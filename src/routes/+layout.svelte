@@ -33,7 +33,7 @@
         align-items: center
 
         height: 6rem
-        background-color: variables.$gray
+        background-color: variables.$light-gray
 
         #PRIME-logo
             height: 4.5rem
@@ -42,7 +42,6 @@
             img
                 height: 100%
             
-        
         #title
             margin: 0
             padding-top: 0.4rem
