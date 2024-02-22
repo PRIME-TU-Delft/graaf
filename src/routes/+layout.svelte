@@ -54,7 +54,7 @@
     #content
         height: 100%
         width: 100%
-        max-width: 1140px
+        max-width: 1200px
         margin: 1.5rem auto 0
         padding: 0 15px
 

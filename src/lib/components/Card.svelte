@@ -1,21 +1,12 @@
 
-<!-- Script -->
-
-<script lang="ts">
-
-    export let header: string;
-
-</script>
-
 <!-- Markup -->
 
 <div id="card">
     <div id="header">
-        {header}
         <slot name="header" />
     </div>
     <div id="body">
-        <slot name="body"/>
+        <slot name="body" />
     </div>
 </div>
 
@@ -29,8 +20,6 @@
         display: flex
         flex-flow: column nowrap
 
-        max-width: 45rem
-        margin: 0 auto
         border-radius: 0.25rem
         border: 1px solid variables.$gray
 
