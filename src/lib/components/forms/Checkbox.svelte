@@ -3,7 +3,7 @@
 
 <script lang="ts">
 
-    import Row from '$components/Row.svelte'
+    import Row from '$components/forms/Row.svelte'
 
     export let label: string;
     export let defaultValue: boolean = false;
@@ -26,7 +26,6 @@
     @use "$styles/variables.sass"
 
     input
-        margin: 0
         accent-color: variables.$blue
 
         &:hover

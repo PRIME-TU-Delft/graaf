@@ -19,6 +19,6 @@
 
         width: 70%
         min-width: 23.625rem // TODO maybe less janky dynamic sizing
-        margin: 0 auto
+        margin: 0 auto -1rem
 
 </style>

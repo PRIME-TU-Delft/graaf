@@ -3,7 +3,7 @@
 
 <script lang="ts">
 
-    import Row from '$components/Row.svelte'
+    import Row from '$components/forms/Row.svelte'
 
     export let label: string;
     export let obfuscate: boolean = false;
@@ -13,8 +13,8 @@
 <!-- Markup -->
 
 <Row>
-    <label for="textfield" slot="left">{label}</label>
-    <input id="textfield" slot="right" type={obfuscate ? "password" : "text"} />
+    <label for={label} slot="left">{label}</label>
+    <input id={label} slot="right" type={obfuscate ? "password" : "text"} />
 </Row>
 
 <!-- Styles -->
@@ -26,7 +26,6 @@
     label
         display: block
         padding: calc(0.375rem + 1px) calc(0.75rem + 16px)
-        
         text-align: right
 
     input
@@ -36,11 +35,10 @@
         border: 1px solid rgba(0, 0, 0, .125)
         border-radius: .25rem
 
-        line-height: 1.5
-        font-size: 1rem
-        font-family: inherit
         color: variables.$secondary
-
         transition: all 0.15s ease-in-out
+
+        &:hover
+            cursor: text
 
 </style>
