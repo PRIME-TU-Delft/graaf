@@ -6,7 +6,7 @@
     import Row from '$components/forms/Row.svelte'
 
     export let label: string;
-    export let defaultValue: boolean = false;
+    export let default_value: boolean = false;
 
 </script>
 
@@ -14,7 +14,7 @@
 
 <Row>
     <div slot="right">
-        <input id="checkbox" type="checkbox" value={defaultValue} />
+        <input id="checkbox" type="checkbox" value={default_value} />
         <label for="checkbox">{label}</label>
     </div>
 </Row>
@@ -29,6 +29,7 @@
         accent-color: variables.$blue
 
         &:hover
+            accent-color: variables.$dark-blue
             cursor: pointer
 
 </style>

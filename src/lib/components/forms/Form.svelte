@@ -1,8 +1,7 @@
 
-
 <!-- Markup -->
 
-<form action="">
+<form>
     <slot />
 </form>
 

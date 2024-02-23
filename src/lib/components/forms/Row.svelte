@@ -2,9 +2,9 @@
 <!-- Markup -->
 
 <div class="row">
-    <div id="center"><slot name="center"/></div>
-    <div id="left"><slot name="left"/></div>
-    <div id="right"><slot name="right"/></div>
+    <div class="center"><slot name="center" /></div>
+    <div class="left"><slot name="left" /></div>
+    <div class="right"><slot name="right" /></div>
 </div>
 
 <!-- Styles -->
@@ -21,17 +21,17 @@
         width: 100%
         margin-bottom: 1rem
 
-        #center
+        .center
             display: flex
             flex-flow: row nowrap
             justify-content: center
 
             flex: 1 1 100%
         
-        #left
+        .left
             flex: 2 1 40%           
         
-        #right
+        .right
             flex: 3 1 60%
 
 </style>

@@ -4,23 +4,26 @@
 <script lang="ts">
 
     import '$styles/global.sass';
-    import PRIME from '$assets/PRIME logo.svg';
-    import TUDelft from '$assets/TUD logo - black.svg';
+
+    import PRIME_logo from '$assets/PRIME-logo.svg';
+    import TUDelft_logo from '$assets/TUD-logo.svg';
 
 </script>
 
 <!-- Markup -->
 
 <header>
-    <a id="PRIME-logo" href="/"><img src={PRIME} alt="PRIME logo"></a>
-    <h1 id="title">Graph editor</h1>
+    <a href="/"><img src={PRIME_logo} alt="PRIME logo"></a>
+    <h1>Graph editor</h1>
 </header>
 
 <div id="content">
     <slot />
 </div>
 
-<img id="TUDelft-logo" src={TUDelft} alt="TUDelft logo">
+<footer>
+    <img src={TUDelft_logo} alt="TUDelft logo">
+</footer>
 
 <!-- Styles -->
 
@@ -30,38 +33,45 @@
 
     header
         display: flex
+        flex-flow: row nowrap
         align-items: center
 
-        height: 6rem
         background-color: variables.$light-gray
 
-        #PRIME-logo
+        a
             height: 4.5rem
-            margin: 0 1rem
+            margin: 1rem
 
             img
                 height: 100%
             
-        #title
-            margin: 0
+        h1
             padding-top: 0.4rem
-
-            font-weight: 500
+            
             font-size: 2.5rem
-            font-family: inherit
             color: variables.$light-purple
 
     #content
-        height: 100%
         width: 100%
         max-width: 1200px
-        margin: 1.5rem auto 0
-        padding: 0 15px
+        margin: 0 auto
+        padding: 2rem 1rem 5rem
 
-    #TUDelft-logo
+    footer
         position: fixed
-        bottom: 20px
-        left: 10px
-        width: 60px
+        bottom: 0
+        width: 100%
+        height: 5rem
+
+        display: flex
+        flex-flow: row nowrap
+        align-items: center        
+
+        img
+            width: 5rem
+            margin: 0 1.25rem
+
+        @media screen and (max-width: calc( 1200px + 13rem ))
+            background-color: white
 
 </style>

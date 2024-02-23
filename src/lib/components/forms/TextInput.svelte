@@ -6,6 +6,7 @@
     import Row from '$components/forms/Row.svelte'
 
     export let label: string;
+    export let placeholder: string = "";
     export let obfuscate: boolean = false;
 
 </script>
@@ -14,7 +15,7 @@
 
 <Row>
     <label for={label} slot="left">{label}</label>
-    <input id={label} slot="right" type={obfuscate ? "password" : "text"} />
+    <input id={label} slot="right" type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 </Row>
 
 <!-- Styles -->
@@ -32,10 +33,10 @@
         width: 100%
         padding: 0.375rem 0.75rem
 
-        border: 1px solid rgba(0, 0, 0, .125)
+        border: 1px solid variables.$gray
         border-radius: .25rem
 
-        color: variables.$secondary
+        color: variables.$dark-gray
         transition: all 0.15s ease-in-out
 
         &:hover

@@ -4,8 +4,26 @@
 <script lang="ts">
 
 	import Card from '$components/Card.svelte';
+	import people_icon from '$assets/people-icon.svg';
+	import Searchbar from '$components/Searchbar.svelte';
 
-	// TODO This is a temporary dataclass to simulate the data that would be fetched from the server
+
+	function onSearch(event: Event) {
+		// TODO add onSearch event
+	}
+
+
+	// TODO These classesa are temporary. Idk what the API will serve
+	class ProgramData {
+		name: string;
+		courses: string[];
+
+		constructor(name: string, courses: string[]) {
+			this.name = name;
+			this.courses = courses;
+		}
+	}
+	
 	class CourseData {
 		code: string;
 		name: string;
@@ -15,8 +33,15 @@
 			this.name = name;
 		}
 	}
+	
+	function getCourse (code: string) {
+		for (let course of courses) {
+			if (course.code === code) {
+				return course;
+			}
+		}
+	}
 
-	// TODO This is a temporary array to simulate the data that would be fetched from the server
 	let courses = [
 		new CourseData("AESB1311", "Linear Algebra"),
 		new CourseData("CSE1200",  "Calculus"),
@@ -39,21 +64,48 @@
 		new CourseData("WI2031TH", "Probability and Statistics")
 	]
 
+	let programs = [
+		new ProgramData("Computer Science", ["CSE1200", "CSE1205", "CSE1210"]),
+		new ProgramData("Electrical Engineering", ["EE1M11", "EE1M21"]),
+		new ProgramData("Mathematics", ["AESB1311", "CSE1200", "CSE1205", "CSE1210", "CTB2105", "CTB2200", "EE1M11", "EE1M21", "LB1155", "NB2191", "TB131B", "TB132B", "TN1401WI", "WBMT", "WBMT1050", "WI1402LR", "WI1403LR", "WI1421LR", "WI2031TH"])
+	]
+
 </script>
 
 <!-- Markup -->
 
-<Card>
-	<div slot="header" class="header">
-		<h1>My Courses</h1>
-		<a class="link-blue" href="/">New Course</a>
-	</div>
-	<div slot="body" class="grid">
-		{#each courses as {code, name}}
-			<a class="cell" href="/">{code} {name}</a>
-		{/each}
-	</div>
-</Card>
+<div class="toolbar">
+	<div class="searchbar"><Searchbar onChange={onSearch} placeholder="Search courses" /></div>
+</div>
+
+<div class="cards">
+	<Card>
+		<div slot="header" class="card-header">
+			<h1>My Courses</h1>
+			<a href="/">New Course</a> <!-- TODO real href -->
+		</div>
+		<div slot="body" class="grid">
+			{#each courses as {code, name}}
+				<a class="cell" href="/">{code} {name}</a>
+			{/each}
+		</div>
+	</Card>
+	
+	{#each programs as {name, courses}}
+		<Card>
+			<div slot="header" class="card-header">
+				<h1>{name}</h1>
+				<img src={people_icon} alt="contributors">
+				<a href="/">Settings</a> <!-- TODO real href -->
+			</div>
+			<div slot="body" class="grid">
+				{#each courses as code}
+					<a class="cell" href="/">{code} {getCourse(code)?.name}</a> <!-- TODO real href -->
+				{/each}
+			</div>
+		</Card>
+	{/each}
+</div>
 
 <!-- Styles -->
 
@@ -61,38 +113,79 @@
 
 	@use "$styles/variables.sass"
 
-	.header
+	.toolbar
+		display: flex
+		flex-flow: row nowrap
+		align-items: center
+
+		margin-bottom: 1rem
+
+		.searchbar
+			width: 300px
+			margin-left: auto
+
+	.cards
+		display: flex
+		flex-flow: column nowrap
+		gap: 2rem
+
+	.card-header
 		display: flex
 		flex-flow: row nowrap
 		justify-content: right
+		align-items: center
+		gap: 5px
 
 		h1
 			margin-right: auto
 			font-size: 1.5rem
-			font-weight: inherit
+
+		img
+			height: 1.5rem
+			padding: 0.25rem
+
+			transition: all 0.15s ease-in-out
+
+			&:hover
+				cursor: pointer
+				transform: scale(1.1)
+				color: variables.$dark-blue
+
+		a
+			padding: 0.25rem
+
+			color: variables.$blue
+			transition: all 0.15s ease-in-out
+
+			&:hover
+				cursor: pointer
+				text-decoration: underline
+				color: variables.$dark-blue
 
 	.grid
 		display: flex
 		flex-flow: row wrap
 
-	.cell
-		flex: 1 1 100%
-		padding: 0.5rem
-		border-bottom: 1px solid variables.$gray
-
-		color: variables.$secondary
-		transition: all 0.15s ease-in-out
-
-		&:hover
-			color: variables.$primary
-			text-decoration: underline
-
-	@media screen and (min-width: 700px)
 		.cell
-			flex: 1 1 50%
+			flex: 0 1 100%
+			padding: 0.5rem
+			border-bottom: 1px solid variables.$gray
 
-	@media screen and (min-width: 1100px)
-		.cell
-			flex: 1 1 33.3333%
+			color: variables.$dark-gray
+			transition: all 0.15s ease-in-out
+
+			&:hover
+				cursor: pointer
+				color: variables.$black
+				text-decoration: underline
+
+			&:last-child
+				flex-grow: 1
+
+			@media screen and (min-width: 700px)
+				flex-basis: 50%
+
+			@media screen and (min-width: 1100px)
+				flex-basis: 33.3333%
 
 </style>

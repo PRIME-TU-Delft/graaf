@@ -1,11 +1,15 @@
 
-<div />
+<!-- Markup -->
+
+<div class="divider" />
+
+<!-- Styles -->
 
 <style lang="sass">
     
     @use "$styles/variables.sass"
 
-    div
+    .divider
         width: 80%
         height: 1px
         margin: 50px auto 50px

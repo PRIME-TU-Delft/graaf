@@ -8,11 +8,15 @@
 	import Row from '$components/forms/Row.svelte';
 	import Textfield from '$components/forms/TextInput.svelte';
 
+    function register(event: Event) {
+        // TODO add register event
+    }
+
 </script>
 
 <!-- Markup -->
 
-<div id="register-form">
+<div class="register-form">
     <Card>
         <h1 slot="header">Register</h1>
         <div slot="body">
@@ -22,7 +26,7 @@
                 <Textfield label="Username" />
                 <Textfield label="Password" obfuscate={true} />
                 <Textfield label="Confirm password" obfuscate={true} />
-                <Row><button slot="right" class="btn-blue" type="submit">Register</button></Row>
+                <Row><button slot="right" type="submit" on:click={register}>Register</button></Row>
             </Form>
         </div>
     </Card>
@@ -34,12 +38,21 @@
     
     @use "$styles/variables.sass"
 
-    #register-form
+    .register-form
         max-width: 45rem
         margin: 0 auto
     
-    h1
-        font-size: inherit
-        font-weight: inherit
+        button
+            padding: 0.375rem 0.75rem
+    
+            border: 1px solid transparent
+            border-radius: 0.25rem
+            
+            color: white
+            background-color: variables.$blue
+            transition: all 0.15s ease-in-out
 
+            &:hover
+                cursor: pointer
+                background-color: variables.$dark-blue
 </style>
