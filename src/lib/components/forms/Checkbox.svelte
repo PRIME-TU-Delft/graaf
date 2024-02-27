@@ -3,12 +3,12 @@
 
 <script lang="ts">
 
-    import Row from "$components/forms/Row.svelte";
+	import Row from "$components/forms/Row.svelte";
 
-    export let label: string;
-    export let default_value: boolean = false;
+	export let label: string;
+	export let default_value: boolean = false;
 
-    let innerWidth: number;
+	let innerWidth: number;
 
 </script>
 
@@ -17,43 +17,43 @@
 <svelte:window bind:innerWidth />
 
 {#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
-    <Row>
-        <div slot="right" class="grow">
-            <input id={label} type="checkbox" value={default_value} />
-            <label for={label}>{label}</label>
-        </div>
-    </Row>
+	<Row>
+		<div slot="right" class="grow">
+			<input id={label} type="checkbox" value={default_value} />
+			<label for={label}>{label}</label>
+		</div>
+	</Row>
 {:else}
-    <Row>
-        <div slot="center" class="grow">
-            <input id={label} type="checkbox" value={default_value} />
-            <label for={label}>{label}</label>
-        </div>
-    </Row>
+	<Row>
+		<div slot="center" class="grow">
+			<input id={label} type="checkbox" value={default_value} />
+			<label for={label}>{label}</label>
+		</div>
+	</Row>
 {/if}
 
 <!-- Styles -->
 
 <style lang="sass">
-    
-    @use "$styles/variables.sass"
 
-    .grow
-        width: 100%
+	@use "$styles/variables.sass"
 
-    input
-        accent-color: variables.$purple
+	.grow
+		width: 100%
 
-        &:hover
-            accent-color: variables.$dark-purple
-            cursor: pointer
-        
-        @media screen and (max-width: variables.$phone-width)
-            margin-right: 0.325rem
-    
-    label
-        width: 100%
+	input
+		accent-color: variables.$purple
 
-    
+		&:hover
+			accent-color: variables.$dark-purple
+			cursor: pointer
+
+		@media screen and (max-width: variables.$phone-width)
+			margin-right: 0.325rem
+
+	label
+		width: 100%
+
+
 
 </style>

@@ -3,48 +3,48 @@
 
 <script lang="ts">
 
-    import search_icon from '$assets/search-icon.svg'
+	import search_icon from '$assets/search-icon.svg'
 
-    export let onChange: (event: Event) => void = () => {}
-    export let placeholder: string = ""
+	export let onChange: (event: Event) => void = () => {}
+	export let placeholder: string = ""
 
 </script>
 
 <!-- Markup -->
 
 <div class="searchbar">
-    <input type="search" placeholder={placeholder} on:change={onChange}/>
-    <img src={search_icon} alt="search-icon" />
+	<input type="search" placeholder={placeholder} on:change={onChange}/>
+	<img src={search_icon} alt="search-icon" />
 </div>
 
 <!-- Styles -->
 
 <style lang="sass">
-    
-    @use "$styles/variables.sass"
 
-    .searchbar
-        position: relative
+	@use "$styles/variables.sass"
 
-        input
-            width: 100%
-            padding: 0.375rem 0.75rem
+	.searchbar
+		position: relative
 
-            border: 1px solid variables.$gray
-            border-radius: .25rem
+		input
+			width: 100%
+			padding: 0.375rem 0.75rem
 
-            color: variables.$dark-gray
-            transition: all 0.15s ease-in-out
+			border: 1px solid variables.$gray
+			border-radius: .25rem
 
-            &:hover
-                cursor: text
+			color: variables.$dark-gray
+			transition: all 0.15s ease-in-out
 
-        img
-            width: 1rem
+			&:hover
+				cursor: text
 
-            position: absolute
-            top: 50%
-            right: 0
-            transform: translate(-50%, -50%)     
+		img
+			width: 1rem
+
+			position: absolute
+			top: 50%
+			right: 0
+			transform: translate(-50%, -50%)
 
 </style>

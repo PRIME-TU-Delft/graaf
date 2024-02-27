@@ -23,7 +23,7 @@
 			this.courses = courses;
 		}
 	}
-	
+
 	class CourseData {
 		code: string;
 		name: string;
@@ -33,7 +33,7 @@
 			this.name = name;
 		}
 	}
-	
+
 	function getCourse (code: string) {
 		for (let course of courses) {
 			if (course.code === code) {
@@ -78,7 +78,7 @@
 	<div class="toolbar">
 		<div class="searchbar"><Searchbar onChange={onSearch} placeholder="Search courses" /></div>
 	</div>
-	
+
 	<Card>
 		<div slot="header" class="card-header">
 			<h1>My Courses</h1>
@@ -90,7 +90,7 @@
 			{/each}
 		</div>
 	</Card>
-	
+
 	{#each programs as {name, courses}}
 		<Card>
 			<div slot="header" class="card-header">
