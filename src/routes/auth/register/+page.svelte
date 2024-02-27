@@ -8,6 +8,8 @@
 	import Row from '$components/forms/Row.svelte';
 	import Textfield from '$components/forms/TextInput.svelte';
 
+    let innerWidth: number;
+
     function register(event: Event) {
         // TODO add register event
     }
@@ -16,7 +18,9 @@
 
 <!-- Markup -->
 
-<div class="register-form">
+<svelte:window bind:innerWidth />
+
+<div class="register-card">
     <Card>
         <h1 slot="header">Register</h1>
         <div slot="body">
@@ -26,7 +30,12 @@
                 <Textfield label="Username" />
                 <Textfield label="Password" obfuscate={true} />
                 <Textfield label="Confirm password" obfuscate={true} />
-                <Row><button slot="right" type="submit" on:click={register}>Register</button></Row>
+
+                {#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
+                    <Row><button slot="right" type="submit" on:click={register}>Register</button></Row>
+                {:else}
+                    <Row><button slot="center" type="submit" on:click={register}>Register</button></Row>
+                {/if}
             </Form>
         </div>
     </Card>
@@ -38,21 +47,22 @@
     
     @use "$styles/variables.sass"
 
-    .register-form
-        max-width: 45rem
-        margin: 0 auto
-    
-        button
-            padding: 0.375rem 0.75rem
-    
-            border: 1px solid transparent
-            border-radius: 0.25rem
-            
-            color: white
-            background-color: variables.$blue
-            transition: all 0.15s ease-in-out
+    .register-card
+        width: 100%
+        max-width: calc(variables.$phone-width - 2 * variables.$main-padding)
 
-            &:hover
-                cursor: pointer
-                background-color: variables.$dark-blue
+    button
+        padding: 0.375rem 0.75rem
+
+        border: 1px solid transparent
+        border-radius: 0.25rem
+        
+        color: white
+        background-color: variables.$purple
+        transition: all 0.15s ease-in-out
+
+        &:hover
+            cursor: pointer
+            background-color: variables.$dark-purple
+
 </style>

@@ -19,20 +19,19 @@
         align-items: center
 
         width: 100%
-        margin-bottom: 1rem
 
-        .center
-            display: flex
-            flex-flow: row nowrap
-            justify-content: center
+    .center
+        display: flex
+        flex-flow: row nowrap
+        align-items: center
+        justify-content: center
 
-            flex: 1 1 100%
+        flex: 1 1 100%
+
+    .left
+        flex: 2 1 40%
         
-        .left
-            flex: 2 1 40%           
-        
-        .right
-            flex: 3 1 60%
+    .right
+        flex: 3 1 60%
 
 </style>
-

@@ -6,9 +6,11 @@
     import Card from '$components/Card.svelte';
 	import Division from '$components/Divider.svelte';
     import Form from '$components/forms/Form.svelte';
-	import Row from '$components/forms/Row.svelte';
+    import Row from '$components/forms/Row.svelte';
 	import TextInput from '$components/forms/TextInput.svelte';
 	import Checkbox from '$components/forms/Checkbox.svelte';
+
+    let innerWidth: number;
 
     function SSOlogin(event: Event) {
         // TODO add SSO login event
@@ -22,8 +24,9 @@
 
 <!-- Markup -->
 
+<svelte:window bind:innerWidth />
 
-<div class="login-form">
+<div class="login-card">
     <Card>
         <h1 slot="header">Login</h1>
         <div slot="body">
@@ -38,12 +41,22 @@
                 <TextInput label="Username" />
                 <TextInput label="Password" obfuscate={true} />
                 <Checkbox label="Remember me" />
-                <Row>
-                    <div slot="right">
-                        <button type="submit" on:click={login}>Login</button>
-                        <a href="/auth/recover">Forgot your password?</a>
-                    </div>
-                </Row>
+    
+                {#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
+                    <Row>
+                        <div slot="right">
+                            <button type="submit" on:click={login}>Login</button>
+                            <a href="/auth/recover">Forgot your password?</a>
+                        </div>
+                    </Row>
+                {:else}
+                    <Row>
+                        <div slot="center">
+                            <button type="submit" on:click={login}>Login</button>
+                            <a href="/auth/recover">Forgot your password?</a>
+                        </div>
+                    </Row>
+                {/if}
             </Form>
         </div>
     </Card>
@@ -55,33 +68,36 @@
     
     @use "$styles/variables.sass"
 
-    .login-form
-        max-width: 45rem
-        margin: 0 auto
+    .login-card
+        width: 100%
+        max-width: calc(variables.$phone-width - 2 * variables.$main-padding)
 
-        button
-            padding: 0.375rem 0.75rem
-    
-            border: 1px solid transparent
-            border-radius: 0.25rem
-            
-            color: white
-            background-color: variables.$blue            
-            transition: all 0.15s ease-in-out
-            
-            &:hover
-                cursor: pointer
-                background-color: variables.$dark-blue
+    p
+        text-align: justify
 
-        a
-            padding: 0.375rem 0.75rem
+    button
+        padding: 0.375rem 0.75rem
 
-            color: variables.$blue
-            transition: all 0.15s ease-in-out
+        border: 1px solid transparent
+        border-radius: 0.25rem
+        
+        color: variables.$white
+        background-color: variables.$purple           
+        transition: all 0.15s ease-in-out
+        
+        &:hover
+            cursor: pointer
+            background-color: variables.$dark-purple
 
-            &:hover
-                cursor: pointer
-                text-decoration: underline
-                color: variables.$dark-blue 
+    a
+        padding: 0.375rem 0.75rem
+
+        color: variables.$purple
+        transition: all 0.15s ease-in-out
+
+        &:hover
+            cursor: pointer
+            text-decoration: underline
+            color: variables.$dark-purple
 
 </style>

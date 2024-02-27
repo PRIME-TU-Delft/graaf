@@ -74,11 +74,11 @@
 
 <!-- Markup -->
 
-<div class="toolbar">
-	<div class="searchbar"><Searchbar onChange={onSearch} placeholder="Search courses" /></div>
-</div>
-
-<div class="cards">
+<div class="dashboard">
+	<div class="toolbar">
+		<div class="searchbar"><Searchbar onChange={onSearch} placeholder="Search courses" /></div>
+	</div>
+	
 	<Card>
 		<div slot="header" class="card-header">
 			<h1>My Courses</h1>
@@ -113,21 +113,22 @@
 
 	@use "$styles/variables.sass"
 
+	.dashboard
+		display: flex
+		flex-flow: column nowrap
+		align-items: center
+		gap: 1rem
+
 	.toolbar
 		display: flex
 		flex-flow: row nowrap
 		align-items: center
 
-		margin-bottom: 1rem
+		width: 100%
 
 		.searchbar
 			width: 300px
 			margin-left: auto
-
-	.cards
-		display: flex
-		flex-flow: column nowrap
-		gap: 2rem
 
 	.card-header
 		display: flex
@@ -135,6 +136,8 @@
 		justify-content: right
 		align-items: center
 		gap: 5px
+
+		width: fill-available
 
 		h1
 			margin-right: auto
@@ -146,21 +149,26 @@
 
 			transition: all 0.15s ease-in-out
 
+			// NOTE filters icon color to purple
+			filter: brightness(0) saturate(100%) invert(43%) sepia(21%) saturate(473%) hue-rotate(194deg) brightness(93%) contrast(85%)
+
 			&:hover
 				cursor: pointer
 				transform: scale(1.1)
-				color: variables.$dark-blue
+
+				// NOTE filters icon color to dark-purple
+				filter: brightness(0) saturate(100%) invert(34%) sepia(9%) saturate(1144%) hue-rotate(196deg) brightness(99%) contrast(84%)
 
 		a
 			padding: 0.25rem
 
-			color: variables.$blue
+			color: variables.$purple
 			transition: all 0.15s ease-in-out
 
 			&:hover
 				cursor: pointer
 				text-decoration: underline
-				color: variables.$dark-blue
+				color: variables.$dark-purple
 
 	.grid
 		display: flex

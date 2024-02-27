@@ -15,18 +15,23 @@
     .card
         display: flex
         flex-flow: column nowrap
+        align-items: stretch
+
+        width: 100%
 
         border-radius: 0.25rem
         border: 1px solid variables.$gray
 
         .header
-            padding: 0.75rem 1.25rem
+            padding: 1rem variables.$card-padding
 
             background-color: variables.$light-gray
             border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0
             border-bottom: 1px solid variables.$gray
 
         .body
-            padding: 1.25rem
+            padding: variables.$card-padding
+
+            background-color: variables.$white
 
 </style>

@@ -10,10 +10,10 @@
     @use "$styles/variables.sass"
 
     .divider
-        width: 80%
+        width: 100%
         height: 1px
-        margin: 50px auto 50px
+        margin: 50px 0
 
-        background-color: rgba(0, 0, 0, .125)
+        background-color: variables.$gray
 
 </style>
