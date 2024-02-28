@@ -49,20 +49,20 @@
 
 	.register-card
 		width: 100%
-		max-width: calc(variables.$phone-width - 2 * variables.$main-padding)
+		max-width: variables.$small-column
 
-	button
-		padding: 0.375rem 0.75rem
-
-		border: 1px solid transparent
-		border-radius: 0.25rem
-
-		color: white
-		background-color: variables.$purple
-		transition: all 0.15s ease-in-out
-
-		&:hover
-			cursor: pointer
-			background-color: variables.$dark-purple
+		button
+			padding: 0.375rem 0.75rem
+	
+			border: 1px solid transparent
+			border-radius: 0.25rem
+	
+			color: white
+			background-color: variables.$purple
+			transition: all 0.15s ease-in-out
+	
+			&:hover
+				cursor: pointer
+				background-color: variables.$dark-purple
 
 </style>

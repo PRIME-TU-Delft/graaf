@@ -15,7 +15,7 @@
 	.card
 		display: flex
 		flex-flow: column nowrap
-		align-items: stretch
+		align-items: center
 
 		width: 100%
 
@@ -23,6 +23,7 @@
 		border: 1px solid variables.$gray
 
 		.header
+			width: 100%
 			padding: 1rem variables.$card-padding
 
 			background-color: variables.$light-gray
@@ -30,6 +31,7 @@
 			border-bottom: 1px solid variables.$gray
 
 		.body
+			width: 100%
 			padding: variables.$card-padding
 
 			background-color: variables.$white
