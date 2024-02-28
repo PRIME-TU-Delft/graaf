@@ -3,10 +3,10 @@
 
 <script lang="ts">
 
-	import search_icon from '$assets/search-icon.svg'
+	import search_icon from '$assets/search-icon.svg';
 
-	export let onChange: (event: Event) => void = () => {}
-	export let placeholder: string = ""
+	export let onChange: (event: Event) => void = () => {};
+	export let placeholder: string = "";
 
 </script>
 
@@ -31,7 +31,7 @@
 			padding: 0.375rem 0.75rem
 
 			border: 1px solid variables.$gray
-			border-radius: .25rem
+			border-radius: variables.$border-radius
 
 			color: variables.$dark-gray
 			transition: all 0.15s ease-in-out

@@ -14,10 +14,12 @@
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 
 <div class="background" class:show={showModal} on:click|self={() => showModal = false}>
-	<div class="card" on:click|stopPropagation>
-		<div class=header><slot name="header" /></div>
-		<slot name="body"/>
-	</div>
+	<dialog on:click|stopPropagation>
+		<h1><slot name="header"> Modal </slot></h1>
+		<section class="body">
+			<slot> Lorum ipsum dolor sid amed. </slot>
+		</section>
+	</dialog>
 </div>
 
 <!-- Styles -->
@@ -25,13 +27,6 @@
 <style lang="sass">
 
 	@use "$styles/variables.sass"
-
-	button
-		display: flex
-		align-items: center
-		justify-content: center
-
-		background: none
 
 	.background
 		position: fixed
@@ -43,28 +38,41 @@
 		align-items: center
 		justify-content: center
 
-		width: 100%
-		height: 100%
+		width: 100vw
+		height: 100vh
 
 		background-color: rgba(0,0,0,0.25)
 
-		.card
-			width: 100%
-			max-width: variables.$small-column
-			padding: 1rem
-
-			border-radius: 0.25rem
-			box-shadow: 0 0 1rem rgba(0,0,0,0.25)
-			background-color: variables.$white
-
-			.header
-				font-size: 1.25rem
-
-				margin-bottom: 1rem
-				padding-bottom: 0.25rem
-				border-bottom: 1px solid variables.$gray
-	
 	.show
 		display: flex
+
+	dialog
+		position: static
+		display: block
+
+		width: 100%
+		max-width: variables.$small-column
+		padding: 1rem
+
+		border-radius: variables.$border-radius
+		box-shadow: 0 0 1rem rgba(0, 0, 0, 0.25)
+		background-color: variables.$white
+
+		h1
+			font-size: 1.25rem
+
+			margin-bottom: 1rem
+			padding-bottom: 0.25rem
+			border-bottom: 1px solid variables.$gray
+
+		.body
+			padding: 0 1rem
+	
+	button
+		display: flex
+		align-items: center
+		justify-content: center
+
+		background: none
 
 </style>

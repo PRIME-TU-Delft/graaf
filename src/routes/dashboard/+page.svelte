@@ -3,13 +3,12 @@
 
 <script lang="ts">
 
+	import Layout from '$layouts/EditorLayout.svelte';
 	import Card from '$components/Card.svelte';
-	import Searchbar from '$components/Searchbar.svelte';
 	import Modal from '$components/Modal.svelte';
+	import Searchbar from '$components/Searchbar.svelte';
 
 	import peopleIcon from '$assets/people-icon.svg';
-
-	let showModal: Modal | null = null;
 
 	function onSearch(event: Event) {
 		// TODO add onSearch event
@@ -79,49 +78,55 @@
 
 <!-- Markup -->
 
-<div class="dashboard">
-	<div class="toolbar">
-		<div class="searchbar"><Searchbar onChange={onSearch} placeholder="Search courses" /></div>
+<Layout
+	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to expermient with the Graph Editor."
+	path={[
+		["Dashboard", "/dashboard"]
+	]}
+>
+
+	<div slot="toolbar" class="searchbar">
+		<Searchbar onChange={onSearch} placeholder="Search courses" />
 	</div>
 
 	<Card>
-		<div slot="header" class="card-header">
-			<h1>My Courses</h1>
-			<a href="/">New Course</a> <!-- TODO real href -->
-		</div>
+		<svelte:fragment slot="header">
+			<h1> My Courses </h1>
+			<a class="link-btn" href="/"> New Course </a> <!-- TODO real href -->
+		</svelte:fragment>
+
 		<div slot="body" class="grid">
 			{#each courses as {code, name}}
-				<a class="cell" href="/">{code} {name}</a>
+				<a class="cell" href={`/dashboard/course/${code}/overview`}> {code} {name} </a>
 			{/each}
 		</div>
 	</Card>
 
 	{#each programs as {name, courses, coordinators}}
 		<Card>
-			<div slot="header" class="card-header">
-				<h1>{name}</h1>
+			<svelte:fragment slot="header">
+				<h1> {name} </h1>
 				<Modal>
-					<img slot="trigger" src={peopleIcon} alt="people-icon" />
-					<h1 slot="header">Program Coordinators</h1>
-					<div slot="body" class="modal-body">
-						<p>These are the coordinators of the {name} program. You can contact them via email to request access to a course.</p>
-						<ul>
-							{#each coordinators as coordinator}
-								<li>{coordinator}</li>
-							{/each}
-						</ul>
-					</div>
+					<img slot="trigger" class="img-btn" src={peopleIcon} alt="people-icon" />
+					<svelte:fragment slot="header"> Program Coordinators </svelte:fragment>
+					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
+					<ul>
+						{#each coordinators as coordinator}
+							<li> {coordinator} </li>
+						{/each}
+					</ul>
 				</Modal>
-				<a href="/">Settings</a> <!-- TODO real href -->
-			</div>
+				<a class="link-btn" href={`/dashboard/program/${name}/settings`}> Settings </a>
+			</svelte:fragment>
+
 			<div slot="body" class="grid">
 				{#each courses as code}
-					<a class="cell" href="/">{code} {getCourse(code)?.name}</a> <!-- TODO real href -->
+					<a class="cell" href="{`/dashboard/course/${code}/overview`}">{code} {getCourse(code)?.name}</a>
 				{/each}
 			</div>
 		</Card>
 	{/each}
-</div>
+</Layout>
 
 <!-- Styles -->
 
@@ -129,97 +134,38 @@
 
 	@use "$styles/variables.sass"
 
-	.dashboard
+	h1
+		margin-right: auto
+		font-size: 1.5rem
+
+	.searchbar
+		width: 20rem
+		margin-left: auto
+
+	.grid
 		display: flex
-		flex-flow: column nowrap
-		align-items: center
-		gap: 1rem
+		flex-flow: row wrap
 
-		width: 100%
-		max-width: variables.$big-column
+		.cell
+			flex: 0 1 100%
+			padding: 0.5rem
+			border-bottom: 1px solid variables.$gray
 
-		.toolbar
-			display: flex
-			flex-flow: row nowrap
-			align-items: center
+			color: variables.$dark-gray
+			transition: all 0.15s ease-in-out
 
-			width: 100%
+			&:hover
+				cursor: pointer
+				color: variables.$black
+				text-decoration: underline
 
-			.searchbar
-				width: 300px
-				margin-left: auto
+			&:last-child
+				flex-grow: 1
 
-		.modal-body
-			p
-				margin: 1rem
-			
-			ul
-				padding-left: 3rem
+			@media screen and (min-width: 700px)
+				flex-basis: 50%
 
-		.card-header
-			display: flex
-			flex-flow: row nowrap
-			justify-content: right
-			align-items: center
-			gap: 5px
-
-			width: 100%
-
-			h1
-				margin-right: auto
-				font-size: 1.5rem
-
-			img
-				height: 1.5rem
-				padding: 0.25rem
-
-				transition: all 0.15s ease-in-out
-
-				// NOTE filters icon color to purple
-				filter: brightness(0) saturate(100%) invert(43%) sepia(21%) saturate(473%) hue-rotate(194deg) brightness(93%) contrast(85%)
-
-				&:hover
-					cursor: pointer
-					transform: scale(1.1)
-
-					// NOTE filters icon color to dark-purple
-					filter: brightness(0) saturate(100%) invert(34%) sepia(9%) saturate(1144%) hue-rotate(196deg) brightness(99%) contrast(84%)
-
-			a
-				padding: 0.25rem
-
-				color: variables.$purple
-				transition: all 0.15s ease-in-out
-
-				&:hover
-					cursor: pointer
-					text-decoration: underline
-					color: variables.$dark-purple
-
-		.grid
-			display: flex
-			flex-flow: row wrap
-
-			.cell
-				flex: 0 1 100%
-				padding: 0.5rem
-				border-bottom: 1px solid variables.$gray
-
-				color: variables.$dark-gray
-				transition: all 0.15s ease-in-out
-
-				&:hover
-					cursor: pointer
-					color: variables.$black
-					text-decoration: underline
-
-				&:last-child
-					flex-grow: 1
-
-				@media screen and (min-width: 700px)
-					flex-basis: 50%
-
-				@media screen and (min-width: 1100px)
-					flex-basis: 33.3333%
+			@media screen and (min-width: 1100px)
+				flex-basis: 33.3333%
 
 </style>

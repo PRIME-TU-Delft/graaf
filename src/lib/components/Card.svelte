@@ -1,10 +1,10 @@
 
 <!-- Markup -->
 
-<div class="card">
-	<div class="header"><slot name="header" /></div>
-	<div class="body"><slot name="body" /></div>
-</div>
+<section class="card">
+	<section class="header"><slot name="header"> Card </slot></section>
+	<section class="body"><slot name="body"> Lorum ipsum dolor sid amed. </slot></section>
+</section>
 
 <!-- Styles -->
 
@@ -15,25 +15,32 @@
 	.card
 		display: flex
 		flex-flow: column nowrap
-		align-items: center
+		align-items: stretch
 
 		width: 100%
 
-		border-radius: 0.25rem
+		border-radius: variables.$border-radius
 		border: 1px solid variables.$gray
 
 		.header
-			width: 100%
-			padding: 1rem variables.$card-padding
+			display: flex
+			flex-flow: row nowrap
+			align-items: center
+
+			padding: 0.75rem 1.5rem
 
 			background-color: variables.$light-gray
-			border-radius: calc(.25rem - 1px) calc(.25rem - 1px) 0 0
+			border-radius: calc(variables.$border-radius - 1px) calc(variables.$border-radius - 1px) 0 0
 			border-bottom: 1px solid variables.$gray
 
 		.body
-			width: 100%
-			padding: variables.$card-padding
+			display: flex
+			flex-flow: column nowrap
+			align-items: stretch
+
+			padding: 1.5rem
 
 			background-color: variables.$white
+			border-radius: 0 0 calc(variables.$border-radius - 1px) calc(variables.$border-radius - 1px)
 
 </style>

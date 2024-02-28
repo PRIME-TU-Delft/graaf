@@ -3,11 +3,12 @@
 
 <script lang="ts">
 
+	import Layout from '$lib/layouts/FormLayout.svelte';
+	
 	import Card from '$components/Card.svelte';
-	import Form from '$components/forms/Form.svelte';
-	import Row from '$components/forms/Row.svelte';
-	import TextInput from '$components/forms/TextInput.svelte';
-	import Checkbox from '$components/forms/Checkbox.svelte';
+	import Row from '$components/Row.svelte';
+	import TextInput from '$components/RowTextInput.svelte';
+	import Checkbox from '$components/RowCheckbox.svelte';
 
 	let innerWidth: number;
 
@@ -25,41 +26,45 @@
 
 <svelte:window bind:innerWidth />
 
-<div class="login-card">
+<Layout>
 	<Card>
 		<h1 slot="header">Login</h1>
-		<div slot="body">
-			<Form>
-				<Row><p slot="center" class="justify">Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will be removed after November 1. You can give yourself access to the courses that your old account had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle access to other courses.</p></Row>
-				<Row><button slot="center" type="submit" on:click={SSOlogin}>Login with TUDelft SSO</button></Row>
-			</Form>
+		<svelte:fragment slot="body">
+			<form>
+				<Row><svelte:fragment slot="center"> 
+					Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will be removed after November 1. You can give yourself access to the courses that your old account had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle access to other courses.
+				</svelte:fragment></Row>
+				<Row><button class="btn" slot="center" type="submit" on:click={SSOlogin}> 
+					Login with TUDelft SSO
+				</button></Row>
+			</form>
 
 			<div class="divider" />
 
-			<Form>
+			<form>
 				<TextInput label="Username" />
 				<TextInput label="Password" obfuscate={true} />
-				<Checkbox label="Remember me" />
+				<Checkbox  label="Remember me" />
 
 				{#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
 					<Row>
-						<div slot="right">
-							<button type="submit" on:click={login}>Login</button>
-							<a href="/auth/recover">Forgot your password?</a>
-						</div>
+						<svelte:fragment slot="right">
+							<button class="btn" type="submit" on:click={login}>Login</button>
+							<a class="link-btn"  href="/auth/recover">Forgot your password?</a>
+						</svelte:fragment>
 					</Row>
 				{:else}
 					<Row>
-						<div slot="center">
-							<button type="submit" on:click={login}>Login</button>
-							<a href="/auth/recover">Forgot your password?</a>
-						</div>
+						<svelte:fragment slot="center">
+							<button class="btn" type="submit" on:click={login}>Login</button>
+							<a class="link-btn" href="/auth/recover">Forgot your password?</a>
+						</svelte:fragment>
 					</Row>
 				{/if}
-			</Form>
-		</div>
+			</form>
+		</svelte:fragment>
 	</Card>
-</div>
+</Layout>
 
 <!-- Styles -->
 
@@ -67,41 +72,15 @@
 
 	@use "$styles/variables.sass"
 
-	.login-card
-		width: 100%
-		max-width: variables.$small-column
-	
-		.justify
-			text-align: justify
+	form
+		display: flex
+		flex-flow: column nowrap
+		align-items: center
+		gap: 1rem
 
-		.divider
-			height: 1px
-			margin: 50px 0
-			background-color: variables.$gray
-
-		button
-			padding: 0.375rem 0.75rem
-
-			border: 1px solid transparent
-			border-radius: 0.25rem
-
-			color: variables.$white
-			background-color: variables.$purple
-			transition: all 0.15s ease-in-out
-
-			&:hover
-				cursor: pointer
-				background-color: variables.$dark-purple
-
-		a
-			padding: 0.375rem 0.75rem
-
-			color: variables.$purple
-			transition: all 0.15s ease-in-out
-
-			&:hover
-				cursor: pointer
-				text-decoration: underline
-				color: variables.$dark-purple
+	.divider
+		height: 1px
+		margin: 50px 0
+		background-color: variables.$gray
 
 </style>

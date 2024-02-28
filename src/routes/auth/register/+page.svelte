@@ -3,10 +3,11 @@
 
 <script lang="ts">
 
+	import Layout from '$layouts/FormLayout.svelte';
+
 	import Card from '$components/Card.svelte';
-	import Form from '$components/forms/Form.svelte';
-	import Row from '$components/forms/Row.svelte';
-	import Textfield from '$components/forms/TextInput.svelte';
+	import Row from '$components/Row.svelte';
+	import Textfield from '$components/RowTextInput.svelte';
 
 	let innerWidth: number;
 
@@ -20,11 +21,11 @@
 
 <svelte:window bind:innerWidth />
 
-<div class="register-card">
+<Layout>
 	<Card>
 		<h1 slot="header">Register</h1>
-		<div slot="body">
-			<Form>
+		<svelte:fragment slot="body">
+			<form>
 				<Textfield label="First name" />
 				<Textfield label="Last name" />
 				<Textfield label="Username" />
@@ -32,14 +33,18 @@
 				<Textfield label="Confirm password" obfuscate={true} />
 
 				{#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
-					<Row><button slot="right" type="submit" on:click={register}>Register</button></Row>
+					<Row><button class="btn" slot="right" type="submit" on:click={register}>
+						Register
+					</button></Row>
 				{:else}
-					<Row><button slot="center" type="submit" on:click={register}>Register</button></Row>
+					<Row><button class="btn" slot="center" type="submit" on:click={register}>
+						Register
+					</button></Row>
 				{/if}
-			</Form>
-		</div>
+			</form>
+		</svelte:fragment>
 	</Card>
-</div>
+</Layout>
 
 <!-- Styles -->
 
@@ -47,22 +52,10 @@
 
 	@use "$styles/variables.sass"
 
-	.register-card
-		width: 100%
-		max-width: variables.$small-column
-
-		button
-			padding: 0.375rem 0.75rem
-	
-			border: 1px solid transparent
-			border-radius: 0.25rem
-	
-			color: white
-			background-color: variables.$purple
-			transition: all 0.15s ease-in-out
-	
-			&:hover
-				cursor: pointer
-				background-color: variables.$dark-purple
+	form
+		display: flex
+		flex-flow: column nowrap
+		align-items: center
+		gap: 1rem
 
 </style>
