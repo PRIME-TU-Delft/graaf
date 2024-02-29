@@ -71,32 +71,6 @@
 			@media screen and (max-width: variables.$phone-width)
 				display: none
 
-		.btn
-			margin-left: 0.25rem
-			padding: 0.375rem 0.75rem
-
-			border: 1px solid transparent
-			border-radius: 0.25rem
-
-			color: white
-			background-color: variables.$purple
-			transition: all 0.15s ease-in-out
-
-			&:hover
-				cursor: pointer
-				background-color: variables.$dark-purple
-
-		.link-btn
-			padding: 0.375rem 0.75rem
-
-			color: variables.$purple
-			transition: all 0.15s ease-in-out
-
-			&:hover
-				cursor: pointer
-				color: variables.$dark-purple
-				text-decoration: underline
-
 		.align-right
 			margin-left: auto
 

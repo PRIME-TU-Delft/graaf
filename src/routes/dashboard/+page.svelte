@@ -8,10 +8,23 @@
 	import Modal from '$components/Modal.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
 
+	import plusIcon from '$assets/plus-icon.svg';
 	import peopleIcon from '$assets/people-icon.svg';
 
 	function onSearch(event: Event) {
 		// TODO add onSearch event
+	}
+
+	function newSandbox() {
+		// TODO add newSandbox function
+	}
+
+	function newCourse() {
+		// TODO add newCourse function
+	}
+
+	function newProgram() {
+		// TODO add newProgram function
 	}
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
@@ -85,16 +98,22 @@
 	]}
 >
 
-	<div slot="toolbar" class="searchbar">
+	<svelte:fragment slot="toolbar">
+		<button class="btn" on:click={newSandbox}>
+			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon"> New Sandbox
+		</button>
+		<button class="btn" on:click={newCourse}>
+			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon">  New Course
+		</button>
+		<button class="btn" on:click={newProgram}>
+			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon"> New Program
+		</button>
+		<div class="grow" />
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
-	</div>
+	</svelte:fragment>
 
 	<Card>
-		<svelte:fragment slot="header">
-			<h1> My Courses </h1>
-			<a class="link-btn" href="/"> New Course </a> <!-- TODO real href -->
-		</svelte:fragment>
-
+		<h1 slot="header"> My Courses </h1>
 		<div slot="body" class="grid">
 			{#each courses as {code, name}}
 				<a class="cell" href={`/dashboard/course/${code}/overview`}> {code} {name} </a>
@@ -106,6 +125,7 @@
 		<Card>
 			<svelte:fragment slot="header">
 				<h1> {name} </h1>
+				<div class="grow" />
 				<Modal>
 					<img slot="trigger" class="img-btn" src={peopleIcon} alt="people-icon" />
 					<svelte:fragment slot="header"> Program Coordinators </svelte:fragment>
@@ -135,12 +155,10 @@
 	@use "$styles/variables.sass"
 
 	h1
-		margin-right: auto
 		font-size: 1.5rem
 
-	.searchbar
-		width: 20rem
-		margin-left: auto
+	.grow
+		margin: auto
 
 	.grid
 		display: flex

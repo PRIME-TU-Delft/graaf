@@ -54,38 +54,15 @@ p, h1, h2, h3, h4, h5, h6, a, button, input, label
 	font-family: inherit
 	line-height: inherit
 	text-decoration: none
+	background: none
 
 ul
 	padding-left: 2rem
 
 // ------------------> Utility styles
 
-.link-btn
-	padding: 0.375rem 0.75rem
-	color: variables.$purple
-	transition: all 0.15s ease-in-out
-
-	&:hover
-		cursor: pointer
-		text-decoration: underline
-		color: variables.$dark-purple
-
-.img-btn
-	height: 1.75rem
-	padding: 0.375rem
-
-	// NOTE filters icon color to purple
-	filter: brightness(0) saturate(100%) invert(43%) sepia(21%) saturate(473%) hue-rotate(194deg) brightness(93%) contrast(85%)
-	transition: all 0.15s ease-in-out
-
-	&:hover
-		cursor: pointer
-		transform: scale(1.1)
-
-		// NOTE filters icon color to dark-purple
-		filter: brightness(0) saturate(100%) invert(34%) sepia(9%) saturate(1144%) hue-rotate(196deg) brightness(99%) contrast(84%)
-
 .btn
+	position: relative
 	padding: 0.375rem 0.75rem
 
 	border: 1px solid transparent
@@ -95,6 +72,76 @@ ul
 	background-color: variables.$purple
 	transition: all 0.15s ease-in-out
 
+	img
+		position: absolute
+		transform: translate(0, -50%)
+		left: 0.375rem
+		top: 50%
+
+		height: 1.25rem
+
+		filter: variables.$white-filter
+		transition: all 0.15s ease-in-out
+
+	&:has(img)
+		padding: 0.375rem 0.75rem 0.375rem 2rem
+
 	&:hover
 		cursor: pointer
 		background-color: variables.$dark-purple
+
+		img
+			cursor: pointer
+		img.rotate-on-hover
+			transform: translate(0, -50%) rotate(45deg)
+		img.scale-on-hover
+			transform: translate(0, -50%) scale(1.1)
+
+.link-btn
+	position: relative
+	padding: 0.375rem 0.75rem
+
+	color: variables.$purple
+	transition: all 0.15s ease-in-out
+
+	img
+		position: absolute
+		transform: translate(0, -50%)
+		left: 0.375rem
+		top: 50%
+
+		height: 1.25rem
+
+		filter: variables.$purple-filter
+		transition: all 0.15s ease-in-out
+
+	&:has(img)
+		padding: 0.375rem 0.75rem 0.375rem 2rem
+
+	&:hover
+		cursor: pointer
+		text-decoration: underline
+		color: variables.$dark-purple
+	
+		img
+			cursor: pointer
+			filter: variables.$dark-purple-filter
+		img.rotate-on-hover
+			transform: translate(0, -50%) rotate(45deg)
+		img.scale-on-hover
+			transform: translate(0, -50%) scale(1.1)
+
+.btn, .link-btn
+	
+
+.img-btn
+	height: 1.75rem
+	padding: 0.375rem
+
+	filter: variables.$purple-filter
+	transition: all 0.15s ease-in-out
+
+	&:hover
+		cursor: pointer
+		transform: scale(1.1)
+		filter: variables.$dark-purple-filter
