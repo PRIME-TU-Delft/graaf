@@ -127,7 +127,7 @@
 				<h1> {name} </h1>
 				<div class="grow" />
 				<Modal>
-					<img slot="trigger" class="img-btn" src={peopleIcon} alt="people-icon" />
+					<img slot="trigger" class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon" />
 					<svelte:fragment slot="header"> Program Coordinators </svelte:fragment>
 					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
 					<ul>

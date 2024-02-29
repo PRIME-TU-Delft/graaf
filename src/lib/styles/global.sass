@@ -95,7 +95,7 @@ ul
 		img.rotate-on-hover
 			transform: translate(0, -50%) rotate(45deg)
 		img.scale-on-hover
-			transform: translate(0, -50%) scale(1.1)
+			transform: translate(0, -50%) scale(1.2)
 
 .link-btn
 	position: relative
@@ -129,7 +129,7 @@ ul
 		img.rotate-on-hover
 			transform: translate(0, -50%) rotate(45deg)
 		img.scale-on-hover
-			transform: translate(0, -50%) scale(1.1)
+			transform: translate(0, -50%) scale(1.2)
 
 .btn, .link-btn
 	
@@ -143,5 +143,9 @@ ul
 
 	&:hover
 		cursor: pointer
-		transform: scale(1.1)
 		filter: variables.$dark-purple-filter
+	
+	&.rotate-on-hover:hover
+		transform: rotate(45deg)
+	&.scale-on-hover:hover
+		transform: scale(1.2)
