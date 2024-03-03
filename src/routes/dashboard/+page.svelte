@@ -179,9 +179,8 @@
 			&:last-child
 				flex-grow: 1
 
-			@media screen and (max-width: 700px)
-				&:not(:last-child)
-					border-bottom: 1px solid variables.$gray
+			&:not(:last-child)
+				border-bottom: 1px solid variables.$gray				
 
 			@media screen and (min-width: 700px)
 				border-bottom: 1px solid variables.$gray

@@ -1,21 +1,30 @@
 
 <script lang="ts">
 
+	import plusIcon from '$assets/plus-icon.svg';
+
 	let showModal: boolean = false;
+	function show() { showModal = true; }
+	function hide() { showModal = false; }
 
 </script>
 
 <!-- Markup -->
 
-<button on:click={() => showModal = true}><slot name="trigger" /></button>
+<button class="trigger" on:click={show}><slot name="trigger" /></button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 
-<div class="background" class:show={showModal} on:click|self={() => showModal = false}>
+<div class="background" class:show={showModal} on:click|self={hide}>
 	<dialog on:click|stopPropagation>
-		<h1><slot name="header"> Modal </slot></h1>
+		<section class="header">
+			<slot name="header"> Modal </slot>
+			<button class="exit" on:click={hide}>
+				<img src={plusIcon} alt="Exit icon">
+			</button>
+		</section>
 		<section class="body">
 			<slot> Lorum ipsum dolor sid amed. </slot>
 		</section>
@@ -41,31 +50,59 @@
 		width: 100vw
 		height: 100vh
 
-		background-color: rgba(0,0,0,0.25)
+		background-color: rgba(0, 0, 0, 0.25)
 
 	.show
 		display: flex
 
 	dialog
-		position: static
-		display: block
+		position: relative
 
+		display: block
 		width: 100%
 		max-width: variables.$small-column
 		padding: 1rem
 
-		border-radius: variables.$border-radius
-		box-shadow: 0 0 1rem rgba(0, 0, 0, 0.25)
 		background-color: variables.$white
+		border-radius: variables.$border-radius
 
-		h1
-			font-size: 1.25rem
+		.exit
+			position: absolute
+			top: 0
+			right: 0
 
+			margin: 0.625rem
+
+			&:hover
+				cursor: pointer
+				
+				img
+					filter: variables.$dark-purple-filter
+					transform: rotate(45deg) scale(1.1)
+			
+			img
+				height: 1.5rem
+				transform: rotate(45deg)
+
+				filter: variables.$purple-filter
+				transition: all 0.15s ease-in-out
+
+				&:hover
+					cursor: pointer
+					filter: variables.$dark-purple-filter
+					transform: rotate(45deg) scale(1.1)
+
+		.header
+			width: 100%
 			margin-bottom: 1rem
 			padding-bottom: 0.25rem
+
+			font-size: 1.25rem
 			border-bottom: 1px solid variables.$gray
 
+
 		.body
+			width: 100%
 			padding: 0 1rem
 	
 	button
