@@ -171,9 +171,6 @@
 			color: variables.$dark-gray
 			transition: all 0.15s ease-in-out
 
-			&:not(:last-child)
-				border-bottom: 1px solid variables.$gray
-
 			&:hover
 				cursor: pointer
 				color: variables.$black
@@ -182,10 +179,16 @@
 			&:last-child
 				flex-grow: 1
 
+			@media screen and (max-width: 700px)
+				&:not(:last-child)
+					border-bottom: 1px solid variables.$gray
+
 			@media screen and (min-width: 700px)
+				border-bottom: 1px solid variables.$gray
 				flex-basis: 50%
 
 			@media screen and (min-width: 1100px)
+				border-bottom: 1px solid variables.$gray
 				flex-basis: 33.3333%
 
 </style>
