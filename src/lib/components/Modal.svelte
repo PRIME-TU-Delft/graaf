@@ -11,7 +11,7 @@
 
 <!-- Markup -->
 
-<button class="trigger" on:click={show}><slot name="trigger" /></button>
+<button class="trigger" on:click={() => showModal = true}><slot name="trigger" /></button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -71,26 +71,22 @@
 			top: 0
 			right: 0
 
-			margin: 0.625rem
+			margin: 1rem
+			overflow: hidden
 
 			&:hover
 				cursor: pointer
-				
+
 				img
 					filter: variables.$dark-purple-filter
 					transform: rotate(45deg) scale(1.1)
 			
 			img
-				height: 1.5rem
+				height: 1.25rem
 				transform: rotate(45deg)
 
 				filter: variables.$purple-filter
 				transition: all 0.15s ease-in-out
-
-				&:hover
-					cursor: pointer
-					filter: variables.$dark-purple-filter
-					transform: rotate(45deg) scale(1.1)
 
 		.header
 			width: 100%
