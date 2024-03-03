@@ -1,0 +1,151 @@
+
+@use "$styles/variables.sass"
+
+// ------------------> Fonts
+
+@font-face
+	font-family: 'Computer Modern Bright'
+	src: url('cmunbmr.woff') format('woff')
+	font-weight: normal
+	font-style: normal
+
+@font-face
+	font-family: 'Computer Modern Bright'
+	src: url('cmunbbx.woff') format('woff')
+	font-weight: bold
+	font-style: normal
+
+@font-face
+	font-family: 'Computer Modern Bright'
+	src: url('cmunbmo.woff') format('woff')
+	font-weight: normal
+	font-style: italic
+
+@font-face
+	font-family: 'Computer Modern Bright'
+	src: url('cmunbxo.woff') format('woff')
+	font-weight: bold
+	font-style: italic
+
+// ------------------> Global styles
+
+*
+	margin:  0
+	padding: 0
+	border:  0
+	outline: 0
+	box-sizing: border-box
+	cursor: default
+
+html, body
+	height: 100vh
+
+	line-height: 1.5
+	font-size: 1rem
+	font-weight: 400
+	font-family: "Computer Modern Bright", sans-serif
+	color: variables.$black
+
+p, h1, h2, h3, h4, h5, h6, a, button, input, label
+	color: inherit
+	user-select: none
+	font-size: inherit
+	font-weight: inherit
+	font-family: inherit
+	line-height: inherit
+	text-decoration: none
+	background: none
+
+ul
+	padding-left: 2rem
+
+// ------------------> Utility styles
+
+.btn
+	position: relative
+	padding: 0.375rem 0.75rem
+
+	border: 1px solid transparent
+	border-radius: variables.$border-radius
+
+	color: variables.$white
+	background-color: variables.$purple
+	transition: all 0.15s ease-in-out
+
+	img
+		position: absolute
+		transform: translate(0, -50%)
+		left: 0.375rem
+		top: 50%
+
+		height: 1.25rem
+
+		filter: variables.$white-filter
+		transition: all 0.15s ease-in-out
+
+	&:has(img)
+		padding: 0.375rem 0.75rem 0.375rem 2rem
+
+	&:hover
+		cursor: pointer
+		background-color: variables.$dark-purple
+
+		img
+			cursor: pointer
+		img.rotate-on-hover
+			transform: translate(0, -50%) rotate(45deg)
+		img.scale-on-hover
+			transform: translate(0, -50%) scale(1.2)
+
+.link-btn
+	position: relative
+	padding: 0.375rem 0.75rem
+
+	color: variables.$purple
+	transition: all 0.15s ease-in-out
+
+	img
+		position: absolute
+		transform: translate(0, -50%)
+		left: 0.375rem
+		top: 50%
+
+		height: 1.25rem
+
+		filter: variables.$purple-filter
+		transition: all 0.15s ease-in-out
+
+	&:has(img)
+		padding: 0.375rem 0.75rem 0.375rem 2rem
+
+	&:hover
+		cursor: pointer
+		text-decoration: underline
+		color: variables.$dark-purple
+	
+		img
+			cursor: pointer
+			filter: variables.$dark-purple-filter
+		img.rotate-on-hover
+			transform: translate(0, -50%) rotate(45deg)
+		img.scale-on-hover
+			transform: translate(0, -50%) scale(1.2)
+
+.btn, .link-btn
+	
+
+.img-btn
+	height: 1.75rem
+	padding: 0.375rem
+
+	filter: variables.$purple-filter
+	transition: all 0.15s ease-in-out
+
+	&:hover
+		cursor: pointer
+		filter: variables.$dark-purple-filter
+	
+	&.rotate-on-hover:hover
+		transform: rotate(45deg)
+	&.scale-on-hover:hover
+		transform: scale(1.2)
