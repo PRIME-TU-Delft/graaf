@@ -167,10 +167,12 @@
 		.cell
 			flex: 0 1 100%
 			padding: 0.5rem
-			border-bottom: 1px solid variables.$gray
 
 			color: variables.$dark-gray
 			transition: all 0.15s ease-in-out
+
+			&:not(:last-child)
+				border-bottom: 1px solid variables.$gray
 
 			&:hover
 				cursor: pointer
