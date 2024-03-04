@@ -1,5 +1,6 @@
 
-@use "$styles/variables.sass"
+@use "$styles/variables.sass" as *
+@use "$styles/palette.sass" as *
 
 // ------------------> Fonts
 
@@ -30,11 +31,12 @@
 // ------------------> Global styles
 
 *
+	box-sizing: border-box
 	margin:  0
 	padding: 0
 	border:  0
 	outline: 0
-	box-sizing: border-box
+
 	cursor: default
 
 html, body
@@ -44,7 +46,7 @@ html, body
 	font-size: 1rem
 	font-weight: 400
 	font-family: "Computer Modern Bright", sans-serif
-	color: variables.$black
+	color: $black
 
 p, h1, h2, h3, h4, h5, h6, a, button, input, label
 	color: inherit
@@ -56,93 +58,121 @@ p, h1, h2, h3, h4, h5, h6, a, button, input, label
 	text-decoration: none
 	background: none
 
+h1
+	font-size: 2.5rem
+h2
+	font-size: 1.75rem
+h3
+	font-size: 1.25rem
 ul
 	padding-left: 2rem
 
 // ------------------> Utility styles
 
+.desktop-layout
+	display: block
+	width: 100%
+
+	@media screen and (max-width: $phone-width)
+		display: none
+
+.phone-layout
+	display: none
+	width: 100%
+
+	@media screen and (max-width: $phone-width)
+		display: block
+
+.flex-spacer
+	flex-grow: 1
+
 .btn
 	position: relative
-	padding: 0.375rem 0.75rem
+	padding: $input-thin-padding $input-thick-padding
 
 	border: 1px solid transparent
-	border-radius: variables.$border-radius
+	border-radius: $border-radius
 
-	color: variables.$white
-	background-color: variables.$purple
-	transition: all 0.15s ease-in-out
-
-	img
-		position: absolute
-		transform: translate(0, -50%)
-		left: 0.375rem
-		top: 50%
-
-		height: 1.25rem
-
-		filter: variables.$white-filter
-		transition: all 0.15s ease-in-out
+	color: $white
+	background-color: $purple
+	transition: all $default-transition
 
 	&:has(img)
-		padding: 0.375rem 0.75rem 0.375rem 2rem
+		padding-left: $input-icon-width
+	img
+		position: absolute
+		translate: 0 -50%
+		left: $input-thin-padding
+		top: 50%
+
+		width: $input-icon-size
+
+		filter: $white-filter
+		transition: all $default-transition
 
 	&:hover
 		cursor: pointer
-		background-color: variables.$dark-purple
+		background-color: $dark-purple
 
 		img
 			cursor: pointer
-		img.rotate-on-hover
-			transform: translate(0, -50%) rotate(45deg)
-		img.scale-on-hover
-			transform: translate(0, -50%) scale(1.2)
+
+			&.rotate-on-hover
+				rotate: $rotate-on-hover
+			&.scale-on-hover
+				scale: $scale-on-hover
 
 .link-btn
 	position: relative
-	padding: 0.375rem 0.75rem
+	padding: $input-thin-padding $input-thick-padding
+	
+	color: $purple
+	transition: all $default-transition
 
-	color: variables.$purple
-	transition: all 0.15s ease-in-out
+	&:has(img)
+		padding-left: $input-icon-width
 
 	img
 		position: absolute
-		transform: translate(0, -50%)
-		left: 0.375rem
+		translate: 0 -50%
+		left: $input-thin-padding
 		top: 50%
 
-		height: 1.25rem
+		width: $input-icon-size
 
-		filter: variables.$purple-filter
-		transition: all 0.15s ease-in-out
-
-	&:has(img)
-		padding: 0.375rem 0.75rem 0.375rem 2rem
+		filter: $purple-filter
+		transition: all $default-transition
 
 	&:hover
 		cursor: pointer
+		color: $dark-purple
 		text-decoration: underline
-		color: variables.$dark-purple
 	
 		img
 			cursor: pointer
-			filter: variables.$dark-purple-filter
-		img.rotate-on-hover
-			transform: translate(0, -50%) rotate(45deg)
-		img.scale-on-hover
-			transform: translate(0, -50%) scale(1.2)
+			filter: $dark-purple-filter
+			
+			&.rotate-on-hover
+				rotate: $rotate-on-hover
+			&.scale-on-hover
+				scale: $scale-on-hover
 
 .img-btn
-	height: 1.75rem
-	padding: 0.375rem
+	width: $input-icon-width
+	padding: $input-thin-padding
 
-	filter: variables.$purple-filter
-	transition: all 0.15s ease-in-out
+	filter: $purple-filter
+	transition: all $default-transition
 
 	&:hover
 		cursor: pointer
-		filter: variables.$dark-purple-filter
-	
-	&.rotate-on-hover:hover
-		transform: rotate(45deg)
-	&.scale-on-hover:hover
-		transform: scale(1.2)
+		filter: $dark-purple-filter
+
+		&.rotate-on-hover
+			rotate: $rotate-on-hover
+		&.scale-on-hover
+			// scale: $scale-on-hover
+			padding: calc($input-icon-size * (1 - $scale-on-hover) / 2 + $input-thin-padding) // Using scale jitters here for some reason
+
+
+			

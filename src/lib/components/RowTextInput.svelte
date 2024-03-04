@@ -9,58 +9,55 @@
 	export let placeholder: string = "";
 	export let obfuscate: boolean = false;
 
-	let innerWidth: number;
-
 </script>
 
 <!-- Markup -->
 
-<svelte:window bind:innerWidth />
-
-{#if innerWidth > 600}  <!-- NOTE this assumes $phone-width is 600px -->
+<div class="desktop-layout">
 	<Row>
 		<label slot="left" for={label}>{label}</label>
 		<input slot="right" id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 	</Row>
-{:else}
+</div>
+	
+<div class="phone-layout">
 	<Row>
-		<div slot="center" class="grow">
+		<svelte:fragment slot="center">
 			<label for={label}>{label}</label>
 			<input id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
-		</div>
+		</svelte:fragment>
 	</Row>
-{/if}
+</div>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
-
-	.grow
-		width: 100%
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	label
 		display: block
-		padding: calc(0.375rem + 1px) calc(0.75rem + 16px)
+		padding: calc($input-thin-padding + 1px) calc($input-thick-padding + 1px)
+		
 		text-align: right
 
-		@media screen and (max-width: variables.$phone-width)
+		@media screen and (max-width: $phone-width)
+			width: 100%
 			padding: 0
+			
 			text-align: left
 
 	input
 		width: 100%
-		padding: 0.375rem 0.75rem
+		padding: $input-thin-padding $input-thick-padding
 
-		border: 1px solid variables.$gray
-		border-radius: variables.$border-radius
+		border: 1px solid $gray
+		border-radius: $border-radius
 
-		color: variables.$dark-gray
-		transition: all 0.15s ease-in-out
+		color: $dark-gray
 
 		&:hover
 			cursor: text
-
 
 </style>

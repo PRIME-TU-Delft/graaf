@@ -12,12 +12,12 @@
 
 <div class="layout">
     <section class="header">
-        <nav>
+        <h2>
             {#each path as [name, href], index}
                 <a href={href}>{name}</a>
                 {#if index < path.length - 1} /&nbsp; {/if}
             {/each}
-        </nav>
+        </h2>
         
        {description}
     </section>
@@ -26,42 +26,49 @@
         <section class="toolbar"><slot name="toolbar" /></section>
     {/if}
     
-    <slot />
+    <section class="body">
+        <slot />
+    </section>
 </div>
 
 <!-- Styles -->
 
 <style lang="sass">
-    @use "$styles/variables.sass"
+
+    @use "$styles/variables.sass" as *
+    @use "$styles/palette.sass" as *
 
     .layout
         display: flex
         flex-flow: column nowrap
-        align-items: stretch
-        gap: 1rem
 
         width: 100%
-        max-width: variables.$big-column
+        max-width: $big-column
 
         .header
-            margin-bottom: 1rem
-            color: variables.$dark-gray
+            margin-bottom: $editorLayout-header-margin
+            color: $dark-gray
 
-            nav
-                margin-bottom: 0.5rem
-
-                font-size: 1.75rem
-                color: variables.$purple
-                transition: all 0.15s ease-in-out
+            h2
+                color: $purple
+                transition: all $default-transition
 
                 a:hover
                     cursor: pointer
+                    color: $dark-purple
                     text-decoration: underline
-                    color: variables.$dark-purple
 
         .toolbar
             display: flex
             flex-flow: row nowrap
             align-items: center
-            gap: 0.5rem
+            gap: $layout-horizontal-gap
+
+            margin-bottom: $editorLayout-toolbar-margin
+        
+        .body
+            display: flex
+            flex-flow: column nowrap
+            gap: $layout-vertical-gap
+        
 </style>

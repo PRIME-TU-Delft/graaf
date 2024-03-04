@@ -1,46 +1,43 @@
 
 <!-- Markup -->
 
-<section class="card">
+<div class="card">
 	<section class="header"><slot name="header"> Card </slot></section>
 	<section class="body"><slot name="body"> Lorum ipsum dolor sid amed. </slot></section>
-</section>
+</div>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	.card
 		display: flex
 		flex-flow: column nowrap
-		align-items: stretch
 
-		width: 100%
-
-		border-radius: variables.$border-radius
-		border: 1px solid variables.$gray
+		border-radius: $border-radius
+		border: 1px solid $gray
 
 		.header
 			display: flex
 			flex-flow: row nowrap
 			align-items: center
 
-			padding: 0.75rem 1.5rem
+			padding: $card-thin-padding $card-thick-padding
 
-			background-color: variables.$light-gray
-			border-radius: calc(variables.$border-radius - 1px) calc(variables.$border-radius - 1px) 0 0
-			border-bottom: 1px solid variables.$gray
+			background-color: $light-gray
+			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+			border-bottom: 1px solid $gray
 
 		.body
 			display: flex
 			flex-flow: column nowrap
-			align-items: stretch
 
-			padding: 1.5rem
+			padding: $card-thick-padding
 
-			background-color: variables.$white
-			border-radius: 0 0 calc(variables.$border-radius - 1px) calc(variables.$border-radius - 1px)
+			background-color: $white
+			border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
 
 </style>

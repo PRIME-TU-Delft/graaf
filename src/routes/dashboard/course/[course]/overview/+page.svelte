@@ -103,13 +103,13 @@
 >
 	<svelte:fragment slot="toolbar">
 		<button class="btn" on:click={newGraph}>
-			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon"> New Graph 
+			<img src="{plusIcon}" alt="Plus icon"> New Graph 
 		</button>
 		<button class="btn" on:click={newLink}> 
-			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon"> New Link
+			<img src="{plusIcon}" alt="Plus icon"> New Link
 		</button>
 
-		<div class="grow" />
+		<div class="flex-spacer" />
 
 		<a class="link-btn" href="/dashboard/course/${course.code}/settings">
 			<img class="rotate-on-hover" src={gearIcon} alt="Cog icon"> Settings
@@ -118,7 +118,7 @@
 
 	<Card>
 		<svelte:fragment slot="header">
-			<h1> Graphs </h1>
+			<h3> Graphs </h3>
 		</svelte:fragment>
 
 		<svelte:fragment slot="body">
@@ -126,7 +126,9 @@
 				<span class="graph"> 
 					{#if graph.has_links} <img src={linkIcon} alt="Link icon" /> {/if}
 					{graph.name}
-					<div class="grow" />
+
+					<div class="flex-spacer" />
+					
 					<img class:disabled={!graph.has_visibility} src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
 					<img src={pencilIcon} alt="Pencil icon" />
 					<img src={copyIcon} alt="Copy icon" />
@@ -138,7 +140,7 @@
 
 	<Card>
 		<svelte:fragment slot="header">
-			<h1> Links </h1>
+			<h3> Links </h3>
 		</svelte:fragment>
 	</Card>
 </Layout>
@@ -147,13 +149,11 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	h1
 		font-size: 1.5rem
-	
-	.grow
-		margin: 0 auto
 	
 	.graph
 		display: flex
@@ -164,20 +164,20 @@
 		padding: 0.5rem
 		padding-left: 2rem
 		
-		color: variables.$dark-gray
+		color: $dark-gray
 
 		&:not(:last-child)
-			border-bottom: 1px solid variables.$gray
+			border-bottom: 1px solid $gray
 
 		img:not(:first-child)
 			width: 1.5rem
 
-			filter: variables.$purple-filter
+			filter: $purple-filter
 			transition: all 0.15s ease-in-out
 
 			&:not(.disabled):hover
 				transform: scale(1.2)
-				filter: variables.$dark-purple-filter
+				filter: $dark-purple-filter
 
 		img:first-child
 			position: absolute
@@ -187,6 +187,6 @@
 
 			width: 1rem
 
-			filter: variables.$black-filter
+			filter: $black-filter
 
 </style>

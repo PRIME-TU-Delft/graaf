@@ -93,27 +93,27 @@
 
 <Layout
 	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to expermient with the Graph Editor."
-	path={[
-		["Dashboard", "/dashboard"]
-	]}
+	path={[["Dashboard", "/dashboard"]]}
 >
 
 	<svelte:fragment slot="toolbar">
 		<button class="btn" on:click={newSandbox}>
-			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon"> New Sandbox
+			<img src="{plusIcon}" alt="Plus icon"> New Sandbox
 		</button>
 		<button class="btn" on:click={newCourse}>
-			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon">  New Course
+			<img src="{plusIcon}" alt="Plus icon">  New Course
 		</button>
 		<button class="btn" on:click={newProgram}>
-			<img class="scale-on-hover" src="{plusIcon}" alt="Plus icon"> New Program
+			<img src="{plusIcon}" alt="Plus icon"> New Program
 		</button>
-		<div class="grow" />
+
+		<div class="flex-spacer" />
+
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
 	</svelte:fragment>
 
 	<Card>
-		<h1 slot="header"> My Courses </h1>
+		<h3 slot="header"> My Courses </h3>
 		<div slot="body" class="grid">
 			{#each courses as {code, name}}
 				<a class="cell" href={`/dashboard/course/${code}/overview`}> {code} {name} </a>
@@ -124,11 +124,13 @@
 	{#each programs as {name, courses, coordinators}}
 		<Card>
 			<svelte:fragment slot="header">
-				<h1> {name} </h1>
-				<div class="grow" />
+				<h3> {name} </h3>
+
+				<div class="flex-spacer" />
+
 				<Modal>
 					<img slot="trigger" class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon" />
-					<svelte:fragment slot="header"> Program Coordinators </svelte:fragment>
+					<h3 slot="header"> Program Coordinators </h3>
 					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
 					<ul>
 						{#each coordinators as coordinator}
@@ -136,6 +138,7 @@
 						{/each}
 					</ul>
 				</Modal>
+				
 				<a class="link-btn" href={`/dashboard/program/${name}/settings`}> Settings </a>
 			</svelte:fragment>
 
@@ -152,13 +155,8 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
-
-	h1
-		font-size: 1.5rem
-
-	.grow
-		margin: auto
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	.grid
 		display: flex
@@ -166,28 +164,28 @@
 
 		.cell
 			flex: 0 1 100%
-			padding: 0.5rem
+			padding: $grid-cell-padding
 
-			color: variables.$dark-gray
-			transition: all 0.15s ease-in-out
+			color: $dark-gray
+			transition: all $default-transition
 
 			&:hover
 				cursor: pointer
-				color: variables.$black
+				color: $black
 				text-decoration: underline
 
 			&:last-child
 				flex-grow: 1
 
 			&:not(:last-child)
-				border-bottom: 1px solid variables.$gray				
+				border-bottom: 1px solid $gray				
 
-			@media screen and (min-width: 700px)
-				border-bottom: 1px solid variables.$gray
+			@media screen and (min-width: $grid-2-column-width)
+				border-bottom: 1px solid $gray
 				flex-basis: 50%
 
-			@media screen and (min-width: 1100px)
-				border-bottom: 1px solid variables.$gray
+			@media screen and (min-width: $grid-3-column-width)
+				border-bottom: 1px solid $gray
 				flex-basis: 33.3333%
 
 </style>

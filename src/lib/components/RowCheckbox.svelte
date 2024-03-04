@@ -8,49 +8,40 @@
 	export let label: string;
 	export let default_value: boolean = false;
 
-	let innerWidth: number;
-
 </script>
 
 <!-- Markup -->
 
-<svelte:window bind:innerWidth />
-
-{#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
+<div class="desktop-layout">
 	<Row>
 		<svelte:fragment slot="right">
-			<input id={label} type="checkbox" value={default_value} />
-			<label for={label}>{label}</label>
+			<input id={label} type="checkbox" value={default_value} /><label for={label}>{label}</label>
 		</svelte:fragment>
 	</Row>
-{:else}
+</div>
+	
+<div class="phone-layout">
 	<Row>
 		<svelte:fragment slot="center">
-			<input id={label} type="checkbox" value={default_value} />
-			<label for={label}>{label}</label>
+			<input id={label} type="checkbox" value={default_value} /><label for={label}>{label}</label>
 		</svelte:fragment>
 	</Row>
-{/if}
+</div>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	input
-		accent-color: variables.$purple
+		margin-right: $input-thin-padding
+
+		accent-color: $purple
+		transition: all $default-transition
 
 		&:hover
-			accent-color: variables.$dark-purple
 			cursor: pointer
-
-		@media screen and (max-width: variables.$phone-width)
-			margin-right: 0.325rem
-
-	label
-		width: 100%
-
-
 
 </style>

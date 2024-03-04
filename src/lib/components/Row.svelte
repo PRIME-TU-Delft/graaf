@@ -16,7 +16,8 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	.row
 		display: flex
@@ -27,7 +28,7 @@
 
 		.center
 			display: flex
-			flex-flow: row nowrap
+			flex-flow: row wrap
 			align-items: center
 			justify-content: center
 	

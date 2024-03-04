@@ -21,33 +21,33 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	.searchbar
 		position: relative
-
-		width: 100%
-		max-width: 20rem
+		width: $searchbar-width
 
 		input
 			width: 100%
-			padding: 0.375rem 0.75rem
+			padding: $input-thin-padding $input-thick-padding
 
-			border: 1px solid variables.$gray
-			border-radius: variables.$border-radius
+			border: 1px solid $gray
+			border-radius: $border-radius
 
-			color: variables.$dark-gray
-			transition: all 0.15s ease-in-out
+			color: $dark-gray
 
 			&:hover
 				cursor: text
 
 		img
-			width: 1rem
-
 			position: absolute
+			translate: -50% -50%
 			top: 50%
 			right: 0
-			transform: translate(-50%, -50%)
+			
+			width: $input-icon-size
+
+			filter: $dark-gray-filter
 
 </style>

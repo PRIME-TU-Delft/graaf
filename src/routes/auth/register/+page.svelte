@@ -3,13 +3,9 @@
 
 <script lang="ts">
 
-	import Layout from '$layouts/FormLayout.svelte';
-
 	import Card from '$components/Card.svelte';
 	import Row from '$components/Row.svelte';
 	import Textfield from '$components/RowTextInput.svelte';
-
-	let innerWidth: number;
 
 	function register(event: Event) {
 		// TODO add register event
@@ -19,43 +15,41 @@
 
 <!-- Markup -->
 
-<svelte:window bind:innerWidth />
+<Card>
+	<h3 slot="header"> Register </h3>
+	<svelte:fragment slot="body">
+		<form>
+			<Textfield label="First name" />
+			<Textfield label="Last name" />
+			<Textfield label="Username" />
+			<Textfield label="Password" obfuscate={true} />
+			<Textfield label="Confirm password" obfuscate={true} />
 
-<Layout>
-	<Card>
-		<h1 slot="header">Register</h1>
-		<svelte:fragment slot="body">
-			<form>
-				<Textfield label="First name" />
-				<Textfield label="Last name" />
-				<Textfield label="Username" />
-				<Textfield label="Password" obfuscate={true} />
-				<Textfield label="Confirm password" obfuscate={true} />
-
-				{#if innerWidth > 600} <!-- NOTE this assumes $phone-width is 600px -->
-					<Row><button class="btn" slot="right" type="submit" on:click={register}>
-						Register
-					</button></Row>
-				{:else}
-					<Row><button class="btn" slot="center" type="submit" on:click={register}>
-						Register
-					</button></Row>
-				{/if}
-			</form>
-		</svelte:fragment>
-	</Card>
-</Layout>
+			<div class="desktop-layout">
+				<Row><button slot="right" class="btn" type="submit" on:click={register}>
+					Register
+				</button></Row>
+			</div>
+				
+			<div class="phone-layout">
+				<Row><button slot="center" class="btn" type="submit" on:click={register}>
+					Register
+				</button></Row>
+			</div>
+		</form>
+	</svelte:fragment>
+</Card>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	form
 		display: flex
 		flex-flow: column nowrap
-		align-items: center
-		gap: 1rem
+		gap: $layout-vertical-gap
 
 </style>

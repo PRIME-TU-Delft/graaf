@@ -10,32 +10,30 @@
 <!-- Markup -->
 
 <div>
-    <h1>{$page.status}</h1>
-    <p>{$page.error?.message}</p>    
+    <h1> {$page.status} </h1>
+    <p> {$page.error?.message} </p>    
 </div>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-    @use "$styles/variables.sass"
+    @use "$styles/variables.sass" as *
+    @use "$styles/palette.sass" as *
 
     div
         position: absolute
+        translate: -50% -50%
         top: 50%
         left: 50%
-        transform: translate(-50%, -50%)
 
         display: flex
         flex-flow: column nowrap
         align-items: center
-        justify-content: center
 
     h1
-        color: variables.$dark-purple
-        font-size: 3rem
+        color: $dark-purple
     p
-        color: variables.$purple
-        font-size: 1rem
+        color: $purple
 
 </style>

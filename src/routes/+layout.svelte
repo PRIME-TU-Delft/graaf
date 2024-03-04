@@ -18,11 +18,13 @@
 	<a id="PRIME-logo" href="/"><img src={PRIME_logo} alt="PRIME logo"></a>
 	<h1>Graph editor</h1>
 
+	<div class="flex-spacer" />
+
 	{#if loggedIn}
-		<a class="link-btn align-right" href="/auth/logout">Logout</a>
+		<a class="link-btn" href="/auth/logout">Logout</a>
 		<a class="btn" href="/dashboard">Dashboard</a>
 	{:else}
-		<a class="link-btn align-right" href="/auth/register">Register</a>
+		<a class="link-btn" href="/auth/register">Register</a>
 		<a class="btn" href="/auth/login">Login</a>
 	{/if}
 </header>
@@ -39,51 +41,42 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass"
-	$footer-height: variables.$tudelft-width * 25/64 + 2 * variables.$tudelft-margin
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	header
 		display: flex
 		flex-flow: row nowrap
 		align-items: center
+		gap: $layout-horizontal-gap
 
-		height: 6rem
-		padding: 1rem
+		padding: $header-padding
+		background-color: $light-gray
 
-		background-color: variables.$light-gray
+		#PRIME-logo img
+			width: $prime-logo-size
+			margin-right: calc($prime-logo-margin - $layout-horizontal-gap)
+			padding-bottom: $prime-logo-alignment
 
-		#PRIME-logo
-			height: 100%
-
-			img
-				height: 100%
-				padding-bottom: 1rem
-
-				&:hover
-					cursor: pointer
+			&:hover
+				cursor: pointer
 
 		h1
-			margin-left: 3rem
+			color: $purple
 
-			font-size: 2.5rem
-			color: variables.$purple
-
-			@media screen and (max-width: variables.$phone-width)
+			@media screen and (max-width: $phone-width)
 				display: none
-
-		.align-right
-			margin-left: auto
 
 	main
 		display: flex
 		flex-flow: column nowrap
 		align-items: center
 
-		width: 100vw
-		padding: variables.$main-padding calc(variables.$tudelft-width + 2 * variables.$tudelft-margin) $footer-height
+		padding: $main-padding $tudelft-logo-width
 
-		@media screen and (max-width: variables.$phone-width)
-			padding: variables.$main-padding variables.$main-padding $footer-height
+		@media screen and (max-width: $phone-width)
+			padding: $main-padding
+			padding-bottom: $footer-height
 
 	footer
 		position: fixed
@@ -93,10 +86,10 @@
 		height: $footer-height
 
 		#TUDelft-logo
-			width: variables.$tudelft-width
-			margin: variables.$tudelft-margin
+			width: $tudelft-logo-size
+			margin: $tudelft-logo-margin
 
-		@media screen and (max-width: variables.$phone-width)
-			background-color: variables.$white
+		@media screen and (max-width: $phone-width)
+			background-color: $white
 
 </style>
