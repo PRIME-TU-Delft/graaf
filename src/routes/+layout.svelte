@@ -51,15 +51,14 @@
 		gap: $layout-horizontal-gap
 
 		padding: $header-padding
-		background-color: $light-gray
+		background: $light-gray
 
 		#PRIME-logo img
 			width: $prime-logo-size
 			margin-right: calc($prime-logo-margin - $layout-horizontal-gap)
 			padding-bottom: $prime-logo-alignment
 
-			&:hover
-				cursor: pointer
+			cursor: pointer
 
 		h1
 			color: $purple

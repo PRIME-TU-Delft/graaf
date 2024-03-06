@@ -99,7 +99,7 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={newSandbox}><img src="{plusIcon}" alt="Plus icon"> New Sandbox </button>
+		<button class="btn" on:click={newSandbox}><img src="{plusIcon}" alt="Plus icon" data-tooltip="test"> New Sandbox </button>
 
 		<Modal>
 			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Course </span>
@@ -144,7 +144,7 @@
 				<div class="flex-spacer" />
 
 				<Modal>
-					<img slot="trigger" class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon" />
+					<img slot="trigger" class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon"/>
 					<h3 slot="header"> Program Coordinators </h3>
 					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
 					<ul>
@@ -181,11 +181,11 @@
 			flex: 0 1 100%
 			padding: $grid-cell-padding
 
+			cursor: pointer
 			color: $dark-gray
-			transition: all $default-transition
+			transition: color $default-transition
 
 			&:hover
-				cursor: pointer
 				color: $black
 				text-decoration: underline
 

@@ -98,41 +98,39 @@ form
 	border: 1px solid transparent
 	border-radius: $border-radius
 
+	cursor: pointer
 	color: $white
-	background-color: $purple
-	transition: all $default-transition
+	background: $purple
+	transition: background $default-transition
 
 	&:has(img)
 		padding-left: $input-icon-width
+		
 	img
 		position: absolute
 		translate: 0 -50%
-		left: $input-thin-padding
 		top: 50%
+		left: $input-thin-padding
 
 		width: $input-icon-size
 
 		filter: $white-filter
-		transition: all $default-transition
+		transition: rotate scale $default-transition
 
 	&:hover
-		cursor: pointer
-		background-color: $dark-purple
-
-		img
-			cursor: pointer
-
-			&.rotate-on-hover
-				rotate: $rotate-on-hover
-			&.scale-on-hover
-				scale: $scale-on-hover
+		background: $dark-purple
+		img.rotate-on-hover
+			rotate: $rotate-on-hover
+		img.scale-on-hover
+			scale: $scale-on-hover
 
 .link-btn
 	position: relative
 	padding: $input-thin-padding $input-thick-padding
 	
+	cursor: pointer
 	color: $purple
-	transition: all $default-transition
+	transition: color $default-transition
 
 	&:has(img)
 		padding-left: $input-icon-width
@@ -140,23 +138,20 @@ form
 	img
 		position: absolute
 		translate: 0 -50%
-		left: $input-thin-padding
 		top: 50%
+		left: $input-thin-padding
 
 		width: $input-icon-size
 
 		filter: $purple-filter
-		transition: all $default-transition
+		transition: filter rotate scale $default-transition
 
 	&:hover
-		cursor: pointer
 		color: $dark-purple
 		text-decoration: underline
-	
+
 		img
-			cursor: pointer
 			filter: $dark-purple-filter
-			
 			&.rotate-on-hover
 				rotate: $rotate-on-hover
 			&.scale-on-hover
@@ -166,18 +161,13 @@ form
 	width: $input-icon-width
 	padding: $input-thin-padding
 
+	cursor: pointer
 	filter: $purple-filter
-	transition: all $default-transition
+	transition: filter rotate padding $default-transition
 
 	&:hover
-		cursor: pointer
 		filter: $dark-purple-filter
-
 		&.rotate-on-hover
 			rotate: $rotate-on-hover
 		&.scale-on-hover
-			// scale: $scale-on-hover
-			padding: calc($input-icon-size * (1 - $scale-on-hover) / 2 + $input-thin-padding) // Using scale jitters here for some reason
-
-
-			
+			padding: calc($input-icon-size * (1 - $scale-on-hover) / 2 + $input-thin-padding) // TODO Using scale jitters here for some reason
