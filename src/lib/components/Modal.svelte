@@ -89,11 +89,9 @@
 				filter: $purple-filter
 				transition: all $default-transition
 			
-			&:hover
-				cursor: pointer
-
-				img
-					filter: $dark-purple-filter
+				&:hover
+					cursor: pointer
 					scale: $scale-on-hover
+					filter: $dark-purple-filter
 
 </style>

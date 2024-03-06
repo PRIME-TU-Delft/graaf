@@ -6,7 +6,9 @@
 	import Layout from '$layouts/EditorLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
+	import Row from '$components/Row.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
+	import TextInput from '$components/RowTextInput.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import peopleIcon from '$assets/people-icon.svg';
@@ -97,15 +99,28 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={newSandbox}>
-			<img src="{plusIcon}" alt="Plus icon"> New Sandbox
-		</button>
-		<button class="btn" on:click={newCourse}>
-			<img src="{plusIcon}" alt="Plus icon">  New Course
-		</button>
-		<button class="btn" on:click={newProgram}>
-			<img src="{plusIcon}" alt="Plus icon"> New Program
-		</button>
+		<button class="btn" on:click={newSandbox}><img src="{plusIcon}" alt="Plus icon"> New Sandbox </button>
+
+		<Modal>
+			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Course </span>
+			<h3 slot="header"> Create Course </h3>
+
+			<form>
+				<TextInput label="Course Code"/>
+				<TextInput label="Course Title"/>
+				<Row><button slot="right" class="btn" on:click={newCourse}> Create </button></Row>
+			</form>
+		</Modal>
+
+		<Modal>
+			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Program </span>
+			<h3 slot="header"> Create Program </h3>
+
+			<form>
+				<TextInput label="Program Title"/>
+				<Row><button slot="right" class="btn" on:click={newProgram}> Create </button></Row>
+			</form>
+		</Modal>
 
 		<div class="flex-spacer" />
 

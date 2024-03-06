@@ -39,17 +39,3 @@
 		</form>
 	</svelte:fragment>
 </Card>
-
-<!-- Styles -->
-
-<style lang="sass">
-
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	form
-		display: flex
-		flex-flow: column nowrap
-		gap: $layout-vertical-gap
-
-</style>

@@ -67,11 +67,6 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	form
-		display: flex
-		flex-flow: column nowrap
-		gap: $layout-vertical-gap
-
 	.divider
 		height: 1px
 		margin: calc($card-divider-height / 2) 0
