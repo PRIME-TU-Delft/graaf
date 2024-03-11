@@ -9,6 +9,7 @@
 	import Row from '$components/Row.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
 	import TextInput from '$components/RowTextInput.svelte';
+	import Tooltip from '$components/Tooltip.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import peopleIcon from '$assets/people-icon.svg';
@@ -99,15 +100,15 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={newSandbox}><img src="{plusIcon}" alt="Plus icon" data-tooltip="test"> New Sandbox </button>
+		<button class="btn" on:click={newSandbox}><img src="{plusIcon}" alt="Plus icon"> New Sandbox </button>
 
 		<Modal>
 			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Course </span>
 			<h3 slot="header"> Create Course </h3>
 
 			<form>
-				<TextInput label="Course Code"/>
-				<TextInput label="Course Title"/>
+				<TextInput label="Code"/>
+				<TextInput label="Title"/>
 				<Row><button slot="right" class="btn" on:click={newCourse}> Create </button></Row>
 			</form>
 		</Modal>
@@ -117,7 +118,7 @@
 			<h3 slot="header"> Create Program </h3>
 
 			<form>
-				<TextInput label="Program Title"/>
+				<TextInput label="Title"/>
 				<Row><button slot="right" class="btn" on:click={newProgram}> Create </button></Row>
 			</form>
 		</Modal>
@@ -144,7 +145,12 @@
 				<div class="flex-spacer" />
 
 				<Modal>
-					<img slot="trigger" class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon"/>
+					<svelte:fragment slot="trigger">
+						<Tooltip data="Program Coordinators">
+							<img class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon"/>
+						</Tooltip>
+					</svelte:fragment>
+					
 					<h3 slot="header"> Program Coordinators </h3>
 					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
 					<ul>

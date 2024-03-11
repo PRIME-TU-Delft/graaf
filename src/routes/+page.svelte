@@ -1,3 +1,2 @@
 
-<!-- TODO temporary -->
-<a href="/dashboard">dashboard</a>
+<a href="/dashboard"> dashboard </a>

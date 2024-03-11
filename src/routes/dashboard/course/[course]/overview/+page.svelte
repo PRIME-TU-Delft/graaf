@@ -5,6 +5,10 @@
 
 	import Layout from '$layouts/EditorLayout.svelte';
 	import Card from '$components/Card.svelte';
+	import Modal from '$components/Modal.svelte';
+	import Tooltip from '$components/Tooltip.svelte';
+	import Row from '$components/Row.svelte';
+	import TextInput from '$components/RowTextInput.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import gearIcon from '$assets/gear-icon.svg';
@@ -102,9 +106,16 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={newGraph}>
-			<img src="{plusIcon}" alt="Plus icon"> New Graph 
-		</button>
+		<Modal>
+			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Graph </span>
+			<h3 slot="header"> Create Graph </h3>
+
+			<form>
+				<TextInput label="Name"/>
+				<Row><button slot="right" class="btn" on:click={newGraph}> Create </button></Row>
+			</form>
+		</Modal>
+
 		<button class="btn" on:click={newLink}> 
 			<img src="{plusIcon}" alt="Plus icon"> New Link
 		</button>
@@ -129,10 +140,21 @@
 
 					<div class="flex-spacer" />
 					
-					<img class:disabled={!graph.has_visibility} src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
-					<img src={pencilIcon} alt="Pencil icon" />
-					<img src={copyIcon} alt="Copy icon" />
-					<img src={trashIcon} alt="Trash icon" />
+					<Tooltip data="Program Coordinators">
+						<img class="img-btn scale-on-hover" class:disabled={!graph.has_visibility} src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
+					</Tooltip>
+
+					<Tooltip data="Program Coordinators">
+						<img class="img-btn scale-on-hover" src={pencilIcon} alt="Pencil icon" />
+					</Tooltip>
+
+					<Tooltip data="Program Coordinators">
+						<img class="img-btn scale-on-hover" src={copyIcon} alt="Copy icon" />
+					</Tooltip>
+
+					<Tooltip data="Program Coordinators">
+						<img class="img-btn scale-on-hover" src={trashIcon} alt="Trash icon" />
+					</Tooltip>
 				</span>
 			{/each}
 		</svelte:fragment>
@@ -168,16 +190,6 @@
 
 		&:not(:last-child)
 			border-bottom: 1px solid $gray
-
-		img:not(:first-child)
-			width: 1.5rem
-
-			filter: $purple-filter
-			transition: all 0.15s ease-in-out
-
-			&:not(.disabled):hover
-				transform: scale(1.2)
-				filter: $dark-purple-filter
 
 		img:first-child
 			position: absolute

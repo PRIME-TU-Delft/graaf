@@ -68,6 +68,8 @@
 		gap: $layout-vertical-gap
 		
 		position: relative
+		
+		width: 100%
 		max-width: $small-column
 		padding: $card-thick-padding
 
