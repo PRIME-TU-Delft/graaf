@@ -29,6 +29,8 @@
 		// TODO add newLink function
 	}
 
+	const modals: { [key: string]: Modal | null } = {}
+
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
 	class Course {
@@ -106,15 +108,9 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Modal>
-			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Graph </span>
-			<h3 slot="header"> Create Graph </h3>
-
-			<form>
-				<TextInput label="Name"/>
-				<Row><button slot="right" class="btn" on:click={newGraph}> Create </button></Row>
-			</form>
-		</Modal>
+		<button class="btn" on:click={modals["CREATE_GRAPH"]?.show}>
+			<img src="{plusIcon}" alt="Plus icon"> New Graph
+		</button>
 
 		<button class="btn" on:click={newLink}> 
 			<img src="{plusIcon}" alt="Plus icon"> New Link
@@ -123,6 +119,15 @@
 		<div class="flex-spacer" />
 
 		<a class="link-btn" href="/dashboard/course/${course.code}/settings"> Settings </a>
+
+		<Modal bind:this={modals["CREATE_GRAPH"]}>
+			<h3 slot="header"> Create Graph </h3>
+
+			<form>
+				<TextInput label="Name"/>
+				<Row><button slot="right" class="btn" on:click={newGraph}> Create </button></Row>
+			</form>
+		</Modal>
 	</svelte:fragment>
 
 	<Card>

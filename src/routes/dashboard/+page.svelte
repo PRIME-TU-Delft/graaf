@@ -30,6 +30,8 @@
 		// TODO add newProgram function
 	}
 
+	const modals: { [key: string]: Modal | null } = {}
+
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
 	class ProgramData {
@@ -100,10 +102,23 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={newSandbox}><img src="{plusIcon}" alt="Plus icon"> New Sandbox </button>
+		<button class="btn" on:click={newSandbox}>
+			<img src="{plusIcon}" alt="Plus icon"> New Sandbox
+		</button>
 
-		<Modal>
-			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Course </span>
+		<button class="btn" on:click={modals["CREATE_COURSE"]?.show}>
+			<img src={plusIcon} alt="Plus icon"> New Course
+		</button>
+
+		<button class="btn" on:click={modals["CREATE_PROGRAM"]?.show}>
+			<img src={plusIcon} alt="Plus icon"> New Program
+		</button>
+
+		<div class="flex-spacer" />
+
+		<Searchbar onChange={onSearch} placeholder="Search courses" />
+
+		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
 			<form>
@@ -113,8 +128,7 @@
 			</form>
 		</Modal>
 
-		<Modal>
-			<span slot="trigger" class="btn"><img src="{plusIcon}" alt="Plus icon"> New Program </span>
+		<Modal bind:this={modals["CREATE_PROGRAM"]}>
 			<h3 slot="header"> Create Program </h3>
 
 			<form>
@@ -122,10 +136,6 @@
 				<Row><button slot="right" class="btn" on:click={newProgram}> Create </button></Row>
 			</form>
 		</Modal>
-
-		<div class="flex-spacer" />
-
-		<Searchbar onChange={onSearch} placeholder="Search courses" />
 	</svelte:fragment>
 
 	<Card>
@@ -144,13 +154,15 @@
 
 				<div class="flex-spacer" />
 
-				<Modal>
-					<svelte:fragment slot="trigger">
-						<Tooltip data="Program Coordinators">
-							<img class="img-btn scale-on-hover" src={peopleIcon} alt="people-icon"/>
-						</Tooltip>
-					</svelte:fragment>
-					
+				<Tooltip data="Program Coordinators">
+					<button class="img-btn" on:click={modals[name]?.show}>
+						<img class="scale-on-hover" src={peopleIcon} alt="people-icon"/>
+					</button>
+				</Tooltip>
+				
+				<a class="link-btn" href={`/dashboard/program/${name}/settings`}> Settings </a>
+
+				<Modal bind:this={modals[name]}>					
 					<h3 slot="header"> Program Coordinators </h3>
 					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
 					<ul>
@@ -159,8 +171,6 @@
 						{/each}
 					</ul>
 				</Modal>
-				
-				<a class="link-btn" href={`/dashboard/program/${name}/settings`}> Settings </a>
 			</svelte:fragment>
 
 			<div slot="body" class="grid">

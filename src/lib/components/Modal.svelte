@@ -3,15 +3,14 @@
 
 	import plusIcon from '$assets/plus-icon.svg';
 
+	export function show() { showModal = true; }
+	export function hide() { showModal = false; }
+
 	let showModal: boolean = false;
-	function show() { showModal = true; }
-	function hide() { showModal = false; }
 
 </script>
 
 <!-- Markup -->
-
-<button class="trigger" on:click={show}><slot name="trigger" /></button>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -56,11 +55,6 @@
 
 		&:not(.show)
 			display: none
-
-	button
-		display: flex
-		align-items: center
-		justify-content: center
 
 	dialog
 		display: flex
