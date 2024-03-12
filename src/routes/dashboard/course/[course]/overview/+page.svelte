@@ -143,29 +143,29 @@
 
 					<div class="flex-spacer" />
 					
-					<Tooltip data="View Graph">
-						<button class="img-btn btn-row" class:disabled={!graph.has_visibility}>
+					<button class="img-btn" class:disabled={!graph.has_visibility}>
+						<Tooltip data="View Graph">
 							<img class="scale-on-hover" src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
-						</button>
-					</Tooltip>
+						</Tooltip>
+					</button>
 
-					<Tooltip data="Edit Graph">
-						<button class="img-btn btn-row">
+					<button class="img-btn">
+						<Tooltip data="Edit Graph">
 							<img class="scale-on-hover" src={pencilIcon} alt="Pencil icon" />
-						</button>
-					</Tooltip>
+						</Tooltip>
+					</button>
 
-					<Tooltip data="Copy Graph">
-						<button class="img-btn btn-row">
+					<button class="img-btn">
+						<Tooltip data="Copy Graph">
 							<img class="scale-on-hover" src={copyIcon} alt="Copy icon" />
-						</button>
-					</Tooltip>
+						</Tooltip>
+					</button>
 
-					<Tooltip data="Delete Graph">
-						<button class="img-btn btn-row">
-							<img class="scale-on-hover" src={trashIcon} alt="Trash icon" />							
-						</button>
-					</Tooltip>
+					<button class="img-btn">
+						<Tooltip data="Delete Graph">
+							<img class="scale-on-hover" src={trashIcon} alt="Trash icon" />		
+						</Tooltip>
+					</button>
 				</span>
 			{/each}
 		</svelte:fragment>
@@ -184,9 +184,6 @@
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
-
-	.img-btn + .img-btn
-		background: green
 
 	h1
 		font-size: 1.5rem

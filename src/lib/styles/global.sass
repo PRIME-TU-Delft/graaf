@@ -91,6 +91,7 @@ form
 .flex-spacer
 	flex-grow: 1
 
+// Regular button with background color, optional icon
 .btn
 	position: relative
 	padding: $input-thin-padding $input-thick-padding
@@ -98,14 +99,15 @@ form
 	border: 1px solid transparent
 	border-radius: $border-radius
 
-	cursor: pointer
 	color: $white
-	background: $purple
-	transition: background $default-transition
+	background: $gray
+	transition: all $default-transition
 
+	// Make room for icon
 	&:has(img)
 		padding-left: $input-icon-width
-		
+	
+	// Position icon
 	img
 		position: absolute
 		translate: 0 -50%
@@ -117,24 +119,31 @@ form
 		filter: $white-filter
 		transition: rotate scale $default-transition
 
-	&:hover
-		background: $dark-purple
-		img.rotate-on-hover
-			rotate: $rotate-on-hover
-		img.scale-on-hover
-			scale: $scale-on-hover
+	// Hover events when not disabled
+	&:not(.disabled)
+		cursor: pointer
+		background: $purple
+		
+		&:hover
+			background: $dark-purple
+			img.rotate-on-hover
+				rotate: $rotate-on-hover
+			img.scale-on-hover
+				scale: $scale-on-hover
 
+// Link button with underline, optional icon
 .link-btn
 	position: relative
 	padding: $input-thin-padding $input-thick-padding
 	
-	cursor: pointer
-	color: $purple
-	transition: color $default-transition
+	color: $gray
+	transition: all $default-transition
 
+	// Create room for icon
 	&:has(img)
 		padding-left: $input-icon-width
 
+	// Position icon
 	img
 		position: absolute
 		translate: 0 -50%
@@ -143,41 +152,49 @@ form
 
 		width: $input-icon-size
 
-		filter: $purple-filter
-		transition: filter rotate scale $default-transition
+		filter: $gray-filter
+		transition: all $default-transition
 
-	&:hover
-		color: $dark-purple
-		text-decoration: underline
-
-		img
-			filter: $dark-purple-filter
-			&.rotate-on-hover
-				rotate: $rotate-on-hover
-			&.scale-on-hover
-				scale: $scale-on-hover
-
-.img-btn
-	box-sizing: content-box
-	width: $input-icon-size
-	padding: $input-thin-padding
-
-	&.btn-row
-		padding: $input-thin-padding $input-row-gap
-
-	img
-		width: 100%
-
-		pointer-events: none
-		filter: $purple-filter
-
+	// Hover events when not disabled
 	&:not(.disabled)
 		cursor: pointer
+		color: $purple
 
-		&:hover img
+		img
+			filter: $purple-filter
+
+		&:hover
+			color: $dark-purple
+			text-decoration: underline
+
+			img
+				filter: $dark-purple-filter
+				&.rotate-on-hover
+					rotate: $rotate-on-hover
+				&.scale-on-hover
+					scale: $scale-on-hover
+
+// Image button with no text
+.img-btn
+	img
+		box-sizing: content-box
+		width: $input-icon-size
+		padding: $input-thin-padding
+
+		filter: $gray-filter
+	
+	// Better alignment for subsequent .link-btn
+	& + .img-btn img
+		padding-left: 0
+
+	// Hover events when not disabled
+	&:not(.disabled) img
+		cursor: pointer
+		filter: $purple-filter
+
+		&:hover
 			filter: $dark-purple-filter
 			&.rotate-on-hover
 				rotate: $rotate-on-hover
 			&.scale-on-hover
 				scale: $scale-on-hover
-				
