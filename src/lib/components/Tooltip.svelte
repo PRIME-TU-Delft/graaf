@@ -43,9 +43,7 @@
             left: 50%
 
             display: none
-            width: auto
-            max-width: $tooltip-width
-            overflow-wrap: break-word
+            width: max-content
 
             padding: 0 $input-thick-padding
             border-radius: $border-radius
@@ -56,7 +54,7 @@
             text-align: center
 
             &.show
-                display: inline-block
+                display: block
 
             &::after
                 position: absolute

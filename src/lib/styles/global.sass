@@ -158,16 +158,26 @@ form
 				scale: $scale-on-hover
 
 .img-btn
-	width: $input-icon-width
+	box-sizing: content-box
+	width: $input-icon-size
 	padding: $input-thin-padding
 
-	cursor: pointer
-	filter: $purple-filter
-	transition: filter rotate padding $default-transition
+	&.btn-row
+		padding: $input-thin-padding $input-row-gap
 
-	&:hover
-		filter: $dark-purple-filter
-		&.rotate-on-hover
-			rotate: $rotate-on-hover
-		&.scale-on-hover
-			padding: calc($input-icon-size * (1 - $scale-on-hover) / 2 + $input-thin-padding) // TODO Using scale jitters here for some reason
+	img
+		width: 100%
+
+		pointer-events: none
+		filter: $purple-filter
+
+	&:not(.disabled)
+		cursor: pointer
+
+		&:hover img
+			filter: $dark-purple-filter
+			&.rotate-on-hover
+				rotate: $rotate-on-hover
+			&.scale-on-hover
+				scale: $scale-on-hover
+				

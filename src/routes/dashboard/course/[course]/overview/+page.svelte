@@ -122,9 +122,7 @@
 
 		<div class="flex-spacer" />
 
-		<a class="link-btn" href="/dashboard/course/${course.code}/settings">
-			<img class="rotate-on-hover" src={gearIcon} alt="Cog icon"> Settings
-		</a>
+		<a class="link-btn" href="/dashboard/course/${course.code}/settings"> Settings </a>
 	</svelte:fragment>
 
 	<Card>
@@ -140,20 +138,28 @@
 
 					<div class="flex-spacer" />
 					
-					<Tooltip data="Program Coordinators">
-						<img class="img-btn scale-on-hover" class:disabled={!graph.has_visibility} src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
+					<Tooltip data="View Graph">
+						<button class="img-btn btn-row" class:disabled={!graph.has_visibility}>
+							<img class="scale-on-hover" src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
+						</button>
 					</Tooltip>
 
-					<Tooltip data="Program Coordinators">
-						<img class="img-btn scale-on-hover" src={pencilIcon} alt="Pencil icon" />
+					<Tooltip data="Edit Graph">
+						<button class="img-btn btn-row">
+							<img class="scale-on-hover" src={pencilIcon} alt="Pencil icon" />
+						</button>
 					</Tooltip>
 
-					<Tooltip data="Program Coordinators">
-						<img class="img-btn scale-on-hover" src={copyIcon} alt="Copy icon" />
+					<Tooltip data="Copy Graph">
+						<button class="img-btn btn-row">
+							<img class="scale-on-hover" src={copyIcon} alt="Copy icon" />
+						</button>
 					</Tooltip>
 
-					<Tooltip data="Program Coordinators">
-						<img class="img-btn scale-on-hover" src={trashIcon} alt="Trash icon" />
+					<Tooltip data="Delete Graph">
+						<button class="img-btn btn-row">
+							<img class="scale-on-hover" src={trashIcon} alt="Trash icon" />							
+						</button>
 					</Tooltip>
 				</span>
 			{/each}
@@ -174,17 +180,20 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
+	.img-btn + .img-btn
+		background: green
+
 	h1
 		font-size: 1.5rem
-	
+
 	.graph
 		display: flex
 		flex-flow: row nowrap
 		align-items: center
 		
 		position: relative
-		padding: 0.5rem
-		padding-left: 2rem
+		padding: $grid-cell-padding
+		padding-left: $input-icon-width
 		
 		color: $dark-gray
 
@@ -193,12 +202,12 @@
 
 		img:first-child
 			position: absolute
-			transform: translate(0, -50%)
-			left: 0.5rem
+			translate: 0 -50%
+			left: $grid-cell-padding
 			top: 50%
 
 			width: 1rem
 
-			filter: $black-filter
+			filter: $dark-purple-filter
 
 </style>
