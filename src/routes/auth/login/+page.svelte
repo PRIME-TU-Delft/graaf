@@ -4,15 +4,18 @@
 <script lang="ts">
 	
 	import Card from '$components/Card.svelte';
-	import Row from '$components/Row.svelte';
-	import TextInput from '$components/RowTextInput.svelte';
-	import Checkbox from '$components/RowCheckbox.svelte';
+	import Row from '$layouts/RowLayout.svelte';
+	import Button from '$components/Button.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
 
-	function SSOlogin(event: Event) {
+	import Textfield from '$components/Textfield.svelte';
+	import Checkbox from '$components/Checkbox.svelte';
+
+	function SSOlogin() {
 		// TODO add SSO login event
 	}
 
-	function login(event: Event) {
+	function login() {
 		// TODO add login event
 	}
 
@@ -27,23 +30,24 @@
 			<Row><svelte:fragment slot="center"> 
 				Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will be removed after November 1. You can give yourself access to the courses that your old account had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle access to other courses.
 			</svelte:fragment></Row>
-			<Row><button slot="center" class="btn" type="submit" on:click={SSOlogin}> 
-				Login with TUDelft SSO
-			</button></Row>
+
+			<Row><svelte:fragment slot="center"> 
+				<Button callback={SSOlogin}> Login with TUDelft SSO </Button>
+			</svelte:fragment></Row>
 		</form>
 
-
 		<div class="divider" />
+
 		<form>
-			<TextInput label="Username" />
-			<TextInput label="Password" obfuscate={true} />
+			<Textfield label="Username" />
+			<Textfield label="Password" obfuscate={true} />
 			<Checkbox  label="Remember me" />
 
 			<div class="desktop-layout">
 				<Row>
 					<svelte:fragment slot="right">
-						<button class="btn" type="submit" on:click={login}> Login </button>
-						<a class="link-btn"  href="/auth/recover"> Forgot your password? </a>
+						<Button callback={login}> Login </Button>
+						<LinkButton href="/auth/recover"> Forgot your password? </LinkButton>
 					</svelte:fragment>
 				</Row>
 			</div>

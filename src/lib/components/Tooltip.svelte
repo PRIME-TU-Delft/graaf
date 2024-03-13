@@ -1,4 +1,6 @@
 
+<!-- Script -->
+
 <script lang="ts">
 
     export let data: string = "Lorum ipsum"
@@ -18,11 +20,15 @@
 
 </script>
 
+<!-- Markup -->
+
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div on:mouseenter={mouseEnter} on:mouseleave={mouseLeave}>
     <span class:show={show}> {data} </span>
     <slot />
 </div>
+
+<!-- Styles -->
 
 <style lang="sass">
 
@@ -37,13 +43,13 @@
         position: relative
 
         span
+            display: none
+            width: max-content
+
             position: absolute
             translate: -50% calc(-100% - $tooltip-spacing)
             z-index: 1
             left: 50%
-
-            display: none
-            width: max-content
 
             padding: 0 $input-thick-padding
             border-radius: $border-radius

@@ -4,10 +4,11 @@
 <script lang="ts">
 
 	import Card from '$components/Card.svelte';
-	import Row from '$components/Row.svelte';
-	import Textfield from '$components/RowTextInput.svelte';
+	import Row from '$layouts/RowLayout.svelte';
+	import Button from '$components/Button.svelte';
+	import Textfield from '$components/Textfield.svelte';
 
-	function register(event: Event) {
+	function register() {
 		// TODO add register event
 	}
 
@@ -26,15 +27,15 @@
 			<Textfield label="Confirm password" obfuscate={true} />
 
 			<div class="desktop-layout">
-				<Row><button slot="right" class="btn" type="submit" on:click={register}>
-					Register
-				</button></Row>
+				<Row><svelte:fragment slot="right">
+					<Button callback={register}> Register </Button>
+				</svelte:fragment></Row>
 			</div>
 				
 			<div class="phone-layout">
-				<Row><button slot="center" class="btn" type="submit" on:click={register}>
-					Register
-				</button></Row>
+				<Row><svelte:fragment slot="center">
+					<Button callback={register}> Register </Button>
+				</svelte:fragment></Row>
 			</div>
 		</form>
 	</svelte:fragment>

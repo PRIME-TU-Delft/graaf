@@ -3,10 +3,10 @@
 
 <script lang="ts">
 
-	import Row from "$components/Row.svelte";
+	import Row from "$layouts/RowLayout.svelte";
 
 	export let label: string;
-	export let default_value: boolean = false;
+	export let value: boolean = false;
 
 </script>
 
@@ -15,7 +15,8 @@
 <div class="desktop-layout">
 	<Row>
 		<svelte:fragment slot="right">
-			<input id={label} type="checkbox" value={default_value} /><label for={label}>{label}</label>
+			   <input id={label} type="checkbox" value={value} /><!--
+			--><label for={label}> {label} </label>
 		</svelte:fragment>
 	</Row>
 </div>
@@ -23,7 +24,8 @@
 <div class="phone-layout">
 	<Row>
 		<svelte:fragment slot="center">
-			<input id={label} type="checkbox" value={default_value} /><label for={label}>{label}</label>
+			   <input id={label} type="checkbox" value={value} /><!--
+			--><label for={label}> {label} </label>
 		</svelte:fragment>
 	</Row>
 </div>

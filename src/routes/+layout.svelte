@@ -3,6 +3,9 @@
 
 <script lang="ts">
 
+	import Button from '$components/Button.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+
 	import '$styles/global.sass';
 
 	import PRIME_logo from '$assets/PRIME-logo.svg';
@@ -15,17 +18,20 @@
 <!-- Markup -->
 
 <header>
-	<a id="PRIME-logo" href="/"><img src={PRIME_logo} alt="PRIME logo"></a>
+	<a id="PRIME-logo" href="/">
+		<img src={PRIME_logo} alt="PRIME logo">
+	</a>
+	
 	<h1>Graph editor</h1>
 
 	<div class="flex-spacer" />
 
 	{#if loggedIn}
-		<a class="link-btn" href="/auth/logout">Logout</a>
-		<a class="btn" href="/dashboard">Dashboard</a>
+		<LinkButton href="/auth/logout"> Logout </LinkButton>
+		<Button href="/dashboard"> Dashboard </Button>
 	{:else}
-		<a class="link-btn" href="/auth/register">Register</a>
-		<a class="btn" href="/auth/login">Login</a>
+		<LinkButton href="/auth/register"> Register </LinkButton>
+		<Button href="/auth/login"> Login </Button>
 	{/if}
 </header>
 

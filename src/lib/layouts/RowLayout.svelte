@@ -1,7 +1,7 @@
 
 <!-- Markup -->
 
-<section class="row">
+<div class="row">
 	{#if $$slots.center}
 		<div class="center"><slot name="center" /></div>
 	{/if}
@@ -10,7 +10,7 @@
 		<div class="left"><slot name="left" /></div>
 		<div class="right"><slot name="right" /></div>
 	{/if}
-</section>
+</div>
 
 <!-- Styles -->
 

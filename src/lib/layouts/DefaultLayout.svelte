@@ -4,7 +4,7 @@
 <script lang="ts">
 
     export let description: string = "Lorum ipsum dolor sid amed."; 
-    export let path: Array<[string, string]> = [];
+    export let path: { [key: string]: string }[] = [];
 
 </script>
 
@@ -13,8 +13,8 @@
 <div class="layout">
     <section class="header">
         <h2>
-            {#each path as [name, href], index}
-                <a href={href}>{name}</a>
+            {#each path as link, index}
+                <a href={link.href}> {link.name} </a>
                 {#if index < path.length - 1} /&nbsp; {/if}
             {/each}
         </h2>
@@ -46,7 +46,7 @@
         max-width: $big-column
 
         .header
-            margin-bottom: $editorLayout-header-margin
+            margin-bottom: $defaultLayout-header-margin
             color: $dark-gray
 
             h2
@@ -64,7 +64,7 @@
             align-items: center
             gap: $layout-horizontal-gap
 
-            margin-bottom: $editorLayout-toolbar-margin
+            margin-bottom: $defaultLayout-toolbar-margin
         
         .body
             display: flex

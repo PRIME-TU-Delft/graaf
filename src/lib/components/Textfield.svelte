@@ -3,7 +3,7 @@
 
 <script lang="ts">
 
-	import Row from "$components/Row.svelte";
+	import Row from "$layouts/RowLayout.svelte";
 
 	export let label: string;
 	export let placeholder: string = "";
@@ -15,16 +15,16 @@
 
 <div class="desktop-layout">
 	<Row>
-		<label slot="left" for={label}>{label}</label>
-		<input slot="right" id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
+		   <label slot="left" for={label}> {label} </label><!--
+		--><input slot="right" id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 	</Row>
 </div>
 	
 <div class="phone-layout">
 	<Row>
 		<svelte:fragment slot="center">
-			<label for={label}>{label}</label>
-			<input id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
+			   <label for={label}> {label} </label><!--
+			--><input id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 		</svelte:fragment>
 	</Row>
 </div>

@@ -3,12 +3,15 @@
 
 <script lang="ts">
 
-	import Layout from '$layouts/EditorLayout.svelte';
+	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
+	import Row from '$layouts/RowLayout.svelte';
+	import Button from '$components/Button.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import IconButton from '$components/IconButton.svelte';
+	import Textfield from '$components/Textfield.svelte';
 	import Tooltip from '$components/Tooltip.svelte';
-	import Row from '$components/Row.svelte';
-	import TextInput from '$components/RowTextInput.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import gearIcon from '$assets/gear-icon.svg';
@@ -29,7 +32,7 @@
 		// TODO add newLink function
 	}
 
-	const modals: { [key: string]: Modal | null } = {}
+	let createGraphModal: Modal;
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
@@ -103,29 +106,39 @@
 <Layout
 	description="Here you can view the graphs and links associated to this course, and edit their properties."
 	path={[
-		["Dashboard", "/dashboard"],
-		[`${course.code} ${course.name}`, `/dashboard/course/${course.code}/overview`]
+		{
+			name: "Dashboard",
+			href: "/dashboard"
+		},
+		{
+			name: `${course.code} ${course.name}`,
+			href: `/dashboard/course/${course.code}/overview`
+		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={modals["CREATE_GRAPH"]?.show}>
-			<img src="{plusIcon}" alt="Plus icon"> New Graph
-		</button>
+		<Button callback={createGraphModal?.show}>
+			<img src={plusIcon} alt="Plus icon"> New Graph
+		</Button>
 
-		<button class="btn" on:click={newLink}> 
-			<img src="{plusIcon}" alt="Plus icon"> New Link
-		</button>
+		<Button callback={newLink}>
+			<img src={plusIcon} alt="Plus icon"> New Link
+		</Button>
 
 		<div class="flex-spacer" />
 
-		<a class="link-btn" href="/dashboard/course/${course.code}/settings"> Settings </a>
+		<LinkButton href="/dashboard/course/{course.code}/settings" rotate={true}>
+			<img src={gearIcon} alt="gear-icon"> Settings
+		</LinkButton>
 
-		<Modal bind:this={modals["CREATE_GRAPH"]}>
+		<Modal bind:this={createGraphModal}>
 			<h3 slot="header"> Create Graph </h3>
 
 			<form>
-				<TextInput label="Name"/>
-				<Row><button slot="right" class="btn" on:click={newGraph}> Create </button></Row>
+				<Textfield label="Name"/>
+				<Row><svelte:fragment slot="right">
+					<Button callback={newGraph}> Create </Button>
+				</svelte:fragment></Row>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -143,29 +156,26 @@
 
 					<div class="flex-spacer" />
 					
-					<button class="img-btn" class:disabled={!graph.has_visibility}>
-						<Tooltip data="View Graph">
-							<img class="scale-on-hover" src={graph.has_visibility ? openEyeIcon : closedEyeIcon} alt="Eye icon" />
-						</Tooltip>
-					</button>
+					<Tooltip data="View Graph">
+						<IconButton 
+							src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
+							alt="eye-icon" 
+							disabled={!graph.has_visibility}
+							scale={true}
+							/>
+					</Tooltip>
 
-					<button class="img-btn">
-						<Tooltip data="Edit Graph">
-							<img class="scale-on-hover" src={pencilIcon} alt="Pencil icon" />
-						</Tooltip>
-					</button>
+					<Tooltip data="Edit Graph">
+						<IconButton src={pencilIcon} alt="pencil-icon" scale={true} />
+					</Tooltip>
 
-					<button class="img-btn">
-						<Tooltip data="Copy Graph">
-							<img class="scale-on-hover" src={copyIcon} alt="Copy icon" />
-						</Tooltip>
-					</button>
+					<Tooltip data="Copy Graph">
+						<IconButton src={copyIcon} alt="copy-icon" scale={true} />
+					</Tooltip>
 
-					<button class="img-btn">
-						<Tooltip data="Delete Graph">
-							<img class="scale-on-hover" src={trashIcon} alt="Trash icon" />		
-						</Tooltip>
-					</button>
+					<Tooltip data="Delete Graph">
+						<IconButton src={trashIcon} alt="trash-icon" scale={true} />
+					</Tooltip>
 				</span>
 			{/each}
 		</svelte:fragment>

@@ -2,8 +2,8 @@
 <!-- Markup -->
 
 <div class="card">
-	<section class="header"><slot name="header"> Card </slot></section>
-	<section class="body"><slot name="body"> Lorum ipsum dolor sid amed. </slot></section>
+	<section class="header"><slot name="header" /></section>
+	<section class="body"><slot name="body" /></section>
 </div>
 
 <!-- Styles -->
@@ -16,9 +16,10 @@
 	.card
 		display: flex
 		flex-flow: column nowrap
+		align-items: stretch
 
-		border-radius: $border-radius
 		border: 1px solid $gray
+		border-radius: $border-radius
 
 		.header
 			display: flex
@@ -28,8 +29,8 @@
 			padding: $card-thin-padding $card-thick-padding
 
 			background-color: $light-gray
-			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 			border-bottom: 1px solid $gray
+			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 
 		.body
 			display: flex

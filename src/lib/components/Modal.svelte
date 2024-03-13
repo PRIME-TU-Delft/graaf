@@ -3,10 +3,10 @@
 
 	import plusIcon from '$assets/plus-icon.svg';
 
-	export function show() { showModal = true; }
-	export function hide() { showModal = false; }
+	export function show() { visible = true; }
+	export function hide() { visible = false; }
 
-	let showModal: boolean = false;
+	let visible: boolean = false;
 
 </script>
 
@@ -16,17 +16,17 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 
-<div class="background" class:show={showModal} on:click|self={hide}>
-	<dialog on:click|stopPropagation>
-		<section class="header">
+<div class="background" class:visible on:click|self={hide}>
+	<dialog>
+		<section>
 			<slot name="header"> Modal </slot>
 			<button class="exit" on:click={hide}>
 				<img src={plusIcon} alt="Exit icon">
 			</button>
 		</section>
 
-		<section class="body">
-			<slot> Lorum ipsum dolor sid amed. </slot>
+		<section>
+			<slot />
 		</section>
 	</dialog>
 </div>
@@ -53,7 +53,7 @@
 
 		background-color: rgba(0, 0, 0, 0.25)
 
-		&:not(.show)
+		&:not(.visible)
 			display: none
 
 	dialog
@@ -71,6 +71,10 @@
 		border-radius: $border-radius
 
 		.exit
+			display: flex
+			align-items: center
+			justify-content: center
+
 			position: absolute
 			top: 0
 			right: 0
@@ -79,14 +83,14 @@
 			overflow: hidden
 			
 			img
-				height: $input-icon-size
+				width: $input-icon-size
 				rotate: 45deg
 
+				cursor: pointer
 				filter: $purple-filter
 				transition: all $default-transition
 			
 				&:hover
-					cursor: pointer
 					scale: $scale-on-hover
 					filter: $dark-purple-filter
 

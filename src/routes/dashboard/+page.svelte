@@ -3,16 +3,19 @@
 
 <script lang="ts">
 
-	import Layout from '$layouts/EditorLayout.svelte';
+	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
-	import Row from '$components/Row.svelte';
+	import Row from '$layouts/RowLayout.svelte';
+	import Button from '$components/Button.svelte';
+	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
-	import TextInput from '$components/RowTextInput.svelte';
+	import Textfield from '$components/Textfield.svelte';
 	import Tooltip from '$components/Tooltip.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import peopleIcon from '$assets/people-icon.svg';
+	import LinkButton from '$components/LinkButton.svelte';
 
 	function onSearch(event: Event) {
 		// TODO add onSearch event
@@ -30,7 +33,9 @@
 		// TODO add newProgram function
 	}
 
-	const modals: { [key: string]: Modal | null } = {}
+	const modals: { [key: string]: Modal | null } = {};
+	let createCourseModal: Modal;
+	let createProgramModal: Modal;
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
@@ -98,42 +103,51 @@
 
 <Layout
 	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to expermient with the Graph Editor."
-	path={[["Dashboard", "/dashboard"]]}
+	path={[
+		{
+			name: "Dashboard",
+			href: "/dashboard"
+		}
+	]}
 >
 
 	<svelte:fragment slot="toolbar">
-		<button class="btn" on:click={newSandbox}>
-			<img src="{plusIcon}" alt="Plus icon"> New Sandbox
-		</button>
+		<Button callback={newSandbox}>
+			<img src={plusIcon} alt="Plus icon"> New Sandbox
+		</Button>
 
-		<button class="btn" on:click={modals["CREATE_COURSE"]?.show}>
+		<Button callback={createCourseModal?.show}>
 			<img src={plusIcon} alt="Plus icon"> New Course
-		</button>
+		</Button>
 
-		<button class="btn" on:click={modals["CREATE_PROGRAM"]?.show}>
+		<Button callback={createProgramModal?.show}>
 			<img src={plusIcon} alt="Plus icon"> New Program
-		</button>
+		</Button>
 
 		<div class="flex-spacer" />
 
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
-
-		<Modal bind:this={modals["CREATE_COURSE"]}>
+		
+		<Modal bind:this={createCourseModal}>
 			<h3 slot="header"> Create Course </h3>
 
 			<form>
-				<TextInput label="Code"/>
-				<TextInput label="Title"/>
-				<Row><button slot="right" class="btn" on:click={newCourse}> Create </button></Row>
+				<Textfield label="Code"/>
+				<Textfield label="Title"/>
+				<Row><svelte:fragment slot="right">
+					<Button callback={newCourse}> Create </Button>
+				</svelte:fragment></Row>
 			</form>
 		</Modal>
 
-		<Modal bind:this={modals["CREATE_PROGRAM"]}>
+		<Modal bind:this={createProgramModal}>
 			<h3 slot="header"> Create Program </h3>
 
 			<form>
-				<TextInput label="Title"/>
-				<Row><button slot="right" class="btn" on:click={newProgram}> Create </button></Row>
+				<Textfield label="Title"/>
+				<Row><svelte:fragment slot="right">
+					<Button callback={newProgram}> Create </Button>
+				</svelte:fragment></Row>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -142,7 +156,7 @@
 		<h3 slot="header"> My Courses </h3>
 		<div slot="body" class="grid">
 			{#each courses as {code, name}}
-				<a class="cell" href={`/dashboard/course/${code}/overview`}> {code} {name} </a>
+				<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
 			{/each}
 		</div>
 	</Card>
@@ -155,12 +169,15 @@
 				<div class="flex-spacer" />
 
 				<Tooltip data="Program Coordinators">
-					<button class="img-btn" on:click={modals[name]?.show}>
-						<img class="scale-on-hover" src={peopleIcon} alt="people-icon"/>
-					</button>
+					<IconButton
+						src={peopleIcon}
+						alt="people-icon"
+						callback={modals[name]?.show}
+						scale={true}
+					/>
 				</Tooltip>
-				
-				<a class="link-btn" href={`/dashboard/program/${name}/settings`}> Settings </a>
+
+				<LinkButton href="/dashboard/program/{name}/settings"> Settings </LinkButton>
 
 				<Modal bind:this={modals[name]}>					
 					<h3 slot="header"> Program Coordinators </h3>
@@ -175,7 +192,7 @@
 
 			<div slot="body" class="grid">
 				{#each courses as code}
-					<a class="cell" href="{`/dashboard/course/${code}/overview`}">{code} {getCourse(code)?.name}</a>
+					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {getCourse(code)?.name} </a>
 				{/each}
 			</div>
 		</Card>
