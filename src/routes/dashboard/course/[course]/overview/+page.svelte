@@ -166,7 +166,7 @@
 					</Tooltip>
 
 					<Tooltip data="Edit Graph">
-						<IconButton src={pencilIcon} alt="pencil-icon" scale={true} />
+						<IconButton href="/dashboard/course/{course.code}/graph/{graph.id}/layout" src={pencilIcon} alt="pencil-icon" scale={true} />
 					</Tooltip>
 
 					<Tooltip data="Copy Graph">
