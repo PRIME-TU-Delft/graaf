@@ -72,36 +72,40 @@
 			];
 		}
 
-		function updateNode(element: SVGUseElement) {
+		function updateNode(element: SVGGElement, node: Node) {
 
-			// Redraw rectangle
-			const rect = d3.select<SVGUseElement, Node>(element);
-			rect.attr('x', node => node.x * gridUnit)
-				.attr('y', node => node.y * gridUnit);
+			// Update node
+			const group = d3.select<SVGGElement, Node>(element);
+			group.select<SVGUseElement>('use')
+				.attr('x', node.x * gridUnit)
+				.attr('y', node.y * gridUnit);
+			group.select<SVGTextElement>('text')
+				.attr('x', node.x * gridUnit + nodeWidth * gridUnit / 2)
+				.attr('y', node.y * gridUnit + nodeHeight * gridUnit / 2);
 
-			// Redraw vertices
+			// Update vertices
 			content.selectAll<SVGLineElement, Node[]>('line')
-				   .filter((nodes: Node[]) => nodes.includes(rect.datum()))
-				   .each(function(nodes: Node[]) {
-						const [x1, y1, x2, y2] = getVertice(nodes[0], nodes[1]);
-						d3.select(this)
-						  .attr('x1', x1 * gridUnit)
-						  .attr('y1', y1 * gridUnit)
-						  .attr('x2', x2 * gridUnit)
-						  .attr('y2', y2 * gridUnit);
-				   });
+				.filter((nodes: Node[]) => nodes.includes(node))
+				.each(function(nodes: Node[]) {
+					const [x1, y1, x2, y2] = getVertice(nodes[0], nodes[1]);
+					d3.select(this)
+						.attr('x1', x1 * gridUnit)
+						.attr('y1', y1 * gridUnit)
+						.attr('x2', x2 * gridUnit)
+						.attr('y2', y2 * gridUnit);
+				});
 		}
 
 		function updateGrid(event: d3.D3ZoomEvent<SVGSVGElement, unknown>) {
 
 			// Redraw grid
 			svg.select('#grid')
-			   .attr('x', event.transform.x)
-			   .attr('y', event.transform.y)
-			   .attr('width', gridUnit * event.transform.k)
-			   .attr('height', gridUnit * event.transform.k)
-			   .selectAll('line')
-				   .attr('opacity', Math.min(1, event.transform.k));
+				.attr('x', event.transform.x)
+				.attr('y', event.transform.y)
+				.attr('width', gridUnit * event.transform.k)
+				.attr('height', gridUnit * event.transform.k)
+				.selectAll('line')
+					.attr('opacity', Math.min(1, event.transform.k));
 		}
 
 		const palette: { [key: string]: { stroke: string, fill: string } } = {
@@ -146,306 +150,314 @@
 		// Confident turquoise
 		if (nodes.some(node => node.style === 'confident-turquoise')) {
 			definitions.append('symbol')
-					   .attr('id', 'confident-turquoise')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top}
-							  L ${right} ${top}
-							  L ${right} ${bottom}
-							  L ${left} ${bottom}
-							  Z
-						   `)
-						   .attr('fill', palette['confident-turquoise'].fill)
-						   .attr('stroke', palette['confident-turquoise'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'confident-turquoise')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['confident-turquoise'].fill)
+					.attr('stroke', palette['confident-turquoise'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top}
+						 L ${right} ${top}
+						 L ${right} ${bottom}
+						 L ${left} ${bottom}
+						 Z
+					`);
 		}
 
 		// Neutral gray
 		if (nodes.some(node => node.style === 'neutral-gray')) {
 			definitions.append('symbol')
-					   .attr('id', 'neutral-gray')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top + gridUnit}
-							  L ${hmid} ${top}
-							  L ${right} ${top + gridUnit}
-							  L ${right} ${bottom - gridUnit}
-							  L ${hmid} ${bottom}
-							  L ${left} ${bottom - gridUnit}
-							  Z
-						   `)
-						   .attr('fill', palette['neutral-gray'].fill)
-						   .attr('stroke', palette['neutral-gray'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'neutral-gray')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['neutral-gray'].fill)
+					.attr('stroke', palette['neutral-gray'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top + gridUnit}
+						 L ${hmid} ${top}
+						 L ${right} ${top + gridUnit}
+						 L ${right} ${bottom - gridUnit}
+						 L ${hmid} ${bottom}
+						 L ${left} ${bottom - gridUnit}
+						 Z
+					`);
 		}
 
 		// Prosperous red
 		if (nodes.some(node => node.style === 'prosperous-red')) {
 			definitions.append('symbol')
-					   .attr('id', 'prosperous-red')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top}
-							  L ${hmid} ${top + gridUnit}
-							  L ${right} ${top}
-							  L ${right} ${bottom}
-							  L ${hmid} ${bottom - gridUnit}
-							  L ${left} ${bottom}
-							  Z
-						   `)
-						   .attr('fill', palette['prosperous-red'].fill)
-						   .attr('stroke', palette['prosperous-red'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'prosperous-red')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['prosperous-red'].fill)
+					.attr('stroke', palette['prosperous-red'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top}
+						 L ${hmid} ${top + gridUnit}
+						 L ${right} ${top}
+						 L ${right} ${bottom}
+						 L ${hmid} ${bottom - gridUnit}
+						 L ${left} ${bottom}
+						 Z
+					`);
 		}
 
 		// Majestic purple
 		if (nodes.some(node => node.style === 'majestic-purple')) {
 			definitions.append('symbol')
-					   .attr('id', 'majestic-purple')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left + gridUnit} ${top}
-							  L ${right - gridUnit} ${top}
-							  L ${right} ${vmid}
-							  L ${right - gridUnit} ${bottom}
-							  L ${left + gridUnit} ${bottom}
-							  L ${left} ${vmid}
-							  Z
-						   `)
-						   .attr('fill', palette['majestic-purple'].fill)
-						   .attr('stroke', palette['majestic-purple'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'majestic-purple')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['majestic-purple'].fill)
+					.attr('stroke', palette['majestic-purple'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left + gridUnit} ${top}
+						 L ${right - gridUnit} ${top}
+						 L ${right} ${vmid}
+						 L ${right - gridUnit} ${bottom}
+						 L ${left + gridUnit} ${bottom}
+						 L ${left} ${vmid}
+						 Z
+					`);
 		}
 
 		// Serious brown
 		if (nodes.some(node => node.style === 'serious-brown')) {
 			definitions.append('symbol')
-					   .attr('id', 'serious-brown')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top}
-							  L ${right} ${top}
-							  L ${right - gridUnit} ${vmid}
-							  L ${right} ${bottom}
-							  L ${left} ${bottom}
-							  L ${left + gridUnit} ${vmid}
-							  Z
-						   `)
-						   .attr('fill', palette['serious-brown'].fill)
-						   .attr('stroke', palette['serious-brown'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'serious-brown')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['serious-brown'].fill)
+					.attr('stroke', palette['serious-brown'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top}
+						 L ${right} ${top}
+						 L ${right - gridUnit} ${vmid}
+						 L ${right} ${bottom}
+						 L ${left} ${bottom}
+						 L ${left + gridUnit} ${vmid}
+						 Z
+					`);
 		}
 
 		// Powerful pink
 		if (nodes.some(node => node.style === 'powerful-pink')) {
 			definitions.append('symbol')
-					   .attr('id', 'powerful-pink')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top + 2 * gridUnit}
-							  L ${left + 2 * gridUnit} ${top}
-							  L ${right - 2 * gridUnit} ${top}
-							  L ${right} ${top + 2 * gridUnit}
-							  L ${right} ${bottom - 2 * gridUnit}
-							  L ${right - 2 * gridUnit} ${bottom}
-							  L ${left + 2 * gridUnit} ${bottom}
-							  L ${left} ${bottom - 2 * gridUnit}
-							  Z
-						   `)
-						   .attr('fill', palette['powerful-pink'].fill)
-						   .attr('stroke', palette['powerful-pink'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'powerful-pink')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['powerful-pink'].fill)
+					.attr('stroke', palette['powerful-pink'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top + 2 * gridUnit}
+						 L ${left + 2 * gridUnit} ${top}
+						 L ${right - 2 * gridUnit} ${top}
+						 L ${right} ${top + 2 * gridUnit}
+						 L ${right} ${bottom - 2 * gridUnit}
+						 L ${right - 2 * gridUnit} ${bottom}
+						 L ${left + 2 * gridUnit} ${bottom}
+						 L ${left} ${bottom - 2 * gridUnit}
+						 Z
+					`);
 		}
 
 		// Energizing orange
 		if (nodes.some(node => node.style === 'energizing-orange')) {
 			definitions.append('symbol')
-					   .attr('id', 'energizing-orange')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top + gridUnit}
-							  L ${left + gridUnit} ${top + gridUnit}
-							  L ${left + gridUnit} ${top}
-							  L ${right - gridUnit} ${top}
-							  L ${right - gridUnit} ${top + gridUnit}
-							  L ${right} ${top + gridUnit}
-							  L ${right} ${bottom - gridUnit}
-							  L ${right - gridUnit} ${bottom - gridUnit}
-							  L ${right - gridUnit} ${bottom}
-							  L ${left + gridUnit} ${bottom}
-							  L ${left + gridUnit} ${bottom - gridUnit}
-							  L ${left} ${bottom - gridUnit}
-							  Z
-						   `)
-						   .attr('fill', palette['energizing-orange'].fill)
-						   .attr('stroke', palette['energizing-orange'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'energizing-orange')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['energizing-orange'].fill)
+					.attr('stroke', palette['energizing-orange'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top + gridUnit}
+						 L ${left + gridUnit} ${top + gridUnit}
+						 L ${left + gridUnit} ${top}
+						 L ${right - gridUnit} ${top}
+						 L ${right - gridUnit} ${top + gridUnit}
+						 L ${right} ${top + gridUnit}
+						 L ${right} ${bottom - gridUnit}
+						 L ${right - gridUnit} ${bottom - gridUnit}
+						 L ${right - gridUnit} ${bottom}
+						 L ${left + gridUnit} ${bottom}
+						 L ${left + gridUnit} ${bottom - gridUnit}
+						 L ${left} ${bottom - gridUnit}
+						 Z
+					`);
 		}
 
 		// Electric green
 		if (nodes.some(node => node.style === 'electric-green')) {
 			definitions.append('symbol')
-					   .attr('id', 'electric-green')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-						 	 `M ${left} ${bottom}
-							  Q ${left + 2 * gridUnit} ${vmid} ${left} ${top}
-							  L ${right} ${top}
-							  Q ${right - 2 * gridUnit} ${vmid} ${right} ${bottom}
-							  Z
-
-						   `)
-						   .attr('fill', palette['electric-green'].fill)
-						   .attr('stroke', palette['electric-green'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'electric-green')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['electric-green'].fill)
+					.attr('stroke', palette['electric-green'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${bottom}
+						 Q ${left + 2 * gridUnit} ${vmid} ${left} ${top}
+						 L ${right} ${top}
+						 Q ${right - 2 * gridUnit} ${vmid} ${right} ${bottom}
+						 Z
+					`);
 		}
 
 		// Mysterious blue
 		if (nodes.some(node => node.style === 'mysterious-blue')) {
 			definitions.append('symbol')
-					   .attr('id', 'mysterious-blue')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left + gridUnit} ${bottom}
-							  Q ${left - gridUnit} ${vmid} ${left + gridUnit} ${top}
-							  L ${right - gridUnit} ${top}
-							  Q ${right + gridUnit} ${vmid} ${right - gridUnit} ${bottom}
-							  Z
-						   `)
-						   .attr('fill', palette['mysterious-blue'].fill)
-						   .attr('stroke', palette['mysterious-blue'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'mysterious-blue')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['mysterious-blue'].fill)
+					.attr('stroke', palette['mysterious-blue'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left + gridUnit} ${bottom}
+						 Q ${left - gridUnit} ${vmid} ${left + gridUnit} ${top}
+						 L ${right - gridUnit} ${top}
+						 Q ${right + gridUnit} ${vmid} ${right - gridUnit} ${bottom}
+						 Z
+					`);
 		}
 
 		// Sunny yellow
 		if (nodes.some(node => node.style === 'sunny-yellow')) {
 			definitions.append('symbol')
-					   .attr('id', 'sunny-yellow')
-					   .attr('width', nodeWidth * gridUnit)
-					   .attr('height', nodeHeight * gridUnit)
-					   .append('path')
-						   .attr('d',
-							 `M ${left} ${top + 2 * gridUnit}
-							  A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${left + 2 * gridUnit}  ${top}
-							  L ${right - 2 * gridUnit} ${top}
-							  A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${right} ${top + 2 * gridUnit}
-							  L ${right} ${bottom - 2 * gridUnit}
-							  A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${right - 2 * gridUnit} ${bottom}
-							  L ${left + 2 * gridUnit} ${bottom}
-							  A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${left} ${bottom - 2 * gridUnit}
-							  Z
-						   `)
-						   .attr('fill', palette['sunny-yellow'].fill)
-						   .attr('stroke', palette['sunny-yellow'].stroke)
-						   .attr('stroke-width', nodeBorderWidth);
+				.attr('id', 'sunny-yellow')
+				.attr('width', nodeWidth * gridUnit)
+				.attr('height', nodeHeight * gridUnit)
+				.append('path')
+					.attr('fill', palette['sunny-yellow'].fill)
+					.attr('stroke', palette['sunny-yellow'].stroke)
+					.attr('stroke-width', nodeBorderWidth)
+					.attr('d',
+						`M ${left} ${top + 2 * gridUnit}
+						 A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${left + 2 * gridUnit}  ${top}
+						 L ${right - 2 * gridUnit} ${top}
+						 A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${right} ${top + 2 * gridUnit}
+						 L ${right} ${bottom - 2 * gridUnit}
+						 A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${right - 2 * gridUnit} ${bottom}
+						 L ${left + 2 * gridUnit} ${bottom}
+						 A ${2 * gridUnit} ${2 * gridUnit} 0 0 1 ${left} ${bottom - 2 * gridUnit}
+						 Z
+					`);
 		}
 
 		// --> Markers <-- //
 
 		definitions.append('marker')
-					   .attr('id', 'arrowhead')
-					   .attr('viewBox', '0 0 10 10')
-					   .attr('refX', 5)
-					   .attr('refY', 5)
-					   .attr('markerWidth', 6)
-					   .attr('markerHeight', 6)
-					   .attr('orient', 'auto-start-reverse')
-					   .append('path')
-						   .attr('d', 
-						     `M 0 0 
-							  L 10 5
-							  L 0 10 
-							  Z
-						   `)
-						   .attr('fill', 'context-fill');
+			.attr('id', 'arrowhead')
+			.attr('viewBox', '0 0 10 10')
+			.attr('refX', 5)
+			.attr('refY', 5)
+			.attr('markerWidth', 6)
+			.attr('markerHeight', 6)
+			.attr('orient', 'auto-start-reverse')
+			.append('path')
+				.attr('fill', 'context-fill')
+				.attr('d', 
+					`M 0 0 
+					 L 10 5
+					 L 0 10 
+					 Z
+				`);
 
 		// --> Grid pattern <-- //
 
 		const pattern = definitions.append('pattern')
-									   .attr('id', 'grid')
-									   .attr('width', gridUnit)
-									   .attr('height', gridUnit)
-									   .attr('patternUnits', 'userSpaceOnUse')
+			.attr('id', 'grid')
+			.attr('width', gridUnit)
+			.attr('height', gridUnit)
+			.attr('patternUnits', 'userSpaceOnUse')
 
 		pattern.append('line')
-				   .attr('stroke', gridColor)
-				   .attr('x1', 0)
-				   .attr('y1', 0)
-				   .attr('x2', gridUnit * 2)
-				   .attr('y2', 0);
+			.attr('stroke', gridColor)
+			.attr('x1', 0)
+			.attr('y1', 0)
+			.attr('x2', gridUnit * 2)
+			.attr('y2', 0);
 
 		pattern.append('line')
-				   .attr('stroke', gridColor)
-				   .attr('x1', 0)
-				   .attr('y1', 0)
-				   .attr('x2', 0)
-				   .attr('y2', gridUnit * 2);
+			.attr('stroke', gridColor)
+			.attr('x1', 0)
+			.attr('y1', 0)
+			.attr('x2', 0)
+			.attr('y2', gridUnit * 2);
 
 		svg.append('rect')
-			   .attr('id', 'background')
-			   .attr('width', '100%')
-			   .attr('height', '100%')
-			   .attr('fill', 'url(#grid)');
+			.attr('width', '100%')
+			.attr('height', '100%')
+			.attr('fill', 'url(#grid)');
 
 		// --> Content <-- //
 
 		const content = svg.append('g');
 		content.selectAll('use')
-			   .data(nodes)
-			   .enter()
-			   .append('use')
-				   .attr('href', node => `#${node.style}`)
-				   .attr('x', node => node.x * gridUnit)
-				   .attr('y', node => node.y * gridUnit)
-				   .each(function(node) {
+			.data(nodes)
+			.enter()
+			.append('g')
+				.call(
+					d3.drag<SVGGElement, Node>()
+						.on('drag', function(event, node) {
+							event.subject.x = event.subject.x + event.dx / gridUnit;
+							event.subject.y = event.subject.y + event.dy / gridUnit;
+							updateNode(this, node);
+						})
+						.on('end', function(event, node) {
+							event.subject.x = Math.round(event.subject.x);
+							event.subject.y = Math.round(event.subject.y);
+							updateNode(this, node);
+						})
+				)
+				.each(function(node) {
 
-						// Draw vertices
-						const dependencies = nodes.filter(dependency => node.dependencies.includes(dependency.id));
-						dependencies.forEach(dependency => {
-							const [x1, y1, x2, y2] = getVertice(dependency, node);
-							content.insert('line', ":first-child")
-								   .datum([dependency, node])
-								   .attr('x1', x1 * gridUnit)
-								   .attr('y1', y1 * gridUnit)
-								   .attr('x2', x2 * gridUnit)
-								   .attr('y2', y2 * gridUnit)
-								   .attr('stroke-width', 2)
-								   .attr('stroke', palette[dependency.style].stroke)
-								   .attr('fill', palette[dependency.style].stroke)
-								   .attr('marker-end', 'url(#arrowhead)');
+					// Draw node
+					const group = d3.select<SVGGElement, Node>(this);
+					group.append('use')
+						.attr('href', `#${node.style}`)
+						.attr('x', node.x * gridUnit)
+						.attr('y', node.y * gridUnit);
+					group.append('text')
+						.text(node.text)
+						.attr('x', node.x * gridUnit + nodeWidth * gridUnit / 2)
+						.attr('y', node.y * gridUnit + nodeHeight * gridUnit / 2)
+						.attr('dominant-baseline', 'middle')
+						.attr('text-anchor', 'middle');
+
+					// Draw vertices
+					const dependencies = nodes.filter(dependency => node.dependencies.includes(dependency.id));
+					dependencies.forEach(dependency => {
+						const [x1, y1, x2, y2] = getVertice(dependency, node);
+						content.insert('line', ":first-child")
+							.datum([dependency, node])
+							.attr('x1', x1 * gridUnit)
+							.attr('y1', y1 * gridUnit)
+							.attr('x2', x2 * gridUnit)
+							.attr('y2', y2 * gridUnit)
+							.attr('stroke-width', 2)
+							.attr('stroke', palette[dependency.style].stroke)
+							.attr('fill', palette[dependency.style].stroke)
+							.attr('marker-end', 'url(#arrowhead)');
 						});
 				   })
-				   .call(
-						d3.drag<SVGUseElement, Node>()
-							.on('drag', function(event, node) {
-								event.subject.x = event.subject.x + event.dx / gridUnit;
-								event.subject.y = event.subject.y + event.dy / gridUnit;
-								updateNode(this);
-							})
-							.on('end', function(event, node) {
-								event.subject.x = Math.round(event.subject.x);
-								event.subject.y = Math.round(event.subject.y);
-								updateNode(this);
-							})
-				   );
 	});
 
 </script>
