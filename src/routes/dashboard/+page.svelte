@@ -31,14 +31,6 @@
 		// TODO add newSandbox function
 	}
 
-	function newCourse() {
-		// TODO add newCourse function
-	}
-
-	function newProgram() {
-		// TODO add newProgram function
-	}
-
 	const modals: { [key: string]: Modal | null } = {};
 
 </script>
@@ -71,7 +63,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
-		
+
 		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
@@ -136,7 +128,7 @@
 			</svelte:fragment>
 
 			<div slot="body" class="grid">
-				{#each courses as code}
+				{#each courses as {code, name}}
 					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>
