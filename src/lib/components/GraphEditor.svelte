@@ -5,7 +5,6 @@
 
 	import { onMount } from 'svelte';
 	import * as d3 from 'd3';
-	import { xor } from '$scripts/xor';
 
 	class Node {
 		id: number;
@@ -43,6 +42,8 @@
 	onMount(() => {
 		function getVertice(start: Node, end: Node): [number, number, number, number] {
 
+			// Trust me bro
+
 			// Half the width and height of the nodes
 			const width  = nodeWidth  / 2 + verticeDistance;
 			const height = nodeHeight / 2 + verticeDistance;
@@ -62,7 +63,7 @@
 			const negBound = -height / width * dx + ay;
 
 			const sign = by > negBound ? -1 : 1;
-			const vertQuad = xor(by > posBound, by > negBound);
+			const vertQuad = by > posBound !== by > negBound;
 
 			// Final vertice
 			return [
