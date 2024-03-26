@@ -9,22 +9,24 @@
 	export let placeholder: string = "";
 	export let obfuscate: boolean = false;
 
+	$: id = label.toLowerCase().replace(/\s/g, "_");
+
 </script>
 
 <!-- Markup -->
 
 <div class="desktop-layout">
 	<Row>
-		   <label slot="left" for={label}> {label} </label><!--
-		--><input slot="right" id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
+		<label slot="left" for={id}>{label}</label><!--
+		--><input slot="right" id={id} name={id} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 	</Row>
 </div>
 	
 <div class="phone-layout">
 	<Row>
 		<svelte:fragment slot="center">
-			   <label for={label}> {label} </label><!--
-			--><input id={label} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
+			<label for={id}>{label}</label><!--
+			--><input id={id} name={id} type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 		</svelte:fragment>
 	</Row>
 </div>
