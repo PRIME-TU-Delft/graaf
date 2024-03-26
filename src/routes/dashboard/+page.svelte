@@ -89,7 +89,7 @@
 			<h3 slot="header"> Create Program </h3>
 
 			<form method="POST" action="?/newProgram" use:enhance>
-				<Textfield label="Title"/>
+				<Textfield label="Name"/>
 				<Row><svelte:fragment slot="right">
 					<Button submit={true} callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
 				</svelte:fragment></Row>
