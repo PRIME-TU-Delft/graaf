@@ -40,8 +40,6 @@
 	}
 
 	const modals: { [key: string]: Modal | null } = {};
-	let createCourseModal: Modal;
-	let createProgramModal: Modal;
 
 </script>
 
@@ -62,11 +60,11 @@
 			<img src={plusIcon} alt="Plus icon"> New Sandbox
 		</Button>
 
-		<Button callback={createCourseModal?.show}>
+		<Button callback={modals.CREATE_COURSE?.show}>
 			<img src={plusIcon} alt="Plus icon"> New Course
 		</Button>
 
-		<Button callback={createProgramModal?.show}>
+		<Button callback={modals.CREATE_PROGRAM?.show}>
 			<img src={plusIcon} alt="Plus icon"> New Program
 		</Button>
 
@@ -74,7 +72,7 @@
 
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
 		
-		<Modal bind:this={createCourseModal}>
+		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
 			<form method="POST" action="?/newCourse" use:enhance>
@@ -82,18 +80,18 @@
 				<Textfield label="Name"/>
 				<Textfield label="Program ID"/>
 				<Row><svelte:fragment slot="right">
-					<Button callback={modals.CREATE_COURSE?.hide}> Create </Button>
+					<Button submit={true} callback={modals.CREATE_COURSE?.hide}> Create </Button>
 				</svelte:fragment></Row>
 			</form>
 		</Modal>
 
-		<Modal bind:this={createProgramModal}>
+		<Modal bind:this={modals["CREATE_PROGRAM"]}>
 			<h3 slot="header"> Create Program </h3>
 
 			<form method="POST" action="?/newProgram" use:enhance>
 				<Textfield label="Title"/>
 				<Row><svelte:fragment slot="right">
-					<Button callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
+					<Button submit={true} callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
 				</svelte:fragment></Row>
 			</form>
 		</Modal>
