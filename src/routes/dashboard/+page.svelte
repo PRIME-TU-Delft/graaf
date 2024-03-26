@@ -9,6 +9,7 @@
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
 	import Row from '$layouts/RowLayout.svelte';
+
 	import Button from '$components/Button.svelte';
 	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
@@ -20,6 +21,9 @@
 	import LinkButton from '$components/LinkButton.svelte';
 
 	export let data;
+
+	const modals: { [key: string]: Modal } = {};
+
 	$: courses = data.courses;
 	$: programs = data.programs;
 
@@ -30,16 +34,6 @@
 	function newSandbox() {
 		// TODO add newSandbox function
 	}
-
-	function newCourse() {
-		// TODO add newCourse function
-	}
-
-	function newProgram() {
-		// TODO add newProgram function
-	}
-
-	const modals: { [key: string]: Modal | null } = {};
 
 </script>
 
