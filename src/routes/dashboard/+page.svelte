@@ -82,7 +82,7 @@
 				<Textfield label="Name"/>
 				<Textfield label="Program ID"/>
 				<Row><svelte:fragment slot="right">
-					<button slot="right" class="btn" on:click={modals.CREATE_COURSE.hide}> Create </button>
+					<Button callback={modals.CREATE_COURSE?.hide}> Create </Button>
 				</svelte:fragment></Row>
 			</form>
 		</Modal>
@@ -93,7 +93,7 @@
 			<form method="POST" action="?/newProgram" use:enhance>
 				<Textfield label="Title"/>
 				<Row><svelte:fragment slot="right">
-					<button slot="right" class="btn" on:click={modals.CREATE_PROGRAM.hide}> Create </button>
+					<Button callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
 				</svelte:fragment></Row>
 			</form>
 		</Modal>
