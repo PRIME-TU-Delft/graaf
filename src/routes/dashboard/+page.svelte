@@ -65,7 +65,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
-		
+
 		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
@@ -130,7 +130,7 @@
 			</svelte:fragment>
 
 			<div slot="body" class="grid">
-				{#each courses as code}
+				{#each courses as {code, name}}
 					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>
