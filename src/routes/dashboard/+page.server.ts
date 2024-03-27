@@ -1,5 +1,5 @@
 import { fail } from '@sveltejs/kit';
-import prisma from '$lib/prisma';
+import prisma from '$scripts/prisma';
 
 export const actions = {
 	newCourse: async ({request}) => {
