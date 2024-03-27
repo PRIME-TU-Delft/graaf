@@ -3,10 +3,13 @@
 
 <script lang="ts">
 
+	import { enhance } from '$app/forms';
+
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
 	import Row from '$layouts/RowLayout.svelte';
+
 	import Button from '$components/Button.svelte';
 	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
@@ -17,6 +20,13 @@
 	import peopleIcon from '$assets/people-icon.svg';
 	import LinkButton from '$components/LinkButton.svelte';
 
+	export let data;
+
+	const modals: { [key: string]: Modal } = {};
+
+	$: courses = data.courses;
+	$: programs = data.programs;
+
 	function onSearch(event: Event) {
 		// TODO add onSearch event
 	}
@@ -24,78 +34,6 @@
 	function newSandbox() {
 		// TODO add newSandbox function
 	}
-
-	function newCourse() {
-		// TODO add newCourse function
-	}
-
-	function newProgram() {
-		// TODO add newProgram function
-	}
-
-	const modals: { [key: string]: Modal | null } = {};
-	let createCourseModal: Modal;
-	let createProgramModal: Modal;
-
-	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
-
-	class ProgramData {
-		name: string;
-		courses: string[];
-		coordinators: string[];
-
-		constructor(name: string, courses: string[], coordinators: string[]) {
-			this.name = name;
-			this.courses = courses;
-			this.coordinators = coordinators;
-		}
-	}
-
-	class CourseData {
-		code: string;
-		name: string;
-
-		constructor(code: string, name: string) {
-			this.code = code;
-			this.name = name;
-		}
-	}
-
-	function getCourse (code: string) {
-		for (let course of courses) {
-			if (course.code === code) {
-				return course;
-			}
-		}
-	}
-
-	let courses = [
-		new CourseData("AESB1311", "Linear Algebra"),
-		new CourseData("CSE1200",  "Calculus"),
-		new CourseData("CSE1205",  "Linear Algebra"),
-		new CourseData("CSE1210",  "Cluster Probability & Statistics"),
-		new CourseData("CTB2105",  "Differentiaalvergelijkingen"),
-		new CourseData("CTB2200",  "Kansrekening en Statistiek"),
-		new CourseData("EE1M11",   "Linear Algebra and Analysis A"),
-		new CourseData("EE1M21",   "Linear Algebra and Analysis B"),
-		new CourseData("LB1155",   "Calculus"),
-		new CourseData("NB2191",   "Differential Equations"),
-		new CourseData("TB131B",   "Differentiaalvergelijkingen en Lineare Algebra"),
-		new CourseData("TB132B",   "Multivariabele Calculus en Lineaire Algebra"),
-		new CourseData("TN1401WI", "Analyse voor TNW 1"),
-		new CourseData("WBMT",     "Linear Algebra"),
-		new CourseData("WBMT1050", "Calculus for Engineering"),
-		new CourseData("WI1402LR", "Calculus II"),
-		new CourseData("WI1403LR", "Linear Algebra"),
-		new CourseData("WI1421LR", "Calculus I"),
-		new CourseData("WI2031TH", "Probability and Statistics")
-	]
-
-	let programs = [
-		new ProgramData("Computer Science", ["CSE1200", "CSE1205", "CSE1210"], ["Beryl van Gelderen"]),
-		new ProgramData("Electrical Engineering", ["EE1M11", "EE1M21"], ["Eva Lnguis", "Merel Piekaar"]),
-		new ProgramData("Mathematics", ["AESB1311", "CSE1200", "CSE1205", "CSE1210", "CTB2105", "CTB2200", "EE1M11", "EE1M21", "LB1155", "NB2191", "TB131B", "TB132B", "TN1401WI", "WBMT", "WBMT1050", "WI1402LR", "WI1403LR", "WI1421LR", "WI2031TH"], ["Beryl van Gelderen", "Eva Lnguis", "Merel Piekaar"])
-	]
 
 </script>
 
@@ -116,37 +54,38 @@
 			<img src={plusIcon} alt="Plus icon"> New Sandbox
 		</Button>
 
-		<Button callback={createCourseModal?.show}>
+		<Button callback={modals.CREATE_COURSE?.show}>
 			<img src={plusIcon} alt="Plus icon"> New Course
 		</Button>
 
-		<Button callback={createProgramModal?.show}>
+		<Button callback={modals.CREATE_PROGRAM?.show}>
 			<img src={plusIcon} alt="Plus icon"> New Program
 		</Button>
 
 		<div class="flex-spacer" />
 
 		<Searchbar onChange={onSearch} placeholder="Search courses" />
-		
-		<Modal bind:this={createCourseModal}>
+
+		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
-			<form>
+			<form method="POST" action="?/newCourse" use:enhance>
 				<Textfield label="Code"/>
-				<Textfield label="Title"/>
+				<Textfield label="Name"/>
+				<Textfield label="Program ID"/>
 				<Row><svelte:fragment slot="right">
-					<Button callback={newCourse}> Create </Button>
+					<Button submit={true} callback={modals.CREATE_COURSE?.hide}> Create </Button>
 				</svelte:fragment></Row>
 			</form>
 		</Modal>
 
-		<Modal bind:this={createProgramModal}>
+		<Modal bind:this={modals["CREATE_PROGRAM"]}>
 			<h3 slot="header"> Create Program </h3>
 
-			<form>
-				<Textfield label="Title"/>
+			<form method="POST" action="?/newProgram" use:enhance>
+				<Textfield label="Name"/>
 				<Row><svelte:fragment slot="right">
-					<Button callback={newProgram}> Create </Button>
+					<Button submit={true} callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
 				</svelte:fragment></Row>
 			</form>
 		</Modal>
@@ -179,7 +118,7 @@
 
 				<LinkButton href="/dashboard/program/{name}/settings"> Settings </LinkButton>
 
-				<Modal bind:this={modals[name]}>					
+				<Modal bind:this={modals[name]}>
 					<h3 slot="header"> Program Coordinators </h3>
 					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
 					<ul>
@@ -191,8 +130,8 @@
 			</svelte:fragment>
 
 			<div slot="body" class="grid">
-				{#each courses as code}
-					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {getCourse(code)?.name} </a>
+				{#each courses as {code, name}}
+					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>
 		</Card>
@@ -226,7 +165,7 @@
 				flex-grow: 1
 
 			&:not(:last-child)
-				border-bottom: 1px solid $gray				
+				border-bottom: 1px solid $gray
 
 			@media screen and (min-width: $grid-2-column-width)
 				border-bottom: 1px solid $gray

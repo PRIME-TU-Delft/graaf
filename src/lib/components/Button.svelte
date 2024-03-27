@@ -6,9 +6,10 @@
 	export let callback: () => void = () => {};
 	export let href: undefined | string = undefined;
 
+	export let submit:   boolean = false;
 	export let disabled: boolean = false;
-	export let scale: boolean = false;
-	export let rotate: boolean = false;
+	export let scale:    boolean = false;
+	export let rotate:   boolean = false;
 
 </script>
 
@@ -18,6 +19,7 @@
 
 	<button
 		class="default-btn" class:disabled class:scale class:rotate
+		type={submit ? 'submit' : 'button'}
 		on:click={callback}
 	>
 		<slot />
@@ -27,6 +29,7 @@
 
 	<a
 		class="default-btn" class:disabled class:scale class:rotate
+		type={submit ? 'submit' : 'button'}
 		on:click={callback}
 		href={href}
 	>
