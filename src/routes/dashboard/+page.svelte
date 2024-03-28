@@ -14,6 +14,7 @@
 	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
 	import Textfield from '$components/Textfield.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
 	import Tooltip from '$components/Tooltip.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
@@ -72,7 +73,21 @@
 			<form method="POST" action="?/newCourse" use:enhance>
 				<Textfield label="Code"/>
 				<Textfield label="Name"/>
-				<Textfield label="Program ID"/>
+				<Row>
+				<svelte:fragment slot="right">
+					
+				<Dropdown 
+					label="Program" 
+					placeholder="Select a program" 
+					options={ 
+						programs.map(program => { 
+							return {name: program.name, value: program.id}
+						}) 
+					} 
+				/>
+										
+				</svelte:fragment>
+			</Row>
 				<Row><svelte:fragment slot="right">
 					<Button submit={true} callback={modals.CREATE_COURSE?.hide}> Create </Button>
 				</svelte:fragment></Row>

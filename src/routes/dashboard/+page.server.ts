@@ -6,7 +6,8 @@ export const actions = {
 		const data = await request.formData();
 		const code = data.get('code')?.toString();
 		const name = data.get('name')?.toString();
-		const programId = Number(data.get('program_id'));
+		const programId = Number(data.get('program'));
+		console.log({code, name, programId})
 
 		if (!code) return fail(400, { code, missing: true });
 		if (!name) return fail(400, { name, missing: true });
