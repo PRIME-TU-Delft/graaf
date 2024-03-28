@@ -4,12 +4,16 @@
 <script lang="ts">
 
 	export let callback: () => void = () => {};
-	export let href: undefined | string = undefined;
+	export let href: string | undefined = undefined;
 
-	export let submit:   boolean = false;
+	export let submit: boolean = false;
 	export let disabled: boolean = false;
-	export let scale:    boolean = false;
-	export let rotate:   boolean = false;
+	export let rotate: boolean = false;
+	export let scale: boolean = false;
+
+	$: if (submit && href !== undefined) {
+		console.warn("Button: submit and href are mutually exclusive");
+	}
 
 </script>
 
@@ -18,8 +22,8 @@
 {#if href === undefined}
 
 	<button
-		class="default-btn" class:disabled class:scale class:rotate
-		type={submit ? 'submit' : 'button'}
+		class="button" class:disabled class:scale class:rotate
+		type={submit ? "submit" : "button"}
 		on:click={callback}
 	>
 		<slot />
@@ -28,8 +32,7 @@
 {:else}
 
 	<a
-		class="default-btn" class:disabled class:scale class:rotate
-		type={submit ? 'submit' : 'button'}
+		class="button" class:disabled class:scale class:rotate
 		on:click={callback}
 		href={href}
 	>
@@ -45,8 +48,11 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.default-btn
-		position: relative
+	.button
+		display: inline-flex
+		flex-flow: row nowrap
+		align-items: center
+
 		padding: $input-thin-padding $input-thick-padding
 
 		border: 1px solid transparent
@@ -62,16 +68,9 @@
 			background: $gray
 			pointer-events: none
 
-		&:has(img)
-			padding-left: $input-icon-width
-
 		:global(img)
-			position: absolute
-			translate: 0 -50%
-			top: 50%
-			left: $input-thin-padding
-
 			width: $input-icon-size
+			padding: $input-icon-padding
 
 			filter: $white-filter
 			transition: all $default-transition
