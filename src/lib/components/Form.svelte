@@ -3,12 +3,14 @@
 
     import { enhance } from '$app/forms';
 
+    import Textfield from "./form/Textfield.svelte";
+
     export let action: string = '';
 
 </script>
 
 <form method="POST" action={action} use:enhance>
-	<slot />
+	<slot {Textfield} />
 </form>
 
 <style lang="sass">
