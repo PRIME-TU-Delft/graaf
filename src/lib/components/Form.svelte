@@ -5,13 +5,14 @@
 
     import Textfield from "./form/Textfield.svelte";
     import Button from "./form/Button.svelte";
+    import Checkbox from './form/Checkbox.svelte';
 
     export let action: string = '';
 
 </script>
 
 <form method="POST" action={action} use:enhance>
-	<slot {Textfield} {Button} />
+	<slot {Textfield} {Button} {Checkbox} />
 </form>
 
 <style lang="sass">

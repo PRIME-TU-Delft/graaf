@@ -35,7 +35,7 @@
             grid-area: label
             place-self: center end
 
-            padding-right: 1em
+            padding-right: $input-label-gap
 
         :global(input)
             grid-area: input
