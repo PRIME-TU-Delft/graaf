@@ -3,28 +3,28 @@
 
 <script lang="ts">
 
-    type Option = {
-        name: string
-        value: any
-    }
+	type Option = {
+		name: string
+		value: any
+	}
 
-    function toggle() {
-        show = !show;
-    }
+	function toggle() {
+		show = !show;
+	}
 
-    function choose(option: Option) {
-        choice = option;
-    }
+	function choose(option: Option) {
+		choice = option;
+	}
 
-    export let label: string;
-    export let placeholder: string;
-    export let options: Option[];
+	export let label: string;
+	export let placeholder: string;
+	export let options: Option[];
 
-    let show: boolean = false;
-    let choice: Option | null = null;
+	let show: boolean = false;
+	let choice: Option | null = null;
 
-    $: id = label.toLowerCase().replace(/\s/g, "_");
-    $: value = choice ? choice.value : choice;
+	$: id = label.toLowerCase().replace(/\s/g, "_");
+	$: value = choice ? choice.value : null;
 
 </script>
 
@@ -36,101 +36,100 @@
 
 <div class="dropdown" class:show on:click={ toggle }>
 
-    <!-- Hidden input to bind the selected value -->
-    <input name={ id } type="hidden" value={ value }>
-    <label for={ id } class:placeholder={ !choice }> 
-        { choice ? choice.name : placeholder } 
-    </label>
-    
-    <div class="options">
-        {#each options as option}
-            <span on:click={ () => choose(option) }> {option.name} </span>
-        {/each}
-    </div>
+	<!-- Hidden input to bind the selected value -->
+	<input id={id} name={id} type="hidden" value={value}>
+	<label for={id} class:placeholder={!choice}>
+		{choice ? choice.name : placeholder}
+	</label>
+
+	<div class="options">
+		{#each options as option}
+			<span on:click={() => choose(option)}> {option.name} </span>
+		{/each}
+	</div>
 </div>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-    @use '$styles/variables.sass' as *
-    @use '$styles/palette.sass' as *
+	@use '$styles/variables.sass' as *
+	@use '$styles/palette.sass' as *
 
-    .dropdown
-        display: flex
-        flex-flow: column nowrap
+	.dropdown
+		display: flex
+		flex-flow: column nowrap
 
-        position: relative
-        width: 100%
+		position: relative
+		width: 100%
 
-        color: $dark-gray
+		color: $dark-gray
 
-        label
-            position: relative
+		label
+			position: relative
 
-            width: 100%
-            padding: $input-thin-padding $input-thick-padding
-            
-            border: 1px solid $gray
-            border-radius: $border-radius
+			width: 100%
+			padding: $input-thin-padding $input-thick-padding
 
-            cursor: pointer
+			border: 1px solid $gray
+			border-radius: $border-radius
 
-            &.placeholder
-                color: $placeholder-color
+			cursor: pointer
 
-            &::after
-                content: ""
+			&.placeholder
+				color: $placeholder-color
 
-                position: absolute
-                translate: 0 15%
-                rotate: 45deg
-                right: $input-thick-padding
-                bottom: 50%
+			&::after
+				content: ""
 
-                box-sizing: border-box
-                width: calc($input-icon-size / sqrt(2))
-                height: calc($input-icon-size / sqrt(2))
+				position: absolute
+				translate: 0 15%
+				rotate: 45deg
+				right: $input-thick-padding
+				bottom: 50%
 
-                border: 1px solid $black
-                border-width: 0 1px 1px 0
-        
-        .options
-            display: none
-            flex-flow: column nowrap
+				box-sizing: border-box
+				width: calc($input-icon-size / sqrt(2))
+				height: calc($input-icon-size / sqrt(2))
 
-            position: absolute
-            z-index: 1
-            top: 100%
+				border: 1px solid $black
+				border-width: 0 1px 1px 0
 
-            width: 100%
+		.options
+			display: none
+			flex-flow: column nowrap
 
-            background-color: $white
-            border: 1px solid $gray
-            border-width: 0 1px 1px 1px
-            border-radius: 0 0 $border-radius $border-radius
+			position: absolute
+			z-index: 1
+			top: 100%
 
-            span
-                padding: $input-thin-padding $input-thick-padding
-                cursor: pointer
+			width: 100%
 
-                &:last-child
-                   border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
+			background-color: $white
+			border: 1px solid $gray
+			border-width: 0 1px 1px 1px
+			border-radius: 0 0 $border-radius $border-radius
 
-                &:hover
-                    background-color: $light-gray
+			span
+				padding: $input-thin-padding $input-thick-padding
+				cursor: pointer
 
-        &.show
-            label
-                padding-bottom: calc( $input-thin-padding + 1px )
-                border-width: 1px 1px 0 1px
-                border-radius: $border-radius $border-radius 0 0
+				&:last-child
+					border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
 
-                &::after
-                    translate: 0 80%
-                    rotate: -135deg
-            
-            .options
-                display: flex
+				&:hover
+					background-color: $light-gray
+
+		&.show
+			label
+				border-bottom-style: dashed
+				border-radius: $border-radius $border-radius 0 0
+
+				&::after
+					translate: 0 80%
+					rotate: -135deg
+
+			.options
+				display: flex
 
 </style>

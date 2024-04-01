@@ -29,10 +29,10 @@
 	
 		<form class="credentials-login">
 	
-			<label for="username" class="textfield-label"> Username </label>
+			<label for="username"> Username </label>
 			<Textfield id="username" />
 
-			<label for="password" class="textfield-label"> Password </label>
+			<label for="password"> Password </label>
 			<Textfield id="password" obfuscate />
 
 			<Checkbox label="Remember me" />
@@ -64,14 +64,14 @@
 		grid-template: "label content" auto / 1fr 2fr
 		place-items: center start
 
-		.textfield-label
+		label
 			grid-column: label
 			justify-self: end
 
 			margin-top: $form-small-gap
 			padding-right: $form-medium-gap
 
-		& > :global(.textfield), & > :global(.checkbox)
+		:global(.textfield), & > :global(.checkbox)
 			grid-column: content
 			margin-top: $form-small-gap
 
@@ -85,9 +85,9 @@
 		@media screen and (max-width: $phone-breakpoint)
 			grid-template: "label" auto "content" auto / 1fr
 			
-			& > :global(.textfield)
+			:global(.textfield)
 				margin-top: 0px
-			.textfield-label
+			label
 				justify-self: start
 			.button-row
 				justify-self: center

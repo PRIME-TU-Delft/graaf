@@ -8,7 +8,6 @@
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
-	import Row from '$layouts/RowLayout.svelte';
 
 	import Button from '$components/Button.svelte';
 	import IconButton from '$components/IconButton.svelte';
@@ -71,12 +70,14 @@
 			<h3 slot="header"> Create Course </h3>
 
 			<form method="POST" action="?/newCourse" use:enhance>
-				<Textfield label="Code"/>
-				<Textfield label="Name"/>
-				<Row>
-				<svelte:fragment slot="right">
+				<label for="code"> Code </label>
+				<Textfield id="code" />
+
+				<label for="name"> Name </label>
+				<Textfield id="name" />
 					
-				<Dropdown 
+				<label for="program"> Program </label>
+				<Dropdown
 					label="Program" 
 					placeholder="Select a program" 
 					options={ 
@@ -85,12 +86,8 @@
 						}) 
 					} 
 				/>
-										
-				</svelte:fragment>
-			</Row>
-				<Row><svelte:fragment slot="right">
-					<Button submit={true} callback={modals.CREATE_COURSE?.hide}> Create </Button>
-				</svelte:fragment></Row>
+			
+				<Button submit callback={modals.CREATE_COURSE?.hide}> Create </Button>
 			</form>
 		</Modal>
 
@@ -98,10 +95,10 @@
 			<h3 slot="header"> Create Program </h3>
 
 			<form method="POST" action="?/newProgram" use:enhance>
-				<Textfield label="Name"/>
-				<Row><svelte:fragment slot="right">
-					<Button submit={true} callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
-				</svelte:fragment></Row>
+				<label for="name"> Name </label>
+				<Textfield id="Name"/>
+
+				<Button submit callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -160,13 +157,33 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
+	form
+		display: grid
+		grid-template: "label content" auto / 1fr 2fr
+		place-items: center start
+
+		label
+			grid-column: label
+			justify-self: end
+
+			margin-top: $form-small-gap
+			padding-right: $form-medium-gap
+
+		:global(.textfield), :global(.dropdown)
+			grid-column: content
+			margin-top: $form-small-gap
+
+		:global(.button)
+			grid-column: content
+			margin-top: $form-big-gap
+
 	.grid
 		display: flex
 		flex-flow: row wrap
 
 		.cell
 			flex: 0 1 100%
-			padding: $grid-cell-padding
+			padding: 0.5rem
 
 			cursor: pointer
 			color: $dark-gray
@@ -182,11 +199,11 @@
 			&:not(:last-child)
 				border-bottom: 1px solid $gray
 
-			@media screen and (min-width: $grid-2-column-width)
+			@media screen and (min-width: 800px)
 				border-bottom: 1px solid $gray
 				flex-basis: 50%
 
-			@media screen and (min-width: $grid-3-column-width)
+			@media screen and (min-width: 1200px)
 				border-bottom: 1px solid $gray
 				flex-basis: 33.3333%
 
