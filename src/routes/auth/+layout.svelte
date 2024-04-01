@@ -1,7 +1,7 @@
 
 <!-- Markup -->
 
-<div>
+<div class="column">
     <slot />
 </div>
 
@@ -12,8 +12,7 @@
     @use "$styles/variables.sass" as *
     @use "$styles/palette.sass" as *
 
-    div
-        width: 100%
+    .column
         max-width: $small-column
 
 </style>

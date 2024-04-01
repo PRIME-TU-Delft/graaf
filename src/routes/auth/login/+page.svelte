@@ -56,7 +56,7 @@
 	.SSO-login
 		display: flex
 		flex-flow: column nowrap
-		align-items: center
+		place-items: center start
 		gap: $form-big-gap
 
 	.credentials-login
