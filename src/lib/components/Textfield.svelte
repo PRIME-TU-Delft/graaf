@@ -11,7 +11,7 @@
 
 <!-- Markup -->
 
-<input id={ id } name={ id } type={obfuscate ? "password" : "text"} placeholder={placeholder} />
+<input id={id} name={id} class="textfield" type={obfuscate ? "password" : "text"} placeholder={placeholder} />
 
 <!-- Styles -->
 

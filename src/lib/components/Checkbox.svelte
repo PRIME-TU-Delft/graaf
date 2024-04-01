@@ -25,7 +25,9 @@
 	@use "$styles/palette.sass" as *
 
 	.checkbox
-		width: 100%
+		display: inline-flex
+		flex-flow: row nowrap
+		align-items: center
 
 		input
 			cursor: pointer
@@ -33,5 +35,6 @@
 			transition: all $default-transition
 
 		label
-			padding-left: $input-label-gap
+			padding-left: 0.5em
+
 </style>

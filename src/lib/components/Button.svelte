@@ -68,9 +68,13 @@
 			background: $gray
 			pointer-events: none
 
+		&:has(img)
+			padding-left: $input-thin-padding
+
 		:global(img)
+			box-sizing: content-box
 			width: $input-icon-size
-			padding: $input-icon-padding
+			padding-right: $input-thin-padding
 
 			filter: $white-filter
 			transition: all $default-transition
