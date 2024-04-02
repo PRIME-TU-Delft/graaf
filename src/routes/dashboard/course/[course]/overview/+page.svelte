@@ -6,12 +6,11 @@
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
-	import Row from '$layouts/RowLayout.svelte';
+
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 	import IconButton from '$components/IconButton.svelte';
 	import Textfield from '$components/Textfield.svelte';
-	import Tooltip from '$components/Tooltip.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import gearIcon from '$assets/gear-icon.svg';
@@ -117,36 +116,34 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button callback={createGraphModal?.show}>
-			<img src={plusIcon} alt="Plus icon"> New Graph
+		<Button on:click={createGraphModal?.show}>
+			<img src={plusIcon} alt=""> New Graph
 		</Button>
 
-		<Button callback={newLink}>
-			<img src={plusIcon} alt="Plus icon"> New Link
+		<Button on:click={newLink}>
+			<img src={plusIcon} alt=""> New Link
 		</Button>
 
 		<div class="flex-spacer" />
 
 		<LinkButton href="/dashboard/course/{course.code}/settings" rotate={true}>
-			<img src={gearIcon} alt="gear-icon"> Settings
+			<img src={gearIcon} alt=""> Settings
 		</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
 			<h3 slot="header"> Create Graph </h3>
 
 			<form>
+				<label for="name"> Name </label>
 				<Textfield label="Name"/>
-				<Row><svelte:fragment slot="right">
-					<Button callback={newGraph}> Create </Button>
-				</svelte:fragment></Row>
+
+				<Button submit on:click={createGraphModal.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
-		<svelte:fragment slot="header">
-			<h3> Graphs </h3>
-		</svelte:fragment>
+		<h3 slot="header"> Graphs </h3>
 
 		<svelte:fragment slot="body">
 			{#each graphs as graph}
@@ -156,35 +153,38 @@
 
 					<div class="flex-spacer" />
 					
-					<Tooltip data="View Graph">
-						<IconButton 
-							src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
-							alt="eye-icon" 
-							disabled={!graph.has_visibility}
-							scale={true}
-							/>
-					</Tooltip>
+					<IconButton 
+						src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
+						description="View Graph"
+						disabled={!graph.has_visibility}
+						scale={true}
+						/>
 
-					<Tooltip data="Edit Graph">
-						<IconButton href="/dashboard/course/{course.code}/graph/{graph.id}/layout" src={pencilIcon} alt="pencil-icon" scale={true} />
-					</Tooltip>
+					<IconButton
+						src={pencilIcon} 
+						description="Edit Graph" 
+						href="/dashboard/course/{course.code}/graph/{graph.id}/layout" 
+						scale={true} 
+						/>
 
-					<Tooltip data="Copy Graph">
-						<IconButton src={copyIcon} alt="copy-icon" scale={true} />
-					</Tooltip>
-
-					<Tooltip data="Delete Graph">
-						<IconButton src={trashIcon} alt="trash-icon" scale={true} />
-					</Tooltip>
+					<IconButton 
+						src={copyIcon} 
+						description="Copy Graph" 
+						scale={true} 
+						/>
+					
+					<IconButton
+						src={trashIcon} 
+						description="Delete Graph" 
+						scale={true} 
+						/>
 				</span>
 			{/each}
 		</svelte:fragment>
 	</Card>
 
 	<Card>
-		<svelte:fragment slot="header">
-			<h3> Links </h3>
-		</svelte:fragment>
+		<h3 slot="header"> Links </h3>
 	</Card>
 </Layout>
 
@@ -204,8 +204,8 @@
 		align-items: center
 		
 		position: relative
-		padding: $grid-cell-padding
-		padding-left: $input-icon-width
+		padding: 1rem
+		padding-left: calc($input-icon-size + 2 * $input-thin-padding)
 		
 		color: $dark-gray
 
@@ -215,7 +215,7 @@
 		img:first-child
 			position: absolute
 			translate: 0 -50%
-			left: $grid-cell-padding
+			left: 1rem
 			top: 50%
 
 			width: 1rem

@@ -13,7 +13,7 @@
 <!-- Markup -->
 
 <div class="checkbox">
-	   <input id={id} type="checkbox" value={value} /><!--
+	   <input id={id} type="checkbox" bind:value /><!--
 	--><label for={id}> {label} </label>
 </div>
 

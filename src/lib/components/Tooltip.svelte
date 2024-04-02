@@ -11,7 +11,7 @@
 
 <!-- Markup -->
 
-<span style="top: {y}px; left: {x}px;"> {text} </span>
+<span style:top="{y}px" style:left="{x}px"> {text} </span>
 
 <!-- Styles -->
 
@@ -21,16 +21,14 @@
     @use "$styles/palette.sass" as *
 
     span
-        width: max-content
-
         position: absolute
         translate: -50% -100%
         z-index: 9999
 
+        width: max-content
         padding: 0 $input-thick-padding
         border-radius: $border-radius
 
-        content: "blah"
         color: $white
         background: $dark-gray
         text-align: center

@@ -3,7 +3,6 @@
 
 <script lang="ts">
 
-	export let callback: () => void = () => {};
 	export let href: string | undefined = undefined;
 
 	export let submit: boolean = false;
@@ -12,7 +11,8 @@
 	export let rotate: boolean = false;
 
 	$: if (submit && href !== undefined) {
-		console.warn("LinkButton: submit and href are mutually exclusive");
+		console.warn("LinkButton: submit type does not require a 'href' prop. Ignoring 'href' prop.");
+		href = undefined;
 	}
 
 </script>
@@ -22,9 +22,9 @@
 {#if href === undefined}
 
 	<button
-		class="link-button" class:disabled class:scale class:rotate
 		type={submit ? "submit" : "button"}
-		on:click={callback}
+		class="link-button" class:disabled class:scale class:rotate
+		on:click
 	>
 		<slot />
 	</button>
@@ -32,9 +32,9 @@
 {:else}
 
 	<a
-		class="link-button" class:disabled class:scale class:rotate
-		on:click={callback}
 		href={href}
+		class="link-button" class:disabled class:scale class:rotate
+		on:click
 	>
 		<slot />
 	</a>

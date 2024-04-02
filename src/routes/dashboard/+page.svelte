@@ -49,31 +49,31 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<Button callback={newSandbox}>
-			<img src={plusIcon} alt="Plus icon"> New Sandbox
+		<Button on:click={newSandbox}>
+			<img src={plusIcon} alt=""> New Sandbox
 		</Button>
 
-		<Button callback={modals.CREATE_COURSE?.show}>
-			<img src={plusIcon} alt="Plus icon"> New Course
+		<Button on:click={modals.CREATE_COURSE?.show}>
+			<img src={plusIcon} alt=""> New Course
 		</Button>
 
-		<Button callback={modals.CREATE_PROGRAM?.show}>
-			<img src={plusIcon} alt="Plus icon"> New Program
+		<Button on:click={modals.CREATE_PROGRAM?.show}>
+			<img src={plusIcon} alt=""> New Program
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<Searchbar onChange={onSearch} placeholder="Search courses" />
+		<Searchbar onChange={onSearch} placeholder="Search courses" /> <!-- TODO I cringe a bit for this implementation -->
 
 		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
 			<form method="POST" action="?/newCourse" use:enhance>
 				<label for="code"> Code </label>
-				<Textfield id="code" />
+				<Textfield label="Code" />
 
 				<label for="name"> Name </label>
-				<Textfield id="name" />
+				<Textfield label="Name" />
 					
 				<label for="program"> Program </label>
 				<Dropdown
@@ -86,7 +86,7 @@
 					} 
 				/>
 			
-				<Button submit callback={modals.CREATE_COURSE?.hide}> Create </Button>
+				<Button submit on:click={modals.CREATE_COURSE?.hide}> Create </Button>
 			</form>
 		</Modal>
 
@@ -95,9 +95,9 @@
 
 			<form method="POST" action="?/newProgram" use:enhance>
 				<label for="name"> Name </label>
-				<Textfield id="Name"/>
+				<Textfield label="Name"/>
 
-				<Button submit callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
+				<Button submit on:click={modals.CREATE_PROGRAM?.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -120,9 +120,8 @@
 
 				<IconButton
 					src={peopleIcon}
-					alt="people-icon"
-					tooltip="Program Coordinators"
-					callback={modals[name]?.show}
+					description="Program Coordinators"
+					on:click={modals[name]?.show}
 					scale={true}
 				/>
 

@@ -3,18 +3,22 @@
 
 <script lang="ts">
 
-	import { tooltip as tooltipAction } from '$scripts/tooltip';
+	import { tooltip } from '$scripts/tooltip';
 
 	export let src: string;
-	export let alt: string;
-	export let tooltip: string = "";
+	export let description: string = "";
 
-	export let callback: () => void = () => {};
-	export let href: undefined | string = undefined;
+	export let href: string | undefined = undefined;
 
-	export let disabled: boolean = false;
-	export let scale: boolean = false;
-	export let rotate: boolean = false;
+	export let submit   : boolean = false;
+	export let disabled : boolean = false;
+	export let scale    : boolean = false;
+	export let rotate   : boolean = false;
+
+	$: if (submit && href !== undefined) {
+		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.");
+		href = undefined;
+	}
 
 </script>
 
@@ -23,9 +27,10 @@
 {#if href === undefined}
 
 	<button
-		use:tooltipAction={tooltip}
+		type={submit ? "submit" : "button"}
 		class="icon-button" class:disabled class:scale class:rotate
-		on:click={callback}
+		use:tooltip={description}
+		on:click
 	>
 		<img src={src} alt="">
 	</button>
@@ -33,11 +38,12 @@
 {:else}
 
 	<a
-		class="icon-button" class:disabled class:scale class:rotate
-		on:click={callback}
 		href={href}
+		class="icon-button" class:disabled class:scale class:rotate
+		use:tooltip={description}
+		on:click
 	>
-		<img src={src} alt={alt}>
+		<img src={src} alt="">
 	</a>
 
 {/if}

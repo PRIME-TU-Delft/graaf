@@ -8,23 +8,16 @@
 		value: any
 	}
 
-	function toggle() {
-		show = !show;
-	}
-
-	function choose(option: Option) {
-		choice = option;
-	}
-
 	export let label: string;
 	export let placeholder: string;
 	export let options: Option[];
+	export let choice: Option | null = null;
 
 	let show: boolean = false;
-	let choice: Option | null = null;
 
 	$: id = label.toLowerCase().replace(/\s/g, "_");
-	$: value = choice ? choice.value : null;
+	$: name = choice !== null ? choice.name : placeholder;
+	$: value = choice !== null ? choice.value : null;
 
 </script>
 
@@ -34,17 +27,15 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-<div class="dropdown" class:show on:click={ toggle }>
+<div class="dropdown" class:show on:click={() => show = !show}>
 
 	<!-- Hidden input to bind the selected value -->
-	<input id={id} name={id} type="hidden" value={value}>
-	<label for={id} class:placeholder={!choice}>
-		{choice ? choice.name : placeholder}
-	</label>
+	<input id={id} name={id} type="hidden" bind:value>
+	<label for={id} class:placeholder={choice === null}> {name} </label>
 
 	<div class="options">
 		{#each options as option}
-			<span on:click={() => choose(option)}> {option.name} </span>
+			<span on:click={() => choice = option}> {option.name} </span>
 		{/each}
 	</div>
 </div>

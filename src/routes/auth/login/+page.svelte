@@ -22,7 +22,7 @@
 	<svelte:fragment slot="body">
 		<form class="SSO-login">
 			Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will be removed after November 1. You can give yourself access to the courses that your old account had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle access to other courses.
-			<Button callback={SSOlogin}> Login with TUDelft SSO </Button>
+			<Button on:click={SSOlogin}> Login with TUDelft SSO </Button>
 		</form>
 	
 		<div class="divider" />
@@ -30,10 +30,10 @@
 		<form class="credentials-login">
 	
 			<label for="username"> Username </label>
-			<Textfield id="username" />
+			<Textfield label="Username" />
 
 			<label for="password"> Password </label>
-			<Textfield id="password" obfuscate />
+			<Textfield label="Password" obfuscate />
 
 			<Checkbox label="Remember me" />
 

@@ -16,19 +16,19 @@
 	<svelte:fragment slot="body">
 		<form>
 			<label for="first_name"> First Name </label>
-			<Textfield id="first_name" />
+			<Textfield label="First Name" />
 
 			<label for="last_name"> Last Name </label>
-			<Textfield id="last_name" />
+			<Textfield label="Last Name" />
 
 			<label for="username"> Username </label>
-			<Textfield id="username" />
+			<Textfield label="Username" />
 
 			<label for="password"> Password </label>
-			<Textfield id="password" obfuscate />
+			<Textfield label="Password" obfuscate />
 
 			<label for="confirm_password"> Confirm Password </label>
-			<Textfield id="confirm_password" obfuscate />
+			<Textfield label="Confirm Password" obfuscate />
 
 			<Button submit> Register </Button>
 		</form>

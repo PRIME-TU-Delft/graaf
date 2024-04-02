@@ -3,7 +3,6 @@
 
 <script lang="ts">
 
-	export let callback: () => void = () => {};
 	export let href: string | undefined = undefined;
 
 	export let submit: boolean = false;
@@ -12,32 +11,33 @@
 	export let scale: boolean = false;
 
 	$: if (submit && href !== undefined) {
-		console.warn("Button: submit and href are mutually exclusive");
+		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.");
+		href = undefined;
 	}
 
 </script>
 
 <!-- Markup -->
 
-{#if href === undefined}
-
-	<button
-		class="button" class:disabled class:scale class:rotate
-		type={submit ? "submit" : "button"}
-		on:click={callback}
-	>
-		<slot />
-	</button>
-
-{:else}
+{#if href !== undefined}
 
 	<a
 		class="button" class:disabled class:scale class:rotate
-		on:click={callback}
 		href={href}
+		on:click
 	>
 		<slot />
 	</a>
+
+{:else}
+
+	<button
+		type={submit ? "submit" : "button"}
+		class="button" class:disabled class:scale class:rotate
+		on:click
+	>
+		<slot />
+	</button>
 
 {/if}
 

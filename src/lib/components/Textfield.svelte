@@ -3,15 +3,18 @@
 
 <script lang="ts">
 
-	export let id: string;
+	export let label: string;
 	export let placeholder: string = "";
 	export let obfuscate: boolean = false;
+
+	$: id = label.toLowerCase().replace(/\s/g, "_");
+	$: type = obfuscate ? "password" : "text" as "password" | "text";
 
 </script>
 
 <!-- Markup -->
 
-<input id={id} name={id} class="textfield" type={obfuscate ? "password" : "text"} placeholder={placeholder} />
+<input id={id} name={id} class="textfield" type={type} placeholder={placeholder} />
 
 <!-- Styles -->
 

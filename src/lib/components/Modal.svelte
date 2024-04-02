@@ -39,7 +39,7 @@
 	@use "$styles/palette.sass" as *
 
 	.background
-		display: flex
+		display: none
 		align-items: center
 		justify-content: center
 
@@ -53,8 +53,8 @@
 
 		background-color: rgba(0, 0, 0, 0.25)
 
-		&:not(.visible)
-			display: none
+		&.visible
+			display: flex
 
 	dialog
 		display: flex
@@ -88,7 +88,6 @@
 
 				cursor: pointer
 				filter: $purple-filter
-				transition: all $default-transition
 			
 				&:hover
 					scale: $scale-on-hover
