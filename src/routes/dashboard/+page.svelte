@@ -14,7 +14,6 @@
 	import Searchbar from '$components/Searchbar.svelte';
 	import Textfield from '$components/Textfield.svelte';
 	import Dropdown from '$components/Dropdown.svelte';
-	import Tooltip from '$components/Tooltip.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import peopleIcon from '$assets/people-icon.svg';
@@ -119,14 +118,13 @@
 
 				<div class="flex-spacer" />
 
-				<Tooltip data="Program Coordinators">
-					<IconButton
-						src={peopleIcon}
-						alt="people-icon"
-						callback={modals[name]?.show}
-						scale={true}
-					/>
-				</Tooltip>
+				<IconButton
+					src={peopleIcon}
+					alt="people-icon"
+					tooltip="Program Coordinators"
+					callback={modals[name]?.show}
+					scale={true}
+				/>
 
 				<LinkButton href="/dashboard/program/{name}/settings"> Settings </LinkButton>
 

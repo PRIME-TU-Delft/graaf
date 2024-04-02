@@ -3,8 +3,11 @@
 
 <script lang="ts">
 
+	import { tooltip as tooltipAction } from '$scripts/tooltip';
+
 	export let src: string;
 	export let alt: string;
+	export let tooltip: string = "";
 
 	export let callback: () => void = () => {};
 	export let href: undefined | string = undefined;
@@ -20,16 +23,17 @@
 {#if href === undefined}
 
 	<button
-		class="icon-btn" class:disabled class:scale class:rotate
+		use:tooltipAction={tooltip}
+		class="icon-button" class:disabled class:scale class:rotate
 		on:click={callback}
 	>
-		<img src={src} alt={alt}>
+		<img src={src} alt="">
 	</button>
 
 {:else}
 
 	<a
-		class="icon-btn" class:disabled class:scale class:rotate
+		class="icon-button" class:disabled class:scale class:rotate
 		on:click={callback}
 		href={href}
 	>
@@ -45,7 +49,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.icon-btn
+	.icon-button
 		box-sizing: content-box
 		height: $input-icon-size
 		padding: $input-thin-padding

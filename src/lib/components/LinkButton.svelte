@@ -89,5 +89,8 @@
 				scale: $scale-on-hover
 			&.rotate :global(img)
 				rotate: $rotate-on-hover
+		
+	:global(.link-button) + .link-button, :global(.icon-button) + .link-button
+		padding-left: $input-thin-padding
 
 </style>

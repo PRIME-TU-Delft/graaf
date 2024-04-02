@@ -3,30 +3,15 @@
 
 <script lang="ts">
 
-    export let data: string = "Lorum ipsum"
-    let show: boolean = false
-    let timeout: number
-    
-    function mouseEnter() {
-        timeout = setTimeout(() => {
-            show = true
-        }, 1000)
-    }
-
-    function mouseLeave() {
-        clearTimeout(timeout)
-        show = false
-    }
+    export let text: string;
+    export let x: number;
+    export let y: number;
 
 </script>
 
 <!-- Markup -->
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div on:mouseenter={mouseEnter} on:mouseleave={mouseLeave}>
-    <span class:show={show}> {data} </span>
-    <slot />
-</div>
+<span style="top: {y}px; left: {x}px;"> {text} </span>
 
 <!-- Styles -->
 
@@ -35,45 +20,35 @@
     @use "$styles/variables.sass" as *
     @use "$styles/palette.sass" as *
 
-    div
-        display: flex
-        align-items: center
-        justify-content: center
+    span
+        width: max-content
 
-        position: relative
+        position: absolute
+        translate: -50% -100%
+        z-index: 9999
 
-        span
-            display: none
-            width: max-content
+        padding: 0 $input-thick-padding
+        border-radius: $border-radius
 
+        content: "blah"
+        color: $white
+        background: $dark-gray
+        text-align: center
+
+        pointer-events: none
+
+        &::after
             position: absolute
-            translate: -50% calc(-100% - $tooltip-spacing)
-            z-index: 1
+            translate: -50% 50%
+            rotate: 45deg
+            bottom: 0
             left: 50%
 
-            padding: 0 $input-thick-padding
-            border-radius: $border-radius
+            content: ""
 
-            content: "blah"
-            color: $white
+            width: 0.5rem
+            height: 0.5rem
+
             background: $dark-gray
-            text-align: center
-
-            &.show
-                display: block
-
-            &::after
-                position: absolute
-                translate: -50% 50%
-                rotate: 45deg
-                bottom: 0
-                left: 50%
-
-                content: ""
-
-                width: 0.5rem
-                height: 0.5rem
-
-                background: $dark-gray
 
 </style>
