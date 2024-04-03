@@ -59,7 +59,7 @@
 	dialog
 		display: flex
 		flex-flow: column nowrap
-		gap: $layout-vertical-gap
+		gap: 1rem
 		
 		position: relative
 		

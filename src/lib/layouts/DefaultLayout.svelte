@@ -71,6 +71,6 @@
             display: flex
             flex-flow: column nowrap
             place-items: stretch start
-            gap: $layout-vertical-gap
+            gap: 1rem
         
 </style>

@@ -29,7 +29,7 @@
 		position: relative
 
 		width: 100%
-		max-width: $searchbar-width
+		max-width: 20rem
 
 		input
 			width: 100%
