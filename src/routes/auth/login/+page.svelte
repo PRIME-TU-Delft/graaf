@@ -71,7 +71,7 @@
 			margin-top: $form-small-gap
 			padding-right: $form-medium-gap
 
-		:global(.textfield), & > :global(.checkbox)
+		:global(.textfield), :global(.checkbox)
 			grid-column: content
 			margin-top: $form-small-gap
 
@@ -81,6 +81,7 @@
 
 			display: inline-flex
 			flex-flow: row nowrap
+			gap: $form-small-gap
 		
 		@media screen and (max-width: $phone-breakpoint)
 			grid-template: "label" auto "content" auto / 1fr

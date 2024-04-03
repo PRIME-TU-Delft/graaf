@@ -41,12 +41,13 @@
     .layout
         display: flex
         flex-flow: column nowrap
+        place-items: stretch start
 
         width: 100%
         max-width: $big-column
 
         .header
-            margin-bottom: $defaultLayout-header-margin
+            margin-bottom: 2rem
             color: $dark-gray
 
             h2
@@ -61,14 +62,15 @@
         .toolbar
             display: flex
             flex-flow: row nowrap
-            align-items: center
-            gap: $layout-horizontal-gap
+            place-items: center start
+            gap: $form-small-gap
 
-            margin-bottom: $defaultLayout-toolbar-margin
+            margin-bottom: 1rem
         
         .body
             display: flex
             flex-flow: column nowrap
+            place-items: stretch start
             gap: $layout-vertical-gap
         
 </style>

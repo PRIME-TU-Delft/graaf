@@ -6,10 +6,10 @@
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 
-	import '$styles/global.sass';
-
 	import PRIME_logo from '$assets/PRIME-logo.svg';
 	import TUDelft_logo from '$assets/TUD-logo.svg';
+
+	import '$styles/global.sass';
 
 	let loggedIn = false; // TODO temporary
 
@@ -54,13 +54,14 @@
 		display: flex
 		flex-flow: row nowrap
 		place-items: center start
+		gap: $form-small-gap
 
 		padding: $header-padding
 		background: $light-gray
 
 		#PRIME-logo img
 			width: $prime-logo-size
-			margin-right: $prime-logo-margin
+			margin-right: calc($prime-logo-margin - $form-small-gap)
 			padding-bottom: $prime-logo-alignment
 
 			cursor: pointer

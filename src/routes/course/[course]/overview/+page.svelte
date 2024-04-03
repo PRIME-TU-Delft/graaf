@@ -111,7 +111,7 @@
 		},
 		{
 			name: `${course.code} ${course.name}`,
-			href: `/dashboard/course/${course.code}/overview`
+			href: `/course/${course.code}/overview`
 		}
 	]}
 >
@@ -126,8 +126,8 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/dashboard/course/{course.code}/settings" rotate={true}>
-			<img src={gearIcon} alt=""> Settings
+		<LinkButton href="/course/{course.code}/settings">
+			Settings
 		</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
@@ -157,26 +157,26 @@
 						src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
 						description="View Graph"
 						disabled={!graph.has_visibility}
-						scale={true}
+						scale
 						/>
 
 					<IconButton
 						src={pencilIcon} 
 						description="Edit Graph" 
-						href="/dashboard/course/{course.code}/graph/{graph.id}/layout" 
-						scale={true} 
+						href="/course/{course.code}/graph/{graph.id}/edit" 
+						scale
 						/>
 
 					<IconButton 
 						src={copyIcon} 
 						description="Copy Graph" 
-						scale={true} 
+						scale
 						/>
 					
 					<IconButton
 						src={trashIcon} 
 						description="Delete Graph" 
-						scale={true} 
+						scale
 						/>
 				</span>
 			{/each}
@@ -195,8 +195,25 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	h1
-		font-size: 1.5rem
+	form
+		display: grid
+		grid-template: "label content" auto / 1fr 2fr
+		place-items: center start
+
+		label
+			grid-column: label
+			justify-self: end
+
+			margin-top: $form-small-gap
+			padding-right: $form-medium-gap
+
+		:global(.textfield)
+			grid-column: content
+			margin-top: $form-small-gap
+
+		:global(.button)
+			grid-column: content
+			margin-top: $form-big-gap
 
 	.graph
 		display: flex
@@ -205,7 +222,7 @@
 		
 		position: relative
 		padding: 1rem
-		padding-left: calc($input-icon-size + 2 * $input-thin-padding)
+		padding-left: calc($input-icon-size + 2 * $input-icon-padding)
 		
 		color: $dark-gray
 
@@ -215,7 +232,7 @@
 		img:first-child
 			position: absolute
 			translate: 0 -50%
-			left: 1rem
+			left: $input-icon-padding
 			top: 50%
 
 			width: 1rem

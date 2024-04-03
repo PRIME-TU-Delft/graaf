@@ -53,10 +53,10 @@
 		flex-flow: row nowrap
 		place-items: center start
  
-		padding: $input-thin-padding $input-thick-padding
+		padding: $input-thin-padding
 
-		border: 1px solid transparent
 		color: $purple
+		border: 1px solid transparent
 
 		cursor: pointer
 		transition: all $default-transition
@@ -68,15 +68,13 @@
 			:global(img)
 				filter: $gray-filter
 
-		&:has(img)
-			padding-left: $input-thin-padding
-
 		:global(img)
 			box-sizing: content-box
 			width: $input-icon-size
-			padding-right: $input-thin-padding
+			margin-right: $input-thin-padding
 
 			filter: $purple-filter
+			transform-origin: center
 			transition: all $default-transition
 
 		&:hover
@@ -89,8 +87,5 @@
 				scale: $scale-on-hover
 			&.rotate :global(img)
 				rotate: $rotate-on-hover
-		
-	:global(.link-button) + .link-button, :global(.icon-button) + .link-button
-		padding-left: $input-thin-padding
 
 </style>

@@ -57,14 +57,15 @@
 
 	.icon-button
 		box-sizing: content-box
+		width: $input-icon-size
 		height: $input-icon-size
-		padding: $input-thin-padding
+		padding: $input-icon-padding
 
 		cursor: pointer
 
 		img
-			width: $input-icon-size
 			filter: $purple-filter
+			transform-origin: center
 			pointer-events: none
 		
 		&.disabled

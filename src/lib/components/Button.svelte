@@ -74,9 +74,10 @@
 		:global(img)
 			box-sizing: content-box
 			width: $input-icon-size
-			padding-right: $input-thin-padding
+			margin-right: $input-thin-padding
 
 			filter: $white-filter
+			transform-origin: center
 			transition: all $default-transition
 
 		&:hover

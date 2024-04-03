@@ -106,7 +106,7 @@
 		<h3 slot="header"> My Courses </h3>
 		<div slot="body" class="grid">
 			{#each courses as {code, name}}
-				<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
+				<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
 			{/each}
 		</div>
 	</Card>
@@ -122,10 +122,10 @@
 					src={peopleIcon}
 					description="Program Coordinators"
 					on:click={modals[name]?.show}
-					scale={true}
+					scale
 				/>
 
-				<LinkButton href="/dashboard/program/{name}/settings"> Settings </LinkButton>
+				<LinkButton href="/program/{name}/settings"> Settings </LinkButton>
 
 				<Modal bind:this={modals[name]}>
 					<h3 slot="header"> Program Coordinators </h3>
@@ -140,7 +140,7 @@
 
 			<div slot="body" class="grid">
 				{#each courses as {code, name}}
-					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
+					<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>
 		</Card>

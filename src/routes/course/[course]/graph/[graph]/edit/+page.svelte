@@ -103,15 +103,15 @@
 		},
 		{
 			name: `${course.code} ${course.name}`,
-			href: `/dashboard/course/${course.code}/overview`
+			href: `/course/${course.code}/overview`
 		},
 		{
 			name: graph.name,
-			href: `/dashboard/course/${course.code}/graph/${graph.id}/overview`
+			href: `/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
 			name: "Layout",
-			href: `/dashboard/course/${course.code}/graph/${graph.id}/layout`
+			href: `/course/${course.code}/graph/${graph.id}/edit`
 		}
 	]}
 >
@@ -119,7 +119,7 @@
 	<svelte:fragment slot="toolbar">
 		<div class="flex-spacer" />
 
-		<Button callback={saveLayout}> Save Layout </Button>
+		<Button on:click={saveLayout}> Save Layout </Button>
 	</svelte:fragment>
 
 	<Tabular
