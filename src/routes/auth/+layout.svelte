@@ -2,17 +2,17 @@
 <!-- Markup -->
 
 <div class="column">
-    <slot />
+	<slot />
 </div>
 
 <!-- Styles -->
 
 <style lang="sass">
 
-    @use "$styles/variables.sass" as *
-    @use "$styles/palette.sass" as *
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
-    .column
-        max-width: $small-column
+	.column
+		max-width: $small-column
 
 </style>

@@ -19,17 +19,7 @@
 
 <!-- Markup -->
 
-{#if href !== undefined}
-
-	<a
-		class="button" class:disabled class:scale class:rotate
-		href={href}
-		on:click
-	>
-		<slot />
-	</a>
-
-{:else}
+{#if href === undefined}
 
 	<button
 		type={submit ? "submit" : "button"}
@@ -38,6 +28,16 @@
 	>
 		<slot />
 	</button>
+
+{:else}
+
+	<a
+		class="button" class:disabled class:scale class:rotate
+		href={href}
+		on:click
+	>
+		<slot />
+	</a>
 
 {/if}
 

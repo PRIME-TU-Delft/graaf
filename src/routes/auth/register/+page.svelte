@@ -61,10 +61,10 @@
 		:global(.button)
 			grid-column: content
 			margin-top: $form-big-gap
-		
+
 		@media screen and (max-width: $phone-breakpoint)
 			grid-template: "label" auto "content" auto / 1fr
-			
+
 			:global(.textfield)
 				margin-top: 0px
 			:global(.button)

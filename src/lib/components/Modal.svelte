@@ -60,9 +60,9 @@
 		display: flex
 		flex-flow: column nowrap
 		gap: 1rem
-		
+
 		position: relative
-		
+
 		width: 100%
 		max-width: $small-column
 		padding: $card-thick-padding
@@ -81,14 +81,14 @@
 
 			margin: $card-thick-padding
 			overflow: hidden
-			
+
 			img
 				width: $input-icon-size
 				rotate: 45deg
 
 				cursor: pointer
 				filter: $purple-filter
-			
+
 				&:hover
 					scale: $scale-on-hover
 					filter: $dark-purple-filter

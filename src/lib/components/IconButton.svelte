@@ -67,12 +67,12 @@
 			filter: $purple-filter
 			transform-origin: center
 			pointer-events: none
-		
+
 		&.disabled
 			pointer-events: none
 
 			img
-				filter: $gray-filter	
+				filter: $gray-filter
 
 		&:hover
 			img

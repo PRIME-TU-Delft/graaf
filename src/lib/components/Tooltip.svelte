@@ -3,9 +3,9 @@
 
 <script lang="ts">
 
-    export let text: string;
-    export let x: number;
-    export let y: number;
+	export let text: string;
+	export let x: number;
+	export let y: number;
 
 </script>
 
@@ -17,36 +17,36 @@
 
 <style lang="sass">
 
-    @use "$styles/variables.sass" as *
-    @use "$styles/palette.sass" as *
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
-    span
-        position: absolute
-        translate: -50% -100%
-        z-index: 9999
+	span
+		position: absolute
+		translate: -50% -100%
+		z-index: 9999
 
-        width: max-content
-        padding: 0 $input-thick-padding
-        border-radius: $border-radius
+		width: max-content
+		padding: 0 $input-thick-padding
+		border-radius: $border-radius
 
-        color: $white
-        background: $dark-gray
-        text-align: center
+		color: $white
+		background: $dark-gray
+		text-align: center
 
-        pointer-events: none
+		pointer-events: none
 
-        &::after
-            position: absolute
-            translate: -50% 50%
-            rotate: 45deg
-            bottom: 0
-            left: 50%
+		&::after
+			position: absolute
+			translate: -50% 50%
+			rotate: 45deg
+			bottom: 0
+			left: 50%
 
-            content: ""
+			content: ""
 
-            width: 0.5rem
-            height: 0.5rem
+			width: 0.5rem
+			height: 0.5rem
 
-            background: $dark-gray
+			background: $dark-gray
 
 </style>

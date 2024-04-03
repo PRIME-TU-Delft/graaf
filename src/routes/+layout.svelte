@@ -21,7 +21,7 @@
 	<a id="PRIME-logo" href="/">
 		<img src={PRIME_logo} alt="PRIME logo">
 	</a>
-	
+
 	<h1>Graph editor</h1>
 
 	<div class="flex-spacer" />

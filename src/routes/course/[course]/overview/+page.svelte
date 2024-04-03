@@ -57,7 +57,7 @@
 			this.has_links = has_links;
 			this.has_visibility = has_visibility;
 		}
-	}	
+	}
 
 	function getCourse(code: string): Course {
 		for (let course of courses) {
@@ -147,13 +147,13 @@
 
 		<svelte:fragment slot="body">
 			{#each graphs as graph}
-				<span class="graph"> 
+				<span class="graph">
 					{#if graph.has_links} <img src={linkIcon} alt="Link icon" /> {/if}
 					{graph.name}
 
 					<div class="flex-spacer" />
-					
-					<IconButton 
+
+					<IconButton
 						src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
 						description="View Graph"
 						disabled={!graph.has_visibility}
@@ -161,21 +161,21 @@
 						/>
 
 					<IconButton
-						src={pencilIcon} 
-						description="Edit Graph" 
-						href="/course/{course.code}/graph/{graph.id}/edit" 
+						src={pencilIcon}
+						description="Edit Graph"
+						href="/course/{course.code}/graph/{graph.id}/edit"
 						scale
 						/>
 
-					<IconButton 
-						src={copyIcon} 
-						description="Copy Graph" 
+					<IconButton
+						src={copyIcon}
+						description="Copy Graph"
 						scale
 						/>
-					
+
 					<IconButton
-						src={trashIcon} 
-						description="Delete Graph" 
+						src={trashIcon}
+						description="Delete Graph"
 						scale
 						/>
 				</span>
@@ -219,11 +219,11 @@
 		display: flex
 		flex-flow: row nowrap
 		align-items: center
-		
+
 		position: relative
 		padding: 1rem
 		padding-left: calc($input-icon-size + 2 * $input-icon-padding)
-		
+
 		color: $dark-gray
 
 		&:not(:last-child)

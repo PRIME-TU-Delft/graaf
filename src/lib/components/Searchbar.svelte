@@ -48,7 +48,7 @@
 			translate: -50% -50%
 			top: 50%
 			right: 0
-			
+
 			width: $input-icon-size
 
 			filter: $dark-gray-filter

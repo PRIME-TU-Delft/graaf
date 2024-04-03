@@ -52,7 +52,7 @@
 		display: inline-flex
 		flex-flow: row nowrap
 		place-items: center start
- 
+
 		padding: $input-thin-padding
 
 		color: $purple

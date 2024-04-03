@@ -2,7 +2,7 @@
 <!-- Script -->
 
 <script lang="ts">
-	
+
 	import Button from '$components/Button.svelte';
 	import Card from '$components/Card.svelte';
 	import Checkbox from '$components/Checkbox.svelte';
@@ -24,11 +24,11 @@
 			Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will be removed after November 1. You can give yourself access to the courses that your old account had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle access to other courses.
 			<Button on:click={SSOlogin}> Login with TUDelft SSO </Button>
 		</form>
-	
+
 		<div class="divider" />
-	
+
 		<form class="credentials-login">
-	
+
 			<label for="username"> Username </label>
 			<Textfield label="Username" />
 
@@ -82,10 +82,10 @@
 			display: inline-flex
 			flex-flow: row nowrap
 			gap: $form-small-gap
-		
+
 		@media screen and (max-width: $phone-breakpoint)
 			grid-template: "label" auto "content" auto / 1fr
-			
+
 			:global(.textfield)
 				margin-top: 0px
 			label

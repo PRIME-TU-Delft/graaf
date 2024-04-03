@@ -74,18 +74,18 @@
 
 				<label for="name"> Name </label>
 				<Textfield label="Name" />
-					
+
 				<label for="program"> Program </label>
 				<Dropdown
-					label="Program" 
-					placeholder="Select a program" 
-					options={ 
-						programs.map(program => { 
+					label="Program"
+					placeholder="Select a program"
+					options={
+						programs.map(program => {
 							return {name: program.name, value: program.id}
-						}) 
-					} 
+						})
+					}
 				/>
-			
+
 				<Button submit on:click={modals.CREATE_COURSE?.hide}> Create </Button>
 			</form>
 		</Modal>
