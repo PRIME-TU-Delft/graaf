@@ -3,15 +3,22 @@
 
 <script lang="ts">
 
+	import { tooltip } from '$scripts/tooltip';
+
 	export let src: string;
-	export let alt: string;
+	export let description: string = "";
 
-	export let callback: () => void = () => {};
-	export let href: undefined | string = undefined;
+	export let href: string | undefined = undefined;
 
-	export let disabled: boolean = false;
-	export let scale: boolean = false;
-	export let rotate: boolean = false;
+	export let submit   : boolean = false;
+	export let disabled : boolean = false;
+	export let scale    : boolean = false;
+	export let rotate   : boolean = false;
+
+	$: if (submit && href !== undefined) {
+		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.");
+		href = undefined;
+	}
 
 </script>
 
@@ -20,20 +27,23 @@
 {#if href === undefined}
 
 	<button
-		class="icon-btn" class:disabled class:scale class:rotate
-		on:click={callback}
+		type={submit ? "submit" : "button"}
+		class="icon-button" class:disabled class:scale class:rotate
+		use:tooltip={description}
+		on:click
 	>
-		<img src={src} alt={alt}>
+		<img src={src} alt="">
 	</button>
 
 {:else}
 
 	<a
-		class="icon-btn" class:disabled class:scale class:rotate
-		on:click={callback}
 		href={href}
+		class="icon-button" class:disabled class:scale class:rotate
+		use:tooltip={description}
+		on:click
 	>
-		<img src={src} alt={alt}>
+		<img src={src} alt="">
 	</a>
 
 {/if}
@@ -45,23 +55,24 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.icon-btn
+	.icon-button
 		box-sizing: content-box
+		width: $input-icon-size
 		height: $input-icon-size
-		padding: $input-thin-padding
+		padding: $input-icon-padding
 
 		cursor: pointer
 
 		img
-			width: $input-icon-size
 			filter: $purple-filter
+			transform-origin: center
 			pointer-events: none
-		
+
 		&.disabled
 			pointer-events: none
 
 			img
-				filter: $gray-filter	
+				filter: $gray-filter
 
 		&:hover
 			img

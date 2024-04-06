@@ -7,13 +7,14 @@
 
 	export let onChange: (event: Event) => void = () => {};
 	export let placeholder: string = "";
+	export let value: string = "";
 
 </script>
 
 <!-- Markup -->
 
 <div class="searchbar">
-	<input type="search" placeholder={placeholder} on:change={onChange}/>
+	<input type="search" placeholder={placeholder} value={value} on:change={onChange}/>
 	<img src={search_icon} alt="search-icon" />
 </div>
 
@@ -26,7 +27,9 @@
 
 	.searchbar
 		position: relative
-		width: $searchbar-width
+
+		width: 100%
+		max-width: 20rem
 
 		input
 			width: 100%
@@ -45,7 +48,7 @@
 			translate: -50% -50%
 			top: 50%
 			right: 0
-			
+
 			width: $input-icon-size
 
 			filter: $dark-gray-filter

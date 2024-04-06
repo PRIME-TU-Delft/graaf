@@ -39,7 +39,7 @@
 	@use "$styles/palette.sass" as *
 
 	.background
-		display: flex
+		display: none
 		align-items: center
 		justify-content: center
 
@@ -53,16 +53,16 @@
 
 		background-color: rgba(0, 0, 0, 0.25)
 
-		&:not(.visible)
-			display: none
+		&.visible
+			display: flex
 
 	dialog
 		display: flex
 		flex-flow: column nowrap
-		gap: $layout-vertical-gap
-		
+		gap: 1rem
+
 		position: relative
-		
+
 		width: 100%
 		max-width: $small-column
 		padding: $card-thick-padding
@@ -81,15 +81,14 @@
 
 			margin: $card-thick-padding
 			overflow: hidden
-			
+
 			img
 				width: $input-icon-size
 				rotate: 45deg
 
 				cursor: pointer
 				filter: $purple-filter
-				transition: all $default-transition
-			
+
 				&:hover
 					scale: $scale-on-hover
 					filter: $dark-purple-filter

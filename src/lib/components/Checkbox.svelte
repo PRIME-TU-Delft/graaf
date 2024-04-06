@@ -3,31 +3,18 @@
 
 <script lang="ts">
 
-	import Row from "$layouts/RowLayout.svelte";
-
 	export let label: string;
 	export let value: boolean = false;
+
+	$: id = label.toLowerCase().replace(/\s/g, "_");
 
 </script>
 
 <!-- Markup -->
 
-<div class="desktop-layout">
-	<Row>
-		<svelte:fragment slot="right">
-			   <input id={label} type="checkbox" value={value} /><!--
-			--><label for={label}> {label} </label>
-		</svelte:fragment>
-	</Row>
-</div>
-	
-<div class="phone-layout">
-	<Row>
-		<svelte:fragment slot="center">
-			   <input id={label} type="checkbox" value={value} /><!--
-			--><label for={label}> {label} </label>
-		</svelte:fragment>
-	</Row>
+<div class="checkbox">
+	   <input id={id} type="checkbox" bind:value /><!--
+	--><label for={id}> {label} </label>
 </div>
 
 <!-- Styles -->
@@ -37,13 +24,17 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	input
-		margin-right: $input-thin-padding
+	.checkbox
+		display: inline-flex
+		flex-flow: row nowrap
+		align-items: center
 
-		accent-color: $purple
-		transition: all $default-transition
-
-		&:hover
+		input
 			cursor: pointer
+			accent-color: $purple
+			transition: all $default-transition
+
+		label
+			padding-left: 0.5em
 
 </style>

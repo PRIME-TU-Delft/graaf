@@ -6,10 +6,10 @@
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 
-	import '$styles/global.sass';
-
 	import PRIME_logo from '$assets/PRIME-logo.svg';
 	import TUDelft_logo from '$assets/TUD-logo.svg';
+
+	import '$styles/global.sass';
 
 	let loggedIn = false; // TODO temporary
 
@@ -21,7 +21,7 @@
 	<a id="PRIME-logo" href="/">
 		<img src={PRIME_logo} alt="PRIME logo">
 	</a>
-	
+
 	<h1>Graph editor</h1>
 
 	<div class="flex-spacer" />
@@ -53,15 +53,15 @@
 	header
 		display: flex
 		flex-flow: row nowrap
-		align-items: center
-		gap: $layout-horizontal-gap
+		place-items: center start
+		gap: $form-small-gap
 
 		padding: $header-padding
 		background: $light-gray
 
 		#PRIME-logo img
 			width: $prime-logo-size
-			margin-right: calc($prime-logo-margin - $layout-horizontal-gap)
+			margin-right: calc($prime-logo-margin - $form-small-gap)
 			padding-bottom: $prime-logo-alignment
 
 			cursor: pointer
@@ -69,17 +69,17 @@
 		h1
 			color: $purple
 
-			@media screen and (max-width: $phone-width)
+			@media screen and (max-width: $phone-breakpoint)
 				display: none
 
 	main
 		display: flex
 		flex-flow: column nowrap
-		align-items: center
+		place-items: center start
 
 		padding: $main-padding $tudelft-logo-width
 
-		@media screen and (max-width: $phone-width)
+		@media screen and (max-width: $phone-breakpoint)
 			padding: $main-padding
 			padding-bottom: $footer-height
 
@@ -94,7 +94,7 @@
 			width: $tudelft-logo-size
 			margin: $tudelft-logo-margin
 
-		@media screen and (max-width: $phone-width)
+		@media screen and (max-width: $phone-breakpoint)
 			background-color: $white
 
 </style>

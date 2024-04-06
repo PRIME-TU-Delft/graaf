@@ -18,7 +18,7 @@ const hmid   = NODE_WIDTH * GRID_UNIT / 2;
 const vmid   = NODE_HEIGHT * GRID_UNIT / 2;
 
 export const styles: { [key: string]: { stroke: string, fill: string, path: string } } = {
-    'confident-turquoise': {
+	'confident-turquoise': {
 		stroke:	'#009da5',
 		fill:	'#ccebed',
 		path:	`M ${left} ${top}
@@ -28,7 +28,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'neutral-gray': {
+	'neutral-gray': {
 		stroke:	'#91999f',
 		fill:	'#d6d6d6',
 		path:	`M ${left} ${top + GRID_UNIT}
@@ -40,7 +40,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'prosperous-red': {
+	'prosperous-red': {
 		stroke:	'#e6362a',
 		fill:	'#fad7d4',
 		path:	`M ${left} ${top}
@@ -52,7 +52,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'majestic-purple': {
+	'majestic-purple': {
 		stroke:	'#ae5171',
 		fill:	'#efdce3',
 		path:	`M ${left + GRID_UNIT} ${top}
@@ -64,7 +64,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'serious-brown': {
+	'serious-brown': {
 		stroke:	'#563d29',
 		fill:	'#d7cec7',
 		path:	`M ${left} ${top}
@@ -76,7 +76,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'powerful-pink': {
+	'powerful-pink': {
 		stroke:	'#f87089',
 		fill:	'#fee2e7',
 		path:	`M ${left} ${top + 2 * GRID_UNIT}
@@ -90,7 +90,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'energizing-orange': {
+	'energizing-orange': {
 		stroke:	'#ff6c2f',
 		fill:	'#ffe2d5',
 		path:	`M ${left} ${top + GRID_UNIT}
@@ -108,7 +108,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'electric-green': {
+	'electric-green': {
 		stroke: '#50d691',
 		fill:	'#dcf7e9',
 		path:	`M ${left} ${bottom}
@@ -118,7 +118,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'mysterious-blue': {
+	'mysterious-blue': {
 		stroke:	'#3255a4',
 		fill:	'#d6dded',
 		path:	`M ${left + GRID_UNIT} ${bottom}
@@ -128,7 +128,7 @@ export const styles: { [key: string]: { stroke: string, fill: string, path: stri
 				 Z`
 	},
 
-    'sunny-yellow': {
+	'sunny-yellow': {
 		stroke:	'#f1c21b',
 		fill:	'#fff2cc',
 		path:	`M ${left} ${top + 2 * GRID_UNIT}

@@ -12,7 +12,7 @@
 	<div class="tabs">
 
 		{#each tabs as tab, index}
-			<button 
+			<button
 				class:active={index === active}
 				on:click={() => active = index}
 			> {tab.title} </button>
@@ -20,7 +20,7 @@
 
 		<div class="dynamic-border" />
 	</div>
-	
+
 	<svelte:component this={tabs[active].content} />
 </div>
 
@@ -50,9 +50,9 @@
 				display: block
 				margin: 0
 				padding: $card-thin-padding $card-thick-padding
-				
+
 				border-color: $gray
-				border-style: solid 
+				border-style: solid
 				border-width: 0 0 1px 1px
 				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 
@@ -65,7 +65,7 @@
 					& ~ button
 						border-width: 0 1px 1px 0
 
-				
+
 				&:first-child
 					border-left: none !important
 

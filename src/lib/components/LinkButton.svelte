@@ -3,12 +3,17 @@
 
 <script lang="ts">
 
-	export let callback: () => void = () => {};
-	export let href: undefined | string = undefined;
+	export let href: string | undefined = undefined;
 
+	export let submit: boolean = false;
 	export let disabled: boolean = false;
 	export let scale: boolean = false;
 	export let rotate: boolean = false;
+
+	$: if (submit && href !== undefined) {
+		console.warn("LinkButton: submit type does not require a 'href' prop. Ignoring 'href' prop.");
+		href = undefined;
+	}
 
 </script>
 
@@ -17,8 +22,9 @@
 {#if href === undefined}
 
 	<button
-		class="link-btn" class:disabled class:scale class:rotate
-		on:click={callback}
+		type={submit ? "submit" : "button"}
+		class="link-button" class:disabled class:scale class:rotate
+		on:click
 	>
 		<slot />
 	</button>
@@ -26,9 +32,9 @@
 {:else}
 
 	<a
-		class="link-btn" class:disabled class:scale class:rotate
-		on:click={callback}
 		href={href}
+		class="link-button" class:disabled class:scale class:rotate
+		on:click
 	>
 		<slot />
 	</a>
@@ -42,11 +48,15 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.link-btn
-		position: relative
-		padding: $input-thin-padding $input-thick-padding
+	.link-button
+		display: inline-flex
+		flex-flow: row nowrap
+		place-items: center start
+
+		padding: $input-thin-padding
 
 		color: $purple
+		border: 1px solid transparent
 
 		cursor: pointer
 		transition: all $default-transition
@@ -58,18 +68,13 @@
 			:global(img)
 				filter: $gray-filter
 
-		&:has(img)
-			padding-left: $input-icon-width
-
 		:global(img)
-			position: absolute
-			translate: 0 -50%
-			top: 50%
-			left: $input-thin-padding
-
+			box-sizing: content-box
 			width: $input-icon-size
+			margin-right: $input-thin-padding
 
 			filter: $purple-filter
+			transform-origin: center
 			transition: all $default-transition
 
 		&:hover

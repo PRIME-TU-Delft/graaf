@@ -8,13 +8,12 @@
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
-	import Row from '$layouts/RowLayout.svelte';
 
 	import Button from '$components/Button.svelte';
 	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte';
 	import Textfield from '$components/Textfield.svelte';
-	import Tooltip from '$components/Tooltip.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import peopleIcon from '$assets/people-icon.svg';
@@ -50,32 +49,44 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<Button callback={newSandbox}>
-			<img src={plusIcon} alt="Plus icon"> New Sandbox
+		<Button on:click={newSandbox}>
+			<img src={plusIcon} alt=""> New Sandbox
 		</Button>
 
-		<Button callback={modals.CREATE_COURSE?.show}>
-			<img src={plusIcon} alt="Plus icon"> New Course
+		<Button on:click={modals.CREATE_COURSE?.show}>
+			<img src={plusIcon} alt=""> New Course
 		</Button>
 
-		<Button callback={modals.CREATE_PROGRAM?.show}>
-			<img src={plusIcon} alt="Plus icon"> New Program
+		<Button on:click={modals.CREATE_PROGRAM?.show}>
+			<img src={plusIcon} alt=""> New Program
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<Searchbar onChange={onSearch} placeholder="Search courses" />
+		<Searchbar onChange={onSearch} placeholder="Search courses" /> <!-- TODO I cringe a bit for this implementation -->
 
 		<Modal bind:this={modals["CREATE_COURSE"]}>
 			<h3 slot="header"> Create Course </h3>
 
 			<form method="POST" action="?/newCourse" use:enhance>
-				<Textfield label="Code"/>
-				<Textfield label="Name"/>
-				<Textfield label="Program ID"/>
-				<Row><svelte:fragment slot="right">
-					<Button submit={true} callback={modals.CREATE_COURSE?.hide}> Create </Button>
-				</svelte:fragment></Row>
+				<label for="code"> Code </label>
+				<Textfield label="Code" />
+
+				<label for="name"> Name </label>
+				<Textfield label="Name" />
+
+				<label for="program"> Program </label>
+				<Dropdown
+					label="Program"
+					placeholder="Select a program"
+					options={
+						programs.map(program => {
+							return {name: program.name, value: program.id}
+						})
+					}
+				/>
+
+				<Button submit on:click={modals.CREATE_COURSE?.hide}> Create </Button>
 			</form>
 		</Modal>
 
@@ -83,10 +94,10 @@
 			<h3 slot="header"> Create Program </h3>
 
 			<form method="POST" action="?/newProgram" use:enhance>
+				<label for="name"> Name </label>
 				<Textfield label="Name"/>
-				<Row><svelte:fragment slot="right">
-					<Button submit={true} callback={modals.CREATE_PROGRAM?.hide}> Create </Button>
-				</svelte:fragment></Row>
+
+				<Button submit on:click={modals.CREATE_PROGRAM?.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -95,7 +106,7 @@
 		<h3 slot="header"> My Courses </h3>
 		<div slot="body" class="grid">
 			{#each courses as {code, name}}
-				<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
+				<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
 			{/each}
 		</div>
 	</Card>
@@ -107,16 +118,14 @@
 
 				<div class="flex-spacer" />
 
-				<Tooltip data="Program Coordinators">
-					<IconButton
-						src={peopleIcon}
-						alt="people-icon"
-						callback={modals[name]?.show}
-						scale={true}
-					/>
-				</Tooltip>
+				<IconButton
+					src={peopleIcon}
+					description="Program Coordinators"
+					on:click={modals[name]?.show}
+					scale
+				/>
 
-				<LinkButton href="/dashboard/program/{name}/settings"> Settings </LinkButton>
+				<LinkButton href="/program/{name}/settings"> Settings </LinkButton>
 
 				<Modal bind:this={modals[name]}>
 					<h3 slot="header"> Program Coordinators </h3>
@@ -131,7 +140,7 @@
 
 			<div slot="body" class="grid">
 				{#each courses as {code, name}}
-					<a class="cell" href="/dashboard/course/{code}/overview"> {code} {name} </a>
+					<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>
 		</Card>
@@ -145,13 +154,33 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
+	form
+		display: grid
+		grid-template: "label content" auto / 1fr 2fr
+		place-items: center start
+
+		label
+			grid-column: label
+			justify-self: end
+
+			margin-top: $form-small-gap
+			padding-right: $form-medium-gap
+
+		:global(.textfield), :global(.dropdown)
+			grid-column: content
+			margin-top: $form-small-gap
+
+		:global(.button)
+			grid-column: content
+			margin-top: $form-big-gap
+
 	.grid
 		display: flex
 		flex-flow: row wrap
 
 		.cell
 			flex: 0 1 100%
-			padding: $grid-cell-padding
+			padding: 0.5rem
 
 			cursor: pointer
 			color: $dark-gray
@@ -167,11 +196,11 @@
 			&:not(:last-child)
 				border-bottom: 1px solid $gray
 
-			@media screen and (min-width: $grid-2-column-width)
+			@media screen and (min-width: 800px)
 				border-bottom: 1px solid $gray
 				flex-basis: 50%
 
-			@media screen and (min-width: $grid-3-column-width)
+			@media screen and (min-width: 1200px)
 				border-bottom: 1px solid $gray
 				flex-basis: 33.3333%
 

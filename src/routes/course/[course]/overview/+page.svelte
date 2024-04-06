@@ -6,12 +6,11 @@
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
-	import Row from '$layouts/RowLayout.svelte';
+
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 	import IconButton from '$components/IconButton.svelte';
 	import Textfield from '$components/Textfield.svelte';
-	import Tooltip from '$components/Tooltip.svelte';
 
 	import plusIcon from '$assets/plus-icon.svg';
 	import gearIcon from '$assets/gear-icon.svg';
@@ -58,7 +57,7 @@
 			this.has_links = has_links;
 			this.has_visibility = has_visibility;
 		}
-	}	
+	}
 
 	function getCourse(code: string): Course {
 		for (let course of courses) {
@@ -112,79 +111,80 @@
 		},
 		{
 			name: `${course.code} ${course.name}`,
-			href: `/dashboard/course/${course.code}/overview`
+			href: `/course/${course.code}/overview`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button callback={createGraphModal?.show}>
-			<img src={plusIcon} alt="Plus icon"> New Graph
+		<Button on:click={createGraphModal?.show}>
+			<img src={plusIcon} alt=""> New Graph
 		</Button>
 
-		<Button callback={newLink}>
-			<img src={plusIcon} alt="Plus icon"> New Link
+		<Button on:click={newLink}>
+			<img src={plusIcon} alt=""> New Link
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/dashboard/course/{course.code}/settings" rotate={true}>
-			<img src={gearIcon} alt="gear-icon"> Settings
+		<LinkButton href="/course/{course.code}/settings">
+			Settings
 		</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
 			<h3 slot="header"> Create Graph </h3>
 
 			<form>
+				<label for="name"> Name </label>
 				<Textfield label="Name"/>
-				<Row><svelte:fragment slot="right">
-					<Button callback={newGraph}> Create </Button>
-				</svelte:fragment></Row>
+
+				<Button submit on:click={createGraphModal.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
-		<svelte:fragment slot="header">
-			<h3> Graphs </h3>
-		</svelte:fragment>
+		<h3 slot="header"> Graphs </h3>
 
 		<svelte:fragment slot="body">
 			{#each graphs as graph}
-				<span class="graph"> 
+				<span class="graph">
 					{#if graph.has_links} <img src={linkIcon} alt="Link icon" /> {/if}
 					{graph.name}
 
 					<div class="flex-spacer" />
-					
-					<Tooltip data="View Graph">
-						<IconButton 
-							src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
-							alt="eye-icon" 
-							disabled={!graph.has_visibility}
-							scale={true}
-							/>
-					</Tooltip>
 
-					<Tooltip data="Edit Graph">
-						<IconButton href="/dashboard/course/{course.code}/graph/{graph.id}/layout" src={pencilIcon} alt="pencil-icon" scale={true} />
-					</Tooltip>
+					<IconButton
+						src={graph.has_visibility ? openEyeIcon : closedEyeIcon}
+						description="View Graph"
+						disabled={!graph.has_visibility}
+						scale
+						/>
 
-					<Tooltip data="Copy Graph">
-						<IconButton src={copyIcon} alt="copy-icon" scale={true} />
-					</Tooltip>
+					<IconButton
+						src={pencilIcon}
+						description="Edit Graph"
+						href="/course/{course.code}/graph/{graph.id}/edit"
+						scale
+						/>
 
-					<Tooltip data="Delete Graph">
-						<IconButton src={trashIcon} alt="trash-icon" scale={true} />
-					</Tooltip>
+					<IconButton
+						src={copyIcon}
+						description="Copy Graph"
+						scale
+						/>
+
+					<IconButton
+						src={trashIcon}
+						description="Delete Graph"
+						scale
+						/>
 				</span>
 			{/each}
 		</svelte:fragment>
 	</Card>
 
 	<Card>
-		<svelte:fragment slot="header">
-			<h3> Links </h3>
-		</svelte:fragment>
+		<h3 slot="header"> Links </h3>
 	</Card>
 </Layout>
 
@@ -195,18 +195,35 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	h1
-		font-size: 1.5rem
+	form
+		display: grid
+		grid-template: "label content" auto / 1fr 2fr
+		place-items: center start
+
+		label
+			grid-column: label
+			justify-self: end
+
+			margin-top: $form-small-gap
+			padding-right: $form-medium-gap
+
+		:global(.textfield)
+			grid-column: content
+			margin-top: $form-small-gap
+
+		:global(.button)
+			grid-column: content
+			margin-top: $form-big-gap
 
 	.graph
 		display: flex
 		flex-flow: row nowrap
 		align-items: center
-		
+
 		position: relative
-		padding: $grid-cell-padding
-		padding-left: $input-icon-width
-		
+		padding: 1rem
+		padding-left: calc($input-icon-size + 2 * $input-icon-padding)
+
 		color: $dark-gray
 
 		&:not(:last-child)
@@ -215,7 +232,7 @@
 		img:first-child
 			position: absolute
 			translate: 0 -50%
-			left: $grid-cell-padding
+			left: $input-icon-padding
 			top: 50%
 
 			width: 1rem
