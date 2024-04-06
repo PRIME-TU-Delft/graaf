@@ -5,7 +5,7 @@
 
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Tabular from '$components/Tabular.svelte';
-	import GraphView from './GraphView.svelte';
+	import GraphEditor from './GraphEditor.svelte';
 	import Button from '$components/Button.svelte';
 
 	import { page } from '$app/stores';
@@ -126,15 +126,15 @@
 		tabs={[
 			{
 				title: "Overview",
-				content: GraphView
+				content: GraphEditor
 			},
 			{
 				title: "Layout",
-				content: GraphView
+				content: GraphEditor
 			},
 			{
 				title: "Properties",
-				content: GraphView
+				content: GraphEditor
 			}
 		]}
 	/>
