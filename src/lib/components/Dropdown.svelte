@@ -95,6 +95,8 @@
 			top: 100%
 
 			width: 100%
+			max-height: 250px
+			overflow-y: auto
 
 			background-color: $white
 			border: 1px solid $gray

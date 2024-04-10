@@ -31,7 +31,7 @@
 
     .editor
         width: 100%
-        height: 600px
+        height: 650px
 
         .graph
             width: 100%

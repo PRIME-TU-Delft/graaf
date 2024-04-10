@@ -5,14 +5,29 @@
 
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Tabular from '$components/Tabular.svelte';
-	import GraphEditor from './GraphEditor.svelte';
+	import Modal from '$components/Modal.svelte';
 	import Button from '$components/Button.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+
+	import GeneralSettings from './GeneralSettings.svelte';
+	import NodeSettings from './NodeSettings.svelte';
+
+	import saveIcon from "$assets/save-icon.svg";
+	import trashIcon from "$assets/trash-icon.svg";
 
 	import { page } from '$app/stores';
 
-	function saveLayout() {
+	function saveChanges() {
 		// TODO add SaveLayout function
 	}
+
+	function deleteGraph() {
+		deleteGraphModal.hide();
+
+		// TODO add deleteGraph function
+	}
+
+	let deleteGraphModal: Modal;
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
@@ -110,8 +125,8 @@
 			href: `/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
-			name: "Edit",
-			href: `/course/${course.code}/graph/${graph.id}/edit`
+			name: "Settings",
+			href: `/course/${course.code}/graph/${graph.id}/settings`
 		}
 	]}
 >
@@ -119,24 +134,52 @@
 	<svelte:fragment slot="toolbar">
 		<div class="flex-spacer" />
 
-		<Button on:click={saveLayout}> Save Layout </Button>
+		<Button on:click={deleteGraphModal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
+		<Button on:click={saveChanges}> <img src={saveIcon} alt=""> Save Changes </Button>
+
+		<Modal bind:this={deleteGraphModal}>
+			<h3 slot="header"> Delete Graph </h3>
+			Are you sure you want to delete {graph.name}?
+
+			<div class="button-row">
+				<LinkButton on:click={deleteGraphModal.hide}> Cancel </LinkButton>
+				<Button on:click={deleteGraph}> Delete Graph </Button>
+			</div>
+		</Modal>
 	</svelte:fragment>
 
 	<Tabular
 		tabs={[
 			{
-				title: "Overview",
-				content: GraphEditor
+				title: "General",
+				content: GeneralSettings
 			},
 			{
-				title: "Layout",
-				content: GraphEditor
+				title: "Domains & Subjects",
+				content: NodeSettings
 			},
 			{
-				title: "Properties",
-				content: GraphEditor
+				title: "Relations",
+				content: GeneralSettings
 			}
 		]}
 	/>
 
 </Layout>
+
+<!-- Styles -->
+
+<style lang="sass">
+
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
+
+	.button-row
+		display: flex
+		flex-flow: row nowrap
+		justify-content: end
+		gap: $form-small-gap
+
+		margin-top: $form-big-gap
+
+</style>
