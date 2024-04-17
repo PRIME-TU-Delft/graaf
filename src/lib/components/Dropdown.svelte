@@ -3,21 +3,17 @@
 
 <script lang="ts">
 
-	type Option = {
-		name: string
-		value: any
-	}
-
 	export let label: string;
+	export let value: any = undefined;
 	export let placeholder: string;
-	export let options: Option[];
-	export let choice: Option | null = null;
+	export let options: { name: string, value: any }[];
 
 	let show: boolean = false;
 
 	$: id = label.toLowerCase().replace(/\s/g, "_");
-	$: name = choice !== null ? choice.name : placeholder;
-	$: value = choice !== null ? choice.value : null;
+	$: if (options.find(option => option.value === value) === undefined) {
+		value = undefined; // If the current value isnt in the available options, default to undefined
+	}
 
 </script>
 
@@ -27,15 +23,15 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-<div class="dropdown" class:show on:click={() => show = !show}>
+<div class="dropdown" class:show on:click={() => show = !show && options.length > 0}>
 
-	<!-- Hidden input to bind the selected value -->
-	<input id={id} name={id} type="hidden" bind:value>
-	<label for={id} class:placeholder={choice === null}> {name} </label>
+	<!-- Hidden input to bind the selected value to a submittable element -->
+	<input id={id} name={id} type="hidden" tabindex="-1" bind:value>
+	<label for={id} class:placeholder={value === undefined}> {options.find(option => option.value === value)?.name ?? placeholder} </label>
 
 	<div class="options">
 		{#each options as option}
-			<span on:click={() => choice = option}> {option.name} </span>
+			<span on:click={() => value = option.value}> {option.name} </span>
 		{/each}
 	</div>
 </div>

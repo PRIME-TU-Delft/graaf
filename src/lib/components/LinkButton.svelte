@@ -77,7 +77,7 @@
 			transform-origin: center
 			transition: all $default-transition
 
-		&:hover
+		&:hover, &:focus
 			color: $dark-purple
 			text-decoration: underline
 

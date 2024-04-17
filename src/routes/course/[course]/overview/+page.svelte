@@ -163,7 +163,7 @@
 					<IconButton
 						src={pencilIcon}
 						description="Edit Graph"
-						href="/course/{course.code}/graph/{graph.id}/edit"
+						href="/course/{course.code}/graph/{graph.id}/settings"
 						scale
 						/>
 

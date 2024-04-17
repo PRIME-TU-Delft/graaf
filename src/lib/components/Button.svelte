@@ -80,7 +80,7 @@
 			transform-origin: center
 			transition: all $default-transition
 
-		&:hover
+		&:hover, &:focus
 			background: $dark-purple
 
 			&.scale :global(img)

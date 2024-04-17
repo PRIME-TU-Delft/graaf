@@ -4,7 +4,6 @@
 <script lang="ts">
 
 	import Layout from '$layouts/DefaultLayout.svelte';
-	import Tabular from '$components/Tabular.svelte';
 	import Modal from '$components/Modal.svelte';
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
@@ -23,11 +22,15 @@
 
 	function deleteGraph() {
 		deleteGraphModal.hide();
-
 		// TODO add deleteGraph function
 	}
 
 	let deleteGraphModal: Modal;
+	let activeTab = 0;
+
+
+
+
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
@@ -148,23 +151,34 @@
 		</Modal>
 	</svelte:fragment>
 
-	<Tabular
-		tabs={[
-			{
-				title: "General",
-				content: GeneralSettings
-			},
-			{
-				title: "Domains & Subjects",
-				content: NodeSettings
-			},
-			{
-				title: "Relations",
-				content: GeneralSettings
-			}
-		]}
-	/>
+	<div class="tabular">
+		<div class="tabs">
+			<button
+				class:active={activeTab === 0}
+				on:click={() => activeTab = 0}
+			> General </button>
 
+			<button
+				class:active={activeTab === 1}
+				on:click={() => activeTab = 1}
+			> Domains & Subjects </button>
+
+			<button
+				class:active={activeTab === 2}
+				on:click={() => activeTab = 2}
+			> Relations </button>
+	
+			<div class="dynamic-border" />
+		</div>
+	
+		{#if activeTab === 0}
+			<GeneralSettings graph={graph} course={course} courses={courses} />
+		{:else if activeTab === 1}
+			<NodeSettings />
+		{:else if activeTab === 2}
+			<NodeSettings />
+		{/if}
+	</div>
 </Layout>
 
 <!-- Styles -->
@@ -181,5 +195,43 @@
 		gap: $form-small-gap
 
 		margin-top: $form-big-gap
+	
+	.tabular
+		border-radius: $border-radius
+		border: 1px solid $gray
+
+		.tabs
+			display: flex
+			flex-flow: row nowrap
+
+			background: $light-gray
+			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+
+			.dynamic-border
+				flex: 1
+				border-bottom: 1px solid $gray
+
+			button
+				display: block
+				margin: 0
+				padding: $card-thin-padding $card-thick-padding
+
+				border-color: $gray
+				border-style: solid
+				border-width: 0 0 1px 1px
+				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+
+				text-align: left
+
+				&.active
+					background: $white
+					border-width: 0 1px 0 1px
+
+					& ~ button
+						border-width: 0 1px 1px 0
+
+
+				&:first-child
+					border-left: none !important
 
 </style>

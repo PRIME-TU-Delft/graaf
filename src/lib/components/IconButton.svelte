@@ -74,7 +74,7 @@
 			img
 				filter: $gray-filter
 
-		&:hover
+		&:hover, &:focus
 			img
 				filter: $dark-purple-filter
 			&.scale img
