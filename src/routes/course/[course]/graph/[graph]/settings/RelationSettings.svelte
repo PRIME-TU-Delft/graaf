@@ -14,7 +14,7 @@
 	import plusIcon from "$assets/plus-icon.svg"
 
 	import { styles } from "$scripts/graph/settings"
-	import { Graph, Relation } from "../../../classes"
+	import { Graph } from "../../../classes"
 
 	// Force reactivity update
 	function update() {
@@ -22,9 +22,6 @@
 	}
 
 	export let graph: Graph
-
-	$: domainOptions = graph.domains.filter(domain => domain.name !== "").map(domain => ({ name: domain.name as string, value: domain }))
-	$: subjectOptions = graph.subjects.filter(subject => subject.name !== "").map(subject => ({ name: subject.name as string, value: subject }))
 
 </script>
 
@@ -57,9 +54,9 @@
 		<div class="row">
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="From" placeholder="From Domain" options={domainOptions} bind:value={relation.from} />
+			<Dropdown label="From" placeholder="From Domain" options={relation.getFromOptions()} bind:value={relation.from} />
 			<span class="preview" style:background-color={relation.fromPreview()} />
-			<Dropdown label="To" placeholder="To Domain" options={domainOptions} bind:value={relation.to} />
+			<Dropdown label="To" placeholder="To Domain" options={relation.getToOptions()} bind:value={relation.to} />
 			<span class="preview" style:background-color={relation.toPreview()} />
 		</div>
 	{/each}
@@ -93,9 +90,9 @@
 		<div class="row">
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="From" placeholder="From Subject" options={subjectOptions} bind:value={relation.from} />
+			<Dropdown label="From" placeholder="From Subject" options={relation.getFromOptions()} bind:value={relation.from} />
 			<span class="preview" style:background-color={relation.fromPreview()} />
-			<Dropdown label="To" placeholder="To Subject" options={subjectOptions} bind:value={relation.to} />
+			<Dropdown label="To" placeholder="To Subject" options={relation.getToOptions()} bind:value={relation.to} />
 			<span class="preview" style:background-color={relation.toPreview()} />
 		</div>
 	{/each}

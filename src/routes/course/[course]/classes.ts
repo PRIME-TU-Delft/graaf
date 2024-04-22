@@ -1,4 +1,3 @@
-
 import { styles } from '$scripts/graph/settings'
 
 export class Course {
@@ -19,8 +18,8 @@ export class Graph {
 	course: Course
 	domains: Domain[] = []
 	subjects: Subject[] = []
-	domainRelations: Relation[] = []
-	subjectRelations: Relation[] = []
+	domainRelations: DomainRelation[] = []
+	subjectRelations: SubjectRelation[] = []
 	links: any[] = []
 
 	constructor(id: number, name: string, course: Course) {
@@ -47,22 +46,18 @@ export class Graph {
 	}
 
 	addDomainRelation() {
-		this.domainRelations.push(new Relation(this))
+		this.domainRelations.push(new DomainRelation(this))
 		console.log(this.domainRelations)
 	}
 
 	addSubjectRelation() {
-		this.subjectRelations.push(new Relation(this))
+		this.subjectRelations.push(new SubjectRelation(this))
 	}
 }
 
-interface Previewable {
-	preview(): string
-}
-
-export class Domain implements Previewable {
+export class Domain {
 	id: number
-	name: string | undefined = undefined
+	name: string = ""
 	color: string | undefined = undefined
 	graph: Graph
 
@@ -89,11 +84,37 @@ export class Domain implements Previewable {
 	preview() {
 		return this.color === undefined ? "transparent" : styles[this.color].stroke
 	}
+
+	getParents(): Domain[] {
+		const parents: Domain[] = []
+
+		for (const relation of this.graph.domainRelations) {
+			if (relation.to === this && relation.from !== undefined) {
+				parents.push(relation.from)
+				parents.push(...relation.from.getParents())
+			}
+		}
+
+		return parents
+	}
+
+	getChildren(): Domain[] {
+		const children: Domain[] = []
+
+		for (const relation of this.graph.domainRelations) {
+			if (relation.from === this && relation.to !== undefined) {
+				children.push(relation.to)
+				children.push(...relation.to.getChildren())
+			}
+		}
+
+		return children
+	}
 }
 
-export class Subject implements Previewable {
+export class Subject {
 	id: number
-	name: string | undefined = undefined
+	name: string = ""
 	domain: Domain | undefined = undefined
 	graph: Graph
 
@@ -111,11 +132,37 @@ export class Subject implements Previewable {
 			return "transparent"
 		return this.domain.preview()
 	}
+
+	getParents(): Subject[] {
+		const parents: Subject[] = [];
+
+		for (const relation of this.graph.subjectRelations) {
+			if (relation.to === this && relation.from !== undefined) {
+				parents.push(relation.from);
+				parents.push(...relation.from.getParents());
+			}
+		}
+
+		return parents;
+	}
+
+	getChildren(): Subject[] {
+		const children: Subject[] = []
+		
+		for (const relation of this.graph.subjectRelations) {
+			if (relation.from === this && relation.to !== undefined) {
+				children.push(relation.to);
+				children.push(...relation.to.getChildren());
+			}
+		}
+
+		return children
+	}
 }
 
-export class Relation {
-	from: Previewable | undefined = undefined
-	to: Previewable | undefined = undefined
+export class DomainRelation {
+	from: Domain | undefined = undefined
+	to: Domain | undefined = undefined
 	graph: Graph
 
 	constructor(graph: Graph) {
@@ -124,7 +171,86 @@ export class Relation {
 
 	delete() {
 		this.graph.domainRelations = this.graph.domainRelations.filter(relation => relation !== this)
+	}
+
+	getFromOptions(): {name: string, value: Domain}[] {
+		if (this.to === undefined) {
+			return this.graph.domains
+				.filter(domain => domain.name !== "")
+				.map(domain => ({name: domain.name, value: domain}))
+		} else {
+			let children = this.to.getChildren()
+			return this.graph.domains
+				.filter(domain => !children.includes(domain) && domain !== this.to && domain.name !== "")
+				.map(domain => ({name: domain.name, value: domain}))
+		}
+		
+	}
+
+	getToOptions(): {name: string, value: Domain}[] {
+		if (this.from === undefined) {
+			return this.graph.domains
+				.filter(domain => domain.name !== "")
+				.map(domain => ({name: domain.name, value: domain}))
+		} else {
+			let parents = this.from.getParents()
+			return this.graph.domains
+				.filter(domain => !parents.includes(domain) && domain !== this.from && domain.name !== "")
+				.map(domain => ({name: domain.name, value: domain}))
+		}
+	}
+
+	fromPreview() {
+		if (this.from === undefined)
+			return "transparent"
+		return this.from.preview()
+	}
+
+	toPreview() {
+		if (this.to === undefined)
+			return "transparent"
+		return this.to.preview()
+	}
+}
+
+export class SubjectRelation {
+	from: Subject | undefined = undefined
+	to: Subject | undefined = undefined
+	graph: Graph
+
+	constructor(graph: Graph) {
+		this.graph = graph
+	}
+
+	delete() {
 		this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
+	}
+
+	getFromOptions(): {name: string, value: Subject}[] {
+		if (this.to === undefined) {
+			return this.graph.subjects
+				.filter(subject => subject.name !== "")
+				.map(subject => ({name: subject.name, value: subject}))
+		} else {
+			let children = this.to.getChildren()
+			return this.graph.subjects
+				.filter(subject => !children.includes(subject) && subject !== this.to && subject.name !== "")
+				.map(subject => ({name: subject.name, value: subject}))
+		}
+		
+	}
+
+	getToOptions(): {name: string, value: Subject}[] {
+		if (this.from === undefined) {
+			return this.graph.subjects
+				.filter(subject => subject.name !== "")
+				.map(subject => ({name: subject.name, value: subject}))
+		} else {
+			let parents = this.from.getParents()
+			return this.graph.subjects
+				.filter(subject => !parents.includes(subject) && subject !== this.from && subject.name !== "")
+				.map(subject => ({name: subject.name, value: subject}))
+		}
 	}
 
 	fromPreview() {
