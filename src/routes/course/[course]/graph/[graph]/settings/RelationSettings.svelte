@@ -13,7 +13,6 @@
 	import trashIcon from "$assets/trash-icon.svg"
 	import plusIcon from "$assets/plus-icon.svg"
 
-	import { styles } from "$scripts/graph/settings"
 	import { Graph } from "../../../classes"
 
 	// Force reactivity update
@@ -55,9 +54,9 @@
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 			<Dropdown label="From" placeholder="From Domain" options={relation.getFromOptions()} bind:value={relation.from} />
-			<span class="preview" style:background-color={relation.fromPreview()} />
+			<span class="preview" style:background-color={relation.getFromPreview()} />
 			<Dropdown label="To" placeholder="To Domain" options={relation.getToOptions()} bind:value={relation.to} />
-			<span class="preview" style:background-color={relation.toPreview()} />
+			<span class="preview" style:background-color={relation.getToPreview()} />
 		</div>
 	{/each}
 
@@ -91,9 +90,9 @@
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 			<Dropdown label="From" placeholder="From Subject" options={relation.getFromOptions()} bind:value={relation.from} />
-			<span class="preview" style:background-color={relation.fromPreview()} />
+			<span class="preview" style:background-color={relation.getFromPreview()} />
 			<Dropdown label="To" placeholder="To Subject" options={relation.getToOptions()} bind:value={relation.to} />
-			<span class="preview" style:background-color={relation.toPreview()} />
+			<span class="preview" style:background-color={relation.getToPreview()} />
 		</div>
 	{/each}
 

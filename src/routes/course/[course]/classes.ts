@@ -86,11 +86,10 @@ export class Domain {
 	}
 
 	getParents(): Domain[] {
-		const parents: Domain[] = []
+		const parents: Domain[] = [this]
 
 		for (const relation of this.graph.domainRelations) {
 			if (relation.to === this && relation.from !== undefined) {
-				parents.push(relation.from)
 				parents.push(...relation.from.getParents())
 			}
 		}
@@ -99,11 +98,10 @@ export class Domain {
 	}
 
 	getChildren(): Domain[] {
-		const children: Domain[] = []
+		const children: Domain[] = [this]
 
 		for (const relation of this.graph.domainRelations) {
 			if (relation.from === this && relation.to !== undefined) {
-				children.push(relation.to)
 				children.push(...relation.to.getChildren())
 			}
 		}
@@ -134,11 +132,10 @@ export class Subject {
 	}
 
 	getParents(): Subject[] {
-		const parents: Subject[] = [];
+		const parents: Subject[] = [this];
 
 		for (const relation of this.graph.subjectRelations) {
 			if (relation.to === this && relation.from !== undefined) {
-				parents.push(relation.from);
 				parents.push(...relation.from.getParents());
 			}
 		}
@@ -147,11 +144,10 @@ export class Subject {
 	}
 
 	getChildren(): Subject[] {
-		const children: Subject[] = []
+		const children: Subject[] = [this]
 		
 		for (const relation of this.graph.subjectRelations) {
 			if (relation.from === this && relation.to !== undefined) {
-				children.push(relation.to);
 				children.push(...relation.to.getChildren());
 			}
 		}
@@ -173,40 +169,61 @@ export class DomainRelation {
 		this.graph.domainRelations = this.graph.domainRelations.filter(relation => relation !== this)
 	}
 
-	getFromOptions(): {name: string, value: Domain}[] {
-		if (this.to === undefined) {
-			return this.graph.domains
-				.filter(domain => domain.name !== "")
-				.map(domain => ({name: domain.name, value: domain}))
-		} else {
-			let children = this.to.getChildren()
-			return this.graph.domains
-				.filter(domain => !children.includes(domain) && domain !== this.to && domain.name !== "")
-				.map(domain => ({name: domain.name, value: domain}))
-		}
+	getFromOptions(): { name: string, value: Domain }[] {
 		
-	}
+		// Domain must have a name
+		let options: Domain[] = this.graph.domains
+			.filter(domain => domain.name !== "")
 
-	getToOptions(): {name: string, value: Domain}[] {
-		if (this.from === undefined) {
-			return this.graph.domains
-				.filter(domain => domain.name !== "")
-				.map(domain => ({name: domain.name, value: domain}))
-		} else {
-			let parents = this.from.getParents()
-			return this.graph.domains
-				.filter(domain => !parents.includes(domain) && domain !== this.from && domain.name !== "")
-				.map(domain => ({name: domain.name, value: domain}))
+		// Prevent circular references
+		if (this.to !== undefined) {
+			let children = this.to.getChildren()
+			options = options.filter(domain => !children.includes(domain))
+		
+			// Prevent duplicate relations
+			if (this.from === undefined) {
+				options = options.filter(domain => 
+					!this.graph.domainRelations.find(relation =>
+						relation.from === domain && relation.to === this.to
+					)
+				)
+			}
 		}
+
+		return options.map(domain => ({name: domain.name, value: domain}))
 	}
 
-	fromPreview() {
+	getToOptions(): { name: string, value: Domain }[] {
+
+		// Domain must have a name
+		let options: Domain[] = this.graph.domains
+			.filter(domain => domain.name !== "")
+
+		// Prevent circular references
+		if (this.from !== undefined) {
+			let parents = this.from.getParents()
+			options = options.filter(domain => !parents.includes(domain))
+
+			// Prevent duplicate relations
+			if (this.to === undefined) {
+				options = options.filter(domain =>
+					!this.graph.domainRelations.find(relation =>
+						relation.from === this.from && relation.to === domain
+					)
+				)
+			}
+		}
+
+		return options.map(domain => ({name: domain.name, value: domain}))
+	}
+
+	getFromPreview() {
 		if (this.from === undefined)
 			return "transparent"
 		return this.from.preview()
 	}
 
-	toPreview() {
+	getToPreview() {
 		if (this.to === undefined)
 			return "transparent"
 		return this.to.preview()
@@ -226,40 +243,61 @@ export class SubjectRelation {
 		this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
 	}
 
-	getFromOptions(): {name: string, value: Subject}[] {
-		if (this.to === undefined) {
-			return this.graph.subjects
-				.filter(subject => subject.name !== "")
-				.map(subject => ({name: subject.name, value: subject}))
-		} else {
+	getFromOptions(): { name: string, value: Subject }[] {
+
+		// Subject must have a name
+		let options: Subject[] = this.graph.subjects
+			.filter(subject => subject.name !== "")
+
+		// Prevent circular references
+		if (this.to !== undefined) {
 			let children = this.to.getChildren()
-			return this.graph.subjects
-				.filter(subject => !children.includes(subject) && subject !== this.to && subject.name !== "")
-				.map(subject => ({name: subject.name, value: subject}))
+			options = options.filter(subject => !children.includes(subject))
+
+			// Prevent duplicate relations
+			if (this.from === undefined) {
+				options = options.filter(subject =>
+					!this.graph.subjectRelations.find(relation =>
+						relation.from === subject && relation.to === this.to
+					)
+				)
+			}
 		}
-		
+
+		return options.map(subject => ({name: subject.name, value: subject}))
 	}
 
-	getToOptions(): {name: string, value: Subject}[] {
-		if (this.from === undefined) {
-			return this.graph.subjects
-				.filter(subject => subject.name !== "")
-				.map(subject => ({name: subject.name, value: subject}))
-		} else {
+	getToOptions(): { name: string, value: Subject }[] {
+
+		// Subject must have a name
+		let options: Subject[] = this.graph.subjects
+			.filter(subject => subject.name !== "")
+
+		// Prevent circular references
+		if (this.from !== undefined) {
 			let parents = this.from.getParents()
-			return this.graph.subjects
-				.filter(subject => !parents.includes(subject) && subject !== this.from && subject.name !== "")
-				.map(subject => ({name: subject.name, value: subject}))
+			options = options.filter(subject => !parents.includes(subject))
+
+			// Prevent duplicate relations
+			if (this.to === undefined) {
+				options = options.filter(subject =>
+					!this.graph.subjectRelations.find(relation =>
+						relation.from === this.from && relation.to === subject
+					)
+				)
+			}
 		}
+
+		return options.map(subject => ({name: subject.name, value: subject}))
 	}
 
-	fromPreview() {
+	getFromPreview() {
 		if (this.from === undefined)
 			return "transparent"
 		return this.from.preview()
 	}
 
-	toPreview() {
+	getToPreview() {
 		if (this.to === undefined)
 			return "transparent"
 		return this.to.preview()

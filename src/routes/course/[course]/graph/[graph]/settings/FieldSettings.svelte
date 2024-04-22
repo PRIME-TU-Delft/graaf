@@ -81,8 +81,8 @@
 
 	{#if graph.subjects.length > 0}
 		<div class=row>
-			<span class="name"> Name </span>
-			<span class="color"> Color </span>
+			<span style="grid-area: name;"> Name </span>
+			<span style="grid-area: color;"> Color </span>
 		</div>
 	{:else}
 		<h6 class="empty"> No subjects found </h6>
