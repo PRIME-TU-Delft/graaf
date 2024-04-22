@@ -3,110 +3,60 @@
 
 <script lang="ts">
 
-	import Layout from '$layouts/DefaultLayout.svelte';
-	import Modal from '$components/Modal.svelte';
-	import Button from '$components/Button.svelte';
-	import LinkButton from '$components/LinkButton.svelte';
+	import Layout from '$layouts/DefaultLayout.svelte'
+	import Modal from '$components/Modal.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
 
-	import GeneralSettings from './GeneralSettings.svelte';
-	import NodeSettings from './NodeSettings.svelte';
+	import GeneralSettings from './GeneralSettings.svelte'
+	import FieldSettings from './FieldSettings.svelte'
+	import RelationSettings from './RelationSettings.svelte'
 
-	import saveIcon from "$assets/save-icon.svg";
-	import trashIcon from "$assets/trash-icon.svg";
+	import saveIcon from "$assets/save-icon.svg"
+	import trashIcon from "$assets/trash-icon.svg"
 
-	import { page } from '$app/stores';
+	import { page } from '$app/stores'
+	import { Course, Graph } from '../../../classes'
+	import { courses, graphs } from '$scripts/fakedata'
 
 	function saveChanges() {
 		// TODO add SaveLayout function
 	}
 
 	function deleteGraph() {
-		deleteGraphModal.hide();
+		deleteGraphModal.hide()
 		// TODO add deleteGraph function
 	}
 
-	let deleteGraphModal: Modal;
-	let activeTab = 0;
-
-
-
+	let deleteGraphModal: Modal
+	let activeTab: number = 0
 
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
-	class Course {
-		code: string;
-		name: string;
-
-		constructor(code: string, name: string) {
-			this.code = code;
-			this.name = name;
-		}
-	}
-
-	class Graph {
-		id: number;
-		name: string;
-		has_links: boolean;
-		has_visibility: boolean;
-
-		constructor(id: number, name: string, has_links: boolean, has_visibility: boolean) {
-			this.id = id;
-			this.name = name;
-			this.has_links = has_links;
-			this.has_visibility = has_visibility;
-		}
-	}
 
 	function getCourse(code: string): Course {
 		for (let course of courses) {
 			if (course.code === code) {
-				return course;
+				return course
 			}
 		}
 
-		throw new Error(`Course with code ${code} not found`);
+		throw new Error(`Course with code ${code} not found`)
 	}
 
 	function getGraph(id: number): Graph {
 		for (let graph of graphs) {
 			if (graph.id === id) {
-				return graph;
+				return graph
 			}
 		}
 
-		throw new Error(`Graph with id ${id} not found`);
+		throw new Error(`Graph with id ${id} not found`)
 	}
 
-	let courses = [
-		new Course("AESB1311", "Linear Algebra"),
-		new Course("CSE1200",  "Calculus"),
-		new Course("CSE1205",  "Linear Algebra"),
-		new Course("CSE1210",  "Cluster Probability & Statistics"),
-		new Course("CTB2105",  "Differentiaalvergelijkingen"),
-		new Course("CTB2200",  "Kansrekening en Statistiek"),
-		new Course("EE1M11",   "Linear Algebra and Analysis A"),
-		new Course("EE1M21",   "Linear Algebra and Analysis B"),
-		new Course("LB1155",   "Calculus"),
-		new Course("NB2191",   "Differential Equations"),
-		new Course("TB131B",   "Differentiaalvergelijkingen en Lineare Algebra"),
-		new Course("TB132B",   "Multivariabele Calculus en Lineaire Algebra"),
-		new Course("TN1401WI", "Analyse voor TNW 1"),
-		new Course("WBMT",     "Linear Algebra"),
-		new Course("WBMT1050", "Calculus for Engineering"),
-		new Course("WI1402LR", "Calculus II"),
-		new Course("WI1403LR", "Linear Algebra"),
-		new Course("WI1421LR", "Calculus I"),
-		new Course("WI2031TH", "Probability and Statistics")
-	]
-
-	let graphs = [
-		new Graph(1, "Graph 2021", true, true),
-		new Graph(2, "Graph 2022", false, false)
-	]
-
-	let course: Course = getCourse($page.params.course); // TODO actual api call
-	let graph: Graph = getGraph(Number($page.params.graph)); // TODO actual api call
+	let course: Course = getCourse($page.params.course)
+	let graph: Graph = getGraph(Number($page.params.graph))
 
 </script>
 
@@ -172,11 +122,11 @@
 		</div>
 	
 		{#if activeTab === 0}
-			<GeneralSettings graph={graph} course={course} courses={courses} />
+			<GeneralSettings {graph} />
 		{:else if activeTab === 1}
-			<NodeSettings />
+			<FieldSettings {graph} />
 		{:else if activeTab === 2}
-			<NodeSettings />
+			<RelationSettings {graph} />
 		{/if}
 	</div>
 </Layout>

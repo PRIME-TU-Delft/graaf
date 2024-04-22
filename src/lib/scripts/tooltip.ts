@@ -32,6 +32,7 @@ export function tooltip(element: HTMLElement, text: string) {
 		destroy() {
 			element.removeEventListener('mouseenter', mouseEnter);
 			element.removeEventListener('mouseleave', mouseLeave);
+			tooltipInstance?.$destroy();
 		}
 	}
 }

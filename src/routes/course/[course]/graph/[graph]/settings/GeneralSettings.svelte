@@ -5,12 +5,14 @@
 
     import Dropdown from "$components/Dropdown.svelte";
     import Textfield from "$components/Textfield.svelte";
-	import Course from './+page.svelte';
-    import Graph from './+page.svelte';
 
+    import { Graph } from '../../../classes'
+    import { courses } from '$scripts/fakedata'
+    
     export let graph: Graph;
-	export let course: Course;
-	export let courses: Course[];
+
+
+    // TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
 </script>
 
@@ -28,7 +30,7 @@
 			label="Course" 
 			placeholder="Choose a course" 
 			options={courses.map(course => ({ name: course.name, value: course }))}
-			bind:value={course}
+			bind:value={graph.course}
 			/>
     </div>
 </div>
