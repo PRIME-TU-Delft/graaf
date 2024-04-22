@@ -3,6 +3,8 @@
 
 <script lang="ts">
 
+	import { clickoutside } from '$scripts/clickoutside';
+
 	export let label: string;
 	export let value: any = undefined;
 	export let placeholder: string;
@@ -23,7 +25,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-<div class="dropdown" class:show on:click={() => show = !show && options.length > 0}>
+<div class="dropdown" class:show on:click={() => show = !show && options.length > 0} use:clickoutside={() => show = false}>
 
 	<!-- Hidden input to bind the selected value to a submittable element -->
 	<input id={id} name={id} type="hidden" tabindex="-1" bind:value>
@@ -33,6 +35,10 @@
 		{#each options as option}
 			<span on:click={() => value = option.value}> {option.name} </span>
 		{/each}
+
+		{#if value !== undefined}
+			<span style="opacity: 0.5;" on:click={() => value = undefined}> <i>Remove choice</i> </span>
+		{/if}
 	</div>
 </div>
 
