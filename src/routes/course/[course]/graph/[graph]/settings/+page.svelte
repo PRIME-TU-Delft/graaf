@@ -3,60 +3,25 @@
 
 <script lang="ts">
 
-	import Layout from '$layouts/DefaultLayout.svelte'
-	import Modal from '$components/Modal.svelte'
-	import Button from '$components/Button.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
+	import FieldSettings from "./FieldSettings.svelte"
+	import GeneralSettings from "./GeneralSettings.svelte"
+	import RelationSettings from "./RelationSettings.svelte"
 
-	import GeneralSettings from './GeneralSettings.svelte'
-	import FieldSettings from './FieldSettings.svelte'
-	import RelationSettings from './RelationSettings.svelte'
+	import Button from "$components/Button.svelte"
+	import Layout from "$layouts/DefaultLayout.svelte"
+	import LinkButton from "$components/LinkButton.svelte"
+	import Modal from "$components/Modal.svelte"
 
 	import saveIcon from "$assets/save-icon.svg"
 	import trashIcon from "$assets/trash-icon.svg"
 
-	import { page } from '$app/stores'
-	import { Course, Graph } from '../../../classes'
-	import { courses, graphs } from '$scripts/fakedata'
+	import type { PageData } from "./$types"
 
-	function saveChanges() {
-		// TODO add SaveLayout function
-	}
+	export let data: PageData
 
-	function deleteGraph() {
-		deleteGraphModal.hide()
-		// TODO add deleteGraph function
-	}
-
+	let { course, graph } = data
 	let deleteGraphModal: Modal
 	let activeTab: number = 0
-
-
-	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
-
-
-	function getCourse(code: string): Course {
-		for (let course of courses) {
-			if (course.code === code) {
-				return course
-			}
-		}
-
-		throw new Error(`Course with code ${code} not found`)
-	}
-
-	function getGraph(id: number): Graph {
-		for (let graph of graphs) {
-			if (graph.id === id) {
-				return graph
-			}
-		}
-
-		throw new Error(`Graph with id ${id} not found`)
-	}
-
-	let course: Course = getCourse($page.params.course)
-	let graph: Graph = getGraph(Number($page.params.graph))
 
 </script>
 
@@ -88,7 +53,7 @@
 		<div class="flex-spacer" />
 
 		<Button on:click={deleteGraphModal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
-		<Button on:click={saveChanges}> <img src={saveIcon} alt=""> Save Changes </Button>
+		<Button on:click={graph.save}> <img src={saveIcon} alt=""> Save Changes </Button>
 
 		<Modal bind:this={deleteGraphModal}>
 			<h3 slot="header"> Delete Graph </h3>
@@ -96,7 +61,7 @@
 
 			<div class="button-row">
 				<LinkButton on:click={deleteGraphModal.hide}> Cancel </LinkButton>
-				<Button on:click={deleteGraph}> Delete Graph </Button>
+				<Button on:click={graph.delete}> Delete Graph </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</svelte:fragment>
@@ -117,10 +82,10 @@
 				class:active={activeTab === 2}
 				on:click={() => activeTab = 2}
 			> Relations </button>
-	
+
 			<div class="dynamic-border" />
 		</div>
-	
+
 		{#if activeTab === 0}
 			<GeneralSettings {graph} />
 		{:else if activeTab === 1}
@@ -145,7 +110,7 @@
 		gap: $form-small-gap
 
 		margin-top: $form-big-gap
-	
+
 	.tabular
 		border-radius: $border-radius
 		border: 1px solid $gray

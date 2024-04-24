@@ -3,24 +3,24 @@
 
 <script lang="ts">
 
-	import Textfield from "$components/Textfield.svelte"
-	import Dropdown from "$components/Dropdown.svelte"
-	import Searchbar from "$components/Searchbar.svelte"
 	import Button from "$components/Button.svelte"
+	import Dropdown from "$components/Dropdown.svelte"
 	import IconButton from "$components/IconButton.svelte"
 	import LinkButton from "$components/LinkButton.svelte"
+	import Searchbar from "$components/Searchbar.svelte"
 
-	import trashIcon from "$assets/trash-icon.svg"
 	import plusIcon from "$assets/plus-icon.svg"
+	import trashIcon from "$assets/trash-icon.svg"
 
-	import { Graph } from "../../../classes"
+	import { Graph, DomainRelation, SubjectRelation } from "./entities"
+
+	export let graph: Graph
 
 	// Force reactivity update
 	function update() {
 		graph = graph
 	}
 
-	export let graph: Graph
 
 </script>
 
@@ -35,28 +35,28 @@
 		<div class="flex-spacer" />
 
 		<Searchbar />
-		<Button on:click={() => { graph.addDomainRelation(); update() }}>
+		<Button on:click={() => { DomainRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> Add Relation
 		</Button>
 	</div>
 
-	{#if graph.domainRelations.length > 0}
+	{#if graph.domainRelations().length > 0}
 		<div class=row>
-			<span style="grid-area: from;"> From </span>
-			<span style="grid-area: to;"> To </span>
+			<span style="grid-area: left;"> From </span>
+			<span style="grid-area: right;"> To </span>
 		</div>
 	{:else}
 		<h6 class="empty"> No relations found </h6>
 	{/if}
 
-	{#each graph.domainRelations as relation, n}
+	{#each graph.domainRelations() as relation, n}
 		<div class="row">
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="From" placeholder="From Domain" options={relation.getFromOptions()} bind:value={relation.from} />
-			<span class="preview" style:background-color={relation.getFromPreview()} />
-			<Dropdown label="To" placeholder="To Domain" options={relation.getToOptions()} bind:value={relation.to} />
-			<span class="preview" style:background-color={relation.getToPreview()} />
+			<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions()} bind:value={relation.parent} />
+			<span class="preview" style:background-color={relation.parentColor()} />
+			<Dropdown label="Child" placeholder="To Domain" options={relation.childOptions()} bind:value={relation.child} />
+			<span class="preview" style:background-color={relation.childColor()} />
 		</div>
 	{/each}
 
@@ -71,28 +71,28 @@
 		<div class="flex-spacer" />
 
 		<Searchbar />
-		<Button on:click={() => { graph.addSubjectRelation(); update() }}>
+		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> Add Relation
 		</Button>
 	</div>
 
-	{#if graph.subjectRelations.length > 0}
+	{#if graph.subjectRelations().length > 0}
 		<div class=row>
-			<span style="grid-area: from;"> From </span>
-			<span style="grid-area: to;"> To </span>
+			<span style="grid-area: left;"> From </span>
+			<span style="grid-area: right;"> To </span>
 		</div>
 	{:else}
 		<h6 class="empty"> No subjects found </h6>
 	{/if}
 
-	{#each graph.subjectRelations as relation, n}
+	{#each graph.subjectRelations() as relation, n}
 		<div class="row">
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="From" placeholder="From Subject" options={relation.getFromOptions()} bind:value={relation.from} />
-			<span class="preview" style:background-color={relation.getFromPreview()} />
-			<Dropdown label="To" placeholder="To Subject" options={relation.getToOptions()} bind:value={relation.to} />
-			<span class="preview" style:background-color={relation.getToPreview()} />
+			<Dropdown label="Parent" placeholder="From Subject" options={relation.parentOptions()} bind:value={relation.parent} />
+			<span class="preview" style:background-color={relation.parentColor()} />
+			<Dropdown label="Child" placeholder="To Subject" options={relation.childOptions()} bind:value={relation.child} />
+			<span class="preview" style:background-color={relation.childColor()} />
 		</div>
 	{/each}
 
@@ -102,8 +102,8 @@
 
 <style lang="sass">
 
-	@use '$styles/variables.sass' as *
-	@use '$styles/palette.sass' as *
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
 
 	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
 
@@ -125,7 +125,7 @@
 
 		.row
 			display: grid
-			grid-template: "id delete from fp to tp" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+			grid-template: "id delete left parent-preview right child-preview" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 			gap: $form-small-gap
 			width: 100%
 
