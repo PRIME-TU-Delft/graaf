@@ -46,7 +46,7 @@
     "uuid": "^9.0.1"
   },
   "mikro-orm": {
-    "alwaysAllowTsNode": true,
+    "alwaysAllowTs": true,
     "configPaths": [
       "./src/lib/server/mikro-orm.config.ts"
     ]

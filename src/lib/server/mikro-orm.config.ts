@@ -9,17 +9,15 @@ const config: Options = {
 	clientUrl: process.env.DATABASE_URL,
 	metadataProvider: TsMorphMetadataProvider,
 
-	entitiesTs: ['./src/lib/server/entities'],
+	entities: ['./src/lib/server/entities/**/*.js'],
+	entitiesTs: ['./src/lib/server/entities/**/*.ts'],
 
 	migrations: {
 		emit: 'ts',
 		path: './src/lib/server/migrations',
 	},
 
-	discovery: {
-		warnWhenNoEntities: false
-	},
-
-	extensions: [Migrator]
+	extensions: [Migrator],
+	debug: true
 };
 export default config;
