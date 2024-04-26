@@ -1,11 +1,13 @@
 import 'dotenv/config';
-import { type Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
+import { type Options, PostgreSqlDriver, ReflectMetadataProvider } from '@mikro-orm/postgresql';
+import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';
 
 const config: Options = {
 	dbName: 'db',
 	driver: PostgreSqlDriver,
 	clientUrl: process.env.DATABASE_URL,
+	metadataProvider: TsMorphMetadataProvider,
 
 	entitiesTs: ['./src/lib/server/entities'],
 

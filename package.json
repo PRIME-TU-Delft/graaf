@@ -38,6 +38,7 @@
     "@mikro-orm/core": "^6.2.3",
     "@mikro-orm/migrations": "^6.2.3",
     "@mikro-orm/postgresql": "^6.2.3",
+    "@mikro-orm/reflection": "^6.2.3",
     "@types/d3": "^7.4.3",
     "@types/uuid": "^9.0.8",
     "d3": "^7.9.0",
