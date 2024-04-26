@@ -1,42 +1,55 @@
 {
-	"name": "graaf",
-	"version": "0.0.1",
-	"private": true,
-	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
-		"preview": "vite preview",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"test": "vitest",
-		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
-	},
-	"devDependencies": {
-		"@sveltejs/adapter-auto": "^3.1.1",
-		"@sveltejs/kit": "^2.5.4",
-		"@sveltejs/vite-plugin-svelte": "^3.0.2",
-		"@types/eslint": "8.56.0",
-		"@typescript-eslint/eslint-plugin": "^6.21.0",
-		"@typescript-eslint/parser": "^6.21.0",
-		"eslint": "^8.57.0",
-		"eslint-config-prettier": "^9.1.0",
-		"eslint-plugin-svelte": "^2.35.1",
-		"prettier": "^3.2.5",
-		"prettier-plugin-svelte": "^3.2.2",
-		"sass": "^1.72.0",
-		"svelte": "^4.2.12",
-		"svelte-check": "^3.6.8",
-		"tslib": "^2.6.2",
-		"typescript": "^5.4.3",
-		"vite": "^5.2.6",
-		"vitest": "^1.4.0"
-	},
-	"type": "module",
-	"dependencies": {
-		"@prisma/client": "^5.11.0",
-		"@types/d3": "^7.4.3",
-		"d3": "^7.9.0",
-		"prisma": "^5.11.0"
-	}
+  "name": "graaf",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "orm": "mikro-orm-esm",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "test": "vitest",
+    "lint": "prettier --check . && eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^3.1.1",
+    "@sveltejs/kit": "^2.5.4",
+    "@sveltejs/vite-plugin-svelte": "^3.0.2",
+    "@types/eslint": "8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-svelte": "^2.35.1",
+    "prettier": "^3.2.5",
+    "prettier-plugin-svelte": "^3.2.2",
+    "sass": "^1.72.0",
+    "svelte": "^4.2.12",
+    "svelte-check": "^3.6.8",
+    "tslib": "^2.6.2",
+    "vite": "^5.2.6",
+    "vitest": "^1.4.0"
+  },
+  "type": "module",
+  "dependencies": {
+    "@mikro-orm/cli": "^6.2.3",
+    "@mikro-orm/core": "^6.2.3",
+    "@mikro-orm/migrations": "^6.2.3",
+    "@mikro-orm/postgresql": "^6.2.3",
+    "@prisma/client": "^5.11.0",
+    "@types/d3": "^7.4.3",
+    "@types/uuid": "^9.0.8",
+    "d3": "^7.9.0",
+    "dotenv": "^16.4.5",
+    "prisma": "^5.11.0",
+    "uuid": "^9.0.1"
+  },
+  "mikro-orm": {
+    "alwaysAllowTsNode": true,
+    "configPaths": [
+      "./src/lib/server/mikro-orm.config.ts"
+    ]
+  }
 }

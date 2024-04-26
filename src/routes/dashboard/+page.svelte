@@ -19,12 +19,62 @@
 	import peopleIcon from '$assets/people-icon.svg';
 	import LinkButton from '$components/LinkButton.svelte';
 
-	export let data;
+	// export let data;
 
 	const modals: { [key: string]: Modal } = {};
 
-	$: courses = data.courses;
-	$: programs = data.programs;
+	const courses = [
+		{ code: "AESB1311", name: "Linear Algebra"},
+		{ code: "CSE1200", name:  "Calculus"},
+		{ code: "CSE1205", name:  "Linear Algebra"},
+		{ code: "CSE1210", name:  "Cluster Probability & Statistics"},
+		{ code: "CTB2105", name:  "Differentiaalvergelijkingen"},
+		{ code: "CTB2200", name:  "Kansrekening en Statistiek"},
+		{ code: "EE1M11", name:   "Linear Algebra and Analysis A"},
+		{ code: "EE1M21", name:   "Linear Algebra and Analysis B"},
+		{ code: "LB1155", name:   "Calculus"},
+		{ code: "NB2191", name:   "Differential Equations"},
+		{ code: "TB131B", name:   "Differentiaalvergelijkingen en Lineare Algebra"},
+		{ code: "TB132B", name:   "Multivariabele Calculus en Lineaire Algebra"},
+		{ code: "TN1401WI", name: "Analyse voor TNW 1"},
+		{ code: "WBMT", name:     "Linear Algebra"},
+		{ code: "WBMT1050", name: "Calculus for Engineering"},
+		{ code: "WI1402LR", name: "Calculus II"},
+		{ code: "WI1403LR", name: "Linear Algebra"},
+		{ code: "WI1421LR", name: "Calculus I"},
+		{ code: "WI2031TH", name: "Probability and Statistics"}
+	];
+
+	const programs = [
+		{
+			name: "Computer Science",
+			courses: [
+				{ code: "CSE1200", name: "Calculus" },
+				{ code: "CSE1205", name: "Linear Algebra" },
+				{ code: "CSE1210", name: "Cluster Probability & Statistics" }
+			],
+			coordinators: ["Julia", "Mark", "John"]
+		},
+		{
+			name: "Electrical Engineering",
+			courses: [
+				{ code: "EE1M11", name: "Linear Algebra and Analysis A" },
+				{ code: "EE1M21", name: "Linear Algebra and Analysis B" }
+			],
+			coordinators: ["Julia", "Mark", "John"]
+		},
+		{
+			name: "Mathematics",
+			courses: [
+				{ code: "AESB1311", name: "Linear Algebra" },
+				{ code: "LB1155", name: "Calculus" }
+			],
+			coordinators: ["Julia", "Mark", "John"]
+		}
+	]
+
+	// $: courses = data.courses;
+	// $: programs = data.programs;
 
 	function onSearch(event: Event) {
 		// TODO add onSearch event
