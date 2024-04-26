@@ -12,6 +12,7 @@
 		"moduleResolution": "bundler",
 
 		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
 		"allowImportingTsExtensions": true,
 		"declaration": true
 	},

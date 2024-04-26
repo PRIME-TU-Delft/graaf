@@ -22,6 +22,9 @@ export class User {
 	first_name: string;
 
 	@Property()
+	middle_name?: string;
+
+	@Property()
 	last_name: string;
 
 	@Enum({ items: () => UserRole, nativeEnumName: 'user_role' })
@@ -33,7 +36,7 @@ export class User {
 	@Property({ nullable: true })
 	email?: string;
 
-	@ManyToMany()
+	@ManyToMany(() => Program, program => program.coordinators)
 	programs = new Collection<Program>(this);
 
 	constructor(netid: string, first_name: string, last_name: string) {
