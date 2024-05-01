@@ -1,60 +1,51 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-	provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
-}
-
-
-enum UserRole {
-	USER
-	ADMIN
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-	id				Int			@id @default(autoincrement())
-	netid			String		@unique
-	first_name		String
-	last_name 		String
-	role			UserRole	@default(USER)
-	createdAt		DateTime	@default(now())
-	email			String?
-	programs		Program[]
+  id         Int       @id @default(autoincrement())
+  netid      String    @unique
+  first_name String
+  last_name  String
+  role       UserRole  @default(USER)
+  createdAt  DateTime  @default(now())
+  email      String?
+  programs   Program[] @relation("ProgramToUser")
 }
-
 
 model Program {
-	id				Int			@id @default(autoincrement())
-	name			String
-	description		String?
-	createdAt		DateTime	@default(now())
-	updatedAt		DateTime	@updatedAt
-	courses			Course[]
-	coordinators	User[]
-}
-
-
-enum CourseType {
-	COURSE
-	SANDBOX
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  courses      Course[]
+  coordinators User[]   @relation("ProgramToUser")
 }
 
 model Course {
-	id				Int			@id @default(autoincrement())
-	code			String
-	name			String
-	description		String?
-	type			CourseType	@default(COURSE)
-	program			Program		@relation(fields: [programId], references: [id])
-	programId		Int
-	createdAt		DateTime	@default(now())
-	updatedAt		DateTime	@updatedAt
+  id          Int        @id @default(autoincrement())
+  code        String
+  name        String
+  description String?
+  type        CourseType @default(COURSE)
+  programId   Int
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  program     Program    @relation(fields: [programId], references: [id])
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum CourseType {
+  COURSE
+  SANDBOX
 }
