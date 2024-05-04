@@ -34,8 +34,9 @@ export const actions = {
 
 
 export async function load() {
+	let programs = await em.find('Program', {});
+	let courses = await em.find('Course', {});
 	return {
-		programs: await em.find('Program', {}),
-		courses: await em.find('Course', {})
+		programs, courses
 	};
 }

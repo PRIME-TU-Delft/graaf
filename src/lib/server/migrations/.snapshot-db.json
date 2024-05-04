@@ -249,6 +249,15 @@
           "nullable": false,
           "mappedType": "string"
         },
+        "middle_name": {
+          "name": "middle_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "mappedType": "string"
+        },
         "last_name": {
           "name": "last_name",
           "type": "varchar(255)",
@@ -330,15 +339,6 @@
     },
     {
       "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "string"
-        },
         "program_id": {
           "name": "program_id",
           "type": "varchar(255)",
@@ -347,16 +347,25 @@
           "primary": false,
           "nullable": false,
           "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "string"
         }
       },
-      "name": "user_programs",
+      "name": "program_coordinators",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "user_programs_pkey",
+          "keyName": "program_coordinators_pkey",
           "columnNames": [
-            "user_id",
-            "program_id"
+            "program_id",
+            "user_id"
           ],
           "composite": true,
           "constraint": true,
@@ -366,29 +375,29 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "user_programs_user_id_foreign": {
-          "constraintName": "user_programs_user_id_foreign",
-          "columnNames": [
-            "user_id"
-          ],
-          "localTableName": "public.user_programs",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.user",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
-        },
-        "user_programs_program_id_foreign": {
-          "constraintName": "user_programs_program_id_foreign",
+        "program_coordinators_program_id_foreign": {
+          "constraintName": "program_coordinators_program_id_foreign",
           "columnNames": [
             "program_id"
           ],
-          "localTableName": "public.user_programs",
+          "localTableName": "public.program_coordinators",
           "referencedColumnNames": [
             "id"
           ],
           "referencedTableName": "public.program",
+          "deleteRule": "cascade",
+          "updateRule": "cascade"
+        },
+        "program_coordinators_user_id_foreign": {
+          "constraintName": "program_coordinators_user_id_foreign",
+          "columnNames": [
+            "user_id"
+          ],
+          "localTableName": "public.program_coordinators",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
           "deleteRule": "cascade",
           "updateRule": "cascade"
         }

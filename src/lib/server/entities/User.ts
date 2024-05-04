@@ -43,5 +43,6 @@ export class User {
 		this.netid = netid;
 		this.first_name = first_name;
 		this.last_name = last_name;
+		this.programs = new Collection(this);
 	}
 }

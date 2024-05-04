@@ -31,5 +31,7 @@ export class Program {
 	constructor(name: string, description?: string) {
 		this.name = name;
 		this.description = description;
+		this.courses = new Collection(this);
+		this.coordinators = new Collection(this);
 	}
 }
