@@ -25,7 +25,7 @@ export class Program {
 	@OneToMany(() => Course, course => course.program)
 	courses = new Collection<Course>(this);
 
-	@ManyToMany(() => User, user => user.programs)
+	@ManyToMany({ entity: () => User, inversedBy: 'programs'})
 	coordinators = new Collection<User>(this);
 
 	constructor(name: string, description?: string) {
