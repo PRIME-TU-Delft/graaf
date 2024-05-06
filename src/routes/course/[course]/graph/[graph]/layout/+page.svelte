@@ -3,21 +3,26 @@
 
 <script lang="ts">
 
-	import FieldSettings from "./FieldSettings.svelte"
-	import GeneralSettings from "./GeneralSettings.svelte"
-	import RelationSettings from "./RelationSettings.svelte"
+	import Layout from '$layouts/DefaultLayout.svelte';
+	import Button from '$components/Button.svelte';
 
-	import Button from "$components/Button.svelte"
-	import LinkButton from "$components/LinkButton.svelte"
-	import Layout from "$layouts/DefaultLayout.svelte"
+	import saveIcon from '$assets/save-icon.svg';
 
-	import saveIcon from "$assets/save-icon.svg"
+	import { layout } from '$scripts/layout/layout'
 
 	import type { PageData } from "./$types"
 	export let data: PageData
 
 	let { course, graph } = data
 	let activeTab: number = 0
+
+	function getStartPositions() {
+		return graph.subjects.map(subject => ({
+			id: subject.id,
+			x: subject.domain!.x,
+			y: subject.domain!.y
+		}))
+	}
 
 </script>
 
@@ -39,15 +44,14 @@
 			href: `/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
-			name: "Settings",
-			href: `/course/${course.code}/graph/${graph.id}/settings`
+			name: "Edit",
+			href: `/course/${course.code}/graph/${graph.id}/edit`
 		}
 	]}
 >
 
 	<svelte:fragment slot="toolbar">
 		<div class="flex-spacer" />
-		<LinkButton href="/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
@@ -56,37 +60,42 @@
 			<button
 				class:active={activeTab === 0}
 				on:click={() => activeTab = 0}
-			> General </button>
+			> Domains </button>
 
 			<button
 				class:active={activeTab === 1}
 				on:click={() => activeTab = 1}
-			> Domains & Subjects </button>
+			> Subjects </button>
 
 			<button
 				class:active={activeTab === 2}
 				on:click={() => activeTab = 2}
-			> Relations </button>
+			> Lectures </button>
 
 			<div class="dynamic-border" />
 		</div>
 
-		{#if activeTab === 0}
-			<GeneralSettings {graph} />
-		{:else if activeTab === 1}
-			<FieldSettings {graph} />
-		{:else if activeTab === 2}
-			<RelationSettings {graph} />
-		{/if}
+		<div class="editor">
+			{#if activeTab === 0}
+				<svg use:layout={[graph.domains, graph.domainRelations]} />
+			{:else if activeTab === 1}
+				<svg use:layout={[graph.subjects, graph.subjectRelations, getStartPositions()]} />
+			{/if}
+		</div>
 	</div>
 </Layout>
-
-<!-- Styles -->
 
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
+
+	.editor
+		height: 650px
+
+		svg
+			width: 100%
+			height: 100%
 
 	.tabular
 		border-radius: $border-radius
@@ -121,7 +130,6 @@
 
 					& ~ button
 						border-width: 0 1px 1px 0
-
 
 				&:first-child
 					border-left: none !important

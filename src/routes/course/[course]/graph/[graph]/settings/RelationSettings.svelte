@@ -12,7 +12,7 @@
 	import plusIcon from "$assets/plus-icon.svg"
 	import trashIcon from "$assets/trash-icon.svg"
 
-	import { Graph, DomainRelation, SubjectRelation } from "./entities"
+	import { Graph, DomainRelation, SubjectRelation } from "$scripts/entities"
 
 	export let graph: Graph
 
@@ -40,7 +40,7 @@
 		</Button>
 	</div>
 
-	{#if graph.domainRelations().length > 0}
+	{#if graph.domainRelations.length > 0}
 		<div class=row>
 			<span style="grid-area: left;"> From </span>
 			<span style="grid-area: right;"> To </span>
@@ -49,7 +49,7 @@
 		<h6 class="empty"> No relations found </h6>
 	{/if}
 
-	{#each graph.domainRelations() as relation, n}
+	{#each graph.domainRelations as relation, n}
 		<div class="row">
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
@@ -76,7 +76,7 @@
 		</Button>
 	</div>
 
-	{#if graph.subjectRelations().length > 0}
+	{#if graph.subjectRelations.length > 0}
 		<div class=row>
 			<span style="grid-area: left;"> From </span>
 			<span style="grid-area: right;"> To </span>
@@ -85,7 +85,7 @@
 		<h6 class="empty"> No subjects found </h6>
 	{/if}
 
-	{#each graph.subjectRelations() as relation, n}
+	{#each graph.subjectRelations as relation, n}
 		<div class="row">
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />

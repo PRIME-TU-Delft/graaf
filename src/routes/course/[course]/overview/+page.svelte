@@ -21,8 +21,6 @@
 	import trashIcon from '$assets/trash-icon.svg';
 
 	import { page } from '$app/stores';
-	import { Course } from '../classes';
-	import { courses } from '$scripts/fakedata';
 
 	function newLink() {
 		// TODO add newLink function
@@ -32,17 +30,24 @@
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
-	function getCourse(code: string): Course {
-		for (let course of courses) {
-			if (course.code === code) {
-				return course;
+	let course = {
+		code: "CSE1200",
+		name: "Calculus",
+		graphs: [
+			{
+				name: "Graph 1",
+				id: 1,
+				hasLinks: () => true,
+				isVisible: () => true
+			},
+			{
+				name: "Graph 2",
+				id: 2,
+				hasLinks: () => false,
+				isVisible: () => false
 			}
-		}
-
-		throw new Error(`Course not found`);
-	}
-
-	let course: Course = getCourse($page.params.course);
+		]
+	};
 
 </script>
 

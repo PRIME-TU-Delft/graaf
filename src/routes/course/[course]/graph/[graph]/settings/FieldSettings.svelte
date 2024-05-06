@@ -13,15 +13,24 @@
 	import plusIcon from "$assets/plus-icon.svg"
 	import trashIcon from "$assets/trash-icon.svg"
 
-	import { styles } from "$scripts/graph/settings"
-	import { Graph, Domain, Subject } from "./entities"
+	import { styles } from "$scripts/layout/settings"
+	import { Graph, Domain, Subject } from "$scripts/entities"
 
 	export let graph: Graph
 
-	$: styleOptions = Object.keys(styles).map(style => ({ name: styles[style].display_name, value: style }))
-	$: domainOptions = graph.domains.filter(domain => domain.name).map(domain => ({ name: domain.name!, value: domain }))
+	$: styleOptions = Object.keys(styles).map(style => ({
+		name: styles[style].display_name,
+		value: style
+	}))
 
-	// Force reactivity update
+	$: domainOptions = graph.domains
+		.filter(domain => domain.name)
+		.map(domain => ({
+			name: domain.name!,
+			value: domain
+		}))
+
+	// Force reactivity update, maybe redundant Svelte 5?
 	function update() {
 		graph = graph
 	}
@@ -31,7 +40,6 @@
 <!-- Markup -->
 
 <div id="domains" class="editor">
-
 	<div class="toolbar">
 		<h2> Domains </h2>
 		<LinkButton href="#subjects"> goto subjects </LinkButton>
@@ -58,15 +66,13 @@
 			<span class="id"> {n + 1} </span>
 			<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 			<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-			<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain.style}/>
+			<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain._style}/>
 			<span class="preview" style:background-color={domain.color()} />
 		</div>
 	{/each}
-
 </div>
 
 <div id="subjects" class="editor">
-
 	<div class="toolbar">
 		<h2> Subjects </h2>
 		<LinkButton href="#domains"> goto domains </LinkButton>
@@ -97,7 +103,6 @@
 			<span class="preview" style:background-color={subject.color()} />
 		</div>
 	{/each}
-
 </div>
 
 <!-- Styles -->

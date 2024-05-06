@@ -9,6 +9,7 @@ export const NODE_HEIGHT = 8;
 export const NODE_MARGIN = 0.75;
 
 export const STROKE_WIDTH = 2;
+export const TRANSITION_DURATION = 1500;
 
 const top    = STROKE_WIDTH / 2;
 const right  = NODE_WIDTH * GRID_UNIT - STROKE_WIDTH / 2;
