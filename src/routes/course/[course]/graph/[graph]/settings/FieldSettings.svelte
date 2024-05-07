@@ -18,6 +18,9 @@
 
 	export let graph: Graph
 
+	let domainQuery: string = ""
+	let subjectQuery: string = ""
+
 	$: styleOptions = Object.keys(styles).map(style => ({
 		name: styles[style].display_name,
 		value: style
@@ -35,6 +38,20 @@
 		graph = graph
 	}
 
+	function searchDomain(query: string, domain: Domain): boolean {
+		query = query.toLowerCase()
+		let name = domain.name?.toLowerCase()
+		let style = domain._style ? styles[domain._style].display_name.toLowerCase() : undefined
+		return name?.includes(query) || style?.includes(query) || false
+	}
+
+	function searchSubject(query: string, subject: Subject): boolean {
+		query = query.toLowerCase()
+		let name = subject.name?.toLowerCase()
+		let domain = subject.domain?.name?.toLowerCase()
+		return name?.includes(query) || domain?.includes(query) || false
+	}
+
 </script>
 
 <!-- Markup -->
@@ -46,7 +63,7 @@
 
 		<div class="flex-spacer" />
 
-		<Searchbar />
+		<Searchbar bind:value={domainQuery} />
 		<Button on:click={() => { Domain.create(graph); update() }}>
 			<img src={plusIcon} alt=""> Add Domain
 		</Button>
@@ -62,13 +79,15 @@
 	{/if}
 
 	{#each graph.domains as domain, n}
-		<div class="row">
-			<span class="id"> {n + 1} </span>
-			<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
-			<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-			<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain._style}/>
-			<span class="preview" style:background-color={domain.color()} />
-		</div>
+		{#if searchDomain(domainQuery, domain)}
+			<div class="row">
+				<span class="id"> {n + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
+				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
+				<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain._style}/>
+				<span class="preview" style:background-color={domain.color()} />
+			</div>
+		{/if}
 	{/each}
 </div>
 
@@ -79,7 +98,7 @@
 
 		<div class="flex-spacer" />
 
-		<Searchbar />
+		<Searchbar bind:value={subjectQuery} />
 		<Button on:click={() => { Subject.create(graph); update() }}>
 			<img src={plusIcon} alt=""> Add Subject
 		</Button>
@@ -95,13 +114,15 @@
 	{/if}
 
 	{#each graph.subjects as subject, n}
-		<div class="row">
-			<span class="id"> {n + 1} </span>
-			<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
-			<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
-			<Dropdown label="Domain" placeholder="Assigned Domain" options={domainOptions} bind:value={subject.domain} />
-			<span class="preview" style:background-color={subject.color()} />
-		</div>
+		{#if searchSubject(subjectQuery, subject)}
+			<div class="row">
+				<span class="id"> {n + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
+				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
+				<Dropdown label="Domain" placeholder="Assigned Domain" options={domainOptions} bind:value={subject.domain} />
+				<span class="preview" style:background-color={subject.color()} />
+			</div>
+		{/if}
 	{/each}
 </div>
 

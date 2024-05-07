@@ -5,7 +5,6 @@
 
 	import search_icon from '$assets/search-icon.svg';
 
-	export let onChange: (event: Event) => void = () => {};
 	export let placeholder: string = "";
 	export let value: string = "";
 
@@ -14,7 +13,7 @@
 <!-- Markup -->
 
 <div class="searchbar">
-	<input type="search" placeholder={placeholder} value={value} on:change={onChange}/>
+	<input type="search" placeholder={placeholder} bind:value={value} on:input/>
 	<img src={search_icon} alt="search-icon" />
 </div>
 

@@ -16,31 +16,46 @@
 
 	export let graph: Graph
 
+	let domainQuery: string = ""
+	let subjectQuery: string = ""
+
 	// Force reactivity update
 	function update() {
 		graph = graph
 	}
 
+	function searchDomain(query: string, relation: DomainRelation): boolean {
+		query = query.toLowerCase()
+		let parent = relation.parent?.name?.toLowerCase()
+		let child = relation.child?.name?.toLowerCase()
+		return parent?.includes(query) || child?.includes(query) || false
+	}
+
+	function searchSubject(query: string, relation: SubjectRelation): boolean {
+		query = query.toLowerCase()
+		let parent = relation.parent?.name?.toLowerCase()
+		let child = relation.child?.name?.toLowerCase()
+		return parent?.includes(query) || child?.includes(query) || false
+	}
 
 </script>
 
 <!-- Markup -->
 
 <div id="domains" class="editor">
-
 	<div class="toolbar">
 		<h2> Domain relations </h2>
 		<LinkButton href="#subjects"> goto subjects </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar />
+		<Searchbar bind:value={domainQuery} />
 		<Button on:click={() => { DomainRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> Add Relation
 		</Button>
 	</div>
 
-	{#if graph.domainRelations.length > 0}
+	{#if graph.domainRelations.some(relation => searchDomain(domainQuery, relation))}
 		<div class=row>
 			<span style="grid-area: left;"> From </span>
 			<span style="grid-area: right;"> To </span>
@@ -50,33 +65,33 @@
 	{/if}
 
 	{#each graph.domainRelations as relation, n}
-		<div class="row">
-			<span class="id"> {n + 1} </span>
-			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions()} bind:value={relation.parent} />
-			<span class="preview" style:background-color={relation.parentColor()} />
-			<Dropdown label="Child" placeholder="To Domain" options={relation.childOptions()} bind:value={relation.child} />
-			<span class="preview" style:background-color={relation.childColor()} />
-		</div>
+		{#if searchDomain(domainQuery, relation)}
+			<div class="row">
+				<span class="id"> {n + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
+				<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions()} bind:value={relation.parent} />
+				<span class="preview" style:background-color={relation.parentColor()} />
+				<Dropdown label="Child" placeholder="To Domain" options={relation.childOptions()} bind:value={relation.child} />
+				<span class="preview" style:background-color={relation.childColor()} />
+			</div>
+		{/if}
 	{/each}
-
 </div>
 
 <div id="subjects" class="editor">
-
 	<div class="toolbar">
 		<h2> Subject relations </h2>
 		<LinkButton href="#domains"> goto domains </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar />
+		<Searchbar bind:value={subjectQuery} />
 		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> Add Relation
 		</Button>
 	</div>
 
-	{#if graph.subjectRelations.length > 0}
+	{#if graph.subjectRelations.some(relation => searchSubject(subjectQuery, relation))}
 		<div class=row>
 			<span style="grid-area: left;"> From </span>
 			<span style="grid-area: right;"> To </span>
@@ -86,16 +101,17 @@
 	{/if}
 
 	{#each graph.subjectRelations as relation, n}
-		<div class="row">
-			<span class="id"> {n + 1} </span>
-			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="Parent" placeholder="From Subject" options={relation.parentOptions()} bind:value={relation.parent} />
-			<span class="preview" style:background-color={relation.parentColor()} />
-			<Dropdown label="Child" placeholder="To Subject" options={relation.childOptions()} bind:value={relation.child} />
-			<span class="preview" style:background-color={relation.childColor()} />
-		</div>
+		{#if searchSubject(subjectQuery, relation)}
+			<div class="row">
+				<span class="id"> {n + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
+				<Dropdown label="Parent" placeholder="From Subject" options={relation.parentOptions()} bind:value={relation.parent} />
+				<span class="preview" style:background-color={relation.parentColor()} />
+				<Dropdown label="Child" placeholder="To Subject" options={relation.childOptions()} bind:value={relation.child} />
+				<span class="preview" style:background-color={relation.childColor()} />
+			</div>
+		{/if}
 	{/each}
-
 </div>
 
 <!-- Styles -->

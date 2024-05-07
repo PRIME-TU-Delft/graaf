@@ -17,6 +17,7 @@
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg';
+	import LinkButton from "$components/LinkButton.svelte";
 
 	// Exports
 	export let data: PageData
@@ -123,6 +124,7 @@
 
 	<svelte:fragment slot="toolbar">
 		<div class="flex-spacer" />
+		<LinkButton href={`/course/${course.code}/graph/${graph.id}/settings`}> Settings </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
