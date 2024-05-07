@@ -33,24 +33,24 @@ class Graph {
 		this.domainRelations = []
 		this.subjectRelations = []
 
-		new Domain(this, 0, 0, 0, "Domain 1", "prosperous-red")
-		new Domain(this, 1, 0, 0, "Domain 2", "energizing-orange")
-		new Domain(this, 2, 0, 0, "Domain 3", "sunny-yellow")
-		new Subject(this, 0, 0, 0, "Subject 1", this.domains[0])
-		new Subject(this, 1, 0, 0, "Subject 2", this.domains[0])
-		new Subject(this, 2, 0, 0, "Subject 3", this.domains[1])
-		new Subject(this, 3, 0, 0, "Subject 4", this.domains[1])
-		new Subject(this, 4, 0, 0, "Subject 5", this.domains[2])
-		new Subject(this, 5, 0, 0, "Subject 6", this.domains[2])
-		new DomainRelation(this, 0, this.domains[0], this.domains[1])
-		new DomainRelation(this, 1, this.domains[1], this.domains[2])
-		new DomainRelation(this, 2, this.domains[0], this.domains[2])
-		new SubjectRelation(this, 0, this.subjects[0], this.subjects[1])
-		new SubjectRelation(this, 1, this.subjects[2], this.subjects[3])
-		new SubjectRelation(this, 2, this.subjects[4], this.subjects[5])
-		new SubjectRelation(this, 3, this.subjects[0], this.subjects[2])
-		new SubjectRelation(this, 4, this.subjects[1], this.subjects[3])
-		new SubjectRelation(this, 5, this.subjects[2], this.subjects[4])
+		new Domain(this, 1, 0, 0, "Domain 1", "prosperous-red")
+		new Domain(this, 2, 0, 0, "Domain 2", "energizing-orange")
+		new Domain(this, 3, 0, 0, "Domain 3", "sunny-yellow")
+		new Subject(this, 1, 0, 0, "Subject 1", this.domains[0])
+		new Subject(this, 2, 0, 0, "Subject 2", this.domains[0])
+		new Subject(this, 3, 0, 0, "Subject 3", this.domains[1])
+		new Subject(this, 4, 0, 0, "Subject 4", this.domains[1])
+		new Subject(this, 5, 0, 0, "Subject 5", this.domains[2])
+		new Subject(this, 6, 0, 0, "Subject 6", this.domains[2])
+		new DomainRelation(this, 1, this.domains[0], this.domains[1])
+		new DomainRelation(this, 2, this.domains[1], this.domains[2])
+		new DomainRelation(this, 3, this.domains[0], this.domains[2])
+		new SubjectRelation(this, 1, this.subjects[0], this.subjects[1])
+		new SubjectRelation(this, 2, this.subjects[2], this.subjects[3])
+		new SubjectRelation(this, 3, this.subjects[4], this.subjects[5])
+		new SubjectRelation(this, 4, this.subjects[0], this.subjects[2])
+		new SubjectRelation(this, 5, this.subjects[1], this.subjects[3])
+		new SubjectRelation(this, 6, this.subjects[2], this.subjects[4])
 	}
 
 	save() {
@@ -62,7 +62,7 @@ class Graph {
 	}
 
 	nextDomainID(): number {
-		return this.domains.length > 0 ? Math.max(...this.domains.map(domain => domain.id)) + 1 : 0
+		return this.domains.length > 0 ? Math.max(...this.domains.map(domain => domain.id)) + 1 : 1
 	}
 
 	nextDomainStyle(): string | undefined {
@@ -71,12 +71,12 @@ class Graph {
 	}
 
 	nextSubjectID(): number {
-		return this.subjects.length > 0 ? Math.max(...this.subjects.map(subject => subject.id)) + 1 : 0
+		return this.subjects.length > 0 ? Math.max(...this.subjects.map(subject => subject.id)) + 1 : 1
 	}
 
 	nextRelationID(): number {
 		let relations = this.domainRelations.concat(this.subjectRelations)
-		return relations.length > 0 ? Math.max(...relations.map(relation => relation.id)) + 1 : 0
+		return relations.length > 0 ? Math.max(...relations.map(relation => relation.id)) + 1 : 1
 	}
 }
 

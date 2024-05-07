@@ -1,32 +1,44 @@
 
-<!-- Script -->
-
 <script lang="ts">
 
+	// Scripts
+	import { Graph } from "$scripts/entities"
+
+	// Components
 	import Modal from "$components/Modal.svelte"
 	import Button from "$components/Button.svelte"
 	import LinkButton from "$components/LinkButton.svelte"
 	import Textfield from "$components/Textfield.svelte"
 
+	// Assets
 	import trashIcon from "$assets/trash-icon.svg"
 
-	import { Graph } from "$scripts/entities"
-
+	// Exports
 	export let graph: Graph
 
+	// Variables
 	let deleteGraphModal: Modal
 
 </script>
 
+
+
 <!-- Markup -->
 
+
+
 <div class="editor">
+
+	<!-- Settings -->
 	<div class="settings">
 		<label for="name"> Name </label>
 		<Textfield label="Name" bind:value={graph.name} />
 	</div>
 
+	<!-- Button row -->
 	<div class="button-row">
+
+		<!-- Delete graph button -->
 		<Button on:click={deleteGraphModal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
 		<Modal bind:this={deleteGraphModal}>
 			<h3 slot="header"> Delete Graph </h3>
@@ -40,7 +52,11 @@
 	</div>
 </div>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
