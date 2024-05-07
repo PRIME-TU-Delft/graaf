@@ -7,13 +7,11 @@ import { createField, updateField } from './field';
 
 import * as settings from './settings';
 
-type PositionBuffer = {id: number, x: number, y: number};
-type LayoutParameters = [Field[], Relation<Field>[], PositionBuffer[]?];
-
-export function layout(element: SVGSVGElement, parameters: LayoutParameters) {
+export function layout(element: SVGSVGElement) {
 	const svg = d3.select<SVGSVGElement, unknown>(element)
 	const definitions = svg.append('defs');
-	const [fields, relations, positionBuffers] = parameters;
+	const content = svg.append('g')
+		.attr('id', 'content');
 
 	// Create arrowhead
 	definitions.append('marker')
@@ -52,7 +50,8 @@ export function layout(element: SVGSVGElement, parameters: LayoutParameters) {
 	svg.append('rect')
 		.attr('fill', 'url(#grid)')
 		.attr('width', '100%')
-		.attr('height', '100%');
+		.attr('height', '100%')
+		.lower();
 
 	// Grid events
 	svg.call(
@@ -73,44 +72,44 @@ export function layout(element: SVGSVGElement, parameters: LayoutParameters) {
 						.attr('opacity', Math.min(1, event.transform.k));
 			})
 	);
+}
 
+export function fillLayout(element: SVGSVGElement, fields: Field[], relations: Relation<Field>[]) {
+	const svg = d3.select<SVGSVGElement, unknown>(element);
+	const content = svg.select('#content');
+	
 	// Create relations
-	const content = svg.append('g');
 	content.selectAll('line')
-		.data(relations)
-		.enter()
-		.append('line')
-			.each(function() { createRelation(this); });
+	.data(relations)
+	.enter()
+	.append('line')
+		.each(function() {
+			createRelation(this);
+		});
 
 	// Create fields
 	content.selectAll('g')
 		.data(fields)
 		.enter()
 		.append('g')
-			.each(function(field) {
-				let buffer = positionBuffers?.find(position => position.id === field.id);
-				if (buffer) {
-
-					// Swap real field position with buffer position
-					let temp = field.x;
-					field.x = buffer.x;
-					buffer.x = temp;
-					temp = field.y;
-					field.y = buffer.y;
-					buffer.y = temp;
-				}
-
+			.each(function() {
 				createField(this);
 			});
+}
 
-	// Transition to real positions
+export function updateLayout(element: SVGSVGElement, animated: boolean = false) {
+	const svg = d3.select<SVGSVGElement, unknown>(element);
+	const content = svg.select('#content');
+	console.log(content);
+
 	content.selectAll<SVGGElement, Field>('g')
 		.each(function(field) {
-			let buffer = positionBuffers?.find(position => position.id === field.id);
-			if (buffer) {
-				field.x = buffer.x;
-				field.y = buffer.y;
-				updateField(this, true);
-			}
+			updateField(this, animated);
 		});
+}
+
+export function clearLayout(element: SVGSVGElement) {
+	const svg = d3.select<SVGSVGElement, unknown>(element);
+	const content = svg.select('#content');
+	content.selectAll('*').remove();
 }

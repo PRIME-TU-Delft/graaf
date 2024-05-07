@@ -7,13 +7,13 @@ import { updateRelation } from './relation';
 import * as settings from './settings';
 import { styles } from './settings';
 
-export function updateField(element: SVGGElement, transition: boolean = false) {
+export function updateField(element: SVGGElement, animated: boolean = false) {
 	const content = d3.select<SVGGElement, unknown>(element.parentNode as SVGGElement);
 	const group = d3.select<SVGGElement, Field>(element);
 
 	group.select('path')
 		.transition()
-			.duration(transition ? settings.TRANSITION_DURATION : 0)
+			.duration(animated ? settings.TRANSITION_DURATION : 0)
 			.ease(d3.easeSinInOut)
 		.attr('transform', field => `translate(
 			${field.x * settings.GRID_UNIT},
@@ -22,7 +22,7 @@ export function updateField(element: SVGGElement, transition: boolean = false) {
 
 	group.select('text')
 		.transition()
-			.duration(transition ? settings.TRANSITION_DURATION : 0)
+			.duration(animated ? settings.TRANSITION_DURATION : 0)
 			.ease(d3.easeSinInOut)
 		.attr('transform', field => `translate(
 			${(field.x + settings.NODE_WIDTH / 2) * settings.GRID_UNIT},
@@ -31,7 +31,7 @@ export function updateField(element: SVGGElement, transition: boolean = false) {
 
 	content.selectAll<SVGLineElement, Relation<Field>>('line')
 		.filter(relation => relation.parent === group.datum() || relation.child === group.datum())
-		.each(function () { updateRelation(this, transition); })
+		.each(function () { updateRelation(this, animated); })
 }
 
 export function createField(element: SVGGElement) {

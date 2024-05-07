@@ -7,7 +7,7 @@ import { Field, Relation } from '../entities';
 import * as settings from './settings';
 import { styles } from './settings';
 
-export function updateRelation(element: SVGLineElement, transition: boolean = false) {
+export function updateRelation(element: SVGLineElement, animated: boolean = false) {
 
 	/* We are calculating the line connecting two nodes.
 	 * It should start at the center of the start node and end at the BOUNDS of the end node.
@@ -39,7 +39,7 @@ export function updateRelation(element: SVGLineElement, transition: boolean = fa
 	if (Math.abs(dx) < halfWidth && Math.abs(dy) < halfHeight) {
 		line
 			.transition()
-				.duration(transition ? settings.TRANSITION_DURATION : 0)
+				.duration(animated ? settings.TRANSITION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.attr('x1', cxStart * settings.GRID_UNIT)
 			.attr('y1', cyStart * settings.GRID_UNIT)
@@ -64,7 +64,7 @@ export function updateRelation(element: SVGLineElement, transition: boolean = fa
 
 	line
 		.transition()
-			.duration(transition ? settings.TRANSITION_DURATION : 0)
+			.duration(animated ? settings.TRANSITION_DURATION : 0)
 			.ease(d3.easeSinInOut)
 		.attr('x1', x1 * settings.GRID_UNIT)
 		.attr('y1', y1 * settings.GRID_UNIT)
