@@ -1,4 +1,4 @@
-import { Entity, Property, PrimaryKey, Enum, ManyToOne } from '@mikro-orm/core';
+import { Entity, Property, PrimaryKey, Enum, ManyToOne, rel } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
 
 import { Program } from './Program.ts';
@@ -36,10 +36,10 @@ export class Course {
 	@Property({ onUpdate: () => new Date() })
 	updatedAt = new Date();
 
-	constructor(code: string, name: string, program: Program, description?: string, type: CourseType = CourseType.COURSE) {
+	constructor(code: string, name: string, programId: string, description?: string, type: CourseType = CourseType.COURSE) {
 		this.code = code;
 		this.name = name;
-		this.program = program;
+		this.program = rel(Program, programId);
 		this.description = description;
 		this.type = type;
 	}
