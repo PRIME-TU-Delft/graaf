@@ -1,12 +1,9 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	export let text: string;
 	export let x: number;
 	export let y: number;
-
 </script>
 
 <!-- Markup -->

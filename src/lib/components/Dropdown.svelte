@@ -1,22 +1,19 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import { clickoutside } from '$scripts/clickoutside';
 
 	export let label: string;
 	export let value: any = undefined;
 	export let placeholder: string;
-	export let options: { name: string, value: any }[];
+	export let options: { name: string; value: any }[];
 
 	let show: boolean = false;
 
-	$: id = label.toLowerCase().replace(/\s/g, "_");
-	$: if (options.find(option => option.value === value) === undefined) {
+	$: id = label.toLowerCase().replace(/\s/g, '_');
+	$: if (options.find((option) => option.value === value) === undefined) {
 		value = undefined; // If the current value isnt in the available options, default to undefined
 	}
-
 </script>
 
 <!-- Markup -->
@@ -25,19 +22,25 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-<div class="dropdown" class:show on:click={() => show = !show && options.length > 0} use:clickoutside={() => show = false}>
-
+<div
+	class="dropdown"
+	class:show
+	on:click={() => (show = !show && options.length > 0)}
+	use:clickoutside={() => (show = false)}
+>
 	<!-- Hidden input to bind the selected value to a submittable element -->
-	<input id={id} name={id} type="hidden" tabindex="-1" bind:value>
-	<label for={id} class:placeholder={value === undefined}> {options.find(option => option.value === value)?.name ?? placeholder} </label>
+	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
+	<label for={id} class:placeholder={value === undefined}>
+		{options.find((option) => option.value === value)?.name ?? placeholder}
+	</label>
 
 	<div class="options">
 		{#each options as option}
-			<span on:click={() => value = option.value}> {option.name} </span>
+			<span on:click={() => (value = option.value)}> {option.name} </span>
 		{/each}
 
 		{#if value !== undefined}
-			<span style="opacity: 0.5;" on:click={() => value = undefined}> <i>Remove choice</i> </span>
+			<span style="opacity: 0.5;" on:click={() => (value = undefined)}> <i>Remove choice</i> </span>
 		{/if}
 	</div>
 </div>

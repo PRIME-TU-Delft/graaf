@@ -1,8 +1,6 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 
@@ -12,14 +10,13 @@
 	import '$styles/global.sass';
 
 	let loggedIn = false; // TODO temporary
-
 </script>
 
 <!-- Markup -->
 
 <header>
 	<a id="PRIME-logo" href="/">
-		<img src={PRIME_logo} alt="PRIME logo">
+		<img src={PRIME_logo} alt="PRIME logo" />
 	</a>
 
 	<h1>Graph editor</h1>
@@ -27,11 +24,11 @@
 	<div class="flex-spacer" />
 
 	{#if loggedIn}
-		<LinkButton href="/auth/logout"> Logout </LinkButton>
-		<Button href="/dashboard"> Dashboard </Button>
+		<LinkButton href="/auth/logout">Logout</LinkButton>
+		<Button href="/dashboard">Dashboard</Button>
 	{:else}
-		<LinkButton href="/auth/register"> Register </LinkButton>
-		<Button href="/auth/login"> Login </Button>
+		<LinkButton href="/auth/register">Register</LinkButton>
+		<Button href="/auth/login">Login</Button>
 	{/if}
 </header>
 
@@ -40,7 +37,7 @@
 </main>
 
 <footer>
-	<img id="TUDelft-logo" src={TUDelft_logo} alt="TUDelft logo">
+	<img id="TUDelft-logo" src={TUDelft_logo} alt="TUDelft logo" />
 </footer>
 
 <!-- Styles -->
