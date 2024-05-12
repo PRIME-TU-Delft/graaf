@@ -1,5 +1,4 @@
 import { Entity, Property, PrimaryKey, Enum, ManyToOne, rel } from '@mikro-orm/core';
-import { v4 as uuid } from 'uuid';
 
 import { Program } from './Program.ts';
 
@@ -11,7 +10,7 @@ export enum CourseType {
 @Entity()
 export class Course {
 	@PrimaryKey()
-	id: string = uuid();
+	id!: number;
 
 	@Property()
 	code: string;
@@ -37,7 +36,7 @@ export class Course {
 	constructor(
 		code: string,
 		name: string,
-		programId: string,
+		programId: number,
 		description?: string,
 		type: CourseType = CourseType.COURSE
 	) {

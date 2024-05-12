@@ -1,5 +1,4 @@
 import { Entity, Property, PrimaryKey, Enum, ManyToMany, Collection } from '@mikro-orm/core';
-import { v4 as uuid } from 'uuid';
 
 import { Program } from './Program.ts';
 
@@ -11,16 +10,13 @@ export enum UserRole {
 @Entity()
 export class User {
 	@PrimaryKey()
-	id: string = uuid();
+	id!: number;
 
 	@Property()
 	netid: string;
 
 	@Property()
 	first_name: string;
-
-	@Property()
-	middle_name?: string;
 
 	@Property()
 	last_name: string;
