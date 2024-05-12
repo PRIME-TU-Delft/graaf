@@ -58,7 +58,7 @@
 
 		<div class="flex-spacer" />
 
-		<Searchbar onChange={onSearch} placeholder="Search courses" />
+		<Searchbar on:input={onSearch} placeholder="Search courses" />
 		<!-- TODO I cringe a bit for this implementation -->
 
 		<Modal bind:this={modals['CREATE_COURSE']}>

@@ -51,7 +51,7 @@ export function createField(element: SVGGElement) {
 
 	group.call(
 		d3.drag<SVGGElement, Field>()
-			.on('start', function(event, field) {
+			.on('start', function() {
 				d3.select(this).raise();
 			})
 			.on('drag', function(event, field) {

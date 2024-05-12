@@ -1,9 +1,20 @@
+
 <script lang="ts">
-	export let tabs: { [key: string]: any }[] = [];
-	export let active: number = 0;
+
+	// Types
+	type T = ConstructorOfATypedSvelteComponent | null | undefined
+
+	// Exports
+	export let tabs: { content: T, title: string }[] = []
+	export let active: number = 0
+
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <div class="card">
 	<div class="tabs">
@@ -19,7 +30,11 @@
 	<svelte:component this={tabs[active].content} />
 </div>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 

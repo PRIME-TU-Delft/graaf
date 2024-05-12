@@ -1,32 +1,39 @@
-<!-- Script -->
 
 <script lang="ts">
-	import { clickoutside } from '$scripts/clickoutside';
 
-	export let label: string;
-	export let value: any = undefined;
-	export let placeholder: string;
-	export let options: { name: string; value: any }[];
+	// Lib imports
+	import { clickoutside } from '$scripts/clickoutside'
 
-	let show: boolean = false;
+	// Types
+	type T = $$Generic
 
-	$: id = label.toLowerCase().replace(/\s/g, '_');
-	$: if (options.find((option) => option.value === value) === undefined) {
-		value = undefined; // If the current value isnt in the available options, default to undefined
+	// Exports
+	export let label: string
+	export let value: T | undefined = undefined
+	export let placeholder: string
+	export let options: { name: string, value: T }[]
+
+	// Variables
+	let show: boolean = false
+
+	$: id = label.toLowerCase().replace(/\s/g, '_')
+	$: if (options.find(option => option.value === value) === undefined) {
+		value = undefined // If the current value isnt in the available options, default to undefined
 	}
+
 </script>
+
+
 
 <!-- Markup -->
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 
-<div
+
+<button
 	class="dropdown"
 	class:show
-	on:click={() => (show = !show && options.length > 0)}
-	use:clickoutside={() => (show = false)}
+	on:click={() => show = !show && options.length > 0}
+	use:clickoutside={() => show = false}
 >
 	<!-- Hidden input to bind the selected value to a submittable element -->
 	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
@@ -36,16 +43,22 @@
 
 	<div class="options">
 		{#each options as option}
-			<span on:click={() => (value = option.value)}> {option.name} </span>
+			<button on:click={() => value = option.value}> {option.name} </button>
 		{/each}
 
 		{#if value !== undefined}
-			<span style="opacity: 0.5;" on:click={() => (value = undefined)}> <i>Remove choice</i> </span>
+			<button style="opacity: 0.5;" on:click={() => value = undefined}>
+				<i>Remove choice</i>
+			</button>
 		{/if}
 	</div>
-</div>
+</button>
+
+
 
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
@@ -108,7 +121,7 @@
 			border-width: 0 1px 1px 1px
 			border-radius: 0 0 $border-radius $border-radius
 
-			span
+			button
 				padding: $input-thin-padding $input-thick-padding
 				cursor: pointer
 

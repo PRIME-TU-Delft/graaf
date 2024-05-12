@@ -1,7 +1,7 @@
-import 'dotenv/config';
-import { type Options, PostgreSqlDriver, ReflectMetadataProvider } from '@mikro-orm/postgresql';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 import { Migrator } from '@mikro-orm/migrations';
+import { PostgreSqlDriver, type Options } from '@mikro-orm/postgresql';
+import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
+import 'dotenv/config';
 
 import { Course } from './entities/Course.ts';
 import { Program } from './entities/Program.ts';

@@ -1,23 +1,30 @@
-<script lang="ts">
-	import plusIcon from '$assets/plus-icon.svg';
 
+<script lang="ts">
+
+	// Assets
+	import plusIcon from '$assets/plus-icon.svg'
+
+	// Exports
 	export function show() {
-		visible = true;
+		visible = true
 	}
 	export function hide() {
-		visible = false;
+		visible = false
 	}
 
-	let visible: boolean = false;
+	// Variables
+	let visible: boolean = false
+
 </script>
+
+
 
 <!-- Markup -->
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 
-<div class="background" class:visible on:click|self={hide}>
+
+<!-- TODO: Replace with shadcn-svelte dialog: https://www.shadcn-svelte.com/docs/components/alert-dialog -->
+<button class="background" class:visible on:click|self={hide}>
 	<dialog>
 		<section>
 			<slot name="header">Modal</slot>
@@ -30,9 +37,13 @@
 			<slot />
 		</section>
 	</dialog>
-</div>
+</button>
+
+
 
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
