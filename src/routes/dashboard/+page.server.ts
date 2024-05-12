@@ -1,23 +1,20 @@
 import { fail } from '@sveltejs/kit';
-import { wrap } from '@mikro-orm/core';
+import { wrap, type EntityDTO } from '@mikro-orm/core';
 
 import orm from '$lib/server/orm';
 import { Program } from '$lib/server/entities/Program';
 import { Course } from '$lib/server/entities/Course';
 
-
 const em = orm.em.fork();
 const programRepo = em.getRepository(Program);
 const courseRepo = em.getRepository(Course);
 
-
-function MapToPOJO<T extends Object>(items: T[]): any[] {
-	return items.map(item => wrap(item).toPOJO());
+function MapToPOJO<T extends object>(items: T[]): EntityDTO<T, never>[] {
+	return items.map((item) => wrap(item).toPOJO());
 }
 
-
 export const actions = {
-	newCourse: async ({request}) => {
+	newCourse: async ({ request }) => {
 		const data = await request.formData();
 		const code = String(data.get('code'));
 		const name = String(data.get('name'));
@@ -30,8 +27,7 @@ export const actions = {
 		await em.flush();
 	},
 
-
-	newProgram: async ({request}) => {
+	newProgram: async ({ request }) => {
 		const data = await request.formData();
 		const name = String(data.get('name'));
 
@@ -39,13 +35,12 @@ export const actions = {
 
 		programRepo.create(new Program(name));
 		await em.flush();
-	},
-}
-
+	}
+};
 
 export async function load() {
-	let programs = await programRepo.findAll({ populate: ['courses', 'coordinators'] });
-	let courses = await courseRepo.findAll({ populate: ['program']});
+	const programs = await programRepo.findAll({ populate: ['courses', 'coordinators'] });
+	const courses = await courseRepo.findAll({ populate: ['program'] });
 
 	return {
 		programs: MapToPOJO(programs),
