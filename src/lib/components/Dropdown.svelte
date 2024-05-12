@@ -3,10 +3,12 @@
 <script lang="ts">
 	import { clickoutside } from '$scripts/clickoutside';
 
+	type T = $$Generic;
+
 	export let label: string;
-	export let value: any = undefined;
+	export let value: T | undefined = undefined;
 	export let placeholder: string;
-	export let options: { name: string; value: any }[];
+	export let options: { name: string; value: T }[];
 
 	let show: boolean = false;
 
@@ -18,11 +20,7 @@
 
 <!-- Markup -->
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-
-<div
+<button
 	class="dropdown"
 	class:show
 	on:click={() => (show = !show && options.length > 0)}
@@ -36,14 +34,16 @@
 
 	<div class="options">
 		{#each options as option}
-			<span on:click={() => (value = option.value)}> {option.name} </span>
+			<button on:click={() => (value = option.value)}> {option.name} </button>
 		{/each}
 
 		{#if value !== undefined}
-			<span style="opacity: 0.5;" on:click={() => (value = undefined)}> <i>Remove choice</i> </span>
+			<button style="opacity: 0.5;" on:click={() => (value = undefined)}>
+				<i>Remove choice</i>
+			</button>
 		{/if}
 	</div>
-</div>
+</button>
 
 <!-- Styles -->
 

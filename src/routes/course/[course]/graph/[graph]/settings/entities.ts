@@ -133,14 +133,14 @@ class Domain extends Field {
 		this.graph.domains = this.graph.domains.filter((domain) => domain !== this);
 
 		// Unset all subjects with this domain
-		for (let subject of this.graph.subjects) {
+		for (const subject of this.graph.subjects) {
 			if (subject.domain === this) {
 				subject.domain = undefined;
 			}
 		}
 
 		// Unset relations with this domain
-		for (let relation of this.graph.relations) {
+		for (const relation of this.graph.relations) {
 			if (relation.parent === this) relation.parent = undefined;
 			if (relation.child === this) relation.child = undefined;
 		}
@@ -174,7 +174,7 @@ class Subject extends Field {
 		this.graph.subjects = this.graph.subjects.filter((subject) => subject !== this);
 
 		// Unset relations with this subject
-		for (let relation of this.graph.relations) {
+		for (const relation of this.graph.relations) {
 			if (relation.parent === this) relation.parent = undefined;
 			if (relation.child === this) relation.child = undefined;
 		}
@@ -229,7 +229,7 @@ class DomainRelation extends Relation<Domain> {
 
 		// Prevent circular references
 		if (this.child) {
-			let children = this.child.children();
+			const children = this.child.children();
 			options = options.filter((domain) => !children.includes(domain));
 
 			// Prevent duplicate relations
@@ -252,7 +252,7 @@ class DomainRelation extends Relation<Domain> {
 
 		// Prevent circular references
 		if (this.parent) {
-			let parents = this.parent.parents();
+			const parents = this.parent.parents();
 			options = options.filter((domain) => !parents.includes(domain));
 
 			// Prevent duplicate relations
@@ -285,7 +285,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Prevent circular references
 		if (this.child) {
-			let children = this.child.children();
+			const children = this.child.children();
 			options = options.filter((subject) => !children.includes(subject));
 
 			// Prevent duplicate relations
@@ -308,7 +308,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Prevent circular references
 		if (this.parent) {
-			let parents = this.parent.parents();
+			const parents = this.parent.parents();
 			options = options.filter((subject) => !parents.includes(subject));
 
 			// Prevent duplicate relations

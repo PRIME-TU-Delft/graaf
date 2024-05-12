@@ -75,7 +75,7 @@ export function createNode(element: SVGGElement) {
 	group.call(
 		d3
 			.drag<SVGGElement, Node>()
-			.on('start', function (event, node) {
+			.on('start', function () {
 				d3.select(this).raise();
 			})
 			.on('drag', function (event, node) {

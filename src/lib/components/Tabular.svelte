@@ -1,5 +1,7 @@
 <script lang="ts">
-	export let tabs: { [key: string]: any }[] = [];
+	type T = ConstructorOfATypedSvelteComponent | null | undefined;
+
+	export let tabs: { content: T; title: string }[] = [];
 	export let active: number = 0;
 </script>
 

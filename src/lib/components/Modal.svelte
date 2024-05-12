@@ -12,12 +12,8 @@
 </script>
 
 <!-- Markup -->
-
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-
-<div class="background" class:visible on:click|self={hide}>
+<!-- TODO: Replace with shadcn-svelte dialog: https://www.shadcn-svelte.com/docs/components/alert-dialog -->
+<button class="background" class:visible on:click|self={hide}>
 	<dialog>
 		<section>
 			<slot name="header">Modal</slot>
@@ -30,7 +26,7 @@
 			<slot />
 		</section>
 	</dialog>
-</div>
+</button>
 
 <!-- Styles -->
 

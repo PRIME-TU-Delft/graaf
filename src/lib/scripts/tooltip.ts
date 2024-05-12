@@ -6,7 +6,7 @@ export function tooltip(element: HTMLElement, text: string) {
 	let tooltipInstance: Tooltip;
 	let timeout: number;
 
-	function mouseEnter(event: MouseEvent) {
+	function mouseEnter() {
 		timeout = setTimeout(() => {
 			tooltipInstance = new Tooltip({
 				target: document.body,
@@ -19,7 +19,7 @@ export function tooltip(element: HTMLElement, text: string) {
 		}, 1000);
 	}
 
-	function mouseLeave(event: MouseEvent) {
+	function mouseLeave() {
 		clearTimeout(timeout);
 		tooltipInstance.$destroy();
 	}
