@@ -1,8 +1,6 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import Button from '$components/Button.svelte';
 	import Card from '$components/Card.svelte';
 	import Checkbox from '$components/Checkbox.svelte';
@@ -12,23 +10,25 @@
 	function SSOlogin() {
 		// TODO add SSO login event
 	}
-
 </script>
 
 <!-- Markup -->
 
 <Card>
-	<h3 slot="header"> Login </h3>
+	<h3 slot="header">Login</h3>
 	<svelte:fragment slot="body">
 		<form class="SSO-login">
-			Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will be removed after November 1. You can give yourself access to the courses that your old account had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle access to other courses.
-			<Button on:click={SSOlogin}> Login with TUDelft SSO </Button>
+			Welcome to the Graph editor, here you can assemble your own course graph! From July 1 forward
+			we will be using TU Delft Single Sign-on as our default login procedure. The old accounts will
+			be removed after November 1. You can give yourself access to the courses that your old account
+			had access to. Please take up contact with PRIME@tudelft.nl or your program manager to handle
+			access to other courses.
+			<Button on:click={SSOlogin}>Login with TUDelft SSO</Button>
 		</form>
 
 		<div class="divider" />
 
 		<form class="credentials-login">
-
 			<label for="username"> Username </label>
 			<Textfield label="Username" />
 
@@ -38,10 +38,11 @@
 			<Checkbox label="Remember me" />
 
 			<div class="button-row">
-				   <Button submit> Login </Button><!--
-				--><LinkButton href="/auth/recover"> Forgot your password? </LinkButton>
+				<Button submit>Login</Button><!--
+				--><LinkButton href="/auth/recover">
+					Forgot your password?
+				</LinkButton>
 			</div>
-
 		</form>
 	</svelte:fragment>
 </Card>

@@ -3,12 +3,10 @@ import { v4 as uuid } from 'uuid';
 
 import { Program } from './Program.ts';
 
-
 export enum CourseType {
 	COURSE = 'course',
 	SANDBOX = 'sandbox'
 }
-
 
 @Entity()
 export class Course {
@@ -36,7 +34,13 @@ export class Course {
 	@Property({ onUpdate: () => new Date() })
 	updatedAt = new Date();
 
-	constructor(code: string, name: string, programId: string, description?: string, type: CourseType = CourseType.COURSE) {
+	constructor(
+		code: string,
+		name: string,
+		programId: string,
+		description?: string,
+		type: CourseType = CourseType.COURSE
+	) {
 		this.code = code;
 		this.name = name;
 		this.program = rel(Program, programId);

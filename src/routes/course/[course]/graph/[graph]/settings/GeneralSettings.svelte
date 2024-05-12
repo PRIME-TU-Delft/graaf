@@ -1,14 +1,11 @@
-
 <!-- Script -->
 
 <script lang="ts">
+	import Textfield from '$components/Textfield.svelte';
 
-	import Textfield from "$components/Textfield.svelte"
+	import { Graph } from './entities';
 
-	import { Graph } from "./entities"
-
-	export let graph: Graph
-
+	export let graph: Graph;
 </script>
 
 <!-- Markup -->

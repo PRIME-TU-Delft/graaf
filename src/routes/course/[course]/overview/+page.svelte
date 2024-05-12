@@ -1,8 +1,6 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Card from '$components/Card.svelte';
 	import Modal from '$components/Modal.svelte';
@@ -43,7 +41,6 @@
 	}
 
 	let course: Course = getCourse($page.params.course);
-
 </script>
 
 <!-- Markup -->
@@ -52,8 +49,8 @@
 	description="Here you can view the graphs and links associated to this course, and edit their properties."
 	path={[
 		{
-			name: "Dashboard",
-			href: "/dashboard"
+			name: 'Dashboard',
+			href: '/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
@@ -63,38 +60,38 @@
 >
 	<svelte:fragment slot="toolbar">
 		<Button on:click={createGraphModal?.show}>
-			<img src={plusIcon} alt=""> New Graph
+			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
 		<Button on:click={newLink}>
-			<img src={plusIcon} alt=""> New Link
+			<img src={plusIcon} alt="" /> New Link
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/course/{course.code}/settings">
-			Settings
-		</LinkButton>
+		<LinkButton href="/course/{course.code}/settings">Settings</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
-			<h3 slot="header"> Create Graph </h3>
+			<h3 slot="header">Create Graph</h3>
 
 			<form>
 				<label for="name"> Name </label>
-				<Textfield label="Name"/>
+				<Textfield label="Name" />
 
-				<Button submit on:click={createGraphModal.hide}> Create </Button>
+				<Button submit on:click={createGraphModal.hide}>Create</Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
-		<h3 slot="header"> Graphs </h3>
+		<h3 slot="header">Graphs</h3>
 
 		<svelte:fragment slot="body">
 			{#each course.graphs as graph}
 				<span class="graph">
-					{#if graph.hasLinks()} <img src={linkIcon} alt="Link icon" /> {/if}
+					{#if graph.hasLinks()}
+						<img src={linkIcon} alt="Link icon" />
+					{/if}
 					{graph.name}
 
 					<div class="flex-spacer" />
@@ -104,33 +101,25 @@
 						description="View Graph"
 						disabled={!graph.isVisible()}
 						scale
-						/>
+					/>
 
 					<IconButton
 						src={pencilIcon}
 						description="Edit Graph"
 						href="/course/{course.code}/graph/{graph.id}/settings"
 						scale
-						/>
+					/>
 
-					<IconButton
-						src={copyIcon}
-						description="Copy Graph"
-						scale
-						/>
+					<IconButton src={copyIcon} description="Copy Graph" scale />
 
-					<IconButton
-						src={trashIcon}
-						description="Delete Graph"
-						scale
-						/>
+					<IconButton src={trashIcon} description="Delete Graph" scale />
 				</span>
 			{/each}
 		</svelte:fragment>
 	</Card>
 
 	<Card>
-		<h3 slot="header"> Links </h3>
+		<h3 slot="header">Links</h3>
 	</Card>
 </Layout>
 

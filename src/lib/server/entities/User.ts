@@ -3,12 +3,10 @@ import { v4 as uuid } from 'uuid';
 
 import { Program } from './Program.ts';
 
-
 export enum UserRole {
 	USER = 'user',
 	ADMIN = 'admin'
 }
-
 
 @Entity()
 export class User {
@@ -36,7 +34,7 @@ export class User {
 	@Property({ nullable: true })
 	email?: string;
 
-	@ManyToMany(() => Program, program => program.coordinators)
+	@ManyToMany(() => Program, (program) => program.coordinators)
 	programs = new Collection<Program>(this);
 
 	constructor(netid: string, first_name: string, last_name: string) {

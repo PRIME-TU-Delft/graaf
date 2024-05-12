@@ -7,7 +7,6 @@ import { Course } from './entities/Course.ts';
 import { Program } from './entities/Program.ts';
 import { User } from './entities/User.ts';
 
-
 const config: Options = {
 	dbName: 'db',
 	driver: PostgreSqlDriver,
@@ -19,7 +18,7 @@ const config: Options = {
 
 	migrations: {
 		emit: 'ts',
-		path: './src/lib/server/migrations',
+		path: './src/lib/server/migrations'
 	},
 
 	extensions: [Migrator],

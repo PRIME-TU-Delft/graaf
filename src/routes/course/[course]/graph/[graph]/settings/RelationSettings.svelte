@@ -1,101 +1,137 @@
-
 <!-- Script -->
 
 <script lang="ts">
+	import Button from '$components/Button.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import IconButton from '$components/IconButton.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import Searchbar from '$components/Searchbar.svelte';
 
-	import Button from "$components/Button.svelte"
-	import Dropdown from "$components/Dropdown.svelte"
-	import IconButton from "$components/IconButton.svelte"
-	import LinkButton from "$components/LinkButton.svelte"
-	import Searchbar from "$components/Searchbar.svelte"
+	import plusIcon from '$assets/plus-icon.svg';
+	import trashIcon from '$assets/trash-icon.svg';
 
-	import plusIcon from "$assets/plus-icon.svg"
-	import trashIcon from "$assets/trash-icon.svg"
+	import { Graph, DomainRelation, SubjectRelation } from './entities';
 
-	import { Graph, DomainRelation, SubjectRelation } from "./entities"
-
-	export let graph: Graph
+	export let graph: Graph;
 
 	// Force reactivity update
 	function update() {
-		graph = graph
+		graph = graph;
 	}
-
-
 </script>
 
 <!-- Markup -->
 
 <div id="domains" class="editor">
-
 	<div class="toolbar">
-		<h2> Domain relations </h2>
-		<LinkButton href="#subjects"> goto subjects </LinkButton>
+		<h2>Domain relations</h2>
+		<LinkButton href="#subjects">goto subjects</LinkButton>
 
 		<div class="flex-spacer" />
 
 		<Searchbar />
-		<Button on:click={() => { DomainRelation.create(graph); update() }}>
-			<img src={plusIcon} alt=""> Add Relation
+		<Button
+			on:click={() => {
+				DomainRelation.create(graph);
+				update();
+			}}
+		>
+			<img src={plusIcon} alt="" /> Add Relation
 		</Button>
 	</div>
 
 	{#if graph.domainRelations().length > 0}
-		<div class=row>
+		<div class="row">
 			<span style="grid-area: left;"> From </span>
 			<span style="grid-area: right;"> To </span>
 		</div>
 	{:else}
-		<h6 class="empty"> No relations found </h6>
+		<h6 class="empty">No relations found</h6>
 	{/if}
 
 	{#each graph.domainRelations() as relation, n}
 		<div class="row">
 			<span class="id"> {n + 1} </span>
-			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions()} bind:value={relation.parent} />
+			<IconButton
+				scale
+				src={trashIcon}
+				on:click={() => {
+					relation.delete();
+					update();
+				}}
+			/>
+			<Dropdown
+				label="Parent"
+				placeholder="From Domain"
+				options={relation.parentOptions()}
+				bind:value={relation.parent}
+			/>
 			<span class="preview" style:background-color={relation.parentColor()} />
-			<Dropdown label="Child" placeholder="To Domain" options={relation.childOptions()} bind:value={relation.child} />
+			<Dropdown
+				label="Child"
+				placeholder="To Domain"
+				options={relation.childOptions()}
+				bind:value={relation.child}
+			/>
 			<span class="preview" style:background-color={relation.childColor()} />
 		</div>
 	{/each}
-
 </div>
 
 <div id="subjects" class="editor">
-
 	<div class="toolbar">
-		<h2> Subject relations </h2>
-		<LinkButton href="#domains"> goto domains </LinkButton>
+		<h2>Subject relations</h2>
+		<LinkButton href="#domains">goto domains</LinkButton>
 
 		<div class="flex-spacer" />
 
 		<Searchbar />
-		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
-			<img src={plusIcon} alt=""> Add Relation
+		<Button
+			on:click={() => {
+				SubjectRelation.create(graph);
+				update();
+			}}
+		>
+			<img src={plusIcon} alt="" /> Add Relation
 		</Button>
 	</div>
 
 	{#if graph.subjectRelations().length > 0}
-		<div class=row>
+		<div class="row">
 			<span style="grid-area: left;"> From </span>
 			<span style="grid-area: right;"> To </span>
 		</div>
 	{:else}
-		<h6 class="empty"> No subjects found </h6>
+		<h6 class="empty">No subjects found</h6>
 	{/if}
 
 	{#each graph.subjectRelations() as relation, n}
 		<div class="row">
 			<span class="id"> {n + 1} </span>
-			<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-			<Dropdown label="Parent" placeholder="From Subject" options={relation.parentOptions()} bind:value={relation.parent} />
+			<IconButton
+				scale
+				src={trashIcon}
+				on:click={() => {
+					relation.delete();
+					update();
+				}}
+			/>
+			<Dropdown
+				label="Parent"
+				placeholder="From Subject"
+				options={relation.parentOptions()}
+				bind:value={relation.parent}
+			/>
 			<span class="preview" style:background-color={relation.parentColor()} />
-			<Dropdown label="Child" placeholder="To Subject" options={relation.childOptions()} bind:value={relation.child} />
+			<Dropdown
+				label="Child"
+				placeholder="To Subject"
+				options={relation.childOptions()}
+				bind:value={relation.child}
+			/>
 			<span class="preview" style:background-color={relation.childColor()} />
 		</div>
 	{/each}
-
 </div>
 
 <!-- Styles -->

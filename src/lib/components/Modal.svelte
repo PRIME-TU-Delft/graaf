@@ -1,13 +1,14 @@
-
 <script lang="ts">
-
 	import plusIcon from '$assets/plus-icon.svg';
 
-	export function show() { visible = true; }
-	export function hide() { visible = false; }
+	export function show() {
+		visible = true;
+	}
+	export function hide() {
+		visible = false;
+	}
 
 	let visible: boolean = false;
-
 </script>
 
 <!-- Markup -->
@@ -19,9 +20,9 @@
 <div class="background" class:visible on:click|self={hide}>
 	<dialog>
 		<section>
-			<slot name="header"> Modal </slot>
+			<slot name="header">Modal</slot>
 			<button class="exit" on:click={hide}>
-				<img src={plusIcon} alt="Exit icon">
+				<img src={plusIcon} alt="Exit icon" />
 			</button>
 		</section>
 

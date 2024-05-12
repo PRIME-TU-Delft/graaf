@@ -1,4 +1,3 @@
-
 import adapter from '@sveltejs/adapter-auto';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
@@ -20,7 +19,7 @@ const config = {
 			$assets: 'src/lib/assets',
 			$layouts: 'src/lib/layouts',
 			$scripts: 'src/lib/scripts'
-		},
+		}
 	}
 };
 

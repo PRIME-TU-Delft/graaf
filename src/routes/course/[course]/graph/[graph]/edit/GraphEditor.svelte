@@ -1,28 +1,22 @@
-
 <!-- Scripts -->
 
 <script lang="ts">
+	import { graph } from '$scripts/graph/graph';
+	import { Node } from '$scripts/graph/node';
 
-    import { graph } from '$scripts/graph/graph';
-    import { Node } from '$scripts/graph/node';
-
-    let nodes = [
-		new Node(0, 0, 20,  'prosperous-red',   'Node 1', []),
-		new Node(1, 30, 0,  'electric-green',   'Node 2', [0]),
-		new Node(2, 30, 40, 'mysterious-blue',  'Node 3', [0, 1])
+	let nodes = [
+		new Node(0, 0, 20, 'prosperous-red', 'Node 1', []),
+		new Node(1, 30, 0, 'electric-green', 'Node 2', [0]),
+		new Node(2, 30, 40, 'mysterious-blue', 'Node 3', [0, 1])
 	];
-
 </script>
 
 <!-- Markup -->
 
 <div class="editor">
+	<svg class="graph" use:graph={nodes} />
 
-    <svg class="graph" use:graph={nodes}/>
-
-    <div class="controls">
-    </div>
-
+	<div class="controls"></div>
 </div>
 
 <!-- Styles -->

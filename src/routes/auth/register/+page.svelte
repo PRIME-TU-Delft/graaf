@@ -1,18 +1,15 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import Card from '$components/Card.svelte';
 	import Button from '$components/Button.svelte';
 	import Textfield from '$components/Textfield.svelte';
-
 </script>
 
 <!-- Markup -->
 
 <Card>
-	<h3 slot="header"> Register </h3>
+	<h3 slot="header">Register</h3>
 	<svelte:fragment slot="body">
 		<form>
 			<label for="first_name"> First Name </label>
@@ -30,7 +27,7 @@
 			<label for="confirm_password"> Confirm Password </label>
 			<Textfield label="Confirm Password" obfuscate />
 
-			<Button submit> Register </Button>
+			<Button submit>Register</Button>
 		</form>
 	</svelte:fragment>
 </Card>

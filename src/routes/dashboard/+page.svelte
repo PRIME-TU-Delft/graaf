@@ -1,8 +1,6 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import { enhance } from '$app/forms';
 
 	import Layout from '$layouts/DefaultLayout.svelte';
@@ -32,7 +30,6 @@
 	function newSandbox() {
 		// TODO add newSandbox function
 	}
-
 </script>
 
 <!-- Markup -->
@@ -41,31 +38,31 @@
 	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to expermient with the Graph Editor."
 	path={[
 		{
-			name: "Dashboard",
-			href: "/dashboard"
+			name: 'Dashboard',
+			href: '/dashboard'
 		}
 	]}
 >
-
 	<svelte:fragment slot="toolbar">
 		<Button on:click={newSandbox}>
-			<img src={plusIcon} alt=""> New Sandbox
+			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
 		<Button on:click={modals.CREATE_COURSE?.show}>
-			<img src={plusIcon} alt=""> New Course
+			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
 		<Button on:click={modals.CREATE_PROGRAM?.show}>
-			<img src={plusIcon} alt=""> New Program
+			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<Searchbar onChange={onSearch} placeholder="Search courses" /> <!-- TODO I cringe a bit for this implementation -->
+		<Searchbar onChange={onSearch} placeholder="Search courses" />
+		<!-- TODO I cringe a bit for this implementation -->
 
-		<Modal bind:this={modals["CREATE_COURSE"]}>
-			<h3 slot="header"> Create Course </h3>
+		<Modal bind:this={modals['CREATE_COURSE']}>
+			<h3 slot="header">Create Course</h3>
 
 			<form method="POST" action="?/newCourse" use:enhance>
 				<label for="code"> Code </label>
@@ -78,42 +75,40 @@
 				<Dropdown
 					label="Program"
 					placeholder="Select a program"
-					options={
-						programs.map(program => {
-							return {name: program.name, value: program.id}
-						})
-					}
+					options={programs.map((program) => {
+						return { name: program.name, value: program.id };
+					})}
 				/>
 
-				<Button submit on:click={modals.CREATE_COURSE?.hide}> Create </Button>
+				<Button submit on:click={modals.CREATE_COURSE?.hide}>Create</Button>
 			</form>
 		</Modal>
 
-		<Modal bind:this={modals["CREATE_PROGRAM"]}>
-			<h3 slot="header"> Create Program </h3>
+		<Modal bind:this={modals['CREATE_PROGRAM']}>
+			<h3 slot="header">Create Program</h3>
 
 			<form method="POST" action="?/newProgram" use:enhance>
 				<label for="name"> Name </label>
-				<Textfield label="Name"/>
+				<Textfield label="Name" />
 
-				<Button submit on:click={modals.CREATE_PROGRAM?.hide}> Create </Button>
+				<Button submit on:click={modals.CREATE_PROGRAM?.hide}>Create</Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
-		<h3 slot="header"> My Courses </h3>
+		<h3 slot="header">My Courses</h3>
 		<div slot="body" class="grid">
-			{#each courses as {code, name}}
+			{#each courses as { code, name }}
 				<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
 			{/each}
 		</div>
 	</Card>
 
-	{#each programs as {name, courses, coordinators}}
+	{#each programs as { name, courses, coordinators }}
 		<Card>
 			<svelte:fragment slot="header">
-				<h3> {name} </h3>
+				<h3>{name}</h3>
 
 				<div class="flex-spacer" />
 
@@ -124,21 +119,24 @@
 					scale
 				/>
 
-				<LinkButton href="/program/{name}/settings"> Settings </LinkButton>
+				<LinkButton href="/program/{name}/settings">Settings</LinkButton>
 
 				<Modal bind:this={modals[name]}>
-					<h3 slot="header"> Program Coordinators </h3>
-					<p> These are the coordinators of the {name} program. You can contact them via email to request access to a course. </p>
+					<h3 slot="header">Program Coordinators</h3>
+					<p>
+						These are the coordinators of the {name} program. You can contact them via email to request
+						access to a course.
+					</p>
 					<ul>
 						{#each coordinators as coordinator}
-							<li> {coordinator} </li>
+							<li>{coordinator}</li>
 						{/each}
 					</ul>
 				</Modal>
 			</svelte:fragment>
 
 			<div slot="body" class="grid">
-				{#each courses as {code, name}}
+				{#each courses as { code, name }}
 					<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>

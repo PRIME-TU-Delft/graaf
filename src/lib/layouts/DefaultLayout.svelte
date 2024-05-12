@@ -1,11 +1,8 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
-	export let description: string = "Lorum ipsum dolor sid amed.";
+	export let description: string = 'Lorum ipsum dolor sid amed.';
 	export let path: { [key: string]: string }[] = [];
-
 </script>
 
 <!-- Markup -->
@@ -15,11 +12,13 @@
 		<h2>
 			{#each path as link, index}
 				<a href={link.href}> {link.name} </a>
-				{#if index < path.length - 1} /&nbsp; {/if}
+				{#if index < path.length - 1}
+					/&nbsp;
+				{/if}
 			{/each}
 		</h2>
 
-	   {description}
+		{description}
 	</section>
 
 	{#if $$slots.toolbar}

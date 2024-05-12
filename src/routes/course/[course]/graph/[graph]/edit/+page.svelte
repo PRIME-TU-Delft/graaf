@@ -1,8 +1,6 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import Layout from '$layouts/DefaultLayout.svelte';
 	import Tabular from '$components/Tabular.svelte';
 	import GraphEditor from './GraphEditor.svelte';
@@ -61,35 +59,31 @@
 	}
 
 	let courses = [
-		new Course("AESB1311", "Linear Algebra"),
-		new Course("CSE1200",  "Calculus"),
-		new Course("CSE1205",  "Linear Algebra"),
-		new Course("CSE1210",  "Cluster Probability & Statistics"),
-		new Course("CTB2105",  "Differentiaalvergelijkingen"),
-		new Course("CTB2200",  "Kansrekening en Statistiek"),
-		new Course("EE1M11",   "Linear Algebra and Analysis A"),
-		new Course("EE1M21",   "Linear Algebra and Analysis B"),
-		new Course("LB1155",   "Calculus"),
-		new Course("NB2191",   "Differential Equations"),
-		new Course("TB131B",   "Differentiaalvergelijkingen en Lineare Algebra"),
-		new Course("TB132B",   "Multivariabele Calculus en Lineaire Algebra"),
-		new Course("TN1401WI", "Analyse voor TNW 1"),
-		new Course("WBMT",     "Linear Algebra"),
-		new Course("WBMT1050", "Calculus for Engineering"),
-		new Course("WI1402LR", "Calculus II"),
-		new Course("WI1403LR", "Linear Algebra"),
-		new Course("WI1421LR", "Calculus I"),
-		new Course("WI2031TH", "Probability and Statistics")
-	]
+		new Course('AESB1311', 'Linear Algebra'),
+		new Course('CSE1200', 'Calculus'),
+		new Course('CSE1205', 'Linear Algebra'),
+		new Course('CSE1210', 'Cluster Probability & Statistics'),
+		new Course('CTB2105', 'Differentiaalvergelijkingen'),
+		new Course('CTB2200', 'Kansrekening en Statistiek'),
+		new Course('EE1M11', 'Linear Algebra and Analysis A'),
+		new Course('EE1M21', 'Linear Algebra and Analysis B'),
+		new Course('LB1155', 'Calculus'),
+		new Course('NB2191', 'Differential Equations'),
+		new Course('TB131B', 'Differentiaalvergelijkingen en Lineare Algebra'),
+		new Course('TB132B', 'Multivariabele Calculus en Lineaire Algebra'),
+		new Course('TN1401WI', 'Analyse voor TNW 1'),
+		new Course('WBMT', 'Linear Algebra'),
+		new Course('WBMT1050', 'Calculus for Engineering'),
+		new Course('WI1402LR', 'Calculus II'),
+		new Course('WI1403LR', 'Linear Algebra'),
+		new Course('WI1421LR', 'Calculus I'),
+		new Course('WI2031TH', 'Probability and Statistics')
+	];
 
-	let graphs = [
-		new Graph(1, "Graph 2021", true, true),
-		new Graph(2, "Graph 2022", false, false)
-	]
+	let graphs = [new Graph(1, 'Graph 2021', true, true), new Graph(2, 'Graph 2022', false, false)];
 
 	let course: Course = getCourse($page.params.course); // TODO actual api call
 	let graph: Graph = getGraph(Number($page.params.graph)); // TODO actual api call
-
 </script>
 
 <!-- Markup -->
@@ -98,8 +92,8 @@
 	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
 	path={[
 		{
-			name: "Dashboard",
-			href: "/dashboard"
+			name: 'Dashboard',
+			href: '/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
@@ -110,33 +104,31 @@
 			href: `/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
-			name: "Edit",
+			name: 'Edit',
 			href: `/course/${course.code}/graph/${graph.id}/edit`
 		}
 	]}
 >
-
 	<svelte:fragment slot="toolbar">
 		<div class="flex-spacer" />
 
-		<Button on:click={saveLayout}> Save Layout </Button>
+		<Button on:click={saveLayout}>Save Layout</Button>
 	</svelte:fragment>
 
 	<Tabular
 		tabs={[
 			{
-				title: "Overview",
+				title: 'Overview',
 				content: GraphEditor
 			},
 			{
-				title: "Layout",
+				title: 'Layout',
 				content: GraphEditor
 			},
 			{
-				title: "Properties",
+				title: 'Properties',
 				content: GraphEditor
 			}
 		]}
 	/>
-
 </Layout>
