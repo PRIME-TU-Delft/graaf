@@ -1,0 +1,384 @@
+{
+	"namespaces": ["public"],
+	"name": "public",
+	"tables": [
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"description": {
+					"name": "description",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "string"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamptz",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"length": 6,
+					"mappedType": "datetime"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamptz",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"length": 6,
+					"mappedType": "datetime"
+				}
+			},
+			"name": "program",
+			"schema": "public",
+			"indexes": [
+				{
+					"keyName": "program_pkey",
+					"columnNames": ["id"],
+					"composite": false,
+					"constraint": true,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {},
+			"nativeEnums": {
+				"course_type": {
+					"name": "course_type",
+					"schema": "public",
+					"items": ["course", "sandbox"]
+				},
+				"user_role": {
+					"name": "user_role",
+					"schema": "public",
+					"items": ["user", "admin"]
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"code": {
+					"name": "code",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"name": {
+					"name": "name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"description": {
+					"name": "description",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "string"
+				},
+				"type": {
+					"name": "type",
+					"type": "course_type",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"nativeEnumName": "course_type",
+					"default": "'course'",
+					"enumItems": ["course", "sandbox"],
+					"mappedType": "enum"
+				},
+				"program_id": {
+					"name": "program_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamptz",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"length": 6,
+					"mappedType": "datetime"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamptz",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"length": 6,
+					"mappedType": "datetime"
+				}
+			},
+			"name": "course",
+			"schema": "public",
+			"indexes": [
+				{
+					"keyName": "course_pkey",
+					"columnNames": ["id"],
+					"composite": false,
+					"constraint": true,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"course_program_id_foreign": {
+					"constraintName": "course_program_id_foreign",
+					"columnNames": ["program_id"],
+					"localTableName": "public.course",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "public.program",
+					"updateRule": "cascade"
+				}
+			},
+			"nativeEnums": {
+				"course_type": {
+					"name": "course_type",
+					"schema": "public",
+					"items": ["course", "sandbox"]
+				},
+				"user_role": {
+					"name": "user_role",
+					"schema": "public",
+					"items": ["user", "admin"]
+				}
+			}
+		},
+		{
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"netid": {
+					"name": "netid",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"first_name": {
+					"name": "first_name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"middle_name": {
+					"name": "middle_name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "string"
+				},
+				"last_name": {
+					"name": "last_name",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"role": {
+					"name": "role",
+					"type": "user_role",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"nativeEnumName": "user_role",
+					"default": "'user'",
+					"enumItems": ["user", "admin"],
+					"mappedType": "enum"
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamptz",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"length": 6,
+					"mappedType": "datetime"
+				},
+				"email": {
+					"name": "email",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": true,
+					"mappedType": "string"
+				}
+			},
+			"name": "user",
+			"schema": "public",
+			"indexes": [
+				{
+					"keyName": "user_pkey",
+					"columnNames": ["id"],
+					"composite": false,
+					"constraint": true,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {},
+			"nativeEnums": {
+				"course_type": {
+					"name": "course_type",
+					"schema": "public",
+					"items": ["course", "sandbox"]
+				},
+				"user_role": {
+					"name": "user_role",
+					"schema": "public",
+					"items": ["user", "admin"]
+				}
+			}
+		},
+		{
+			"columns": {
+				"program_id": {
+					"name": "program_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				},
+				"user_id": {
+					"name": "user_id",
+					"type": "varchar(255)",
+					"unsigned": false,
+					"autoincrement": false,
+					"primary": false,
+					"nullable": false,
+					"mappedType": "string"
+				}
+			},
+			"name": "program_coordinators",
+			"schema": "public",
+			"indexes": [
+				{
+					"keyName": "program_coordinators_pkey",
+					"columnNames": ["program_id", "user_id"],
+					"composite": true,
+					"constraint": true,
+					"primary": true,
+					"unique": true
+				}
+			],
+			"checks": [],
+			"foreignKeys": {
+				"program_coordinators_program_id_foreign": {
+					"constraintName": "program_coordinators_program_id_foreign",
+					"columnNames": ["program_id"],
+					"localTableName": "public.program_coordinators",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "public.program",
+					"deleteRule": "cascade",
+					"updateRule": "cascade"
+				},
+				"program_coordinators_user_id_foreign": {
+					"constraintName": "program_coordinators_user_id_foreign",
+					"columnNames": ["user_id"],
+					"localTableName": "public.program_coordinators",
+					"referencedColumnNames": ["id"],
+					"referencedTableName": "public.user",
+					"deleteRule": "cascade",
+					"updateRule": "cascade"
+				}
+			},
+			"nativeEnums": {
+				"course_type": {
+					"name": "course_type",
+					"schema": "public",
+					"items": ["course", "sandbox"]
+				},
+				"user_role": {
+					"name": "user_role",
+					"schema": "public",
+					"items": ["user", "admin"]
+				}
+			}
+		}
+	],
+	"nativeEnums": {
+		"course_type": {
+			"name": "course_type",
+			"schema": "public",
+			"items": ["course", "sandbox"]
+		},
+		"user_role": {
+			"name": "user_role",
+			"schema": "public",
+			"items": ["user", "admin"]
+		}
+	}
+}

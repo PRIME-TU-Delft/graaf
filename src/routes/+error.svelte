@@ -1,17 +1,14 @@
-
 <!-- Script -->
 
 <script lang="ts">
-
 	import { page } from '$app/stores';
-
 </script>
 
 <!-- Markup -->
 
 <div>
-	<h1> {$page.status} </h1>
-	<p> {$page.error?.message} </p>    
+	<h1>{$page.status}</h1>
+	<p>{$page.error?.message}</p>
 </div>
 
 <!-- Styles -->

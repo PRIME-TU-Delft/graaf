@@ -1,31 +1,31 @@
 
 <script lang="ts">
 
-	// Scripts
-	import { styles } from "$scripts/layout/settings"
-	import { Graph, Domain, Subject } from "$scripts/entities"
+	// Lib imports
+	import { Graph, Domain, Subject } from '$scripts/entities'
+	import { styles } from '$scripts/layout/settings'
 
 	// Components
-	import Button from "$components/Button.svelte"
-	import Dropdown from "$components/Dropdown.svelte"
-	import IconButton from "$components/IconButton.svelte"
-	import LinkButton from "$components/LinkButton.svelte"
-	import Searchbar from "$components/Searchbar.svelte"
-	import Textfield from "$components/Textfield.svelte"
+	import Button from '$components/Button.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import Searchbar from '$components/Searchbar.svelte'
+	import Textfield from '$components/Textfield.svelte'
 
 	// Assets
-	import plusIcon from "$assets/plus-icon.svg"
-	import trashIcon from "$assets/trash-icon.svg"
-	import neutralSortIcon from "$assets/neutral-sort-icon.svg"
-	import ascendingSortIcon from "$assets/ascending-sort-icon.svg"
-	import descedingSortIcon from "$assets/descending-sort-icon.svg"
+	import plusIcon from '$assets/plus-icon.svg'
+	import trashIcon from '$assets/trash-icon.svg'
+	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
+	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
+	import descedingSortIcon from '$assets/descending-sort-icon.svg'
 
 	// Exports
 	export let graph: Graph
 
 	// Variables
-	let domainQuery: string = ""
-	let subjectQuery: string = ""
+	let domainQuery: string = ''
+	let subjectQuery: string = ''
 	let domainIdSort: boolean | null = true
 	let domainFromSort: boolean | null = null
 	let domainToSort: boolean | null = null
@@ -65,7 +65,6 @@
 		let domain = subject.domain?.name?.toLowerCase()
 		return name?.includes(query) || domain?.includes(query) || false
 	}
-
 </script>
 
 
@@ -79,8 +78,8 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2> Domains </h2>
-		<LinkButton href="#subjects"> goto subjects </LinkButton>
+		<h2>Domains</h2>
+		<LinkButton href="#subjects">goto subjects</LinkButton>
 
 		<div class="flex-spacer" />
 
@@ -172,8 +171,8 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2> Subjects </h2>
-		<LinkButton href="#domains"> goto domains </LinkButton>
+		<h2>Subjects</h2>
+		<LinkButton href="#domains">goto domains</LinkButton>
 
 		<div class="flex-spacer" />
 

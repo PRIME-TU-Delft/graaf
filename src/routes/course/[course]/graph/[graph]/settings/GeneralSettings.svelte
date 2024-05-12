@@ -1,17 +1,17 @@
 
 <script lang="ts">
 
-	// Scripts
-	import { Graph } from "$scripts/entities"
+	// Lib imports
+	import { Graph } from '$scripts/entities'
 
 	// Components
-	import Modal from "$components/Modal.svelte"
-	import Button from "$components/Button.svelte"
-	import LinkButton from "$components/LinkButton.svelte"
-	import Textfield from "$components/Textfield.svelte"
+	import Modal from '$components/Modal.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import Textfield from '$components/Textfield.svelte'
 
 	// Assets
-	import trashIcon from "$assets/trash-icon.svg"
+	import trashIcon from '$assets/trash-icon.svg'
 
 	// Exports
 	export let graph: Graph

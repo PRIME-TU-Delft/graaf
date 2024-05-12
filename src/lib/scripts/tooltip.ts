@@ -1,5 +1,4 @@
-
-import Tooltip from '$components/Tooltip.svelte'
+import Tooltip from '$components/Tooltip.svelte';
 
 export function tooltip(element: HTMLElement, text: string) {
 	if (text === '') return;
@@ -34,5 +33,5 @@ export function tooltip(element: HTMLElement, text: string) {
 			element.removeEventListener('mouseleave', mouseLeave);
 			tooltipInstance?.$destroy();
 		}
-	}
+	};
 }

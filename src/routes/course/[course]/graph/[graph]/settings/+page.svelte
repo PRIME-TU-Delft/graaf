@@ -1,34 +1,41 @@
 
-<!-- Script -->
-
 <script lang="ts">
 
-	import FieldSettings from "./FieldSettings.svelte"
-	import GeneralSettings from "./GeneralSettings.svelte"
-	import RelationSettings from "./RelationSettings.svelte"
+	// Svelte imports
+	import type { PageData } from './$types'
 
-	import Button from "$components/Button.svelte"
-	import LinkButton from "$components/LinkButton.svelte"
-	import Layout from "$layouts/DefaultLayout.svelte"
+	// Components
+	import Layout from '$layouts/DefaultLayout.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import FieldSettings from './FieldSettings.svelte'
+	import GeneralSettings from './GeneralSettings.svelte'
+	import RelationSettings from './RelationSettings.svelte'
 
-	import saveIcon from "$assets/save-icon.svg"
+	// Assets
+	import saveIcon from '$assets/save-icon.svg'
 
-	import type { PageData } from "./$types"
+	// Exports
 	export let data: PageData
 
+	// Variables
 	let { course, graph } = data
 	let activeTab: number = 0
 
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <Layout
 	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
 	path={[
 		{
-			name: "Dashboard",
-			href: "/dashboard"
+			name: 'Dashboard',
+			href: '/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
@@ -39,12 +46,11 @@
 			href: `/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
-			name: "Settings",
+			name: 'Settings',
 			href: `/course/${course.code}/graph/${graph.id}/settings`
 		}
 	]}
 >
-
 	<svelte:fragment slot="toolbar">
 		<div class="flex-spacer" />
 		<LinkButton href="/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
@@ -53,20 +59,13 @@
 
 	<div class="tabular">
 		<div class="tabs">
-			<button
-				class:active={activeTab === 0}
-				on:click={() => activeTab = 0}
-			> General </button>
+			<button class:active={activeTab === 0} on:click={() => (activeTab = 0)}> General </button>
 
-			<button
-				class:active={activeTab === 1}
-				on:click={() => activeTab = 1}
-			> Domains & Subjects </button>
+			<button class:active={activeTab === 1} on:click={() => (activeTab = 1)}>
+				Domains & Subjects
+			</button>
 
-			<button
-				class:active={activeTab === 2}
-				on:click={() => activeTab = 2}
-			> Relations </button>
+			<button class:active={activeTab === 2} on:click={() => (activeTab = 2)}> Relations </button>
 
 			<div class="dynamic-border" />
 		</div>
@@ -81,7 +80,11 @@
 	</div>
 </Layout>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 

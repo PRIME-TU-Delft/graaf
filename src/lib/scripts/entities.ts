@@ -1,5 +1,4 @@
-
-import { styles } from "./layout/settings"
+import { styles } from '$scripts/layout/settings'
 
 export { Course, Graph, Field, Domain, Subject, Relation, DomainRelation, SubjectRelation }
 
@@ -11,37 +10,34 @@ class Course {
 		// TODO load from database
 
 		this.code = code
-		this.name = "Course Name"
+		this.name = 'Course Name'
 	}
 }
 
 class Graph {
 	id: number
 	name: string
-	domains: Domain[]
-	subjects: Subject[]
-	domainRelations: DomainRelation[]
-	subjectRelations: SubjectRelation[]
+	domains: Domain[] = []
+	subjects: Subject[] = []
+	domainRelations: DomainRelation[] = []
+	subjectRelations: SubjectRelation[] = []
 
 	constructor(id: number) {
-		// TODO load from database
-
 		this.id = id
-		this.name = "Graph Name"
-		this.domains = []
-		this.subjects = []
-		this.domainRelations = []
-		this.subjectRelations = []
 
-		new Domain(this, 1, 0, 0, "Domain 1", "prosperous-red")
-		new Domain(this, 2, 0, 0, "Domain 2", "energizing-orange")
-		new Domain(this, 3, 0, 0, "Domain 3", "sunny-yellow")
-		new Subject(this, 1, 0, 0, "Subject 1", this.domains[0])
-		new Subject(this, 2, 0, 0, "Subject 2", this.domains[0])
-		new Subject(this, 3, 0, 0, "Subject 3", this.domains[1])
-		new Subject(this, 4, 0, 0, "Subject 4", this.domains[1])
-		new Subject(this, 5, 0, 0, "Subject 5", this.domains[2])
-		new Subject(this, 6, 0, 0, "Subject 6", this.domains[2])
+		// TODO load from database, below is fake data
+
+		this.name = 'Graph Name'
+
+		new Domain(this, 1, 0, 0, 'Domain 1', 'prosperous-red')
+		new Domain(this, 2, 0, 0, 'Domain 2', 'energizing-orange')
+		new Domain(this, 3, 0, 0, 'Domain 3', 'sunny-yellow')
+		new Subject(this, 1, 0, 0, 'Subject 1', this.domains[0])
+		new Subject(this, 2, 0, 0, 'Subject 2', this.domains[0])
+		new Subject(this, 3, 0, 0, 'Subject 3', this.domains[1])
+		new Subject(this, 4, 0, 0, 'Subject 4', this.domains[1])
+		new Subject(this, 5, 0, 0, 'Subject 5', this.domains[2])
+		new Subject(this, 6, 0, 0, 'Subject 6', this.domains[2])
 		new DomainRelation(this, 1, this.domains[0], this.domains[1])
 		new DomainRelation(this, 2, this.domains[1], this.domains[2])
 		new DomainRelation(this, 3, this.domains[0], this.domains[2])
@@ -75,7 +71,7 @@ class Graph {
 	}
 
 	nextRelationID(): number {
-		let relations = this.domainRelations.concat(this.subjectRelations)
+		const relations = this.domainRelations.concat(this.subjectRelations)
 		return relations.length > 0 ? Math.max(...relations.map(relation => relation.id)) + 1 : 1
 	}
 }
@@ -96,10 +92,10 @@ abstract class Field {
 	}
 
 	parents(): Field[] {
-		let relations = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
-		let parents = [this]
+		const relations: Relation<Field>[] = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
+		const parents: Field[] = [this]
 
-		for (let relation of relations) {
+		for (const relation of relations) {
 			if (relation.child === this && relation.parent) {
 				parents.push(...relation.parent.parents())
 			}
@@ -109,10 +105,10 @@ abstract class Field {
 	}
 
 	children(): Field[] {
-		let relations = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
-		let children = [this]
+		const relations: Relation<Field>[] = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
+		const children: Field[] = [this]
 
-		for (let relation of relations) {
+		for (const relation of relations) {
 			if (relation.parent === this && relation.child) {
 				children.push(...relation.child.children())
 			}
@@ -122,8 +118,8 @@ abstract class Field {
 	}
 
 	color(): string {
-		let style = this.style()
-		return style ? styles[style].stroke : "transparent"
+		const style = this.style()
+		return style ? styles[style].stroke : 'transparent'
 	}
 
 	abstract style(): string | undefined
@@ -135,8 +131,8 @@ class Domain extends Field {
 
 	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string) {
 		super(graph, id, x, y, name)
-		this._style = style
 
+		this._style = style
 		this.graph.domains.push(this)
 	}
 
@@ -158,14 +154,14 @@ class Domain extends Field {
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
 
 		// Unset all subjects with this domain
-		for (let subject of this.graph.subjects) {
+		for (const subject of this.graph.subjects) {
 			if (subject.domain === this) {
 				subject.domain = undefined
 			}
 		}
 
 		// Unset relations with this domain
-		for (let relation of this.graph.domainRelations) {
+		for (const relation of this.graph.domainRelations) {
 			if (relation.parent === this) relation.parent = undefined
 			if (relation.child === this) relation.child = undefined
 		}
@@ -177,12 +173,12 @@ class Subject extends Field {
 
 	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain) {
 		super(graph, id, x, y, name)
-		this.domain = domain
 
+		this.domain = domain
 		this.graph.subjects.push(this)
 	}
 
-	static create (graph: Graph): void {
+	static create(graph: Graph): void {
 		new Subject(
 			graph,
 			graph.nextSubjectID(),
@@ -198,7 +194,7 @@ class Subject extends Field {
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
 
 		// Unset relations with this subject
-		for (let relation of this.graph.subjectRelations) {
+		for (const relation of this.graph.subjectRelations) {
 			if (relation.parent === this) relation.parent = undefined
 			if (relation.child === this) relation.child = undefined
 		}
@@ -217,6 +213,14 @@ class Relation<T extends Field> {
 		this.parent = parent
 		this.child = child
 	}
+
+	parentColor(): string {
+		return this.parent ? this.parent.color() : 'transparent'
+	}
+
+	childColor(): string {
+		return this.child ? this.child.color() : 'transparent'
+	}
 }
 
 class DomainRelation extends Relation<Domain> {
@@ -229,10 +233,6 @@ class DomainRelation extends Relation<Domain> {
 		new DomainRelation(graph, graph.nextRelationID())
 	}
 
-	parentColor(): string {
-		return this.parent ? this.parent.color() : "transparent"
-	}
-
 	parentOptions(): { name: string, value: Domain }[] {
 
 		// Domain must have a name
@@ -240,7 +240,7 @@ class DomainRelation extends Relation<Domain> {
 
 		// Prevent circular references
 		if (this.child) {
-			let children = this.child.children()
+			const children = this.child.children()
 			options = options.filter(domain => !children.includes(domain))
 
 			// Prevent duplicate relations
@@ -256,10 +256,6 @@ class DomainRelation extends Relation<Domain> {
 		return options.map(domain => ({ name: domain.name!, value: domain }))
 	}
 
-	childColor(): string {
-		return this.child ? this.child.color() : "transparent"
-	}
-
 	childOptions(): { name: string, value: Domain }[] {
 
 		// Domain must have a name
@@ -267,7 +263,7 @@ class DomainRelation extends Relation<Domain> {
 
 		// Prevent circular references
 		if (this.parent) {
-			let parents = this.parent.parents()
+			const parents = this.parent.parents()
 			options = options.filter(domain => !parents.includes(domain))
 
 			// Prevent duplicate relations
@@ -298,10 +294,6 @@ class SubjectRelation extends Relation<Subject> {
 		new SubjectRelation(graph, graph.nextDomainID())
 	}
 
-	parentColor(): string {
-		return this.parent ? this.parent.color() : "transparent"
-	}
-
 	parentOptions(): { name: string, value: Subject }[] {
 
 		// Domain must have a name
@@ -309,7 +301,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Prevent circular references
 		if (this.child) {
-			let children = this.child.children()
+			const children = this.child.children()
 			options = options.filter(subject => !children.includes(subject))
 
 			// Prevent duplicate relations
@@ -325,10 +317,6 @@ class SubjectRelation extends Relation<Subject> {
 		return options.map(subject => ({ name: subject.name!, value: subject }))
 	}
 
-	childColor(): string {
-		return this.child ? this.child.color() : "transparent"
-	}
-
 	childOptions(): { name: string, value: Subject }[] {
 
 		// Domain must have a name
@@ -336,7 +324,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Prevent circular references
 		if (this.parent) {
-			let parents = this.parent.parents()
+			const parents = this.parent.parents()
 			options = options.filter(subject => !parents.includes(subject))
 
 			// Prevent duplicate relations

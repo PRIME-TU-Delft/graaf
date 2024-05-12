@@ -1,21 +1,16 @@
-
 <script lang="ts">
-
 	export let tabs: { [key: string]: any }[] = [];
 	export let active: number = 0;
-
 </script>
 
 <!-- Markup -->
 
 <div class="card">
 	<div class="tabs">
-
 		{#each tabs as tab, index}
-			<button
-				class:active={index === active}
-				on:click={() => active = index}
-			> {tab.title} </button>
+			<button class:active={index === active} on:click={() => (active = index)}>
+				{tab.title}
+			</button>
 		{/each}
 
 		<div class="dynamic-border" />

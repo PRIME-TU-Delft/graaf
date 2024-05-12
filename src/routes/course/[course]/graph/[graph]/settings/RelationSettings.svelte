@@ -1,29 +1,29 @@
 
 <script lang="ts">
 
-	// Scripts
-	import { Graph, Field, Relation, DomainRelation, SubjectRelation } from "$scripts/entities"
+	// Lib imports
+	import { Graph, Field, Relation, DomainRelation, SubjectRelation } from '$scripts/entities'
 
 	// Components
-	import Button from "$components/Button.svelte"
-	import Dropdown from "$components/Dropdown.svelte"
-	import IconButton from "$components/IconButton.svelte"
-	import LinkButton from "$components/LinkButton.svelte"
-	import Searchbar from "$components/Searchbar.svelte"
+	import Button from '$components/Button.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import Searchbar from '$components/Searchbar.svelte'
 
 	// Assets
-	import plusIcon from "$assets/plus-icon.svg"
-	import trashIcon from "$assets/trash-icon.svg"
-	import ascendingSortIcon from "$assets/ascending-sort-icon.svg"
-	import descedingSortIcon from "$assets/descending-sort-icon.svg"
-	import neutralSortIcon from "$assets/neutral-sort-icon.svg"
+	import plusIcon from '$assets/plus-icon.svg'
+	import trashIcon from '$assets/trash-icon.svg'
+	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
+	import descedingSortIcon from '$assets/descending-sort-icon.svg'
+	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 
 	// Exports
 	export let graph: Graph
 
 	// Variables
-	let domainQuery: string = ""
-	let subjectQuery: string = ""
+	let domainQuery: string = ''
+	let subjectQuery: string = ''
 	let domainIdSort: boolean | null = true
 	let domainFromSort: boolean | null = null
 	let domainToSort: boolean | null = null
@@ -57,8 +57,8 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2> Domain relations </h2>
-		<LinkButton href="#subjects"> goto subjects </LinkButton>
+		<h2>Domain relations</h2>
+		<LinkButton href="#subjects">goto subjects</LinkButton>
 
 		<div class="flex-spacer" />
 
@@ -151,8 +151,8 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2> Subject relations </h2>
-		<LinkButton href="#domains"> goto domains </LinkButton>
+		<h2>Subject relations</h2>
+		<LinkButton href="#domains">goto domains</LinkButton>
 
 		<div class="flex-spacer" />
 

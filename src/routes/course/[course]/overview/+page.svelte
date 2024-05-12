@@ -1,64 +1,65 @@
 
-<!-- Script -->
-
 <script lang="ts">
 
-	import Layout from '$layouts/DefaultLayout.svelte';
-	import Card from '$components/Card.svelte';
-	import Modal from '$components/Modal.svelte';
+	// Components
+	import Layout from '$layouts/DefaultLayout.svelte'
+	import Card from '$components/Card.svelte'
+	import Modal from '$components/Modal.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import Textfield from '$components/Textfield.svelte'
 
-	import Button from '$components/Button.svelte';
-	import LinkButton from '$components/LinkButton.svelte';
-	import IconButton from '$components/IconButton.svelte';
-	import Textfield from '$components/Textfield.svelte';
-
-	import plusIcon from '$assets/plus-icon.svg';
-	import linkIcon from '$assets/link-icon.svg';
-	import openEyeIcon from '$assets/open-eye-icon.svg';
-	import closedEyeIcon from '$assets/closed-eye-icon.svg';
-	import pencilIcon from '$assets/pencil-icon.svg';
-	import copyIcon from '$assets/copy-icon.svg';
-	import trashIcon from '$assets/trash-icon.svg';
-
-	import { page } from '$app/stores';
+	// Assets
+	import plusIcon from '$assets/plus-icon.svg'
+	import linkIcon from '$assets/link-icon.svg'
+	import openEyeIcon from '$assets/open-eye-icon.svg'
+	import closedEyeIcon from '$assets/closed-eye-icon.svg'
+	import pencilIcon from '$assets/pencil-icon.svg'
+	import copyIcon from '$assets/copy-icon.svg'
+	import trashIcon from '$assets/trash-icon.svg'
 
 	function newLink() {
 		// TODO add newLink function
 	}
 
-	let createGraphModal: Modal;
+	let createGraphModal: Modal
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
 	let course = {
-		code: "CSE1200",
-		name: "Calculus",
+		code: 'CSE1200',
+		name: 'Calculus',
 		graphs: [
 			{
-				name: "Graph 1",
+				name: 'Graph 1',
 				id: 1,
 				hasLinks: () => true,
 				isVisible: () => true
 			},
 			{
-				name: "Graph 2",
+				name: 'Graph 2',
 				id: 2,
 				hasLinks: () => false,
 				isVisible: () => false
 			}
 		]
-	};
+	}
 
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <Layout
 	description="Here you can view the graphs and links associated to this course, and edit their properties."
 	path={[
 		{
-			name: "Dashboard",
-			href: "/dashboard"
+			name: 'Dashboard',
+			href: '/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
@@ -68,38 +69,38 @@
 >
 	<svelte:fragment slot="toolbar">
 		<Button on:click={createGraphModal?.show}>
-			<img src={plusIcon} alt=""> New Graph
+			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
 		<Button on:click={newLink}>
-			<img src={plusIcon} alt=""> New Link
+			<img src={plusIcon} alt="" /> New Link
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/course/{course.code}/settings">
-			Settings
-		</LinkButton>
+		<LinkButton href="/course/{course.code}/settings">Settings</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
-			<h3 slot="header"> Create Graph </h3>
+			<h3 slot="header">Create Graph</h3>
 
 			<form>
 				<label for="name"> Name </label>
-				<Textfield label="Name"/>
+				<Textfield label="Name" />
 
-				<Button submit on:click={createGraphModal.hide}> Create </Button>
+				<Button submit on:click={createGraphModal.hide}>Create</Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
-		<h3 slot="header"> Graphs </h3>
+		<h3 slot="header">Graphs</h3>
 
 		<svelte:fragment slot="body">
 			{#each course.graphs as graph}
 				<span class="graph">
-					{#if graph.hasLinks()} <img src={linkIcon} alt="Link icon" /> {/if}
+					{#if graph.hasLinks()}
+						<img src={linkIcon} alt="Link icon" />
+					{/if}
 					{graph.name}
 
 					<div class="flex-spacer" />
@@ -109,37 +110,33 @@
 						description="View Graph"
 						disabled={!graph.isVisible()}
 						scale
-						/>
+					/>
 
 					<IconButton
 						src={pencilIcon}
 						description="Edit Graph"
 						href="/course/{course.code}/graph/{graph.id}/settings"
 						scale
-						/>
+					/>
 
-					<IconButton
-						src={copyIcon}
-						description="Copy Graph"
-						scale
-						/>
+					<IconButton src={copyIcon} description="Copy Graph" scale />
 
-					<IconButton
-						src={trashIcon}
-						description="Delete Graph"
-						scale
-						/>
+					<IconButton src={trashIcon} description="Delete Graph" scale />
 				</span>
 			{/each}
 		</svelte:fragment>
 	</Card>
 
 	<Card>
-		<h3 slot="header"> Links </h3>
+		<h3 slot="header">Links</h3>
 	</Card>
 </Layout>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
