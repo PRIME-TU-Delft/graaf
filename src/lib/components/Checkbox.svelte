@@ -1,13 +1,20 @@
-<!-- Script -->
 
 <script lang="ts">
+
+	// Exports
 	export let label: string;
 	export let value: boolean = false;
 
+	// Variables
 	$: id = label.toLowerCase().replace(/\s/g, '_');
+
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <div class="checkbox">
 	<input {id} type="checkbox" bind:value /><!--

@@ -1,38 +1,50 @@
-<script lang="ts">
-	import plusIcon from '$assets/plus-icon.svg';
 
+<script lang="ts">
+
+	// Internal imports
+	import { clickoutside } from '$scripts/clickoutside'
+
+	// Assets
+	import plusIcon from '$assets/plus-icon.svg'
+
+	// Exports
 	export function show() {
-		visible = true;
+		visible = true
 	}
 	export function hide() {
-		visible = false;
+		visible = false
 	}
 
-	let visible: boolean = false;
+	// Variables
+	let visible: boolean = false
+
 </script>
+
+
 
 <!-- Markup -->
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 
-<div class="background" class:visible on:click|self={hide}>
-	<dialog>
-		<section>
-			<slot name="header">Modal</slot>
-			<button class="exit" on:click={hide}>
-				<img src={plusIcon} alt="Exit icon" />
-			</button>
-		</section>
 
-		<section>
-			<slot />
-		</section>
-	</dialog>
-</div>
+<!-- TODO: Replace with shadcn-svelte dialog: https://www.shadcn-svelte.com/docs/components/alert-dialog -->
+<div class="background" class:visible />
+<dialog class="modal" class:visible use:clickoutside={hide}>
+	<header>
+		<slot name="header">Modal</slot>
+		<button class="exit" on:click={hide}>
+			<img src={plusIcon} alt="Exit icon" class="icon" />
+		</button>
+	</header>
+	<section>
+		<slot />
+	</section>
+</dialog>
+
+
 
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
@@ -41,8 +53,6 @@
 
 	.background
 		display: none
-		align-items: center
-		justify-content: center
 
 		position: fixed
 		z-index: 999
@@ -54,15 +64,16 @@
 
 		background-color: rgba(0, 0, 0, 0.25)
 
-		&.visible
-			display: flex
-
-	dialog
-		display: flex
+	.modal
+		display: none
 		flex-flow: column nowrap
 		gap: 1rem
 
-		position: relative
+		position: fixed
+		translate: -50% -50%
+		z-index: 1000
+		top: 50%
+		left: 50%
 
 		width: 100%
 		max-width: $small-column
@@ -83,7 +94,7 @@
 			margin: $card-thick-padding
 			overflow: hidden
 
-			img
+			.icon
 				width: $input-icon-size
 				rotate: 45deg
 
@@ -93,5 +104,8 @@
 				&:hover
 					scale: $scale-on-hover
 					filter: $dark-purple-filter
+
+	.visible
+		display: flex
 
 </style>

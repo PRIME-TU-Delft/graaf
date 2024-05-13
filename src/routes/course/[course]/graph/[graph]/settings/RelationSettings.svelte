@@ -1,7 +1,7 @@
 
 <script lang="ts">
 
-	// Lib imports
+	// Internal imports
 	import { Graph, Field, Relation, DomainRelation, SubjectRelation } from '$scripts/entities'
 
 	// Components

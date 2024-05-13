@@ -1,11 +1,14 @@
-<!-- Markup -->
 
 <div class="card">
-	<section class="header"><slot name="header" /></section>
+	<header class="header"><slot name="header" /></header>
 	<section class="body"><slot name="body" /></section>
 </div>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 

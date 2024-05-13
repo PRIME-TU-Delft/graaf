@@ -1,14 +1,25 @@
+
 <script lang="ts">
-	export let tabs: { [key: string]: any }[] = [];
-	export let active: number = 0;
+
+	// Types
+	type T = ConstructorOfATypedSvelteComponent | null | undefined
+
+	// Exports
+	export let tabs: { content: T, title: string }[] = []
+	export let active: number = 0
+	
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <div class="card">
 	<div class="tabs">
 		{#each tabs as tab, index}
-			<button class:active={index === active} on:click={() => (active = index)}>
+			<button class="tab" class:active={index === active} on:click={() => active = index}>
 				{tab.title}
 			</button>
 		{/each}
@@ -19,7 +30,11 @@
 	<svelte:component this={tabs[active].content} />
 </div>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
@@ -41,7 +56,7 @@
 				flex: 1
 				border-bottom: 1px solid $gray
 
-			button
+			.tab
 				display: block
 				margin: 0
 				padding: $card-thin-padding $card-thick-padding
@@ -57,7 +72,7 @@
 					background: $white
 					border-width: 0 1px 0 1px
 
-					& ~ button
+					& ~ .tab
 						border-width: 0 1px 1px 0
 
 

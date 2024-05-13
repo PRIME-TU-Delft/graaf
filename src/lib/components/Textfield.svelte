@@ -1,30 +1,59 @@
-<!-- Script -->
 
 <script lang="ts">
-	export let label: string;
-	export let value: string = '';
-	export let placeholder: string = '';
-	export let obfuscate: boolean = false;
 
-	$: id = label.toLowerCase().replace(/\s/g, '_');
+	// Exports
+	export let label: string
+	export let value: string = ''
+	export let placeholder: string = ''
+	export let obfuscate: boolean = false
+
+	// Variables
+	$: id = label.toLowerCase().replace(/\s/g, '_')
+
 </script>
+
+
 
 <!-- Markup -->
 
+
+
 {#if obfuscate}
-	<input {id} name={id} type="password" class="textfield" {placeholder} bind:value />
+
+	<input
+		{id}
+		{placeholder}
+		name={id}
+		type="password"
+		class="textfield"
+		bind:value
+		/>
+
 {:else}
-	<input {id} name={id} type="text" class="textfield" {placeholder} bind:value />
+
+	<input
+		{id}
+		{placeholder}
+		name={id}
+		type="text"
+		class="textfield"
+		bind:value
+		/>
+
 {/if}
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	input
+	.textfield
 		width: 100%
 		padding: $input-thin-padding $input-thick-padding
 		box-sizing: border-box

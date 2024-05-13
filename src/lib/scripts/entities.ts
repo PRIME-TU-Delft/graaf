@@ -1,5 +1,8 @@
-import { styles } from '$scripts/layout/settings'
 
+// Internal Imports
+import { styles } from './layout/settings'
+
+// Exports
 export { Course, Graph, Field, Domain, Subject, Relation, DomainRelation, SubjectRelation }
 
 class Course {

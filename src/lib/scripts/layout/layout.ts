@@ -1,13 +1,17 @@
 
+// External imports
 import * as d3 from 'd3';
 
+// Internal imports
 import { Field, Relation } from '../entities';
-import { createRelation } from './relation';
 import { createField, updateField } from './field';
-
+import { createRelation } from './relation';
 import * as settings from './settings';
 
+// Exports
 export function layout(element: SVGSVGElement) {
+	// Prepare an svg to display the layout.
+
 	const svg = d3.select<SVGSVGElement, unknown>(element)
 	const definitions = svg.append('defs');
 	const content = svg.append('g')
@@ -75,17 +79,19 @@ export function layout(element: SVGSVGElement) {
 }
 
 export function fillLayout(element: SVGSVGElement, fields: Field[], relations: Relation<Field>[]) {
+	// Fill the layout with fields and relations.
+
 	const svg = d3.select<SVGSVGElement, unknown>(element);
 	const content = svg.select('#content');
-	
+
 	// Create relations
 	content.selectAll('line')
-	.data(relations)
-	.enter()
-	.append('line')
-		.each(function() {
-			createRelation(this);
-		});
+		.data(relations)
+		.enter()
+		.append('line')
+			.each(function() {
+				createRelation(this);
+			});
 
 	// Create fields
 	content.selectAll('g')
@@ -98,6 +104,8 @@ export function fillLayout(element: SVGSVGElement, fields: Field[], relations: R
 }
 
 export function updateLayout(element: SVGSVGElement, animated: boolean = false) {
+	// Update the layout to represent its current state. When animated is true, the transition is animated.
+
 	const svg = d3.select<SVGSVGElement, unknown>(element);
 	const content = svg.select('#content');
 	console.log(content);
@@ -109,6 +117,8 @@ export function updateLayout(element: SVGSVGElement, animated: boolean = false) 
 }
 
 export function clearLayout(element: SVGSVGElement) {
+	// Clear the layout of all fields and relations.
+
 	const svg = d3.select<SVGSVGElement, unknown>(element);
 	const content = svg.select('#content');
 	content.selectAll('*').remove();

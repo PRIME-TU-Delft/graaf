@@ -1,14 +1,19 @@
+
+// Components
 import Tooltip from '$components/Tooltip.svelte';
 
+// Exports
 export function tooltip(element: HTMLElement, text: string) {
+	// Show a tooltip with the given text when the mouse hovers over the element.
+
 	if (text === '') return;
 
-	let tooltipInstance: Tooltip;
-	let timeout: number;
+	let instance: Tooltip;
+	let timeout: NodeJS.Timeout;
 
-	function mouseEnter(event: MouseEvent) {
+	function mouseEnter() {
 		timeout = setTimeout(() => {
-			tooltipInstance = new Tooltip({
+			instance = new Tooltip({
 				target: document.body,
 				props: {
 					text: text,
@@ -19,9 +24,9 @@ export function tooltip(element: HTMLElement, text: string) {
 		}, 1000);
 	}
 
-	function mouseLeave(event: MouseEvent) {
+	function mouseLeave() {
 		clearTimeout(timeout);
-		tooltipInstance.$destroy();
+		instance.$destroy();
 	}
 
 	element.addEventListener('mouseenter', mouseEnter);
@@ -31,7 +36,7 @@ export function tooltip(element: HTMLElement, text: string) {
 		destroy() {
 			element.removeEventListener('mouseenter', mouseEnter);
 			element.removeEventListener('mouseleave', mouseLeave);
-			tooltipInstance?.$destroy();
+			instance?.$destroy();
 		}
 	};
 }

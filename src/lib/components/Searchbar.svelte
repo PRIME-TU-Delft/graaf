@@ -1,22 +1,31 @@
-<!-- Script -->
 
 <script lang="ts">
 
-	import search_icon from '$assets/search-icon.svg';
+	// Assets
+	import search_icon from '$assets/search-icon.svg'
 
-	export let placeholder: string = '';
-	export let value: string = '';
+	// Exports
+	export let placeholder: string = ''
+	export let value: string = ''
 
 </script>
 
+
+
 <!-- Markup -->
 
+
+
 <div class="searchbar">
-	<input type="search" placeholder={placeholder} bind:value={value} on:input on:change/>
+	<input type="search" placeholder={placeholder} bind:value on:input on:change/>
 	<img src={search_icon} alt="search-icon" />
 </div>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 

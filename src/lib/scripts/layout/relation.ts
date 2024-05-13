@@ -1,9 +1,9 @@
 
-
+// External imports
 import * as d3 from 'd3';
 
+// Internal imports
 import { Field, Relation } from '../entities';
-
 import * as settings from './settings';
 import { styles } from './settings';
 

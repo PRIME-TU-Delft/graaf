@@ -1,7 +1,7 @@
 
 <script lang="ts">
 
-	// Lib imports
+	// Internal imports
 	import { Graph } from '$scripts/entities'
 
 	// Components
