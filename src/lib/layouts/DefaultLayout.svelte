@@ -1,25 +1,31 @@
-<!-- Script -->
 
 <script lang="ts">
-	export let description: string = 'Lorum ipsum dolor sid amed.';
-	export let path: { [key: string]: string }[] = [];
+
+	// Exports
+	export let description: string = 'Lorum ipsum dolor sid amed.'
+	export let path: { [key: string]: string }[] = []
+	
 </script>
+
+
 
 <!-- Markup -->
 
+
+
 <div class="layout">
-	<section class="header">
-		<h2>
+	<header class="header">
+		<nav>
 			{#each path as link, index}
 				<a href={link.href}> {link.name} </a>
 				{#if index < path.length - 1}
 					/&nbsp;
 				{/if}
 			{/each}
-		</h2>
+		</nav>
 
 		{description}
-	</section>
+	</header>
 
 	{#if $$slots.toolbar}
 		<section class="toolbar"><slot name="toolbar" /></section>
@@ -30,7 +36,11 @@
 	</section>
 </div>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
@@ -49,8 +59,9 @@
 			margin-bottom: 2rem
 			color: $dark-gray
 
-			h2
+			nav
 				color: $purple
+				font-size: 1.75rem
 				transition: all $default-transition
 
 				a:hover

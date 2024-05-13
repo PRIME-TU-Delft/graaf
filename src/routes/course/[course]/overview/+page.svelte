@@ -1,49 +1,58 @@
-<!-- Script -->
 
 <script lang="ts">
-	import Layout from '$layouts/DefaultLayout.svelte';
-	import Card from '$components/Card.svelte';
-	import Modal from '$components/Modal.svelte';
 
-	import Button from '$components/Button.svelte';
-	import LinkButton from '$components/LinkButton.svelte';
-	import IconButton from '$components/IconButton.svelte';
-	import Textfield from '$components/Textfield.svelte';
+	// Components
+	import Layout from '$layouts/DefaultLayout.svelte'
+	import Card from '$components/Card.svelte'
+	import Modal from '$components/Modal.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import Textfield from '$components/Textfield.svelte'
 
-	import plusIcon from '$assets/plus-icon.svg';
-	import linkIcon from '$assets/link-icon.svg';
-	import openEyeIcon from '$assets/open-eye-icon.svg';
-	import closedEyeIcon from '$assets/closed-eye-icon.svg';
-	import pencilIcon from '$assets/pencil-icon.svg';
-	import copyIcon from '$assets/copy-icon.svg';
-	import trashIcon from '$assets/trash-icon.svg';
-
-	import { page } from '$app/stores';
-	import { Course } from '../classes';
-	import { courses } from '$scripts/fakedata';
+	// Assets
+	import plusIcon from '$assets/plus-icon.svg'
+	import linkIcon from '$assets/link-icon.svg'
+	import openEyeIcon from '$assets/open-eye-icon.svg'
+	import closedEyeIcon from '$assets/closed-eye-icon.svg'
+	import pencilIcon from '$assets/pencil-icon.svg'
+	import copyIcon from '$assets/copy-icon.svg'
+	import trashIcon from '$assets/trash-icon.svg'
 
 	function newLink() {
 		// TODO add newLink function
 	}
 
-	let createGraphModal: Modal;
+	let createGraphModal: Modal
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
-	function getCourse(code: string): Course {
-		for (let course of courses) {
-			if (course.code === code) {
-				return course;
+	let course = {
+		code: 'CSE1200',
+		name: 'Calculus',
+		graphs: [
+			{
+				name: 'Graph 1',
+				id: 1,
+				hasLinks: () => true,
+				isVisible: () => true
+			},
+			{
+				name: 'Graph 2',
+				id: 2,
+				hasLinks: () => false,
+				isVisible: () => false
 			}
-		}
-
-		throw new Error(`Course not found`);
+		]
 	}
 
-	let course: Course = getCourse($page.params.course);
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <Layout
 	description="Here you can view the graphs and links associated to this course, and edit their properties."
@@ -123,7 +132,11 @@
 	</Card>
 </Layout>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 

@@ -1,51 +1,65 @@
-<!-- Script -->
 
 <script lang="ts">
-	import { clickoutside } from '$scripts/clickoutside';
 
-	type T = $$Generic;
+	// Internal imports
+	import { clickoutside } from '$scripts/clickoutside'
 
-	export let label: string;
-	export let value: T | undefined = undefined;
-	export let placeholder: string;
-	export let options: { name: string; value: T }[];
+	// Types
+	type T = $$Generic
 
-	let show: boolean = false;
+	// Exports
+	export let label: string
+	export let value: T | undefined = undefined
+	export let placeholder: string
+	export let options: { name: string, value: T }[]
 
-	$: id = label.toLowerCase().replace(/\s/g, '_');
-	$: if (options.find((option) => option.value === value) === undefined) {
-		value = undefined; // If the current value isnt in the available options, default to undefined
+	// Variables
+	let show: boolean = false
+	$: id = label.toLowerCase().replace(/\s/g, '_')
+
+	// Property validation
+	$: if (options.find(option => option.value === value) === undefined) {
+		value = undefined // If the current value isnt in the available options, default to undefined
 	}
+
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <button
 	class="dropdown"
 	class:show
-	on:click={() => (show = !show && options.length > 0)}
-	use:clickoutside={() => (show = false)}
+	on:click={() => show = !show && options.length > 0}
+	use:clickoutside={() => show = false}
 >
 	<!-- Hidden input to bind the selected value to a submittable element -->
 	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
-	<label for={id} class:placeholder={value === undefined}>
-		{options.find((option) => option.value === value)?.name ?? placeholder}
+	<label for={id} class="label" class:placeholder={value === undefined}>
+		{options.find(option => option.value === value)?.name ?? placeholder}
 	</label>
 
 	<div class="options">
 		{#each options as option}
-			<button on:click={() => (value = option.value)}> {option.name} </button>
+			<button class="option" on:click={() => value = option.value}> {option.name} </button>
 		{/each}
 
 		{#if value !== undefined}
-			<button style="opacity: 0.5;" on:click={() => (value = undefined)}>
+			<button class="option remove-choice" on:click={() => value = undefined}>
 				<i>Remove choice</i>
 			</button>
 		{/if}
 	</div>
 </button>
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 
@@ -61,7 +75,7 @@
 
 		color: $dark-gray
 
-		label
+		.label
 			position: relative
 
 			width: 100%
@@ -108,9 +122,12 @@
 			border-width: 0 1px 1px 1px
 			border-radius: 0 0 $border-radius $border-radius
 
-			span
+			.option
 				padding: $input-thin-padding $input-thick-padding
 				cursor: pointer
+
+				&.remove-choice
+					opacity: 0.5
 
 				&:last-child
 					border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
@@ -119,7 +136,7 @@
 					background-color: $light-gray
 
 		&.show
-			label
+			.label
 				border-bottom-style: dashed
 				border-radius: $border-radius $border-radius 0 0
 

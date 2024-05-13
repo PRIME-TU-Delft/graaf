@@ -1,22 +1,29 @@
-<!-- Script -->
 
 <script lang="ts">
-	export let href: string | undefined = undefined;
 
-	export let submit: boolean = false;
-	export let disabled: boolean = false;
-	export let scale: boolean = false;
-	export let rotate: boolean = false;
+	// Exports
+	export let href: string | undefined = undefined
+	export let submit: boolean = false
+	export let disabled: boolean = false
+	export let scale: boolean = false
+	export let rotate: boolean = false
 
+	// Property validation
 	$: if (submit && href !== undefined) {
-		console.warn("LinkButton: submit type does not require a 'href' prop. Ignoring 'href' prop.");
-		href = undefined;
+		console.warn("LinkButton: submit type does not require a 'href' prop. Ignoring 'href' prop.")
+		href = undefined
 	}
+
 </script>
+
+
 
 <!-- Markup -->
 
+
+
 {#if href === undefined}
+
 	<button
 		type={submit ? 'submit' : 'button'}
 		class="link-button"
@@ -27,13 +34,27 @@
 	>
 		<slot />
 	</button>
+
 {:else}
-	<a {href} class="link-button" class:disabled class:scale class:rotate on:click>
+
+	<a 
+		{href}
+		class="link-button" 
+		class:disabled 
+		class:scale 
+		class:rotate 
+		on:click
+	>
 		<slot />
 	</a>
+
 {/if}
 
+
+
 <!-- Styles -->
+
+
 
 <style lang="sass">
 

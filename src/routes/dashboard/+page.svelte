@@ -1,27 +1,31 @@
-<!-- Script -->
 
 <script lang="ts">
-	import { enhance } from '$app/forms';
 
-	import Layout from '$layouts/DefaultLayout.svelte';
-	import Card from '$components/Card.svelte';
-	import Modal from '$components/Modal.svelte';
+	// Svelte imports
+	import { enhance } from '$app/forms'
 
-	import Button from '$components/Button.svelte';
-	import IconButton from '$components/IconButton.svelte';
-	import Searchbar from '$components/Searchbar.svelte';
-	import Textfield from '$components/Textfield.svelte';
-	import Dropdown from '$components/Dropdown.svelte';
+	// Components
+	import Layout from '$layouts/DefaultLayout.svelte'
+	import Card from '$components/Card.svelte'
+	import Modal from '$components/Modal.svelte'
+	import Button from '$components/Button.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import Searchbar from '$components/Searchbar.svelte'
+	import Textfield from '$components/Textfield.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
 
-	import plusIcon from '$assets/plus-icon.svg';
-	import peopleIcon from '$assets/people-icon.svg';
-	import LinkButton from '$components/LinkButton.svelte';
+	// Assets
+	import plusIcon from '$assets/plus-icon.svg'
+	import peopleIcon from '$assets/people-icon.svg'
 
-	export let data;
-	$: courses = data.courses;
-	$: programs = data.programs;
+	// Exports
+	export let data
 
-	const modals: { [key: string]: Modal } = {};
+	// Variables
+	const modals: { [key: string]: Modal } = {}
+	$: courses = data.courses
+	$: programs = data.programs
 
 	function onSearch(event: Event) {
 		// TODO add onSearch event
@@ -30,9 +34,14 @@
 	function newSandbox() {
 		// TODO add newSandbox function
 	}
+
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <Layout
 	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to expermient with the Graph Editor."
@@ -58,8 +67,7 @@
 
 		<div class="flex-spacer" />
 
-		<Searchbar onChange={onSearch} placeholder="Search courses" />
-		<!-- TODO I cringe a bit for this implementation -->
+		<Searchbar on:input={onSearch} placeholder="Search courses" />
 
 		<Modal bind:this={modals['CREATE_COURSE']}>
 			<h3 slot="header">Create Course</h3>
@@ -75,8 +83,8 @@
 				<Dropdown
 					label="Program"
 					placeholder="Select a program"
-					options={programs.map((program) => {
-						return { name: program.name, value: program.id };
+					options={programs.map(program => {
+						return { name: program.name, value: program.id }
 					})}
 				/>
 

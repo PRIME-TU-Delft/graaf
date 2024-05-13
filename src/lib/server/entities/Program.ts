@@ -1,5 +1,4 @@
 import { Entity, Property, PrimaryKey, OneToMany, ManyToMany, Collection } from '@mikro-orm/core';
-import { v4 as uuid } from 'uuid';
 
 import { Course } from './Course.ts';
 import { User } from './User.ts';
@@ -7,7 +6,7 @@ import { User } from './User.ts';
 @Entity()
 export class Program {
 	@PrimaryKey()
-	id: string = uuid();
+	id!: number;
 
 	@Property()
 	name: string;

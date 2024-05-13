@@ -18,7 +18,7 @@ export const actions = {
 		const data = await request.formData();
 		const code = String(data.get('code'));
 		const name = String(data.get('name'));
-		const programId = String(data.get('program'));
+		const programId = Number(data.get('program'));
 
 		if (!code) return fail(400, { code, missing: true });
 		if (!name) return fail(400, { name, missing: true });

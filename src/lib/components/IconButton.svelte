@@ -1,27 +1,34 @@
-<!-- Script -->
 
 <script lang="ts">
-	import { tooltip } from '$scripts/tooltip';
 
-	export let src: string;
-	export let description: string = '';
+	// Internal imports
+	import { tooltip } from '$scripts/tooltip'
 
-	export let href: string | undefined = undefined;
+	// Exports1
+	export let src: string
+	export let description: string = ''
+	export let href: string | undefined = undefined
+	export let submit: boolean = false
+	export let disabled: boolean = false
+	export let scale: boolean = false
+	export let rotate: boolean = false
 
-	export let submit: boolean = false;
-	export let disabled: boolean = false;
-	export let scale: boolean = false;
-	export let rotate: boolean = false;
-
+	// Property validation
 	$: if (submit && href !== undefined) {
-		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.");
-		href = undefined;
+		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.")
+		href = undefined
 	}
+
 </script>
+
+
 
 <!-- Markup -->
 
+
+
 {#if href === undefined}
+
 	<button
 		type={submit ? 'submit' : 'button'}
 		class="icon-button"
@@ -31,9 +38,11 @@
 		use:tooltip={description}
 		on:click
 	>
-		<img {src} alt="" />
+		<img {src} alt="" class="icon" />
 	</button>
+
 {:else}
+
 	<a
 		{href}
 		class="icon-button"
@@ -43,8 +52,9 @@
 		use:tooltip={description}
 		on:click
 	>
-		<img {src} alt="" />
+		<img {src} alt="" class="icon" />
 	</a>
+
 {/if}
 
 <!-- Styles -->
@@ -62,7 +72,10 @@
 
 		cursor: pointer
 
-		img
+		.icon
+			width: 100%
+			height: 100%
+
 			filter: $purple-filter
 			transform-origin: center
 			pointer-events: none
@@ -70,15 +83,15 @@
 		&.disabled
 			pointer-events: none
 
-			img
+			.icon
 				filter: $gray-filter
 
 		&:hover, &:focus
-			img
+			.icon
 				filter: $dark-purple-filter
-			&.scale img
+			&.scale .icon
 				scale: $scale-on-hover
-			&.rotate img
+			&.rotate .icon
 				rotate: $rotate-on-hover
 
 </style>
