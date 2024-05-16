@@ -7,6 +7,13 @@ import { Course } from './entities/Course.ts';
 import { Program } from './entities/Program.ts';
 import { User } from './entities/User.ts';
 
+
+function parseBooleanInAReallyDumbWayBecauseJavascriptTypeCoercionSucksAss(s: string | undefined): boolean {
+	s = s?.trim().toLowerCase();
+	return s === 'true' || s === '1';
+}
+
+
 const config: Options = {
 	dbName: 'db',
 	driver: PostgreSqlDriver,
@@ -22,6 +29,6 @@ const config: Options = {
 	},
 
 	extensions: [Migrator],
-	debug: true
+	debug: parseBooleanInAReallyDumbWayBecauseJavascriptTypeCoercionSucksAss(process.env.DEBUG)
 };
 export default config;
