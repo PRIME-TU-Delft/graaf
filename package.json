@@ -4,6 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
+		"dev-prisma": "prisma generate --watch & vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -13,6 +14,7 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
+		"@prisma/client": "^5.14.0",
 		"@sveltejs/adapter-auto": "^3.1.1",
 		"@sveltejs/kit": "^2.5.4",
 		"@sveltejs/vite-plugin-svelte": "^3.0.2",
@@ -27,6 +29,7 @@
 		"mariadb": "^3.3.0",
 		"prettier": "^3.2.5",
 		"prettier-plugin-svelte": "^3.2.2",
+		"prisma": "^5.14.0",
 		"sass": "^1.72.0",
 		"svelte": "^4.2.12",
 		"svelte-check": "^3.6.8",
