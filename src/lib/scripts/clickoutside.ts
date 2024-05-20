@@ -1,22 +1,22 @@
 
 // Exports
 export function clickoutside(element: HTMLElement, callback: () => void) {
-	// Call the callback function when a click event occurs outside the given element.
-
 	function onClick(event: MouseEvent) {
 		if (!element.contains(event.target as Node)) {
 			callback();
 		}
 	}
 
-	document.body.addEventListener('click', onClick);
+	// Add a timeout to prevent the click event from firing immediately
+	var timeout: NodeJS.Timeout;
+	timeout = setTimeout(
+		() => document.body.addEventListener('click', onClick),
+		0
+	)
 
 	return {
-		update(newCallback: () => void) {
-			callback = newCallback;
-		},
-
 		destroy() {
+			clearTimeout(timeout);
 			document.body.removeEventListener('click', onClick);
 		}
 	};

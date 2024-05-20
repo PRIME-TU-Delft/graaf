@@ -37,7 +37,8 @@
 	}
 
 	// Checks if query appears in relation
-	function search(query: string, relation: Relation<Field>): boolean {
+	function relationMatchesQuery(query: string, relation: Relation<Field>): boolean {
+		if (!query) return true
 		query = query.toLowerCase()
 		let parent = relation.parent?.name?.toLowerCase()
 		let child = relation.child?.name?.toLowerCase()
@@ -57,8 +58,8 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2>Domain relations</h2>
-		<LinkButton href="#subjects">goto subjects</LinkButton>
+		<h2> Domain relations </h2>
+		<LinkButton href="#subjects"> goto subjects </LinkButton>
 
 		<div class="flex-spacer" />
 
@@ -69,7 +70,7 @@
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.domainRelations.some(relation => search(domainQuery, relation))}
+	{#if graph.domainRelations.some(relation => relationMatchesQuery(domainQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -133,7 +134,7 @@
 
 	<!-- List of relations -->
 	{#each graph.domainRelations as relation}
-		{#if search(domainQuery, relation)}
+		{#if relationMatchesQuery(domainQuery, relation)}
 			<div class="row">
 				<span class="id"> {relation.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
@@ -151,8 +152,8 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2>Subject relations</h2>
-		<LinkButton href="#domains">goto domains</LinkButton>
+		<h2> Subject relations </h2>
+		<LinkButton href="#domains"> goto domains </LinkButton>
 
 		<div class="flex-spacer" />
 
@@ -163,7 +164,7 @@
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.subjectRelations.some(relation => search(subjectQuery, relation))}
+	{#if graph.subjectRelations.some(relation => relationMatchesQuery(subjectQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -227,7 +228,7 @@
 
 	<!-- List of relations -->
 	{#each graph.subjectRelations as relation}
-		{#if search(subjectQuery, relation)}
+		{#if relationMatchesQuery(subjectQuery, relation)}
 			<div class="row">
 				<span class="id"> {relation.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />

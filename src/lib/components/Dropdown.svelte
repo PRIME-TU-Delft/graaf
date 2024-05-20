@@ -9,12 +9,25 @@
 
 	// Exports
 	export let label: string
-	export let value: T | undefined = undefined
 	export let placeholder: string
+	export let value: T | undefined = undefined
 	export let options: { name: string, value: T }[]
 
+	// Functions
+	export function show() {
+		visible = true
+	}
+
+	export function hide() {
+		visible = false
+	}
+
+	export function toggle() {
+		visible = !visible
+	}
+
 	// Variables
-	let show: boolean = false
+	let visible: boolean = false
 	$: id = label.toLowerCase().replace(/\s/g, '_')
 
 	// Property validation
@@ -32,13 +45,13 @@
 
 <button
 	class="dropdown"
-	class:show
-	on:click={() => show = !show && options.length > 0}
-	use:clickoutside={() => show = false}
+	class:visible
+	on:click={toggle}
+	use:clickoutside={hide}
 >
 	<!-- Hidden input to bind the selected value to a submittable element -->
 	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
-	<label for={id} class="label" class:placeholder={value === undefined}>
+	<label for={id} class="label" class:grayed-out={value === undefined}>
 		{options.find(option => option.value === value)?.name ?? placeholder}
 	</label>
 
@@ -47,9 +60,15 @@
 			<button class="option" on:click={() => value = option.value}> {option.name} </button>
 		{/each}
 
+		{#if options.length === 0}
+			<button disabled class="option grayed-out"> 
+				<i> No options available </i>
+			</button>
+		{/if}
+
 		{#if value !== undefined}
-			<button class="option remove-choice" on:click={() => value = undefined}>
-				<i>Remove choice</i>
+			<button class="option grayed-out" on:click={() => value = undefined}>
+				<i> Remove choice </i>
 			</button>
 		{/if}
 	</div>
@@ -65,6 +84,8 @@
 
 	@use '$styles/variables.sass' as *
 	@use '$styles/palette.sass' as *
+
+	$caret-size: calc($input-icon-size / sqrt(2))
 
 	.dropdown
 		display: flex
@@ -83,11 +104,8 @@
 
 			border: 1px solid $gray
 			border-radius: $border-radius
-
+			text-align: left
 			cursor: pointer
-
-			&.placeholder
-				color: $placeholder-color
 
 			&::after
 				content: ""
@@ -99,8 +117,8 @@
 				bottom: 50%
 
 				box-sizing: border-box
-				width: calc($input-icon-size / sqrt(2))
-				height: calc($input-icon-size / sqrt(2))
+				width: $caret-size
+				height: $caret-size
 
 				border: 1px solid $black
 				border-width: 0 1px 1px 0
@@ -124,18 +142,16 @@
 
 			.option
 				padding: $input-thin-padding $input-thick-padding
+				text-align: left
 				cursor: pointer
-
-				&.remove-choice
-					opacity: 0.5
 
 				&:last-child
 					border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
 
-				&:hover
+				&:hover:not(:disabled)
 					background-color: $light-gray
 
-		&.show
+		&.visible
 			.label
 				border-bottom-style: dashed
 				border-radius: $border-radius $border-radius 0 0
@@ -146,5 +162,8 @@
 
 			.options
 				display: flex
+		
+		.grayed-out
+			color: $placeholder-color
 
 </style>

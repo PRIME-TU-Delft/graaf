@@ -51,7 +51,7 @@
 	}
 
 	// Checks if query appears in domain
-	function searchDomain(query: string, domain: Domain): boolean {
+	function domainMatchesQuery(query: string, domain: Domain): boolean {
 		query = query.toLowerCase()
 		let name = domain.name?.toLowerCase()
 		let style = domain._style ? styles[domain._style].display_name.toLowerCase() : undefined
@@ -59,7 +59,7 @@
 	}
 
 	// Checks if query appears in subject
-	function searchSubject(query: string, subject: Subject): boolean {
+	function subjectMatchesQuery(query: string, subject: Subject): boolean {
 		query = query.toLowerCase()
 		let name = subject.name?.toLowerCase()
 		let domain = subject.domain?.name?.toLowerCase()
@@ -90,7 +90,7 @@
 	</div>
 
 	<!-- If any domains were found that match the search -->
-	{#if graph.domains.length > 0}
+	{#if graph.domains.some(domain => domainMatchesQuery(domainQuery, domain))}
 
 		<!-- Header -->
 		<div class=row>
@@ -154,7 +154,7 @@
 
 	<!-- Domain list -->
 	{#each graph.domains as domain}
-		{#if searchDomain(domainQuery, domain)}
+		{#if domainMatchesQuery(domainQuery, domain)}
 			<div class="row">
 				<span class="id"> {domain.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
@@ -183,10 +183,11 @@
 	</div>
 
 	<!-- If any subjects were found that match the search -->
-	{#if graph.subjects.length > 0}
+	{#if graph.subjects.some(subject => subjectMatchesQuery(subjectQuery, subject))}
 
 		<!-- Header -->
 		<div class=row>
+
 			<!-- ID sort button -->
 			<IconButton
 				src={subjectIdSort === null ? neutralSortIcon : subjectIdSort ? ascendingSortIcon : descedingSortIcon}
@@ -246,7 +247,7 @@
 
 	<!-- Subject list -->
 	{#each graph.subjects as subject}
-		{#if searchSubject(subjectQuery, subject)}
+		{#if subjectMatchesQuery(subjectQuery, subject)}
 			<div class="row">
 				<span class="id"> {subject.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
@@ -289,12 +290,20 @@
 
 		.row
 			display: grid
-			grid-template: "id delete left right preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
+			grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
+			place-items: center center
 			gap: $form-small-gap
 			width: 100%
 
-			.id, .preview, :global(.icon-button)
-				place-self: center center
+			.header
+				display: flex
+				flex-flow: row nowrap
+				align-content: center
+				justify-content: right
+				width: 100%
+
+				span
+					flex: 1
 
 			:global(.icon-button)
 				margin-bottom: 5px

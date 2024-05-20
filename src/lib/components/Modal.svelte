@@ -27,18 +27,20 @@
 
 
 <!-- TODO: Replace with shadcn-svelte dialog: https://www.shadcn-svelte.com/docs/components/alert-dialog -->
-<div class="background" class:visible />
-<dialog class="modal" class:visible use:clickoutside={hide}>
-	<header>
-		<slot name="header">Modal</slot>
-		<button class="exit" on:click={hide}>
-			<img src={plusIcon} alt="Exit icon" class="icon" />
-		</button>
-	</header>
-	<section>
-		<slot />
-	</section>
-</dialog>
+{#if visible}
+	<div class="background" />
+	<dialog class="modal" use:clickoutside={hide}>
+		<header>
+			<slot name="header"> Modal </slot>
+			<button class="exit" on:click={hide}>
+				<img src={plusIcon} alt="Exit icon" class="icon" />
+			</button>
+		</header>
+		<section>
+			<slot />
+		</section>
+	</dialog>
+{/if}
 
 
 
@@ -52,8 +54,6 @@
 	@use "$styles/palette.sass" as *
 
 	.background
-		display: none
-
 		position: fixed
 		z-index: 999
 		top: 0
@@ -65,7 +65,7 @@
 		background-color: rgba(0, 0, 0, 0.25)
 
 	.modal
-		display: none
+		display: flex
 		flex-flow: column nowrap
 		gap: 1rem
 
@@ -104,8 +104,5 @@
 				&:hover
 					scale: $scale-on-hover
 					filter: $dark-purple-filter
-
-	.visible
-		display: flex
 
 </style>

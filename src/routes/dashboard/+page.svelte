@@ -24,6 +24,8 @@
 
 	// Variables
 	const modals: { [key: string]: Modal } = {}
+	var createProgramModal: Modal
+	var createCourseModal: Modal
 	$: courses = data.courses
 	$: programs = data.programs
 
@@ -57,20 +59,31 @@
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
-		<Button on:click={modals.CREATE_COURSE?.show}>
-			<img src={plusIcon} alt="" /> New Course
+		<Button on:click={createProgramModal?.show}>
+			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
-		<Button on:click={modals.CREATE_PROGRAM?.show}>
-			<img src={plusIcon} alt="" /> New Program
+		<Button on:click={createCourseModal?.show}>
+			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
 		<div class="flex-spacer" />
 
 		<Searchbar on:input={onSearch} placeholder="Search courses" />
 
-		<Modal bind:this={modals['CREATE_COURSE']}>
-			<h3 slot="header">Create Course</h3>
+		<Modal bind:this={createProgramModal}>
+			<h3 slot="header"> Create Program </h3>
+
+			<form method="POST" action="?/newProgram" use:enhance>
+				<label for="name"> Name </label>
+				<Textfield label="Name" />
+
+				<Button submit on:click={createProgramModal?.hide}> Create </Button>
+			</form>
+		</Modal>
+
+		<Modal bind:this={createCourseModal}>
+			<h3 slot="header"> Create Course </h3>
 
 			<form method="POST" action="?/newCourse" use:enhance>
 				<label for="code"> Code </label>
@@ -88,24 +101,13 @@
 					})}
 				/>
 
-				<Button submit on:click={modals.CREATE_COURSE?.hide}>Create</Button>
-			</form>
-		</Modal>
-
-		<Modal bind:this={modals['CREATE_PROGRAM']}>
-			<h3 slot="header">Create Program</h3>
-
-			<form method="POST" action="?/newProgram" use:enhance>
-				<label for="name"> Name </label>
-				<Textfield label="Name" />
-
-				<Button submit on:click={modals.CREATE_PROGRAM?.hide}>Create</Button>
+				<Button submit on:click={createCourseModal?.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
-		<h3 slot="header">My Courses</h3>
+		<h3 slot="header"> My Courses </h3>
 		<div slot="body" class="grid">
 			{#each courses as { code, name }}
 				<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
@@ -116,7 +118,7 @@
 	{#each programs as { name, courses, coordinators }}
 		<Card>
 			<svelte:fragment slot="header">
-				<h3>{name}</h3>
+				<h3> {name} </h3>
 
 				<div class="flex-spacer" />
 
@@ -130,14 +132,14 @@
 				<LinkButton href="/program/{name}/settings">Settings</LinkButton>
 
 				<Modal bind:this={modals[name]}>
-					<h3 slot="header">Program Coordinators</h3>
+					<h3 slot="header"> Program Coordinators </h3>
 					<p>
 						These are the coordinators of the {name} program. You can contact them via email to request
 						access to a course.
 					</p>
 					<ul>
 						{#each coordinators as coordinator}
-							<li>{coordinator}</li>
+							<li> {coordinator} </li>
 						{/each}
 					</ul>
 				</Modal>
