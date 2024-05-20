@@ -1,5 +1,5 @@
 
-import { Course, Graph } from '$scripts/entities'
+import { Course, Graph } from '$scripts/graph/entities'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = ({ params }) => {

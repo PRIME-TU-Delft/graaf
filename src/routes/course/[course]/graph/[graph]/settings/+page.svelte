@@ -11,6 +11,7 @@
 	import FieldSettings from './FieldSettings.svelte'
 	import GeneralSettings from './GeneralSettings.svelte'
 	import RelationSettings from './RelationSettings.svelte'
+	import LectureSettings from './LectureSettings.svelte'
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
@@ -59,13 +60,10 @@
 
 	<div class="tabular">
 		<div class="tabs">
-			<button class:active={activeTab === 0} on:click={() => (activeTab = 0)}> General </button>
-
-			<button class:active={activeTab === 1} on:click={() => (activeTab = 1)}>
-				Domains & Subjects
-			</button>
-
-			<button class:active={activeTab === 2} on:click={() => (activeTab = 2)}> Relations </button>
+			<button class:active={activeTab === 0} on:click={() => activeTab = 0}> General </button>
+			<button class:active={activeTab === 1} on:click={() => activeTab = 1}> Domains & Subjects </button>
+			<button class:active={activeTab === 2} on:click={() => activeTab = 2}> Relations </button>
+			<button class:active={activeTab === 3} on:click={() => activeTab = 3}> Lectures </button>
 
 			<div class="dynamic-border" />
 		</div>
@@ -76,6 +74,8 @@
 			<FieldSettings {graph} />
 		{:else if activeTab === 2}
 			<RelationSettings {graph} />
+		{:else if activeTab === 3}
+			<LectureSettings {graph} />
 		{/if}
 	</div>
 </Layout>

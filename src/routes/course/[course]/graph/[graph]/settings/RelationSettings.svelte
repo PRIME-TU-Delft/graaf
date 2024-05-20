@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Field, Relation, DomainRelation, SubjectRelation } from '$scripts/entities'
+	import { Graph, Field, Relation, DomainRelation, SubjectRelation } from '$scripts/graph/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -40,8 +40,10 @@
 	function relationMatchesQuery(query: string, relation: Relation<Field>): boolean {
 		if (!query) return true
 		query = query.toLowerCase()
+
 		let parent = relation.parent?.name?.toLowerCase()
 		let child = relation.child?.name?.toLowerCase()
+		
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
@@ -65,7 +67,7 @@
 
 		<Searchbar bind:value={domainQuery} />
 		<Button on:click={() => { DomainRelation.create(graph); update() }}>
-			<img src={plusIcon} alt=""> Add Relation
+			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
@@ -136,7 +138,7 @@
 	{#each graph.domainRelations as relation}
 		{#if relationMatchesQuery(domainQuery, relation)}
 			<div class="row">
-				<span class="id"> {relation.id} </span>
+				<span> {relation.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 				<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions()} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parentColor()} />
@@ -159,7 +161,7 @@
 
 		<Searchbar bind:value={subjectQuery} />
 		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
-			<img src={plusIcon} alt=""> Add Relation
+			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
@@ -230,7 +232,7 @@
 	{#each graph.subjectRelations as relation}
 		{#if relationMatchesQuery(subjectQuery, relation)}
 			<div class="row">
-				<span class="id"> {relation.id} </span>
+				<span> {relation.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 				<Dropdown label="Parent" placeholder="From Subject" options={relation.parentOptions()} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parentColor()} />
@@ -275,7 +277,6 @@
 			grid-template: "id delete left left-preview right right-preview" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 			place-items: center center
 			gap: $form-small-gap
-			width: 100%
 
 			.header
 				display: flex

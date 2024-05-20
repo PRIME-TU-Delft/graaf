@@ -1,10 +1,11 @@
 
 // Internal Imports
-import { styles } from './layout/settings'
+import { styles } from './settings'
 
 // Exports
-export { Course, Graph, Field, Domain, Subject, Relation, DomainRelation, SubjectRelation }
+export { Course, Graph, Field, Domain, Subject, Relation, DomainRelation, SubjectRelation, Lecture }
 
+// TODO course probably shouldnt be in this file
 class Course {
 	code: string
 	name: string
@@ -24,6 +25,7 @@ class Graph {
 	subjects: Subject[] = []
 	domainRelations: DomainRelation[] = []
 	subjectRelations: SubjectRelation[] = []
+	lectures: Lecture[] = []
 
 	constructor(id: number) {
 		this.id = id
@@ -50,6 +52,8 @@ class Graph {
 		new SubjectRelation(this, 4, this.subjects[0], this.subjects[2])
 		new SubjectRelation(this, 5, this.subjects[1], this.subjects[3])
 		new SubjectRelation(this, 6, this.subjects[2], this.subjects[4])
+		new Lecture(this, 1, 'Lecture 1', [this.subjects[0], this.subjects[2], this.subjects[4]])
+		new Lecture(this, 2, 'Lecture 2', [this.subjects[1], this.subjects[3], this.subjects[5]])
 	}
 
 	save() {
@@ -64,11 +68,6 @@ class Graph {
 		return this.domains.length > 0 ? Math.max(...this.domains.map(domain => domain.id)) + 1 : 1
 	}
 
-	nextDomainStyle(): string | undefined {
-		const usedStyles = this.domains.map(domain => domain.style())
-		return Object.keys(styles).find(style => !usedStyles.includes(style))
-	}
-
 	nextSubjectID(): number {
 		return this.subjects.length > 0 ? Math.max(...this.subjects.map(subject => subject.id)) + 1 : 1
 	}
@@ -76,6 +75,15 @@ class Graph {
 	nextRelationID(): number {
 		const relations = this.domainRelations.concat(this.subjectRelations)
 		return relations.length > 0 ? Math.max(...relations.map(relation => relation.id)) + 1 : 1
+	}
+
+	nextLectureID(): number {
+		return this.lectures.length > 0 ? Math.max(...this.lectures.map(lecture => lecture.id)) + 1 : 1
+	}
+
+	nextDomainStyle(): string | undefined {
+		const usedStyles = this.domains.map(domain => domain.style())
+		return Object.keys(styles).find(style => !usedStyles.includes(style))
 	}
 }
 
@@ -345,5 +353,62 @@ class SubjectRelation extends Relation<Subject> {
 
 	delete() {
 		this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
+	}
+}
+
+class Lecture {
+	graph: Graph
+	id: number
+	name?: string
+	subjects: (Subject | undefined)[] = []
+
+	constructor(graph: Graph, id: number, name?: string, subjects: Subject[] = []) {
+		this.graph = graph
+		this.id = id
+		this.name = name
+		this.subjects = subjects
+
+		this.graph.lectures.push(this)
+	}
+
+	static create(graph: Graph): void {
+		new Lecture(graph, graph.nextLectureID())
+	}
+
+	delete() {
+		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
+	}
+
+	options(whitelist?: Subject): { name: string, value: Subject }[] {
+		return this.graph.subjects
+			.filter(subject => subject.name)
+			.filter(subject => subject === whitelist || !this.subjects.includes(subject))
+			.map(subject => ({ name: subject.name!, value: subject }))
+	}
+
+	parents(): Subject[] {
+		const parents: Subject[] = []
+		for (const subject of this.subjects) {
+			for (const relation of this.graph.subjectRelations) {
+				if (relation.child === subject && relation.parent && !parents.includes(relation.parent)) {
+					parents.push(relation.parent)
+				}
+			}
+		}
+
+		return parents
+	}
+
+	children(): Subject[] {
+		const children: Subject[] = []
+		for (const subject of this.subjects) {
+			for (const relation of this.graph.subjectRelations) {
+				if (relation.parent === subject && relation.child && !children.includes(relation.child)) {
+					children.push(relation.child)
+				}
+			}
+		}
+
+		return children
 	}
 }

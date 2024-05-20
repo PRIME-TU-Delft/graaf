@@ -2,8 +2,8 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, Subject } from '$scripts/entities'
-	import { styles } from '$scripts/layout/settings'
+	import { Graph, Domain, Subject } from '$scripts/graph/entities'
+	import { styles } from '$scripts/graph/settings'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -52,17 +52,23 @@
 
 	// Checks if query appears in domain
 	function domainMatchesQuery(query: string, domain: Domain): boolean {
+		if (!query) return true
 		query = query.toLowerCase()
+
 		let name = domain.name?.toLowerCase()
 		let style = domain._style ? styles[domain._style].display_name.toLowerCase() : undefined
+
 		return name?.includes(query) || style?.includes(query) || false
 	}
 
 	// Checks if query appears in subject
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
+		if (!query) return true
 		query = query.toLowerCase()
+
 		let name = subject.name?.toLowerCase()
 		let domain = subject.domain?.name?.toLowerCase()
+
 		return name?.includes(query) || domain?.includes(query) || false
 	}
 </script>
@@ -78,14 +84,14 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2>Domains</h2>
-		<LinkButton href="#subjects">goto subjects</LinkButton>
+		<h2> Domains </h2>
+		<LinkButton href="#subjects"> goto subjects </LinkButton>
 
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domainQuery} />
 		<Button on:click={() => { Domain.create(graph); update() }}>
-			<img src={plusIcon} alt=""> Add Domain
+			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
 
@@ -156,7 +162,7 @@
 	{#each graph.domains as domain}
 		{#if domainMatchesQuery(domainQuery, domain)}
 			<div class="row">
-				<span class="id"> {domain.id} </span>
+				<span> {domain.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
 				<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain._style}/>
@@ -171,14 +177,14 @@
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2>Subjects</h2>
-		<LinkButton href="#domains">goto domains</LinkButton>
+		<h2> Subjects </h2>
+		<LinkButton href="#domains"> goto domains </LinkButton>
 
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={subjectQuery} />
 		<Button on:click={() => { Subject.create(graph); update() }}>
-			<img src={plusIcon} alt=""> Add Subject
+			<img src={plusIcon} alt=""> New Subject
 		</Button>
 	</div>
 
@@ -249,7 +255,7 @@
 	{#each graph.subjects as subject}
 		{#if subjectMatchesQuery(subjectQuery, subject)}
 			<div class="row">
-				<span class="id"> {subject.id} </span>
+				<span> {subject.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
 				<Dropdown label="Domain" placeholder="Assigned Domain" options={domainOptions} bind:value={subject.domain} />
@@ -293,7 +299,6 @@
 			grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
 			place-items: center center
 			gap: $form-small-gap
-			width: 100%
 
 			.header
 				display: flex

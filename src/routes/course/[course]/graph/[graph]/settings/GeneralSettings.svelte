@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph } from '$scripts/entities'
+	import { Graph } from '$scripts/graph/entities'
 
 	// Components
 	import Modal from '$components/Modal.svelte'

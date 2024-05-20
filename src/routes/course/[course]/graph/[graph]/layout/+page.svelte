@@ -5,14 +5,12 @@
 
 	// Svelte imports
 	import type { PageData } from './$types'
-	import { onMount } from 'svelte'
 
 	// Lib imports
-	import { layout, fillLayout, updateLayout, clearLayout } from '$scripts/layout/layout'
-	import * as settings from '$scripts/layout/settings'
+	import { Layout, LayoutType } from '$scripts/graph/layout'
 
 	// Components
-	import Layout from '$layouts/DefaultLayout.svelte'
+	import DefaultLayout from '$layouts/DefaultLayout.svelte'
 	import Button from '$components/Button.svelte'
 
 	// Assets
@@ -22,85 +20,16 @@
 	// Exports
 	export let data: PageData
 
+	// Variables
 	let { course, graph } = data
+	let layout: Layout = new Layout(graph)
 	let activeTab: number = 0
-	let svg: SVGSVGElement
-
-	onMount(() => {
-		fillLayout(svg, graph.domains, graph.domainRelations)
-	})
-
-	function domainToSubjectTransition() {
-
-		// Save the current layout
-		const buffers = graph.subjects.map(subject => ({ subject, x: subject.x, y: subject.y }))
-
-		// Move the subjects to their domain
-		graph.subjects.forEach(subject => {
-			subject.x = subject.domain!.x
-			subject.y = subject.domain!.y
-		})
-
-		// Create the new layout
-		clearLayout(svg)
-		fillLayout(svg, graph.subjects, graph.subjectRelations)
-
-		// Move the subjects back to their original position
-		buffers.forEach(buffer => {
-			buffer.subject.x = buffer.x
-			buffer.subject.y = buffer.y
-		})
-
-		// Animate
-		updateLayout(svg, true)
-	}
-
-	function subjectToDomainTransition() {
-
-		// Save the current layout
-		const buffers = graph.subjects.map(subject => ({ subject, x: subject.x, y: subject.y }))
-
-		// Move the subjects to their domain
-		graph.subjects.forEach(subject => {
-			subject.x = subject.domain!.x
-			subject.y = subject.domain!.y
-		})
-
-		// Animate
-		updateLayout(svg, true)
-
-		// Restore the layout
-		buffers.forEach(buffer => {
-			buffer.subject.x = buffer.x
-			buffer.subject.y = buffer.y
-		})
-
-		// Show the domains after the animation
-		setTimeout(() => {
-			clearLayout(svg)
-			fillLayout(svg, graph.domains, graph.domainRelations)
-		}, settings.TRANSITION_DURATION)
-	}
-
-	function swapTab(tab: number) {
-		if (tab !== activeTab) {
-			if (tab === 0 && activeTab === 1) {
-				subjectToDomainTransition()
-			} else if (tab === 1 && activeTab === 0) {
-				domainToSubjectTransition()
-			} else {
-				clearLayout(svg)
-			}
-		}
-
-		activeTab = tab
-	}
 
 </script>
 
 <!-- Markup -->
 
-<Layout
+<DefaultLayout
 	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
 	path={[
 		{
@@ -132,27 +61,27 @@
 		<div class="tabs">
 			<button
 				class:active={activeTab === 0}
-				on:click={() => swapTab(0)}
+				on:click={() => {activeTab = 0; layout.show(LayoutType.domain)}}
 			> Domains </button>
 
 			<button
 				class:active={activeTab === 1}
-				on:click={() => swapTab(1)}
+				on:click={() => {activeTab = 1; layout.show(LayoutType.subject)}}
 			> Subjects </button>
 
 			<button
 				class:active={activeTab === 2}
-				on:click={() => swapTab(2)}
+				on:click={() => {activeTab = 2}}
 			> Lectures </button>
 
 			<div class="dynamic-border" />
 		</div>
 
 		<div class="editor">
-			<svg bind:this={svg} use:layout/>
+			<svg use:layout.setup/>
 		</div>
 	</div>
-</Layout>
+</DefaultLayout>
 
 <style lang="sass">
 
