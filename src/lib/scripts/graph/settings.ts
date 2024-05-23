@@ -1,24 +1,30 @@
-export const GRID_UNIT = 10;
-export const GRID_COLOR = '#a4a4a4';
-export const GRID_MIN_ZOOM = 0.5;
-export const GRID_MAX_ZOOM = 2;
+export const GRID_UNIT = 10
+export const GRID_COLOR = '#a4a4a4'
+export const GRID_MIN_ZOOM = 0.5
+export const GRID_MAX_ZOOM = 2
 
-export const NODE_WIDTH = 16;
-export const NODE_HEIGHT = 8;
-export const NODE_MARGIN = 0.75;
+export const FIELD_WIDTH = 16
+export const FIELD_HEIGHT = 8
+export const FIELD_MARGIN = 0.75
+export const FIELD_FONT_SIZE = 15
 
-export const STROKE_WIDTH = 2;
-export const TRANSITION_DURATION = 1500;
+export const LECTURE_HEADER_HEIGHT = 7
+export const LECTURE_PADDING = 5
+export const LECTURE_WIDTH = 2 * LECTURE_PADDING + FIELD_WIDTH
+export const LECTURE_FONT_SIZE = 20
 
-const top = STROKE_WIDTH / 2;
-const right = NODE_WIDTH * GRID_UNIT - STROKE_WIDTH / 2;
-const bottom = NODE_HEIGHT * GRID_UNIT - STROKE_WIDTH / 2;
-const left = STROKE_WIDTH / 2;
-const hmid = (NODE_WIDTH * GRID_UNIT) / 2;
-const vmid = (NODE_HEIGHT * GRID_UNIT) / 2;
+export const STROKE_WIDTH = 2
+export const TRANSITION_DURATION = 1500
+
+const top = STROKE_WIDTH / 2
+const right = FIELD_WIDTH * GRID_UNIT - STROKE_WIDTH / 2
+const bottom = FIELD_HEIGHT * GRID_UNIT - STROKE_WIDTH / 2
+const left = STROKE_WIDTH / 2
+const hmid = (FIELD_WIDTH * GRID_UNIT) / 2
+const vmid = (FIELD_HEIGHT * GRID_UNIT) / 2
 
 export const styles: {
-	[key: string]: { display_name: string; stroke: string; fill: string; path: string };
+	[key: string]: { display_name: string, stroke: string, fill: string, path: string }
 } = {
 	'prosperous-red': {
 		display_name: 'Prosperous Red',
@@ -153,4 +159,4 @@ export const styles: {
 				 L ${left + GRID_UNIT} ${vmid}
 				 Z`
 	}
-};
+}

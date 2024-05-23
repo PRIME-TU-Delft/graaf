@@ -18,6 +18,8 @@ class Course {
 	}
 }
 
+// Entities
+
 class Graph {
 	id: number
 	name: string
@@ -52,8 +54,7 @@ class Graph {
 		new SubjectRelation(this, 4, this.subjects[0], this.subjects[2])
 		new SubjectRelation(this, 5, this.subjects[1], this.subjects[3])
 		new SubjectRelation(this, 6, this.subjects[2], this.subjects[4])
-		new Lecture(this, 1, 'Lecture 1', [this.subjects[0], this.subjects[2], this.subjects[4]])
-		new Lecture(this, 2, 'Lecture 2', [this.subjects[1], this.subjects[3], this.subjects[5]])
+		new Lecture(this, 1, 'Lecture 1', [this.subjects[2], this.subjects[3], this.subjects[4]])
 	}
 
 	save() {
@@ -140,11 +141,13 @@ abstract class Field {
 class Domain extends Field {
 	_style?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string) {
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string, push_to_graph: boolean = true) {
 		super(graph, id, x, y, name)
 
 		this._style = style
-		this.graph.domains.push(this)
+		if (push_to_graph) {
+			this.graph.domains.push(this)
+		}
 	}
 
 	static create(graph: Graph): void {
@@ -182,11 +185,13 @@ class Domain extends Field {
 class Subject extends Field {
 	domain?: Domain
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain) {
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain, push_to_graph: boolean = true) {
 		super(graph, id, x, y, name)
 
 		this.domain = domain
-		this.graph.subjects.push(this)
+		if (push_to_graph) {
+			this.graph.subjects.push(this)
+		}
 	}
 
 	static create(graph: Graph): void {
@@ -235,9 +240,12 @@ class Relation<T extends Field> {
 }
 
 class DomainRelation extends Relation<Domain> {
-	constructor(graph: Graph, id: number, parent?: Domain, child?: Domain) {
+	constructor(graph: Graph, id: number, parent?: Domain, child?: Domain, push_to_graph: boolean = true) {
 		super(graph, id, parent, child)
-		graph.domainRelations.push(this)
+
+		if (push_to_graph) {
+			graph.domainRelations.push(this)
+		}
 	}
 
 	static create(graph: Graph): void {
@@ -296,9 +304,12 @@ class DomainRelation extends Relation<Domain> {
 }
 
 class SubjectRelation extends Relation<Subject> {
-	constructor(graph: Graph, id: number, parent?: Subject, child?: Subject) {
+	constructor(graph: Graph, id: number, parent?: Subject, child?: Subject, push_to_graph: boolean = true) {
 		super(graph, id, parent, child)
-		graph.subjectRelations.push(this)
+
+		if (push_to_graph) {
+			graph.subjectRelations.push(this)
+		}
 	}
 
 	static create(graph: Graph): void {
@@ -379,10 +390,10 @@ class Lecture {
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
 	}
 
-	options(whitelist?: Subject): { name: string, value: Subject }[] {
+	options(chosen?: Subject): { name: string, value: Subject }[] {
 		return this.graph.subjects
 			.filter(subject => subject.name)
-			.filter(subject => subject === whitelist || !this.subjects.includes(subject))
+			.filter(subject => subject === chosen || !this.subjects.includes(subject))
 			.map(subject => ({ name: subject.name!, value: subject }))
 	}
 
@@ -390,7 +401,11 @@ class Lecture {
 		const parents: Subject[] = []
 		for (const subject of this.subjects) {
 			for (const relation of this.graph.subjectRelations) {
-				if (relation.child === subject && relation.parent && !parents.includes(relation.parent)) {
+				if (relation.child === subject &&
+					relation.parent &&
+					!parents.includes(relation.parent) &&
+					!this.subjects.includes(relation.parent)
+				) {
 					parents.push(relation.parent)
 				}
 			}
@@ -403,12 +418,22 @@ class Lecture {
 		const children: Subject[] = []
 		for (const subject of this.subjects) {
 			for (const relation of this.graph.subjectRelations) {
-				if (relation.parent === subject && relation.child && !children.includes(relation.child)) {
+				if (relation.parent === subject &&
+					relation.child &&
+					!children.includes(relation.child) &&
+					!this.subjects.includes(relation.child)
+				) {
 					children.push(relation.child)
 				}
 			}
 		}
 
 		return children
+	}
+
+	relations(): SubjectRelation[] {
+		return this.graph.subjectRelations.filter(relation =>
+			this.subjects.includes(relation.parent) || this.subjects.includes(relation.child)
+		)
 	}
 }

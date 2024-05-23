@@ -1,13 +1,12 @@
 
-<!-- Script -->
-
 <script lang="ts">
 
 	// Svelte imports
 	import type { PageData } from './$types'
 
 	// Lib imports
-	import { Layout, LayoutType } from '$scripts/graph/layout'
+	import { GraphSVG, GraphType } from '$scripts/graph/graphSVG'
+	import { LectureSVG } from '$scripts/graph/lectureSVG'
 
 	// Components
 	import DefaultLayout from '$layouts/DefaultLayout.svelte'
@@ -22,12 +21,16 @@
 
 	// Variables
 	let { course, graph } = data
-	let layout: Layout = new Layout(graph)
+	let graphSVG: GraphSVG = new GraphSVG(graph, true)
 	let activeTab: number = 0
 
 </script>
 
+
+
 <!-- Markup -->
+
+
 
 <DefaultLayout
 	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
@@ -61,27 +64,42 @@
 		<div class="tabs">
 			<button
 				class:active={activeTab === 0}
-				on:click={() => {activeTab = 0; layout.show(LayoutType.domain)}}
+				on:click={() => {
+					graphSVG.show(GraphType.domain)
+					activeTab = 0
+				}}
 			> Domains </button>
 
 			<button
 				class:active={activeTab === 1}
-				on:click={() => {activeTab = 1; layout.show(LayoutType.subject)}}
+				on:click={() => {
+					graphSVG.show(GraphType.subject)
+					activeTab = 1
+				}}
 			> Subjects </button>
 
 			<button
 				class:active={activeTab === 2}
-				on:click={() => {activeTab = 2}}
+				on:click={() => {
+					graphSVG.show(GraphType.lecture, graph.lectures ? graph.lectures[0] : undefined)
+					activeTab = 2
+				}}
 			> Lectures </button>
 
 			<div class="dynamic-border" />
 		</div>
 
 		<div class="editor">
-			<svg use:layout.setup/>
+			<svg use:graphSVG.create />
 		</div>
 	</div>
 </DefaultLayout>
+
+
+
+<!-- Styles -->
+
+
 
 <style lang="sass">
 
