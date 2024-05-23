@@ -67,6 +67,7 @@ model Graph {
 	course			Course		@relation(fields: [courseId], references: [id])
 	courseId		Int
 	domains			Domain[]
+	subjects		Subject[]
 	// UI names
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
@@ -78,12 +79,12 @@ model Domain {
 	name			String
 	x				Int			@default(0)
 	y				Int			@default(0)
-	style			String?
+	style			String
 	graph			Graph		@relation(fields: [graphId], references: [id])
 	graphId			Int
 	subjects		Subject[]
-	toDomains		Domain[]	@relation("DomainRelation")
-	fromDomains		Domain[]	@relation("DomainRelation")
+	parentDomains	Domain[]	@relation("DomainRelation")
+	childDomains	Domain[]	@relation("DomainRelation")
 }
 
 
@@ -92,9 +93,11 @@ model Subject {
 	name			String
 	x				Int			@default(0)
 	y				Int			@default(0)
-	style			String?
+	style			String
+	graph			Graph		@relation(fields: [graphId], references: [id])
+	graphId			Int
 	domain			Domain		@relation(fields: [domainId], references: [id])
 	domainId		Int
-	toSubjects		Subject[]	@relation("SubjectRelation")
-	fromSubjects	Subject[]	@relation("SubjectRelation")
+	parentSubjects	Subject[]	@relation("SubjectRelation")
+	childSubjects	Subject[]	@relation("SubjectRelation")
 }
