@@ -19,66 +19,40 @@ class Course {
 }
 
 class Graph {
-	id: number
 	name: string
-	domains: Domain[] = []
-	subjects: Subject[] = []
-	domainRelations: DomainRelation[] = []
-	subjectRelations: SubjectRelation[] = []
-	lectures: Lecture[] = []
+	domains: Domain[]
+	subjects: Subject[]
+	domainRelations: DomainRelation[]
+	subjectRelations: SubjectRelation[]
+	lectures: Lecture[]
 
-	constructor(id: number) {
-		this.id = id
+	constructor(name: string, domains: Domain[], subjects: Subject[], domainRelations: DomainRelation[], subjectRelations: SubjectRelation[], lectures: Lecture[]) {
+		this.name = name
+		this.domains = domains
+		this.subjects = subjects
+		this.domainRelations = domainRelations
+		this.subjectRelations = subjectRelations
+		this.lectures = lectures
+	}
 
-		// TODO load from database, below is fake data
+	static create(data: object): Graph {
+		throw new Error('Not implemented')
+	}
 
-		this.name = 'Graph Name'
+	serialize(): object {
+		throw new Error('Not implemented')
+	}
 
-		new Domain(this, 1, 0, 0, 'Domain 1', 'prosperous-red')
-		new Domain(this, 2, 0, 0, 'Domain 2', 'energizing-orange')
-		new Domain(this, 3, 0, 0, 'Domain 3', 'sunny-yellow')
-		new Subject(this, 1, 0, 0, 'Subject 1', this.domains[0])
-		new Subject(this, 2, 0, 0, 'Subject 2', this.domains[0])
-		new Subject(this, 3, 0, 0, 'Subject 3', this.domains[1])
-		new Subject(this, 4, 0, 0, 'Subject 4', this.domains[1])
-		new Subject(this, 5, 0, 0, 'Subject 5', this.domains[2])
-		new Subject(this, 6, 0, 0, 'Subject 6', this.domains[2])
-		new DomainRelation(this, 1, this.domains[0], this.domains[1])
-		new DomainRelation(this, 2, this.domains[1], this.domains[2])
-		new DomainRelation(this, 3, this.domains[0], this.domains[2])
-		new SubjectRelation(this, 1, this.subjects[0], this.subjects[1])
-		new SubjectRelation(this, 2, this.subjects[2], this.subjects[3])
-		new SubjectRelation(this, 3, this.subjects[4], this.subjects[5])
-		new SubjectRelation(this, 4, this.subjects[0], this.subjects[2])
-		new SubjectRelation(this, 5, this.subjects[1], this.subjects[3])
-		new SubjectRelation(this, 6, this.subjects[2], this.subjects[4])
-		new Lecture(this, 1, 'Lecture 1', [this.subjects[0], this.subjects[2], this.subjects[4]])
-		new Lecture(this, 2, 'Lecture 2', [this.subjects[1], this.subjects[3], this.subjects[5]])
+	validate(): boolean {
+		throw new Error('Not implemented')
 	}
 
 	save() {
-		// TODO implement
+		throw new Error('Not implemented')
 	}
 
 	delete() {
-		// TODO implement
-	}
-
-	nextDomainID(): number {
-		return this.domains.length > 0 ? Math.max(...this.domains.map(domain => domain.id)) + 1 : 1
-	}
-
-	nextSubjectID(): number {
-		return this.subjects.length > 0 ? Math.max(...this.subjects.map(subject => subject.id)) + 1 : 1
-	}
-
-	nextRelationID(): number {
-		const relations = this.domainRelations.concat(this.subjectRelations)
-		return relations.length > 0 ? Math.max(...relations.map(relation => relation.id)) + 1 : 1
-	}
-
-	nextLectureID(): number {
-		return this.lectures.length > 0 ? Math.max(...this.lectures.map(lecture => lecture.id)) + 1 : 1
+		throw new Error('Not implemented')
 	}
 
 	nextDomainStyle(): string | undefined {
@@ -89,14 +63,12 @@ class Graph {
 
 abstract class Field {
 	graph: Graph
-	id: number
 	x: number
 	y: number
 	name?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string) {
+	constructor(graph: Graph, x: number, y: number, name?: string) {
 		this.graph = graph
-		this.id = id
 		this.x = x
 		this.y = y
 		this.name = name
@@ -140,21 +112,20 @@ abstract class Field {
 class Domain extends Field {
 	_style?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string) {
-		super(graph, id, x, y, name)
-
+	constructor(graph: Graph, x: number, y: number, name?: string, style?: string) {
+		super(graph, x, y, name)
 		this._style = style
-		this.graph.domains.push(this)
 	}
 
-	static create(graph: Graph): void {
-		new Domain(
+	static create(graph: Graph) {
+		let domain = new Domain(
 			graph,
-			graph.nextDomainID(),
 			0, 0, // TODO Calculate position to not overlap
 			undefined,
 			graph.nextDomainStyle()
 		)
+
+		graph.domains.push(domain)
 	}
 
 	style(): string | undefined {
@@ -182,19 +153,18 @@ class Domain extends Field {
 class Subject extends Field {
 	domain?: Domain
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain) {
-		super(graph, id, x, y, name)
-
+	constructor(graph: Graph,  x: number, y: number, name?: string, domain?: Domain) {
+		super(graph, x, y, name)
 		this.domain = domain
-		this.graph.subjects.push(this)
 	}
 
-	static create(graph: Graph): void {
-		new Subject(
+	static create(graph: Graph) {
+		let subject = new Subject(
 			graph,
-			graph.nextSubjectID(),
 			0, 0 // TODO Calculate position to not overlap
 		)
+		
+		graph.subjects.push(subject)
 	}
 
 	style(): string | undefined {
@@ -214,13 +184,11 @@ class Subject extends Field {
 
 class Relation<T extends Field> {
 	graph: Graph
-	id: number
 	parent?: T
 	child?: T
 
-	constructor(graph: Graph, id: number, parent?: T, child?: T) {
+	constructor(graph: Graph, parent?: T, child?: T) {
 		this.graph = graph
-		this.id = id
 		this.parent = parent
 		this.child = child
 	}
@@ -235,13 +203,9 @@ class Relation<T extends Field> {
 }
 
 class DomainRelation extends Relation<Domain> {
-	constructor(graph: Graph, id: number, parent?: Domain, child?: Domain) {
-		super(graph, id, parent, child)
-		graph.domainRelations.push(this)
-	}
-
-	static create(graph: Graph): void {
-		new DomainRelation(graph, graph.nextRelationID())
+	static create(graph: Graph) {
+		let relation = new DomainRelation(graph)
+		graph.domainRelations.push(relation)
 	}
 
 	parentOptions(): { name: string, value: Domain }[] {
@@ -296,13 +260,9 @@ class DomainRelation extends Relation<Domain> {
 }
 
 class SubjectRelation extends Relation<Subject> {
-	constructor(graph: Graph, id: number, parent?: Subject, child?: Subject) {
-		super(graph, id, parent, child)
-		graph.subjectRelations.push(this)
-	}
-
-	static create(graph: Graph): void {
-		new SubjectRelation(graph, graph.nextDomainID())
+	static create(graph: Graph) {
+		let relation = new SubjectRelation(graph)
+		graph.subjectRelations.push(relation)
 	}
 
 	parentOptions(): { name: string, value: Subject }[] {
@@ -358,21 +318,19 @@ class SubjectRelation extends Relation<Subject> {
 
 class Lecture {
 	graph: Graph
-	id: number
 	name?: string
 	subjects: (Subject | undefined)[] = []
 
-	constructor(graph: Graph, id: number, name?: string, subjects: Subject[] = []) {
+	constructor(graph: Graph, name?: string, subjects: Subject[] = []) {
 		this.graph = graph
-		this.id = id
 		this.name = name
 		this.subjects = subjects
 
 		this.graph.lectures.push(this)
 	}
 
-	static create(graph: Graph): void {
-		new Lecture(graph, graph.nextLectureID())
+	static create(graph: Graph) {
+		new Lecture(graph)
 	}
 
 	delete() {
