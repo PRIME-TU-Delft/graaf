@@ -18,8 +18,6 @@ class Course {
 	}
 }
 
-// Entities
-
 class Graph {
 	id: number
 	name: string
@@ -371,69 +369,59 @@ class Lecture {
 	graph: Graph
 	id: number
 	name?: string
-	subjects: (Subject | undefined)[] = []
+	presentSubjects: (Subject | undefined)[] = []
 
-	constructor(graph: Graph, id: number, name?: string, subjects: Subject[] = []) {
+	constructor(graph: Graph, id: number, name?: string, presentSubjects: Subject[] = []) {
 		this.graph = graph
 		this.id = id
 		this.name = name
-		this.subjects = subjects
-
-		this.graph.lectures.push(this)
+		this.presentSubjects = presentSubjects
 	}
 
 	static create(graph: Graph): void {
-		new Lecture(graph, graph.nextLectureID())
+		const lecture = new Lecture(graph, graph.nextLectureID())
+		graph.lectures.push(lecture)
 	}
 
 	delete() {
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
 	}
 
-	options(chosen?: Subject): { name: string, value: Subject }[] {
-		return this.graph.subjects
-			.filter(subject => subject.name)
-			.filter(subject => subject === chosen || !this.subjects.includes(subject))
-			.map(subject => ({ name: subject.name!, value: subject }))
-	}
-
-	parents(): Subject[] {
-		const parents: Subject[] = []
-		for (const subject of this.subjects) {
-			for (const relation of this.graph.subjectRelations) {
-				if (relation.child === subject &&
-					relation.parent &&
-					!parents.includes(relation.parent) &&
-					!this.subjects.includes(relation.parent)
-				) {
-					parents.push(relation.parent)
-				}
+	get pastSubjects(): Subject[] {
+		const pastSubjects: Subject[] = []
+		for (const relation of this.relations) {
+			if (!this.presentSubjects.includes(relation.child)) {
+				pastSubjects.push(relation.child!)
 			}
 		}
 
-		return parents
+		return pastSubjects
 	}
 
-	children(): Subject[] {
-		const children: Subject[] = []
-		for (const subject of this.subjects) {
-			for (const relation of this.graph.subjectRelations) {
-				if (relation.parent === subject &&
-					relation.child &&
-					!children.includes(relation.child) &&
-					!this.subjects.includes(relation.child)
-				) {
-					children.push(relation.child)
-				}
+	get futureSubjects(): Subject[] {
+		const futureSubjects: Subject[] = []
+		for (const relation of this.relations) {
+			if (!this.presentSubjects.includes(relation.parent)) {
+				futureSubjects.push(relation.parent!)
 			}
 		}
 
-		return children
+		return futureSubjects
 	}
 
-	relations(): SubjectRelation[] {
+	get subjects(): Subject[] {
+		return this.pastSubjects.concat(
+			this.presentSubjects.filter(subject => subject) as Subject[], 
+			this.futureSubjects
+		)
+	}
+
+	get relations(): SubjectRelation[] {
 		return this.graph.subjectRelations.filter(relation =>
-			this.subjects.includes(relation.parent) || this.subjects.includes(relation.child)
+			relation.parent && relation.child && (
+				this.presentSubjects.includes(relation.parent) || 
+				this.presentSubjects.includes(relation.child)
+			)
 		)
 	}
 }

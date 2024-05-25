@@ -6,7 +6,6 @@
 
 	// Lib imports
 	import { GraphSVG, GraphType } from '$scripts/graph/graphSVG'
-	import { LectureSVG } from '$scripts/graph/lectureSVG'
 
 	// Components
 	import DefaultLayout from '$layouts/DefaultLayout.svelte'
