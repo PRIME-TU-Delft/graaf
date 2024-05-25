@@ -6,7 +6,6 @@
 
 	// Lib imports
 	import { GraphSVG, GraphType } from '$scripts/graph/graphSVG'
-	import { LectureSVG } from '$scripts/graph/lectureSVG'
 
 	// Components
 	import DefaultLayout from '$layouts/DefaultLayout.svelte'
@@ -21,7 +20,7 @@
 
 	// Variables
 	let { course, graph } = data
-	let graphSVG: GraphSVG = new GraphSVG(graph, true)
+	let graphSVG: GraphSVG = new GraphSVG(graph, GraphType.domains, true)
 	let activeTab: number = 0
 
 </script>
@@ -65,7 +64,7 @@
 			<button
 				class:active={activeTab === 0}
 				on:click={() => {
-					graphSVG.show(GraphType.domain)
+					graphSVG.setType(GraphType.domains)
 					activeTab = 0
 				}}
 			> Domains </button>
@@ -73,7 +72,7 @@
 			<button
 				class:active={activeTab === 1}
 				on:click={() => {
-					graphSVG.show(GraphType.subject)
+					graphSVG.setType(GraphType.subjects)
 					activeTab = 1
 				}}
 			> Subjects </button>
@@ -81,7 +80,7 @@
 			<button
 				class:active={activeTab === 2}
 				on:click={() => {
-					graphSVG.show(GraphType.lecture, graph.lectures ? graph.lectures[0] : undefined)
+					graphSVG.setType(GraphType.lecture)
 					activeTab = 2
 				}}
 			> Lectures </button>

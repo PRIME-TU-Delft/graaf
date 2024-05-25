@@ -14,13 +14,12 @@ class Course {
 		// TODO load from database
 
 		this.code = code
-		this.name = 'Course Name'
+		this.name = 'Calculus'
 	}
 }
 
-// Entities
-
 class Graph {
+	id: number
 	name: string
 	domains: Domain[]
 	subjects: Subject[]
@@ -28,17 +27,50 @@ class Graph {
 	subjectRelations: SubjectRelation[]
 	lectures: Lecture[]
 
-	constructor(name: string, domains: Domain[], subjects: Subject[], domainRelations: DomainRelation[], subjectRelations: SubjectRelation[], lectures: Lecture[]) {
-		this.name = name
-		this.domains = domains
-		this.subjects = subjects
-		this.domainRelations = domainRelations
-		this.subjectRelations = subjectRelations
-		this.lectures = lectures
-	}
+	constructor(data: object) {
+		this.id = 1
+		this.name = 'Graph 1'
+		this.domains = []
+		this.subjects = []
+		this.domainRelations = []
+		this.subjectRelations = []
+		this.lectures = []
 
-	static create(data: object): Graph {
-		throw new Error('Not implemented')
+		// TODO load from data
+
+		this.domains.push(
+			new Domain(this, 1, 0, 0, 'Domain 1', 'prosperous-red'),
+			new Domain(this, 2, 0, 0, 'Domain 2', 'energizing-orange'),
+			new Domain(this, 3, 0, 0, 'Domain 3', 'sunny-yellow')
+		)
+
+		this.subjects.push(
+			new Subject(this, 4, 0, 0, 'Subject 1', this.domains[0]),
+			new Subject(this, 5, 0, 0, 'Subject 2', this.domains[0]),
+			new Subject(this, 6, 0, 0, 'Subject 3', this.domains[1]),
+			new Subject(this, 7, 0, 0, 'Subject 4', this.domains[1]),
+			new Subject(this, 8, 0, 0, 'Subject 5', this.domains[2]),
+			new Subject(this, 9, 0, 0, 'Subject 6', this.domains[2])
+		)
+
+		this.domainRelations.push(
+			new DomainRelation(this, 1, this.domains[0], this.domains[1]),
+			new DomainRelation(this, 2, this.domains[1], this.domains[2]),
+			new DomainRelation(this, 3, this.domains[0], this.domains[2])
+		)
+
+		this.subjectRelations.push(
+			new SubjectRelation(this, 4, this.subjects[0], this.subjects[1]),
+			new SubjectRelation(this, 5, this.subjects[2], this.subjects[3]),
+			new SubjectRelation(this, 6, this.subjects[4], this.subjects[5]),
+			new SubjectRelation(this, 7, this.subjects[0], this.subjects[2]),
+			new SubjectRelation(this, 8, this.subjects[1], this.subjects[3]),
+			new SubjectRelation(this, 9, this.subjects[2], this.subjects[4])
+		)
+
+		this.lectures.push(
+			new Lecture(this, 'Lecture 1', [this.subjects[2], this.subjects[3], this.subjects[4]])
+		)
 	}
 
 	serialize(): object {
@@ -68,6 +100,16 @@ class Graph {
 		throw new Error('Not implemented')
 	}
 
+	nextFieldID(): number {
+		const ids = this.domains.concat(this.subjects).map(field => field.id)
+		return Math.max(0, ...ids) + 1
+	}
+
+	nextRelationID(): number {
+		const ids = this.domainRelations.concat(this.subjectRelations).map(relation => relation.id)
+		return Math.max(0, ...ids) + 1
+	}
+
 	nextDomainStyle(): string | undefined {
 		const usedStyles = this.domains.map(domain => domain.style)
 		return Object.keys(styles).find(style => !usedStyles.includes(style))
@@ -76,12 +118,14 @@ class Graph {
 
 abstract class Field {
 	graph: Graph
+	id: number
 	x: number
 	y: number
 	name?: string
 
-	constructor(graph: Graph, x: number, y: number, name?: string) {
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string) {
 		this.graph = graph
+		this.id = id
 		this.x = x
 		this.y = y
 		this.name = name
@@ -124,10 +168,9 @@ abstract class Field {
 class Domain extends Field {
 	private _style?: string
 
-	constructor(graph: Graph, x: number, y: number, name?: string, style?: string) {
-		super(graph, x, y, name)
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string) {
+		super(graph, id, x, y, name)
 		this._style = style
-		this.graph.domains.push(this)
 	}
 
 	get style(): string | undefined {
@@ -141,6 +184,7 @@ class Domain extends Field {
 	static create(graph: Graph) {
 		let domain = new Domain(
 			graph,
+			graph.nextFieldID(),
 			0, 0, // TODO Calculate position to not overlap
 			undefined,
 			graph.nextDomainStyle()
@@ -170,10 +214,9 @@ class Domain extends Field {
 class Subject extends Field {
 	domain?: Domain
 
-	constructor(graph: Graph,  x: number, y: number, name?: string, domain?: Domain) {
-		super(graph, x, y, name)
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain) {
+		super(graph, id, x, y, name)
 		this.domain = domain
-		this.graph.subjects.push(this)
 	}
 
 	get style(): string | undefined {
@@ -183,6 +226,7 @@ class Subject extends Field {
 	static create(graph: Graph) {
 		let subject = new Subject(
 			graph,
+			graph.nextFieldID(),
 			0, 0 // TODO Calculate position to not overlap
 		)
 		
@@ -202,11 +246,13 @@ class Subject extends Field {
 
 abstract class Relation<T extends Field> {
 	graph: Graph
+	id: number
 	parent?: T
 	child?: T
 
-	constructor(graph: Graph, parent?: T, child?: T) {
+	constructor(graph: Graph, id: number, parent?: T, child?: T) {
 		this.graph = graph
+		this.id = id
 		this.parent = parent
 		this.child = child
 	}
@@ -282,14 +328,22 @@ abstract class Relation<T extends Field> {
 
 class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph) {
-		let relation = new DomainRelation(graph)
+		let relation = new DomainRelation(
+			graph,
+			graph.nextRelationID()
+		)
+
 		graph.domainRelations.push(relation)
 	}
 }
 
 class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph) {
-		let relation = new SubjectRelation(graph)
+		let relation = new SubjectRelation(
+			graph,
+			graph.nextRelationID()
+		)
+
 		graph.subjectRelations.push(relation)
 	}
 }
@@ -297,68 +351,58 @@ class SubjectRelation extends Relation<Subject> {
 class Lecture {
 	graph: Graph
 	name?: string
-	subjects: (Subject | undefined)[] = []
+	presentSubjects: (Subject | undefined)[] = []
 
-	constructor(graph: Graph, name?: string, subjects: Subject[] = []) {
+	constructor(graph: Graph, name?: string, presentSubjects: Subject[] = []) {
 		this.graph = graph
 		this.name = name
-		this.subjects = subjects
-
-		this.graph.lectures.push(this)
+		this.presentSubjects = presentSubjects
 	}
 
-	static create(graph: Graph) {
-		new Lecture(graph)
+	static create(graph: Graph): void {
+		const lecture = new Lecture(graph)
+		graph.lectures.push(lecture)
 	}
 
 	delete() {
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
 	}
 
-	options(chosen?: Subject): { name: string, value: Subject }[] {
-		return this.graph.subjects
-			.filter(subject => subject.name)
-			.filter(subject => subject === chosen || !this.subjects.includes(subject))
-			.map(subject => ({ name: subject.name!, value: subject }))
-	}
-
-	parents(): Subject[] {
-		const parents: Subject[] = []
-		for (const subject of this.subjects) {
-			for (const relation of this.graph.subjectRelations) {
-				if (relation.child === subject &&
-					relation.parent &&
-					!parents.includes(relation.parent) &&
-					!this.subjects.includes(relation.parent)
-				) {
-					parents.push(relation.parent)
-				}
+	get pastSubjects(): Subject[] {
+		const pastSubjects: Subject[] = []
+		for (const relation of this.relations) {
+			if (!this.presentSubjects.includes(relation.child)) {
+				pastSubjects.push(relation.child!)
 			}
 		}
 
-		return parents
+		return pastSubjects
 	}
 
-	children(): Subject[] {
-		const children: Subject[] = []
-		for (const subject of this.subjects) {
-			for (const relation of this.graph.subjectRelations) {
-				if (relation.parent === subject &&
-					relation.child &&
-					!children.includes(relation.child) &&
-					!this.subjects.includes(relation.child)
-				) {
-					children.push(relation.child)
-				}
+	get futureSubjects(): Subject[] {
+		const futureSubjects: Subject[] = []
+		for (const relation of this.relations) {
+			if (!this.presentSubjects.includes(relation.parent)) {
+				futureSubjects.push(relation.parent!)
 			}
 		}
 
-		return children
+		return futureSubjects
 	}
 
-	relations(): SubjectRelation[] {
+	get subjects(): Subject[] {
+		return this.pastSubjects.concat(
+			this.presentSubjects.filter(subject => subject) as Subject[], 
+			this.futureSubjects
+		)
+	}
+
+	get relations(): SubjectRelation[] {
 		return this.graph.subjectRelations.filter(relation =>
-			this.subjects.includes(relation.parent) || this.subjects.includes(relation.child)
+			relation.parent && relation.child && (
+				this.presentSubjects.includes(relation.parent) || 
+				this.presentSubjects.includes(relation.child)
+			)
 		)
 	}
 }
