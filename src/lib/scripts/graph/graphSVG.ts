@@ -60,6 +60,7 @@ class GraphSVG {
 							this.moveContent(this.domainTransform)
 							this.moveContent(this.lectureTransform, true, () => {
 								this.setBackground(GraphType.lecture)
+								this.moveContent(this.lectureTransform)
 							})
 						} else {
 							this.setZoomAndPan(0, 0, 1)
@@ -87,6 +88,7 @@ class GraphSVG {
 							this.setContent(this.lecture.subjects, this.lecture.relations, true, () => {
 								this.moveContent(this.lectureTransform, true, () => {
 									this.setBackground(GraphType.lecture)
+									this.moveContent(this.lectureTransform)
 								})
 							})
 						} else {
@@ -103,6 +105,7 @@ class GraphSVG {
 					case GraphType.domains:
 						if (this.lecture) {
 							this.setBackground(GraphType.domains)
+							this.moveContent(this.lectureTransform)
 							this.moveContent(this.domainTransform, true, () => {
 								this.setContent(this.graph.domains, this.graph.domainRelations, true)
 							})
@@ -117,6 +120,7 @@ class GraphSVG {
 					case GraphType.subjects:
 						if (this.lecture) {
 							this.setBackground(GraphType.subjects)
+							this.moveContent(this.lectureTransform)
 							this.restoreContent(true, () => {
 								this.setContent(this.graph.subjects, this.graph.subjectRelations, true)
 							})
@@ -192,20 +196,20 @@ class GraphSVG {
 				.attr('d', `M 0 0 L 10 5 L 0 10 Z`)
 
 		// Grid pattern
-		const pattern = definitions.append('pattern')
+		const grid = definitions.append('pattern')
 			.attr('patternUnits', 'userSpaceOnUse')
 			.attr('width', settings.GRID_UNIT)
 			.attr('height', settings.GRID_UNIT)
 			.attr('id', 'grid')
 
-		pattern.append('line')
+		grid.append('line')
 			.attr('stroke', settings.GRID_COLOR)
 			.attr('x1', 0)
 			.attr('y1', 0)
 			.attr('x2', settings.GRID_UNIT * settings.GRID_MAX_ZOOM)
 			.attr('y2', 0)
 
-		pattern.append('line')
+		grid.append('line')
 			.attr('stroke', settings.GRID_COLOR)
 			.attr('x1', 0)
 			.attr('y1', 0)
@@ -407,14 +411,12 @@ class GraphSVG {
 	}
 
 	private setBackground(type: GraphType) {
-		const background = d3.select<SVGSVGElement, unknown>(this.svg)
-			.select('#background')
+		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
+		const background = svg.select<SVGGElement>('#background')
 
 		// Remove old background
-		d3.select(this.svg)
-			.select('#background')
-				.selectAll('*')
-					.remove()
+		background.selectAll('*')
+			.remove()
 
 		// Add new background
 		switch (type) {
@@ -424,90 +426,98 @@ class GraphSVG {
 				// Set interactive to default
 				this.setInteractive(this.interactive)
 
-				// Grid
-				background.append('rect')
-					.attr('fill', 'url(#grid)')
+				// Set svg size
+				svg
 					.attr('width', '100%')
 					.attr('height', '100%')
+
+				// Grid
+				background
+					.append('rect')
+						.attr('fill', 'url(#grid)')
+						.attr('width', '100%')
+						.attr('height', '100%')
 
 				break
 
 			case GraphType.lecture:
-
-				// Find longest column
-				const size = this.lecture ? Math.max(
-					this.lecture.pastSubjects.length,
-					this.lecture.presentSubjects.length,
-					this.lecture.futureSubjects.length
-				) : 0
+				const size = this.lecture?.size || 0
 
 				// Set interactive to false
 				this.setInteractive(false)
+
+				// Set svg size
+				svg
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT * 3 + settings.STROKE_WIDTH)
+					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING + settings.LECTURE_HEADER_HEIGHT) * settings.GRID_UNIT + settings.STROKE_WIDTH)
 
 				// Past subject colunm
 				background.append('rect')
 					.attr('x', settings.STROKE_WIDTH / 2)
 					.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
-					.attr('width', settings.LECTURE_WIDTH * settings.GRID_UNIT)
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
 					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
 					.attr('stroke-width', settings.STROKE_WIDTH)
 					.attr('fill', 'transparent')
 					.attr('stroke', 'black')
 
 				background.append('text')
-					.attr('x', (settings.STROKE_WIDTH + settings.LECTURE_WIDTH * settings.GRID_UNIT) / 2)
-					.attr('y', settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT / 2)
+					.attr('x', (settings.STROKE_WIDTH + settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
 					.attr('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('text-anchor', 'middle')
-					.attr('dominant-baseline', 'middle')
+					.attr('dominant-baseline', 'hanging')
 					.text('Past Topics')
 
 				// Present subject column
 				background.append('rect')
-					.attr('x', settings.STROKE_WIDTH / 2 + settings.LECTURE_WIDTH * settings.GRID_UNIT)
+					.attr('x', settings.STROKE_WIDTH / 2 + settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
 					.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
-					.attr('width', settings.LECTURE_WIDTH * settings.GRID_UNIT)
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
 					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
 					.attr('stroke-width', settings.STROKE_WIDTH)
 					.attr('fill', 'transparent')
 					.attr('stroke', 'black')
 
 				background.append('text')
-					.attr('x', (settings.STROKE_WIDTH + 3 * settings.LECTURE_WIDTH * settings.GRID_UNIT) / 2)
-					.attr('y', settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT / 2)
+					.attr('x', (settings.STROKE_WIDTH + 3 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
 					.attr('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('text-anchor', 'middle')
-					.attr('dominant-baseline', 'middle')
+					.attr('dominant-baseline', 'hanging')
 					.text('This Lecture')
 
 				// Future subject column
 				background.append('rect')
-					.attr('x', settings.STROKE_WIDTH / 2 + 2 * settings.LECTURE_WIDTH * settings.GRID_UNIT)
+					.attr('x', settings.STROKE_WIDTH / 2 + 2 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
 					.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
-					.attr('width', settings.LECTURE_WIDTH * settings.GRID_UNIT)
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
 					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
 					.attr('stroke-width', settings.STROKE_WIDTH)
 					.attr('fill', 'transparent')
 					.attr('stroke', 'black')
 
 				background.append('text')
-					.attr('x', (settings.STROKE_WIDTH + 5 * settings.LECTURE_WIDTH * settings.GRID_UNIT) / 2)
-					.attr('y', settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT / 2)
+					.attr('x', (settings.STROKE_WIDTH + 5 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
 					.attr('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('text-anchor', 'middle')
-					.attr('dominant-baseline', 'middle')
+					.attr('dominant-baseline', 'hanging')
 					.text('Future Topics')
 		}
 	}
 
 	private lectureTransform(subject: Subject, graphSVG: GraphSVG) {
 
+		// Get bounding box and size
+		const bbx = d3.select<SVGGElement, unknown>('#background').node()!.getBBox()
+		const size = graphSVG.lecture?.size || 0
+		const dx = (bbx.width / settings.GRID_UNIT - 3 * settings.LECTURE_COLUMN_WIDTH) / 2
+		const dy = (bbx.height / settings.GRID_UNIT - size * settings.FIELD_HEIGHT - (size + 1) * settings.LECTURE_PADDING - settings.LECTURE_HEADER_HEIGHT) / 2
+
 		// Set past subject positions to the right column
 		const pastSubjects = graphSVG.lecture?.pastSubjects
 		if (pastSubjects?.includes(subject)) {
 			const index = pastSubjects.indexOf(subject)
-			subject.x = settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
-			subject.y = settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
+			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
 			return
 		}
 
@@ -515,8 +525,8 @@ class GraphSVG {
 		const presentSubjects = graphSVG.lecture?.presentSubjects
 		if (presentSubjects?.includes(subject)) {
 			const index = presentSubjects.indexOf(subject)
-			subject.x = settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_WIDTH + settings.LECTURE_PADDING
-			subject.y = settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
 			return
 		}
 
@@ -524,8 +534,8 @@ class GraphSVG {
 		const futureSubjects = graphSVG.lecture?.futureSubjects
 		if (futureSubjects?.includes(subject)) {
 			const index = futureSubjects.indexOf(subject)
-			subject.x = settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_WIDTH + settings.LECTURE_PADDING
-			subject.y = settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
 			return
 		}
 	}

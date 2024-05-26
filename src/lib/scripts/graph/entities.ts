@@ -369,25 +369,25 @@ class Lecture {
 	}
 
 	get pastSubjects(): Subject[] {
-		const pastSubjects = []
+		const pastSubjects: Subject[] = []
 		for (const relation of this.relations) {
-			if (!this.presentSubjects.includes(relation.parent)) {
-				pastSubjects.push(relation.parent)
+			if (!(this.presentSubjects.includes(relation.parent) || pastSubjects.includes(relation.parent!))) {
+				pastSubjects.push(relation.parent!)
 			}
 		}
 
-		return pastSubjects as Subject[]
+		return pastSubjects
 	}
 
 	get futureSubjects(): Subject[] {
-		const futureSubjects = []
+		const futureSubjects: Subject[] = []
 		for (const relation of this.relations) {
-			if (!this.presentSubjects.includes(relation.child)) {
-				futureSubjects.push(relation.child)
+			if (!(this.presentSubjects.includes(relation.child) || futureSubjects.includes(relation.child!))) {
+				futureSubjects.push(relation.child!)
 			}
 		}
 
-		return futureSubjects as Subject[]
+		return futureSubjects
 	}
 
 	get subjects(): Subject[] {
@@ -405,6 +405,14 @@ class Lecture {
 				this.presentSubjects.includes(relation.parent) ||
 				this.presentSubjects.includes(relation.child)
 			)
+		)
+	}
+
+	get size(): number {
+		return Math.max(
+			this.pastSubjects.length,
+			this.presentSubjects.length,
+			this.futureSubjects.length
 		)
 	}
 }

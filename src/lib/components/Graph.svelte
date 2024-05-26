@@ -58,11 +58,12 @@
 	@use "$styles/palette.sass" as *
 
 	.editor
+		display: flex
+		align-items: center 
+		justify-content: center
+
 		height: 650px
 
-		svg
-			width: 100%
-			height: 100%
 
 	.tabular
 		border-radius: $border-radius
