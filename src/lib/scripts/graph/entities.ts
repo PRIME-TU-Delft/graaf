@@ -69,7 +69,7 @@ class Graph {
 		)
 
 		this.lectures.push(
-			new Lecture(this, 'Lecture 1', [this.subjects[2], this.subjects[3], this.subjects[4]])
+			new Lecture(this, 'Lecture 1', [this.subjects[3], this.subjects[4]])
 		)
 	}
 
@@ -229,7 +229,7 @@ class Subject extends Field {
 			graph.nextFieldID(),
 			0, 0 // TODO Calculate position to not overlap
 		)
-		
+
 		graph.subjects.push(subject)
 	}
 
@@ -313,7 +313,7 @@ abstract class Relation<T extends Field> {
 		}
 
 		return options.map(field => ({ name: field.name!, value: field as T }))
-	
+
 	}
 
 	delete() {
@@ -369,38 +369,40 @@ class Lecture {
 	}
 
 	get pastSubjects(): Subject[] {
-		const pastSubjects: Subject[] = []
+		const pastSubjects = []
 		for (const relation of this.relations) {
-			if (!this.presentSubjects.includes(relation.child)) {
-				pastSubjects.push(relation.child!)
+			if (!this.presentSubjects.includes(relation.parent)) {
+				pastSubjects.push(relation.parent)
 			}
 		}
 
-		return pastSubjects
+		return pastSubjects as Subject[]
 	}
 
 	get futureSubjects(): Subject[] {
-		const futureSubjects: Subject[] = []
+		const futureSubjects = []
 		for (const relation of this.relations) {
-			if (!this.presentSubjects.includes(relation.parent)) {
-				futureSubjects.push(relation.parent!)
+			if (!this.presentSubjects.includes(relation.child)) {
+				futureSubjects.push(relation.child)
 			}
 		}
 
-		return futureSubjects
+		return futureSubjects as Subject[]
 	}
 
 	get subjects(): Subject[] {
-		return this.pastSubjects.concat(
-			this.presentSubjects.filter(subject => subject) as Subject[], 
-			this.futureSubjects
-		)
+		return this.presentSubjects
+			.filter(subject => subject)
+			.concat(
+				this.pastSubjects,
+				this.futureSubjects
+			) as Subject[]
 	}
 
 	get relations(): SubjectRelation[] {
 		return this.graph.subjectRelations.filter(relation =>
 			relation.parent && relation.child && (
-				this.presentSubjects.includes(relation.parent) || 
+				this.presentSubjects.includes(relation.parent) ||
 				this.presentSubjects.includes(relation.child)
 			)
 		)

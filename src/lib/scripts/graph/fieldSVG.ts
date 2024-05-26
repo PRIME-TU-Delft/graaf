@@ -12,7 +12,9 @@ import { styles } from './settings'
 export { FieldSVG }
 
 class FieldSVG {
-	static create(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>) {		// Field attrs
+	static create(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>) {
+
+		// Field attrs
 		selection
 			.attr('id', field => field.id)
 			.attr('class', 'field')
@@ -59,12 +61,12 @@ class FieldSVG {
 		)
 	}
 
-	static update(selection: d3.Selection<SVGGElement, Field, d3.BaseType, undefined>, animated: boolean = false) {
+	static update(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, animated: boolean = false) {
 
 		// Update field position
 		selection
 			.transition()
-				.duration(animated ? settings.TRANSITION_DURATION : 0)
+				.duration(animated ? settings.ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},
@@ -75,9 +77,6 @@ class FieldSVG {
 		d3.select<SVGGElement, unknown>(selection.node()?.parentNode as SVGGElement)
 			.selectAll<SVGLineElement, Relation<Field>>('line')
 			.filter(relation => relation.parent === selection.datum() || relation.child === selection.datum())
-				.each(function() {
-					RelationSVG.update(d3.select(this), animated)
-				})
-
+			.each(function() { RelationSVG.update(d3.select(this), animated) })
 	}
 }

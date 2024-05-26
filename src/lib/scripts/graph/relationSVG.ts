@@ -53,7 +53,7 @@ class RelationSVG {
 			if (Math.abs(dx) < halfWidth && Math.abs(dy) < halfHeight) {
 				d3.select(this)
 					.transition()
-						.duration(animated ? settings.TRANSITION_DURATION : 0)
+						.duration(animated ? settings.ANIMATION_DURATION : 0)
 						.ease(d3.easeSinInOut)
 					.attr('x1', cxStart * settings.GRID_UNIT)
 					.attr('y1', cyStart * settings.GRID_UNIT)
@@ -79,7 +79,7 @@ class RelationSVG {
 
 			d3.select(this)
 				.transition()
-					.duration(animated ? settings.TRANSITION_DURATION : 0)
+					.duration(animated ? settings.ANIMATION_DURATION : 0)
 					.ease(d3.easeSinInOut)
 				.attr('x1', x1 * settings.GRID_UNIT)
 				.attr('y1', y1 * settings.GRID_UNIT)

@@ -14,7 +14,8 @@ export const LECTURE_WIDTH = 2 * LECTURE_PADDING + FIELD_WIDTH
 export const LECTURE_FONT_SIZE = 20
 
 export const STROKE_WIDTH = 2
-export const TRANSITION_DURATION = 1500
+export const FADE_DURATION = 500
+export const ANIMATION_DURATION = 1000
 
 const top = STROKE_WIDTH / 2
 const right = FIELD_WIDTH * GRID_UNIT - STROKE_WIDTH / 2
