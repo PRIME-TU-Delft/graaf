@@ -4,7 +4,6 @@ import * as d3 from 'd3'
 
 // Internal imports
 import { Graph, Field, Subject, Relation, Lecture } from './entities'
-import { createArrowhead } from './arrowhead'
 import { FieldSVG } from './fieldSVG'
 import { RelationSVG } from './relationSVG'
 import * as settings from './settings'
@@ -12,484 +11,539 @@ import * as settings from './settings'
 // Exports
 export { GraphSVG, GraphType }
 
-// Enums
 enum GraphType {
-	domain = 0,
-	subject = 1,
-	lecture = 2
+	domains,
+	subjects,
+	lecture
 }
 
-// Classes
 class GraphSVG {
-	graph: Graph
-	interactive: boolean
-	svg?: SVGSVGElement
-	type?: GraphType
-	lecture?: Lecture
-	animating_from?: GraphType
+	private _type: GraphType
+	private _lecture?: Lecture
+	private _interactive: boolean
+	private _animating: boolean = false
 
-	constructor(graph: Graph, interactive: boolean) {
+	private graph: Graph
+	private svg!: SVGSVGElement
+	private zoom!: d3.ZoomBehavior<SVGSVGElement, unknown>
+	private fields: Field[] = []
+
+	constructor(graph: Graph, type: GraphType, interactive: boolean) {
 		this.graph = graph
-		this.interactive = interactive
+		this._type = type
+		this._interactive = interactive
+	}
+
+	get type() {
+		return this._type
+	}
+
+	set type(type: GraphType) {
+		if (this.type === type || this.animating) return
+
+		switch (this.type) {
+			case GraphType.domains:
+				switch (type) {
+
+					// Domains -> Subjects
+					case GraphType.subjects:
+						this.setContent(this.graph.subjects, this.graph.subjectRelations)
+						this.moveContent(this.domainTransform)
+						this.restoreContent(true)
+						break
+
+					// Domains -> Lecture
+					case GraphType.lecture:
+						if (this.lecture) {
+							this.setZoomAndPan(0, 0, 1, true)
+							this.setContent(this.lecture.subjects, this.lecture.relations)
+							this.moveContent(this.domainTransform)
+							this.moveContent(this.lectureTransform, true, () => {
+								this.setBackground(GraphType.lecture)
+								this.moveContent(this.lectureTransform)
+							})
+						} else {
+							this.setZoomAndPan(0, 0, 1)
+							this.setBackground(GraphType.lecture)
+							this.clearContent()
+						}
+
+				} break
+
+			case GraphType.subjects:
+				switch (type) {
+
+					// Subjects -> Domains
+					case GraphType.domains:
+						this.moveContent(this.domainTransform, true, () => {
+							this.setContent(this.graph.domains, this.graph.domainRelations, true)
+						})
+
+						break
+
+					// Subjects -> Lectures
+					case GraphType.lecture:
+						if (this.lecture) {
+							this.setZoomAndPan(0, 0, 1, true)
+							this.setContent(this.lecture.subjects, this.lecture.relations, true, () => {
+								this.moveContent(this.lectureTransform, true, () => {
+									this.setBackground(GraphType.lecture)
+									this.moveContent(this.lectureTransform)
+								})
+							})
+						} else {
+							this.setZoomAndPan(0, 0, 1)
+							this.setBackground(GraphType.lecture)
+							this.clearContent()
+						}
+				} break
+
+			case GraphType.lecture:
+				switch (type) {
+
+					// Lectures -> Domains
+					case GraphType.domains:
+						if (this.lecture) {
+							this.setBackground(GraphType.domains)
+							this.moveContent(this.lectureTransform)
+							this.moveContent(this.domainTransform, true, () => {
+								this.setContent(this.graph.domains, this.graph.domainRelations, true)
+							})
+						} else {
+							this.setBackground(GraphType.domains)
+							this.setContent(this.graph.domains, this.graph.domainRelations, true)
+						}
+
+						break
+
+					// Lectures -> Subjects
+					case GraphType.subjects:
+						if (this.lecture) {
+							this.setBackground(GraphType.subjects)
+							this.moveContent(this.lectureTransform)
+							this.restoreContent(true, () => {
+								this.setContent(this.graph.subjects, this.graph.subjectRelations, true)
+							})
+						} else {
+							this.setBackground(GraphType.subjects)
+							this.setContent(this.graph.subjects, this.graph.subjectRelations, true)
+						}
+				}
+		}
+
+		this._type = type
+	}
+
+	get lecture() {
+		return this._lecture
+	}
+
+	set lecture(lecture: Lecture | undefined) {
+		this._lecture = lecture
+
+		if (this.type !== GraphType.lecture) return
+		if (this.animating) throw new Error('Animation in progress')
+
+		if (this.lecture) {
+			this.clearContent()
+			this.setContent(this.lecture.subjects, this.lecture.relations)
+			this.moveContent(this.lectureTransform)
+			this.setBackground(GraphType.lecture)
+		} else {
+			this.clearContent()
+			this.setBackground(GraphType.lecture)
+		}
+	}
+
+	get interactive() {
+		return this._interactive
+	}
+
+	set interactive(interactive: boolean) {
+		this._interactive = interactive
+		this.setInteractive(interactive)
+	}
+
+	get animating() {
+		return this._animating
+	}
+
+	set animating(animating: boolean) {
+		this._animating = animating
+		this.setInteractive(this.interactive && !animating)
 	}
 
 	create(element: SVGSVGElement) {
 		this.svg = element
-		this.type = GraphType.domain
 
 		// D3 setup
-		const svg = d3.select<SVGSVGElement, unknown>(element)
+		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
 		const definitions = svg.append('defs')
 		svg.append('g').attr('id', 'background')
 		svg.append('g').attr('id', 'content')
 
 		// Arrowhead pattern
-		createArrowhead(element)
+		definitions.append('marker')
+			.attr('id', 'arrowhead')
+			.attr('viewBox', '0 0 10 10')
+			.attr('refX', 5)
+			.attr('refY', 5)
+			.attr('markerWidth', 6)
+			.attr('markerHeight', 6)
+			.attr('orient', 'auto-start-reverse')
+			.append('path')
+				.attr('fill', 'context-fill')
+				.attr('d', `M 0 0 L 10 5 L 0 10 Z`)
 
 		// Grid pattern
-		const pattern = definitions.append('pattern')
+		const grid = definitions.append('pattern')
 			.attr('patternUnits', 'userSpaceOnUse')
 			.attr('width', settings.GRID_UNIT)
 			.attr('height', settings.GRID_UNIT)
 			.attr('id', 'grid')
 
-		pattern.append('line')
+		grid.append('line')
 			.attr('stroke', settings.GRID_COLOR)
 			.attr('x1', 0)
 			.attr('y1', 0)
 			.attr('x2', settings.GRID_UNIT * settings.GRID_MAX_ZOOM)
 			.attr('y2', 0)
 
-		pattern.append('line')
+		grid.append('line')
 			.attr('stroke', settings.GRID_COLOR)
 			.attr('x1', 0)
 			.attr('y1', 0)
 			.attr('x2', 0)
 			.attr('y2', settings.GRID_UNIT * settings.GRID_MAX_ZOOM)
 
-		// Show graph
-		this._updateBackground()
-		this._setContent(this.graph.domains, this.graph.domainRelations)
-	}
+		// Zoom & pan
+		this.zoom = d3.zoom<SVGSVGElement, unknown>()
+			.scaleExtent([settings.GRID_MIN_ZOOM, settings.GRID_MAX_ZOOM])
+			.on('zoom', event => {
 
-	// Dear lord, forgive me for I have sinned
-	show(type: GraphType, lecture?: Lecture) {
-		if (this.svg === undefined ||
-			(this.type !== GraphType.lecture && this.type === type) ||
-			(this.type === GraphType.lecture && this.lecture === lecture)
-		) return
+				// Update content
+				svg.select('#content')
+					.attr('transform', event.transform)
 
-		var buffers: { field: Field, x: number, y: number }[]
+				// Update grid
+				svg.select('#grid')
+					.attr('x', event.transform.x)
+					.attr('y', event.transform.y)
+					.attr('width', settings.GRID_UNIT * event.transform.k)
+					.attr('height', settings.GRID_UNIT * event.transform.k)
+					.selectAll('line')
+						.attr('opacity', Math.min(1, event.transform.k))
+			})
 
+		svg.call(this.zoom)
+
+		// Background & content
 		switch (this.type) {
-			case GraphType.domain:
-				switch (type) {
+			case GraphType.domains:
+				this.setContent(this.graph.domains, this.graph.domainRelations)
+				this.setBackground(GraphType.domains)
+				break
 
-					// Domain to subject
-					case GraphType.subject:
-						this.type = type
-						this.lecture = undefined
-						
-						switch (this.animating_from) {
-							case GraphType.subject:
-
-								// Animate towards subject
-								this.animating_from = GraphType.domain
-								this._animate(() => { this.animating_from = undefined })
-								break
-							
-							case GraphType.lecture:
-
-								// TODO figure out how to animate this
-								this._interrupt()
-								this._updateBackground()
-								this._setContent(this.graph.subjects, this.graph.subjectRelations)
-								break
-							
-							default:
-
-								// Animate towards subject
-								buffers = this._bufferLayout(this.graph.subjects)
-								this._moveSubjectsToDomains(this.graph.subjects)
-								this._setContent(this.graph.subjects, this.graph.subjectRelations)
-								this._restoreLayout(buffers)
-								this.animating_from = GraphType.domain
-								this._animate(() => { this.animating_from = undefined })
-						} break
-
-					// Domain to lecture
-					case GraphType.lecture:
-						this.type = type
-						this.lecture = lecture
-
-						// If lecture is undefined, do not animate
-						if (this.lecture === undefined) {
-							this._interrupt()
-							this._updateBackground()
-							this._clearContent()
-							return
-						}
-
-						// Gather data
-						const parents = this.lecture.parents()
-						const children = this.lecture.children()
-						const subjects = this.lecture.subjects.concat(parents, children) as Subject[]
-						const relations = this.lecture.relations()
-						buffers = this._bufferLayout(subjects)
-
-						switch (this.animating_from) {
-							case GraphType.subject:
-							case GraphType.lecture:
-
-								// TODO figure out how to animate this
-								this._interrupt()
-								this._moveSubjectsToLecture(parents, this.lecture.subjects as Subject[], children)
-								this._updateBackground()
-								this._setContent(subjects, relations)
-								this._restoreLayout(buffers)
-								break
-							
-							default:
-
-								// Animate towards lecture
-								this._moveSubjectsToDomains(subjects)
-								this._setContent(subjects, relations)
-								this._moveSubjectsToLecture(parents, this.lecture.subjects as Subject[], children)
-								this.animating_from = GraphType.domain
-								this._animate(() => {
-									this.animating_from = undefined
-									this._updateBackground()
-								})
-
-								this._restoreLayout(buffers)
-						}
-				} break
-
-			case GraphType.subject:
-				switch (type) {
-
-					// Subject to domain
-					case GraphType.domain:
-						this.type = type
-						this.lecture = undefined
-
-						// Animate towards domain
-						buffers = this._bufferLayout(this.graph.subjects)
-						this._moveSubjectsToDomains(this.graph.subjects)
-						this.animating_from = GraphType.subject
-						this._animate(() => {
-							this.animating_from = undefined
-							this._setContent(this.graph.domains, this.graph.domainRelations)
-						})
-
-						this._restoreLayout(buffers)
-						break
-
-					// Subject to lecture
-					case GraphType.lecture:
-						this.type = type
-						this.lecture = lecture
-
-						// If lecture is undefined, do not animate
-						if (this.lecture === undefined) {
-							this._updateBackground()
-							this._clearContent()
-							return
-						}
-
-						// Gather data
-						const parents = this.lecture.parents()
-						const children = this.lecture.children()
-						const subjects = this.lecture.subjects.concat(parents, children) as Subject[]
-						const relations = this.lecture.relations()
-
-						// Animate towards lecture
-						this._setContent(subjects, relations)
-						buffers = this._bufferLayout(subjects)
-						this._moveSubjectsToLecture(parents, this.lecture.subjects as Subject[], children)
-						this.animating_from = GraphType.subject
-						this._animate(() => {
-							this.animating_from = undefined
-							this._updateBackground()
-						})
-
-						this._restoreLayout(buffers)
-						break
-				
-				} break
+			case GraphType.subjects:
+				this.setContent(this.graph.subjects, this.graph.subjectRelations)
+				this.setBackground(GraphType.subjects)
+				break
 
 			case GraphType.lecture:
-				switch (type) {
-
-					// Lecture to domain
-					case GraphType.domain:
-						this.type = type
-						this._updateBackground()
-
-						// If lecture is undefined, do not animate
-						if (this.lecture === undefined) {
-							this._setContent(this.graph.domains, this.graph.domainRelations)
-							return
-						}
-
-						// Gather data
-						var parents = this.lecture.parents()
-						var children = this.lecture.children()
-						var subjects = this.lecture.subjects.concat(parents, children) as Subject[]
-						this.lecture = undefined
-
-						// Animate towards domain
-						buffers = this._bufferLayout(subjects)
-						this._moveSubjectsToDomains(subjects)
-						this.animating_from = GraphType.lecture
-						this._animate(() => {
-							this.animating_from = undefined
-							this._setContent(this.graph.domains, this.graph.domainRelations)
-						})
-
-						this._restoreLayout(buffers)
-						break
-
-					// Lecture to subject
-					case GraphType.subject:
-						this.type = type
-						this.lecture = undefined
-
-						// TODO figure out how to animate this
-						this._setContent(this.graph.subjects, this.graph.subjectRelations)
-						this._updateBackground()
-						break
-
-					// Lecture to lecture
-					case GraphType.lecture:
-						this.lecture = lecture
-
-						// If lecture is undefined, do not animate
-						if (this.lecture === undefined) {
-							this._updateBackground()
-							this._clearContent()
-							return
-						}
-
-						// Gather data
-						var parents = this.lecture.parents()
-						var children = this.lecture.children()
-						var subjects = this.lecture.subjects.concat(parents, children) as Subject[]
-						var relations = this.lecture.relations()
-
-						// Show new lecture
-						buffers = this._bufferLayout(subjects)
-						this._moveSubjectsToLecture(parents, this.lecture.subjects as Subject[], children)
-						this._setContent(subjects, relations)
-						this._updateBackground()
-						this._restoreLayout(buffers)			
-				}
+				if (!this.lecture) break
+				this.setContent(this.lecture.subjects, this.lecture.relations)
+				this.moveContent(this.lectureTransform)
+				this.setBackground(GraphType.lecture)
+				break
 		}
 	}
 
-	_updateBackground() {
-		if (this.svg === undefined) return
+	private setInteractive(interactive: boolean) {
 
-		// D3 setup
-		const svg = d3.select(this.svg)
-		const background = svg.select('#background')
-		const content = svg.select('#content')
+		// Set pointer events
+		d3.select<SVGSVGElement, unknown>(this.svg)
+			.style('pointer-events', interactive ? 'all' : 'none')
+	}
 
-		// Clear background
-		background.selectAll('*')
-			.remove()
+	private setZoomAndPan(x: number, y: number, k: number, animate: boolean = false) {
 
-		// Lecture background
-		if (this.type === GraphType.lecture) {
-			const size = this.lecture ? Math.max(this.lecture.children().length, this.lecture.subjects.length, this.lecture.parents().length) : 0
-
-			// Past subjects
-			background.append('rect')
-				.attr('x', settings.STROKE_WIDTH / 2)
-				.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
-				.attr('width', settings.LECTURE_WIDTH * settings.GRID_UNIT)
-				.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
-				.attr('stroke-width', settings.STROKE_WIDTH)
-				.attr('fill', 'transparent')
-				.attr('stroke', 'black')
-
-			background.append('text')
-				.attr('x', (settings.STROKE_WIDTH + settings.LECTURE_WIDTH * settings.GRID_UNIT) / 2)
-				.attr('y', settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT / 2)
-				.attr('font-size', settings.LECTURE_FONT_SIZE)
-				.attr('text-anchor', 'middle')
-				.attr('dominant-baseline', 'middle')
-				.text('Past Topics')
-
-			// Present subjects
-			background.append('rect')
-				.attr('x', settings.STROKE_WIDTH / 2 + settings.LECTURE_WIDTH * settings.GRID_UNIT)
-				.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
-				.attr('width', settings.LECTURE_WIDTH * settings.GRID_UNIT)
-				.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
-				.attr('stroke-width', settings.STROKE_WIDTH)
-				.attr('fill', 'transparent')
-				.attr('stroke', 'black')
-
-			background.append('text')
-				.attr('x', (settings.STROKE_WIDTH + 3 * settings.LECTURE_WIDTH * settings.GRID_UNIT) / 2)
-				.attr('y', settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT / 2)
-				.attr('font-size', settings.LECTURE_FONT_SIZE)
-				.attr('text-anchor', 'middle')
-				.attr('dominant-baseline', 'middle')
-				.text('This Lecture')
-
-			// Future subjects
-			background.append('rect')
-				.attr('x', settings.STROKE_WIDTH / 2 + 2 * settings.LECTURE_WIDTH * settings.GRID_UNIT)
-				.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
-				.attr('width', settings.LECTURE_WIDTH * settings.GRID_UNIT)
-				.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
-				.attr('stroke-width', settings.STROKE_WIDTH)
-				.attr('fill', 'transparent')
-				.attr('stroke', 'black')
-
-			background.append('text')
-				.attr('x', (settings.STROKE_WIDTH + 5 * settings.LECTURE_WIDTH * settings.GRID_UNIT) / 2)
-				.attr('y', settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT / 2)
-				.attr('font-size', settings.LECTURE_FONT_SIZE)
-				.attr('text-anchor', 'middle')
-				.attr('dominant-baseline', 'middle')
-				.text('Future Topics')
-
-			// Remove zoom behaviour
-			svg.on('.zoom', null)
-
-		}
-
-		// Grid background
-		else {
-
-			// Grid
-			background.append('rect')
-				.attr('fill', 'url(#grid)')
-				.attr('width', '100%')
-				.attr('height', '100%')
-				.lower()
-
-			// Add zoom behaviour
-			if (!this.interactive) return
-
-			svg.call(
-				d3.zoom<SVGSVGElement, unknown>()
-					.scaleExtent([settings.GRID_MIN_ZOOM, settings.GRID_MAX_ZOOM])
-					.on('zoom', (event) => {
-
-						// Update content
-						content.attr('transform', event.transform)
-
-						// Update grid
-						svg.select('#grid')
-							.attr('x', event.transform.x)
-							.attr('y', event.transform.y)
-							.attr('width', settings.GRID_UNIT * event.transform.k)
-							.attr('height', settings.GRID_UNIT * event.transform.k)
-							.selectAll('line')
-								.attr('opacity', Math.min(1, event.transform.k))
-					})
+		// Call zoom with custom transform
+		d3.select<SVGSVGElement, unknown>(this.svg)
+			.transition()
+				.duration(animate ? settings.ANIMATION_DURATION : 0)
+				.ease(d3.easeSinInOut)
+			.call(
+				this.zoom.transform,
+				d3.zoomIdentity.translate(x, y).scale(k)
 			)
-		}
 	}
 
-	_setContent(fields: Field[], relations: Relation<Field>[]) {
-		if (this.svg === undefined) return
-
-		// D3 setup
-		const interactive = this.interactive && this.type !== GraphType.lecture
+	private setContent(fields: Field[], relations: Relation<Field>[], fade: boolean = false, callback: () => void = () => {}) {
 		const content = d3.select<SVGSVGElement, unknown>(this.svg)
 			.select('#content')
 
-		// Clear content
-		this._clearContent()
-
-		// Create relations
+		// Update Relations
+		this.animating = fade
 		content.selectAll<SVGLineElement, Relation<Field>>('.relation')
-			.data(relations)
-			.enter()
-			.append('line')
-				.each(function() {
-					RelationSVG.create(this)
-				})
+			.data(relations, relation => relation.id)
+			.join(
+				function(enter) {
+					return enter
+						.append('line')
+						.call(RelationSVG.create)
+						.style('opacity', 0)
+				},
 
-		// Create fields
+				function(update) {
+					return update
+				},
+
+				function(exit) {
+					return exit
+						.transition()
+							.duration(fade ? settings.FADE_DURATION : 0)
+							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
+						.style('opacity', 0)
+				}
+			)
+			.transition()
+				.duration(fade ? settings.FADE_DURATION : 0)
+				.ease(d3.easeSinInOut)
+			.style('opacity', 1)
+
+		// Update Fields
 		content.selectAll<SVGGElement, Field>('.field')
-			.data(fields)
-			.enter()
-			.append('g')
-				.each(function() {
-					FieldSVG.create(this, interactive)
-				})
+			.data(fields, field => field.id)
+			.join(
+				function(enter) {
+					return enter
+						.append('g')
+						.call(FieldSVG.create)
+						.style('opacity', 0)
+				},
+
+				function(update) {
+					return update
+				},
+
+				function(exit) {
+					return exit
+						.transition()
+							.duration(fade ? settings.FADE_DURATION : 0)
+							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
+						.style('opacity', 0)
+				}
+			)
+			.transition()
+				.duration(fade ? settings.FADE_DURATION : 0)
+			.style('opacity', 1)
+
+		this.fields = fields
+		if (!fade) return
+
+		// Post-transition
+		setTimeout(() => {
+			this.animating = false
+			callback()
+		}, settings.FADE_DURATION)
 	}
 
-	_clearContent() {
-		if (this.svg === undefined) return
+	private moveContent(transform: (value: Field, graphSVG: GraphSVG) => void, animate: boolean = false, callback: () => void = () => {}) {
+
+		// Buffer field positions
+		const buffers = this.fields.map(field => ({ field, x: field.x, y: field.y }))
+
+		// Set field positions
+		for (let i = 0; i < this.fields.length; i++) {
+			const field = this.fields[i]
+			transform(field, this)
+		}
+
+		// Update fields
+		this.animating = animate
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.select('#content')
-				.selectAll('*')
-					.remove()
-	}
+				.selectAll<SVGGElement, Field>('.field')
+					.each(function() { FieldSVG.update(d3.select(this), animate) })
 
-	_bufferLayout(fields: Field[]) {
-		return fields.map(field => ({ field: field, x: field.x, y: field.y }))
-	}
-
-	_restoreLayout(buffers: { field: Field, x: number, y: number }[]) {
+		// Restore field positions
 		for (const buffer of buffers) {
 			buffer.field.x = buffer.x
 			buffer.field.y = buffer.y
 		}
+
+		if (!animate) return
+
+		// Post-transition
+		setTimeout(() => {
+			this.animating = false
+			callback()
+		}, settings.ANIMATION_DURATION)
 	}
 
-	_moveSubjectsToDomains(subjects: Subject[]) {
-		for (const subject of subjects) {
-			subject.x = subject.domain!.x
-			subject.y = subject.domain!.y
-		}
+	private restoreContent(animate: boolean = false, callback: () => void = () => {}) {
+
+		// As the field positions are always maintained, we can just update them
+		this.moveContent(() => {}, animate, callback)
 	}
 
-	_moveSubjectsToLecture(parents: Subject[], subjects: Subject[], children: Subject[]) {
-		for (let index = 0; index < parents.length; index++) {
-			const subject = parents[index];
-			subject.x = settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING;
-			subject.y = settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT;
-		}
-	
-		for (let index = 0; index < subjects.length; index++) {
-			const subject = subjects[index];
-			subject!.x = settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_WIDTH + settings.LECTURE_PADDING;
-			subject!.y = settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT;
-		}
-	
-		for (let index = 0; index < children.length; index++) {
-			const subject = children[index];
-			subject.x = settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_WIDTH + settings.LECTURE_PADDING;
-			subject.y = settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT;
-		}
-	}
+	private clearContent(fade: boolean = false, callback: () => void = () => {}) {
 
-	_animate(callback: () => void) {
-		if (this.svg === undefined) return
-		d3.select<SVGSVGElement, unknown>(this.svg)
-			.select('#content')
-				.selectAll<SVGGElement, Field>('.field')
-					.each(function() {
-						FieldSVG.update(this, true, callback)
-					})
-	}
-
-	_interrupt() {
-		if (this.svg === undefined) return
-		d3.select<SVGSVGElement, unknown>(this.svg)
+		// Clear content
+		this.animating = fade
+		d3.select(this.svg)
 			.select('#content')
 				.selectAll('*')
-					.interrupt()
-		
-		this.animating_from = undefined
+					.transition()
+						.duration(fade ? settings.FADE_DURATION : 0)
+						.ease(d3.easeSinInOut)
+						.on('end', function () { d3.select(this).remove()})
+					.style('opacity', 0)
+
+		this.fields = []
+		if (!fade) return
+
+		// Post-transition
+		setTimeout(() => {
+			this.animating = false
+			callback()
+		}, settings.FADE_DURATION)
+	}
+
+	private setBackground(type: GraphType) {
+		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
+		const background = svg.select<SVGGElement>('#background')
+
+		// Remove old background
+		background.selectAll('*')
+			.remove()
+
+		// Add new background
+		switch (type) {
+			case GraphType.domains:
+			case GraphType.subjects:
+
+				// Set interactive to default
+				this.setInteractive(this.interactive)
+
+				// Set svg size
+				svg
+					.attr('width', '100%')
+					.attr('height', '100%')
+
+				// Grid
+				background
+					.append('rect')
+						.attr('fill', 'url(#grid)')
+						.attr('width', '100%')
+						.attr('height', '100%')
+
+				break
+
+			case GraphType.lecture:
+				const size = this.lecture?.size || 0
+
+				// Set interactive to false
+				this.setInteractive(false)
+
+				// Set svg size
+				svg
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT * 3 + settings.STROKE_WIDTH)
+					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING + settings.LECTURE_HEADER_HEIGHT) * settings.GRID_UNIT + settings.STROKE_WIDTH)
+
+				// Past subject colunm
+				background.append('rect')
+					.attr('x', settings.STROKE_WIDTH / 2)
+					.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
+					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
+					.attr('stroke-width', settings.STROKE_WIDTH)
+					.attr('fill', 'transparent')
+					.attr('stroke', 'black')
+
+				background.append('text')
+					.attr('x', (settings.STROKE_WIDTH + settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
+					.attr('font-size', settings.LECTURE_FONT_SIZE)
+					.attr('text-anchor', 'middle')
+					.attr('dominant-baseline', 'hanging')
+					.text('Past Topics')
+
+				// Present subject column
+				background.append('rect')
+					.attr('x', settings.STROKE_WIDTH / 2 + settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
+					.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
+					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
+					.attr('stroke-width', settings.STROKE_WIDTH)
+					.attr('fill', 'transparent')
+					.attr('stroke', 'black')
+
+				background.append('text')
+					.attr('x', (settings.STROKE_WIDTH + 3 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
+					.attr('font-size', settings.LECTURE_FONT_SIZE)
+					.attr('text-anchor', 'middle')
+					.attr('dominant-baseline', 'hanging')
+					.text('This Lecture')
+
+				// Future subject column
+				background.append('rect')
+					.attr('x', settings.STROKE_WIDTH / 2 + 2 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
+					.attr('y', settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
+					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT)
+					.attr('height', (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT)
+					.attr('stroke-width', settings.STROKE_WIDTH)
+					.attr('fill', 'transparent')
+					.attr('stroke', 'black')
+
+				background.append('text')
+					.attr('x', (settings.STROKE_WIDTH + 5 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
+					.attr('font-size', settings.LECTURE_FONT_SIZE)
+					.attr('text-anchor', 'middle')
+					.attr('dominant-baseline', 'hanging')
+					.text('Future Topics')
+		}
+	}
+
+	private lectureTransform(subject: Subject, graphSVG: GraphSVG) {
+
+		// Get bounding box and size
+		const bbx = d3.select<SVGGElement, unknown>('#background').node()!.getBBox()
+		const size = graphSVG.lecture?.size || 0
+		const dx = (bbx.width / settings.GRID_UNIT - 3 * settings.LECTURE_COLUMN_WIDTH) / 2
+		const dy = (bbx.height / settings.GRID_UNIT - size * settings.FIELD_HEIGHT - (size + 1) * settings.LECTURE_PADDING - settings.LECTURE_HEADER_HEIGHT) / 2
+
+		// Set past subject positions to the right column
+		const pastSubjects = graphSVG.lecture?.pastSubjects
+		if (pastSubjects?.includes(subject)) {
+			const index = pastSubjects.indexOf(subject)
+			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
+			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			return
+		}
+
+		// Set present subject positions to the middle column
+		const presentSubjects = graphSVG.lecture?.presentSubjects
+		if (presentSubjects?.includes(subject)) {
+			const index = presentSubjects.indexOf(subject)
+			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			return
+		}
+
+		// Set future subject positions to the left column
+		const futureSubjects = graphSVG.lecture?.futureSubjects
+		if (futureSubjects?.includes(subject)) {
+			const index = futureSubjects.indexOf(subject)
+			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			return
+		}
+	}
+
+	private domainTransform(subject: Subject) {
+
+		// Set subject positions to their respective domains
+		subject.x = subject.domain!.x
+		subject.y = subject.domain!.y
 	}
 }
-

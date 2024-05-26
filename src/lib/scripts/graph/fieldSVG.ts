@@ -8,34 +8,31 @@ import { RelationSVG } from './relationSVG'
 import * as settings from './settings'
 import { styles } from './settings'
 
-
 // Exports
 export { FieldSVG }
 
 class FieldSVG {
-	static create(element: SVGGElement, interactive: boolean = true) {
-		const group = d3.select<SVGGElement, Field>(element)
-		const field = group.datum()
+	static create(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>) {
 
 		// Field attrs
-		group
-			.attr('id', field.id)
+		selection
+			.attr('id', field => field.id)
 			.attr('class', 'field')
-			.attr('transform', `translate(
+			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},
 				${field.y * settings.GRID_UNIT}
 			)`)
 
 		// Field outline
-		group.append('path')
+		selection.append('path')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', styles[field.style()!].stroke)
-			.attr('fill', styles[field.style()!].fill)
-			.attr('d', styles[field.style()!].path)
+			.attr('stroke', field => styles[field.style!].stroke)
+			.attr('fill', field => styles[field.style!].fill)
+			.attr('d', field => styles[field.style!].path)
 
 		// Field text
-		group.append('text')
-			.text(field.name!)
+		selection.append('text')
+			.text(field => field.name!)
 			.attr('font-size', settings.FIELD_FONT_SIZE)
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'middle')
@@ -45,56 +42,41 @@ class FieldSVG {
 			)`)
 
 		// Drag behaviour
-		FieldSVG.setInteractive(element, interactive)
+		selection.call(
+			d3.drag<SVGGElement, Field>()
+				.on('start', function() {
+					d3.select(this)
+						.raise()
+				})
+				.on('drag', function(event, field) {
+					field.x = field.x + event.dx / settings.GRID_UNIT
+					field.y = field.y + event.dy / settings.GRID_UNIT
+					FieldSVG.update(d3.select(this))
+				})
+				.on('end', function(_ ,field) {
+					field.x = Math.round(field.x)
+					field.y = Math.round(field.y)
+					FieldSVG.update(d3.select(this))
+				})
+		)
 	}
 
-	static update(element: SVGGElement, animated: boolean = false, callback: () => void = () => {}) {
-		const group = d3.select<SVGGElement, Field>(element)
+	static update(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, animated: boolean = false) {
 
 		// Update field position
-		group
+		selection
 			.transition()
-				.duration(animated ? settings.TRANSITION_DURATION : 0)
+				.duration(animated ? settings.ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
-				.on('end', callback)
 			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},
 				${field.y * settings.GRID_UNIT}
 			)`)
 
 		// Update relations
-		d3.select<SVGGElement, unknown>(group.node()!.parentNode as SVGGElement)
+		d3.select<SVGGElement, unknown>(selection.node()?.parentNode as SVGGElement)
 			.selectAll<SVGLineElement, Relation<Field>>('line')
-			.filter(relation => relation.parent === group.datum() || relation.child === group.datum())
-			.each(function() { RelationSVG.update(this, animated) })
-
-	}
-
-	static setInteractive(element: SVGGElement, interactive: boolean) {
-		const group = d3.select<SVGGElement, Field>(element)
-
-		if (interactive) {
-			group.call(
-				d3.drag<SVGGElement, Field>()
-					.on('start', function() {
-						d3.select(this)
-							.raise()
-					})
-					.on('drag', function(event) {
-						const field = group.datum()
-						field.x = field.x + event.dx / settings.GRID_UNIT
-						field.y = field.y + event.dy / settings.GRID_UNIT
-						FieldSVG.update(element)
-					})
-					.on('end', function() {
-						const field = group.datum()
-						field.x = Math.round(field.x)
-						field.y = Math.round(field.y)
-						FieldSVG.update(element)
-					})
-			)
-		} else {
-			group.on('.drag', null)
-		}
+			.filter(relation => relation.parent === selection.datum() || relation.child === selection.datum())
+			.each(function() { RelationSVG.update(d3.select(this), animated) })
 	}
 }

@@ -14,76 +14,104 @@ class Course {
 		// TODO load from database
 
 		this.code = code
-		this.name = 'Course Name'
+		this.name = 'Calculus'
 	}
 }
-
-// Entities
 
 class Graph {
 	id: number
 	name: string
-	domains: Domain[] = []
-	subjects: Subject[] = []
-	domainRelations: DomainRelation[] = []
-	subjectRelations: SubjectRelation[] = []
-	lectures: Lecture[] = []
+	domains: Domain[]
+	subjects: Subject[]
+	domainRelations: DomainRelation[]
+	subjectRelations: SubjectRelation[]
+	lectures: Lecture[]
 
-	constructor(id: number) {
-		this.id = id
+	constructor(data: object) {
+		this.id = 1
+		this.name = 'Graph 1'
+		this.domains = []
+		this.subjects = []
+		this.domainRelations = []
+		this.subjectRelations = []
+		this.lectures = []
 
-		// TODO load from database, below is fake data
+		// TODO load from data
 
-		this.name = 'Graph Name'
+		this.domains.push(
+			new Domain(this, 1, 0, 0, 'Domain 1', 'prosperous-red'),
+			new Domain(this, 2, 0, 0, 'Domain 2', 'energizing-orange'),
+			new Domain(this, 3, 0, 0, 'Domain 3', 'sunny-yellow')
+		)
 
-		new Domain(this, 1, 0, 0, 'Domain 1', 'prosperous-red')
-		new Domain(this, 2, 0, 0, 'Domain 2', 'energizing-orange')
-		new Domain(this, 3, 0, 0, 'Domain 3', 'sunny-yellow')
-		new Subject(this, 1, 0, 0, 'Subject 1', this.domains[0])
-		new Subject(this, 2, 0, 0, 'Subject 2', this.domains[0])
-		new Subject(this, 3, 0, 0, 'Subject 3', this.domains[1])
-		new Subject(this, 4, 0, 0, 'Subject 4', this.domains[1])
-		new Subject(this, 5, 0, 0, 'Subject 5', this.domains[2])
-		new Subject(this, 6, 0, 0, 'Subject 6', this.domains[2])
-		new DomainRelation(this, 1, this.domains[0], this.domains[1])
-		new DomainRelation(this, 2, this.domains[1], this.domains[2])
-		new DomainRelation(this, 3, this.domains[0], this.domains[2])
-		new SubjectRelation(this, 1, this.subjects[0], this.subjects[1])
-		new SubjectRelation(this, 2, this.subjects[2], this.subjects[3])
-		new SubjectRelation(this, 3, this.subjects[4], this.subjects[5])
-		new SubjectRelation(this, 4, this.subjects[0], this.subjects[2])
-		new SubjectRelation(this, 5, this.subjects[1], this.subjects[3])
-		new SubjectRelation(this, 6, this.subjects[2], this.subjects[4])
-		new Lecture(this, 1, 'Lecture 1', [this.subjects[2], this.subjects[3], this.subjects[4]])
+		this.subjects.push(
+			new Subject(this, 4, 0, 0, 'Subject 1', this.domains[0]),
+			new Subject(this, 5, 0, 0, 'Subject 2', this.domains[0]),
+			new Subject(this, 6, 0, 0, 'Subject 3', this.domains[1]),
+			new Subject(this, 7, 0, 0, 'Subject 4', this.domains[1]),
+			new Subject(this, 8, 0, 0, 'Subject 5', this.domains[2]),
+			new Subject(this, 9, 0, 0, 'Subject 6', this.domains[2])
+		)
+
+		this.domainRelations.push(
+			new DomainRelation(this, 1, this.domains[0], this.domains[1]),
+			new DomainRelation(this, 2, this.domains[1], this.domains[2]),
+			new DomainRelation(this, 3, this.domains[0], this.domains[2])
+		)
+
+		this.subjectRelations.push(
+			new SubjectRelation(this, 4, this.subjects[0], this.subjects[1]),
+			new SubjectRelation(this, 5, this.subjects[2], this.subjects[3]),
+			new SubjectRelation(this, 6, this.subjects[4], this.subjects[5]),
+			new SubjectRelation(this, 7, this.subjects[0], this.subjects[2]),
+			new SubjectRelation(this, 8, this.subjects[1], this.subjects[3]),
+			new SubjectRelation(this, 9, this.subjects[2], this.subjects[4])
+		)
+
+		this.lectures.push(
+			new Lecture(this, 'Lecture 1', [this.subjects[3], this.subjects[4]])
+		)
+	}
+
+	serialize(): object {
+		throw new Error('Not implemented')
+	}
+
+	validate(): boolean {
+
+		// Check for missing fields
+		for (const domain of this.domains)
+			if (!domain.name || !domain.style) return false
+		for (const subject of this.subjects)
+			if (!subject.name || !subject.domain) return false
+		for (const relation of this.domainRelations)
+			if (!relation.parent || !relation.child) return false
+		for (const relation of this.subjectRelations)
+			if (!relation.parent || !relation.child) return false
+
+		return true
 	}
 
 	save() {
-		// TODO implement
+		throw new Error('Not implemented')
 	}
 
 	delete() {
-		// TODO implement
+		throw new Error('Not implemented')
 	}
 
-	nextDomainID(): number {
-		return this.domains.length > 0 ? Math.max(...this.domains.map(domain => domain.id)) + 1 : 1
-	}
-
-	nextSubjectID(): number {
-		return this.subjects.length > 0 ? Math.max(...this.subjects.map(subject => subject.id)) + 1 : 1
+	nextFieldID(): number {
+		const ids = this.domains.concat(this.subjects).map(field => field.id)
+		return Math.max(0, ...ids) + 1
 	}
 
 	nextRelationID(): number {
-		const relations = this.domainRelations.concat(this.subjectRelations)
-		return relations.length > 0 ? Math.max(...relations.map(relation => relation.id)) + 1 : 1
-	}
-
-	nextLectureID(): number {
-		return this.lectures.length > 0 ? Math.max(...this.lectures.map(lecture => lecture.id)) + 1 : 1
+		const ids = this.domainRelations.concat(this.subjectRelations).map(relation => relation.id)
+		return Math.max(0, ...ids) + 1
 	}
 
 	nextDomainStyle(): string | undefined {
-		const usedStyles = this.domains.map(domain => domain.style())
+		const usedStyles = this.domains.map(domain => domain.style)
 		return Object.keys(styles).find(style => !usedStyles.includes(style))
 	}
 }
@@ -103,65 +131,66 @@ abstract class Field {
 		this.name = name
 	}
 
-	parents(): Field[] {
-		const relations: Relation<Field>[] = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
+	get parents(): Field[] {
+		const relations = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
 		const parents: Field[] = [this]
 
 		for (const relation of relations) {
 			if (relation.child === this && relation.parent) {
-				parents.push(...relation.parent.parents())
+				parents.push(...relation.parent.parents)
 			}
 		}
 
 		return parents
 	}
 
-	children(): Field[] {
-		const relations: Relation<Field>[] = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
+	get children(): Field[] {
+		const relations = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
 		const children: Field[] = [this]
 
 		for (const relation of relations) {
 			if (relation.parent === this && relation.child) {
-				children.push(...relation.child.children())
+				children.push(...relation.child.children)
 			}
 		}
 
 		return children
 	}
 
-	color(): string {
-		const style = this.style()
-		return style ? styles[style].stroke : 'transparent'
+	get color(): string {
+		return this.style ? styles[this.style].stroke : 'transparent'
 	}
 
-	abstract style(): string | undefined
+	abstract get style(): string | undefined
 	abstract delete(): void
 }
 
 class Domain extends Field {
-	_style?: string
+	private _style?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string, push_to_graph: boolean = true) {
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string) {
 		super(graph, id, x, y, name)
-
 		this._style = style
-		if (push_to_graph) {
-			this.graph.domains.push(this)
-		}
 	}
 
-	static create(graph: Graph): void {
-		new Domain(
+	get style(): string | undefined {
+		return this._style
+	}
+
+	set style(style: string | undefined) {
+		this._style = style
+	}
+
+	static create(graph: Graph) {
+		let domain = new Domain(
 			graph,
-			graph.nextDomainID(),
+			graph.nextFieldID(),
 			0, 0, // TODO Calculate position to not overlap
 			undefined,
 			graph.nextDomainStyle()
 		)
-	}
 
-	style(): string | undefined {
-		return this._style
+		graph.domains.push(domain)
 	}
 
 	delete() {
@@ -185,25 +214,23 @@ class Domain extends Field {
 class Subject extends Field {
 	domain?: Domain
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain, push_to_graph: boolean = true) {
+	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain) {
 		super(graph, id, x, y, name)
-
 		this.domain = domain
-		if (push_to_graph) {
-			this.graph.subjects.push(this)
-		}
 	}
 
-	static create(graph: Graph): void {
-		new Subject(
+	get style(): string | undefined {
+		return this.domain?.style
+	}
+
+	static create(graph: Graph) {
+		let subject = new Subject(
 			graph,
-			graph.nextSubjectID(),
+			graph.nextFieldID(),
 			0, 0 // TODO Calculate position to not overlap
 		)
-	}
 
-	style(): string | undefined {
-		return this.domain?.style()
+		graph.subjects.push(subject)
 	}
 
 	delete() {
@@ -217,7 +244,7 @@ class Subject extends Field {
 	}
 }
 
-class Relation<T extends Field> {
+abstract class Relation<T extends Field> {
 	graph: Graph
 	id: number
 	parent?: T
@@ -230,210 +257,162 @@ class Relation<T extends Field> {
 		this.child = child
 	}
 
-	parentColor(): string {
-		return this.parent ? this.parent.color() : 'transparent'
+	get parentColor(): string {
+		return this.parent ? this.parent.color : 'transparent'
 	}
 
-	childColor(): string {
-		return this.child ? this.child.color() : 'transparent'
-	}
-}
-
-class DomainRelation extends Relation<Domain> {
-	constructor(graph: Graph, id: number, parent?: Domain, child?: Domain, push_to_graph: boolean = true) {
-		super(graph, id, parent, child)
-
-		if (push_to_graph) {
-			graph.domainRelations.push(this)
-		}
+	get childColor(): string {
+		return this.child ? this.child.color : 'transparent'
 	}
 
-	static create(graph: Graph): void {
-		new DomainRelation(graph, graph.nextRelationID())
-	}
+	get parentOptions(): { name: string, value: T }[] {
+		let fields = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+		let relations = this instanceof DomainRelation ? this.graph.domainRelations : this.graph.subjectRelations
 
-	parentOptions(): { name: string, value: Domain }[] {
-
-		// Domain must have a name
-		let options = this.graph.domains.filter(domain => domain.name)
+		// Field must have a name
+		let options = fields.filter(field => field.name)
 
 		// Prevent circular references
 		if (this.child) {
-			const children = this.child.children()
-			options = options.filter(domain => !children.includes(domain))
+			const children = this.child.children
+			options = options.filter(field => !children.includes(field))
 
 			// Prevent duplicate relations
 			if (!this.parent) {
-				options = options.filter(domain =>
-					!this.graph.domainRelations.find(relation =>
-						relation.parent === domain && relation.child === this.child
+				options = options.filter(field =>
+					!relations.find(relation =>
+						relation.parent === field && relation.child === this.child
 					)
 				)
 			}
 		}
 
-		return options.map(domain => ({ name: domain.name!, value: domain }))
+		return options.map(field => ({ name: field.name!, value: field as T }))
 	}
 
-	childOptions(): { name: string, value: Domain }[] {
+	get childOptions(): { name: string, value: T }[] {
+		let fields = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+		let relations = this instanceof DomainRelation ? this.graph.domainRelations : this.graph.subjectRelations
 
-		// Domain must have a name
-		let options = this.graph.domains.filter(domain => domain.name)
+		// Field must have a name
+		let options = fields.filter(field => field.name)
 
 		// Prevent circular references
 		if (this.parent) {
-			const parents = this.parent.parents()
-			options = options.filter(domain => !parents.includes(domain))
+			const parents = this.parent.parents
+			options = options.filter(field => !parents.includes(field))
 
 			// Prevent duplicate relations
 			if (!this.child) {
-				options = options.filter(domain =>
-					!this.graph.domainRelations.find(relation =>
-						relation.parent === this.parent && relation.child === domain
+				options = options.filter(field =>
+					!relations.find(relation =>
+						relation.parent === this.parent && relation.child === field
 					)
 				)
 			}
 		}
 
-		return options.map(domain => ({ name: domain.name!, value: domain }))
+		return options.map(field => ({ name: field.name!, value: field as T }))
+
 	}
 
 	delete() {
-		this.graph.domainRelations = this.graph.domainRelations.filter(relation => relation !== this)
+		if (this instanceof DomainRelation) {
+			this.graph.domainRelations = this.graph.domainRelations.filter(relation => relation !== this)
+		} else if (this instanceof SubjectRelation) {
+			this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
+		}
+	}
+
+}
+
+class DomainRelation extends Relation<Domain> {
+	static create(graph: Graph) {
+		let relation = new DomainRelation(
+			graph,
+			graph.nextRelationID()
+		)
+
+		graph.domainRelations.push(relation)
 	}
 }
 
 class SubjectRelation extends Relation<Subject> {
-	constructor(graph: Graph, id: number, parent?: Subject, child?: Subject, push_to_graph: boolean = true) {
-		super(graph, id, parent, child)
+	static create(graph: Graph) {
+		let relation = new SubjectRelation(
+			graph,
+			graph.nextRelationID()
+		)
 
-		if (push_to_graph) {
-			graph.subjectRelations.push(this)
-		}
-	}
-
-	static create(graph: Graph): void {
-		new SubjectRelation(graph, graph.nextDomainID())
-	}
-
-	parentOptions(): { name: string, value: Subject }[] {
-
-		// Domain must have a name
-		let options = this.graph.subjects.filter(subject => subject.name)
-
-		// Prevent circular references
-		if (this.child) {
-			const children = this.child.children()
-			options = options.filter(subject => !children.includes(subject))
-
-			// Prevent duplicate relations
-			if (!this.parent) {
-				options = options.filter(subject =>
-					!this.graph.subjectRelations.find(relation =>
-						relation.parent === subject && relation.child === this.child
-					)
-				)
-			}
-		}
-
-		return options.map(subject => ({ name: subject.name!, value: subject }))
-	}
-
-	childOptions(): { name: string, value: Subject }[] {
-
-		// Domain must have a name
-		let options = this.graph.subjects.filter(subject => subject.name)
-
-		// Prevent circular references
-		if (this.parent) {
-			const parents = this.parent.parents()
-			options = options.filter(subject => !parents.includes(subject))
-
-			// Prevent duplicate relations
-			if (!this.child) {
-				options = options.filter(subject =>
-					!this.graph.subjectRelations.find(relation =>
-						relation.parent === this.parent && relation.child === subject
-					)
-				)
-			}
-		}
-
-		return options.map(subject => ({ name: subject.name!, value: subject }))
-	}
-
-	delete() {
-		this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
+		graph.subjectRelations.push(relation)
 	}
 }
 
 class Lecture {
 	graph: Graph
-	id: number
 	name?: string
-	subjects: (Subject | undefined)[] = []
+	presentSubjects: (Subject | undefined)[] = []
 
-	constructor(graph: Graph, id: number, name?: string, subjects: Subject[] = []) {
+	constructor(graph: Graph, name?: string, presentSubjects: Subject[] = []) {
 		this.graph = graph
-		this.id = id
 		this.name = name
-		this.subjects = subjects
-
-		this.graph.lectures.push(this)
+		this.presentSubjects = presentSubjects
 	}
 
 	static create(graph: Graph): void {
-		new Lecture(graph, graph.nextLectureID())
+		const lecture = new Lecture(graph)
+		graph.lectures.push(lecture)
 	}
 
 	delete() {
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
 	}
 
-	options(chosen?: Subject): { name: string, value: Subject }[] {
-		return this.graph.subjects
-			.filter(subject => subject.name)
-			.filter(subject => subject === chosen || !this.subjects.includes(subject))
-			.map(subject => ({ name: subject.name!, value: subject }))
-	}
-
-	parents(): Subject[] {
-		const parents: Subject[] = []
-		for (const subject of this.subjects) {
-			for (const relation of this.graph.subjectRelations) {
-				if (relation.child === subject &&
-					relation.parent &&
-					!parents.includes(relation.parent) &&
-					!this.subjects.includes(relation.parent)
-				) {
-					parents.push(relation.parent)
-				}
+	get pastSubjects(): Subject[] {
+		const pastSubjects: Subject[] = []
+		for (const relation of this.relations) {
+			if (!(this.presentSubjects.includes(relation.parent) || pastSubjects.includes(relation.parent!))) {
+				pastSubjects.push(relation.parent!)
 			}
 		}
 
-		return parents
+		return pastSubjects
 	}
 
-	children(): Subject[] {
-		const children: Subject[] = []
-		for (const subject of this.subjects) {
-			for (const relation of this.graph.subjectRelations) {
-				if (relation.parent === subject &&
-					relation.child &&
-					!children.includes(relation.child) &&
-					!this.subjects.includes(relation.child)
-				) {
-					children.push(relation.child)
-				}
+	get futureSubjects(): Subject[] {
+		const futureSubjects: Subject[] = []
+		for (const relation of this.relations) {
+			if (!(this.presentSubjects.includes(relation.child) || futureSubjects.includes(relation.child!))) {
+				futureSubjects.push(relation.child!)
 			}
 		}
 
-		return children
+		return futureSubjects
 	}
 
-	relations(): SubjectRelation[] {
+	get subjects(): Subject[] {
+		return this.presentSubjects
+			.filter(subject => subject)
+			.concat(
+				this.pastSubjects,
+				this.futureSubjects
+			) as Subject[]
+	}
+
+	get relations(): SubjectRelation[] {
 		return this.graph.subjectRelations.filter(relation =>
-			this.subjects.includes(relation.parent) || this.subjects.includes(relation.child)
+			relation.parent && relation.child && (
+				this.presentSubjects.includes(relation.parent) ||
+				this.presentSubjects.includes(relation.child)
+			)
+		)
+	}
+
+	get size(): number {
+		return Math.max(
+			this.pastSubjects.length,
+			this.presentSubjects.length,
+			this.futureSubjects.length
 		)
 	}
 }
