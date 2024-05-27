@@ -39,18 +39,18 @@ class Graph {
 		// TODO load from data
 
 		this.domains.push(
-			new Domain(this, 1, 0, 0, 'Domain 1', 'prosperous-red'),
-			new Domain(this, 2, 0, 0, 'Domain 2', 'energizing-orange'),
-			new Domain(this, 3, 0, 0, 'Domain 3', 'sunny-yellow')
+			new Domain(this, 1, 0, 0, [], [], 'Domain 1', 'prosperous-red'),
+			new Domain(this, 2, 0, 0, [], [], 'Domain 2', 'energizing-orange'),
+			new Domain(this, 3, 0, 0, [], [], 'Domain 3', 'sunny-yellow')
 		)
 
 		this.subjects.push(
-			new Subject(this, 4, 0, 0, 'Subject 1', this.domains[0]),
-			new Subject(this, 5, 0, 0, 'Subject 2', this.domains[0]),
-			new Subject(this, 6, 0, 0, 'Subject 3', this.domains[1]),
-			new Subject(this, 7, 0, 0, 'Subject 4', this.domains[1]),
-			new Subject(this, 8, 0, 0, 'Subject 5', this.domains[2]),
-			new Subject(this, 9, 0, 0, 'Subject 6', this.domains[2])
+			new Subject(this, 4, 0, 0, [], [], 'Subject 1', this.domains[0]),
+			new Subject(this, 5, 0, 0, [], [], 'Subject 2', this.domains[0]),
+			new Subject(this, 6, 0, 0, [], [], 'Subject 3', this.domains[1]),
+			new Subject(this, 7, 0, 0, [], [], 'Subject 4', this.domains[1]),
+			new Subject(this, 8, 0, 0, [], [], 'Subject 5', this.domains[2]),
+			new Subject(this, 9, 0, 0, [], [], 'Subject 6', this.domains[2])
 		)
 
 		this.domainRelations.push(
@@ -121,40 +121,40 @@ abstract class Field {
 	id: number
 	x: number
 	y: number
+	parents: Field[]
+	children: Field[]
 	name?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string) {
+	constructor(graph: Graph, id: number, x: number, y: number, parents: Field[], children: Field[], name?: string,) {
 		this.graph = graph
 		this.id = id
 		this.x = x
 		this.y = y
+		this.parents = parents
+		this.children = children
 		this.name = name
 	}
 
-	get parents(): Field[] {
-		const relations = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
-		const parents: Field[] = [this]
-
-		for (const relation of relations) {
-			if (relation.child === this && relation.parent) {
-				parents.push(...relation.parent.parents)
-			}
+	get ancestors(): Field[] {
+		let ancestors = this.parents
+		for (const parent of this.parents) {
+			ancestors = ancestors.concat(
+				parent.ancestors.filter(ancestor => !ancestors.includes(ancestor))
+			)
 		}
 
-		return parents
+		return ancestors
 	}
 
-	get children(): Field[] {
-		const relations = this instanceof Domain ? this.graph.domainRelations : this.graph.subjectRelations
-		const children: Field[] = [this]
-
-		for (const relation of relations) {
-			if (relation.parent === this && relation.child) {
-				children.push(...relation.child.children)
-			}
+	get descendants(): Field[] {
+		let descendants = this.children
+		for (const child of this.children) {
+			descendants = descendants.concat(
+				child.descendants.filter(descendant => !descendants.includes(descendant))
+			)
 		}
 
-		return children
+		return descendants
 	}
 
 	get color(): string {
@@ -168,8 +168,8 @@ abstract class Field {
 class Domain extends Field {
 	private _style?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, style?: string) {
-		super(graph, id, x, y, name)
+	constructor(graph: Graph, id: number, x: number, y: number, parents: Domain[], children: Domain[], name?: string, style?: string) {
+		super(graph, id, x, y, parents, children, name)
 		this._style = style
 	}
 
@@ -185,7 +185,8 @@ class Domain extends Field {
 		let domain = new Domain(
 			graph,
 			graph.nextFieldID(),
-			0, 0, // TODO Calculate position to not overlap
+			0, 0, // TODO Calculate position to not overlap,
+			[], [],
 			undefined,
 			graph.nextDomainStyle()
 		)
@@ -204,9 +205,9 @@ class Domain extends Field {
 		}
 
 		// Unset relations with this domain
-		for (const relation of this.graph.domainRelations) {
-			if (relation.parent === this) relation.parent = undefined
-			if (relation.child === this) relation.child = undefined
+		for (const domain of this.graph.domains) {
+			domain.parents = domain.parents.filter(parent => parent !== this)
+			domain.children = domain.children.filter(child => child !== this)
 		}
 	}
 }
@@ -214,8 +215,8 @@ class Domain extends Field {
 class Subject extends Field {
 	domain?: Domain
 
-	constructor(graph: Graph, id: number, x: number, y: number, name?: string, domain?: Domain) {
-		super(graph, id, x, y, name)
+	constructor(graph: Graph, id: number, x: number, y: number, parents: Subject[], children: Subject[], name?: string, domain?: Domain) {
+		super(graph, id, x, y, parents, children, name)
 		this.domain = domain
 	}
 
@@ -227,7 +228,8 @@ class Subject extends Field {
 		let subject = new Subject(
 			graph,
 			graph.nextFieldID(),
-			0, 0 // TODO Calculate position to not overlap
+			0, 0, // TODO Calculate position to not overlap
+			[], []
 		)
 
 		graph.subjects.push(subject)
@@ -237,9 +239,9 @@ class Subject extends Field {
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
 
 		// Unset relations with this subject
-		for (const relation of this.graph.subjectRelations) {
-			if (relation.parent === this) relation.parent = undefined
-			if (relation.child === this) relation.child = undefined
+		for (const subject of this.graph.subjects) {
+			subject.parents = subject.parents.filter(parent => parent !== this)
+			subject.children = subject.children.filter(child => child !== this)
 		}
 	}
 }
@@ -247,8 +249,8 @@ class Subject extends Field {
 abstract class Relation<T extends Field> {
 	graph: Graph
 	id: number
-	parent?: T
-	child?: T
+	private _parent?: T
+	private _child?: T
 
 	constructor(graph: Graph, id: number, parent?: T, child?: T) {
 		this.graph = graph
@@ -257,63 +259,146 @@ abstract class Relation<T extends Field> {
 		this.child = child
 	}
 
-	get parentColor(): string {
-		return this.parent ? this.parent.color : 'transparent'
+	get parent(): T | undefined {
+		return this._parent
 	}
 
-	get childColor(): string {
-		return this.child ? this.child.color : 'transparent'
+	set parent(parent: T | undefined) {
+		if (this.parent === parent) return
+
+		if (this.child) {
+			if (this.parent) {
+				this.parent.children = this.parent.children.filter(field => field !== this.child)
+				this.child.parents = this.child.parents.filter(field => field !== this.parent)
+			}
+			
+			if (parent) {
+				parent.children.push(this.child)
+				this.child.parents.push(parent)
+			}
+		}
+
+		this._parent = parent
+	}
+
+	get parentColor(): string {
+		return this.parent?.color ?? 'transparent'
 	}
 
 	get parentOptions(): { name: string, value: T }[] {
-		let fields = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
-		let relations = this instanceof DomainRelation ? this.graph.domainRelations : this.graph.subjectRelations
+		let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
 
 		// Field must have a name
-		let options = fields.filter(field => field.name)
+		options = options.filter(option => option.name)
 
 		// Prevent circular references
-		if (this.child) {
-			const children = this.child.children
-			options = options.filter(field => !children.includes(field))
+		const descendants = this.child?.descendants
+		options = options.filter(option => 
+			option !== this.child && !descendants?.includes(option)
+		)
+
+		// Prevent duplicate relations
+		options = options.filter(option => {
+			if (this.parent === option) return true
+			return !this.child?.parents.includes(option)
+		})
+
+		// Ensure child options remain available
+		options = options.filter(parent => {
+			let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+
+			// Field must have a name
+			options = options.filter(option => option.name)
+
+			// Prevent circular references
+			const ancestors = parent.ancestors
+			options = options.filter(option => 
+				option !== parent && !ancestors?.includes(option)
+			)
 
 			// Prevent duplicate relations
-			if (!this.parent) {
-				options = options.filter(field =>
-					!relations.find(relation =>
-						relation.parent === field && relation.child === this.child
-					)
-				)
+			options = options.filter(option => {
+				if (this.child === option) return true
+				return !parent.children.includes(option)
+			})
+
+			return options.length > 0
+		})
+
+		return options.map(option => {
+			return { name: option.name, value: option } as { name: string, value: T }
+		})
+	}
+
+	get child(): T | undefined {
+		return this._child
+	}
+
+	set child(child: T | undefined) {
+		if (this.child === child) return
+
+		if (this.parent) {
+			if (this.child) {
+				this.parent.children = this.parent.children.filter(field => field !== this.child)
+				this.child.parents = this.child.parents.filter(field => field !== this.parent)
+			}
+
+			if (child) {
+				this.parent.children.push(child)
+				child.parents.push(this.parent)
 			}
 		}
 
-		return options.map(field => ({ name: field.name!, value: field as T }))
+		this._child = child
+	}
+
+	get childColor(): string {
+		return this.child?.color ?? 'transparent'
 	}
 
 	get childOptions(): { name: string, value: T }[] {
-		let fields = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
-		let relations = this instanceof DomainRelation ? this.graph.domainRelations : this.graph.subjectRelations
+		let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
 
 		// Field must have a name
-		let options = fields.filter(field => field.name)
+		options = options.filter(option => option.name)
 
 		// Prevent circular references
-		if (this.parent) {
-			const parents = this.parent.parents
-			options = options.filter(field => !parents.includes(field))
+		const ancestors = this.parent?.ancestors
+		options = options.filter(option => 
+			option !== this.parent && !ancestors?.includes(option)
+		)
+
+		// Prevent duplicate relations
+		options = options.filter(option => {
+			if (this.child === option) return true
+			return !this.parent?.children.includes(option)
+		})
+
+		// Ensure parent options remain available
+		options = options.filter(child => {
+			let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+
+			// Field must have a name
+			options = options.filter(option => option.name)
+
+			// Prevent circular references
+			const descendants = child.descendants
+			options = options.filter(option => 
+				option !== child && !descendants?.includes(option)
+			)
 
 			// Prevent duplicate relations
-			if (!this.child) {
-				options = options.filter(field =>
-					!relations.find(relation =>
-						relation.parent === this.parent && relation.child === field
-					)
-				)
-			}
-		}
+			options = options.filter(option => {
+				if (this.parent === option) return true
+				return !child.parents.includes(option)
+			})
 
-		return options.map(field => ({ name: field.name!, value: field as T }))
+			return options.length > 0
+		})
 
+		return options.map(option => {
+			return { name: option.name, value: option } as { name: string, value: T }
+		})
 	}
 
 	delete() {
@@ -322,28 +407,24 @@ abstract class Relation<T extends Field> {
 		} else if (this instanceof SubjectRelation) {
 			this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
 		}
-	}
 
+		if (this.parent && this.child) {
+			this.parent.children = this.parent.children.filter(field => field !== this.child)
+			this.child.parents = this.child.parents.filter(field => field !== this.parent)
+		}
+	}
 }
 
 class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph) {
-		let relation = new DomainRelation(
-			graph,
-			graph.nextRelationID()
-		)
-
+		let relation = new DomainRelation(graph, graph.nextRelationID())
 		graph.domainRelations.push(relation)
 	}
 }
 
 class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph) {
-		let relation = new SubjectRelation(
-			graph,
-			graph.nextRelationID()
-		)
-
+		let relation = new SubjectRelation(graph, graph.nextRelationID())
 		graph.subjectRelations.push(relation)
 	}
 }

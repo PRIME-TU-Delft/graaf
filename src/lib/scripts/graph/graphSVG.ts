@@ -183,8 +183,9 @@ class GraphSVG {
 	}
 
 	set lecture(lecture: Lecture | undefined) {
-		if (this.type !== GraphType.lecture || this.animating) return
+		if (this.animating) return
 		this._lecture = lecture
+		if (this.type !== GraphType.lecture) return
 
 		if (this.lecture) {
 			this.clearContent()

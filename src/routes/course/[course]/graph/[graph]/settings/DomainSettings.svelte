@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, Subject } from '$scripts/graph/entities'
+	import { Graph, Domain, Field, Relation, DomainRelation } from '$scripts/graph/entities'
 	import { styles } from '$scripts/graph/settings'
 
 	// Components
@@ -25,25 +25,18 @@
 
 	// Variables
 	let domainQuery: string = ''
-	let subjectQuery: string = ''
 	let domainIdSort: boolean | null = true
 	let domainFromSort: boolean | null = null
 	let domainToSort: boolean | null = null
-	let subjectIdSort: boolean | null = true
-	let subjectFromSort: boolean | null = null
-	let subjectToSort: boolean | null = null
+	let relationQuery: string = ''
+	let relationIdSort: boolean | null = true
+	let relationFromSort: boolean | null = null
+	let relationToSort: boolean | null = null
 
 	$: styleOptions = Object.keys(styles).map(style => ({
 		name: styles[style].display_name,
 		value: style
 	}))
-
-	$: domainOptions = graph.domains
-		.filter(domain => domain.name)
-		.map(domain => ({
-			name: domain.name!,
-			value: domain
-		}))
 
 	// Force reactivity update
 	function update() {
@@ -56,21 +49,22 @@
 		query = query.toLowerCase()
 
 		let name = domain.name?.toLowerCase()
-		let style = domain._style ? styles[domain._style].display_name.toLowerCase() : undefined
+		let style = domain.style ? styles[domain.style].display_name.toLowerCase() : undefined
 
 		return name?.includes(query) || style?.includes(query) || false
 	}
 
-	// Checks if query appears in subject
-	function subjectMatchesQuery(query: string, subject: Subject): boolean {
+	// Checks if query appears in relation
+	function relationMatchesQuery(query: string, relation: Relation<Field>): boolean {
 		if (!query) return true
 		query = query.toLowerCase()
 
-		let name = subject.name?.toLowerCase()
-		let domain = subject.domain?.name?.toLowerCase()
+		let parent = relation.parent?.name?.toLowerCase()
+		let child = relation.child?.name?.toLowerCase()
 
-		return name?.includes(query) || domain?.includes(query) || false
+		return parent?.includes(query) || child?.includes(query) || false
 	}
+
 </script>
 
 
@@ -80,12 +74,12 @@
 
 
 <!-- Domains -->
-<div id="domains" class="editor">
+<div id="domains" class="domains">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Domains </h2>
-		<LinkButton href="#subjects"> goto subjects </LinkButton>
+		<LinkButton href="#relations"> goto relations </LinkButton>
 
 		<div class="flex-spacer" />
 
@@ -140,8 +134,8 @@
 						domainToSort = !domainToSort
 						domainIdSort = domainFromSort = null
 						graph.domains.sort((a, b) => {
-							let astr = a._style ? styles[a._style].display_name : ''
-							let bstr = b._style ? styles[b._style].display_name : ''
+							let astr = a.style ? styles[a.style].display_name : ''
+							let bstr = b.style ? styles[b.style].display_name : ''
 							return astr.localeCompare(bstr) * (domainToSort ? 1 : -1)
 						})
 
@@ -154,7 +148,7 @@
 	{:else}
 
 		<!-- If no domains were found that match the search -->
-		<h6 class="empty"> No domains found </h6>
+		<h6 class="grayed"> No domains found </h6>
 
 	{/if}
 
@@ -165,42 +159,42 @@
 				<span> {domain.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-				<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain._style}/>
-				<span class="preview" style:background-color={domain.color()} />
+				<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain.style}/>
+				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
 	{/each}
 </div>
 
-<!-- Subjects -->
-<div id="subjects" class="editor">
+<!-- Domain relations -->
+<div id="relations" class="relations">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2> Subjects </h2>
+		<h2> Relations </h2>
 		<LinkButton href="#domains"> goto domains </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={subjectQuery} />
-		<Button on:click={() => { Subject.create(graph); update() }}>
-			<img src={plusIcon} alt=""> New Subject
+		<Searchbar bind:value={relationQuery} />
+		<Button on:click={() => { DomainRelation.create(graph); update() }}>
+			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
-	<!-- If any subjects were found that match the search -->
-	{#if graph.subjects.some(subject => subjectMatchesQuery(subjectQuery, subject))}
+	<!-- If any relations were found that match the search -->
+	{#if graph.domainRelations.some(relation => relationMatchesQuery(relationQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
 
 			<!-- ID sort button -->
 			<IconButton
-				src={subjectIdSort === null ? neutralSortIcon : subjectIdSort ? ascendingSortIcon : descedingSortIcon}
+				src={relationIdSort === null ? neutralSortIcon : relationIdSort ? ascendingSortIcon : descedingSortIcon}
 				on:click={() => {
-					subjectIdSort = !subjectIdSort
-					subjectFromSort = subjectToSort = null
-					graph.subjects.sort((a, b) => { return (a.id - b.id) * (subjectIdSort ? 1 : -1)})
+					relationIdSort = !relationIdSort
+					relationFromSort = relationToSort = null
+					graph.domainRelations.sort((a, b) => (a.id - b.id) * (relationIdSort ? 1 : -1))
 					update()
 				}}
 			/>
@@ -209,14 +203,14 @@
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={subjectFromSort === null ? neutralSortIcon : subjectFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={relationFromSort === null ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						subjectFromSort = !subjectFromSort
-						subjectIdSort = subjectToSort = null
-						graph.subjects.sort((a, b) => {
-							let astr = a.name || ''
-							let bstr = b.name || ''
-							return astr.localeCompare(bstr) * (subjectFromSort ? 1 : -1)
+						relationFromSort = !relationFromSort
+						relationIdSort = relationToSort = null
+						graph.domainRelations.sort((a, b) => {
+							let astr = a.parent?.name || ''
+							let bstr = b.parent?.name || ''
+							return astr.localeCompare(bstr) * (relationFromSort ? 1 : -1)
 						})
 
 						update()
@@ -228,14 +222,14 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={subjectToSort === null ? neutralSortIcon : subjectToSort ? ascendingSortIcon : descedingSortIcon}
+					src={relationToSort === null ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						subjectToSort = !subjectToSort
-						subjectIdSort = subjectFromSort = null
-						graph.subjects.sort((a, b) => {
-							let astr = a.domain?.name || ''
-							let bstr = b.domain?.name || ''
-							return astr.localeCompare(bstr) * (subjectToSort ? 1 : -1)
+						relationToSort = !relationToSort
+						relationIdSort = relationFromSort = null
+						graph.domainRelations.sort((a, b) => {
+							let astr = a.child?.name || ''
+							let bstr = b.child?.name || ''
+							return astr.localeCompare(bstr) * (relationToSort ? 1 : -1)
 						})
 
 						update()
@@ -246,20 +240,21 @@
 
 	{:else}
 
-		<!-- If no subjects were found that match the search -->
-		<h6 class="empty"> No subjects found </h6>
+		<!-- If no relations were found that match the search -->
+		<h6 class="grayed"> No relations found </h6>
 
 	{/if}
 
-	<!-- Subject list -->
-	{#each graph.subjects as subject}
-		{#if subjectMatchesQuery(subjectQuery, subject)}
+	<!-- List of relations -->
+	{#each graph.domainRelations as relation}
+		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {subject.id} </span>
-				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
-				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
-				<Dropdown label="Domain" placeholder="Assigned Domain" options={domainOptions} bind:value={subject.domain} />
-				<span class="preview" style:background-color={subject.color()} />
+				<span> {relation.id} </span>
+				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
+				<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions} bind:value={relation.parent} />
+				<span class="preview" style:background-color={relation.parentColor} />
+				<Dropdown label="Child" placeholder="To Domain" options={relation.childOptions} bind:value={relation.child} />
+				<span class="preview" style:background-color={relation.childColor} />
 			</div>
 		{/if}
 	{/each}
@@ -278,43 +273,45 @@
 
 	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
 
-	.editor
+	.toolbar
+		display: flex
+		flex-flow: row nowrap
+		margin-bottom: $form-big-gap
+		gap: $form-small-gap
+
+	.header
+		display: flex
+		flex-flow: row nowrap
+		align-content: center
+		justify-content: right
+		width: 100%
+
+		span
+			flex: 1
+
+	.preview
+		width: $input-icon-size
+		height: $input-icon-size
+
+	.grayed
+		margin: auto
+		color: $gray
+
+	.domains, .relations
 		display: flex
 		flex-flow: column nowrap
 		padding: $card-thick-padding
 		gap: $form-small-gap
 
-		.toolbar
-			display: flex
-			flex-flow: row nowrap
-			margin-bottom: $form-big-gap
-			gap: $form-small-gap
-
-		.empty
-			margin: auto
-			color: $gray
-
 		.row
 			display: grid
-			grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
 			place-items: center center
 			gap: $form-small-gap
+	
+	.domains .row
+		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
 
-			.header
-				display: flex
-				flex-flow: row nowrap
-				align-content: center
-				justify-content: right
-				width: 100%
-
-				span
-					flex: 1
-
-			:global(.icon-button)
-				margin-bottom: 5px
-
-			.preview
-				width: $input-icon-size
-				height: $input-icon-size
+	.relations .row
+		grid-template: "id delete left left-preview right right-preview" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 
 </style>

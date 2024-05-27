@@ -8,9 +8,9 @@
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import Button from '$components/Button.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
-	import FieldSettings from './FieldSettings.svelte'
 	import GeneralSettings from './GeneralSettings.svelte'
-	import RelationSettings from './RelationSettings.svelte'
+	import DomainSettings from './DomainSettings.svelte';
+	import SubjectSettings from './SubjectSettings.svelte';
 	import LectureSettings from './LectureSettings.svelte'
 
 	// Assets
@@ -61,8 +61,8 @@
 	<div class="tabular">
 		<div class="tabs">
 			<button class:active={activeTab === 0} on:click={() => activeTab = 0}> General </button>
-			<button class:active={activeTab === 1} on:click={() => activeTab = 1}> Domains & Subjects </button>
-			<button class:active={activeTab === 2} on:click={() => activeTab = 2}> Relations </button>
+			<button class:active={activeTab === 1} on:click={() => activeTab = 1}> Domains </button>
+			<button class:active={activeTab === 2} on:click={() => activeTab = 2}> Subjects </button>
 			<button class:active={activeTab === 3} on:click={() => activeTab = 3}> Lectures </button>
 
 			<div class="dynamic-border" />
@@ -71,9 +71,9 @@
 		{#if activeTab === 0}
 			<GeneralSettings {graph} />
 		{:else if activeTab === 1}
-			<FieldSettings {graph} />
+			<DomainSettings {graph} />
 		{:else if activeTab === 2}
-			<RelationSettings {graph} />
+			<SubjectSettings {graph} />
 		{:else if activeTab === 3}
 			<LectureSettings {graph} />
 		{/if}
