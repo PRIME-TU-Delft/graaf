@@ -104,6 +104,7 @@
 
 			border: 1px solid $gray
 			border-radius: $border-radius
+			background-color: $white
 			text-align: left
 			cursor: pointer
 

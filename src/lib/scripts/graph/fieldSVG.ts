@@ -33,7 +33,7 @@ class FieldSVG {
 		// Field text
 		selection.append('text')
 			.text(field => field.name!)
-			.attr('font-size', settings.FIELD_FONT_SIZE)
+			.style('font-size', settings.FIELD_FONT_SIZE)
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'middle')
 			.attr('transform', `translate(

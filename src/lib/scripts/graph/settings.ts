@@ -11,7 +11,7 @@ export const FIELD_FONT_SIZE = 15
 export const LECTURE_PADDING = 5
 export const LECTURE_HEADER_HEIGHT = 3
 export const LECTURE_COLUMN_WIDTH = 2 * LECTURE_PADDING + FIELD_WIDTH
-export const LECTURE_FONT_SIZE = 20
+export const LECTURE_FONT_SIZE = 22
 
 export const STROKE_WIDTH = 2
 export const FADE_DURATION = 500

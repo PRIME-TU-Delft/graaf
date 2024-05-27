@@ -4,12 +4,9 @@
 	// Svelte imports
 	import type { PageData } from './$types'
 
-	// Lib imports
-	import { GraphSVG, GraphType } from '$scripts/graph/graphSVG'
-
 	// Components
 	import DefaultLayout from '$layouts/DefaultLayout.svelte'
-	import Graph from '$components/Graph.svelte'
+	import GraphInterface from '$components/GraphInterface.svelte'
 	import Button from '$components/Button.svelte'
 
 	// Assets
@@ -21,8 +18,6 @@
 
 	// Variables
 	let { course, graph } = data
-	let graphSVG: GraphSVG = new GraphSVG(graph, GraphType.domains, true)
-	let activeTab: number = 0
 
 </script>
 
@@ -60,6 +55,6 @@
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
-	<Graph {graph} />
+	<GraphInterface {graph} />
 	
 </DefaultLayout>

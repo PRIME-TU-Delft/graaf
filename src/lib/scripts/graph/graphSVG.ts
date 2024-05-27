@@ -18,20 +18,22 @@ enum GraphType {
 }
 
 class GraphSVG {
+	graph: Graph
+
 	private _type: GraphType
 	private _lecture?: Lecture
-	private _interactive: boolean
-	private _animating: boolean = false
 
-	private graph: Graph
 	private svg!: SVGSVGElement
 	private zoom!: d3.ZoomBehavior<SVGSVGElement, unknown>
+
 	private fields: Field[] = []
+	private interactive: boolean
+	private animating: boolean = false
 
 	constructor(graph: Graph, type: GraphType, interactive: boolean) {
 		this.graph = graph
+		this.interactive = interactive
 		this._type = type
-		this._interactive = interactive
 	}
 
 	get type() {
@@ -47,22 +49,33 @@ class GraphSVG {
 
 					// Domains -> Subjects
 					case GraphType.subjects:
+						this.animating = true
+						this.setInteractive(false)
 						this.setContent(this.graph.subjects, this.graph.subjectRelations)
 						this.moveContent(this.domainTransform)
-						this.restoreContent(true)
+						this.restoreContent(true, () => {
+							this.setInteractive(this.interactive)
+							this.animating = false
+						})
 						break
 
 					// Domains -> Lecture
 					case GraphType.lecture:
 						if (this.lecture) {
+							this.animating = true
+							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
 							this.setContent(this.lecture.subjects, this.lecture.relations)
 							this.moveContent(this.domainTransform)
 							this.moveContent(this.lectureTransform, true, () => {
 								this.setBackground(GraphType.lecture)
 								this.moveContent(this.lectureTransform)
+								this.animating = false
 							})
-						} else {
+						}
+
+						else {
+							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1)
 							this.setBackground(GraphType.lecture)
 							this.clearContent()
@@ -75,8 +88,13 @@ class GraphSVG {
 
 					// Subjects -> Domains
 					case GraphType.domains:
+						this.animating = true
+						this.setInteractive(false)
 						this.moveContent(this.domainTransform, true, () => {
-							this.setContent(this.graph.domains, this.graph.domainRelations, true)
+							this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
+								this.setInteractive(this.interactive)
+								this.animating = false
+							})
 						})
 
 						break
@@ -84,14 +102,20 @@ class GraphSVG {
 					// Subjects -> Lectures
 					case GraphType.lecture:
 						if (this.lecture) {
+							this.animating = true
+							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
 							this.setContent(this.lecture.subjects, this.lecture.relations, true, () => {
 								this.moveContent(this.lectureTransform, true, () => {
 									this.setBackground(GraphType.lecture)
 									this.moveContent(this.lectureTransform)
+									this.animating = false
 								})
 							})
-						} else {
+						}
+
+						else {
+							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1)
 							this.setBackground(GraphType.lecture)
 							this.clearContent()
@@ -104,14 +128,24 @@ class GraphSVG {
 					// Lectures -> Domains
 					case GraphType.domains:
 						if (this.lecture) {
+							this.animating = true
 							this.setBackground(GraphType.domains)
 							this.moveContent(this.lectureTransform)
 							this.moveContent(this.domainTransform, true, () => {
-								this.setContent(this.graph.domains, this.graph.domainRelations, true)
+								this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
+									this.setInteractive(this.interactive)
+									this.animating = false
+								})
 							})
-						} else {
+						}
+
+						else {
+							this.animating = true
 							this.setBackground(GraphType.domains)
-							this.setContent(this.graph.domains, this.graph.domainRelations, true)
+							this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
+								this.setInteractive(this.interactive)
+								this.animating = false
+							})
 						}
 
 						break
@@ -119,14 +153,24 @@ class GraphSVG {
 					// Lectures -> Subjects
 					case GraphType.subjects:
 						if (this.lecture) {
+							this.animating = true
 							this.setBackground(GraphType.subjects)
 							this.moveContent(this.lectureTransform)
 							this.restoreContent(true, () => {
-								this.setContent(this.graph.subjects, this.graph.subjectRelations, true)
+								this.setContent(this.graph.subjects, this.graph.subjectRelations, true, () => {
+									this.setInteractive(this.interactive)
+									this.animating = false
+								})
 							})
-						} else {
+						}
+
+						else {
+							this.animating = true
 							this.setBackground(GraphType.subjects)
-							this.setContent(this.graph.subjects, this.graph.subjectRelations, true)
+							this.setContent(this.graph.subjects, this.graph.subjectRelations, true, () => {
+								this.setInteractive(this.interactive)
+								this.animating = false
+							})
 						}
 				}
 		}
@@ -139,38 +183,18 @@ class GraphSVG {
 	}
 
 	set lecture(lecture: Lecture | undefined) {
+		if (this.type !== GraphType.lecture || this.animating) return
 		this._lecture = lecture
-
-		if (this.type !== GraphType.lecture) return
-		if (this.animating) throw new Error('Animation in progress')
 
 		if (this.lecture) {
 			this.clearContent()
+			this.setBackground(GraphType.lecture)
 			this.setContent(this.lecture.subjects, this.lecture.relations)
 			this.moveContent(this.lectureTransform)
-			this.setBackground(GraphType.lecture)
 		} else {
 			this.clearContent()
 			this.setBackground(GraphType.lecture)
 		}
-	}
-
-	get interactive() {
-		return this._interactive
-	}
-
-	set interactive(interactive: boolean) {
-		this._interactive = interactive
-		this.setInteractive(interactive)
-	}
-
-	get animating() {
-		return this._animating
-	}
-
-	set animating(animating: boolean) {
-		this._animating = animating
-		this.setInteractive(this.interactive && !animating)
 	}
 
 	create(element: SVGSVGElement) {
@@ -232,12 +256,13 @@ class GraphSVG {
 					.attr('width', settings.GRID_UNIT * event.transform.k)
 					.attr('height', settings.GRID_UNIT * event.transform.k)
 					.selectAll('line')
-						.attr('opacity', Math.min(1, event.transform.k))
+						.style('opacity', Math.min(1, event.transform.k))
 			})
 
 		svg.call(this.zoom)
 
 		// Background & content
+		this.setInteractive(this.interactive)
 		switch (this.type) {
 			case GraphType.domains:
 				this.setContent(this.graph.domains, this.graph.domainRelations)
@@ -265,7 +290,7 @@ class GraphSVG {
 			.style('pointer-events', interactive ? 'all' : 'none')
 	}
 
-	private setZoomAndPan(x: number, y: number, k: number, animate: boolean = false) {
+	private setZoomAndPan(x: number, y: number, k: number, animate: boolean = false, callback: () => void = () => {}) {
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -276,14 +301,18 @@ class GraphSVG {
 				this.zoom.transform,
 				d3.zoomIdentity.translate(x, y).scale(k)
 			)
+
+		// Post-transition
+		setTimeout(() => {
+			callback()
+		}, animate ? settings.ANIMATION_DURATION : 0)
 	}
 
 	private setContent(fields: Field[], relations: Relation<Field>[], fade: boolean = false, callback: () => void = () => {}) {
-		const content = d3.select<SVGSVGElement, unknown>(this.svg)
-			.select('#content')
+		const content = d3.select<SVGGElement, unknown>('#content')
+		this.fields = fields
 
 		// Update Relations
-		this.animating = fade
 		content.selectAll<SVGLineElement, Relation<Field>>('.relation')
 			.data(relations, relation => relation.id)
 			.join(
@@ -338,14 +367,10 @@ class GraphSVG {
 				.duration(fade ? settings.FADE_DURATION : 0)
 			.style('opacity', 1)
 
-		this.fields = fields
-		if (!fade) return
-
 		// Post-transition
 		setTimeout(() => {
-			this.animating = false
 			callback()
-		}, settings.FADE_DURATION)
+		}, fade ? settings.FADE_DURATION : 0)
 	}
 
 	private moveContent(transform: (value: Field, graphSVG: GraphSVG) => void, animate: boolean = false, callback: () => void = () => {}) {
@@ -360,7 +385,6 @@ class GraphSVG {
 		}
 
 		// Update fields
-		this.animating = animate
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.select('#content')
 				.selectAll<SVGGElement, Field>('.field')
@@ -372,13 +396,10 @@ class GraphSVG {
 			buffer.field.y = buffer.y
 		}
 
-		if (!animate) return
-
 		// Post-transition
 		setTimeout(() => {
-			this.animating = false
 			callback()
-		}, settings.ANIMATION_DURATION)
+		}, animate ? settings.ANIMATION_DURATION : 0)
 	}
 
 	private restoreContent(animate: boolean = false, callback: () => void = () => {}) {
@@ -388,9 +409,9 @@ class GraphSVG {
 	}
 
 	private clearContent(fade: boolean = false, callback: () => void = () => {}) {
+		this.fields = []
 
 		// Clear content
-		this.animating = fade
 		d3.select(this.svg)
 			.select('#content')
 				.selectAll('*')
@@ -400,14 +421,10 @@ class GraphSVG {
 						.on('end', function () { d3.select(this).remove()})
 					.style('opacity', 0)
 
-		this.fields = []
-		if (!fade) return
-
 		// Post-transition
 		setTimeout(() => {
-			this.animating = false
 			callback()
-		}, settings.FADE_DURATION)
+		}, fade ? settings.FADE_DURATION : 0)
 	}
 
 	private setBackground(type: GraphType) {
@@ -422,9 +439,6 @@ class GraphSVG {
 		switch (type) {
 			case GraphType.domains:
 			case GraphType.subjects:
-
-				// Set interactive to default
-				this.setInteractive(this.interactive)
 
 				// Set svg size
 				svg
@@ -443,9 +457,6 @@ class GraphSVG {
 			case GraphType.lecture:
 				const size = this.lecture?.size || 0
 
-				// Set interactive to false
-				this.setInteractive(false)
-
 				// Set svg size
 				svg
 					.attr('width', settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT * 3 + settings.STROKE_WIDTH)
@@ -462,11 +473,11 @@ class GraphSVG {
 					.attr('stroke', 'black')
 
 				background.append('text')
+					.text('Past Topics')
+					.style('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('x', (settings.STROKE_WIDTH + settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
-					.attr('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('text-anchor', 'middle')
 					.attr('dominant-baseline', 'hanging')
-					.text('Past Topics')
 
 				// Present subject column
 				background.append('rect')
@@ -479,11 +490,11 @@ class GraphSVG {
 					.attr('stroke', 'black')
 
 				background.append('text')
+					.text('This Lecture')
+					.style('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('x', (settings.STROKE_WIDTH + 3 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
-					.attr('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('text-anchor', 'middle')
 					.attr('dominant-baseline', 'hanging')
-					.text('This Lecture')
 
 				// Future subject column
 				background.append('rect')
@@ -496,11 +507,11 @@ class GraphSVG {
 					.attr('stroke', 'black')
 
 				background.append('text')
+					.text('Future Topics')
+					.style('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('x', (settings.STROKE_WIDTH + 5 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2)
-					.attr('font-size', settings.LECTURE_FONT_SIZE)
 					.attr('text-anchor', 'middle')
 					.attr('dominant-baseline', 'hanging')
-					.text('Future Topics')
 		}
 	}
 
