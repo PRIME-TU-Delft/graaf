@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, Field, Relation, SubjectRelation } from '$scripts/graph/entities'
+	import { Graph, Subject, Field, Relation } from '$scripts/graph/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -25,13 +25,13 @@
 
 	// Variables
 	let subjectQuery: string = ''
-	let subjectIdSort: boolean | null = true
-	let subjectFromSort: boolean | null = null
-	let subjectToSort: boolean | null = null
+	let subjectNameSort: boolean | undefined
+	let subjectDomainSort: boolean | undefined
 	let relationQuery: string = ''
-	let relationIdSort: boolean | null = true
-	let relationFromSort: boolean | null = null
-	let relationToSort: boolean | null = null
+	let relationFromSort: boolean | undefined
+	let relationToSort: boolean | undefined
+
+	let relations: Relation[] = graph.subjectRelations
 
     $: domainOptions = graph.domains
 		.filter(domain => domain.name)
@@ -41,8 +41,10 @@
 		}))
 
 	// Force reactivity update
+	// NOTE: Maybe redundant Svelte 5?
 	function update() {
-		graph = graph // Maybe redundant Svelte 5?
+		graph = graph
+		relations = relations
 	}
 
 	// Checks if query appears in subject
@@ -57,7 +59,7 @@
 	}
 
 	// Checks if query appears in relation
-	function relationMatchesQuery(query: string, relation: Relation<Field>): boolean {
+	function relationMatchesQuery(query: string, relation: Relation): boolean {
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -65,6 +67,11 @@
 		let child = relation.child?.name?.toLowerCase()
 
 		return parent?.includes(query) || child?.includes(query) || false
+	}
+
+	// Alphabetizes strings
+	function alphabetize(a?: string, b?: string, ascending: boolean = true): number {
+		return (a ?? '').localeCompare(b ?? '') * (ascending ? 1 : -1)
 	}
 
 </script>
@@ -97,50 +104,29 @@
 		<!-- Header -->
 		<div class=row>
 
-			<!-- ID sort button -->
-			<IconButton
-				src={subjectIdSort === null ? neutralSortIcon : subjectIdSort ? ascendingSortIcon : descedingSortIcon}
-				on:click={() => {
-					subjectIdSort = !subjectIdSort
-					subjectFromSort = subjectToSort = null
-					graph.subjects.sort((a, b) => { return (a.id - b.id) * (subjectIdSort ? 1 : -1)})
-					update()
-				}}
-			/>
-
-			<!-- From label and sort button -->
+			<!-- Name label and sort button -->
 			<div class="header" style="grid-area: left;">
-				<span> From </span>
+				<span> Name </span>
 				<IconButton
-					src={subjectFromSort === null ? neutralSortIcon : subjectFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={subjectNameSort === undefined ? neutralSortIcon : subjectNameSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						subjectFromSort = !subjectFromSort
-						subjectIdSort = subjectToSort = null
-						graph.subjects.sort((a, b) => {
-							let astr = a.name || ''
-							let bstr = b.name || ''
-							return astr.localeCompare(bstr) * (subjectFromSort ? 1 : -1)
-						})
-
+						subjectDomainSort = undefined
+						subjectNameSort = !subjectNameSort
+						graph.subjects.sort((a, b) => alphabetize(a.name, b.name, subjectNameSort))
 						update()
 					}}
 				/>
 			</div>
 
-			<!-- To label and sort button -->
+			<!-- Domain label and sort button -->
 			<div class="header" style="grid-area: right;">
-				<span> To </span>
+				<span> Domain </span>
 				<IconButton
-					src={subjectToSort === null ? neutralSortIcon : subjectToSort ? ascendingSortIcon : descedingSortIcon}
+					src={subjectDomainSort === undefined ? neutralSortIcon : subjectDomainSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						subjectToSort = !subjectToSort
-						subjectIdSort = subjectFromSort = null
-						graph.subjects.sort((a, b) => {
-							let astr = a.domain?.name || ''
-							let bstr = b.domain?.name || ''
-							return astr.localeCompare(bstr) * (subjectToSort ? 1 : -1)
-						})
-
+						subjectNameSort = undefined
+						subjectDomainSort = !subjectDomainSort
+						graph.subjects.sort((a, b) => alphabetize(a.domain?.name, b.domain?.name, subjectDomainSort))
 						update()
 					}}
 				/>
@@ -155,10 +141,10 @@
 	{/if}
 
 	<!-- Subject list -->
-	{#each graph.subjects as subject}
+	{#each graph.subjects as subject, n}
 		{#if subjectMatchesQuery(subjectQuery, subject)}
 			<div class="row">
-				<span> {subject.id} </span>
+				<span> {n + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
 				<Dropdown label="Domain" placeholder="Assigned Domain" options={domainOptions} bind:value={subject.domain} />
@@ -179,42 +165,26 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relationQuery} />
-		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
+		<Button on:click={() => { relations.push(Relation.create(graph)); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.subjectRelations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if relations.some(relation => relationMatchesQuery(relationQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
-
-			<!-- ID sort button -->
-			<IconButton
-				src={relationIdSort === null ? neutralSortIcon : relationIdSort ? ascendingSortIcon : descedingSortIcon}
-				on:click={() => {
-					relationIdSort = !relationIdSort
-					relationFromSort = relationToSort = null
-					graph.subjectRelations.sort((a, b) => { return (a.id - b.id) * (relationIdSort ? 1 : -1)})
-					update()
-				}}
-			/>
 
 			<!-- From label and sort button -->
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={relationFromSort === null ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={relationFromSort === undefined ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
+						relationToSort = undefined
 						relationFromSort = !relationFromSort
-						relationIdSort = relationToSort = null
-						graph.subjectRelations.sort((a, b) => {
-							let astr = a.parent?.name || ''
-							let bstr = b.parent?.name || ''
-							return astr.localeCompare(bstr) * (relationFromSort ? 1 : -1)
-						})
-
+						relations.sort((a, b) => alphabetize(a.parent?.name, b.parent?.name, relationFromSort))
 						update()
 					}}
 				/>
@@ -224,16 +194,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={relationToSort === null ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
+					src={relationToSort === undefined ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
+						relationFromSort = undefined
 						relationToSort = !relationToSort
-						relationIdSort = relationFromSort = null
-						graph.subjectRelations.sort((a, b) => {
-							let astr = a.child?.name || ''
-							let bstr = b.child?.name || ''
-							return astr.localeCompare(bstr) * (relationToSort ? 1 : -1)
-						})
-
+						relations.sort((a, b) => alphabetize(a.child?.name, b.child?.name, relationToSort))
 						update()
 					}}
 				/>
@@ -248,14 +213,19 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each graph.subjectRelations as relation}
+	{#each relations as relation, n}
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {relation.id} </span>
-				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Subject" options={relation.parentOptions} bind:value={relation.parent} />
+				<span> {n + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => {
+					relations = relations.filter(r => r !== relation)
+					relation.delete()
+					update()
+				}} />
+
+				<Dropdown label="Parent" placeholder="From Subject" options={relation.filterParentOptions(graph.subjects)} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parentColor} />
-				<Dropdown label="Child" placeholder="To Subject" options={relation.childOptions} bind:value={relation.child} />
+				<Dropdown label="Child" placeholder="To Subject" options={relation.filterChildOptions(graph.subjects)} bind:value={relation.child} />
 				<span class="preview" style:background-color={relation.childColor} />
 			</div>
 		{/if}

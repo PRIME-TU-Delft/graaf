@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, Field, Relation, DomainRelation } from '$scripts/graph/entities'
+	import { Graph, Domain, Field, Relation } from '$scripts/graph/entities'
 	import { styles } from '$scripts/graph/settings'
 
 	// Components
@@ -25,13 +25,13 @@
 
 	// Variables
 	let domainQuery: string = ''
-	let domainIdSort: boolean | null = true
-	let domainFromSort: boolean | null = null
-	let domainToSort: boolean | null = null
+	let domainNameSort: boolean | undefined
+	let domainStyleSort: boolean | undefined
 	let relationQuery: string = ''
-	let relationIdSort: boolean | null = true
-	let relationFromSort: boolean | null = null
-	let relationToSort: boolean | null = null
+	let relationFromSort: boolean | undefined
+	let relationToSort: boolean | undefined
+
+	let relations: Relation[] = graph.domainRelations
 
 	$: styleOptions = Object.keys(styles).map(style => ({
 		name: styles[style].display_name,
@@ -39,8 +39,10 @@
 	}))
 
 	// Force reactivity update
+	// NOTE: Maybe redundant Svelte 5?
 	function update() {
-		graph = graph // Maybe redundant Svelte 5?
+		graph = graph
+		relations = relations
 	}
 
 	// Checks if query appears in domain
@@ -55,7 +57,7 @@
 	}
 
 	// Checks if query appears in relation
-	function relationMatchesQuery(query: string, relation: Relation<Field>): boolean {
+	function relationMatchesQuery(query: string, relation: Relation): boolean {
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -63,6 +65,11 @@
 		let child = relation.child?.name?.toLowerCase()
 
 		return parent?.includes(query) || child?.includes(query) || false
+	}
+
+	// Alphabetizes strings
+	function alphabetize(a?: string, b?: string, ascending: boolean = true): number {
+		return (a ?? '').localeCompare(b ?? '') * (ascending ? 1 : -1)
 	}
 
 </script>
@@ -95,49 +102,33 @@
 		<!-- Header -->
 		<div class=row>
 
-			<!-- ID sort button -->
-			<IconButton
-				src={domainIdSort === null ? neutralSortIcon : domainIdSort ? ascendingSortIcon : descedingSortIcon}
-				on:click={() => {
-					domainIdSort = !domainIdSort
-					domainFromSort = domainToSort = null
-					graph.domains.sort((a, b) => (a.id - b.id) * (domainIdSort ? 1 : -1))
-					update()
-				}}
-			/>
-
-			<!-- From label and sort button -->
+			<!-- Name label and sort button -->
 			<div class="header" style="grid-area: left;">
-				<span> From </span>
+				<span> Name </span>
 				<IconButton
-					src={domainFromSort === null ? neutralSortIcon : domainFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={domainNameSort === undefined ? neutralSortIcon : domainNameSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						domainFromSort = !domainFromSort
-						domainIdSort = domainToSort = null
-						graph.domains.sort((a, b) => {
-							let astr = a.name || ''
-							let bstr = b.name || ''
-							return astr.localeCompare(bstr) * (domainFromSort ? 1 : -1)
-						})
-
+						domainStyleSort = undefined
+						domainNameSort = !domainNameSort
+						graph.domains.sort((a, b) => alphabetize(a.name, b.name, domainNameSort))
 						update()
 					}}
 				/>
 			</div>
 
-			<!-- To label and sort button -->
+			<!-- Style label and sort button -->
 			<div class="header" style="grid-area: right;">
-				<span> To </span>
+				<span> Style </span>
 				<IconButton
-					src={domainToSort === null ? neutralSortIcon : domainToSort ? ascendingSortIcon : descedingSortIcon}
+					src={domainStyleSort === undefined ? neutralSortIcon : domainStyleSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						domainToSort = !domainToSort
-						domainIdSort = domainFromSort = null
-						graph.domains.sort((a, b) => {
-							let astr = a.style ? styles[a.style].display_name : ''
-							let bstr = b.style ? styles[b.style].display_name : ''
-							return astr.localeCompare(bstr) * (domainToSort ? 1 : -1)
-						})
+						domainNameSort = undefined
+						domainStyleSort = !domainStyleSort
+						graph.domains.sort((a, b) => alphabetize(
+							a.style ? styles[a.style].display_name : undefined, 
+							b.style ? styles[b.style].display_name : undefined, 
+							domainStyleSort
+						))
 
 						update()
 					}}
@@ -153,10 +144,10 @@
 	{/if}
 
 	<!-- Domain list -->
-	{#each graph.domains as domain}
+	{#each graph.domains as domain, n}
 		{#if domainMatchesQuery(domainQuery, domain)}
 			<div class="row">
-				<span> {domain.id} </span>
+				<span> {n + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
 				<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain.style}/>
@@ -177,42 +168,26 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relationQuery} />
-		<Button on:click={() => { DomainRelation.create(graph); update() }}>
+		<Button on:click={() => { relations.push(Relation.create(graph)); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.domainRelations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if relations.some(relation => relationMatchesQuery(relationQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
-
-			<!-- ID sort button -->
-			<IconButton
-				src={relationIdSort === null ? neutralSortIcon : relationIdSort ? ascendingSortIcon : descedingSortIcon}
-				on:click={() => {
-					relationIdSort = !relationIdSort
-					relationFromSort = relationToSort = null
-					graph.domainRelations.sort((a, b) => (a.id - b.id) * (relationIdSort ? 1 : -1))
-					update()
-				}}
-			/>
 
 			<!-- From label and sort button -->
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={relationFromSort === null ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={relationFromSort === undefined ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
+						relationToSort = undefined
 						relationFromSort = !relationFromSort
-						relationIdSort = relationToSort = null
-						graph.domainRelations.sort((a, b) => {
-							let astr = a.parent?.name || ''
-							let bstr = b.parent?.name || ''
-							return astr.localeCompare(bstr) * (relationFromSort ? 1 : -1)
-						})
-
+						relations.sort((a, b) => alphabetize(a.parent?.name, b.parent?.name, relationFromSort))
 						update()
 					}}
 				/>
@@ -222,16 +197,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={relationToSort === null ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
+					src={relationToSort === undefined ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
+						relationFromSort = undefined
 						relationToSort = !relationToSort
-						relationIdSort = relationFromSort = null
-						graph.domainRelations.sort((a, b) => {
-							let astr = a.child?.name || ''
-							let bstr = b.child?.name || ''
-							return astr.localeCompare(bstr) * (relationToSort ? 1 : -1)
-						})
-
+						relations.sort((a, b) => alphabetize(a.child?.name, b.child?.name, relationToSort))
 						update()
 					}}
 				/>
@@ -246,14 +216,19 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each graph.domainRelations as relation}
+	{#each relations as relation, n}
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {relation.id} </span>
-				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Domain" options={relation.parentOptions} bind:value={relation.parent} />
+				<span> {n + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => { 
+					relations = relations.filter(r => r !== relation)
+					relation.delete()
+					update() 
+				}} />
+
+				<Dropdown label="Parent" placeholder="From Domain" options={relation.filterParentOptions(graph.domains)} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parentColor} />
-				<Dropdown label="Child" placeholder="To Domain" options={relation.childOptions} bind:value={relation.child} />
+				<Dropdown label="Child" placeholder="To Domain" options={relation.filterChildOptions(graph.domains)} bind:value={relation.child} />
 				<span class="preview" style:background-color={relation.childColor} />
 			</div>
 		{/if}

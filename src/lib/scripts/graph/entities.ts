@@ -3,7 +3,7 @@
 import { styles } from './settings'
 
 // Exports
-export { Course, Graph, Field, Domain, Subject, Relation, DomainRelation, SubjectRelation, Lecture }
+export { Course, Graph, Field, Domain, Subject, Relation, Lecture }
 
 // TODO course probably shouldnt be in this file
 class Course {
@@ -23,8 +23,6 @@ class Graph {
 	name: string
 	domains: Domain[]
 	subjects: Subject[]
-	domainRelations: DomainRelation[]
-	subjectRelations: SubjectRelation[]
 	lectures: Lecture[]
 
 	constructor(data: object) {
@@ -32,13 +30,11 @@ class Graph {
 		this.name = 'Graph 1'
 		this.domains = []
 		this.subjects = []
-		this.domainRelations = []
-		this.subjectRelations = []
 		this.lectures = []
 
 		// TODO load from data
 
-		this.domains.push(
+		/* this.domains.push(
 			new Domain(this, 1, 0, 0, [], [], 'Domain 1', 'prosperous-red'),
 			new Domain(this, 2, 0, 0, [], [], 'Domain 2', 'energizing-orange'),
 			new Domain(this, 3, 0, 0, [], [], 'Domain 3', 'sunny-yellow')
@@ -53,24 +49,41 @@ class Graph {
 			new Subject(this, 9, 0, 0, [], [], 'Subject 6', this.domains[2])
 		)
 
-		this.domainRelations.push(
-			new DomainRelation(this, 1, this.domains[0], this.domains[1]),
-			new DomainRelation(this, 2, this.domains[1], this.domains[2]),
-			new DomainRelation(this, 3, this.domains[0], this.domains[2])
-		)
-
-		this.subjectRelations.push(
-			new SubjectRelation(this, 4, this.subjects[0], this.subjects[1]),
-			new SubjectRelation(this, 5, this.subjects[2], this.subjects[3]),
-			new SubjectRelation(this, 6, this.subjects[4], this.subjects[5]),
-			new SubjectRelation(this, 7, this.subjects[0], this.subjects[2]),
-			new SubjectRelation(this, 8, this.subjects[1], this.subjects[3]),
-			new SubjectRelation(this, 9, this.subjects[2], this.subjects[4])
-		)
+		Relation.create(this, this.domains[0], this.domains[1])
+		Relation.create(this, this.domains[1], this.domains[2])
+		Relation.create(this, this.domains[0], this.domains[2])
+		Relation.create(this, this.subjects[0], this.subjects[1])
+		Relation.create(this, this.subjects[2], this.subjects[3])
+		Relation.create(this, this.subjects[4], this.subjects[5])
+		Relation.create(this, this.subjects[0], this.subjects[2])
+		Relation.create(this, this.subjects[1], this.subjects[3])
+		Relation.create(this, this.subjects[2], this.subjects[4])
 
 		this.lectures.push(
-			new Lecture(this, 'Lecture 1', [this.subjects[3], this.subjects[4]])
-		)
+			new Lecture()
+		) */
+	}
+
+	get domainRelations(): Relation[] {
+		let relations: Relation[] = []
+		for (const domain of this.domains) {
+			for (const child of domain.children) {
+				relations.push(new Relation(this, domain, child))
+			}
+		}
+
+		return relations
+	}
+
+	get subjectRelations(): Relation[] {
+		let relations: Relation[] = []
+		for (const subject of this.subjects) {
+			for (const child of subject.children) {
+				relations.push(new Relation(this, subject, child))
+			}
+		}
+
+		return relations
 	}
 
 	serialize(): object {
@@ -84,10 +97,6 @@ class Graph {
 			if (!domain.name || !domain.style) return false
 		for (const subject of this.subjects)
 			if (!subject.name || !subject.domain) return false
-		for (const relation of this.domainRelations)
-			if (!relation.parent || !relation.child) return false
-		for (const relation of this.subjectRelations)
-			if (!relation.parent || !relation.child) return false
 
 		return true
 	}
@@ -102,11 +111,6 @@ class Graph {
 
 	nextFieldID(): number {
 		const ids = this.domains.concat(this.subjects).map(field => field.id)
-		return Math.max(0, ...ids) + 1
-	}
-
-	nextRelationID(): number {
-		const ids = this.domainRelations.concat(this.subjectRelations).map(relation => relation.id)
 		return Math.max(0, ...ids) + 1
 	}
 
@@ -133,6 +137,14 @@ abstract class Field {
 		this.parents = parents
 		this.children = children
 		this.name = name
+	}
+
+	get backwardRelations(): Relation[] {
+		return this.parents.map(parent => new Relation(this.graph, parent, this))
+	}
+
+	get forwardRelations(): Relation[] {
+		return this.children.map(child => new Relation(this.graph, this, child))
 	}
 
 	get ancestors(): Field[] {
@@ -173,14 +185,6 @@ class Domain extends Field {
 		this._style = style
 	}
 
-	get style(): string | undefined {
-		return this._style
-	}
-
-	set style(style: string | undefined) {
-		this._style = style
-	}
-
 	static create(graph: Graph) {
 		let domain = new Domain(
 			graph,
@@ -192,6 +196,14 @@ class Domain extends Field {
 		)
 
 		graph.domains.push(domain)
+	}
+
+	get style(): string | undefined {
+		return this._style
+	}
+
+	set style(style: string | undefined) {
+		this._style = style
 	}
 
 	delete() {
@@ -220,10 +232,6 @@ class Subject extends Field {
 		this.domain = domain
 	}
 
-	get style(): string | undefined {
-		return this.domain?.style
-	}
-
 	static create(graph: Graph) {
 		let subject = new Subject(
 			graph,
@@ -235,6 +243,10 @@ class Subject extends Field {
 		graph.subjects.push(subject)
 	}
 
+	get style(): string | undefined {
+		return this.domain?.style
+	}
+	
 	delete() {
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
 
@@ -246,24 +258,33 @@ class Subject extends Field {
 	}
 }
 
-abstract class Relation<T extends Field> {
+class Relation {
 	graph: Graph
-	id: number
-	private _parent?: T
-	private _child?: T
+	private _parent?: Field
+	private _child?: Field
 
-	constructor(graph: Graph, id: number, parent?: T, child?: T) {
+	constructor(graph: Graph, parent?: Field, child?: Field) {
 		this.graph = graph
-		this.id = id
-		this.parent = parent
-		this.child = child
+		this._parent = parent
+		this._child = child
 	}
 
-	get parent(): T | undefined {
+	static create(graph: Graph, parent?: Field, child?: Field): Relation {
+		let relation = new Relation(graph)
+		relation.parent = parent
+		relation.child = child
+		return relation
+	}
+
+	get id(): string {
+		return `${this.parent?.id ?? 'undefined'}.${this.child?.id ?? 'undefined'}`
+	}
+
+	get parent(): Field | undefined {
 		return this._parent
 	}
 
-	set parent(parent: T | undefined) {
+	set parent(parent: Field | undefined) {
 		if (this.parent === parent) return
 
 		if (this.child) {
@@ -285,8 +306,8 @@ abstract class Relation<T extends Field> {
 		return this.parent?.color ?? 'transparent'
 	}
 
-	get parentOptions(): { name: string, value: T }[] {
-		let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+	filterParentOptions(fields: Field[]): { name: string, value: Field }[] {
+		let options = Array.from(fields)
 
 		// Field must have a name
 		options = options.filter(option => option.name)
@@ -305,7 +326,7 @@ abstract class Relation<T extends Field> {
 
 		// Ensure child options remain available
 		options = options.filter(parent => {
-			let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+			let options = Array.from(fields)
 
 			// Field must have a name
 			options = options.filter(option => option.name)
@@ -326,15 +347,15 @@ abstract class Relation<T extends Field> {
 		})
 
 		return options.map(option => {
-			return { name: option.name, value: option } as { name: string, value: T }
+			return { name: option.name, value: option } as { name: string, value: Field }
 		})
 	}
 
-	get child(): T | undefined {
+	get child(): Field | undefined {
 		return this._child
 	}
 
-	set child(child: T | undefined) {
+	set child(child: Field | undefined) {
 		if (this.child === child) return
 
 		if (this.parent) {
@@ -356,8 +377,8 @@ abstract class Relation<T extends Field> {
 		return this.child?.color ?? 'transparent'
 	}
 
-	get childOptions(): { name: string, value: T }[] {
-		let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+	filterChildOptions(fields: Field[]): { name: string, value: Field }[] {
+		let options = Array.from(fields)
 
 		// Field must have a name
 		options = options.filter(option => option.name)
@@ -376,7 +397,7 @@ abstract class Relation<T extends Field> {
 
 		// Ensure parent options remain available
 		options = options.filter(child => {
-			let options = this instanceof DomainRelation ? this.graph.domains : this.graph.subjects
+			let options = Array.from(fields)
 
 			// Field must have a name
 			options = options.filter(option => option.name)
@@ -397,17 +418,11 @@ abstract class Relation<T extends Field> {
 		})
 
 		return options.map(option => {
-			return { name: option.name, value: option } as { name: string, value: T }
+			return { name: option.name, value: option } as { name: string, value: Field }
 		})
 	}
 
 	delete() {
-		if (this instanceof DomainRelation) {
-			this.graph.domainRelations = this.graph.domainRelations.filter(relation => relation !== this)
-		} else if (this instanceof SubjectRelation) {
-			this.graph.subjectRelations = this.graph.subjectRelations.filter(relation => relation !== this)
-		}
-
 		if (this.parent && this.child) {
 			this.parent.children = this.parent.children.filter(field => field !== this.child)
 			this.child.parents = this.child.parents.filter(field => field !== this.parent)
@@ -415,24 +430,10 @@ abstract class Relation<T extends Field> {
 	}
 }
 
-class DomainRelation extends Relation<Domain> {
-	static create(graph: Graph) {
-		let relation = new DomainRelation(graph, graph.nextRelationID())
-		graph.domainRelations.push(relation)
-	}
-}
-
-class SubjectRelation extends Relation<Subject> {
-	static create(graph: Graph) {
-		let relation = new SubjectRelation(graph, graph.nextRelationID())
-		graph.subjectRelations.push(relation)
-	}
-}
-
-class Lecture {
-	graph: Graph
+class Lecture { }
+	/* graph: Graph
 	name?: string
-	presentSubjects: (Subject | undefined)[] = []
+	presentSubjects: (Subject | undefined)[]
 
 	constructor(graph: Graph, name?: string, presentSubjects: Subject[] = []) {
 		this.graph = graph
@@ -496,4 +497,4 @@ class Lecture {
 			this.futureSubjects.length
 		)
 	}
-}
+} */

@@ -62,6 +62,7 @@ class FieldSVG {
 	}
 
 	static update(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, animated: boolean = false) {
+		const content = d3.select<SVGGElement, unknown>(selection.node()!.parentNode as SVGGElement)
 
 		// Update field position
 		selection
@@ -74,9 +75,10 @@ class FieldSVG {
 			)`)
 
 		// Update relations
-		d3.select<SVGGElement, unknown>(selection.node()?.parentNode as SVGGElement)
-			.selectAll<SVGLineElement, Relation<Field>>('line')
-			.filter(relation => relation.parent === selection.datum() || relation.child === selection.datum())
-			.each(function() { RelationSVG.update(d3.select(this), animated) })
+		selection.each(function(field) {
+			content.selectAll<SVGLineElement, Relation>('.relation')
+				.filter(relation => relation.parent === field || relation.child === field)
+				.call(RelationSVG.update, animated)
+		})
 	}
 }

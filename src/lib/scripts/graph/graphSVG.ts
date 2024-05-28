@@ -51,7 +51,7 @@ class GraphSVG {
 					case GraphType.subjects:
 						this.animating = true
 						this.setInteractive(false)
-						this.setContent(this.graph.subjects, this.graph.subjectRelations)
+						this.setContent(this.graph.subjects)
 						this.moveContent(this.domainTransform)
 						this.restoreContent(true, () => {
 							this.setInteractive(this.interactive)
@@ -65,7 +65,7 @@ class GraphSVG {
 							this.animating = true
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
-							this.setContent(this.lecture.subjects, this.lecture.relations)
+							this.setContent(this.lecture.subjects)
 							this.moveContent(this.domainTransform)
 							this.moveContent(this.lectureTransform, true, () => {
 								this.setBackground(GraphType.lecture)
@@ -91,7 +91,7 @@ class GraphSVG {
 						this.animating = true
 						this.setInteractive(false)
 						this.moveContent(this.domainTransform, true, () => {
-							this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
+							this.setContent(this.graph.domains, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
@@ -105,7 +105,7 @@ class GraphSVG {
 							this.animating = true
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
-							this.setContent(this.lecture.subjects, this.lecture.relations, true, () => {
+							this.setContent(this.lecture.subjects, true, () => {
 								this.moveContent(this.lectureTransform, true, () => {
 									this.setBackground(GraphType.lecture)
 									this.moveContent(this.lectureTransform)
@@ -132,7 +132,7 @@ class GraphSVG {
 							this.setBackground(GraphType.domains)
 							this.moveContent(this.lectureTransform)
 							this.moveContent(this.domainTransform, true, () => {
-								this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
+								this.setContent(this.graph.domains, true, () => {
 									this.setInteractive(this.interactive)
 									this.animating = false
 								})
@@ -142,7 +142,7 @@ class GraphSVG {
 						else {
 							this.animating = true
 							this.setBackground(GraphType.domains)
-							this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
+							this.setContent(this.graph.domains, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
@@ -157,7 +157,7 @@ class GraphSVG {
 							this.setBackground(GraphType.subjects)
 							this.moveContent(this.lectureTransform)
 							this.restoreContent(true, () => {
-								this.setContent(this.graph.subjects, this.graph.subjectRelations, true, () => {
+								this.setContent(this.graph.subjects, true, () => {
 									this.setInteractive(this.interactive)
 									this.animating = false
 								})
@@ -167,7 +167,7 @@ class GraphSVG {
 						else {
 							this.animating = true
 							this.setBackground(GraphType.subjects)
-							this.setContent(this.graph.subjects, this.graph.subjectRelations, true, () => {
+							this.setContent(this.graph.subjects, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
@@ -309,19 +309,19 @@ class GraphSVG {
 		}, animate ? settings.ANIMATION_DURATION : 0)
 	}
 
-	private setContent(fields: Field[], relations: Relation<Field>[], fade: boolean = false, callback: () => void = () => {}) {
+	private setContent(fields: Field[], fade: boolean = false, callback: () => void = () => {}) {
 		const content = d3.select<SVGGElement, unknown>('#content')
 		this.fields = fields
 
-		// Update Relations
-		content.selectAll<SVGLineElement, Relation<Field>>('.relation')
-			.data(relations, relation => relation.id)
+		// Update relations
+		content.selectAll<SVGLineElement, Relation>('.relation')
+			.data(fields.flatMap(field => field.forwardRelations), relation => relation.id)
 			.join(
 				function(enter) {
 					return enter
 						.append('line')
-						.call(RelationSVG.create)
-						.style('opacity', 0)
+							.call(RelationSVG.create)
+							.style('opacity', 0)
 				},
 
 				function(update) {
@@ -338,7 +338,6 @@ class GraphSVG {
 			)
 			.transition()
 				.duration(fade ? settings.FADE_DURATION : 0)
-				.ease(d3.easeSinInOut)
 			.style('opacity', 1)
 
 		// Update Fields
@@ -348,8 +347,8 @@ class GraphSVG {
 				function(enter) {
 					return enter
 						.append('g')
-						.call(FieldSVG.create)
-						.style('opacity', 0)
+							.call(FieldSVG.create)
+							.style('opacity', 0)
 				},
 
 				function(update) {

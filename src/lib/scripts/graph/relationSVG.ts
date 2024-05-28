@@ -3,7 +3,7 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Field, Relation } from './entities'
+import { Relation } from './entities'
 import * as settings from './settings'
 import { styles } from './settings'
 
@@ -11,20 +11,19 @@ import { styles } from './settings'
 export { RelationSVG }
 
 class RelationSVG {
-	static create(selection: d3.Selection<SVGLineElement, Relation<Field>, d3.BaseType, unknown>) {
+	static create(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>) {
 		selection
 			.attr('class', 'relation')
-			.attr('id', relation => relation.id)
 			.attr('stroke-width', settings.STROKE_WIDTH)
 			.attr('stroke', relation => styles[relation.parent!.style!].stroke)
 			.attr('fill', relation => styles[relation.parent!.style!].stroke)
 			.attr('marker-end', 'url(#arrowhead)')
-
-		RelationSVG.update(selection)
+			.call(RelationSVG.update)
 	}
 
-	static update(selection: d3.Selection<SVGLineElement, Relation<Field>, d3.BaseType, unknown>, animated: boolean = false) {
+	static update(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>, animated: boolean = false) {
 		selection.each(function(relation) {
+			const line = d3.select(this)
 
 			/* We are calculating the line connecting two nodes.
 			 * It should start at the center of the start node and end at the BOUNDS of the end node.
@@ -51,8 +50,7 @@ class RelationSVG {
 
 			// Check for overlap
 			if (Math.abs(dx) < halfWidth && Math.abs(dy) < halfHeight) {
-				d3.select(this)
-					.transition()
+				line.transition()
 						.duration(animated ? settings.ANIMATION_DURATION : 0)
 						.ease(d3.easeSinInOut)
 					.attr('x1', cxStart * settings.GRID_UNIT)
@@ -77,8 +75,7 @@ class RelationSVG {
 			const x2 = cxEnd + sign * (vertQuad ? halfHeight * dx / dy : halfWidth)
 			const y2 = cyEnd + sign * (vertQuad ? halfHeight : halfWidth * dy / dx)
 
-			d3.select(this)
-				.transition()
+			line.transition()
 					.duration(animated ? settings.ANIMATION_DURATION : 0)
 					.ease(d3.easeSinInOut)
 				.attr('x1', x1 * settings.GRID_UNIT)
