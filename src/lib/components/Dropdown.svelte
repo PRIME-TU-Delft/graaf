@@ -11,7 +11,7 @@
 	export let label: string
 	export let placeholder: string
 	export let value: T | undefined = undefined
-	export let options: { name: string, value: T }[]
+	export let options: { name: string, value: T, available: boolean, reason?: '' }[]
 
 	// Functions
 	export function show() {
@@ -51,23 +51,30 @@
 >
 	<!-- Hidden input to bind the selected value to a submittable element -->
 	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
-	<label for={id} class="label" class:grayed-out={value === undefined}>
+	<label for={id} class="label" class:grayed={value === undefined}>
 		{options.find(option => option.value === value)?.name ?? placeholder}
 	</label>
 
 	<div class="options">
 		{#each options as option}
-			<button class="option" on:click={() => value = option.value}> {option.name} </button>
+			{#if option.available}
+				<button class="option" on:click={() => value = option.value}> {option.name} </button>
+			{:else}
+				<button disabled class="option unavailable">
+					<span class="name"> {option.name} </span>
+					<span class="reason"> {option.reason} </span>
+				</button>
+			{/if}
 		{/each}
 
 		{#if options.length === 0}
-			<button disabled class="option grayed-out"> 
+			<button disabled class="option"> 
 				<i> No options available </i>
 			</button>
 		{/if}
 
 		{#if value !== undefined}
-			<button class="option grayed-out" on:click={() => value = undefined}>
+			<button class="option grayed" on:click={() => value = undefined}>
 				<i> Remove choice </i>
 			</button>
 		{/if}
@@ -151,6 +158,23 @@
 
 				&:hover:not(:disabled)
 					background-color: $light-gray
+				
+				&:disabled
+					display: flex
+					color: $placeholder-color
+					cursor: not-allowed
+
+					.name
+						pointer-events: none
+
+					.reason
+						flex: 1
+						color: $red
+						text-align: right
+						pointer-events: none
+
+				
+
 
 		&.visible
 			.label
@@ -164,7 +188,7 @@
 			.options
 				display: flex
 		
-		.grayed-out
+		.grayed
 			color: $placeholder-color
 
 </style>

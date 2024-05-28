@@ -306,48 +306,64 @@ class Relation {
 		return this.parent?.color ?? 'transparent'
 	}
 
-	filterParentOptions(fields: Field[]): { name: string, value: Field }[] {
-		let options = Array.from(fields)
+	filterParentOptions(fields: Field[]): { name: string, value: Field, available: boolean, reason?: string }[] {
+		let options = fields.map(field => {
+			return { name: field.name, value: field, available: true } as { name: string, value: Field, available: boolean, reason?: string }
+		})
 
 		// Field must have a name
-		options = options.filter(option => option.name)
-
-		// Prevent circular references
-		const descendants = this.child?.descendants
-		options = options.filter(option => 
-			option !== this.child && !descendants?.includes(option)
-		)
+		options = options.filter(option => option.value.name)
 
 		// Prevent duplicate relations
-		options = options.filter(option => {
-			if (this.parent === option) return true
-			return !this.child?.parents.includes(option)
+		options.forEach(option => {
+			if (this.parent !== option.value && this.child?.parents.includes(option.value)) {
+				option.available = false
+				option.reason = 'Duplicate relation'
+			}
+		})
+		
+		// Prevent circular references
+		const descendants = this.child?.descendants
+		options.forEach(option => {
+			if (!option.available) return
+			if (option.value === this.child || descendants?.includes(option.value)) {
+				option.available = false
+				option.reason = 'Circular reference'
+			}
 		})
 
 		// Ensure child options remain available
-		options = options.filter(parent => {
-			let options = Array.from(fields)
+		options.forEach(option => {
+			if (!option.available) return
+			let childOptions = Array.from(fields)
 
 			// Field must have a name
-			options = options.filter(option => option.name)
+			childOptions = childOptions.filter(option => option.name)
 
 			// Prevent circular references
+			const parent = option.value
 			const ancestors = parent.ancestors
-			options = options.filter(option => 
+			childOptions = childOptions.filter(option => 
 				option !== parent && !ancestors?.includes(option)
 			)
 
 			// Prevent duplicate relations
-			options = options.filter(option => {
+			childOptions = childOptions.filter(option => {
 				if (this.child === option) return true
 				return !parent.children.includes(option)
 			})
 
-			return options.length > 0
+			if (childOptions.length === 0) {
+				option.available = false
+				option.reason = 'No valid child'
+			}
 		})
 
-		return options.map(option => {
-			return { name: option.name, value: option } as { name: string, value: Field }
+		// Sort options by availability
+		return options.sort((a, b) => {
+			if (a.available && !b.available) return -1
+			if (!a.available && b.available) return 1
+			return 0
 		})
 	}
 
@@ -377,48 +393,63 @@ class Relation {
 		return this.child?.color ?? 'transparent'
 	}
 
-	filterChildOptions(fields: Field[]): { name: string, value: Field }[] {
-		let options = Array.from(fields)
+	filterChildOptions(fields: Field[]): { name: string, value: Field, available: boolean, reason?: string }[] {
+		let options = fields.map(field => {
+			return { name: field.name, value: field, available: true } as { name: string, value: Field, available: boolean, reason?: string }
+		})
 
 		// Field must have a name
-		options = options.filter(option => option.name)
+		options = options.filter(option => option.value.name)
 
 		// Prevent circular references
 		const ancestors = this.parent?.ancestors
-		options = options.filter(option => 
-			option !== this.parent && !ancestors?.includes(option)
-		)
+		console.log(ancestors)
+		options.forEach(option => {
+			if (option.value === this.parent || ancestors?.includes(option.value)) {
+				option.available = false
+				option.reason = 'Circular reference'
+			}
+		})
 
 		// Prevent duplicate relations
-		options = options.filter(option => {
-			if (this.child === option) return true
-			return !this.parent?.children.includes(option)
+		options.forEach(option => {
+			if (this.child !== option.value && this.parent?.children.includes(option.value)) {
+				option.available = false
+				option.reason = 'Duplicate relation'
+			}
 		})
 
 		// Ensure parent options remain available
-		options = options.filter(child => {
-			let options = Array.from(fields)
+		options.forEach(option => {
+			let parentOptions = Array.from(fields)
 
 			// Field must have a name
-			options = options.filter(option => option.name)
+			parentOptions = parentOptions.filter(option => option.name)
 
 			// Prevent circular references
+			const child = option.value
 			const descendants = child.descendants
-			options = options.filter(option => 
+			parentOptions = parentOptions.filter(option => 
 				option !== child && !descendants?.includes(option)
 			)
 
 			// Prevent duplicate relations
-			options = options.filter(option => {
+			parentOptions = parentOptions.filter(option => {
 				if (this.parent === option) return true
 				return !child.parents.includes(option)
 			})
 
-			return options.length > 0
+			if (parentOptions.length === 0) {
+				option.available = false
+				option.reason = 'No valid parent'
+			}
 		})
 
-		return options.map(option => {
-			return { name: option.name, value: option } as { name: string, value: Field }
+		// Sort options by availability
+		return options.sort((a, b) => {
+			if (a.available && !b.available) return -1
+			if (!a.available && b.available) return 1
+			return 0
 		})
 	}
 
