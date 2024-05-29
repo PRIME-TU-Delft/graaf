@@ -3,8 +3,8 @@
 
 
 	// Lib imports
-    import { Graph } from '$scripts/graph/entities'
-	import { GraphSVG, GraphType } from '$scripts/graph/graphSVG'
+    import { Graph } from '$scripts/entities'
+	import { GraphSVG, GraphType } from '$scripts/d3'
 	
 	// Components
 	import Dropdown from './Dropdown.svelte';
@@ -16,10 +16,6 @@
 	// Variables
 	let graphSVG: GraphSVG = new GraphSVG(graph, GraphType.domains, interactive)
 	graphSVG.lecture = graph.lectures[0]
-
-	$: lectureOptions = graph.lectures
-		.filter(lecture => lecture.name)
-		.map(lecture => ({name: lecture.name!, value: lecture}))
 
 </script>
 
@@ -45,11 +41,11 @@
 
         <button
 			class="tab last"
-            class:active={graphSVG.type === GraphType.lecture}
-            on:click={() => graphSVG.type = GraphType.lecture}
+            class:active={graphSVG.type === GraphType.lectures}
+            on:click={() => graphSVG.type = GraphType.lectures}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={lectureOptions} />
+		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lectureOptions} />
     </div>
 
     <div class="editor">
@@ -73,7 +69,7 @@
 		align-items: center 
 		justify-content: center
 
-		height: 650px
+		height: 600px
 
 	.tabular
 		border-radius: $border-radius

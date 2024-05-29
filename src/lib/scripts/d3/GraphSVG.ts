@@ -3,18 +3,17 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Graph, Field, Subject, Relation, Lecture } from './entities'
-import { FieldSVG } from './fieldSVG'
-import { RelationSVG } from './relationSVG'
-import * as settings from './settings'
+import { FieldSVG, RelationSVG } from '../d3'
+import { Graph, Field, Subject, Relation, Lecture } from '../entities'
+import * as settings from '../settings'
 
 // Exports
-export { GraphSVG, GraphType }
+export { GraphType, GraphSVG }
 
 enum GraphType {
 	domains,
 	subjects,
-	lecture
+	lectures
 }
 
 class GraphSVG {
@@ -60,15 +59,16 @@ class GraphSVG {
 						break
 
 					// Domains -> Lecture
-					case GraphType.lecture:
+					case GraphType.lectures:
 						if (this.lecture) {
+							console.log(this.lecture.pastSubjects, this.lecture.presentSubjects, this.lecture.futureSubjects)
 							this.animating = true
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
 							this.setContent(this.lecture.subjects, this.lecture.relations)
 							this.moveContent(this.domainTransform)
 							this.moveContent(this.lectureTransform, true, () => {
-								this.setBackground(GraphType.lecture)
+								this.setBackground(GraphType.lectures)
 								this.moveContent(this.lectureTransform)
 								this.animating = false
 							})
@@ -77,7 +77,7 @@ class GraphSVG {
 						else {
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1)
-							this.setBackground(GraphType.lecture)
+							this.setBackground(GraphType.lectures)
 							this.clearContent()
 						}
 
@@ -100,14 +100,14 @@ class GraphSVG {
 						break
 
 					// Subjects -> Lectures
-					case GraphType.lecture:
+					case GraphType.lectures:
 						if (this.lecture) {
 							this.animating = true
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
 							this.setContent(this.lecture.subjects, this.lecture.relations, true, () => {
 								this.moveContent(this.lectureTransform, true, () => {
-									this.setBackground(GraphType.lecture)
+									this.setBackground(GraphType.lectures)
 									this.moveContent(this.lectureTransform)
 									this.animating = false
 								})
@@ -117,12 +117,12 @@ class GraphSVG {
 						else {
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1)
-							this.setBackground(GraphType.lecture)
+							this.setBackground(GraphType.lectures)
 							this.clearContent()
 						}
 				} break
 
-			case GraphType.lecture:
+			case GraphType.lectures:
 				switch (type) {
 
 					// Lectures -> Domains
@@ -183,17 +183,18 @@ class GraphSVG {
 	}
 
 	set lecture(lecture: Lecture | undefined) {
-		if (this.type !== GraphType.lecture || this.animating) return
+		if (this.animating) return
 		this._lecture = lecture
+		if (this.type !== GraphType.lectures) return
 
 		if (this.lecture) {
 			this.clearContent()
-			this.setBackground(GraphType.lecture)
+			this.setBackground(GraphType.lectures)
 			this.setContent(this.lecture.subjects, this.lecture.relations)
 			this.moveContent(this.lectureTransform)
 		} else {
 			this.clearContent()
-			this.setBackground(GraphType.lecture)
+			this.setBackground(GraphType.lectures)
 		}
 	}
 
@@ -274,11 +275,11 @@ class GraphSVG {
 				this.setBackground(GraphType.subjects)
 				break
 
-			case GraphType.lecture:
+			case GraphType.lectures:
 				if (!this.lecture) break
 				this.setContent(this.lecture.subjects, this.lecture.relations)
 				this.moveContent(this.lectureTransform)
-				this.setBackground(GraphType.lecture)
+				this.setBackground(GraphType.lectures)
 				break
 		}
 	}
@@ -308,19 +309,19 @@ class GraphSVG {
 		}, animate ? settings.ANIMATION_DURATION : 0)
 	}
 
-	private setContent(fields: Field[], relations: Relation<Field>[], fade: boolean = false, callback: () => void = () => {}) {
+	private setContent(fields: Field[], relations: Relation[], fade: boolean = false, callback: () => void = () => {}) {
 		const content = d3.select<SVGGElement, unknown>('#content')
 		this.fields = fields
 
-		// Update Relations
-		content.selectAll<SVGLineElement, Relation<Field>>('.relation')
+		// Update relations
+		content.selectAll<SVGLineElement, Relation>('.relation')
 			.data(relations, relation => relation.id)
 			.join(
 				function(enter) {
 					return enter
 						.append('line')
-						.call(RelationSVG.create)
-						.style('opacity', 0)
+							.call(RelationSVG.create)
+							.style('opacity', 0)
 				},
 
 				function(update) {
@@ -337,7 +338,6 @@ class GraphSVG {
 			)
 			.transition()
 				.duration(fade ? settings.FADE_DURATION : 0)
-				.ease(d3.easeSinInOut)
 			.style('opacity', 1)
 
 		// Update Fields
@@ -347,8 +347,8 @@ class GraphSVG {
 				function(enter) {
 					return enter
 						.append('g')
-						.call(FieldSVG.create)
-						.style('opacity', 0)
+							.call(FieldSVG.create)
+							.style('opacity', 0)
 				},
 
 				function(update) {
@@ -454,7 +454,7 @@ class GraphSVG {
 
 				break
 
-			case GraphType.lecture:
+			case GraphType.lectures:
 				const size = this.lecture?.size || 0
 
 				// Set svg size

@@ -1,10 +1,10 @@
 
-import { Course, Graph } from '$scripts/graph/entities'
+import { Course, Graph } from '$scripts/entities'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = ({ params }) => {
 	return {
-		course: new Course(params.course),
-		graph: new Graph(parseInt(params.graph))
+		course: new Course(new Object()),
+		graph: new Graph(new Object())
 	}
 }

@@ -29,6 +29,10 @@
 	$: courses = data.courses
 	$: programs = data.programs
 
+	$: programOptions = programs.map(program => {
+		return { name: program.name, value: program.id, available: true }
+	})
+
 	function onSearch(event: Event) {
 		// TODO add onSearch event
 	}
@@ -96,9 +100,7 @@
 				<Dropdown
 					label="Program"
 					placeholder="Select a program"
-					options={programs.map(program => {
-						return { name: program.name, value: program.id }
-					})}
+					options={programOptions}
 				/>
 
 				<Button submit on:click={createCourseModal?.hide}> Create </Button>
