@@ -17,12 +17,6 @@
 	let graphSVG: GraphSVG = new GraphSVG(graph, GraphType.domains, interactive)
 	graphSVG.lecture = graph.lectures[0]
 
-	$: lectureOptions = graph.lectures
-		.filter(lecture => lecture.name)
-		.map(lecture => (
-			{name: lecture.name!, value: lecture, available: true}
-		))
-
 </script>
 
 
@@ -51,7 +45,7 @@
             on:click={() => graphSVG.type = GraphType.lecture}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={lectureOptions} />
+		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lectureOptions} />
     </div>
 
     <div class="editor">

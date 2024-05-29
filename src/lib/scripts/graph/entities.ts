@@ -86,6 +86,30 @@ class Graph {
 		return relations
 	}
 
+	get domainOptions(): { name: string, value: Domain, available: boolean, reason?: string }[] {
+		return this.domains
+			.filter(domain => domain.name)
+			.map(domain => (
+				{ name: domain.name, value: domain, available: true }
+			)) as { name: string, value: Domain, available: boolean, reason?: string }[]
+	
+	}
+
+	get lectureOptions(): { name: string, value: Lecture, available: boolean, reason?: string }[] {
+		return this.lectures
+			.filter(lecture => lecture.name)
+			.map(lecture => (
+				{ name: lecture.name, value: lecture, available: true }
+			)) as { name: string, value: Lecture, available: boolean, reason?: string }[]
+	}
+
+	get styleOptions(): { name: string, value: string, available: boolean, reason?: string }[] {
+		return Object.keys(styles)
+			.map(style => (
+				{ name: styles[style].display_name, value: style, available: true }
+			))
+	}
+
 	serialize(): object {
 		throw new Error('Not implemented')
 	}
@@ -365,12 +389,7 @@ class Relation {
 			}
 		})
 
-		// Sort options by availability
-		return options.sort((a, b) => {
-			if (a.available && !b.available) return -1
-			if (!a.available && b.available) return 1
-			return 0
-		})
+		return options
 	}
 
 	get child(): Field | undefined {
@@ -452,12 +471,7 @@ class Relation {
 			}
 		})
 
-		// Sort options by availability
-		return options.sort((a, b) => {
-			if (a.available && !b.available) return -1
-			if (!a.available && b.available) return 1
-			return 0
-		})
+		return options
 	}
 
 	delete() {
@@ -471,12 +485,12 @@ class Relation {
 class Lecture {
 	graph: Graph
 	name?: string
-	private _presentSubjects: (Subject | undefined)[]
+	presentSubjects: (Subject | undefined)[]
 
 	constructor(graph: Graph, name?: string, presentSubjects: Subject[] = []) {
 		this.graph = graph
 		this.name = name
-		this._presentSubjects = presentSubjects
+		this.presentSubjects = presentSubjects
 	}
 
 	static create(graph: Graph): void {
@@ -493,10 +507,6 @@ class Lecture {
 			.filter(subject => subject)
 			.flatMap(subject => subject!.parents)
 			.filter((subject, index, self) => self.indexOf(subject) === index)
-	}
-
-	get presentSubjects(): (Subject | undefined)[] {
-		return this._presentSubjects
 	}
 
 	get futureSubjects(): Subject[] {
@@ -533,11 +543,11 @@ class Lecture {
 	}
 
 	addSubject() {
-		this._presentSubjects.push(undefined)
+		this.presentSubjects.push(undefined)
 	}
 
 	removeSubject(index: number) {
-		this._presentSubjects.splice(index, 1)
+		this.presentSubjects.splice(index, 1)
 	}
 
 	subjectOptions(index: number): { name: string, value: Subject, available: boolean, reason?: string }[] {

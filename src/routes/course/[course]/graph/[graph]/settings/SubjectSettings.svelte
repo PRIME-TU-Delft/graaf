@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, Field, Relation } from '$scripts/graph/entities'
+	import { Graph, Subject, Relation } from '$scripts/graph/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -32,12 +32,6 @@
 	let relationToSort: boolean | undefined
 
 	let relations: Relation[] = graph.subjectRelations
-
-    $: domainOptions = graph.domains
-		.filter(domain => domain.name)
-		.map(domain => (
-			{ name: domain.name!, value: domain, available: true }
-		))
 
 	// Force reactivity update
 	// NOTE: Maybe redundant Svelte 5?
@@ -146,7 +140,7 @@
 				<span> {n + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
-				<Dropdown label="Domain" placeholder="Assigned Domain" options={domainOptions} bind:value={subject.domain} />
+				<Dropdown label="Domain" placeholder="Assigned Domain" options={graph.domainOptions} bind:value={subject.domain} />
 				<span class="preview" style:background-color={subject.color} />
 			</div>
 		{/if}

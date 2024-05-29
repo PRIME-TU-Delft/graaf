@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, Field, Relation } from '$scripts/graph/entities'
+	import { Graph, Domain, Relation } from '$scripts/graph/entities'
 	import { styles } from '$scripts/graph/settings'
 
 	// Components
@@ -32,10 +32,6 @@
 	let relationToSort: boolean | undefined
 
 	let relations: Relation[] = graph.domainRelations
-
-	$: styleOptions = Object.keys(styles).map(style => (
-		{ name: styles[style].display_name, value: style, available: true }
-	))
 
 	// Force reactivity update
 	// NOTE: Maybe redundant Svelte 5?
@@ -149,7 +145,7 @@
 				<span> {n + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-				<Dropdown label="Style" placeholder="Domain Style" options={styleOptions} bind:value={domain.style}/>
+				<Dropdown label="Style" placeholder="Domain Style" options={graph.styleOptions} bind:value={domain.style}/>
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}

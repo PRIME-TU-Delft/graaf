@@ -1,21 +1,21 @@
 export const GRID_UNIT = 10
 export const GRID_COLOR = '#a4a4a4'
-export const GRID_MIN_ZOOM = 0.5
-export const GRID_MAX_ZOOM = 2
+export const GRID_MIN_ZOOM = 0.5		// scalar
+export const GRID_MAX_ZOOM = 2			// scalar
 
-export const FIELD_WIDTH = 16
-export const FIELD_HEIGHT = 8
-export const FIELD_MARGIN = 0.75
-export const FIELD_FONT_SIZE = 15
+export const FIELD_WIDTH = 16			// GU
+export const FIELD_HEIGHT = 8			// GU	
+export const FIELD_MARGIN = 0.75		// GU
+export const FIELD_FONT_SIZE = 15		// px
 
-export const LECTURE_PADDING = 5
-export const LECTURE_HEADER_HEIGHT = 3
+export const LECTURE_PADDING = 5		// GU
+export const LECTURE_HEADER_HEIGHT = 3	// GU
+export const LECTURE_FONT_SIZE = 22		// px
 export const LECTURE_COLUMN_WIDTH = 2 * LECTURE_PADDING + FIELD_WIDTH
-export const LECTURE_FONT_SIZE = 22
 
-export const STROKE_WIDTH = 2
-export const FADE_DURATION = 500
-export const ANIMATION_DURATION = 1000
+export const STROKE_WIDTH = 2 			// px
+export const FADE_DURATION = 500		// ms
+export const ANIMATION_DURATION = 1000	// ms
 
 const top = STROKE_WIDTH / 2
 const right = FIELD_WIDTH * GRID_UNIT - STROKE_WIDTH / 2

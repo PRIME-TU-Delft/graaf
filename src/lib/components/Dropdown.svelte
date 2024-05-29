@@ -30,6 +30,11 @@
 	let visible: boolean = false
 	$: id = label.toLowerCase().replace(/\s/g, '_')
 
+	// Sort by availability
+	$: options = options.sort((a, b) => 
+		a.available === b.available ? 0 : a.available ? -1 : 1
+	)
+
 	// Property validation
 	$: if (options.find(option => option.value === value) === undefined) {
 		value = undefined // If the current value isnt in the available options, default to undefined
