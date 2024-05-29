@@ -34,7 +34,7 @@ class Graph {
 
 		// TODO load from data
 
-		/* this.domains.push(
+		this.domains.push(
 			new Domain(this, 1, 0, 0, [], [], 'Domain 1', 'prosperous-red'),
 			new Domain(this, 2, 0, 0, [], [], 'Domain 2', 'energizing-orange'),
 			new Domain(this, 3, 0, 0, [], [], 'Domain 3', 'sunny-yellow')
@@ -60,8 +60,8 @@ class Graph {
 		Relation.create(this, this.subjects[2], this.subjects[4])
 
 		this.lectures.push(
-			new Lecture()
-		) */
+			new Lecture(this, 'Lecture 1', [this.subjects[2], this.subjects[4]]),
+		)
 	}
 
 	get domainRelations(): Relation[] {
@@ -506,13 +506,15 @@ class Lecture {
 		return this.presentSubjects
 			.filter(subject => subject)
 			.flatMap(subject => subject!.parents)
-			.filter((subject, index, self) => self.indexOf(subject) === index)
+			.filter(parent => !this.presentSubjects.includes(parent))
+			.filter((parent, index, self) => self.indexOf(parent) === index)
 	}
 
 	get futureSubjects(): Subject[] {
 		return this.presentSubjects
 			.filter(subject => subject)
 			.flatMap(subject => subject!.children)
+			.filter(child => !this.presentSubjects.includes(child))
 			.filter((subject, index, self) => self.indexOf(subject) === index)
 	}
 

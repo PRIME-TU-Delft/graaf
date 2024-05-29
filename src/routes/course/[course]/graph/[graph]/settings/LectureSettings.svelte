@@ -143,10 +143,9 @@
 				display: grid
 				grid-template: "id delete subject preview" auto / $icon-width $icon-width 1fr $icon-width
 				place-items: center center
-				place-self: start start
 				gap: $form-small-gap
 
-				width: 100%
+				place-self: center stretch
 				padding-left: $gutter-width
 				border-left: 1px solid $gray
 				margin-left: $gutter-width

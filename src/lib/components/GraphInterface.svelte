@@ -69,7 +69,7 @@
 		align-items: center 
 		justify-content: center
 
-		height: 650px
+		height: 600px
 
 	.tabular
 		border-radius: $border-radius

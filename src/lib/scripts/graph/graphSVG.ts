@@ -51,7 +51,7 @@ class GraphSVG {
 					case GraphType.subjects:
 						this.animating = true
 						this.setInteractive(false)
-						this.setContent(this.graph.subjects)
+						this.setContent(this.graph.subjects, this.graph.subjectRelations)
 						this.moveContent(this.domainTransform)
 						this.restoreContent(true, () => {
 							this.setInteractive(this.interactive)
@@ -62,10 +62,11 @@ class GraphSVG {
 					// Domains -> Lecture
 					case GraphType.lecture:
 						if (this.lecture) {
+							console.log(this.lecture.pastSubjects, this.lecture.presentSubjects, this.lecture.futureSubjects)
 							this.animating = true
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
-							this.setContent(this.lecture.subjects)
+							this.setContent(this.lecture.subjects, this.lecture.relations)
 							this.moveContent(this.domainTransform)
 							this.moveContent(this.lectureTransform, true, () => {
 								this.setBackground(GraphType.lecture)
@@ -91,7 +92,7 @@ class GraphSVG {
 						this.animating = true
 						this.setInteractive(false)
 						this.moveContent(this.domainTransform, true, () => {
-							this.setContent(this.graph.domains, true, () => {
+							this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
@@ -105,7 +106,7 @@ class GraphSVG {
 							this.animating = true
 							this.setInteractive(false)
 							this.setZoomAndPan(0, 0, 1, true)
-							this.setContent(this.lecture.subjects, true, () => {
+							this.setContent(this.lecture.subjects, this.lecture.relations, true, () => {
 								this.moveContent(this.lectureTransform, true, () => {
 									this.setBackground(GraphType.lecture)
 									this.moveContent(this.lectureTransform)
@@ -132,7 +133,7 @@ class GraphSVG {
 							this.setBackground(GraphType.domains)
 							this.moveContent(this.lectureTransform)
 							this.moveContent(this.domainTransform, true, () => {
-								this.setContent(this.graph.domains, true, () => {
+								this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
 									this.setInteractive(this.interactive)
 									this.animating = false
 								})
@@ -142,7 +143,7 @@ class GraphSVG {
 						else {
 							this.animating = true
 							this.setBackground(GraphType.domains)
-							this.setContent(this.graph.domains, true, () => {
+							this.setContent(this.graph.domains, this.graph.domainRelations, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
@@ -157,7 +158,7 @@ class GraphSVG {
 							this.setBackground(GraphType.subjects)
 							this.moveContent(this.lectureTransform)
 							this.restoreContent(true, () => {
-								this.setContent(this.graph.subjects, true, () => {
+								this.setContent(this.graph.subjects, this.graph.subjectRelations, true, () => {
 									this.setInteractive(this.interactive)
 									this.animating = false
 								})
@@ -167,7 +168,7 @@ class GraphSVG {
 						else {
 							this.animating = true
 							this.setBackground(GraphType.subjects)
-							this.setContent(this.graph.subjects, true, () => {
+							this.setContent(this.graph.subjects, this.graph.subjectRelations, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
@@ -309,13 +310,13 @@ class GraphSVG {
 		}, animate ? settings.ANIMATION_DURATION : 0)
 	}
 
-	private setContent(fields: Field[], fade: boolean = false, callback: () => void = () => {}) {
+	private setContent(fields: Field[], relations: Relation[], fade: boolean = false, callback: () => void = () => {}) {
 		const content = d3.select<SVGGElement, unknown>('#content')
 		this.fields = fields
 
 		// Update relations
 		content.selectAll<SVGLineElement, Relation>('.relation')
-			.data(fields.flatMap(field => field.forwardRelations), relation => relation.id)
+			.data(relations, relation => relation.id)
 			.join(
 				function(enter) {
 					return enter
