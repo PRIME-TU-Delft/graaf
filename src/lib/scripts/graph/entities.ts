@@ -246,7 +246,7 @@ class Subject extends Field {
 	get style(): string | undefined {
 		return this.domain?.style
 	}
-	
+
 	delete() {
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
 
@@ -292,7 +292,7 @@ class Relation {
 				this.parent.children = this.parent.children.filter(field => field !== this.child)
 				this.child.parents = this.child.parents.filter(field => field !== this.parent)
 			}
-			
+
 			if (parent) {
 				parent.children.push(this.child)
 				this.child.parents.push(parent)
@@ -321,7 +321,7 @@ class Relation {
 				option.reason = 'Duplicate relation'
 			}
 		})
-		
+
 		// Prevent circular references
 		const descendants = this.child?.descendants
 		options.forEach(option => {
@@ -349,7 +349,7 @@ class Relation {
 
 			// Prevent circular references
 			const ancestors = parent.ancestors
-			childOptions = childOptions.filter(option => 
+			childOptions = childOptions.filter(option =>
 				option !== parent && !ancestors?.includes(option)
 			)
 
@@ -442,7 +442,7 @@ class Relation {
 			})
 
 			// Prevent circular references
-			parentOptions = parentOptions.filter(option => 
+			parentOptions = parentOptions.filter(option =>
 				option !== child && !descendants?.includes(option)
 			)
 
@@ -468,15 +468,15 @@ class Relation {
 	}
 }
 
-class Lecture { }
-	/* graph: Graph
+class Lecture {
+	graph: Graph
 	name?: string
-	presentSubjects: (Subject | undefined)[]
+	private _presentSubjects: (Subject | undefined)[]
 
 	constructor(graph: Graph, name?: string, presentSubjects: Subject[] = []) {
 		this.graph = graph
 		this.name = name
-		this.presentSubjects = presentSubjects
+		this._presentSubjects = presentSubjects
 	}
 
 	static create(graph: Graph): void {
@@ -489,25 +489,21 @@ class Lecture { }
 	}
 
 	get pastSubjects(): Subject[] {
-		const pastSubjects: Subject[] = []
-		for (const relation of this.relations) {
-			if (!(this.presentSubjects.includes(relation.parent) || pastSubjects.includes(relation.parent!))) {
-				pastSubjects.push(relation.parent!)
-			}
-		}
+		return this.presentSubjects
+			.filter(subject => subject)
+			.flatMap(subject => subject!.parents)
+			.filter((subject, index, self) => self.indexOf(subject) === index)
+	}
 
-		return pastSubjects
+	get presentSubjects(): (Subject | undefined)[] {
+		return this._presentSubjects
 	}
 
 	get futureSubjects(): Subject[] {
-		const futureSubjects: Subject[] = []
-		for (const relation of this.relations) {
-			if (!(this.presentSubjects.includes(relation.child) || futureSubjects.includes(relation.child!))) {
-				futureSubjects.push(relation.child!)
-			}
-		}
-
-		return futureSubjects
+		return this.presentSubjects
+			.filter(subject => subject)
+			.flatMap(subject => subject!.children)
+			.filter((subject, index, self) => self.indexOf(subject) === index)
 	}
 
 	get subjects(): Subject[] {
@@ -519,13 +515,13 @@ class Lecture { }
 			) as Subject[]
 	}
 
-	get relations(): SubjectRelation[] {
-		return this.graph.subjectRelations.filter(relation =>
-			relation.parent && relation.child && (
-				this.presentSubjects.includes(relation.parent) ||
-				this.presentSubjects.includes(relation.child)
-			)
-		)
+	get relations(): Relation[] {
+		return this.presentSubjects
+			.filter(subject => subject)
+			.flatMap(subject => [
+				...subject!.backwardRelations,
+				...subject!.forwardRelations
+			])
 	}
 
 	get size(): number {
@@ -535,4 +531,34 @@ class Lecture { }
 			this.futureSubjects.length
 		)
 	}
-} */
+
+	addSubject() {
+		this._presentSubjects.push(undefined)
+	}
+
+	removeSubject(index: number) {
+		this._presentSubjects.splice(index, 1)
+	}
+
+	subjectOptions(index: number): { name: string, value: Subject, available: boolean, reason?: string }[] {
+		const options = this.graph.subjects
+			.filter(subject => subject.name)
+			.map(subject => (
+				{ name: subject.name, value: subject, available: true }
+			)) as { name: string, value: Subject, available: boolean, reason?: string }[]
+		
+		options.forEach(subject => {
+			if (subject.value === this.presentSubjects[index]) return
+			if (this.presentSubjects.includes(subject.value)) {
+				subject.available = false
+				subject.reason = 'Duplicate subject'
+			}
+		});
+
+		return options
+	}
+
+	subjectColor(index: number) {
+		return this.presentSubjects[index]?.color ?? 'transparent'
+	}
+}

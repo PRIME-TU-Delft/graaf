@@ -69,21 +69,26 @@
 	{#if graph.lectures.some(lecture => lectureMatchesQuery(query, lecture))}
 
 		<!-- List of lectures -->
-		{#each graph.lectures as lecture}
+		{#each graph.lectures as lecture, n}
 			{#if lectureMatchesQuery(query, lecture)}
 				<div class="lecture">
-					<span> {lecture.id} </span>
+					<span> {n + 1} </span>
 					<IconButton scale src={trashIcon} on:click={() => { lecture.delete(); update() }} />
 					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} />
-					<Button on:click={() => { lecture.subjects.push(undefined); update() }}> Add Subject </Button>
+					<Button on:click={() => { lecture.addSubject(); update() }}> Add Subject </Button>
 					
 					<div class="subjects" style="grid-area: subjects;">
-						{#each lecture.subjects as subject, id}
-							<div class="gutter" />
-							<span> {id + 1} </span>
-							<IconButton scale src={trashIcon} on:click={() => { lecture.subjects.splice(id, 1); update() }} />
-							<Dropdown label="Subject" placeholder="Choose subject" options={lecture.options(subject)} bind:value={lecture.subjects[id]}/>
-							<span class="preview" style:background-color={subject?.color() || 'transparent'} />
+						{#each lecture.presentSubjects as _, m}
+							<span> {m + 1} </span>
+							<IconButton scale src={trashIcon} on:click={() => { lecture.removeSubject(m); update() }} />
+							<Dropdown 
+								label="Subject" 
+								placeholder="Choose subject" 
+								options={lecture.subjectOptions(m)} 
+								bind:value={lecture.presentSubjects[m]}
+								/>
+
+							<span class="preview" style:background-color={lecture.subjectColor(m)} />
 						{/each}
 					</div>
 				</div>
@@ -110,7 +115,7 @@
 	@use "$styles/palette.sass" as *
 
 	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
-	$gutter-width: calc(2 * $icon-width + $form-small-gap)
+	$gutter-width: calc($icon-width + $form-small-gap)
 
 	.editor
 		display: flex
@@ -136,14 +141,15 @@
 
 			.subjects
 				display: grid
-				grid-template: "gutter id delete subject preview" auto / $gutter-width $icon-width $icon-width 1fr $icon-width
+				grid-template: "id delete subject preview" auto / $icon-width $icon-width 1fr $icon-width
 				place-items: center center
+				place-self: start start
 				gap: $form-small-gap
-				width: 100%
 
-				.gutter
-					height: calc(100% + $form-small-gap)
-					border-left: 1px solid $gray
+				width: 100%
+				padding-left: $gutter-width
+				border-left: 1px solid $gray
+				margin-left: $gutter-width
 
 				.preview
 					width: $input-icon-size
