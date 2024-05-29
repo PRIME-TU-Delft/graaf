@@ -3,9 +3,9 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Relation } from './entities'
-import * as settings from './settings'
-import { styles } from './settings'
+import { Relation } from '../entities'
+import * as settings from '../settings'
+import { styles } from '../settings'
 
 // Exports
 export { RelationSVG }

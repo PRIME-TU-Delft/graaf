@@ -2,8 +2,8 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, Relation } from '$scripts/graph/entities'
-	import { styles } from '$scripts/graph/settings'
+	import { Graph, Domain, Relation } from '$scripts/entities'
+	import { styles } from '$scripts/settings'
 
 	// Components
 	import Button from '$components/Button.svelte'

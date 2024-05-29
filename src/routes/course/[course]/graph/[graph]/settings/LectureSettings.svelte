@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Lecture } from '$scripts/graph/entities'
+	import { Graph, Lecture } from '$scripts/entities'
 
 	// Components
 	import Searchbar from '$components/Searchbar.svelte'

@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, Relation } from '$scripts/graph/entities'
+	import { Graph, Subject, Relation } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
