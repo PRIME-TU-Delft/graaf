@@ -33,10 +33,9 @@
 
 	let relations: Relation[] = graph.domainRelations
 
-	$: styleOptions = Object.keys(styles).map(style => ({
-		name: styles[style].display_name,
-		value: style
-	}))
+	$: styleOptions = Object.keys(styles).map(style => (
+		{ name: styles[style].display_name, value: style, available: true }
+	))
 
 	// Force reactivity update
 	// NOTE: Maybe redundant Svelte 5?

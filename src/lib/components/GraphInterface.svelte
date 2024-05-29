@@ -19,7 +19,9 @@
 
 	$: lectureOptions = graph.lectures
 		.filter(lecture => lecture.name)
-		.map(lecture => ({name: lecture.name!, value: lecture}))
+		.map(lecture => (
+			{name: lecture.name!, value: lecture, available: true}
+		))
 
 </script>
 

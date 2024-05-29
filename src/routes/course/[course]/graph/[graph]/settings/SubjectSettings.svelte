@@ -35,10 +35,9 @@
 
     $: domainOptions = graph.domains
 		.filter(domain => domain.name)
-		.map(domain => ({
-			name: domain.name!,
-			value: domain
-		}))
+		.map(domain => (
+			{ name: domain.name!, value: domain, available: true }
+		))
 
 	// Force reactivity update
 	// NOTE: Maybe redundant Svelte 5?

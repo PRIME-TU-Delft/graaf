@@ -11,7 +11,7 @@
 	export let label: string
 	export let placeholder: string
 	export let value: T | undefined = undefined
-	export let options: { name: string, value: T, available: boolean, reason?: '' }[]
+	export let options: { name: string, value: T, available: boolean, reason?: string }[]
 
 	// Functions
 	export function show() {
