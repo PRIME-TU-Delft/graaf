@@ -340,8 +340,14 @@ class Relation {
 			// Field must have a name
 			childOptions = childOptions.filter(option => option.name)
 
-			// Prevent circular references
+			// Prevent duplicate relations
 			const parent = option.value
+			childOptions = childOptions.filter(option => {
+				if (this.child === option) return true
+				return !parent.children.includes(option)
+			})
+
+			// Prevent circular references
 			const ancestors = parent.ancestors
 			childOptions = childOptions.filter(option => 
 				option !== parent && !ancestors?.includes(option)
@@ -401,16 +407,6 @@ class Relation {
 		// Field must have a name
 		options = options.filter(option => option.value.name)
 
-		// Prevent circular references
-		const ancestors = this.parent?.ancestors
-		console.log(ancestors)
-		options.forEach(option => {
-			if (option.value === this.parent || ancestors?.includes(option.value)) {
-				option.available = false
-				option.reason = 'Circular reference'
-			}
-		})
-
 		// Prevent duplicate relations
 		options.forEach(option => {
 			if (this.child !== option.value && this.parent?.children.includes(option.value)) {
@@ -419,25 +415,36 @@ class Relation {
 			}
 		})
 
+		// Prevent circular references
+		const ancestors = this.parent?.ancestors
+		options.forEach(option => {
+			if (!option.available) return
+			if (option.value === this.parent || ancestors?.includes(option.value)) {
+				option.available = false
+				option.reason = 'Circular reference'
+			}
+		})
+
 		// Ensure parent options remain available
 		options.forEach(option => {
+			if (!option.available) return
 			let parentOptions = Array.from(fields)
 
 			// Field must have a name
 			parentOptions = parentOptions.filter(option => option.name)
 
-			// Prevent circular references
+			// Prevent duplicate relations
 			const child = option.value
 			const descendants = child.descendants
-			parentOptions = parentOptions.filter(option => 
-				option !== child && !descendants?.includes(option)
-			)
-
-			// Prevent duplicate relations
 			parentOptions = parentOptions.filter(option => {
 				if (this.parent === option) return true
 				return !child.parents.includes(option)
 			})
+
+			// Prevent circular references
+			parentOptions = parentOptions.filter(option => 
+				option !== child && !descendants?.includes(option)
+			)
 
 			if (parentOptions.length === 0) {
 				option.available = false
