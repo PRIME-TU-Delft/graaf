@@ -60,6 +60,7 @@ abstract class Field {
 	}
 
 	abstract get style(): string | undefined
+	abstract validate(): boolean
 	abstract delete(): void
 }
 
@@ -90,6 +91,10 @@ class Domain extends Field {
 
 	set style(style: string | undefined) {
 		this._style = style
+	}
+
+	validate(): boolean {
+		return this.name !== undefined && this.style !== undefined
 	}
 
 	delete() {
@@ -131,6 +136,10 @@ class Subject extends Field {
 
 	get style(): string | undefined {
 		return this.domain?.style
+	}
+
+	validate(): boolean {
+		return this.name !== undefined && this.domain !== undefined
 	}
 
 	delete() {

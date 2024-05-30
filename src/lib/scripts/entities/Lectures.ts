@@ -21,10 +21,6 @@ class Lecture {
 		graph.lectures.push(lecture)
 	}
 
-	delete() {
-		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
-	}
-
 	get pastSubjects(): Subject[] {
 		return this.presentSubjects
 			.filter(subject => subject)
@@ -95,5 +91,13 @@ class Lecture {
 
 	subjectColor(index: number) {
 		return this.presentSubjects[index]?.color ?? 'transparent'
+	}
+
+	validate(): boolean {
+		return this.name !== undefined && this.presentSubjects.every(subject => subject)
+	}
+
+	delete() {
+		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
 	}
 }

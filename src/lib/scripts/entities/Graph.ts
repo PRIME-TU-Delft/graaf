@@ -98,19 +98,19 @@ class Graph {
 			))
 	}
 
-	serialize(): object {
-		throw new Error('Not implemented')
-	}
-
 	validate(): boolean {
-
-		// Check for missing fields
 		for (const domain of this.domains)
-			if (!domain.name || !domain.style) return false
+			if (!domain.validate()) return false
 		for (const subject of this.subjects)
-			if (!subject.name || !subject.domain) return false
+			if (!subject.validate()) return false
+		for (const lecture of this.lectures)
+			if (!lecture.validate()) return false
 
 		return true
+	}
+
+	serialize(): object {
+		throw new Error('Not implemented')
 	}
 
 	save() {
