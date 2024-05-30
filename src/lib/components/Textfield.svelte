@@ -1,6 +1,13 @@
 
 <script lang="ts">
 
+	// Components
+	import IconButton from "./IconButton.svelte"
+
+	// Assets
+	import openEye from "$assets/open-eye-icon.svg"
+	import closedEye from "$assets/closed-eye-icon.svg"
+
 	// Exports
 	export let label: string
 	export let value: string = ''
@@ -8,7 +15,13 @@
 	export let obfuscate: boolean = false
 
 	// Variables
+	let show: boolean = false
 	$: id = label.toLowerCase().replace(/\s/g, '_')
+
+	function toggle() {
+		show = !show
+		document.querySelector<HTMLInputElement>(`#${id}`)!.type = show ? "text" : "password"
+	}
 
 </script>
 
@@ -20,14 +33,17 @@
 
 {#if obfuscate}
 
-	<input
-		{id}
-		{placeholder}
-		name={id}
-		type="password"
-		class="textfield"
-		bind:value
-		/>
+	<div class="textfield">
+		<input
+			{id}
+			{placeholder}
+			name={id}
+			type="password"
+			bind:value
+			/>
+		
+		<IconButton src={ show ? closedEye : openEye } description={ show ? "Hide" : "Show" } on:click={toggle} />
+	</div>
 
 {:else}
 
@@ -53,7 +69,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.textfield
+	input
 		width: 100%
 		padding: $input-thin-padding $input-thick-padding
 		box-sizing: border-box
@@ -63,5 +79,15 @@
 
 		color: $dark-gray
 		cursor: text
+	
+	div
+		width: 100%
+		position: relative
+
+		:global(.icon-button)
+			position: absolute
+			translate: 0 -50%
+			top: 50%
+			right: $input-thin-padding
 
 </style>

@@ -24,9 +24,6 @@
 			<label for="password"> Password </label>
 			<Textfield label="Password" obfuscate />
 
-			<label for="confirm_password"> Confirm Password </label>
-			<Textfield label="Confirm Password" obfuscate />
-
 			<Button submit>Register</Button>
 		</form>
 	</svelte:fragment>
