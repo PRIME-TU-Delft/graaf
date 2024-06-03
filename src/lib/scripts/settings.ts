@@ -13,6 +13,9 @@ export const FIELD_WIDTH: GridUnits  = 16
 export const FIELD_HEIGHT: GridUnits = 8
 export const FIELD_MARGIN: GridUnits = 0.75
 export const FIELD_FONT_SIZE: Pixels = 15
+export const FIELD_SHADOW_DEVIATION: Pixels = 5
+export const FIELD_SHADOW_OPACITY: Scalar = 0.75
+export const FIELD_SHADOW_COLOR: string = 'green'
 
 export const LECTURE_PADDING: GridUnits       = 5
 export const LECTURE_HEADER_HEIGHT: GridUnits = 3

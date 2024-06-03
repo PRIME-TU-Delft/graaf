@@ -15,7 +15,6 @@
 
 	// Variables
 	let graphSVG: GraphSVG = new GraphSVG(graph, GraphType.domains, interactive)
-	graphSVG.lecture = graph.lectures[0]
 
 </script>
 

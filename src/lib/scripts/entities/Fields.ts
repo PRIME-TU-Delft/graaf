@@ -14,6 +14,7 @@ abstract class Field {
 	parents: Field[]
 	children: Field[]
 	name?: string
+	highlight: boolean = false
 
 	constructor(graph: Graph, id: number, x: number, y: number, parents: Field[], children: Field[], name?: string,) {
 		this.graph = graph

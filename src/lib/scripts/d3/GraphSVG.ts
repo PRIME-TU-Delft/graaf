@@ -184,9 +184,22 @@ class GraphSVG {
 
 	set lecture(lecture: Lecture | undefined) {
 		if (this.animating) return
+		
+		// Set lecture and highlights
 		this._lecture = lecture
-		if (this.type !== GraphType.lectures) return
+		for (const field of this.fields) {
+			field.highlight = lecture?.presentSubjects.includes(field) ?? false
+		}
 
+		// Update fields
+		if (!this.svg) return
+		d3.select<SVGSVGElement, unknown>(this.svg)
+			.select('#content')
+				.selectAll<SVGGElement, Field>('.field')
+					.call(FieldSVG.update)
+
+		// Update lecture
+		if (this.type !== GraphType.lectures) return
 		if (this.lecture) {
 			this.clearContent()
 			this.setBackground(GraphType.lectures)
@@ -240,6 +253,16 @@ class GraphSVG {
 			.attr('y1', 0)
 			.attr('x2', 0)
 			.attr('y2', settings.GRID_UNIT * settings.GRID_MAX_ZOOM)
+
+		// Shadow filter
+		definitions.append('filter')
+			.attr('id', 'shadow')
+			.append('feDropShadow')
+				.attr('dx', 0)
+				.attr('dy', 0)
+				.attr('stdDeviation', settings.FIELD_SHADOW_DEVIATION)
+				.attr('flood-opacity', settings.FIELD_SHADOW_OPACITY)
+				.attr('flood-color', settings.FIELD_SHADOW_COLOR)
 
 		// Zoom & pan
 		this.zoom = d3.zoom<SVGSVGElement, unknown>()

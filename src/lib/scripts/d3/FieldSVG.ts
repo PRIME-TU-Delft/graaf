@@ -64,6 +64,10 @@ class FieldSVG {
 	static update(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, animated: boolean = false) {
 		const content = d3.select<SVGGElement, unknown>(selection.node()!.parentNode as SVGGElement)
 
+		// Highlight field
+		selection
+			.attr('filter', field => field.highlight ? 'url(#shadow)' : null)
+
 		// Update field position
 		selection
 			.transition()
