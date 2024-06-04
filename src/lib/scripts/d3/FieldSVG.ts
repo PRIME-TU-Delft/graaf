@@ -13,6 +13,7 @@ export { FieldSVG }
 
 class FieldSVG {
 	static create(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>) {
+		if (selection.empty()) return
 
 		// Field attrs
 		selection
@@ -62,6 +63,7 @@ class FieldSVG {
 	}
 
 	static update(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, animated: boolean = false) {
+		if (selection.empty()) return
 		const content = d3.select<SVGGElement, unknown>(selection.node()!.parentNode as SVGGElement)
 
 		// Highlight field

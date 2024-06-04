@@ -187,27 +187,30 @@ class GraphSVG {
 		
 		// Set lecture and highlights
 		this._lecture = lecture
-		for (const field of this.fields) {
-			field.highlight = lecture?.presentSubjects.includes(field) ?? false
+		for (const subject of this.graph.subjects) {
+			subject.highlight = lecture?.presentSubjects.includes(subject) ?? false
 		}
 
-		// Update fields
+		// Update content
 		if (!this.svg) return
+		if (this.type === GraphType.lectures) {
+			this.clearContent()
+			this.setBackground(GraphType.lectures)
+
+			if (this.lecture) {
+				this.setContent(this.lecture.subjects, this.lecture.relations)
+			}
+		}
+				
+		// Update highlights
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.select('#content')
 				.selectAll<SVGGElement, Field>('.field')
-					.call(FieldSVG.update)
+					.call(FieldSVG.update)	
 
-		// Update lecture
-		if (this.type !== GraphType.lectures) return
-		if (this.lecture) {
-			this.clearContent()
-			this.setBackground(GraphType.lectures)
-			this.setContent(this.lecture.subjects, this.lecture.relations)
+		// Move content
+		if (this.type === GraphType.lectures) {
 			this.moveContent(this.lectureTransform)
-		} else {
-			this.clearContent()
-			this.setBackground(GraphType.lectures)
 		}
 	}
 

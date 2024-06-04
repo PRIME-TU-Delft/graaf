@@ -12,6 +12,7 @@ export { RelationSVG }
 
 class RelationSVG {
 	static create(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>) {
+		if (selection.empty()) return
 		selection
 			.attr('class', 'relation')
 			.attr('stroke-width', settings.STROKE_WIDTH)
@@ -22,6 +23,7 @@ class RelationSVG {
 	}
 
 	static update(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>, animated: boolean = false) {
+		if (selection.empty()) return
 		selection.each(function(relation) {
 			const line = d3.select(this)
 
