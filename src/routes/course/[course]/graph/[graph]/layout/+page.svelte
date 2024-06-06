@@ -18,6 +18,7 @@
 
 	// Variables
 	let { course, graph } = data
+	let graphInterface: GraphInterface
 
 </script>
 
@@ -50,11 +51,12 @@
 >
 
 	<svelte:fragment slot="toolbar">
+		<Button on:click={graphInterface.findGraph}> Find Graph </Button>
 		<div class="flex-spacer" />
 		<LinkButton href={`/course/${course.code}/graph/${graph.id}/settings`}> Settings </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
-	<GraphInterface {graph} />
+	<GraphInterface bind:this={graphInterface} {graph} />
 	
 </DefaultLayout>

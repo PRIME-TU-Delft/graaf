@@ -1,10 +1,26 @@
 
 // Internal imports
 import { Domain, Subject, Relation, Lecture } from '../entities'
+import * as settings from '../settings'
 import { styles } from '../settings'
 
 // Exports
-export { Graph }
+export { Graph, Extent }
+
+class Extent {
+	x: number
+	y: number
+	width: number
+	height: number
+
+	constructor(x: number, y: number, width: number, height: number) {
+		this.x = x
+		this.y = y
+		this.width = width
+		this.height = height
+	}
+
+}
 
 class Graph {
 	id: number
@@ -63,6 +79,29 @@ class Graph {
 		return relations
 	}
 
+	get domainOptions(): { name: string, value: Domain, available: boolean, reason?: string }[] {
+		return this.domains
+			.filter(domain => domain.name)
+			.map(domain => (
+				{ name: domain.name, value: domain, available: true }
+			)) as { name: string, value: Domain, available: boolean, reason?: string }[]
+	
+	}
+
+	get domainExtent(): Extent {
+		const lowestX = Math.min(...this.domains.map(domain => domain.x - settings.FIELD_MARGIN))
+		const lowestY = Math.min(...this.domains.map(domain => domain.y - settings.FIELD_MARGIN))
+		const highestX = Math.max(...this.domains.map(domain => domain.x + settings.FIELD_MARGIN + settings.FIELD_WIDTH))
+		const highestY = Math.max(...this.domains.map(domain => domain.y + settings.FIELD_MARGIN + settings.FIELD_HEIGHT))
+
+		return new Extent(
+			(highestX + lowestX) / 2,
+			(highestY + lowestY) / 2,
+			highestX - lowestX,
+			highestY - lowestY
+		)
+	}
+
 	get subjectRelations(): Relation[] {
 		let relations: Relation[] = []
 		for (const subject of this.subjects) {
@@ -74,13 +113,18 @@ class Graph {
 		return relations
 	}
 
-	get domainOptions(): { name: string, value: Domain, available: boolean, reason?: string }[] {
-		return this.domains
-			.filter(domain => domain.name)
-			.map(domain => (
-				{ name: domain.name, value: domain, available: true }
-			)) as { name: string, value: Domain, available: boolean, reason?: string }[]
-	
+	get subjectExtent(): Extent {
+		const lowestX = Math.min(...this.subjects.map(subject => subject.x - settings.FIELD_MARGIN))
+		const lowestY = Math.min(...this.subjects.map(subject => subject.y - settings.FIELD_MARGIN))
+		const highestX = Math.max(...this.subjects.map(subject => subject.x + settings.FIELD_MARGIN + settings.FIELD_WIDTH))
+		const highestY = Math.max(...this.subjects.map(subject => subject.y + settings.FIELD_MARGIN + settings.FIELD_HEIGHT))
+
+		return new Extent(
+			(highestX + lowestX) / 2,
+			(highestY + lowestY) / 2,
+			highestX - lowestX,
+			highestY - lowestY
+		)
 	}
 
 	get lectureOptions(): { name: string, value: Lecture, available: boolean, reason?: string }[] {

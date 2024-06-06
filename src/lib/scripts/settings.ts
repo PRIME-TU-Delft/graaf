@@ -7,7 +7,7 @@ type Milliseconds = number
 export const GRID_COLOR = '#a4a4a4'
 export const GRID_UNIT: Scalar     = 10
 export const GRID_MIN_ZOOM: Scalar = 0.5
-export const GRID_MAX_ZOOM: Scalar = 2
+export const GRID_MAX_ZOOM: Scalar = 1.5
 
 export const FIELD_WIDTH: GridUnits  = 16
 export const FIELD_HEIGHT: GridUnits = 8

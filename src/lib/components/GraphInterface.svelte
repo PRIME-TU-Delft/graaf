@@ -12,9 +12,10 @@
 	// Exports
 	export let graph: Graph
 	export let interactive: boolean = true
+	export function findGraph() { graphSVG.findGraph() }
 
 	// Variables
-	let graphSVG: GraphSVG = new GraphSVG(graph, GraphType.domains, interactive)
+	let graphSVG: GraphSVG = new GraphSVG(graph, interactive)
 
 </script>
 
@@ -64,10 +65,6 @@
 	@use "$styles/palette.sass" as *
 
 	.editor
-		display: flex
-		align-items: center 
-		justify-content: center
-
 		height: 600px
 
 	.tabular
