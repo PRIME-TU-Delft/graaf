@@ -340,7 +340,10 @@ class GraphSVG {
 			.call(
 				this.zoom.transform,
 				d3.zoomIdentity
-					.translate(x, y)
+					.translate(
+						this.svg.clientWidth / 2 - k * x,
+						this.svg.clientHeight / 2 - k * y
+					)
 					.scale(k)
 			)
 
@@ -351,58 +354,57 @@ class GraphSVG {
 	}
 
 	private moveIntoFrame(transition: Transition, animate: boolean = false, callback: () => void = () => {}) {
-		let extent: Extent
-		let k: number
-
 		if (transition.end === GraphType.lectures) {
+
+			// If swapping between lectures, reset pan and zoom
 			if (transition.start === GraphType.lectures) {
-				this.setZoomAndPan(
-					this.svg.clientWidth / 2 ,
-					this.svg.clientHeight / 2, 
-					1
-				)
+				this.setZoomAndPan(0, 0, 1)
 				return
 			}
 
-			extent = transition.start === GraphType.domains ? this.graph.domainExtent : this.graph.subjectExtent
+			// If swapping to lectures, maintain pan of previous extent and zoom to fit lecture into frame
+			const extent = transition.start === GraphType.domains ? this.graph.domainExtent : this.graph.subjectExtent
 			this.setZoomAndPan(
-				this.svg.clientWidth / 2 - extent.x * settings.GRID_UNIT, 
-				this.svg.clientHeight / 2 - extent.y * settings.GRID_UNIT, 
+				extent.x * settings.GRID_UNIT,
+				extent.y * settings.GRID_UNIT,
 				1, animate, callback
 			)
 			return
 		}
 
-		extent = transition.end === GraphType.domains ? this.graph.domainExtent : this.graph.subjectExtent
-		k = Math.max(
-			settings.GRID_MIN_ZOOM,
-			Math.min(
-				this.svg.clientWidth / (extent.width * settings.GRID_UNIT),
-				this.svg.clientHeight / (extent.height * settings.GRID_UNIT),
-				settings.GRID_MAX_ZOOM
-			)
-		)
+		// Target extent is whatever we are transitioning towards
+		const extent = transition.end === GraphType.domains ? this.graph.domainExtent : this.graph.subjectExtent
 
 		// If coming from lectures, current pan might be at origin. In that case, pan to end-extent
 		if (transition.start === GraphType.lectures) {
 			this.setZoomAndPan(
-				this.svg.clientWidth / 2 - extent.x * settings.GRID_UNIT, 
-				this.svg.clientHeight / 2 - extent.y * settings.GRID_UNIT, 
+				extent.x * settings.GRID_UNIT,
+				extent.y * settings.GRID_UNIT,
 				1
 			)
 		}
 
 		// Pan and zoom to fit end-extent into frame
 		this.setZoomAndPan(
-			this.svg.clientWidth / 2 - k * extent.x * settings.GRID_UNIT,
-			this.svg.clientHeight / 2 - k * extent.y * settings.GRID_UNIT,
-			k, animate, callback
+			extent.x * settings.GRID_UNIT,
+			extent.y * settings.GRID_UNIT,
+			Math.max(
+				settings.GRID_MIN_ZOOM,
+				Math.min(
+					this.svg.clientWidth / (extent.width * settings.GRID_UNIT),
+					this.svg.clientHeight / (extent.height * settings.GRID_UNIT),
+					settings.GRID_MAX_ZOOM
+				)
+			),
+
+			animate,
+			callback
 		)
 	}
 
 	private setBackground(transition: Transition) {
-		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
-		const background = svg.select<SVGGElement>('#background')
+		const background = d3.select<SVGSVGElement, unknown>(this.svg)
+			.select<SVGGElement>('#background')
 
 		// Remove old background
 		background.selectAll('*')
