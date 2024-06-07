@@ -79,26 +79,27 @@ class Graph {
 		return relations
 	}
 
-	get domainOptions(): { name: string, value: Domain, available: boolean, reason?: string }[] {
-		return this.domains
-			.filter(domain => domain.name)
-			.map(domain => (
-				{ name: domain.name, value: domain, available: true }
-			)) as { name: string, value: Domain, available: boolean, reason?: string }[]
-	
+	get domainOptions(): { name: string, value: Domain, warning?: string, error?: string }[] {
+		const options = []
+		for (const domain of this.domains) {
+			if (!domain.name) continue
+			options.push({ name: domain.name, value: domain })
+		}
+
+		return options as { name: string, value: Domain, warning?: string, error?: string }[]
 	}
 
 	get domainExtent(): Extent {
-		const lowestX = Math.min(...this.domains.map(domain => domain.x - settings.FIELD_MARGIN))
-		const lowestY = Math.min(...this.domains.map(domain => domain.y - settings.FIELD_MARGIN))
-		const highestX = Math.max(...this.domains.map(domain => domain.x + settings.FIELD_MARGIN + settings.FIELD_WIDTH))
-		const highestY = Math.max(...this.domains.map(domain => domain.y + settings.FIELD_MARGIN + settings.FIELD_HEIGHT))
+		const top = Math.min(...this.domains.map(domain => domain.y - settings.FIELD_MARGIN))
+		const left = Math.min(...this.domains.map(domain => domain.x - settings.FIELD_MARGIN))
+		const bottom = Math.max(...this.domains.map(domain => domain.y + settings.FIELD_MARGIN + settings.FIELD_HEIGHT))
+		const right = Math.max(...this.domains.map(domain => domain.x + settings.FIELD_MARGIN + settings.FIELD_WIDTH))
 
 		return new Extent(
-			(highestX + lowestX) / 2,
-			(highestY + lowestY) / 2,
-			highestX - lowestX,
-			highestY - lowestY
+			(right + left) / 2,
+			(bottom + top) / 2,
+			right - left,
+			bottom - top
 		)
 	}
 
@@ -114,16 +115,15 @@ class Graph {
 	}
 
 	get subjectExtent(): Extent {
-		const lowestX = Math.min(...this.subjects.map(subject => subject.x - settings.FIELD_MARGIN))
-		const lowestY = Math.min(...this.subjects.map(subject => subject.y - settings.FIELD_MARGIN))
-		const highestX = Math.max(...this.subjects.map(subject => subject.x + settings.FIELD_MARGIN + settings.FIELD_WIDTH))
-		const highestY = Math.max(...this.subjects.map(subject => subject.y + settings.FIELD_MARGIN + settings.FIELD_HEIGHT))
+		const left = Math.min(...this.subjects.map(subject => subject.x - settings.FIELD_MARGIN))
+		const bottom = Math.max(...this.subjects.map(subject => subject.y + settings.FIELD_MARGIN + settings.FIELD_HEIGHT))
+		const right = Math.max(...this.subjects.map(subject => subject.x + settings.FIELD_MARGIN + settings.FIELD_WIDTH))
 
 		return new Extent(
-			(highestX + lowestX) / 2,
-			(highestY + lowestY) / 2,
-			highestX - lowestX,
-			highestY - lowestY
+			(right + left) / 2,
+			(bottom + top) / 2,
+			right - left,
+			bottom - top
 		)
 	}
 
@@ -133,13 +133,6 @@ class Graph {
 			.map(lecture => (
 				{ name: lecture.name, value: lecture, available: true }
 			)) as { name: string, value: Lecture, available: boolean, reason?: string }[]
-	}
-
-	get styleOptions(): { name: string, value: string, available: boolean, reason?: string }[] {
-		return Object.keys(styles)
-			.map(style => (
-				{ name: styles[style].display_name, value: style, available: true }
-			))
 	}
 
 	validate(): boolean {

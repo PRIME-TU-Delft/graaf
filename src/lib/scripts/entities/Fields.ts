@@ -100,6 +100,22 @@ class Domain extends Field {
 		this._style = style
 	}
 
+	get styleOptions(): { name: string, value: string, warning?: string, error?: string }[] {
+		const options = []
+		const index = this.graph.domains.indexOf(this)
+		for (const style of Object.keys(styles)) {
+			let occurance = this.graph.domains.findIndex(domain => domain.style === style)
+
+			if (occurance === -1 || occurance >= index) {
+				options.push({ name: styles[style].display_name, value: style })
+			} else {
+				options.push({ name: styles[style].display_name, value: style, warning: 'Duplicate style' })
+			}
+		}
+
+		return options
+	}
+
 	validate(): boolean {
 		return this.name !== undefined && this.style !== undefined
 	}

@@ -4,6 +4,10 @@
 	// Internal imports
 	import { clickoutside } from '$scripts/clickoutside'
 
+	// Assets
+	import warningIcon from '$assets/warning-icon.svg'
+	import errorIcon from '$assets/error-icon.svg'
+
 	// Types
 	type T = $$Generic
 
@@ -11,7 +15,7 @@
 	export let label: string
 	export let placeholder: string
 	export let value: T | undefined = undefined
-	export let options: { name: string, value: T, available: boolean, reason?: string }[]
+	export let options: { name: string, value: T, warning?: string, error?: string }[]
 
 	// Functions
 	export function show() {
@@ -29,11 +33,6 @@
 	// Variables
 	let visible: boolean = false
 	$: id = label.toLowerCase().replace(/\s/g, '_')
-
-	// Sort by availability
-	$: options = options.sort((a, b) => 
-		a.available === b.available ? 0 : a.available ? -1 : 1
-	)
 
 	// Property validation
 	$: if (options.find(option => option.value === value) === undefined) {
@@ -56,24 +55,35 @@
 >
 	<!-- Hidden input to bind the selected value to a submittable element -->
 	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
-	<label for={id} class="label" class:grayed={value === undefined}>
+	<label for={id} class="chosen" class:grayed={value === undefined}>
 		{options.find(option => option.value === value)?.name ?? placeholder}
 	</label>
 
 	<div class="options">
 		{#each options as option}
-			{#if option.available}
-				<button class="option" on:click={() => value = option.value}> {option.name} </button>
-			{:else}
-				<button disabled class="option unavailable">
-					<span class="name"> {option.name} </span>
-					<span class="reason"> {option.reason} </span>
-				</button>
-			{/if}
+			<button 
+				class="option" 
+				disabled={option.error !== undefined} 
+				on:click={() => value = option.value}
+			>
+				{option.name}
+
+				{#if option.error}
+					<span class="error">
+						<img class="icon" src={errorIcon} alt="" />
+						{option.error}
+					</span>
+				{:else if option.warning}
+					<span class="warning">
+						<img class="icon" src={warningIcon} alt="" />
+						{option.warning}
+					</span>
+				{/if}
+			</button>
 		{/each}
 
 		{#if options.length === 0}
-			<button disabled class="option"> 
+			<button disabled class="option grayed"> 
 				<i> No options available </i>
 			</button>
 		{/if}
@@ -108,10 +118,10 @@
 
 		color: $dark-gray
 
-		.label
+		.chosen
 			position: relative
-
 			width: 100%
+			
 			padding: $input-thin-padding $input-thick-padding
 
 			border: 1px solid $gray
@@ -146,7 +156,7 @@
 
 			width: 100%
 			max-height: 250px
-			overflow-y: auto
+			overflow-y: scroll
 
 			background-color: $white
 			border: 1px solid $gray
@@ -154,35 +164,41 @@
 			border-radius: 0 0 $border-radius $border-radius
 
 			.option
+				display: flex
+
+
 				padding: $input-thin-padding $input-thick-padding
 				text-align: left
 				cursor: pointer
-
-				&:last-child
-					border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
 
 				&:hover:not(:disabled)
 					background-color: $light-gray
 				
 				&:disabled
-					display: flex
-					color: $placeholder-color
-					cursor: not-allowed
-
-					.name
-						pointer-events: none
-
-					.reason
-						flex: 1
-						color: $red
-						text-align: right
-						pointer-events: none
-
+					cursor: not-allowed						
 				
+				.warning, .error
+					display: flex
+					align-items: center
+					justify-content: end
+					gap: $input-thin-padding
+					flex: 1
 
+					color: $yellow
+
+					.icon
+						width: $input-icon-size
+						height: $input-icon-size
+						filter: $yellow-filter
+
+				.error
+					color: $red
+
+					.icon
+						filter: $red-filter
 
 		&.visible
-			.label
+			.chosen
 				border-bottom-style: dashed
 				border-radius: $border-radius $border-radius 0 0
 
@@ -193,7 +209,7 @@
 			.options
 				display: flex
 		
-		.grayed
+		.grayed, option:disabled
 			color: $placeholder-color
 
 </style>

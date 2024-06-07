@@ -145,7 +145,7 @@
 				<span> {n + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-				<Dropdown label="Style" placeholder="Domain Style" options={graph.styleOptions} bind:value={domain.style}/>
+				<Dropdown label="Style" placeholder="Domain Style" options={domain.styleOptions} bind:value={domain.style}/>
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
