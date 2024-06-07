@@ -22,37 +22,60 @@ class Lecture {
 	}
 
 	get pastSubjects(): Subject[] {
-		return this.presentSubjects
-			.filter(subject => subject)
-			.flatMap(subject => subject!.parents)
-			.filter(parent => !this.presentSubjects.includes(parent))
-			.filter((parent, index, self) => self.indexOf(parent) === index)
+		const past: Subject[] = []
+		for (const subject of this.presentSubjects) {
+			if (!subject) continue
+			for (const parent of subject.parents) {
+				if (this.presentSubjects.includes(parent) || past.includes(parent)) continue
+				past.push(parent)
+			}
+		}
+
+		return past
 	}
 
 	get futureSubjects(): Subject[] {
-		return this.presentSubjects
-			.filter(subject => subject)
-			.flatMap(subject => subject!.children)
-			.filter(child => !this.presentSubjects.includes(child))
-			.filter((subject, index, self) => self.indexOf(subject) === index)
+		const future: Subject[] = []
+		for (const subject of this.presentSubjects) {
+			if (!subject) continue
+			for (const child of subject.children) {
+				if (this.presentSubjects.includes(child) || future.includes(child)) continue
+				future.push(child)
+			}
+		}
+
+		return future
 	}
 
 	get subjects(): Subject[] {
-		return this.presentSubjects
-			.filter(subject => subject)
-			.concat(
-				this.pastSubjects,
-				this.futureSubjects
-			) as Subject[]
+		const subjects: Subject[] = []
+		for (const subject of this.presentSubjects) {
+			if (!subject) continue
+			for (const parent of subject.parents) {
+				if (subjects.includes(parent)) continue
+				subjects.push(parent)
+			}
+
+			for (const child of subject.children) {
+				if (subjects.includes(child)) continue
+				subjects.push(child)
+			}
+		}
+
+		return subjects
 	}
 
 	get relations(): Relation[] {
-		return this.presentSubjects
-			.filter(subject => subject)
-			.flatMap(subject => [
-				...subject!.backwardRelations,
-				...subject!.forwardRelations
-			])
+		const relations: Relation[] = []
+		for (const subject of this.presentSubjects) {
+			if (!subject) continue
+			for (const relation of subject.relations) {
+				if (relations.includes(relation)) continue
+				relations.push(relation)
+			}
+		}
+
+		return relations
 	}
 
 	get size(): number {

@@ -13,9 +13,9 @@ abstract class Field {
 	y: number
 	parents: Field[]
 	children: Field[]
+	highlighted: boolean = false
 	name?: string
-	highlight: boolean = false
-
+	
 	constructor(graph: Graph, id: number, x: number, y: number, parents: Field[], children: Field[], name?: string,) {
 		this.graph = graph
 		this.id = id
@@ -26,20 +26,24 @@ abstract class Field {
 		this.name = name
 	}
 
-	get backwardRelations(): Relation[] {
-		return this.parents.map(parent => new Relation(this.graph, parent, this))
-	}
+	get relations(): Relation[] {
+		const relations = []
+		for (const parent of this.parents)
+			relations.push(new Relation(this.graph, parent, this))
+		for (const child of this.children)
+			relations.push(new Relation(this.graph, this, child))
 
-	get forwardRelations(): Relation[] {
-		return this.children.map(child => new Relation(this.graph, this, child))
+		return relations
 	}
 
 	get ancestors(): Field[] {
-		let ancestors = this.parents
+		const ancestors = this.parents
 		for (const parent of this.parents) {
-			ancestors = ancestors.concat(
-				parent.ancestors.filter(ancestor => !ancestors.includes(ancestor))
-			)
+			if (ancestors.includes(parent)) continue
+			for (const ancestor of parent.ancestors) {
+				if (ancestors.includes(ancestor)) continue
+				ancestors.push(ancestor)
+			}
 		}
 
 		return ancestors
@@ -48,9 +52,11 @@ abstract class Field {
 	get descendants(): Field[] {
 		let descendants = this.children
 		for (const child of this.children) {
-			descendants = descendants.concat(
-				child.descendants.filter(descendant => !descendants.includes(descendant))
-			)
+			if (descendants.includes(child)) continue
+			for (const descendant of child.descendants) {
+				if (descendants.includes(descendant)) continue
+				descendants.push(descendant)
+			}
 		}
 
 		return descendants
