@@ -1,6 +1,7 @@
 
 // Internal imports
-import { Graph, Field } from '../entities'
+import type { D } from 'vitest/dist/reporters-yx5ZTtEV.js'
+import { Graph, Field, Domain, Subject } from '../entities'
 
 // Exports
 export { Relation }
@@ -53,64 +54,76 @@ class Relation {
 		return this.parent?.color ?? 'transparent'
 	}
 
-	filterParentOptions(fields: Field[]): { name: string, value: Field, available: boolean, reason?: string }[] {
-		let options = fields.map(field => {
-			return { name: field.name, value: field, available: true } as { name: string, value: Field, available: boolean, reason?: string }
-		})
+	filterParentOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
+		const options = []
 
-		// Field must have a name
-		options = options.filter(option => option.value.name)
-
-		// Prevent duplicate relations
-		options.forEach(option => {
-			if (this.parent !== option.value && this.child?.parents.includes(option.value)) {
-				option.available = false
-				option.reason = 'Duplicate relation'
+		if (!this.child) {
+			for (const field of fields) {
+				if (!field.name) continue
+				options.push({ name: field.name, value: field })
 			}
-		})
 
-		// Prevent circular references
-		const descendants = this.child?.descendants
-		options.forEach(option => {
-			if (!option.available) return
-			if (option.value === this.child || descendants?.includes(option.value)) {
-				option.available = false
-				option.reason = 'Circular reference'
-			}
-		})
+			return options
+		}
 
-		// Ensure child options remain available
-		options.forEach(option => {
-			if (!option.available) return
-			let childOptions = Array.from(fields)
+		const descendants = this.child.descendants
+		for (const field of fields) {
 
 			// Field must have a name
-			childOptions = childOptions.filter(option => option.name)
+			if (!field.name) continue
 
 			// Prevent duplicate relations
-			const parent = option.value
-			childOptions = childOptions.filter(option => {
-				if (this.child === option) return true
-				return !parent.children.includes(option)
-			})
+			if (this.parent !== field && this.child?.parents.includes(field)) {
+				options.push({ name: field.name, value: field, error: 'Duplicate relation' })
+				continue
+			}
+
+			// Prevent self-references
+			if (this.child === field) {
+				options.push({ name: field.name, value: field, error: 'Self-reference' })
+				continue
+			}
 
 			// Prevent circular references
-			const ancestors = parent.ancestors
-			childOptions = childOptions.filter(option =>
-				option !== parent && !ancestors?.includes(option)
-			)
-
-			// Prevent duplicate relations
-			childOptions = childOptions.filter(option => {
-				if (this.child === option) return true
-				return !parent.children.includes(option)
-			})
-
-			if (childOptions.length === 0) {
-				option.available = false
-				option.reason = 'No valid child'
+			if (descendants.includes(field)) {
+				options.push({ name: field.name, value: field, error: 'Circular reference' })
+				continue
 			}
-		})
+
+			// Check if there is a matching domain relation
+			if (field instanceof Subject) {
+				const child = this.child as Subject | undefined
+				if (field.domain && child?.domain) {
+					if (field.domain !== child.domain) {
+						if (!field.domain.children.includes(child.domain)) {
+							options.push({ name: field.name, value: field, warning: 'No matching domain relation' })
+							continue
+						}
+					}
+				}
+			}
+
+			// Check if there is a matching subject relation
+			else if (field instanceof Domain) {
+				let invalid = true
+				for (const subject of field.subjects) {
+					for (const child of subject.children as Subject[]) {
+						if (child.domain === this.child) {
+							invalid = false
+							break
+						}
+					}
+				}
+
+				if (invalid) {
+					options.push({ name: field.name, value: field, warning: 'No matching subject relation' })
+					continue
+				}
+			}
+
+			// Field is available
+			options.push({ name: field.name, value: field })
+		}
 
 		return options
 	}
@@ -141,58 +154,75 @@ class Relation {
 		return this.child?.color ?? 'transparent'
 	}
 
-	filterChildOptions(fields: Field[]): { name: string, value: Field, available: boolean, reason?: string }[] {
-		let options = fields.map(field => {
-			return { name: field.name, value: field, available: true } as { name: string, value: Field, available: boolean, reason?: string }
-		})
-
-		// Field must have a name
-		options = options.filter(option => option.value.name)
-
-		// Prevent duplicate relations
-		options.forEach(option => {
-			if (this.child !== option.value && this.parent?.children.includes(option.value)) {
-				option.available = false
-				option.reason = 'Duplicate relation'
+	filterChildOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
+		const options = []
+		if (!this.parent) {
+			for (const field of fields) {
+				if (!field.name) continue
+				options.push({ name: field.name, value: field })
 			}
-		})
 
-		// Prevent circular references
-		const ancestors = this.parent?.ancestors
-		options.forEach(option => {
-			if (!option.available) return
-			if (option.value === this.parent || ancestors?.includes(option.value)) {
-				option.available = false
-				option.reason = 'Circular reference'
-			}
-		})
+			return options
+		}
 
-		// Ensure parent options remain available
-		options.forEach(option => {
-			if (!option.available) return
-			let parentOptions = Array.from(fields)
+		const ancestors = this.parent.ancestors
+		for (const field of fields) {
 
 			// Field must have a name
-			parentOptions = parentOptions.filter(option => option.name)
+			if (!field.name) continue
 
 			// Prevent duplicate relations
-			const child = option.value
-			const descendants = child.descendants
-			parentOptions = parentOptions.filter(option => {
-				if (this.parent === option) return true
-				return !child.parents.includes(option)
-			})
+			if (this.child !== field && this.parent?.children.includes(field)) {
+				options.push({ name: field.name, value: field, error: 'Duplicate relation' })
+				continue
+			}
+
+			// Prevent self-references
+			if (field === this.parent) {
+				options.push({ name: field.name, value: field, error: 'Self-reference' })
+				continue
+			}
 
 			// Prevent circular references
-			parentOptions = parentOptions.filter(option =>
-				option !== child && !descendants?.includes(option)
-			)
-
-			if (parentOptions.length === 0) {
-				option.available = false
-				option.reason = 'No valid parent'
+			if (ancestors.includes(field)) {
+				options.push({ name: field.name, value: field, error: 'Circular reference' })
+				continue
 			}
-		})
+
+			// Check if there is a matching domain relation
+			if (field instanceof Subject) {
+				const parent = this.parent as Subject | undefined
+				if (field.domain && parent?.domain) {
+					if (field.domain !== parent.domain) {
+						if (!field.domain.parents.includes(parent.domain)) {
+							options.push({ name: field.name, value: field, warning: 'No matching domain relation' })
+							continue
+						}
+					}
+				}
+			}
+
+			// Check if there is a matching subject relation
+			else if (field instanceof Domain) {
+				let invalid = true
+				for (const subject of field.subjects) {
+					for (const parent of subject.parents as Subject[]) {
+						if (parent.domain === this.parent) {
+							invalid = false
+							break
+						}
+					}
+				}
+
+				if (invalid) {
+					options.push({ name: field.name, value: field, warning: 'No matching subject relation' })
+					continue
+				}
+			}
+
+			// Field is available
+			options.push({ name: field.name, value: field })
+		}
 
 		return options
 	}

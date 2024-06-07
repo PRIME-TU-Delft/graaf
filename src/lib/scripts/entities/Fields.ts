@@ -92,6 +92,17 @@ class Domain extends Field {
 		graph.domains.push(domain)
 	}
 
+	get subjects(): Subject[] {
+		const subjects = []
+		for (const subject of this.graph.subjects) {
+			if (subject.domain === this) {
+				subjects.push(subject)
+			}
+		}
+		
+		return subjects
+	}
+
 	get style(): string | undefined {
 		return this._style
 	}

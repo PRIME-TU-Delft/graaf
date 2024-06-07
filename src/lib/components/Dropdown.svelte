@@ -34,6 +34,13 @@
 	let visible: boolean = false
 	$: id = label.toLowerCase().replace(/\s/g, '_')
 
+	// Sort options by availability
+	$: options = options.sort((a, b) =>
+		(a.error !== undefined && b.error === undefined) ?  1 :
+		(a.error === undefined && b.error !== undefined) ? -1 : 
+		0
+	)
+
 	// Property validation
 	$: if (options.find(option => option.value === value) === undefined) {
 		value = undefined // If the current value isnt in the available options, default to undefined
@@ -61,9 +68,9 @@
 
 	<div class="options">
 		{#each options as option}
-			<button 
-				class="option" 
-				disabled={option.error !== undefined} 
+			<button
+				class="option"
+				disabled={option.error !== undefined}
 				on:click={() => value = option.value}
 			>
 				{option.name}
@@ -83,7 +90,7 @@
 		{/each}
 
 		{#if options.length === 0}
-			<button disabled class="option grayed"> 
+			<button disabled class="option grayed">
 				<i> No options available </i>
 			</button>
 		{/if}
@@ -121,7 +128,7 @@
 		.chosen
 			position: relative
 			width: 100%
-			
+
 			padding: $input-thin-padding $input-thick-padding
 
 			border: 1px solid $gray
@@ -173,10 +180,11 @@
 
 				&:hover:not(:disabled)
 					background-color: $light-gray
-				
+
 				&:disabled
-					cursor: not-allowed						
-				
+					cursor: not-allowed
+					color: $placeholder-color
+
 				.warning, .error
 					display: flex
 					align-items: center
@@ -184,6 +192,7 @@
 					gap: $input-thin-padding
 					flex: 1
 
+					pointer-events: none
 					color: $yellow
 
 					.icon
@@ -208,8 +217,8 @@
 
 			.options
 				display: flex
-		
-		.grayed, option:disabled
+
+		.grayed
 			color: $placeholder-color
 
 </style>
