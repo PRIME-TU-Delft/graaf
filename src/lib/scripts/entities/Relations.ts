@@ -1,10 +1,11 @@
 
 // Internal imports
-import type { D } from 'vitest/dist/reporters-yx5ZTtEV.js'
 import { Graph, Field, Domain, Subject } from '../entities'
 
 // Exports
 export { Relation }
+
+class Log
 
 class Relation {
 	graph: Graph
@@ -54,80 +55,6 @@ class Relation {
 		return this.parent?.color ?? 'transparent'
 	}
 
-	filterParentOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
-		const options = []
-
-		if (!this.child) {
-			for (const field of fields) {
-				if (!field.name) continue
-				options.push({ name: field.name, value: field })
-			}
-
-			return options
-		}
-
-		const descendants = this.child.descendants
-		for (const field of fields) {
-
-			// Field must have a name
-			if (!field.name) continue
-
-			// Prevent duplicate relations
-			if (this.parent !== field && this.child?.parents.includes(field)) {
-				options.push({ name: field.name, value: field, error: 'Duplicate relation' })
-				continue
-			}
-
-			// Prevent self-references
-			if (this.child === field) {
-				options.push({ name: field.name, value: field, error: 'Self-reference' })
-				continue
-			}
-
-			// Prevent circular references
-			if (descendants.includes(field)) {
-				options.push({ name: field.name, value: field, error: 'Circular reference' })
-				continue
-			}
-
-			// Check if there is a matching domain relation
-			if (field instanceof Subject) {
-				const child = this.child as Subject | undefined
-				if (field.domain && child?.domain) {
-					if (field.domain !== child.domain) {
-						if (!field.domain.children.includes(child.domain)) {
-							options.push({ name: field.name, value: field, warning: 'No matching domain relation' })
-							continue
-						}
-					}
-				}
-			}
-
-			// Check if there is a matching subject relation
-			else if (field instanceof Domain) {
-				let invalid = true
-				for (const subject of field.subjects) {
-					for (const child of subject.children as Subject[]) {
-						if (child.domain === this.child) {
-							invalid = false
-							break
-						}
-					}
-				}
-
-				if (invalid) {
-					options.push({ name: field.name, value: field, warning: 'No matching subject relation' })
-					continue
-				}
-			}
-
-			// Field is available
-			options.push({ name: field.name, value: field })
-		}
-
-		return options
-	}
-
 	get child(): Field | undefined {
 		return this._child
 	}
@@ -154,77 +81,102 @@ class Relation {
 		return this.child?.color ?? 'transparent'
 	}
 
-	filterChildOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
+	filterParentOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
 		const options = []
-		if (!this.parent) {
-			for (const field of fields) {
-				if (!field.name) continue
-				options.push({ name: field.name, value: field })
-			}
-
-			return options
-		}
-
-		const ancestors = this.parent.ancestors
 		for (const field of fields) {
-
-			// Field must have a name
 			if (!field.name) continue
 
-			// Prevent duplicate relations
-			if (this.child !== field && this.parent?.children.includes(field)) {
-				options.push({ name: field.name, value: field, error: 'Duplicate relation' })
+			if (!this.child) {
+				options.push({ name: field.name, value: field })
 				continue
 			}
 
-			// Prevent self-references
-			if (field === this.parent) {
-				options.push({ name: field.name, value: field, error: 'Self-reference' })
-				continue
-			}
-
-			// Prevent circular references
-			if (ancestors.includes(field)) {
-				options.push({ name: field.name, value: field, error: 'Circular reference' })
-				continue
-			}
-
-			// Check if there is a matching domain relation
-			if (field instanceof Subject) {
-				const parent = this.parent as Subject | undefined
-				if (field.domain && parent?.domain) {
-					if (field.domain !== parent.domain) {
-						if (!field.domain.parents.includes(parent.domain)) {
-							options.push({ name: field.name, value: field, warning: 'No matching domain relation' })
-							continue
-						}
-					}
-				}
-			}
-
-			// Check if there is a matching subject relation
-			else if (field instanceof Domain) {
-				let invalid = true
-				for (const subject of field.subjects) {
-					for (const parent of subject.parents as Subject[]) {
-						if (parent.domain === this.parent) {
-							invalid = false
-							break
-						}
-					}
-				}
-
-				if (invalid) {
-					options.push({ name: field.name, value: field, warning: 'No matching subject relation' })
-					continue
-				}
-			}
-
-			// Field is available
-			options.push({ name: field.name, value: field })
+			options.push(
+				{ name: field.name, value: field, ...this.validate(field, this.child) }
+			)
 		}
 
 		return options
+	}
+
+	filterChildOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
+		const options = []
+		for (const field of fields) {
+			if (!field.name) continue
+
+			if (!this.parent) {
+				options.push({ name: field.name, value: field })
+				continue
+			}
+
+			options.push(
+				{ name: field.name, value: field, ...this.validate(this.parent, field) }
+			)
+		}
+
+		return options
+	}
+
+	validate(a: Field, b: Field): { warning?: string, error?: string, description?: string } {
+		const type = a instanceof Subject ? 'subject' : 'domain'
+		const parent = a as Subject & Domain
+		const child = b as Subject & Domain
+
+		// Cast parent and child to their respective types
+		parent
+
+		// Prevent self-references
+		if (parent === child) {
+			return { error: 'Self-reference', description: `A ${type} cannot relate to itself` }
+		}
+
+		// Prevent duplicate relations
+		if (parent.children.includes(child)) {
+			return { error: 'Duplicate relation', description: 'This relation between already exists' }
+		}
+
+		// Prevent circular references
+		if (parent.ancestors.includes(child)) {
+			return { error: 'Circular relation', description: 'This relation results in a loop' }
+		}
+
+		// Check if there is a conflicting domain relation
+		if (
+			type === 'subject'
+		) {
+			if (parent.domain && child.domain &&
+				parent.domain !== child.domain && (
+					// TODO check child.domain.children.includes(parent.domain)
+					parent.domain.parents.includes(child.domain) ||
+					!parent.domain.children.includes(child.domain)
+				)
+			) {
+				return { warning: 'Conflicting domain relations', description: `This relation does not obey domain relations` }
+			}
+
+			return { }
+
+		} else {
+			for (const subject of parent.subjects) {
+			
+				// TODO check child.subjects.children.domain === parent
+				// Check if there is a conflicting domain relation
+				for (const ancestor of subject.parents as Subject[]) {
+					if (ancestor.domain === child) {
+						return { warning: 'Conflicting subject relations', description: 'Subjects do not obey this relation' }
+					}
+				}
+	
+				// Check if there is matching domain relation
+				for (const descendant of subject.children as Subject[]) {
+					if (descendant.domain === child) {
+						return { }
+					}
+				}
+			}
+	
+			return { warning: 'Conflicting subject relations', description: 'No subjects follow this relation' }
+		}
 	}
 
 	delete() {

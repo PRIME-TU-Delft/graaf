@@ -103,11 +103,11 @@ class Graph {
 		)
 	}
 
-	get subjectRelations(): Relation[] {
-		let relations: Relation[] = []
+	get subjectRelations(): Relation<Subject>[] {
+		let relations: Relation<Subject>[] = []
 		for (const subject of this.subjects) {
 			for (const child of subject.children) {
-				relations.push(new Relation(this, subject, child))
+				relations.push(new Relation<Subject>(this, subject, child))
 			}
 		}
 
