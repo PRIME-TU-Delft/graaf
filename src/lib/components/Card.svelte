@@ -5,9 +5,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

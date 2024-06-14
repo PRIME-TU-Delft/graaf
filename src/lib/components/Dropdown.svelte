@@ -1,12 +1,15 @@
 
 <script lang="ts">
 
+	// External imports
+	import { createEventDispatcher } from 'svelte'
+
 	// Internal imports
+	import { DropdownOption } from '$scripts/entities/DropdownOption'
 	import { clickoutside } from '$scripts/clickoutside'
 
-	// Assets
-	import warningIcon from '$assets/warning-icon.svg'
-	import errorIcon from '$assets/error-icon.svg'
+	// Components
+	import Validation from '$components/Validation.svelte'
 
 	// Types
 	type T = $$Generic
@@ -15,7 +18,24 @@
 	export let label: string
 	export let placeholder: string
 	export let value: T | undefined = undefined
-	export let options: { name: string, value: T, warning?: string, error?: string }[]
+	export let options: DropdownOption<T>[]
+
+	// Variables
+	const dispatch = createEventDispatcher()
+	const id = label.toLowerCase().replace(/\s/g, '_')
+
+	let visible: boolean = false
+
+	// Unset value if value not in options
+	$: choice = options.find(option => option.value === value)
+	$: set(choice?.value)
+
+	// Sort options so errors are at the bottom
+	$: options = options.sort((a, b) => {
+		if (a.validation.severity === 'error') return 1
+		if (b.validation.severity === 'error') return -1
+		return 0
+	})
 
 	// Functions
 	export function show() {
@@ -30,62 +50,42 @@
 		visible = !visible
 	}
 
-	// Variables
-	let visible: boolean = false
-	$: id = label.toLowerCase().replace(/\s/g, '_')
-
-	// Sort options by availability
-	$: options = options.sort((a, b) =>
-		(a.error !== undefined && b.error === undefined) ?  1 :
-		(a.error === undefined && b.error !== undefined) ? -1 : 
-		0
-	)
-
-	// Property validation
-	$: if (options.find(option => option.value === value) === undefined) {
-		value = undefined // If the current value isnt in the available options, default to undefined
+	function set(next?: T) {
+		if (next === value)
+			return
+		value = next
+		dispatch('change', next)
 	}
 
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <button
 	class="dropdown"
 	class:visible
+	tabindex="-1"
 	on:click={toggle}
 	use:clickoutside={hide}
 >
 	<!-- Hidden input to bind the selected value to a submittable element -->
-	<input {id} name={id} type="hidden" tabindex="-1" bind:value />
-	<label for={id} class="chosen" class:grayed={value === undefined}>
-		{options.find(option => option.value === value)?.name ?? placeholder}
+	<input id={id} name={id} type="hidden" bind:value />
+	<label for={id} class="header" class:grayed={!choice}>
+		{choice?.name || placeholder}
 	</label>
 
 	<div class="options">
 		{#each options as option}
 			<button
 				class="option"
-				disabled={option.error !== undefined}
-				on:click={() => value = option.value}
+				disabled={option.validation.severity === 'error'}
+				on:click={() => { set(option.value) }}
 			>
 				{option.name}
-
-				{#if option.error}
-					<span class="error">
-						<img class="icon" src={errorIcon} alt="" />
-						{option.error}
-					</span>
-				{:else if option.warning}
-					<span class="warning">
-						<img class="icon" src={warningIcon} alt="" />
-						{option.warning}
-					</span>
-				{/if}
+				<div class="flex-spacer" />
+				<Validation data={option.validation} />
 			</button>
 		{/each}
 
@@ -96,7 +96,7 @@
 		{/if}
 
 		{#if value !== undefined}
-			<button class="option grayed" on:click={() => value = undefined}>
+			<button class="option grayed" on:click={() => { set(undefined) }}>
 				<i> Remove choice </i>
 			</button>
 		{/if}
@@ -104,9 +104,7 @@
 </button>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">
@@ -125,7 +123,7 @@
 
 		color: $dark-gray
 
-		.chosen
+		.header
 			position: relative
 			width: 100%
 
@@ -162,7 +160,7 @@
 			top: 100%
 
 			width: 100%
-			max-height: 250px
+			max-height: $max-dropdown-height
 			overflow-y: scroll
 
 			background-color: $white
@@ -172,8 +170,6 @@
 
 			.option
 				display: flex
-
-
 				padding: $input-thin-padding $input-thick-padding
 				text-align: left
 				cursor: pointer
@@ -185,29 +181,8 @@
 					cursor: not-allowed
 					color: $placeholder-color
 
-				.warning, .error
-					display: flex
-					align-items: center
-					justify-content: end
-					gap: $input-thin-padding
-					flex: 1
-
-					pointer-events: none
-					color: $yellow
-
-					.icon
-						width: $input-icon-size
-						height: $input-icon-size
-						filter: $yellow-filter
-
-				.error
-					color: $red
-
-					.icon
-						filter: $red-filter
-
 		&.visible
-			.chosen
+			.header
 				border-bottom-style: dashed
 				border-radius: $border-radius $border-radius 0 0
 

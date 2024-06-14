@@ -22,9 +22,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 {#if href === undefined}

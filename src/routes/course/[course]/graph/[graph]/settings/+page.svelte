@@ -12,6 +12,7 @@
 	import DomainSettings from './DomainSettings.svelte';
 	import SubjectSettings from './SubjectSettings.svelte';
 	import LectureSettings from './LectureSettings.svelte'
+	import Response from '$components/Validation.svelte'
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
@@ -22,6 +23,16 @@
 	// Variables
 	let { course, graph } = data
 	let activeTab: number = 0
+
+	// Functions
+	function update() {
+		/* Force Svelte update 
+		 * I hate this but svelte forces my hand
+		 * Maybe I should just use a store or wait for Svelte 5
+		 */
+
+		graph = graph
+	}
 
 </script>
 
@@ -53,9 +64,10 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
+		<Response show_success data={graph.validate()} />
 		<div class="flex-spacer" />
 		<LinkButton href="/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
-		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
+		<Button on:click={graph.save}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
 	<div class="tabular">
@@ -69,13 +81,13 @@
 		</div>
 
 		{#if activeTab === 0}
-			<GeneralSettings {graph} />
+			<GeneralSettings {graph} {update} />
 		{:else if activeTab === 1}
-			<DomainSettings {graph} />
+			<DomainSettings {graph} {update} />
 		{:else if activeTab === 2}
-			<SubjectSettings {graph} />
+			<SubjectSettings {graph} {update} />
 		{:else if activeTab === 3}
-			<LectureSettings {graph} />
+			<LectureSettings {graph} {update} />
 		{/if}
 	</div>
 </Layout>

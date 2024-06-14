@@ -1,6 +1,8 @@
 
-export { Course } from './Course'
-export { Graph, Extent } from './Graph'
+export { Relation, DomainRelation, SubjectRelation } from './Relations'
+export { ValidationData, Error, Warning } from './ValidationData'
 export { Field, Domain, Subject } from './Fields'
-export { Relation } from './Relations'
-export { Lecture } from './Lectures'
+export { DropdownOption } from './DropdownOption'
+export { Lecture } from './Lecture'
+export { Course } from './Course'
+export { Graph } from './Graph'

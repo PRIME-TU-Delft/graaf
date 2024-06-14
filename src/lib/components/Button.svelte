@@ -17,9 +17,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 {#if href === undefined}
@@ -51,9 +49,7 @@
 {/if}
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

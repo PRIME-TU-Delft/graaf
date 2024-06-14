@@ -1,188 +1,225 @@
 
 // Internal imports
-import { Graph, Relation } from '../entities'
+import { ValidationData, Error, Warning } from './ValidationData'
+import { DropdownOption } from './DropdownOption'
 import { styles } from '../settings'
+import { Graph } from '../entities'
 
 // Exports
 export { Field, Domain, Subject }
 
-abstract class Field {
-	graph: Graph
-	id: number
-	x: number
-	y: number
-	parents: Field[]
-	children: Field[]
-	highlighted: boolean = false
-	name?: string
-	
-	constructor(graph: Graph, id: number, x: number, y: number, parents: Field[], children: Field[], name?: string,) {
-		this.graph = graph
-		this.id = id
-		this.x = x
-		this.y = y
-		this.parents = parents
-		this.children = children
-		this.name = name
-	}
 
-	get relations(): Relation[] {
-		const relations = []
-		for (const parent of this.parents)
-			relations.push(new Relation(this.graph, parent, this))
-		for (const child of this.children)
-			relations.push(new Relation(this.graph, this, child))
+// --------------------> Classes
 
-		return relations
-	}
 
-	get ancestors(): Field[] {
-		const ancestors = this.parents
-		for (const parent of this.parents) {
-			if (ancestors.includes(parent)) continue
-			for (const ancestor of parent.ancestors) {
-				if (ancestors.includes(ancestor)) continue
-				ancestors.push(ancestor)
-			}
-		}
+abstract class Field<T extends Domain | Subject> {
+	constructor(
+		public graph: Graph, 
+		public id: number, 
+		public name: string = '', 
+		public parents: T[] = [], 
+		public children: T[] = []
+	) { }
 
-		return ancestors
-	}
-
-	get descendants(): Field[] {
-		let descendants = this.children
-		for (const child of this.children) {
-			if (descendants.includes(child)) continue
-			for (const descendant of child.descendants) {
-				if (descendants.includes(descendant)) continue
-				descendants.push(descendant)
-			}
-		}
-
-		return descendants
-	}
-
-	get color(): string {
-		return this.style ? styles[this.style].stroke : 'transparent'
-	}
-
-	abstract get style(): string | undefined
-	abstract validate(): boolean
+	abstract get color(): string
+	abstract validate(): ValidationData
 	abstract delete(): void
 }
 
-class Domain extends Field {
-	private _style?: string
+class Domain extends Field<Domain> {
+	style?: string
 
-	constructor(graph: Graph, id: number, x: number, y: number, parents: Domain[], children: Domain[], name?: string, style?: string) {
-		super(graph, id, x, y, parents, children, name)
-		this._style = style
+	// Inferred
+	subjects: Subject[] = []
+
+	constructor(graph: Graph, id: number, style?: string, name?: string, parents: Domain[] = [], children: Domain[] = []) {
+		super(graph, id, name, parents, children)
+		this.style = style
 	}
 
-	static create(graph: Graph) {
-		let domain = new Domain(
-			graph,
-			graph.nextFieldID(),
-			0, 0, // TODO Calculate position to not overlap,
-			[], [],
-			undefined,
-			graph.nextDomainStyle()
-		)
+	get style_options(): DropdownOption<string>[] {
+		/* Return the style options of this domain */
 
-		graph.domains.push(domain)
-	}
-
-	get subjects(): Subject[] {
-		const subjects = []
-		for (const subject of this.graph.subjects) {
-			if (subject.domain === this) {
-				subjects.push(subject)
-			}
-		}
-		
-		return subjects
-	}
-
-	get style(): string | undefined {
-		return this._style
-	}
-
-	set style(style: string | undefined) {
-		this._style = style
-	}
-
-	get styleOptions(): { name: string, value: string, warning?: string, error?: string }[] {
 		const options = []
-		const index = this.graph.domains.indexOf(this)
-		for (const style of Object.keys(styles)) {
-			let occurance = this.graph.domains.findIndex(domain => domain.style === style)
-
-			if (occurance === -1 || occurance >= index) {
-				options.push({ name: styles[style].display_name, value: style })
-			} else {
-				options.push({ name: styles[style].display_name, value: style, warning: 'Duplicate style' })
-			}
+		for (const [style, value] of Object.entries(styles)) {
+			const response = new ValidationData()
+			if (this.graph.domains.some(domain => this !== domain && domain.style === style))
+				response.add(new Warning('Duplicate style'))
+			options.push(new DropdownOption(value.display_name, style, response))
 		}
 
 		return options
 	}
 
-	validate(): boolean {
-		return this.name !== undefined && this.style !== undefined
+	get color(): string {
+		/* Return the preview color of this domain */
+
+		return this.style ? styles[this.style].stroke : 'transparent'
 	}
 
-	delete() {
-		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
+	static create(graph: Graph): Domain {
+		/* Create this domain */
 
-		// Unset all subjects with this domain
+		// Find unused style
+		let style = undefined
+		for (const key of Object.keys(styles)) {
+			if (graph.domains.some(domain => domain.style === key)) continue
+			style = key
+			break
+		}
+
+		const domain = new Domain(graph, 0, style) // TODO Implement ID generation
+		graph.domains.push(domain)
+		return domain
+	}
+
+	validate(): ValidationData {
+		/* Validate this domain */
+
+		const response = new ValidationData()
+
+		// Check if the domain has a name
+		if (this.name === '')
+			response.add(new Error(`Domain (${this.id}) doesn\'t have a name`))
+
+		// Check if the domain has a unique name
+		else {
+			const index = this.graph.domains.findIndex(domain => domain.name === this.name)
+			if (index < this.graph.domains.indexOf(this)) {
+				response.add(
+					new Warning(
+						`Domain (${this.id}) name isn\'t unique`, 
+						`First used by domain (${this.graph.domains[index].id})`
+					)
+				)
+			}
+		}
+
+		// Check if the domain has a style
+		if (!this.style)
+			response.add(new Error(`Domain (${this.id}) doesn\'t have a style`))
+
+		// Check if the domain has a unique style
+		else {
+			const index = this.graph.domains.findIndex(domain => domain.style === this.style)
+			if (index < this.graph.domains.indexOf(this)) {
+				response.add(
+					new Warning(
+						`Domain (${this.id}) style isn\'t unique`, 
+						`First used by domain (${this.graph.domains[index].id})`
+					)
+				)
+			}
+		}
+
+		return response
+	}
+
+	delete(): void {
+		/* Delete this domain */
+
+		// Delete relations
+		for (const relation of this.graph.domain_relations) {
+			if (relation.parent === this || relation.child === this) {
+				relation.delete()
+			}
+		}
+
+		// Unset subjects with this domain
 		for (const subject of this.graph.subjects) {
 			if (subject.domain === this) {
 				subject.domain = undefined
 			}
 		}
 
-		// Unset relations with this domain
-		for (const domain of this.graph.domains) {
-			domain.parents = domain.parents.filter(parent => parent !== this)
-			domain.children = domain.children.filter(child => child !== this)
-		}
+		// Remove this domain from the graph
+		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
 	}
 }
 
-class Subject extends Field {
-	domain?: Domain
+class Subject extends Field<Subject> {
+	private _domain?: Domain
 
-	constructor(graph: Graph, id: number, x: number, y: number, parents: Subject[], children: Subject[], name?: string, domain?: Domain) {
-		super(graph, id, x, y, parents, children, name)
+	constructor(graph: Graph, id: number, name?: string, domain?: Domain, parents: Subject[] = [], children: Subject[] = []) {
+		super(graph, id, name, parents, children)
 		this.domain = domain
 	}
 
-	static create(graph: Graph) {
-		let subject = new Subject(
-			graph,
-			graph.nextFieldID(),
-			0, 0, // TODO Calculate position to not overlap
-			[], []
-		)
+	get domain(): Domain | undefined {
+		/* Return the domain of this subject */
 
-		graph.subjects.push(subject)
+		return this._domain
 	}
 
-	get style(): string | undefined {
-		return this.domain?.style
-	}
+	set domain(domain: Domain | undefined) {
+		/* Set the domain of this subject */
 
-	validate(): boolean {
-		return this.name !== undefined && this.domain !== undefined
-	}
+		// Ensure the domain is different
+		if (this.domain === domain) return
 
-	delete() {
-		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
-
-		// Unset relations with this subject
-		for (const subject of this.graph.subjects) {
-			subject.parents = subject.parents.filter(parent => parent !== this)
-			subject.children = subject.children.filter(child => child !== this)
+		// Remove this subject from the old domain
+		if (this.domain) {
+			this.domain.subjects = this.domain.subjects.filter(subject => subject !== this)
 		}
+
+		// Add this subject to the new domain
+		if (domain) {
+			domain.subjects.push(this)
+		}
+		
+		this._domain = domain
+	}
+
+	get color(): string {
+		/* Return the preview color of this subject */
+
+		return this.domain?.color || 'transparent'
+	}
+
+	static create(graph: Graph): Subject {
+		/* Create this subject */
+
+		const subject = new Subject(graph, 0) // TODO Implement ID generation
+		graph.subjects.push(subject)
+		return subject
+	}
+
+	validate(): ValidationData {
+		/* Validate this subject */
+
+		const response = new ValidationData()
+
+		// Check if the subject has a name
+		if (this.name === '')
+			response.add(new Error('Subject must have a name'))
+
+		// Check if the name is unique
+		else if (this.graph.subjects.some(subject => subject !== this && subject.name === this.name))
+			response.add(new Warning('Subject name isn\'t unique'))
+
+		// Check if the subject has a domain
+		if (!this.domain)
+			response.add(new Error('Subject must have a domain'))
+
+		return response
+	}
+
+	delete(): void {
+		/* Delete this subject */
+
+		// Delete relations
+		for (const relation of this.graph.subject_relations) {
+			if (relation.parent === this || relation.child === this) {
+				relation.delete()
+			}
+		}
+
+		// Remove subject from lectures
+		for (const lecture of this.graph.lectures) {
+			lecture.subjects = lecture.subjects.filter(subject => subject !== this)
+		}
+
+		// Remove this subject from the graph
+		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
 	}
 }

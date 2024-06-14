@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, Relation } from '$scripts/entities'
+	import { Graph, Domain, DomainRelation, Relation } from '$scripts/entities'
 	import { styles } from '$scripts/settings'
 
 	// Components
@@ -12,6 +12,7 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Modal from '$components/Modal.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -22,26 +23,22 @@
 
 	// Exports
 	export let graph: Graph
+	export let update: () => void
 
 	// Variables
 	let domainQuery: string = ''
 	let domainNameSort: boolean | undefined
 	let domainStyleSort: boolean | undefined
+
 	let relationQuery: string = ''
 	let relationFromSort: boolean | undefined
 	let relationToSort: boolean | undefined
 
-	let relations: Relation[] = graph.domainRelations
+	let inferModal: Modal
 
-	// Force reactivity update
-	// NOTE: Maybe redundant Svelte 5?
-	function update() {
-		graph = graph
-		relations = relations
-	}
-
-	// Checks if query appears in domain
 	function domainMatchesQuery(query: string, domain: Domain): boolean {
+		/* Checks if query appears in domain */
+
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -51,8 +48,9 @@
 		return name?.includes(query) || style?.includes(query) || false
 	}
 
-	// Checks if query appears in relation
-	function relationMatchesQuery(query: string, relation: Relation): boolean {
+	function relationMatchesQuery(query: string, relation: DomainRelation): boolean {
+		/* Checks if query appears in relation */
+
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -62,9 +60,11 @@
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
-	// Alphabetizes strings
-	function alphabetize(a?: string, b?: string, ascending: boolean = true): number {
-		return (a ?? '').localeCompare(b ?? '') * (ascending ? 1 : -1)
+	function alphabetize<T>(list: T[], key: (item: T) => string, ascending: boolean = true) {
+		/* Alphabetizes list */
+
+		list.sort((a, b) => key(a).localeCompare(key(b)))
+		if (!ascending) list.reverse()
 	}
 
 </script>
@@ -90,11 +90,11 @@
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
-
-	<!-- If any domains were found that match the search -->
+	
+	<!-- Header -->
 	{#if graph.domains.some(domain => domainMatchesQuery(domainQuery, domain))}
 
-		<!-- Header -->
+		<!-- If any domains were found that match the search -->
 		<div class=row>
 
 			<!-- Name label and sort button -->
@@ -105,7 +105,7 @@
 					on:click={() => {
 						domainStyleSort = undefined
 						domainNameSort = !domainNameSort
-						graph.domains.sort((a, b) => alphabetize(a.name, b.name, domainNameSort))
+						alphabetize(graph.domains, domain => domain.name || '', domainNameSort)
 						update()
 					}}
 				/>
@@ -119,12 +119,7 @@
 					on:click={() => {
 						domainNameSort = undefined
 						domainStyleSort = !domainStyleSort
-						graph.domains.sort((a, b) => alphabetize(
-							a.style ? styles[a.style].display_name : undefined, 
-							b.style ? styles[b.style].display_name : undefined, 
-							domainStyleSort
-						))
-
+						alphabetize(graph.domains, domain => domain.style ? styles[domain.style].display_name : '', domainStyleSort)
 						update()
 					}}
 				/>
@@ -139,13 +134,13 @@
 	{/if}
 
 	<!-- Domain list -->
-	{#each graph.domains as domain, n}
+	{#each graph.domains as domain}
 		{#if domainMatchesQuery(domainQuery, domain)}
 			<div class="row">
-				<span> {n + 1} </span>
+				<span> {domain.id} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
-				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-				<Dropdown label="Style" placeholder="Domain Style" options={domain.styleOptions} bind:value={domain.style}/>
+				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:input={update} />
+				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} on:change={update}/>
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
@@ -163,13 +158,14 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relationQuery} />
-		<Button on:click={() => { relations.push(Relation.create(graph)); update() }}>
+
+		<Button on:click={() => { DomainRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if relations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if graph.domain_relations.some(relation => relationMatchesQuery(relationQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -182,7 +178,7 @@
 					on:click={() => {
 						relationToSort = undefined
 						relationFromSort = !relationFromSort
-						relations.sort((a, b) => alphabetize(a.parent?.name, b.parent?.name, relationFromSort))
+						alphabetize(graph.domain_relations, relation => relation.parent?.name || '', relationFromSort)
 						update()
 					}}
 				/>
@@ -196,7 +192,7 @@
 					on:click={() => {
 						relationFromSort = undefined
 						relationToSort = !relationToSort
-						relations.sort((a, b) => alphabetize(a.child?.name, b.child?.name, relationToSort))
+						alphabetize(graph.domain_relations, relation => relation.child?.name || '', relationToSort)
 						update()
 					}}
 				/>
@@ -211,20 +207,19 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each relations as relation, n}
+	{#each graph.domain_relations as relation}
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {n + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => { 
-					relations = relations.filter(r => r !== relation)
+				<span> {relation.id} </span>
+				<IconButton scale src={trashIcon} on:click={() => {
 					relation.delete()
-					update() 
+					update()
 				}} />
 
-				<Dropdown label="Parent" placeholder="From Domain" options={relation.filterParentOptions(graph.domains)} bind:value={relation.parent} />
-				<span class="preview" style:background-color={relation.parentColor} />
-				<Dropdown label="Child" placeholder="To Domain" options={relation.filterChildOptions(graph.domains)} bind:value={relation.child} />
-				<span class="preview" style:background-color={relation.childColor} />
+				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} on:change={update} />
+				<span class="preview" style:background-color={relation.parent_color} />
+				<Dropdown label="Child" placeholder="To Domain" options={relation.child_options} bind:value={relation.child} on:change={update} />
+				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}
 	{/each}
@@ -245,7 +240,6 @@
 
 	.toolbar
 		display: flex
-		flex-flow: row nowrap
 		margin-bottom: $form-big-gap
 		gap: $form-small-gap
 
@@ -277,7 +271,7 @@
 			display: grid
 			place-items: center center
 			gap: $form-small-gap
-	
+
 	.domains .row
 		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
 

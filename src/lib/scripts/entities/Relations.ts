@@ -1,67 +1,60 @@
 
 // Internal imports
-import { Graph, Field, Domain, Subject } from '../entities'
+import { DropdownOption } from './DropdownOption'
+import { ValidationData, Error, Warning } from './ValidationData'
+import { Domain, Subject } from './Fields'
+import { Graph } from './Graph'
 
 // Exports
-export { Relation }
+export { Relation, DomainRelation, SubjectRelation }
 
-class Log
 
-class Relation {
-	graph: Graph
-	private _parent?: Field
-	private _child?: Field
+// --------------------> Classes
 
-	constructor(graph: Graph, parent?: Field, child?: Field) {
-		this.graph = graph
-		this._parent = parent
-		this._child = child
-	}
 
-	static create(graph: Graph, parent?: Field, child?: Field): Relation {
-		let relation = new Relation(graph)
-		relation.parent = parent
-		relation.child = child
-		return relation
-	}
+abstract class Relation<T extends Domain | Subject> {
+	constructor (
+		public graph: Graph,
+		public id: number,
+		private _parent?: T,
+		private _child?: T
+	) { }
 
-	get id(): string {
-		return `${this.parent?.id ?? 'undefined'}.${this.child?.id ?? 'undefined'}`
-	}
-
-	get parent(): Field | undefined {
+	get parent(): T | undefined {
 		return this._parent
 	}
 
-	set parent(parent: Field | undefined) {
+	set parent(parent: T | undefined) {
 		if (this.parent === parent) return
 
+		// Update parent and child references
 		if (this.child) {
 			if (this.parent) {
-				this.parent.children = this.parent.children.filter(field => field !== this.child)
 				this.child.parents = this.child.parents.filter(field => field !== this.parent)
+				this.parent.children = this.parent.children.filter(field => field !== this.child)
 			}
 
 			if (parent) {
-				parent.children.push(this.child)
 				this.child.parents.push(parent)
+				parent.children.push(this.child)
 			}
 		}
 
 		this._parent = parent
 	}
 
-	get parentColor(): string {
-		return this.parent?.color ?? 'transparent'
+	get parent_color(): string {
+		return this.parent?.color || 'transparent'
 	}
 
-	get child(): Field | undefined {
+	get child(): T | undefined {
 		return this._child
 	}
 
-	set child(child: Field | undefined) {
+	set child(child: T | undefined) {
 		if (this.child === child) return
 
+		// Update parent and child references
 		if (this.parent) {
 			if (this.child) {
 				this.parent.children = this.parent.children.filter(field => field !== this.child)
@@ -77,112 +70,301 @@ class Relation {
 		this._child = child
 	}
 
-	get childColor(): string {
-		return this.child?.color ?? 'transparent'
+	get child_color(): string {
+		return this.child?.color || 'transparent'
 	}
 
-	filterParentOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
-		const options = []
-		for (const field of fields) {
-			if (!field.name) continue
+	get defined(): boolean {
+		return this.parent !== undefined && this.child !== undefined
+	}
 
-			if (!this.child) {
-				options.push({ name: field.name, value: field })
+	protected isCyclic(parent?: T, child?: T): boolean {
+		/* Depth first check if the relation is cyclic */
+
+		if (!parent || !child) return false
+
+		let stack = [child]
+		while (stack.length > 0) {
+			const current = stack.pop()!
+			if (current === parent) return true
+			stack.push(...current.children)
+		}
+
+		return false
+	}
+
+	protected isSelfReferential(parent?: T, child?: T): boolean {
+		/* Check if the relation is self-referential */
+
+		if (!parent || !child) return false
+		return parent === child
+	}
+
+	abstract get parent_options(): DropdownOption<T>[]
+	abstract get child_options(): DropdownOption<T>[]
+	abstract validate(): ValidationData
+	abstract delete(): void
+}
+
+class DomainRelation extends Relation<Domain> {
+	static create(graph: Graph): DomainRelation {
+		/* Create this domain relation */
+
+		const relation = new DomainRelation(graph, 0) // TODO Implement ID generation
+		graph.domain_relations.push(relation)
+		return relation
+	}
+
+	private isDuplicate(parent?: Domain, child?: Domain): boolean {
+		/* Check if the relation is a duplicate */
+
+		if (!parent || !child) return false
+
+		const first = this.graph.domain_relations.findIndex(relation => relation.parent === parent && relation.child === child)
+		const index = this.graph.domain_relations.indexOf(this)
+
+		return first >= 0 && first < index
+	}
+
+	private isConsistent(parent?: Domain, child?: Domain): boolean {
+		/* Check if the relation is consistent */
+		
+		if (!parent || !child) return true
+
+		for (const subject of parent.subjects) {
+			for (const child of subject.children) {
+				if (child.domain === this.child) return true
+			}
+		}
+
+		return false
+	}
+
+	private validateOption(parent?: Domain, child?: Domain): ValidationData {
+		const validation = new ValidationData()
+
+		// Check if the relation is self-referential
+		if (this.isSelfReferential(parent, child))
+			validation.add(new Error('Self-referential'))
+
+		// Check if the relation is cyclic
+		else if (this.isCyclic(parent, child))
+			validation.add(new Error('Cyclic relation'))
+
+		// Check if the relation is a duplicate
+		else if (this.isDuplicate(parent, child))
+			validation.add(new Error('Duplicate relation'))
+
+		// Check if the relation is consistent
+		else if (!this.isConsistent(parent, child))
+			validation.add(new Warning('Inconsistent with subjects'))
+		
+		return validation
+	}
+
+	get parent_options(): DropdownOption<Domain>[] {
+		/* Return the parent options for this domain relation */
+
+		const options: DropdownOption<Domain>[] = []
+		for (const domain of this.graph.domains) {
+
+			// Check if the domain has a name
+			if (domain.name === '')
 				continue
-			}
-
-			options.push(
-				{ name: field.name, value: field, ...this.validate(field, this.child) }
-			)
-		}
-
-		return options
-	}
-
-	filterChildOptions(fields: Field[]): { name: string, value: Field, warning?: string, error?: string }[] {
-		const options = []
-		for (const field of fields) {
-			if (!field.name) continue
-
-			if (!this.parent) {
-				options.push({ name: field.name, value: field })
-				continue
-			}
-
-			options.push(
-				{ name: field.name, value: field, ...this.validate(this.parent, field) }
-			)
-		}
-
-		return options
-	}
-
-	validate(a: Field, b: Field): { warning?: string, error?: string, description?: string } {
-		const type = a instanceof Subject ? 'subject' : 'domain'
-		const parent = a as Subject & Domain
-		const child = b as Subject & Domain
-
-		// Cast parent and child to their respective types
-		parent
-
-		// Prevent self-references
-		if (parent === child) {
-			return { error: 'Self-reference', description: `A ${type} cannot relate to itself` }
-		}
-
-		// Prevent duplicate relations
-		if (parent.children.includes(child)) {
-			return { error: 'Duplicate relation', description: 'This relation between already exists' }
-		}
-
-		// Prevent circular references
-		if (parent.ancestors.includes(child)) {
-			return { error: 'Circular relation', description: 'This relation results in a loop' }
-		}
-
-		// Check if there is a conflicting domain relation
-		if (
-			type === 'subject'
-		) {
-			if (parent.domain && child.domain &&
-				parent.domain !== child.domain && (
-					// TODO check child.domain.children.includes(parent.domain)
-					parent.domain.parents.includes(child.domain) ||
-					!parent.domain.children.includes(child.domain)
-				)
-			) {
-				return { warning: 'Conflicting domain relations', description: `This relation does not obey domain relations` }
-			}
-
-			return { }
-
-		} else {
-			for (const subject of parent.subjects) {
 			
-				// TODO check child.subjects.children.domain === parent
-				// Check if there is a conflicting domain relation
-				for (const ancestor of subject.parents as Subject[]) {
-					if (ancestor.domain === child) {
-						return { warning: 'Conflicting subject relations', description: 'Subjects do not obey this relation' }
-					}
-				}
-	
-				// Check if there is matching domain relation
-				for (const descendant of subject.children as Subject[]) {
-					if (descendant.domain === child) {
-						return { }
-					}
-				}
-			}
-	
-			return { warning: 'Conflicting subject relations', description: 'No subjects follow this relation' }
+			// Add the domain to options
+			options.push(
+				new DropdownOption(
+					domain.name, 
+					domain, 
+					this.validateOption(domain, this.child)
+				)
+			)
 		}
+
+		return options
 	}
 
-	delete() {
-		if (this.parent && this.child) {
-			this.parent.children = this.parent.children.filter(field => field !== this.child)
-			this.child.parents = this.child.parents.filter(field => field !== this.parent)
+	get child_options(): DropdownOption<Domain>[] {
+		/* Return the child options for this domain relation */
+
+		const options: DropdownOption<Domain>[] = []
+		for (const domain of this.graph.domains) {
+
+			// Check if the domain has a name
+			if (domain.name === '')
+				continue
+			
+			// Add the domain to options
+			options.push(
+				new DropdownOption(
+					domain.name, 
+					domain, 
+					this.validateOption(this.parent, domain)
+				)
+			)
 		}
+
+		return options
+	}
+
+	validate(): ValidationData {
+		/* Validate this domain relation */
+
+		const response = new ValidationData()
+
+		// Check if the relation is defined
+		if (!this.defined)
+			response.add(new Error(`Relation (${this.id}) is not fully defined`))
+
+		// Check if the relation is consistent
+		if (!this.isConsistent(this.parent, this.child))
+			response.add(new Warning(`Relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
+
+		return response
+	}
+
+	delete(): void {
+		/* Delete this domain relation */
+
+		// Remove references in the parent and child
+		if (this.defined) {
+			this.parent!.children = this.parent!.children.filter(child => child !== this.child)
+			this.child!.parents = this.child!.parents.filter(parent => parent !== this.parent)
+		}
+
+		// Remove this relation from the graph
+		this.graph.domain_relations = this.graph.domain_relations.filter(relation => relation !== this)
+	}
+}
+
+class SubjectRelation extends Relation<Subject> {
+	static create(graph: Graph): SubjectRelation {
+		/* Create this subject relation */
+
+		const relation = new SubjectRelation(graph, 0) // TODO Implement ID generation
+		graph.subject_relations.push(relation)
+		return relation
+	}
+
+	private isConsistent(parent?: Subject | undefined, child?: Subject | undefined): boolean {
+		/* Check if the relation is consistent */
+
+		if (!parent?.domain || !child?.domain) return true
+
+		for (const domain_child of parent.domain.children) {
+			if (domain_child === child.domain) return true
+		}
+
+		return false
+	
+	}
+
+	private isDuplicate(parent?: Subject, child?: Subject): boolean {
+		/* Check if the relation is a duplicate */
+
+		if (!parent || !child) return true
+
+		const first = this.graph.subject_relations.findIndex(relation => relation.parent === parent && relation.child === child)
+		const index = this.graph.subject_relations.indexOf(this)
+		
+		return first >= 0 && first < index
+	}
+
+	private validateOption(parent?: Subject, child?: Subject): ValidationData {
+		const validation = new ValidationData()
+
+		// Check if the relation is self-referential
+		if (this.isSelfReferential(parent, child))
+			validation.add(new Error('Self-referential'))
+
+		// Check if the relation is cyclic
+		else if (this.isCyclic(parent, child))
+			validation.add(new Error('Cyclic relation'))
+
+		// Check if the relation is a duplicate
+		else if (this.isDuplicate(parent, child))
+			validation.add(new Error('Duplicate relation'))
+
+		// Check if the relation is consistent
+		else if (!this.isConsistent(parent, child))
+			validation.add(new Warning('Inconsistent with domains'))
+
+		return validation
+	}
+
+	get parent_options(): DropdownOption<Subject>[] {
+		/* Return the parent options for this subject relation */
+
+		const options: DropdownOption<Subject>[] = []
+		for (const subject of this.graph.subjects) {
+
+			// Check if the subject has a name
+			if (subject.name === '')
+				continue
+
+			// Add the subject to options
+			options.push(
+				new DropdownOption(
+					subject.name, 
+					subject, 
+					this.validateOption(subject, this.child)
+				)
+			)
+		}
+
+		return options
+	}
+
+	get child_options(): DropdownOption<Subject>[] {
+		/* Return the child options for this subject relation */
+
+		const options: DropdownOption<Subject>[] = []
+		for (const subject of this.graph.subjects) {
+
+			// Check if the subject has a name
+			if (subject.name === '')
+				continue
+
+			// Add the subject to options
+			options.push(
+				new DropdownOption(
+					subject.name, 
+					subject, 
+					this.validateOption(this.parent, subject)
+				)
+			)
+		}
+
+		return options
+	}
+
+	validate(): ValidationData {
+		/* Validate this subject relation */
+
+		const response = new ValidationData()
+
+		// Check if the relation is defined
+		if (!this.defined)
+			response.add(new Error(`Relation (${this.id}) is not fully defined`))
+
+		// Check if the relation is consistent
+		if (!this.isConsistent(this.parent, this.child))
+			response.add(new Warning(`Relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
+
+		return response
+	}
+
+	delete(): void {
+		/* Delete this subject relation */
+
+		// Remove references in the parent and child
+		if (this.defined) {
+			this.parent!.children = this.parent!.children.filter(child => child !== this.child)
+			this.child!.parents = this.child!.parents.filter(parent => parent !== this.parent)
+		}
+
+		// Remove this relation from the graph
+		this.graph.subject_relations = this.graph.subject_relations.filter(relation => relation !== this)
 	}
 }

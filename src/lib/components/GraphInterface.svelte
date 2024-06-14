@@ -20,9 +20,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <div class="tabular">
@@ -54,9 +52,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

@@ -15,6 +15,7 @@
 
 	// Exports
 	export let graph: Graph
+	export let update: () => void
 
 	// Variables
 	let deleteGraphModal: Modal
@@ -32,7 +33,7 @@
 	<!-- Settings -->
 	<div class="settings">
 		<label for="name"> Name </label>
-		<Textfield label="Name" bind:value={graph.name} />
+		<Textfield label="Name" bind:value={graph.name} on:input={update} />
 	</div>
 
 	<!-- Button row -->
@@ -42,11 +43,11 @@
 		<Button on:click={deleteGraphModal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
 		<Modal bind:this={deleteGraphModal}>
 			<h3 slot="header"> Delete Graph </h3>
-			Are you sure you want to delete {graph.name}?
+			Are you sure you want to delete {graph.name}? This action <b>cannot</b> be undone.
 
-			<div class="button-row">
+			<div slot="button-row">
 				<LinkButton on:click={deleteGraphModal.hide}> Cancel </LinkButton>
-				<Button on:click={graph.delete}> Delete Graph </Button> <!-- TODO redirect to course overview -->
+				<Button on:click={graph.delete}> Continue </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</div>

@@ -11,9 +11,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <div class="card">
@@ -31,9 +29,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">
