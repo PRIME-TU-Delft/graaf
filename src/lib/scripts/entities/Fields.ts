@@ -32,7 +32,7 @@ class Domain extends Field<Domain> {
 	// Inferred
 	subjects: Subject[] = []
 
-	constructor(graph: Graph, id: number, style?: string, name?: string, parents: Domain[] = [], children: Domain[] = []) {
+	constructor(graph: Graph, id: number, style?: string, name: string = '', parents: Domain[] = [], children: Domain[] = []) {
 		super(graph, id, name, parents, children)
 		this.style = style
 	}
@@ -84,12 +84,12 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a unique name
 		else {
-			const index = this.graph.domains.findIndex(domain => domain.name === this.name)
-			if (index < this.graph.domains.indexOf(this)) {
+			const first = this.graph.domains.findIndex(domain => domain.name === this.name)
+			if (first < this.graph.domains.indexOf(this)) {
 				response.add(
 					new Warning(
 						`Domain (${this.id}) name isn\'t unique`, 
-						`First used by domain (${this.graph.domains[index].id})`
+						`First used by domain (${this.graph.domains[first].id})`
 					)
 				)
 			}
@@ -101,12 +101,12 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a unique style
 		else {
-			const index = this.graph.domains.findIndex(domain => domain.style === this.style)
-			if (index < this.graph.domains.indexOf(this)) {
+			const first = this.graph.domains.findIndex(domain => domain.style === this.style)
+			if (first < this.graph.domains.indexOf(this)) {
 				response.add(
 					new Warning(
 						`Domain (${this.id}) style isn\'t unique`, 
-						`First used by domain (${this.graph.domains[index].id})`
+						`First used by domain (${this.graph.domains[first].id})`
 					)
 				)
 			}
@@ -140,11 +140,29 @@ class Domain extends Field<Domain> {
 class Subject extends Field<Subject> {
 	private _domain?: Domain
 
-	constructor(graph: Graph, id: number, name?: string, domain?: Domain, parents: Subject[] = [], children: Subject[] = []) {
+	constructor(graph: Graph, id: number, name: string = '', domain?: Domain, parents: Subject[] = [], children: Subject[] = []) {
 		super(graph, id, name, parents, children)
 		this.domain = domain
 	}
 
+	get domain_options(): DropdownOption<Domain>[] {
+		/* Return the domain options of this subject */
+
+		const options = []
+		for (const domain of this.graph.domains) {
+			if (domain.name === '') continue
+			options.push(
+				new DropdownOption(
+					domain.name, 
+					domain, 
+					new ValidationData()
+				)
+			)
+		}
+
+		return options
+	}
+ 
 	get domain(): Domain | undefined {
 		/* Return the domain of this subject */
 
@@ -191,15 +209,24 @@ class Subject extends Field<Subject> {
 
 		// Check if the subject has a name
 		if (this.name === '')
-			response.add(new Error('Subject must have a name'))
+			response.add(new Error(`Subject (${this.id}) doesn\'t have a name`))
 
 		// Check if the name is unique
-		else if (this.graph.subjects.some(subject => subject !== this && subject.name === this.name))
-			response.add(new Warning('Subject name isn\'t unique'))
+		else {
+			const first = this.graph.subjects.findIndex(subject => subject.name === this.name)
+			if (first < this.graph.subjects.indexOf(this)) {
+				response.add(
+					new Warning(
+						`Subject (${this.id}) name isn\'t unique`, 
+						`First used by subject (${this.graph.subjects[first].id})`
+					)
+				)
+			}
+		}
 
 		// Check if the subject has a domain
 		if (!this.domain)
-			response.add(new Error('Subject must have a domain'))
+			response.add(new Error(`Subject (${this.id}) doesn\'t have a domain`))
 
 		return response
 	}

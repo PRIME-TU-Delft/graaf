@@ -1,6 +1,6 @@
 
 // Internal imports
-import { ValidationData, Error } from './ValidationData'
+import { ValidationData, Error, Warning } from './ValidationData'
 import { Subject } from './Fields'
 import { Graph } from './Graph'
 
@@ -26,11 +26,20 @@ class Lecture {
 
 		// Check if the lecture has a name
 		if (this.name === '')
-			response.add(new Error('Lecture has no name'))
+			response.add(new Error(`Lecture (${this.id}) has no name`))
 
 		// Check if the name is unique
-		else if (this.graph.lectures.some(lecture => lecture !== this && lecture.name === this.name))
-			response.add(new Error('Lecture name isn\'t unique'))
+		else {
+			const first = this.graph.domains.findIndex(lecture => lecture.name === this.name)
+			if (first < this.graph.lectures.indexOf(this)) {
+				response.add(
+					new Warning(
+						`Lecture (${this.id}) name isn\'t unique`, 
+						`First used by lecture (${this.graph.domains[first].id})`
+					)
+				)
+			}
+		}
 
 		// Check if the lecture has subjects
 		if (!this.subjects.length)

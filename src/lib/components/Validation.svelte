@@ -13,17 +13,11 @@
 
 	// Exports
 	export let data: ValidationData
-	export let show_success: boolean = false
+	export let short: boolean = false
 
 	// Variables
 	let error_dropdown: boolean = false
 	let warning_dropdown: boolean = false
-
-	// Reset dropdowns if only one item
-	$: if (data.total_items < 2) {
-		warning_dropdown = false
-		error_dropdown = false
-	}
 
 	// Functions
 	function show_errors() {
@@ -50,7 +44,27 @@
 <!-- Markup -->
 
 
-{#if data.total_items > 1}
+{#if short}
+
+	{#if data.severity === 'error'}
+
+		<span class="error">
+			<img src={errorIcon} alt="" /> {data.errors[0].short}
+		</span>
+
+	{:else if data.severity === 'warning'}
+
+		<span class="warning">
+			<img src={warningIcon} alt="" /> {data.warnings[0].short}
+		</span>
+
+	{/if}
+
+{:else if data.severity === 'success'}
+
+	<span class="success"> <img src={successIcon} alt=""> Everything is good! </span>
+
+{:else}
 
 	<div class="multiple">
 		<button class="error" on:click={show_errors} use:tooltip={error_dropdown ? 'Hide errors' : 'Show errors'} >
@@ -78,7 +92,7 @@
 				{/if}
 			</div>
 		{/if}
-	
+
 		{#if warning_dropdown}
 			<div class="dropdown" use:clickoutside={hide_warnings}>
 				{#each data.warnings as warning}
@@ -97,22 +111,6 @@
 			</div>
 		{/if}
 	</div>
-
-{:else if data.severity === 'error'}
-
-	<span class="error">
-		<img src={errorIcon} alt="" /> {data.errors[0].short}
-	</span>
-
-{:else if data.severity === 'warning'}
-
-	<span class="warning">
-		<img src={warningIcon} alt="" /> {data.warnings[0].short}
-	</span>
-
-{:else if show_success}
-
-	<span class="success"> <img src={successIcon} alt=""> Everything is good! </span>
 
 {/if}
 

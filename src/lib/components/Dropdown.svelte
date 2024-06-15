@@ -85,7 +85,7 @@
 			>
 				{option.name}
 				<div class="flex-spacer" />
-				<Validation data={option.validation} />
+				<Validation short data={option.validation} />
 			</button>
 		{/each}
 

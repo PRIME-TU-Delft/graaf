@@ -131,9 +131,9 @@ class DomainRelation extends Relation<Domain> {
 		
 		if (!parent || !child) return true
 
-		for (const subject of parent.subjects) {
-			for (const child of subject.children) {
-				if (child.domain === this.child) return true
+		for (const relation of this.graph.subject_relations) {
+			if (relation.parent?.domain === parent && relation.child?.domain === child) {
+				return true
 			}
 		}
 
@@ -215,11 +215,11 @@ class DomainRelation extends Relation<Domain> {
 
 		// Check if the relation is defined
 		if (!this.defined)
-			response.add(new Error(`Relation (${this.id}) is not fully defined`))
+			response.add(new Error(`Domain relation (${this.id}) is not fully defined`))
 
 		// Check if the relation is consistent
 		if (!this.isConsistent(this.parent, this.child))
-			response.add(new Warning(`Relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
+			response.add(new Warning(`Domain relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
 
 		return response
 	}
@@ -263,7 +263,7 @@ class SubjectRelation extends Relation<Subject> {
 	private isDuplicate(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is a duplicate */
 
-		if (!parent || !child) return true
+		if (!parent || !child) return false
 
 		const first = this.graph.subject_relations.findIndex(relation => relation.parent === parent && relation.child === child)
 		const index = this.graph.subject_relations.indexOf(this)
@@ -346,11 +346,11 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Check if the relation is defined
 		if (!this.defined)
-			response.add(new Error(`Relation (${this.id}) is not fully defined`))
+			response.add(new Error(`Subject relation (${this.id}) is not fully defined`))
 
 		// Check if the relation is consistent
 		if (!this.isConsistent(this.parent, this.child))
-			response.add(new Warning(`Relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
+			response.add(new Warning(`Subject relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
 
 		return response
 	}

@@ -64,7 +64,7 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Response show_success data={graph.validate()} />
+		<Response data={graph.validate()} />
 		<div class="flex-spacer" />
 		<LinkButton href="/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
 		<Button on:click={graph.save}> <img src={saveIcon} alt=""> Save Changes </Button>
