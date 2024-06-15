@@ -11,7 +11,6 @@
 	import Button from '$components/Button.svelte'
 	import IconButton from '$components/IconButton.svelte';
 
-
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'

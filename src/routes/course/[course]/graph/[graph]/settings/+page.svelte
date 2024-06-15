@@ -24,6 +24,8 @@
 	let { course, graph } = data
 	let activeTab: number = 0
 
+	console.log(graph.uuid)
+
 	// Functions
 	function update() {
 		/* Force Svelte update 
@@ -55,19 +57,19 @@
 		},
 		{
 			name: graph.name,
-			href: `/course/${course.code}/graph/${graph.id}/overview`
+			href: `/course/${course.code}/graph/${graph.uuid}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/course/${course.code}/graph/${graph.id}/settings`
+			href: `/course/${course.code}/graph/${graph.uuid}/settings`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
 		<Response data={graph.validate()} />
 		<div class="flex-spacer" />
-		<LinkButton href="/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
-		<Button on:click={graph.save}> <img src={saveIcon} alt=""> Save Changes </Button>
+		<LinkButton href="/course/{course.code}/graph/{graph.uuid}/layout"> Edit layout </LinkButton>
+		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
 	<div class="tabular">

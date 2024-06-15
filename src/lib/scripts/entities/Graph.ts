@@ -1,4 +1,7 @@
 
+// External imports
+import * as uuid from 'uuid'
+
 // Internal imports
 import { ValidationData, Error } from './ValidationData'
 import { DomainRelation, SubjectRelation } from './Relations'
@@ -14,7 +17,7 @@ export { Graph }
 
 class Graph {
 	constructor(
-		public id: number, 
+		public uuid: string,
 		public name: string = '', 
 		public domains: Domain[] = [], 
 		public subjects: Subject[] = [], 
@@ -25,19 +28,16 @@ class Graph {
 	domain_relations: DomainRelation[] = []
 	subject_relations: SubjectRelation[] = []
 
-	static create(id: number): Graph {
+	static create(): Graph {
 		/* Create a new graph */
 
-		return new Graph(id)
+		return new Graph(uuid.v4())
 	}
 
 	static load(obj: Object): Graph {
-		/* Load the graph from a POGO */
+		/* Load the graph from a POJO */
 
-		// TODO this is a placeholder
-		return new Graph(
-			1, 'Graph'
-		)
+		throw new Error('Not implemented')
 	}
 
 	validate(): ValidationData {

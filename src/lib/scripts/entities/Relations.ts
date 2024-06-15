@@ -1,4 +1,7 @@
 
+// External imports
+import * as uuid from 'uuid'
+
 // Internal imports
 import { DropdownOption } from './DropdownOption'
 import { ValidationData, Error, Warning } from './ValidationData'
@@ -15,7 +18,8 @@ export { Relation, DomainRelation, SubjectRelation }
 abstract class Relation<T extends Domain | Subject> {
 	constructor (
 		public graph: Graph,
-		public id: number,
+		public uuid: string,
+		public index: number,
 		private _parent?: T,
 		private _child?: T
 	) { }
@@ -110,7 +114,7 @@ class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph): DomainRelation {
 		/* Create this domain relation */
 
-		const relation = new DomainRelation(graph, 0) // TODO Implement ID generation
+		const relation = new DomainRelation(graph, uuid.v4(), graph.domain_relations.length)
 		graph.domain_relations.push(relation)
 		return relation
 	}
@@ -215,17 +219,24 @@ class DomainRelation extends Relation<Domain> {
 
 		// Check if the relation is defined
 		if (!this.defined)
-			response.add(new Error(`Domain relation (${this.id}) is not fully defined`))
+			response.add(new Error(`Domain relation (${this.index + 1}) is not fully defined`))
 
 		// Check if the relation is consistent
 		if (!this.isConsistent(this.parent, this.child))
-			response.add(new Warning(`Domain relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
+			response.add(new Warning(`Domain relation (${this.index + 1}) is inconsistent`, 'The subjects of these domains are not related'))
 
 		return response
 	}
 
 	delete(): void {
 		/* Delete this domain relation */
+
+		// Shift indexes
+		for (const relation of this.graph.domain_relations) {
+			if (relation.index > this.index) {
+				relation.index--
+			}
+		}
 
 		// Remove references in the parent and child
 		if (this.defined) {
@@ -242,7 +253,7 @@ class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph): SubjectRelation {
 		/* Create this subject relation */
 
-		const relation = new SubjectRelation(graph, 0) // TODO Implement ID generation
+		const relation = new SubjectRelation(graph, uuid.v4(), graph.subject_relations.length)
 		graph.subject_relations.push(relation)
 		return relation
 	}
@@ -346,17 +357,24 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Check if the relation is defined
 		if (!this.defined)
-			response.add(new Error(`Subject relation (${this.id}) is not fully defined`))
+			response.add(new Error(`Subject relation (${this.index + 1}) is not fully defined`))
 
 		// Check if the relation is consistent
 		if (!this.isConsistent(this.parent, this.child))
-			response.add(new Warning(`Subject relation (${this.id}) is inconsistent`, 'The subjects of these domains are not related'))
+			response.add(new Warning(`Subject relation (${this.index + 1}) is inconsistent`, 'The subjects of these domains are not related'))
 
 		return response
 	}
 
 	delete(): void {
 		/* Delete this subject relation */
+
+		// Shift indexes
+		for (const relation of this.graph.subject_relations) {
+			if (relation.index > this.index) {
+				relation.index--
+			}
+		}
 
 		// Remove references in the parent and child
 		if (this.defined) {

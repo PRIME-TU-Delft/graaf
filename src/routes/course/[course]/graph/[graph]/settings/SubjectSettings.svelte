@@ -129,10 +129,10 @@
 	{/if}
 
 	<!-- Subject list -->
-	{#each graph.subjects as subject, n}
+	{#each graph.subjects as subject}
 		{#if subjectMatchesQuery(subjectQuery, subject)}
 			<div class="row">
-				<span> {n + 1} </span>
+				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
 				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} on:change={update} />
@@ -201,10 +201,10 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each graph.subject_relations as relation, n}
+	{#each graph.subject_relations as relation}
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {n + 1} </span>
+				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => {
 					relation.delete()
 					update()

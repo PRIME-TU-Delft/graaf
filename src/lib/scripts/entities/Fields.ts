@@ -1,4 +1,7 @@
 
+// External imports
+import * as uuid from 'uuid'
+
 // Internal imports
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
@@ -15,7 +18,8 @@ export { Field, Domain, Subject }
 abstract class Field<T extends Domain | Subject> {
 	constructor(
 		public graph: Graph, 
-		public id: number, 
+		public uuid: string,
+		public index: number,
 		public name: string = '', 
 		public parents: T[] = [], 
 		public children: T[] = []
@@ -32,8 +36,8 @@ class Domain extends Field<Domain> {
 	// Inferred
 	subjects: Subject[] = []
 
-	constructor(graph: Graph, id: number, style?: string, name: string = '', parents: Domain[] = [], children: Domain[] = []) {
-		super(graph, id, name, parents, children)
+	constructor(graph: Graph, uuid: string, index: number, style?: string, name: string = '', parents: Domain[] = [], children: Domain[] = []) {
+		super(graph, uuid, index, name, parents, children)
 		this.style = style
 	}
 
@@ -68,7 +72,7 @@ class Domain extends Field<Domain> {
 			break
 		}
 
-		const domain = new Domain(graph, 0, style) // TODO Implement ID generation
+		const domain = new Domain(graph, uuid.v4(), graph.domains.length, style)
 		graph.domains.push(domain)
 		return domain
 	}
@@ -80,7 +84,7 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a name
 		if (this.name === '')
-			response.add(new Error(`Domain (${this.id}) doesn\'t have a name`))
+			response.add(new Error(`Domain (${this.index + 1}) doesn\'t have a name`))
 
 		// Check if the domain has a unique name
 		else {
@@ -88,8 +92,8 @@ class Domain extends Field<Domain> {
 			if (first < this.graph.domains.indexOf(this)) {
 				response.add(
 					new Warning(
-						`Domain (${this.id}) name isn\'t unique`, 
-						`First used by domain (${this.graph.domains[first].id})`
+						`Domain (${this.index + 1}) name isn\'t unique`, 
+						`First used by domain (${this.graph.domains[first].index})`
 					)
 				)
 			}
@@ -97,7 +101,7 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a style
 		if (!this.style)
-			response.add(new Error(`Domain (${this.id}) doesn\'t have a style`))
+			response.add(new Error(`Domain (${this.index + 1}) doesn\'t have a style`))
 
 		// Check if the domain has a unique style
 		else {
@@ -105,8 +109,8 @@ class Domain extends Field<Domain> {
 			if (first < this.graph.domains.indexOf(this)) {
 				response.add(
 					new Warning(
-						`Domain (${this.id}) style isn\'t unique`, 
-						`First used by domain (${this.graph.domains[first].id})`
+						`Domain (${this.index + 1}) style isn\'t unique`, 
+						`First used by domain (${this.graph.domains[first].index + 1})`
 					)
 				)
 			}
@@ -117,6 +121,13 @@ class Domain extends Field<Domain> {
 
 	delete(): void {
 		/* Delete this domain */
+
+		// Shift indexes
+		for (const domain of this.graph.domains) {
+			if (domain.index > this.index) {
+				domain.index--
+			}
+		}
 
 		// Delete relations
 		for (const relation of this.graph.domain_relations) {
@@ -140,8 +151,8 @@ class Domain extends Field<Domain> {
 class Subject extends Field<Subject> {
 	private _domain?: Domain
 
-	constructor(graph: Graph, id: number, name: string = '', domain?: Domain, parents: Subject[] = [], children: Subject[] = []) {
-		super(graph, id, name, parents, children)
+	constructor(graph: Graph, uuid: string, index: number, name: string = '', domain?: Domain, parents: Subject[] = [], children: Subject[] = []) {
+		super(graph, uuid, index, name, parents, children)
 		this.domain = domain
 	}
 
@@ -197,7 +208,7 @@ class Subject extends Field<Subject> {
 	static create(graph: Graph): Subject {
 		/* Create this subject */
 
-		const subject = new Subject(graph, 0) // TODO Implement ID generation
+		const subject = new Subject(graph, uuid.v4(), graph.subjects.length)
 		graph.subjects.push(subject)
 		return subject
 	}
@@ -209,7 +220,7 @@ class Subject extends Field<Subject> {
 
 		// Check if the subject has a name
 		if (this.name === '')
-			response.add(new Error(`Subject (${this.id}) doesn\'t have a name`))
+			response.add(new Error(`Subject (${this.index + 1}) doesn\'t have a name`))
 
 		// Check if the name is unique
 		else {
@@ -217,8 +228,8 @@ class Subject extends Field<Subject> {
 			if (first < this.graph.subjects.indexOf(this)) {
 				response.add(
 					new Warning(
-						`Subject (${this.id}) name isn\'t unique`, 
-						`First used by subject (${this.graph.subjects[first].id})`
+						`Subject (${this.index + 1}) name isn\'t unique`, 
+						`First used by subject (${this.graph.subjects[first].index + 1})`
 					)
 				)
 			}
@@ -226,13 +237,20 @@ class Subject extends Field<Subject> {
 
 		// Check if the subject has a domain
 		if (!this.domain)
-			response.add(new Error(`Subject (${this.id}) doesn\'t have a domain`))
+			response.add(new Error(`Subject (${this.index + 1}) doesn\'t have a domain`))
 
 		return response
 	}
 
 	delete(): void {
 		/* Delete this subject */
+
+		// Shift indexes
+		for (const subject of this.graph.subjects) {
+			if (subject.index > this.index) {
+				subject.index--
+			}
+		}
 
 		// Delete relations
 		for (const relation of this.graph.subject_relations) {

@@ -137,7 +137,7 @@
 	{#each graph.domains as domain}
 		{#if domainMatchesQuery(domainQuery, domain)}
 			<div class="row">
-				<span> {domain.id} </span>
+				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:input={update} />
 				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} on:change={update}/>
@@ -210,7 +210,7 @@
 	{#each graph.domain_relations as relation}
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {relation.id} </span>
+				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => {
 					relation.delete()
 					update()
