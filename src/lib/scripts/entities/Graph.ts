@@ -18,9 +18,9 @@ export { Graph }
 class Graph {
 	constructor(
 		public uuid: string,
-		public name: string = '', 
-		public domains: Domain[] = [], 
-		public subjects: Subject[] = [], 
+		public name: string = '',
+		public domains: Domain[] = [],
+		public subjects: Subject[] = [],
 		public lectures: Lecture[] = []
 	) { }
 
@@ -31,13 +31,19 @@ class Graph {
 	static create(): Graph {
 		/* Create a new graph */
 
-		return new Graph(uuid.v4())
+		return new Graph(Graph.generateUUID())
 	}
 
 	static load(obj: Object): Graph {
 		/* Load the graph from a POJO */
 
 		throw new Error('Not implemented')
+	}
+
+	static generateUUID(): string {
+		/* Generate a new UUID */
+
+		return uuid.v4()
 	}
 
 	validate(): ValidationData {
@@ -52,14 +58,14 @@ class Graph {
 		// Validate domains, subjects and lectures
 		for (const domain of this.domains)
 			response.add(domain.validate())
-		for (const subject of this.subjects)
-			response.add(subject.validate())
-		for (const lecture of this.lectures)
-			response.add(lecture.validate())
 		for (const relation of this.domain_relations)
 			response.add(relation.validate())
+		for (const subject of this.subjects)
+			response.add(subject.validate())
 		for (const relation of this.subject_relations)
 			response.add(relation.validate())
+		for (const lecture of this.lectures)
+			response.add(lecture.validate())
 
 		return response
 	}

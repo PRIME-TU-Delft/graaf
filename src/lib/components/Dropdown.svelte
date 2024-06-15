@@ -54,7 +54,7 @@
 		if (next === value)
 			return
 		value = next
-		dispatch('change', next)
+		dispatch('input', next)
 	}
 
 </script>

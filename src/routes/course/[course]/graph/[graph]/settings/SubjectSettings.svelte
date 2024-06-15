@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, Relation, SubjectRelation } from '$scripts/entities'
+	import { Graph, Subject, SubjectRelation } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -28,6 +28,7 @@
 	let subjectQuery: string = ''
 	let subjectNameSort: boolean | undefined
 	let subjectDomainSort: boolean | undefined
+
 	let relationQuery: string = ''
 	let relationFromSort: boolean | undefined
 	let relationToSort: boolean | undefined
@@ -71,7 +72,7 @@
 
 
 <!-- Subjects -->
-<div id="subjects" class="subjects">
+<div id="subjects" class="subjects editor">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
@@ -135,7 +136,7 @@
 				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
-				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} on:change={update} />
+				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} on:input={update} />
 				<span class="preview" style:background-color={subject.color} />
 			</div>
 		{/if}
@@ -143,7 +144,7 @@
 </div>
 
 <!-- Subject relations -->
-<div id="subjects" class="relations">
+<div id="subjects" class="relations editor">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
@@ -205,14 +206,10 @@
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
 				<span> {relation.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => {
-					relation.delete()
-					update()
-				}} />
-
-				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} on:change={update} />
+				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
+				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown label="Child" placeholder="To Subject" options={relation.child_options} bind:value={relation.child} on:change={update} />
+				<Dropdown label="Child" placeholder="To Subject" options={relation.child_options} bind:value={relation.child} on:input={update} />
 				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}
@@ -220,9 +217,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">
@@ -232,40 +227,40 @@
 
 	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
 
-	.toolbar
-		display: flex
-		flex-flow: row nowrap
-		margin-bottom: $form-big-gap
-		gap: $form-small-gap
-
-	.header
-		display: flex
-		flex-flow: row nowrap
-		align-content: center
-		justify-content: right
-		width: 100%
-
-		span
-			flex: 1
-
-	.preview
-		width: $input-icon-size
-		height: $input-icon-size
-
-	.grayed
-		margin: auto
-		color: $gray
-
-	.subjects, .relations
+	.editor
 		display: flex
 		flex-flow: column nowrap
 		padding: $card-thick-padding
 		gap: $form-small-gap
 
+		.grayed
+			margin: auto
+			color: $gray
+
+		.toolbar
+			display: flex
+			flex-flow: row nowrap
+			margin-bottom: $form-big-gap
+			gap: $form-small-gap
+
 		.row
 			display: grid
 			place-items: center center
 			gap: $form-small-gap
+
+			.preview
+				width: $input-icon-size
+				height: $input-icon-size
+
+			.header
+				display: flex
+				flex-flow: row nowrap
+				align-content: center
+				justify-content: right
+				width: 100%
+
+				span
+					flex: 1
 	
 	.subjects .row
 		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width

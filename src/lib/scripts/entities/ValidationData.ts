@@ -10,10 +10,6 @@ class ValidationData {
 	errors: Error[] = []
 	warnings: Warning[] = []
 
-	get total_items(): number {
-		return this.errors.length + this.warnings.length
-	}
-
 	get severity(): 'error' | 'warning' | 'success'  {
 		if (this.errors.length > 0)
 			return 'error'

@@ -5,9 +5,9 @@
 	import { Graph } from '$scripts/entities'
 
 	// Components
-	import Modal from '$components/Modal.svelte'
 	import Button from '$components/Button.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import Modal from '$components/Modal.svelte'
 	import Textfield from '$components/Textfield.svelte'
 
 	// Assets
@@ -23,9 +23,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <div class="editor">
@@ -54,9 +52,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

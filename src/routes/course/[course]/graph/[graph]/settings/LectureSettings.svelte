@@ -5,11 +5,11 @@
 	import { Graph, Lecture } from '$scripts/entities'
 
 	// Components
+	import Button from '$components/Button.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
-	import IconButton from '$components/IconButton.svelte';
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -17,17 +17,15 @@
 
 	// Exports
 	export let graph: Graph
+	export let update: () => void
 
 	// Variables
 	let query: string = ''
 
-	// Force reactivity update
-	function update() {
-		graph = graph // Maybe redundant Svelte 5?
-	}
-
-	// Checks if query appears in lecture
+	// Functions
 	function lectureMatchesQuery(query: string, lecture: Lecture): boolean {
+		/* Checks if query appears in lecture */
+	
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -45,9 +43,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <div class="editor">
@@ -68,26 +64,20 @@
 	{#if graph.lectures.some(lecture => lectureMatchesQuery(query, lecture))}
 
 		<!-- List of lectures -->
-		{#each graph.lectures as lecture, n}
+		{#each graph.lectures as lecture}
 			{#if lectureMatchesQuery(query, lecture)}
 				<div class="lecture">
-					<span> {n + 1} </span>
+					<span> {lecture.index + 1} </span>
 					<IconButton scale src={trashIcon} on:click={() => { lecture.delete(); update() }} />
-					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} />
-					<Button on:click={() => { lecture.addSubject(); update() }}> Add Subject </Button>
+					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} on:input={update} />
+					<Button on:click={() => { lecture.add_subject(); update() }}> Add Subject </Button>
 					
 					<div class="subjects" style="grid-area: subjects;">
-						{#each lecture.presentSubjects as _, m}
-							<span> {m + 1} </span>
-							<IconButton scale src={trashIcon} on:click={() => { lecture.removeSubject(m); update() }} />
-							<Dropdown 
-								label="Subject" 
-								placeholder="Choose subject" 
-								options={lecture.subjectOptions(m)} 
-								bind:value={lecture.presentSubjects[m]}
-								/>
-
-							<span class="preview" style:background-color={lecture.subjectColor(m)} />
+						{#each lecture.subjects as _, n}
+							<span> {n + 1} </span>
+							<IconButton scale src={trashIcon} on:click={() => { lecture.remove_subject(n); update() }} />
+							<Dropdown label="Subject" placeholder="Choose subject" options={lecture.subject_options(n)} bind:value={lecture.subjects[n]} on:input={update}/>
+							<span class="preview" style:background-color={lecture.subject_color(n)} />
 						{/each}
 					</div>
 				</div>
@@ -103,9 +93,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

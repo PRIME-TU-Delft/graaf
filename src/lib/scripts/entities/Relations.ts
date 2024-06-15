@@ -1,7 +1,4 @@
 
-// External imports
-import * as uuid from 'uuid'
-
 // Internal imports
 import { DropdownOption } from './DropdownOption'
 import { ValidationData, Error, Warning } from './ValidationData'
@@ -114,7 +111,12 @@ class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph): DomainRelation {
 		/* Create this domain relation */
 
-		const relation = new DomainRelation(graph, uuid.v4(), graph.domain_relations.length)
+		const relation = new DomainRelation(
+			graph,
+			Graph.generateUUID(),
+			graph.domain_relations.length
+		)
+
 		graph.domain_relations.push(relation)
 		return relation
 	}
@@ -132,7 +134,7 @@ class DomainRelation extends Relation<Domain> {
 
 	private isConsistent(parent?: Domain, child?: Domain): boolean {
 		/* Check if the relation is consistent */
-		
+
 		if (!parent || !child) return true
 
 		for (const relation of this.graph.subject_relations) {
@@ -162,7 +164,7 @@ class DomainRelation extends Relation<Domain> {
 		// Check if the relation is consistent
 		else if (!this.isConsistent(parent, child))
 			validation.add(new Warning('Inconsistent with subjects'))
-		
+
 		return validation
 	}
 
@@ -175,12 +177,12 @@ class DomainRelation extends Relation<Domain> {
 			// Check if the domain has a name
 			if (domain.name === '')
 				continue
-			
+
 			// Add the domain to options
 			options.push(
 				new DropdownOption(
-					domain.name, 
-					domain, 
+					domain.name,
+					domain,
 					this.validateOption(domain, this.child)
 				)
 			)
@@ -198,12 +200,12 @@ class DomainRelation extends Relation<Domain> {
 			// Check if the domain has a name
 			if (domain.name === '')
 				continue
-			
+
 			// Add the domain to options
 			options.push(
 				new DropdownOption(
-					domain.name, 
-					domain, 
+					domain.name,
+					domain,
 					this.validateOption(this.parent, domain)
 				)
 			)
@@ -253,22 +255,31 @@ class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph): SubjectRelation {
 		/* Create this subject relation */
 
-		const relation = new SubjectRelation(graph, uuid.v4(), graph.subject_relations.length)
+		const relation = new SubjectRelation(
+			graph,
+			Graph.generateUUID(),
+			graph.subject_relations.length
+		)
+
 		graph.subject_relations.push(relation)
 		return relation
 	}
 
-	private isConsistent(parent?: Subject | undefined, child?: Subject | undefined): boolean {
+	private isConsistent(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is consistent */
 
-		if (!parent?.domain || !child?.domain) return true
+		if (
+			!child?.domain ||
+			!parent?.domain ||
+			parent.domain === child.domain
+		) return true
 
 		for (const domain_child of parent.domain.children) {
 			if (domain_child === child.domain) return true
 		}
 
 		return false
-	
+
 	}
 
 	private isDuplicate(parent?: Subject, child?: Subject): boolean {
@@ -278,7 +289,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		const first = this.graph.subject_relations.findIndex(relation => relation.parent === parent && relation.child === child)
 		const index = this.graph.subject_relations.indexOf(this)
-		
+
 		return first >= 0 && first < index
 	}
 
@@ -317,8 +328,8 @@ class SubjectRelation extends Relation<Subject> {
 			// Add the subject to options
 			options.push(
 				new DropdownOption(
-					subject.name, 
-					subject, 
+					subject.name,
+					subject,
 					this.validateOption(subject, this.child)
 				)
 			)
@@ -340,8 +351,8 @@ class SubjectRelation extends Relation<Subject> {
 			// Add the subject to options
 			options.push(
 				new DropdownOption(
-					subject.name, 
-					subject, 
+					subject.name,
+					subject,
 					this.validateOption(this.parent, subject)
 				)
 			)

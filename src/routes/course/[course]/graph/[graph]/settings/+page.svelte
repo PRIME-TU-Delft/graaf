@@ -5,14 +5,14 @@
 	import type { PageData } from './$types'
 
 	// Components
-	import Layout from '$layouts/DefaultLayout.svelte'
 	import Button from '$components/Button.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import GeneralSettings from './GeneralSettings.svelte'
 	import DomainSettings from './DomainSettings.svelte';
-	import SubjectSettings from './SubjectSettings.svelte';
+	import GeneralSettings from './GeneralSettings.svelte'
+	import Layout from '$layouts/DefaultLayout.svelte'
 	import LectureSettings from './LectureSettings.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
 	import Response from '$components/Validation.svelte'
+	import SubjectSettings from './SubjectSettings.svelte';
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
@@ -22,9 +22,7 @@
 
 	// Variables
 	let { course, graph } = data
-	let activeTab: number = 0
-
-	console.log(graph.uuid)
+	let active_tab: number = 0
 
 	// Functions
 	function update() {
@@ -39,9 +37,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <Layout
@@ -74,30 +70,44 @@
 
 	<div class="tabular">
 		<div class="tabs">
-			<button class:active={activeTab === 0} on:click={() => activeTab = 0}> General </button>
-			<button class:active={activeTab === 1} on:click={() => activeTab = 1}> Domains </button>
-			<button class:active={activeTab === 2} on:click={() => activeTab = 2}> Subjects </button>
-			<button class:active={activeTab === 3} on:click={() => activeTab = 3}> Lectures </button>
+			<button 
+				class="tab"
+				class:active={active_tab === 0}
+				on:click={() => active_tab = 0}
+			> General </button>
+			<button 
+				class="tab"
+				class:active={active_tab === 1}
+				on:click={() => active_tab = 1}
+			> Domains </button>
+			<button 
+				class="tab"
+				class:active={active_tab === 2}
+				on:click={() => active_tab = 2}
+			> Subjects </button>
+			<button 
+				class="tab"
+				class:active={active_tab === 3}
+				on:click={() => active_tab = 3}
+			> Lectures </button>
 
 			<div class="dynamic-border" />
 		</div>
 
-		{#if activeTab === 0}
+		{#if active_tab === 0}
 			<GeneralSettings {graph} {update} />
-		{:else if activeTab === 1}
+		{:else if active_tab === 1}
 			<DomainSettings {graph} {update} />
-		{:else if activeTab === 2}
+		{:else if active_tab === 2}
 			<SubjectSettings {graph} {update} />
-		{:else if activeTab === 3}
+		{:else if active_tab === 3}
 			<LectureSettings {graph} {update} />
 		{/if}
 	</div>
 </Layout>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">
@@ -111,26 +121,18 @@
 
 		.tabs
 			display: flex
-			flex-flow: row nowrap
+			overflow-x: scroll
 
 			background: $light-gray
 			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 
-			.dynamic-border
-				flex: 1
-				border-bottom: 1px solid $gray
-
-			button
-				display: block
-				margin: 0
+			.tab
 				padding: $card-thin-padding $card-thick-padding
 
 				border-color: $gray
 				border-style: solid
 				border-width: 0 0 1px 1px
 				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
-
-				text-align: left
 
 				&.active
 					background: $white
@@ -142,5 +144,9 @@
 
 				&:first-child
 					border-left: none !important
+			
+			.dynamic-border
+				border-bottom: 1px solid $gray
+				flex: 1
 
 </style>
