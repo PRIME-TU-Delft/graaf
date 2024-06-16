@@ -12,20 +12,20 @@ export { Relation, DomainRelation, SubjectRelation }
 // --------------------> Classes
 
 
-abstract class Relation<T extends Domain | Subject> {
+abstract class Relation {
 	constructor (
 		public graph: Graph,
 		public uuid: string,
 		public index: number,
-		private _parent?: T,
-		private _child?: T
+		private _parent?: Domain | Subject,
+		private _child?: Domain | Subject
 	) { }
 
-	get parent(): T | undefined {
+	get parent(): Domain | Subject | undefined {
 		return this._parent
 	}
 
-	set parent(parent: T | undefined) {
+	set parent(parent: Domain | Subject | undefined) {
 		if (this.parent === parent) return
 
 		// Update parent and child references
@@ -48,11 +48,11 @@ abstract class Relation<T extends Domain | Subject> {
 		return this.parent?.color || 'transparent'
 	}
 
-	get child(): T | undefined {
+	get child(): Domain | Subject | undefined {
 		return this._child
 	}
 
-	set child(child: T | undefined) {
+	set child(child: Domain | Subject | undefined) {
 		if (this.child === child) return
 
 		// Update parent and child references
@@ -79,7 +79,7 @@ abstract class Relation<T extends Domain | Subject> {
 		return this.parent !== undefined && this.child !== undefined
 	}
 
-	protected isCyclic(parent?: T, child?: T): boolean {
+	protected isCyclic(parent?: Domain | Subject, child?: Domain | Subject): boolean {
 		/* Depth first check if the relation is cyclic */
 
 		if (!parent || !child) return false
@@ -94,20 +94,20 @@ abstract class Relation<T extends Domain | Subject> {
 		return false
 	}
 
-	protected isSelfReferential(parent?: T, child?: T): boolean {
+	protected isSelfReferential(parent?: Domain | Subject, child?: Domain | Subject): boolean {
 		/* Check if the relation is self-referential */
 
 		if (!parent || !child) return false
 		return parent === child
 	}
 
-	abstract get parent_options(): DropdownOption<T>[]
-	abstract get child_options(): DropdownOption<T>[]
+	abstract get parent_options(): DropdownOption<Domain | Subject>[]
+	abstract get child_options(): DropdownOption<Domain | Subject>[]
 	abstract validate(): ValidationData
 	abstract delete(): void
 }
 
-class DomainRelation extends Relation<Domain> {
+class DomainRelation extends Relation {
 	static create(graph: Graph): DomainRelation {
 		/* Create this domain relation */
 
@@ -251,7 +251,7 @@ class DomainRelation extends Relation<Domain> {
 	}
 }
 
-class SubjectRelation extends Relation<Subject> {
+class SubjectRelation extends Relation {
 	static create(graph: Graph): SubjectRelation {
 		/* Create this subject relation */
 

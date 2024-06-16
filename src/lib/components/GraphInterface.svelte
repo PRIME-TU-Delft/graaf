@@ -43,7 +43,7 @@
             on:click={() => graphSVG.type = GraphType.lectures}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lectureOptions} />
+		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lecture_options} />
     </div>
 
     <div class="editor">

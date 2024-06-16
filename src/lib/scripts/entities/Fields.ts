@@ -12,30 +12,55 @@ export { Field, Domain, Subject }
 // --------------------> Classes
 
 
-abstract class Field<T extends Domain | Subject> {
+abstract class Field {
 	constructor(
 		public graph: Graph,
 		public uuid: string,
 		public index: number,
-		public name: string = '',
-		public parents: T[] = [],
-		public children: T[] = []
+		public x: number,
+		public y: number,
+		public name: string,
+		public parents: (Domain | Subject)[],
+		public children: (Domain | Subject)[]
 	) { }
 
+	abstract get style(): string | undefined
 	abstract get color(): string
 	abstract validate(): ValidationData
 	abstract delete(): void
 }
 
-class Domain extends Field<Domain> {
-	style?: string
+class Domain extends Field {
+	private _style?: string
 
 	// Inferred
 	subjects: Subject[] = []
 
-	constructor(graph: Graph, uuid: string, index: number, style?: string, name: string = '', parents: Domain[] = [], children: Domain[] = []) {
-		super(graph, uuid, index, name, parents, children)
+	constructor(
+		graph: Graph, 
+		uuid: string, 
+		index: number, 
+		x: number = 0,
+		y: number = 0,
+		style?: string,
+		name: string = '', 
+		parents: Domain[] = [], 
+		children: Domain[] = []
+	) {
+		super(graph, uuid, index, x, y, name, parents, children)
 		this.style = style
+	}
+
+	get style(): string | undefined {
+		/* Return the style of this domain */
+
+		return this._style
+	}
+
+	set style(style: string | undefined) {
+		/* Set the style of this domain */
+
+		this._style = style
 	}
 
 	get style_options(): DropdownOption<string>[] {
@@ -44,8 +69,11 @@ class Domain extends Field<Domain> {
 		const options = []
 		for (const [style, value] of Object.entries(styles)) {
 			const response = new ValidationData()
+
+			// Check if the style is already used
 			if (this.graph.domains.some(domain => this !== domain && domain.style === style))
 				response.add(new Warning('Duplicate style'))
+
 			options.push(new DropdownOption(value.display_name, style, response))
 		}
 
@@ -74,6 +102,7 @@ class Domain extends Field<Domain> {
 			graph,
 			Graph.generateUUID(),
 			graph.domains.length,
+			0, 0, // TODO find non-overlapping coordinates
 			style
 		)
 
@@ -152,12 +181,28 @@ class Domain extends Field<Domain> {
 	}
 }
 
-class Subject extends Field<Subject> {
+class Subject extends Field {
 	private _domain?: Domain
 
-	constructor(graph: Graph, uuid: string, index: number, name: string = '', domain?: Domain, parents: Subject[] = [], children: Subject[] = []) {
-		super(graph, uuid, index, name, parents, children)
+	constructor(
+		graph: Graph, 
+		uuid: string, 
+		index: number,
+		x: number = 0,
+		y: number = 0,
+		domain?: Domain,
+		name: string = '', 
+		parents: Subject[] = [], 
+		children: Subject[] = []
+	) {
+		super(graph, uuid, index, x, y, name, parents, children)
 		this.domain = domain
+	}
+
+	get style(): string | undefined {
+		/* Return the style of this subject */
+
+		return this.domain?.style
 	}
 
 	get domain_options(): DropdownOption<Domain>[] {
@@ -165,7 +210,10 @@ class Subject extends Field<Subject> {
 
 		const options = []
 		for (const domain of this.graph.domains) {
+
+			// Check if the domain has a name
 			if (domain.name === '') continue
+
 			options.push(
 				new DropdownOption(
 					domain.name,
@@ -215,7 +263,8 @@ class Subject extends Field<Subject> {
 		const subject = new Subject(
 			graph,
 			Graph.generateUUID(),
-			graph.subjects.length
+			graph.subjects.length,
+			0, 0 // TODO find non-overlapping coordinates
 		)
 
 		graph.subjects.push(subject)

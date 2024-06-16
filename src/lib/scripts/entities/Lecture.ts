@@ -2,6 +2,7 @@
 // Internal imports
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
+import { SubjectRelation } from './Relations'
 import { Subject } from './Fields'
 import { Graph } from './Graph'
 
@@ -20,6 +21,29 @@ class Lecture {
 		public name: string = '',
 		public subjects: (Subject | undefined)[] = []
 	) { }
+
+	get fields(): Subject[] {
+		/* Return the fields of this lecture */
+
+		return this.past
+			.concat(this.present)
+			.concat(this.future)
+	}
+
+	get relations(): SubjectRelation[] {
+		/* Return the relations of this lecture */
+
+		const relations: SubjectRelation[] = []
+		for (const subject of this.present) {
+			for (const relation of this.graph.subject_relations) {
+				if (relation.child === subject || relation.parent === subject) {
+					relations.push(relation)
+				}
+			}
+		}
+
+		return relations
+	}
 
 	get past(): Subject[] {
 		/* Return the past of this lecture */

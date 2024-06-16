@@ -4,7 +4,7 @@ import type { PageLoad } from './$types'
 
 export const load: PageLoad = ({ params }) => {
 	return {
-		course: new Course(new Object()),
-		graph: new Graph(new Object())
+		course: Course.load(new Object()),
+		graph: Graph.create()
 	}
 }

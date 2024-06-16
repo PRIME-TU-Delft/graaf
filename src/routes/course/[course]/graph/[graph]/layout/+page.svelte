@@ -23,9 +23,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <DefaultLayout

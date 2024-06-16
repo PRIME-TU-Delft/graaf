@@ -3,6 +3,7 @@
 import * as uuid from 'uuid'
 
 // Internal imports
+import { DropdownOption } from './DropdownOption'
 import { ValidationData, Error } from './ValidationData'
 import { DomainRelation, SubjectRelation } from './Relations'
 import { Domain, Subject } from './Fields'
@@ -28,10 +29,96 @@ class Graph {
 	domain_relations: DomainRelation[] = []
 	subject_relations: SubjectRelation[] = []
 
+	get lecture_options(): DropdownOption<Lecture>[] {
+		/* Return the options of the lecture */
+
+		const options = []
+		for (const lecture of this.lectures) {
+			options.push(
+				new DropdownOption(
+					lecture.name,
+					lecture,
+					new ValidationData()
+				)
+			)
+		}
+
+		return options
+	}
+
 	static create(): Graph {
 		/* Create a new graph */
 
-		return new Graph(Graph.generateUUID())
+		const graph = new Graph(Graph.generateUUID())
+		let domain = Domain.create(graph)
+		domain.name = 'Domain 1'
+		domain.style = 'prosperous-red'
+
+		domain = Domain.create(graph)
+		domain.name = 'Domain 2'
+		domain.style = 'energizing-orange'
+
+		domain = Domain.create(graph)
+		domain.name = 'Domain 3'
+		domain.style = 'sunny-yellow'
+
+		let domain_relation = DomainRelation.create(graph)
+		domain_relation.parent = graph.domains[0]
+		domain_relation.child = graph.domains[1]
+
+		domain_relation = DomainRelation.create(graph)
+		domain_relation.parent = graph.domains[0]
+		domain_relation.child = graph.domains[2]
+
+		domain_relation = DomainRelation.create(graph)
+		domain_relation.parent = graph.domains[1]
+		domain_relation.child = graph.domains[2]
+
+		let subject = Subject.create(graph)
+		subject.name = 'Subject 1'
+		subject.domain = graph.domains[0]
+
+		subject = Subject.create(graph)
+		subject.name = 'Subject 2'
+		subject.domain = graph.domains[0]
+
+		subject = Subject.create(graph)
+		subject.name = 'Subject 3'
+		subject.domain = graph.domains[1]
+
+		subject = Subject.create(graph)
+		subject.name = 'Subject 4'
+		subject.domain = graph.domains[2]
+
+		subject = Subject.create(graph)
+		subject.name = 'Subject 5'
+		subject.domain = graph.domains[2]
+
+		let subject_relation = SubjectRelation.create(graph)
+		subject_relation.parent = graph.subjects[0]
+		subject_relation.child = graph.subjects[1]
+
+		subject_relation = SubjectRelation.create(graph)
+		subject_relation.parent = graph.subjects[0]
+		subject_relation.child = graph.subjects[2]
+
+		subject_relation = SubjectRelation.create(graph)
+		subject_relation.parent = graph.subjects[1]
+		subject_relation.child = graph.subjects[2]
+
+		subject_relation = SubjectRelation.create(graph)
+		subject_relation.parent = graph.subjects[2]
+		subject_relation.child = graph.subjects[3]
+
+		subject_relation = SubjectRelation.create(graph)
+		subject_relation.parent = graph.subjects[2]
+		subject_relation.child = graph.subjects[4]
+
+		let lecture = Lecture.create(graph)
+		lecture.name = 'Lecture 1'
+		lecture.subjects = [graph.subjects[1], graph.subjects[2], graph.subjects[3]]
+
+		return graph
 	}
 
 	static load(obj: Object): Graph {
