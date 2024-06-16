@@ -74,6 +74,16 @@ class Lecture {
 		public lecture_subjects: LectureSubject[] = []
 	) { }
 
+	get size(): number {
+		/* Return the size of the lecture */
+
+		return Math.max(
+			this.past.length,
+			this.present.length,
+			this.future.length
+		)
+	}
+
 	get past(): Subject[] {
 		/* Return the past of this lecture */
 

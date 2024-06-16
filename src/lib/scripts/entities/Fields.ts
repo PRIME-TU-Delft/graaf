@@ -12,7 +12,7 @@ export { Field, Domain, Subject }
 // --------------------> Classes
 
 
-abstract class Field {
+abstract class Field<T extends Domain | Subject> {
 	constructor(
 		public graph: Graph,
 		public uuid: string,
@@ -20,8 +20,8 @@ abstract class Field {
 		public x: number,
 		public y: number,
 		public name: string,
-		public parents: (Domain | Subject)[],
-		public children: (Domain | Subject)[]
+		public parents: T[],
+		public children: T[]
 	) { }
 
 	abstract get style(): string | undefined
@@ -30,7 +30,7 @@ abstract class Field {
 	abstract delete(): void
 }
 
-class Domain extends Field {
+class Domain extends Field<Domain> {
 	private _style?: string
 
 	constructor(
@@ -191,7 +191,7 @@ class Domain extends Field {
 	}
 }
 
-class Subject extends Field {
+class Subject extends Field<Subject> {
 	domain?: Domain
 
 	constructor(
@@ -304,7 +304,7 @@ class Subject extends Field {
 
 		// Remove subject from lectures
 		for (const lecture of this.graph.lectures) {
-			lecture.lecture_subjects = lecture.lecture_subjects.filter(subject => subject !== this)
+			lecture.lecture_subjects = lecture.lecture_subjects.filter(ls => ls.subject !== this)
 		}
 
 		// Remove this subject from the graph

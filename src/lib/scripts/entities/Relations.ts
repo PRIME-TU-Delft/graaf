@@ -12,32 +12,32 @@ export { Relation, DomainRelation, SubjectRelation }
 // --------------------> Classes
 
 
-abstract class Relation {
+abstract class Relation<T extends Domain | Subject> {
 	constructor (
 		public graph: Graph,
 		public uuid: string,
 		public index: number,
-		private _parent?: Domain | Subject,
-		private _child?: Domain | Subject
+		private _parent?: T,
+		private _child?: T
 	) { }
 
-	get parent(): Domain | Subject | undefined {
+	get parent(): T | undefined {
 		return this._parent
 	}
 
-	set parent(parent: Domain | Subject | undefined) {
+	set parent(parent: T | undefined) {
 		if (this.parent === parent) return
 
 		// Update parent and child references
 		if (this.child) {
 			if (this.parent) {
-				this.child.parents = this.child.parents.filter(field => field !== this.parent)
-				this.parent.children = this.parent.children.filter(field => field !== this.child)
+				this.child.parents = this.child.parents.filter(field => field !== this.parent) as Domain[] | Subject[]
+				this.parent.children = this.parent.children.filter(field => field !== this.child) as Domain[] | Subject[]
 			}
 
 			if (parent) {
-				this.child.parents.push(parent)
-				parent.children.push(this.child)
+				this.child.parents = [...this.child.parents, parent] as Domain[] | Subject[]
+				parent.children = [...parent.children, this.child] as Domain[] | Subject[]
 			}
 		}
 
@@ -48,23 +48,23 @@ abstract class Relation {
 		return this.parent?.color || 'transparent'
 	}
 
-	get child(): Domain | Subject | undefined {
+	get child(): T | undefined {
 		return this._child
 	}
 
-	set child(child: Domain | Subject | undefined) {
+	set child(child: T | undefined) {
 		if (this.child === child) return
 
 		// Update parent and child references
 		if (this.parent) {
 			if (this.child) {
-				this.parent.children = this.parent.children.filter(field => field !== this.child)
-				this.child.parents = this.child.parents.filter(field => field !== this.parent)
+				this.parent.children = this.parent.children.filter(field => field !== this.child) as Domain[] | Subject[]
+				this.child.parents = this.child.parents.filter(field => field !== this.parent) as Domain[] | Subject[]
 			}
 
 			if (child) {
-				this.parent.children.push(child)
-				child.parents.push(this.parent)
+				this.parent.children = [...this.parent.children, child] as Domain[] | Subject[]
+				child.parents = [...child.parents, this.parent] as Domain[] | Subject[]
 			}
 		}
 
@@ -79,12 +79,12 @@ abstract class Relation {
 		return this.parent !== undefined && this.child !== undefined
 	}
 
-	protected isCyclic(parent?: Domain | Subject, child?: Domain | Subject): boolean {
+	protected isCyclic(parent?: T, child?: T): boolean {
 		/* Depth first check if the relation is cyclic */
 
 		if (!parent || !child) return false
 
-		let stack = [child]
+		let stack: (Domain | Subject)[] = [child]
 		while (stack.length > 0) {
 			const current = stack.pop()!
 			if (current === parent) return true
@@ -94,7 +94,7 @@ abstract class Relation {
 		return false
 	}
 
-	protected isSelfReferential(parent?: Domain | Subject, child?: Domain | Subject): boolean {
+	protected isSelfReferential(parent?: T, child?: T): boolean {
 		/* Check if the relation is self-referential */
 
 		if (!parent || !child) return false
@@ -107,7 +107,7 @@ abstract class Relation {
 	abstract delete(): void
 }
 
-class DomainRelation extends Relation {
+class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph): DomainRelation {
 		/* Create this domain relation */
 
@@ -251,7 +251,7 @@ class DomainRelation extends Relation {
 	}
 }
 
-class SubjectRelation extends Relation {
+class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph): SubjectRelation {
 		/* Create this subject relation */
 

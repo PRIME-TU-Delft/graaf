@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 
 // Internal imports
 import { FieldSVG, RelationSVG } from '../d3'
-import { Graph, Field, Domain, Subject, Relation, Lecture } from '../entities'
+import { Graph, Domain, Subject, Relation, Lecture, Field } from '../entities'
 import * as settings from '../settings'
 
 // Exports
@@ -14,7 +14,7 @@ export { GraphType, GraphSVG }
 // --------------------> Types
 
 
-type Transform = (subject: Subject, bbx: BoundingBox, graphSVG: GraphSVG) => void
+type Transform = (field: Field<Domain | Subject>, bbx: BoundingBox, graphSVG: GraphSVG) => void
 
 enum GraphType {
 	domains,
@@ -34,7 +34,7 @@ class BoundingBox {
 		public height: number
 	) { }
 
-	static from(fields: (Domain | Subject)[]): BoundingBox {
+	static from(fields: Domain[] | Subject[]): BoundingBox {
 		/* Create a bounding box around a list of fields */
 
 		let min_x = Infinity
@@ -78,7 +78,7 @@ class GraphSVG {
 	private _type: GraphType = GraphType.domains
 	private _lecture?: Lecture = undefined
 
-	private fields: Field[] = []
+	private fields: Field<Domain | Subject>[] = []
 	private animating: boolean = false
 
 	// If either of these are undefined, the graph is being interacted with before it was created
@@ -250,7 +250,7 @@ class GraphSVG {
 		// Update highlights
 		d3.select(this.svg)
 			.select('#content')
-				.selectAll<SVGGElement, Field>('.field')
+				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
 					.call(FieldSVG.updateHighlight, this.lecture)
 	}
 
@@ -460,8 +460,8 @@ class GraphSVG {
 	}
 
 	private setContent(transition: Transition, fade: boolean = false, callback: () => void = () => {}) {
-		let relations: Relation[]
-		let fields: Field[]
+		let relations: Relation<Domain | Subject>[]
+		let fields: Field<Domain | Subject>[]
 
 		// Get fields and relations
 		if (transition.end === GraphType.domains) {
@@ -480,36 +480,36 @@ class GraphSVG {
 		this.fields = fields
 
 		// Update Fields
-		content.selectAll<SVGGElement, Field>('.field')
-		.data(fields, field => field.uuid)
-		.join(
-			function(enter) {
-				return enter
-					.append('g')
-						.call(FieldSVG.create)
+		content.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+			.data(fields, field => field.uuid)
+			.join(
+				function(enter) {
+					return enter
+						.append('g')
+							.call(FieldSVG.create)
+							.call(FieldSVG.updateHighlight, lecture)
+							.style('opacity', 0)
+				},
+
+				function(update) {
+					return update
 						.call(FieldSVG.updateHighlight, lecture)
+				},
+
+				function(exit) {
+					return exit
+						.transition()
+							.duration(fade ? settings.FADE_DURATION : 0)
+							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
-			},
-
-			function(update) {
-				return update
-					.call(FieldSVG.updateHighlight, lecture)
-			},
-
-			function(exit) {
-				return exit
-					.transition()
-						.duration(fade ? settings.FADE_DURATION : 0)
-						.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
-					.style('opacity', 0)
-			}
-		)
-		.transition()
-			.duration(fade ? settings.FADE_DURATION : 0)
-		.style('opacity', 1)
+				}
+			)
+			.transition()
+				.duration(fade ? settings.FADE_DURATION : 0)
+			.style('opacity', 1)
 
 		// Update relations
-		content.selectAll<SVGLineElement, Relation>('.relation')
+		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
 			.data(relations, relation => relation.uuid)
 			.join(
 				function(enter) {
@@ -564,7 +564,7 @@ class GraphSVG {
 		// Update fields
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.select('#content')
-				.selectAll<SVGGElement, Field>('.field')
+				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
 					.call(FieldSVG.updatePosition, animate)
 
 		// Restore field positions
@@ -654,41 +654,48 @@ class GraphSVG {
 		)
 	}
 
-	private lectureTransform(subject: Subject, bbx: BoundingBox, graphSVG: GraphSVG) {
-		const size = Math.max(graphSVG.lecture?.past.length || 0, graphSVG.lecture?.present.length || 0, graphSVG.lecture?.future.length || 0)
-		const dx = bbx.x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
-		const dy = bbx.y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2
+	private lectureTransform(field: Field<Domain | Subject>, bbx: BoundingBox, graphSVG: GraphSVG) {
+		if (field instanceof Subject) {
+			const size = this.lecture?.size || 0
+			const dx = bbx.x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
+			const dy = bbx.y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2
 
-		// Set past subject positions to the right column
-		const pastSubjects = graphSVG.lecture?.past
-		if (pastSubjects?.includes(subject)) {
-			const index = pastSubjects.indexOf(subject)
-			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
-			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
-			return
-		}
+			// Set past subject positions to the right column
+			const past = graphSVG.lecture?.past
+			if (past?.includes(field)) {
+				const index = past.indexOf(field)
+				field.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
+				field.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+				return
+			}
 
-		// Set present subject positions to the middle column
-		const presentSubjects = graphSVG.lecture?.present
-		if (presentSubjects?.includes(subject)) {
-			const index = presentSubjects.indexOf(subject)
-			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
-			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
-			return
-		}
+			// Set present subject positions to the middle column
+			const present = graphSVG.lecture?.present
+			if (present?.includes(field)) {
+				const index = present.indexOf(field)
+				field.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+				field.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+				return
+			}
 
-		// Set future subject positions to the left column
-		const futureSubjects = graphSVG.lecture?.future
-		if (futureSubjects?.includes(subject)) {
-			const index = futureSubjects.indexOf(subject)
-			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
-			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
-			return
+			// Set future subject positions to the left column
+			const future = graphSVG.lecture?.future
+			if (future?.includes(field)) {
+				const index = future.indexOf(field)
+				field.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+				field.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+				return
+			}
 		}
 	}
 
-	private domainTransform(subject: Subject) {
-		subject.x = subject.domain!.x
-		subject.y = subject.domain!.y
+	private domainTransform(field: Field<Domain | Subject>) {
+		if (field instanceof Domain) {
+			field.x = field.x * settings.GRID_UNIT
+			field.y = field.y * settings.GRID_UNIT
+		} else if (field instanceof Subject) {
+			field.x = field.domain!.x
+			field.y = field.domain!.y
+		}
 	}
 }

@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 
 // Internal imports
 import { RelationSVG } from '../d3'
-import { Field, Domain, Relation, Lecture } from '../entities'
+import { Field, Domain, Subject, Relation, Lecture } from '../entities'
 import * as settings from '../settings'
 import { styles } from '../settings'
 
@@ -12,7 +12,7 @@ import { styles } from '../settings'
 export { FieldSVG }
 
 class FieldSVG {
-	static create(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>) {
+	static create(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>) {
 		if (selection.empty()) return
 
 		// Field attrs
@@ -44,7 +44,7 @@ class FieldSVG {
 
 		// Drag behaviour
 		selection.call(
-			d3.drag<SVGGElement, Field>()
+			d3.drag<SVGGElement, Field<Domain | Subject>>()
 				.on('start', function() {
 					d3.select(this)
 						.raise()
@@ -62,7 +62,7 @@ class FieldSVG {
 		)
 	}
 
-	static updatePosition(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, animated: boolean = false) {
+	static updatePosition(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>, animated: boolean = false) {
 		if (selection.empty()) return
 		const content = d3.select<SVGGElement, unknown>(selection.node()!.parentNode as SVGGElement)
 
@@ -82,13 +82,13 @@ class FieldSVG {
 
 		// Update relations
 		selection.each(function(field) {
-			content.selectAll<SVGLineElement, Relation>('.relation')
+			content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
 				.filter(relation => relation.parent === field || relation.child === field)
 				.call(RelationSVG.update, animated)
 		})
 	}
 
-	static updateHighlight(selection: d3.Selection<SVGGElement, Field, d3.BaseType, unknown>, lecture?: Lecture) {
+	static updateHighlight(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>, lecture?: Lecture) {
 		if (selection.empty()) return
 
 		selection
@@ -96,7 +96,7 @@ class FieldSVG {
 				if (field instanceof Domain) {
 					d3.select(this)
 						.attr('filter', lecture?.present.some(subject => subject.domain === field) ? 'url(#shadow)' : null)
-				} else {
+				} else if (field instanceof Subject) {
 					d3.select(this)
 						.attr('filter', lecture?.present.includes(field) ? 'url(#shadow)' : null)
 				}
