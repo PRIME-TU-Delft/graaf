@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Lecture } from '$scripts/entities'
+	import { Graph, Lecture, LectureSubject } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -70,14 +70,14 @@
 					<span> {lecture.index + 1} </span>
 					<IconButton scale src={trashIcon} on:click={() => { lecture.delete(); update() }} />
 					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} on:input={update} />
-					<Button on:click={() => { lecture.add_subject(); update() }}> Add Subject </Button>
+					<Button on:click={() => { LectureSubject.create(lecture); update() }}> Add Subject </Button>
 					
 					<div class="subjects" style="grid-area: subjects;">
-						{#each lecture.subjects as _, n}
+						{#each lecture.lecture_subjects as lecture_subject, n}
 							<span> {n + 1} </span>
-							<IconButton scale src={trashIcon} on:click={() => { lecture.remove_subject(n); update() }} />
-							<Dropdown label="Subject" placeholder="Choose subject" options={lecture.subject_options(n)} bind:value={lecture.subjects[n]} on:input={update}/>
-							<span class="preview" style:background-color={lecture.subject_color(n)} />
+							<IconButton scale src={trashIcon} on:click={() => { lecture_subject.delete(); update() }} />
+							<Dropdown label="Subject" placeholder="Choose subject" options={lecture_subject.options} bind:value={lecture_subject.subject} on:input={update}/>
+							<span class="preview" style:background-color={lecture_subject.color} />
 						{/each}
 					</div>
 				</div>

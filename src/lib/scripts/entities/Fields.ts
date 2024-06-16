@@ -33,22 +33,38 @@ abstract class Field {
 class Domain extends Field {
 	private _style?: string
 
-	// Inferred
-	subjects: Subject[] = []
-
 	constructor(
-		graph: Graph, 
-		uuid: string, 
-		index: number, 
+		graph: Graph,
+		uuid: string,
+		index: number,
 		x: number = 0,
 		y: number = 0,
 		style?: string,
-		name: string = '', 
-		parents: Domain[] = [], 
+		name: string = '',
+		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
 		super(graph, uuid, index, x, y, name, parents, children)
 		this.style = style
+	}
+
+	get subjects(): Subject[] {
+		/* Return the subjects of this domain */
+
+		const subjects = []
+		for (const subject of this.graph.subjects) {
+			if (subject.domain === this) {
+				subjects.push(subject)
+			}
+		}
+
+		return subjects
+	}
+
+	get color(): string {
+		/* Return the preview color of this domain */
+
+		return this.style ? styles[this.style].stroke : 'transparent'
 	}
 
 	get style(): string | undefined {
@@ -78,12 +94,6 @@ class Domain extends Field {
 		}
 
 		return options
-	}
-
-	get color(): string {
-		/* Return the preview color of this domain */
-
-		return this.style ? styles[this.style].stroke : 'transparent'
 	}
 
 	static create(graph: Graph): Domain {
@@ -182,21 +192,27 @@ class Domain extends Field {
 }
 
 class Subject extends Field {
-	private _domain?: Domain
+	domain?: Domain
 
 	constructor(
-		graph: Graph, 
-		uuid: string, 
+		graph: Graph,
+		uuid: string,
 		index: number,
 		x: number = 0,
 		y: number = 0,
 		domain?: Domain,
-		name: string = '', 
-		parents: Subject[] = [], 
+		name: string = '',
+		parents: Subject[] = [],
 		children: Subject[] = []
 	) {
 		super(graph, uuid, index, x, y, name, parents, children)
 		this.domain = domain
+	}
+
+	get color(): string {
+		/* Return the preview color of this subject */
+
+		return this.domain?.color || 'transparent'
 	}
 
 	get style(): string | undefined {
@@ -224,37 +240,6 @@ class Subject extends Field {
 		}
 
 		return options
-	}
-
-	get domain(): Domain | undefined {
-		/* Return the domain of this subject */
-
-		return this._domain
-	}
-
-	set domain(domain: Domain | undefined) {
-		/* Set the domain of this subject */
-
-		// Ensure the domain is different
-		if (this.domain === domain) return
-
-		// Remove this subject from the old domain
-		if (this.domain) {
-			this.domain.subjects = this.domain.subjects.filter(subject => subject !== this)
-		}
-
-		// Add this subject to the new domain
-		if (domain) {
-			domain.subjects.push(this)
-		}
-
-		this._domain = domain
-	}
-
-	get color(): string {
-		/* Return the preview color of this subject */
-
-		return this.domain?.color || 'transparent'
 	}
 
 	static create(graph: Graph): Subject {
@@ -319,7 +304,7 @@ class Subject extends Field {
 
 		// Remove subject from lectures
 		for (const lecture of this.graph.lectures) {
-			lecture.subjects = lecture.subjects.filter(subject => subject !== this)
+			lecture.lecture_subjects = lecture.lecture_subjects.filter(subject => subject !== this)
 		}
 
 		// Remove this subject from the graph

@@ -7,11 +7,63 @@ import { Subject } from './Fields'
 import { Graph } from './Graph'
 
 // Exports
-export { Lecture }
+export { Lecture, LectureSubject }
 
 
 // --------------------> Classes
 
+
+class LectureSubject {
+	constructor(
+		public lecture: Lecture,
+		public subject?: Subject
+	) { }
+
+	static create(lecture: Lecture): LectureSubject {
+		/* Create a new lecture subject */
+
+		const lecture_subject = new LectureSubject(lecture)
+		lecture.lecture_subjects.push(lecture_subject)
+		return lecture_subject
+	}
+
+	get color(): string {
+		/* Return the color of the subject */
+
+		return this.subject?.color || 'transparent'
+	}
+
+	get options(): DropdownOption<Subject>[] {
+		/* Return the options of the subject */
+
+		const options = []
+		for (const subject of this.lecture.graph.subjects) {
+			if (subject.name === '') continue
+
+			// Check if the subject is already in the lecture
+			const validation = new ValidationData()
+			if (this.lecture.present.includes(subject)) {
+				validation.add(new Error('Subject already in lecture'))
+			}
+
+			options.push(
+				new DropdownOption(
+					subject.name,
+					subject,
+					validation
+				)
+			)
+		}
+
+		return options
+	}
+
+	delete() {
+		/* Delete this lecture subject */
+
+		this.lecture.lecture_subjects = this.lecture.lecture_subjects.filter(subject => subject !== this)
+	}
+}
 
 class Lecture {
 	constructor(
@@ -19,10 +71,54 @@ class Lecture {
 		public uuid: string,
 		public index: number,
 		public name: string = '',
-		public subjects: (Subject | undefined)[] = []
+		public lecture_subjects: LectureSubject[] = []
 	) { }
 
-	get fields(): Subject[] {
+	get past(): Subject[] {
+		/* Return the past of this lecture */
+
+		const past: Subject[] = []
+		for (const lecture_subject of this.lecture_subjects) {
+			if (!lecture_subject.subject) continue
+			for (const parent of lecture_subject.subject.parents) {
+				if (this.present.includes(parent) || past.includes(parent))
+					continue
+				past.push(parent)
+			}
+		}
+
+		return past
+	}
+
+	get present(): Subject[] {
+		/* Return the present of this lecture */
+
+		const present: Subject[] = []
+		for (const lecture_subject of this.lecture_subjects) {
+			if (!lecture_subject.subject) continue
+			present.push(lecture_subject.subject)
+		}
+
+		return present
+	}
+
+	get future(): Subject[] {
+		/* Return the future of this lecture */
+
+		const future: Subject[] = []
+		for (const lecture_subject of this.lecture_subjects) {
+			if (!lecture_subject.subject) continue
+			for (const child of lecture_subject.subject.children) {
+				if (this.present.includes(child) || future.includes(child))
+					continue
+				future.push(child)
+			}
+		}
+
+		return future
+	}
+
+	get subjects(): Subject[] {
 		/* Return the fields of this lecture */
 
 		return this.past
@@ -45,54 +141,6 @@ class Lecture {
 		return relations
 	}
 
-	get past(): Subject[] {
-		/* Return the past of this lecture */
-
-		const past: Subject[] = []
-		for (const subject of this.subjects) {
-			if (!subject) continue
-			for (const parent of subject.parents) {
-				if (this.subjects.includes(parent) ||
-					past.includes(parent)
-				) continue
-
-				past.push(parent)
-			}
-		}
-
-		return past
-	}
-
-	get present(): Subject[] {
-		/* Return the present of this lecture */
-
-		const present: Subject[] = []
-		for (const subject of this.subjects) {
-			if (!subject) continue
-			present.push(subject)
-		}
-
-		return present
-	}
-
-	get future(): Subject[] {
-		/* Return the future of this lecture */
-
-		const future: Subject[] = []
-		for (const subject of this.subjects) {
-			if (!subject) continue
-			for (const child of subject.children) {
-				if (this.subjects.includes(child) ||
-					future.includes(child)
-				) continue
-
-				future.push(child)
-			}
-		}
-
-		return future
-	}
-
 	static create(graph: Graph): Lecture {
 		/* Create a new lecture */
 
@@ -104,49 +152,6 @@ class Lecture {
 
 		graph.lectures.push(lecture)
 		return lecture
-	}
-
-	add_subject() {
-		/* Add a subject to the lecture */
-
-		this.subjects.push(undefined)
-	}
-
-	remove_subject(index: number) {
-		/* Remove a subject from the lecture */
-
-		this.subjects.splice(index, 1)
-	}
-
-	subject_color(index: number): string {
-		/* Return the color of the subject */
-
-		return this.subjects[index]?.color || 'transparent'
-	}
-
-	subject_options(index: number): DropdownOption<Subject>[] {
-		/* Return the options of the subject */
-
-		const options = []
-		for (const subject of this.graph.subjects) {
-			if (subject.name === '') continue
-
-			// Check if the subject is already in the lecture
-			const validation = new ValidationData()
-			if (this.subjects.includes(subject)) {
-				validation.add(new Error('Subject already in lecture'))
-			}
-
-			options.push(
-				new DropdownOption(
-					subject.name,
-					subject,
-					validation
-				)
-			)
-		}
-
-		return options
 	}
 
 	validate(): ValidationData {
@@ -172,11 +177,11 @@ class Lecture {
 		}
 
 		// Check if the lecture has subjects
-		if (!this.subjects.length)
+		if (!this.lecture_subjects.length)
 			response.add(new Error(`Lecture (${this.index + 1}) has no subjects`))
 
 		// Check if the lecture has undefined subjects
-		else if (this.subjects.some(subject => !subject))
+		else if (this.lecture_subjects.some(subject => !subject))
 			response.add(new Error(`Lecture (${this.index + 1}) has undefined subjects`))
 
 		return response

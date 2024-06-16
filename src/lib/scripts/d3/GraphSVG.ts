@@ -43,10 +43,10 @@ class BoundingBox {
 		let max_y = -Infinity
 
 		for (const field of fields) {
-			min_x = Math.min(min_x, field.x)
-			min_y = Math.min(min_y, field.y)
-			max_x = Math.max(max_x, field.x + settings.FIELD_WIDTH)
-			max_y = Math.max(max_y, field.y + settings.FIELD_HEIGHT)
+			min_x = Math.min(min_x, field.x - settings.FIELD_MARGIN)
+			min_y = Math.min(min_y, field.y - settings.FIELD_MARGIN)
+			max_x = Math.max(max_x, field.x + settings.FIELD_WIDTH + settings.FIELD_MARGIN)
+			max_y = Math.max(max_y, field.y + settings.FIELD_HEIGHT + settings.FIELD_MARGIN)
 		}
 
 		return new BoundingBox(
@@ -96,6 +96,9 @@ class GraphSVG {
 
 	set type(type: GraphType) {
 		if (this.type === type || this.animating) return
+
+		this.animating = true
+		this.setInteractive(false)
 		const transition = new Transition(this.type, type)
 
 		switch (transition.start) {
@@ -104,11 +107,9 @@ class GraphSVG {
 
 					// Domains -> Subjects
 					case GraphType.subjects:
-						this.animating = true
-						this.setInteractive(false)
+					this.moveIntoFrame(transition, true)
 						this.setContent(transition)
 						this.moveContent(transition, this.domainTransform)
-						this.moveIntoFrame(transition, true)
 						this.restoreContent(transition, true, () => {
 							this.setInteractive(this.interactive)
 							this.animating = false
@@ -119,11 +120,9 @@ class GraphSVG {
 					// Domains -> Lecture
 					case GraphType.lectures:
 						if (this.lecture) {
-							this.animating = true
-							this.setInteractive(false)
+							this.moveIntoFrame(transition, true)
 							this.setContent(transition)
 							this.moveContent(transition, this.domainTransform)
-							this.moveIntoFrame(transition, true)
 							this.moveContent(transition, this.lectureTransform, true, () => {
 								this.setBackground(transition)
 								this.animating = false
@@ -131,10 +130,10 @@ class GraphSVG {
 						}
 
 						else {
-							this.setInteractive(false)
 							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.clearContent()
+							this.animating = false
 						}
 				} break
 
@@ -143,8 +142,6 @@ class GraphSVG {
 
 					// Subjects -> Domains
 					case GraphType.domains:
-						this.animating = true
-						this.setInteractive(false)
 						this.moveIntoFrame(transition, true)
 						this.moveContent(transition, this.domainTransform, true, () => {
 							this.setContent(transition, true, () => {
@@ -158,10 +155,8 @@ class GraphSVG {
 					// Subjects -> Lectures
 					case GraphType.lectures:
 						if (this.lecture) {
-							this.animating = true
-							this.setInteractive(false)
+							this.moveIntoFrame(transition, true)
 							this.setContent(transition, true, () => {
-								this.moveIntoFrame(transition, true)
 								this.moveContent(transition, this.lectureTransform, true, () => {
 									this.setBackground(transition)
 									this.animating = false
@@ -170,10 +165,10 @@ class GraphSVG {
 						}
 
 						else {
-							this.setInteractive(false)
 							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.clearContent()
+							this.animating = false
 						}
 				} break
 
@@ -183,10 +178,9 @@ class GraphSVG {
 					// Lectures -> Domains
 					case GraphType.domains:
 						if (this.lecture) {
-							this.animating = true
+							this.moveIntoFrame(transition, true)
 							this.setBackground(transition)
 							this.moveContent(transition, this.lectureTransform)
-							this.moveIntoFrame(transition, true)
 							this.moveContent(transition, this.domainTransform, true, () => {
 								this.setContent(transition, true, () => {
 									this.setInteractive(this.interactive)
@@ -196,9 +190,8 @@ class GraphSVG {
 						}
 
 						else {
-							this.animating = true
-							this.setBackground(transition)
 							this.moveIntoFrame(transition)
+							this.setBackground(transition)
 							this.setContent(transition, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
@@ -210,7 +203,7 @@ class GraphSVG {
 					// Lectures -> Subjects
 					case GraphType.subjects:
 						if (this.lecture) {
-							this.animating = true
+							this.moveIntoFrame(transition, true)
 							this.setBackground(transition)
 							this.moveContent(transition, this.lectureTransform)
 							this.restoreContent(transition, true, () => {
@@ -220,18 +213,15 @@ class GraphSVG {
 								})
 							})
 
-							this.moveIntoFrame(transition, true)
 						}
 
 						else {
-							this.animating = true
+							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.setContent(transition, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
-
-							this.moveIntoFrame(transition)
 						}
 				}
 		}
@@ -251,10 +241,10 @@ class GraphSVG {
 		// Update content
 		if (this.type === GraphType.lectures) {
 			const transition = new Transition(this.type)
+			this.moveIntoFrame(transition)
 			this.setBackground(transition)
 			this.setContent(transition)
 			this.moveContent(transition, this.lectureTransform)
-			this.moveIntoFrame(transition)
 		}
 
 		// Update highlights
@@ -482,11 +472,11 @@ class GraphSVG {
 			fields = this.graph.subjects
 		} else {
 			relations = this.lecture?.relations ?? []
-			fields = this.lecture?.fields ?? []
+			fields = this.lecture?.subjects ?? []
 		}
 
 		const content = d3.select<SVGGElement, unknown>('#content')
-		const graphSVG = this
+		const lecture = this.lecture
 		this.fields = fields
 
 		// Update Fields
@@ -497,15 +487,15 @@ class GraphSVG {
 				return enter
 					.append('g')
 						.call(FieldSVG.create)
-						.call(FieldSVG.updateHighlight, graphSVG.lecture)
+						.call(FieldSVG.updateHighlight, lecture)
 						.style('opacity', 0)
 			},
-		
+
 			function(update) {
 				return update
-					.call(FieldSVG.updateHighlight, graphSVG.lecture)
+					.call(FieldSVG.updateHighlight, lecture)
 			},
-		
+
 			function(exit) {
 				return exit
 					.transition()

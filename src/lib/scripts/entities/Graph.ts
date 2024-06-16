@@ -7,7 +7,7 @@ import { DropdownOption } from './DropdownOption'
 import { ValidationData, Error } from './ValidationData'
 import { DomainRelation, SubjectRelation } from './Relations'
 import { Domain, Subject } from './Fields'
-import { Lecture } from './Lecture'
+import { Lecture, LectureSubject } from './Lecture'
 
 // Exports
 export { Graph }
@@ -116,7 +116,12 @@ class Graph {
 
 		let lecture = Lecture.create(graph)
 		lecture.name = 'Lecture 1'
-		lecture.subjects = [graph.subjects[1], graph.subjects[2], graph.subjects[3]]
+
+		let lecture_subject = LectureSubject.create(lecture)
+		lecture_subject.subject = graph.subjects[1]
+
+		lecture_subject = LectureSubject.create(lecture)
+		lecture_subject.subject = graph.subjects[2]
 
 		return graph
 	}
