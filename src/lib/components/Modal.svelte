@@ -21,9 +21,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <!-- TODO: Replace with shadcn-svelte dialog: https://www.shadcn-svelte.com/docs/components/alert-dialog -->
@@ -38,14 +36,13 @@
 		</header>
 		<section>
 			<slot />
+			<div class="button-row"><slot name="button-row" /></div>
 		</section>
 	</dialog>
 {/if}
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">
@@ -62,7 +59,8 @@
 		width: 100vw
 		height: 100vh
 
-		background-color: rgba(0, 0, 0, 0.25)
+		opacity: 0.25
+		background-color: black
 
 	.modal
 		display: flex
@@ -81,6 +79,14 @@
 
 		background-color: $white
 		border-radius: $border-radius
+
+		.button-row
+			display: flex
+			flex-flow: row nowrap
+			justify-content: end
+			gap: $form-small-gap
+
+			margin-top: $form-big-gap
 
 		.exit
 			display: flex

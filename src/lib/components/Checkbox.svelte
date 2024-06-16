@@ -11,9 +11,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <div class="checkbox">
@@ -21,7 +19,9 @@
 	--><label for={id}> {label} </label>
 </div>
 
+
 <!-- Styles -->
+
 
 <style lang="sass">
 

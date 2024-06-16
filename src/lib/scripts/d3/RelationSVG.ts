@@ -24,6 +24,11 @@ class RelationSVG {
 
 	static update(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>, animated: boolean = false) {
 		if (selection.empty()) return
+
+		// Lower relations
+		selection.lower()
+
+		// Update relations
 		selection.each(function(relation) {
 			const line = d3.select(this)
 

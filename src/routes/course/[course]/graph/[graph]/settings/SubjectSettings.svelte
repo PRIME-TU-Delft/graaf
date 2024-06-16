@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, Relation } from '$scripts/entities'
+	import { Graph, Subject, SubjectRelation } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -22,26 +22,21 @@
 
 	// Exports
 	export let graph: Graph
+	export let update: () => void
 
 	// Variables
 	let subjectQuery: string = ''
 	let subjectNameSort: boolean | undefined
 	let subjectDomainSort: boolean | undefined
+
 	let relationQuery: string = ''
 	let relationFromSort: boolean | undefined
 	let relationToSort: boolean | undefined
 
-	let relations: Relation[] = graph.subjectRelations
-
-	// Force reactivity update
-	// NOTE: Maybe redundant Svelte 5?
-	function update() {
-		graph = graph
-		relations = relations
-	}
-
-	// Checks if query appears in subject
+	// Functions
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
+		/* Checks if query appears in subject */
+
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -51,8 +46,9 @@
 		return name?.includes(query) || domain?.includes(query) || false
 	}
 
-	// Checks if query appears in relation
-	function relationMatchesQuery(query: string, relation: Relation): boolean {
+	function relationMatchesQuery(query: string, relation: SubjectRelation): boolean {
+		/* Checks if query appears in relation */
+
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -62,21 +58,21 @@
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
-	// Alphabetizes strings
-	function alphabetize(a?: string, b?: string, ascending: boolean = true): number {
-		return (a ?? '').localeCompare(b ?? '') * (ascending ? 1 : -1)
+	function alphabetize<T>(list: T[], key: (item: T) => string, ascending: boolean = true) {
+		/* Alphabetizes list */
+
+		list.sort((a, b) => key(a).localeCompare(key(b)))
+		if (!ascending) list.reverse()
 	}
 
 </script>
 
 
-
 <!-- Markup -->
 
 
-
 <!-- Subjects -->
-<div id="subjects" class="subjects">
+<div id="subjects" class="subjects editor">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
@@ -105,7 +101,7 @@
 					on:click={() => {
 						subjectDomainSort = undefined
 						subjectNameSort = !subjectNameSort
-						graph.subjects.sort((a, b) => alphabetize(a.name, b.name, subjectNameSort))
+						alphabetize(graph.subjects, subject => subject.name, subjectNameSort)
 						update()
 					}}
 				/>
@@ -119,7 +115,7 @@
 					on:click={() => {
 						subjectNameSort = undefined
 						subjectDomainSort = !subjectDomainSort
-						graph.subjects.sort((a, b) => alphabetize(a.domain?.name, b.domain?.name, subjectDomainSort))
+						alphabetize(graph.subjects, subject => subject.domain?.name || '', subjectDomainSort)
 						update()
 					}}
 				/>
@@ -134,13 +130,13 @@
 	{/if}
 
 	<!-- Subject list -->
-	{#each graph.subjects as subject, n}
+	{#each graph.subjects as subject}
 		{#if subjectMatchesQuery(subjectQuery, subject)}
 			<div class="row">
-				<span> {n + 1} </span>
+				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
-				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
-				<Dropdown label="Domain" placeholder="Assigned Domain" options={graph.domainOptions} bind:value={subject.domain} />
+				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
+				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} on:input={update} />
 				<span class="preview" style:background-color={subject.color} />
 			</div>
 		{/if}
@@ -148,7 +144,7 @@
 </div>
 
 <!-- Subject relations -->
-<div id="subjects" class="relations">
+<div id="subjects" class="relations editor">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
@@ -158,13 +154,13 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relationQuery} />
-		<Button on:click={() => { relations.push(Relation.create(graph)); update() }}>
+		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if relations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if graph.subject_relations.some(relation => relationMatchesQuery(relationQuery, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -177,7 +173,7 @@
 					on:click={() => {
 						relationToSort = undefined
 						relationFromSort = !relationFromSort
-						relations.sort((a, b) => alphabetize(a.parent?.name, b.parent?.name, relationFromSort))
+						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relationFromSort)
 						update()
 					}}
 				/>
@@ -191,7 +187,7 @@
 					on:click={() => {
 						relationFromSort = undefined
 						relationToSort = !relationToSort
-						relations.sort((a, b) => alphabetize(a.child?.name, b.child?.name, relationToSort))
+						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relationToSort)
 						update()
 					}}
 				/>
@@ -206,29 +202,22 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each relations as relation, n}
+	{#each graph.subject_relations as relation}
 		{#if relationMatchesQuery(relationQuery, relation)}
 			<div class="row">
-				<span> {n + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => {
-					relations = relations.filter(r => r !== relation)
-					relation.delete()
-					update()
-				}} />
-
-				<Dropdown label="Parent" placeholder="From Subject" options={relation.filterParentOptions(graph.subjects)} bind:value={relation.parent} />
-				<span class="preview" style:background-color={relation.parentColor} />
-				<Dropdown label="Child" placeholder="To Subject" options={relation.filterChildOptions(graph.subjects)} bind:value={relation.child} />
-				<span class="preview" style:background-color={relation.childColor} />
+				<span> {relation.index + 1} </span>
+				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
+				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
+				<span class="preview" style:background-color={relation.parent_color} />
+				<Dropdown label="Child" placeholder="To Subject" options={relation.child_options} bind:value={relation.child} on:input={update} />
+				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}
 	{/each}
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">
@@ -238,40 +227,40 @@
 
 	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
 
-	.toolbar
-		display: flex
-		flex-flow: row nowrap
-		margin-bottom: $form-big-gap
-		gap: $form-small-gap
-
-	.header
-		display: flex
-		flex-flow: row nowrap
-		align-content: center
-		justify-content: right
-		width: 100%
-
-		span
-			flex: 1
-
-	.preview
-		width: $input-icon-size
-		height: $input-icon-size
-
-	.grayed
-		margin: auto
-		color: $gray
-
-	.subjects, .relations
+	.editor
 		display: flex
 		flex-flow: column nowrap
 		padding: $card-thick-padding
 		gap: $form-small-gap
 
+		.grayed
+			margin: auto
+			color: $gray
+
+		.toolbar
+			display: flex
+			flex-flow: row nowrap
+			margin-bottom: $form-big-gap
+			gap: $form-small-gap
+
 		.row
 			display: grid
 			place-items: center center
 			gap: $form-small-gap
+
+			.preview
+				width: $input-icon-size
+				height: $input-icon-size
+
+			.header
+				display: flex
+				flex-flow: row nowrap
+				align-content: center
+				justify-content: right
+				width: 100%
+
+				span
+					flex: 1
 	
 	.subjects .row
 		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width

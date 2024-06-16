@@ -11,9 +11,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <div class="searchbar">
@@ -22,9 +20,7 @@
 </div>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

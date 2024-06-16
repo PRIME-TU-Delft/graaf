@@ -15,10 +15,10 @@
 	export let obfuscate: boolean = false
 
 	// Variables
+	const id: string = label.toLowerCase().replace(/\s/g, '_')
 	let show: boolean = false
-	$: id = label.toLowerCase().replace(/\s/g, '_')
 
-	function toggle() {
+	function toggle_obfuscation() {
 		show = !show
 		document.querySelector<HTMLInputElement>(`#${id}`)!.type = show ? "text" : "password"
 	}
@@ -26,42 +26,44 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 {#if obfuscate}
 
 	<div class="textfield">
 		<input
-			{id}
-			{placeholder}
+			id={id}
 			name={id}
 			type="password"
+			placeholder={placeholder}
+			on:change on:input
 			bind:value
 			/>
-		
-		<IconButton src={ show ? closedEye : openEye } description={ show ? "Hide" : "Show" } on:click={toggle} />
+
+		<IconButton 
+			src={ show ? closedEye : openEye } 
+			description={ show ? "Hide" : "Show" } 
+			on:click={toggle_obfuscation} 
+			/>
 	</div>
 
 {:else}
 
 	<input
-		{id}
-		{placeholder}
+		id={id}
 		name={id}
+		placeholder={placeholder}
 		type="text"
 		class="textfield"
 		bind:value
+		on:input
 		/>
 
 {/if}
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

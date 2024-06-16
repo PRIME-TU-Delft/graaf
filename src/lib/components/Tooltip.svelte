@@ -9,9 +9,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <span
@@ -23,9 +21,7 @@
 </span>
 
 
-
 <!-- Styles -->
-
 
 
 <style lang="sass">

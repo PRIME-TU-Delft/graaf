@@ -4,16 +4,64 @@ import * as d3 from 'd3'
 
 // Internal imports
 import { FieldSVG, RelationSVG } from '../d3'
-import { Graph, Field, Subject, Relation, Lecture, Extent } from '../entities'
+import { Graph, Domain, Subject, Relation, Lecture, Field } from '../entities'
 import * as settings from '../settings'
 
 // Exports
 export { GraphType, GraphSVG }
 
+
+// --------------------> Types
+
+
+type Transform = (field: Field<Domain | Subject>, bbx: BoundingBox, graphSVG: GraphSVG) => void
+
 enum GraphType {
 	domains,
 	subjects,
 	lectures
+}
+
+
+// --------------------> Classes
+
+
+class BoundingBox {
+	constructor(
+		public x: number,
+		public y: number,
+		public width: number,
+		public height: number
+	) { }
+
+	static from(fields: Domain[] | Subject[]): BoundingBox {
+		/* Create a bounding box around a list of fields */
+
+		let min_x = Infinity
+		let min_y = Infinity
+		let max_x = -Infinity
+		let max_y = -Infinity
+
+		for (const field of fields) {
+			min_x = Math.min(min_x, field.x - settings.FIELD_MARGIN)
+			min_y = Math.min(min_y, field.y - settings.FIELD_MARGIN)
+			max_x = Math.max(max_x, field.x + settings.FIELD_WIDTH + settings.FIELD_MARGIN)
+			max_y = Math.max(max_y, field.y + settings.FIELD_HEIGHT + settings.FIELD_MARGIN)
+		}
+
+		return new BoundingBox(
+			(max_x + min_x) / 2,
+			(max_y + min_y) / 2,
+			max_x - min_x,
+			max_y - min_y
+		)
+	}
+
+	static origin(): BoundingBox {
+		/* Create an empty bounding box around the origin */
+
+		return new BoundingBox(0, 0, 0, 0)
+	}
 }
 
 class Transition {
@@ -27,23 +75,20 @@ class Transition {
 }
 
 class GraphSVG {
-	graph: Graph
-
 	private _type: GraphType = GraphType.domains
 	private _lecture?: Lecture = undefined
+
+	private fields: Field<Domain | Subject>[] = []
+	private animating: boolean = false
 
 	// If either of these are undefined, the graph is being interacted with before it was created
 	private svg!: SVGSVGElement
 	private zoom!: d3.ZoomBehavior<SVGSVGElement, unknown>
 
-	private fields: Field[] = []
-	private interactive: boolean
-	private animating: boolean = false
-
-	constructor(graph: Graph, interactive: boolean) {
-		this.graph = graph
-		this.interactive = interactive
-	}
+	constructor(
+		public graph: Graph,
+		private interactive: boolean
+	) { }
 
 	get type() {
 		return this._type
@@ -51,6 +96,9 @@ class GraphSVG {
 
 	set type(type: GraphType) {
 		if (this.type === type || this.animating) return
+
+		this.animating = true
+		this.setInteractive(false)
 		const transition = new Transition(this.type, type)
 
 		switch (transition.start) {
@@ -59,8 +107,7 @@ class GraphSVG {
 
 					// Domains -> Subjects
 					case GraphType.subjects:
-						this.animating = true
-						this.setInteractive(false)
+					this.moveIntoFrame(transition, true)
 						this.setContent(transition)
 						this.moveContent(transition, this.domainTransform)
 						this.restoreContent(transition, true, () => {
@@ -68,29 +115,25 @@ class GraphSVG {
 							this.animating = false
 						})
 
-						this.moveIntoFrame(transition, true)
 						break
 
 					// Domains -> Lecture
 					case GraphType.lectures:
 						if (this.lecture) {
-							this.animating = true
-							this.setInteractive(false)
+							this.moveIntoFrame(transition, true)
 							this.setContent(transition)
 							this.moveContent(transition, this.domainTransform)
 							this.moveContent(transition, this.lectureTransform, true, () => {
 								this.setBackground(transition)
 								this.animating = false
 							})
-
-							this.moveIntoFrame(transition, true)
 						}
 
 						else {
-							this.setInteractive(false)
 							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.clearContent()
+							this.animating = false
 						}
 				} break
 
@@ -99,8 +142,7 @@ class GraphSVG {
 
 					// Subjects -> Domains
 					case GraphType.domains:
-						this.animating = true
-						this.setInteractive(false)
+						this.moveIntoFrame(transition, true)
 						this.moveContent(transition, this.domainTransform, true, () => {
 							this.setContent(transition, true, () => {
 								this.setInteractive(this.interactive)
@@ -108,16 +150,13 @@ class GraphSVG {
 							})
 						})
 
-						this.moveIntoFrame(transition, true)
 						break
 
 					// Subjects -> Lectures
 					case GraphType.lectures:
 						if (this.lecture) {
-							this.animating = true
-							this.setInteractive(false)
+							this.moveIntoFrame(transition, true)
 							this.setContent(transition, true, () => {
-								this.moveIntoFrame(transition, true)
 								this.moveContent(transition, this.lectureTransform, true, () => {
 									this.setBackground(transition)
 									this.animating = false
@@ -126,10 +165,10 @@ class GraphSVG {
 						}
 
 						else {
-							this.setInteractive(false)
 							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.clearContent()
+							this.animating = false
 						}
 				} break
 
@@ -139,7 +178,7 @@ class GraphSVG {
 					// Lectures -> Domains
 					case GraphType.domains:
 						if (this.lecture) {
-							this.animating = true
+							this.moveIntoFrame(transition, true)
 							this.setBackground(transition)
 							this.moveContent(transition, this.lectureTransform)
 							this.moveContent(transition, this.domainTransform, true, () => {
@@ -148,19 +187,15 @@ class GraphSVG {
 									this.animating = false
 								})
 							})
-
-							this.moveIntoFrame(transition, true)
 						}
 
 						else {
-							this.animating = true
+							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.setContent(transition, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
-
-							this.moveIntoFrame(transition)
 						}
 
 						break
@@ -168,7 +203,7 @@ class GraphSVG {
 					// Lectures -> Subjects
 					case GraphType.subjects:
 						if (this.lecture) {
-							this.animating = true
+							this.moveIntoFrame(transition, true)
 							this.setBackground(transition)
 							this.moveContent(transition, this.lectureTransform)
 							this.restoreContent(transition, true, () => {
@@ -178,18 +213,15 @@ class GraphSVG {
 								})
 							})
 
-							this.moveIntoFrame(transition, true)
 						}
 
 						else {
-							this.animating = true
+							this.moveIntoFrame(transition)
 							this.setBackground(transition)
 							this.setContent(transition, true, () => {
 								this.setInteractive(this.interactive)
 								this.animating = false
 							})
-
-							this.moveIntoFrame(transition)
 						}
 				}
 		}
@@ -204,31 +236,22 @@ class GraphSVG {
 	set lecture(lecture: Lecture | undefined) {
 		if (this.animating || this.lecture === lecture) return
 
-		// Set lecture and highlights
 		this._lecture = lecture
-		for (const subject of this.graph.subjects) {
-			subject.highlight = lecture?.presentSubjects.includes(subject) ?? false
-		}
 
 		// Update content
-		if (!this.svg) return
-		const transition = new Transition(this.type)
-		if (transition.end === GraphType.lectures) {
+		if (this.type === GraphType.lectures) {
+			const transition = new Transition(this.type)
+			this.moveIntoFrame(transition)
 			this.setBackground(transition)
 			this.setContent(transition)
+			this.moveContent(transition, this.lectureTransform)
 		}
 
 		// Update highlights
-		d3.select<SVGSVGElement, unknown>(this.svg)
+		d3.select(this.svg)
 			.select('#content')
-				.selectAll<SVGGElement, Field>('.field')
-					.call(FieldSVG.update)
-
-		// Move content
-		if (this.type === GraphType.lectures) {
-			this.moveContent(transition, this.lectureTransform)
-			this.moveIntoFrame(transition)
-		}
+				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+					.call(FieldSVG.updateHighlight, this.lecture)
 	}
 
 	create(element: SVGSVGElement) {
@@ -353,55 +376,6 @@ class GraphSVG {
 		}, animate ? settings.ANIMATION_DURATION : 0)
 	}
 
-	private moveIntoFrame(transition: Transition, animate: boolean = false, callback: () => void = () => {}) {
-		if (transition.end === GraphType.lectures) {
-
-			// If swapping between lectures, reset pan and zoom
-			if (transition.start === GraphType.lectures) {
-				this.setZoomAndPan(0, 0, 1)
-				return
-			}
-
-			// If swapping to lectures, maintain pan of previous extent and zoom to fit lecture into frame
-			const extent = transition.start === GraphType.domains ? this.graph.domainExtent : this.graph.subjectExtent
-			this.setZoomAndPan(
-				extent.x * settings.GRID_UNIT,
-				extent.y * settings.GRID_UNIT,
-				1, animate, callback
-			)
-			return
-		}
-
-		// Target extent is whatever we are transitioning towards
-		const extent = transition.end === GraphType.domains ? this.graph.domainExtent : this.graph.subjectExtent
-
-		// If coming from lectures, current pan might be at origin. In that case, pan to end-extent
-		if (transition.start === GraphType.lectures) {
-			this.setZoomAndPan(
-				extent.x * settings.GRID_UNIT,
-				extent.y * settings.GRID_UNIT,
-				1
-			)
-		}
-
-		// Pan and zoom to fit end-extent into frame
-		this.setZoomAndPan(
-			extent.x * settings.GRID_UNIT,
-			extent.y * settings.GRID_UNIT,
-			Math.max(
-				settings.GRID_MIN_ZOOM,
-				Math.min(
-					this.svg.clientWidth / (extent.width * settings.GRID_UNIT),
-					this.svg.clientHeight / (extent.height * settings.GRID_UNIT),
-					settings.GRID_MAX_ZOOM
-				)
-			),
-
-			animate,
-			callback
-		)
-	}
-
 	private setBackground(transition: Transition) {
 		const background = d3.select<SVGSVGElement, unknown>(this.svg)
 			.select<SVGGElement>('#background')
@@ -425,7 +399,7 @@ class GraphSVG {
 				break
 
 			case GraphType.lectures:
-				const size = this.lecture?.size ?? 0
+				const size = Math.max(this.lecture?.past.length || 0, this.lecture?.present.length || 0, this.lecture?.future.length || 0)
 				const dx = (this.svg.clientWidth - 3 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2
 				const dy = (this.svg.clientHeight - (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING + settings.LECTURE_HEADER_HEIGHT) * settings.GRID_UNIT) / 2
 
@@ -486,37 +460,40 @@ class GraphSVG {
 	}
 
 	private setContent(transition: Transition, fade: boolean = false, callback: () => void = () => {}) {
-		let relations: Relation[]
-		let fields: Field[]
+		let relations: Relation<Domain | Subject>[]
+		let fields: Field<Domain | Subject>[]
 
 		// Get fields and relations
 		if (transition.end === GraphType.domains) {
-			relations = this.graph.domainRelations
+			relations = this.graph.domain_relations
 			fields = this.graph.domains
 		} else if (transition.end === GraphType.subjects) {
-			relations = this.graph.subjectRelations
+			relations = this.graph.subject_relations
 			fields = this.graph.subjects
 		} else {
 			relations = this.lecture?.relations ?? []
 			fields = this.lecture?.subjects ?? []
 		}
 
+		const content = d3.select<SVGGElement, unknown>('#content')
+		const lecture = this.lecture
 		this.fields = fields
 
-		// Update relations
-		const content = d3.select<SVGGElement, unknown>('#content')
-		content.selectAll<SVGLineElement, Relation>('.relation')
-			.data(relations, relation => relation.id)
+		// Update Fields
+		content.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+			.data(fields, field => field.uuid)
 			.join(
 				function(enter) {
 					return enter
-						.append('line')
-							.call(RelationSVG.create)
+						.append('g')
+							.call(FieldSVG.create)
+							.call(FieldSVG.updateHighlight, lecture)
 							.style('opacity', 0)
 				},
 
 				function(update) {
 					return update
+						.call(FieldSVG.updateHighlight, lecture)
 				},
 
 				function(exit) {
@@ -531,14 +508,14 @@ class GraphSVG {
 				.duration(fade ? settings.FADE_DURATION : 0)
 			.style('opacity', 1)
 
-		// Update Fields
-		content.selectAll<SVGGElement, Field>('.field')
-			.data(fields, field => field.id)
+		// Update relations
+		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
+			.data(relations, relation => relation.uuid)
 			.join(
 				function(enter) {
 					return enter
-						.append('g')
-							.call(FieldSVG.create)
+						.append('line')
+							.call(RelationSVG.create)
 							.style('opacity', 0)
 				},
 
@@ -564,29 +541,31 @@ class GraphSVG {
 		}, fade ? settings.FADE_DURATION : 0)
 	}
 
-	private moveContent(transition: Transition, transform: (value: Field, extent: Extent, graphSVG: GraphSVG) => void, animate: boolean = false, callback: () => void = () => {}) {
+	private moveContent(transition: Transition, transform: Transform, animate: boolean = false, callback: () => void = () => {}) {
 
 		// Buffer field positions
 		const buffers = this.fields.map(field => ({ field, x: field.x, y: field.y }))
 
-		// Find extent
-		let extent = new Extent(0, 0, 0, 0)
+		// Find bounding box
+		let bbx: BoundingBox
 		if (transition.start === GraphType.domains || transition.end === GraphType.domains) {
-			extent = this.graph.domainExtent
+			bbx = BoundingBox.from(this.graph.domains)
 		} else if (transition.start === GraphType.subjects || transition.end === GraphType.subjects) {
-			extent = this.graph.subjectExtent
+			bbx = BoundingBox.from(this.graph.subjects)
+		} else {
+			bbx = BoundingBox.origin()
 		}
 
 		// Set field positions
 		for (const field of this.fields) {
-			transform(field, extent, this)
+			transform(field, bbx, this)
 		}
 
 		// Update fields
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.select('#content')
-				.selectAll<SVGGElement, Field>('.field')
-					.call(FieldSVG.update, animate)
+				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+					.call(FieldSVG.updatePosition, animate)
 
 		// Restore field positions
 		for (const buffer of buffers) {
@@ -625,41 +604,98 @@ class GraphSVG {
 		}, fade ? settings.FADE_DURATION : 0)
 	}
 
-	private lectureTransform(subject: Subject, extent: Extent, graphSVG: GraphSVG) {
-		const size = graphSVG.lecture?.size ?? 0
-		const dx = extent.x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
-		const dy = extent.y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2
+	private moveIntoFrame(transition: Transition, animate: boolean = false, callback: () => void = () => {}) {
+		if (transition.end === GraphType.lectures) {
 
-		// Set past subject positions to the right column
-		const pastSubjects = graphSVG.lecture?.pastSubjects
-		if (pastSubjects?.includes(subject)) {
-			const index = pastSubjects.indexOf(subject)
-			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
-			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+			// If swapping between lectures, reset pan and zoom
+			if (transition.start === GraphType.lectures) {
+				this.setZoomAndPan(0, 0, 1)
+				return
+			}
+
+			// If swapping to lectures, maintain pan of previous extent and zoom to fit lecture into frame
+			const bbx = BoundingBox.from(transition.start === GraphType.domains ? this.graph.domains : this.graph.subjects)
+			this.setZoomAndPan(
+				bbx.x * settings.GRID_UNIT,
+				bbx.y * settings.GRID_UNIT,
+				1, animate, callback
+			)
+
 			return
 		}
 
-		// Set present subject positions to the middle column
-		const presentSubjects = graphSVG.lecture?.presentSubjects
-		if (presentSubjects?.includes(subject)) {
-			const index = presentSubjects.indexOf(subject)
-			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
-			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
-			return
+		// Target bounding box is whatever we are transitioning towards
+		const bbx = BoundingBox.from(transition.end === GraphType.domains ? this.graph.domains : this.graph.subjects)
+
+		// If coming from lectures, current pan might be at origin. In that case, pan to end-extent
+		if (transition.start === GraphType.lectures) {
+			this.setZoomAndPan(
+				bbx.x * settings.GRID_UNIT,
+				bbx.y * settings.GRID_UNIT,
+				1
+			)
 		}
 
-		// Set future subject positions to the left column
-		const futureSubjects = graphSVG.lecture?.futureSubjects
-		if (futureSubjects?.includes(subject)) {
-			const index = futureSubjects.indexOf(subject)
-			subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
-			subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
-			return
+		// Pan and zoom to fit end-extent into frame
+		this.setZoomAndPan(
+			bbx.x * settings.GRID_UNIT,
+			bbx.y * settings.GRID_UNIT,
+			Math.max(
+				settings.GRID_MIN_ZOOM,
+				Math.min(
+					this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
+					this.svg.clientHeight / (bbx.height * settings.GRID_UNIT),
+					settings.GRID_MAX_ZOOM
+				)
+			),
+
+			animate,
+			callback
+		)
+	}
+
+	private lectureTransform(field: Field<Domain | Subject>, bbx: BoundingBox, graphSVG: GraphSVG) {
+		if (field instanceof Subject) {
+			const size = this.lecture?.size || 0
+			const dx = bbx.x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
+			const dy = bbx.y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2
+
+			// Set past subject positions to the right column
+			const past = graphSVG.lecture?.past
+			if (past?.includes(field)) {
+				const index = past.indexOf(field)
+				field.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
+				field.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+				return
+			}
+
+			// Set present subject positions to the middle column
+			const present = graphSVG.lecture?.present
+			if (present?.includes(field)) {
+				const index = present.indexOf(field)
+				field.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+				field.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+				return
+			}
+
+			// Set future subject positions to the left column
+			const future = graphSVG.lecture?.future
+			if (future?.includes(field)) {
+				const index = future.indexOf(field)
+				field.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
+				field.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
+				return
+			}
 		}
 	}
 
-	private domainTransform(subject: Subject) {
-		subject.x = subject.domain!.x
-		subject.y = subject.domain!.y
+	private domainTransform(field: Field<Domain | Subject>) {
+		if (field instanceof Domain) {
+			field.x = field.x * settings.GRID_UNIT
+			field.y = field.y * settings.GRID_UNIT
+		} else if (field instanceof Subject) {
+			field.x = field.domain!.x
+			field.y = field.domain!.y
+		}
 	}
 }

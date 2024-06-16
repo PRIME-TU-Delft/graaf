@@ -2,14 +2,29 @@
 // Exports
 export { Course }
 
+
+// --------------------> Classes
+
+
 class Course {
-	code: string
-	name: string
+	constructor(
+		public code: string,
+		public name: string = ''
+	) { }
 
-	constructor(data: object) {
-		// TODO load from database
+	static create(code: string): Course {
+		/* Create a new course */
 
-		this.code = 'CSE1200'
-		this.name = 'Calculus'
+		return new Course(code)
+	}
+
+	static load(obj: Object) {
+		/* Load the course from a POGO */
+
+		// TODO this is a placeholder
+		return new Course(
+			'CSE1200',
+			'Calculus'
+		)
 	}
 }
