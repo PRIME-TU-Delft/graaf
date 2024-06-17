@@ -1,6 +1,7 @@
 
 // External imports
 import * as uuid from 'uuid'
+import * as devalue from 'devalue'
 
 // Internal imports
 import { DropdownOption } from './DropdownOption'
@@ -162,10 +163,25 @@ class Graph {
 		return response
 	}
 
+	serialize(): string {
+		/* Serialize the graph to a POJO */
+
+		return devalue.stringify(this, {
+			Graph: (value) => value instanceof Graph && 
+				[value.uuid, value.name, value.domains, value.subjects, value.lectures],
+			Domain: (value) => value instanceof Domain && 
+				[value.uuid, value.x, value.y, value.style, value.name, value.parents, value.children],
+			Subject: (value) => value instanceof Subject && 
+				[value.uuid, value.x, value.y, value.domain, value.name, value.parents, value.children],
+			Lecture: (value) => value instanceof Lecture && 
+				[value.uuid, value.name, value.present]
+		})
+	}
+
 	save() {
 		/* Save the graph to the database */
 
-		throw new Error('Not implemented')
+		console.log(this.serialize())
 	}
 
 	delete() {
