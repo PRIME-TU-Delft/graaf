@@ -18,6 +18,7 @@
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 	import peopleIcon from '$assets/people-icon.svg'
+	import { ValidationData } from '$scripts/entities/ValidationData.js';
 
 	// Exports
 	export let data
@@ -30,7 +31,7 @@
 	$: programs = data.programs
 
 	$: programOptions = programs.map(program => {
-		return { name: program.name, value: program.id, available: true }
+		return { name: program.name, value: program.id, validation: new ValidationData() }
 	})
 
 	function onSearch(event: Event) {
@@ -78,18 +79,18 @@
 		<Modal bind:this={createProgramModal}>
 			<h3 slot="header"> Create Program </h3>
 
-			<form method="POST" action="?/newProgram" use:enhance>
+			<form method="POST" action="?/newProgram" use:enhance={createProgramModal?.hide}>
 				<label for="name"> Name </label>
 				<Textfield label="Name" />
 
-				<Button submit on:click={createProgramModal?.hide}> Create </Button>
+				<Button submit> Create </Button>
 			</form>
 		</Modal>
 
 		<Modal bind:this={createCourseModal}>
 			<h3 slot="header"> Create Course </h3>
 
-			<form method="POST" action="?/newCourse" use:enhance>
+			<form method="POST" action="?/newCourse" use:enhance={createProgramModal?.hide}>
 				<label for="code"> Code </label>
 				<Textfield label="Code" />
 
@@ -103,7 +104,7 @@
 					options={programOptions}
 				/>
 
-				<Button submit on:click={createCourseModal?.hide}> Create </Button>
+				<Button submit> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
