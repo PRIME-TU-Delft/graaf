@@ -2,16 +2,17 @@
 <script lang="ts">
 
 	// Exports
-	export let href: string | undefined = undefined;
-	export let submit: boolean = false;
-	export let disabled: boolean = false;
-	export let rotate: boolean = false;
-	export let scale: boolean = false;
+	export let href: string | undefined = undefined
+	export let submit: boolean = false
+	export let disabled: boolean = false
+	export let rotate: boolean = false
+	export let scale: boolean = false
+	export let dangerous: boolean = false
 
 	// Property validation
 	$: if (submit && href !== undefined) {
-		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.");
-		href = undefined;
+		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.")
+		href = undefined
 	}
 
 </script>
@@ -23,11 +24,12 @@
 {#if href === undefined}
 
 	<button
-		type={submit ? 'submit' : 'button'}
 		class="button"
 		class:disabled
 		class:scale
 		class:rotate
+		class:dangerous
+		type={submit ? 'submit' : 'button'}
 		on:click
 	>
 		<slot />
@@ -36,11 +38,12 @@
 {:else}
 
 	<a
-		{href}
+		href={href}
 		class="button"
 		class:disabled
 		class:scale
 		class:rotate
+		class:dangerous
 		on:click
 	>
 		<slot />
@@ -73,6 +76,9 @@
 		cursor: pointer
 		transition: all $default-transition
 
+		&.dangerous
+			background: $red
+
 		&.disabled
 			background: $gray
 			pointer-events: none
@@ -92,6 +98,8 @@
 		&:hover, &:focus
 			background: $dark-purple
 
+			&.dangerous
+				background: $dark-red
 			&.scale :global(img)
 				scale: $scale-on-hover
 			&.rotate :global(img)

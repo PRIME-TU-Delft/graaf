@@ -4,6 +4,9 @@
 	// Svelte imports
 	import type { PageData } from './$types'
 
+	// Internal imports
+	import { tooltip } from '$scripts/tooltip'
+
 	// Components
 	import Button from '$components/Button.svelte'
 	import DomainSettings from './DomainSettings.svelte';
@@ -23,6 +26,8 @@
 	// Variables
 	let { course, graph } = data
 	let active_tab: number = 0
+
+	$: validation = graph.validate()
 
 	// Functions
 	function update() {
@@ -62,10 +67,12 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Response data={graph.validate()} />
+		<Response data={validation} />
 		<div class="flex-spacer" />
 		<LinkButton href="/course/{course.code}/graph/{graph.uuid}/layout"> Edit layout </LinkButton>
-		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
+		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>
+			<img src={saveIcon} alt=""> Save Changes 
+		</Button>
 	</svelte:fragment>
 
 	<div class="tabular">

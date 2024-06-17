@@ -17,6 +17,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      devalue:
+        specifier: ^5.0.0
+        version: 5.0.0
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5

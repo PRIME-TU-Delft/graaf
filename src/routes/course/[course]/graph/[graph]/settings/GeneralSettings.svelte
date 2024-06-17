@@ -45,7 +45,7 @@
 
 			<div slot="button-row">
 				<LinkButton on:click={deleteGraphModal.hide}> Cancel </LinkButton>
-				<Button on:click={graph.delete}> Continue </Button> <!-- TODO redirect to course overview -->
+				<Button dangerous on:click={graph.delete}> Delete Graph </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</div>
