@@ -18,7 +18,7 @@ class Course {
 		return new Course(code)
 	}
 
-	static load(obj: Object) {
+	static revive(obj: Object) {
 		/* Load the course from a POGO */
 
 		// TODO this is a placeholder
