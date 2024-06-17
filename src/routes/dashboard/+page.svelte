@@ -90,7 +90,7 @@
 		<Modal bind:this={createCourseModal}>
 			<h3 slot="header"> Create Course </h3>
 
-			<form method="POST" action="?/newCourse" use:enhance={createProgramModal?.hide}>
+			<form method="POST" action="?/newCourse" use:enhance={createCourseModal?.hide}>
 				<label for="code"> Code </label>
 				<Textfield label="Code" />
 
