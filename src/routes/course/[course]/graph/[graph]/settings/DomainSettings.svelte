@@ -10,7 +10,6 @@
 	import Dropdown from '$components/Dropdown.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
-	import Modal from '$components/Modal.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
 

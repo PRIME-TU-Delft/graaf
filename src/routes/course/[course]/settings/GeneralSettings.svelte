@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph } from '$scripts/entities'
+	import { Course } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -14,11 +14,11 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Exports
-	export let graph: Graph
+	export let course: Course
 	export let update: () => void
 
 	// Variables
-	let deleteGraphModal: Modal
+	let deleteCourseModal: Modal
 
 </script>
 
@@ -30,22 +30,24 @@
 
 	<!-- Settings -->
 	<div class="settings">
+		<label for="code"> Code </label>
+		<Textfield label="Code" bind:value={course.code} on:input={update} />
 		<label for="name"> Name </label>
-		<Textfield label="Name" bind:value={graph.name} on:input={update} />
+		<Textfield label="Name" bind:value={course.name} on:input={update} />
 	</div>
 
 	<!-- Button row -->
 	<div class="button-row">
 
 		<!-- Delete graph button -->
-		<Button dangerous on:click={deleteGraphModal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
-		<Modal bind:this={deleteGraphModal}>
-			<h3 slot="header"> Delete Graph </h3>
-			Are you sure you want to delete {graph.name}? This action <b>cannot</b> be undone.
+		<Button dangerous on:click={deleteCourseModal.show}> <img src={trashIcon} alt=""> Delete Course </Button>
+		<Modal bind:this={deleteCourseModal}>
+			<h3 slot="header"> Delete Course </h3>
+			Are you sure you want to delete {course.code} {course.name}? This action <b>cannot</b> be undone.
 
 			<div slot="button-row">
-				<LinkButton on:click={deleteGraphModal.hide}> Cancel </LinkButton>
-				<Button dangerous on:click={graph.delete}> Delete </Button> <!-- TODO redirect to course overview -->
+				<LinkButton on:click={deleteCourseModal.hide}> Cancel </LinkButton>
+				<Button dangerous on:click={course.delete}> Delete </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</div>
@@ -66,6 +68,9 @@
 		.settings
 			display: flex
 			flex-flow: column
+
+			label:not(:first-child)
+				margin-top: $form-small-gap
 
 		.button-row
 			display: flex

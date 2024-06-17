@@ -3,7 +3,7 @@ export { DropdownOption } from './DropdownOption'
 export { ValidationData } from './ValidationData'
 
 export { Graph } from './Graph'
-export { Course } from './Course'
+export { Course, AssignedUser } from './Course'
 export { Field, Domain, Subject } from './Fields'
 export { Relation, DomainRelation, SubjectRelation } from './Relations'
 export { Lecture, LectureSubject } from './Lecture'

@@ -78,16 +78,15 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/course/{course.code}/settings">Settings</LinkButton>
+		<LinkButton href="/course/{course.code}/settings"> Settings </LinkButton>
 
 		<Modal bind:this={createGraphModal}>
-			<h3 slot="header">Create Graph</h3>
+			<h3 slot="header"> Create Graph </h3>
 
 			<form>
 				<label for="name"> Name </label>
 				<Textfield label="Name" />
-
-				<Button submit on:click={createGraphModal.hide}>Create</Button>
+				<Button submit on:click={createGraphModal.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
