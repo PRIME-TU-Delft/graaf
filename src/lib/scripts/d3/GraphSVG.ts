@@ -656,7 +656,7 @@ class GraphSVG {
 
 	private lectureTransform(field: Field<Domain | Subject>, bbx: BoundingBox, graphSVG: GraphSVG) {
 		if (field instanceof Subject) {
-			const size = this.lecture?.size || 0
+			const size = graphSVG.lecture?.size || 0
 			const dx = bbx.x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
 			const dy = bbx.y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2
 
