@@ -49,7 +49,7 @@ enum CourseType {
 
 model Course {
 	id				Int			@id @default(autoincrement())
-	code			String
+	code			String		@unique
 	name			String
 	description		String?
 	type			CourseType	@default(COURSE)

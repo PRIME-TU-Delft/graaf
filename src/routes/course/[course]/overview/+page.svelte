@@ -1,6 +1,8 @@
 
 <script lang="ts">
 
+	import { enhance } from '$app/forms'
+
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import Card from '$components/Card.svelte'
@@ -27,24 +29,8 @@
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
-	let course = {
-		code: 'CSE1200',
-		name: 'Calculus',
-		graphs: [
-			{
-				name: 'Graph 1',
-				id: 1,
-				hasLinks: () => true,
-				isVisible: () => true
-			},
-			{
-				name: 'Graph 2',
-				id: 2,
-				hasLinks: () => false,
-				isVisible: () => false
-			}
-		]
-	}
+	export let data;
+	$: course = data.course;
 
 </script>
 
@@ -83,11 +69,11 @@
 		<Modal bind:this={createGraphModal}>
 			<h3 slot="header">Create Graph</h3>
 
-			<form>
+			<form method="POST" action="?/newGraph" use:enhance={createGraphModal.hide}>
 				<label for="name"> Name </label>
 				<Textfield label="Name" />
 
-				<Button submit on:click={createGraphModal.hide}>Create</Button>
+				<Button submit>Create</Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
