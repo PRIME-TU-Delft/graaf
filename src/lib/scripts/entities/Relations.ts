@@ -1,7 +1,7 @@
 
 // Internal imports
-import { DropdownOption } from './DropdownOption'
 import { ValidationData, Error, Warning } from './ValidationData'
+import { DropdownOption } from './DropdownOption'
 import { Domain, Subject } from './Fields'
 import { Graph } from './Graph'
 

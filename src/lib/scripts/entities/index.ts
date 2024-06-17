@@ -1,8 +1,13 @@
 
-export { Relation, DomainRelation, SubjectRelation } from './Relations'
-export { ValidationData, Error, Warning } from './ValidationData'
-export { Lecture, LectureSubject } from './Lecture'
-export { Field, Domain, Subject } from './Fields'
 export { DropdownOption } from './DropdownOption'
-export { Course } from './Course'
+export { ValidationData } from './ValidationData'
+
 export { Graph } from './Graph'
+export { Course } from './Course'
+export { Field, Domain, Subject } from './Fields'
+export { Relation, DomainRelation, SubjectRelation } from './Relations'
+export { Lecture, LectureSubject } from './Lecture'
+
+export type { UUID, SerializedGraph } from './Graph'
+export type { SerializedDomain, SerializedSubject } from './Fields'
+export type { SerializedLecture } from './Lecture'

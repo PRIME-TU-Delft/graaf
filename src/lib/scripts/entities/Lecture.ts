@@ -4,11 +4,20 @@ import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
 import { SubjectRelation } from './Relations'
 import { Subject } from './Fields'
-import { Graph } from './Graph'
+import { Graph, type UUID } from './Graph'
 
 // Exports
-export { Lecture, LectureSubject }
+export { Lecture, LectureSubject, type SerializedLecture }
 
+
+// --------------------> Type
+
+
+type SerializedLecture = {
+	uuid: UUID,
+	name: string,
+	subjects: UUID[]
+}
 
 // --------------------> Classes
 
@@ -68,7 +77,7 @@ class LectureSubject {
 class Lecture {
 	constructor(
 		public graph: Graph,
-		public uuid: string,
+		public uuid: UUID,
 		public index: number,
 		public name: string = '',
 		public lecture_subjects: LectureSubject[] = []
@@ -197,8 +206,11 @@ class Lecture {
 		return response
 	}
 
-	reduce() {
+	reduce(): SerializedLecture {
 		/* Serialize lecture to a POJO */
+
+		if (this.validate().severity === 'error')
+			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			uuid: this.uuid,

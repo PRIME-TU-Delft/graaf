@@ -3,11 +3,37 @@
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
 import { styles } from '../settings'
-import { DomainRelation, Graph, SubjectRelation } from '../entities'
-import type { S } from 'vitest/dist/reporters-yx5ZTtEV.js'
+import { Graph } from './Graph'
+
+import type { UUID } from './Graph'
 
 // Exports
 export { Field, Domain, Subject }
+export type { SerializedDomain, SerializedSubject }
+
+
+// --------------------> Types
+
+
+type SerializedDomain = {
+	uuid: UUID,
+	x: number,
+	y: number,
+	style: string,
+	name: string,
+	parents: UUID[],
+	children: UUID[]
+}
+
+type SerializedSubject = {
+	uuid: UUID,
+	x: number,
+	y: number,
+	domain: UUID,
+	name: string,
+	parents: UUID[],
+	children: UUID[]
+}
 
 
 // --------------------> Classes
@@ -163,14 +189,17 @@ class Domain extends Field<Domain> {
 		return response
 	}
 
-	reduce() {
+	reduce(): SerializedDomain {
 		/* Serialize domain to a POJO */
+
+		if (this.validate().severity === 'error')
+			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			uuid: this.uuid,
 			x: this.x,
 			y: this.y,
-			style: this.style,
+			style: this.style!,
 			name: this.name,
 			parents: this.parents.map(parent => parent.uuid),
 			children: this.children.map(child => child.uuid)
@@ -300,14 +329,17 @@ class Subject extends Field<Subject> {
 		return response
 	}
 
-	reduce() {
+	reduce(): SerializedSubject {
 		/* Serialize subject to a POJO */
+
+		if (this.validate().severity === 'error')
+			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			uuid: this.uuid,
 			x: this.x,
 			y: this.y,
-			domain: this.domain?.uuid,
+			domain: this.domain!.uuid,
 			name: this.name,
 			parents: this.parents.map(parent => parent.uuid),
 			children: this.children.map(child => child.uuid)

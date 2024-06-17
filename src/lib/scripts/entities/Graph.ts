@@ -3,14 +3,32 @@
 import * as uuid from 'uuid'
 
 // Internal imports
-import { DropdownOption } from './DropdownOption'
-import { ValidationData, Error } from './ValidationData'
 import { DomainRelation, SubjectRelation } from './Relations'
-import { Domain, Subject } from './Fields'
+import { ValidationData, Error } from './ValidationData'
 import { Lecture, LectureSubject } from './Lecture'
+import { DropdownOption } from './DropdownOption'
+import { Domain, Subject } from './Fields'
+
+import type { SerializedLecture } from './Lecture'
+import type { SerializedSubject } from './Fields'
+import type { SerializedDomain } from './Fields'
 
 // Exports
 export { Graph }
+export type { UUID, SerializedGraph }
+
+
+// --------------------> Types
+
+
+type UUID = string
+type SerializedGraph = {
+	uuid: UUID,
+	name: string,
+	domains: SerializedDomain[],
+	subjects: SerializedSubject[],
+	lectures: SerializedLecture[]
+}
 
 
 // --------------------> Classes
@@ -128,10 +146,9 @@ class Graph {
 		return graph
 	}
 
-	static revive(serialized: string) {
+	static revive(data: SerializedGraph) {
 		/* Load the graph from a POJO */
 
-		const data = JSON.parse(serialized)
 		const graph = new Graph(data.uuid, data.name)
 
 		// Define domains
@@ -163,7 +180,7 @@ class Graph {
 				relation.child = child
 			}
 		}
-		
+
 		// Define subjects
 		for (const subject_data of data.subjects) {
 			const domain = graph.domains.find(domain => domain.uuid === subject_data.domain)
@@ -200,9 +217,9 @@ class Graph {
 		// Define lectures
 		for (const lecture_data of data.lectures) {
 			const lecture = new Lecture(
-				graph, 
-				lecture_data.uuid, 
-				graph.lectures.length, 
+				graph,
+				lecture_data.uuid,
+				graph.lectures.length,
 				lecture_data.name
 			)
 
@@ -251,16 +268,19 @@ class Graph {
 		return response
 	}
 
-	reduce(): string {
+	reduce(): SerializedGraph {
 		/* Serialize graph to a POJO */
 
-		return JSON.stringify({
+		if (this.validate().severity === 'error')
+			throw new Error('Cannot reduce with outstanding errors')
+
+		return {
 			uuid: this.uuid,
 			name: this.name,
 			domains: this.domains.map(domain => domain.reduce()),
 			subjects: this.subjects.map(subject => subject.reduce()),
 			lectures: this.lectures.map(lecture => lecture.reduce())
-		})
+		}
 	}
 
 	save() {
