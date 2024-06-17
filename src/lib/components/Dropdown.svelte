@@ -64,6 +64,7 @@
 
 
 <button
+	type="button"
 	class="dropdown"
 	class:visible
 	tabindex="-1"
@@ -79,6 +80,7 @@
 	<div class="options">
 		{#each options as option}
 			<button
+				type="button"
 				class="option"
 				disabled={option.validation.severity === 'error'}
 				on:click={() => { set(option.value) }}
@@ -90,13 +92,13 @@
 		{/each}
 
 		{#if options.length === 0}
-			<button disabled class="option grayed">
+			<button type="button" disabled class="option grayed">
 				<i> No options available </i>
 			</button>
 		{/if}
 
 		{#if value !== undefined}
-			<button class="option grayed" on:click={() => { set(undefined) }}>
+			<button type="button" class="option grayed" on:click={() => { set(undefined) }}>
 				<i> Remove choice </i>
 			</button>
 		{/if}

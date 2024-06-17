@@ -1,4 +1,5 @@
 import { fail } from '@sveltejs/kit';
+import prisma from '$lib/server/prisma';
 
 export const actions = {
 	newCourse: async ({ request }) => {
@@ -10,8 +11,19 @@ export const actions = {
 		if (!code) return fail(400, { code, missing: true });
 		if (!name) return fail(400, { name, missing: true });
 
-		// Write to db
+		await prisma.course.create({
+			data: {
+				code,
+				name,
+				program: {
+					connect: {
+						id: programId
+					}
+				}
+			}
+		});
 	},
+
 
 	newProgram: async ({ request }) => {
 		const data = await request.formData();
@@ -19,15 +31,16 @@ export const actions = {
 
 		if (!name) return fail(400, { name, missing: true });
 
-		// Write to db
+		await prisma.program.create({
+			data: { name }
+		});
 	}
 };
 
-export async function load() {
-	//
 
+export async function load() {
 	return {
-		programs: [],
-		courses: []
+		programs: await prisma.program.findMany({ include: { courses: true, coordinators: true } }),
+		courses: await prisma.course.findMany({ include: { program: true } })
 	};
 }
