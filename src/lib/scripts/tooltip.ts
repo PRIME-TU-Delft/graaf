@@ -21,12 +21,12 @@ export function tooltip(element: HTMLElement, text: string) {
 					y: element.getBoundingClientRect().top - 6
 				}
 			})
-		}, 1000)
+		}, 800)
 	}
 
 	function mouseLeave() {
 		clearTimeout(timeout)
-		instance.$destroy()
+		instance?.$destroy()
 	}
 
 	element.addEventListener('mouseenter', mouseEnter)
@@ -34,6 +34,7 @@ export function tooltip(element: HTMLElement, text: string) {
 
 	return {
 		update(newText: string) {
+			instance?.$set({ text: newText })
 			text = newText
 		},
 

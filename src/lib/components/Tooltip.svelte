@@ -11,6 +11,7 @@
 
 <!-- Markup -->
 
+<svelte:options accessors/>
 
 <span
 	class="tooltip"
