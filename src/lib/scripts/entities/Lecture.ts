@@ -197,6 +197,16 @@ class Lecture {
 		return response
 	}
 
+	reduce() {
+		/* Serialize lecture to a POJO */
+
+		return {
+			uuid: this.uuid,
+			name: this.name,
+			subjects: this.present.map(subject => subject.uuid)
+		}
+	}
+
 	delete() {
 		/* Delete this lecture */
 

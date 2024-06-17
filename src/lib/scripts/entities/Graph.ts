@@ -51,6 +51,8 @@ class Graph {
 		/* Create a new graph */
 
 		const graph = new Graph(Graph.generateUUID())
+		graph.name = 'New Graph'
+
 		let domain = Domain.create(graph)
 		domain.name = 'Domain 1'
 		domain.style = 'prosperous-red'
@@ -127,10 +129,95 @@ class Graph {
 		return graph
 	}
 
-	static load(obj: Object): Graph {
+	static revive(serialized: string) {
 		/* Load the graph from a POJO */
 
-		throw new Error('Not implemented')
+		const data = JSON.parse(serialized)
+		const graph = new Graph(data.uuid, data.name)
+
+		// Define domains
+		for (const domain_data of data.domains) {
+			graph.domains.push(
+				new Domain(
+					graph,
+					domain_data.uuid,
+					graph.domains.length,
+					domain_data.x,
+					domain_data.y,
+					domain_data.style,
+					domain_data.name
+				)
+			)
+		}
+
+		// Build domain relations
+		for (const parent_data of data.domains) {
+			const parent = graph.domains.find(domain => domain.uuid === parent_data.uuid)
+			if (!parent) throw new Error('Failed to revive, non-existent UUID in domain relations')
+
+			for (const child_uuid of parent_data.children) {
+				const child = graph.domains.find(domain => domain.uuid === child_uuid)
+				if (!child) throw new Error('Failed to revive, non-existent UUID in domain relations')
+
+				const relation = DomainRelation.create(graph)
+				relation.parent = parent
+				relation.child = child
+			}
+		}
+
+		// Define subjects
+		for (const subject_data of data.subjects) {
+			const domain = graph.domains.find(domain => domain.uuid === subject_data.domain)
+			if (!domain) throw new Error('Failed to revive, non-existent UUID in subjects')
+
+			graph.subjects.push(
+				new Subject(
+					graph,
+					subject_data.uuid,
+					graph.subjects.length,
+					subject_data.x,
+					subject_data.y,
+					domain,
+					subject_data.name
+				)
+			)
+		}
+
+		// Build subject relations
+		for (const parent_data of data.subjects) {
+			const parent = graph.subjects.find(subject => subject.uuid === parent_data.uuid)
+			if (!parent) throw new Error('Failed to revive, non-existent UUID in subject relations')
+
+			for (const child_uuid of parent_data.children) {
+				const child = graph.subjects.find(subject => subject.uuid === child_uuid)
+				if (!child) throw new Error('Failed to revive, non-existent UUID in subject relations')
+
+				const relation = SubjectRelation.create(graph)
+				relation.parent = parent
+				relation.child = child
+			}
+		}
+
+		// Define lectures
+		for (const lecture_data of data.lectures) {
+			const lecture = new Lecture(
+				graph, 
+				lecture_data.uuid, 
+				graph.lectures.length, 
+				lecture_data.name
+			)
+
+			graph.lectures.push(lecture)
+
+			// Define lecture subjects
+			for (const subject_uuid of lecture_data.subjects) {
+				const subject = graph.subjects.find(subject => subject.uuid === subject_uuid)
+				if (!subject) throw new Error('Failed to revive, non-existent UUID in lecture subjects')
+
+				const lecture_subject = LectureSubject.create(lecture)
+				lecture_subject.subject = subject
+			}
+		}
 	}
 
 	static generateUUID(): string {
@@ -163,25 +250,22 @@ class Graph {
 		return response
 	}
 
-	serialize(): string {
-		/* Serialize the graph to a POJO */
+	reduce(): string {
+		/* Serialize graph to a POJO */
 
-		return devalue.stringify(this, {
-			Graph: (value) => value instanceof Graph && 
-				[value.uuid, value.name, value.domains, value.subjects, value.lectures],
-			Domain: (value) => value instanceof Domain && 
-				[value.uuid, value.x, value.y, value.style, value.name, value.parents, value.children],
-			Subject: (value) => value instanceof Subject && 
-				[value.uuid, value.x, value.y, value.domain, value.name, value.parents, value.children],
-			Lecture: (value) => value instanceof Lecture && 
-				[value.uuid, value.name, value.present]
+		return JSON.stringify({
+			uuid: this.uuid,
+			name: this.name,
+			domains: this.domains.map(domain => domain.reduce()),
+			subjects: this.subjects.map(subject => subject.reduce()),
+			lectures: this.lectures.map(lecture => lecture.reduce())
 		})
 	}
 
 	save() {
 		/* Save the graph to the database */
 
-		console.log(this.serialize())
+		console.log(this.reduce())
 	}
 
 	delete() {

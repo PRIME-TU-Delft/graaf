@@ -3,7 +3,8 @@
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
 import { styles } from '../settings'
-import { Graph } from '../entities'
+import { DomainRelation, Graph, SubjectRelation } from '../entities'
+import type { S } from 'vitest/dist/reporters-yx5ZTtEV.js'
 
 // Exports
 export { Field, Domain, Subject }
@@ -162,6 +163,20 @@ class Domain extends Field<Domain> {
 		return response
 	}
 
+	reduce() {
+		/* Serialize domain to a POJO */
+
+		return {
+			uuid: this.uuid,
+			x: this.x,
+			y: this.y,
+			style: this.style,
+			name: this.name,
+			parents: this.parents.map(parent => parent.uuid),
+			children: this.children.map(child => child.uuid)
+		}
+	}
+
 	delete(): void {
 		/* Delete this domain */
 
@@ -283,6 +298,20 @@ class Subject extends Field<Subject> {
 			response.add(new Error(`Subject (${this.index + 1}) has no assigned domain`))
 
 		return response
+	}
+
+	reduce() {
+		/* Serialize subject to a POJO */
+
+		return {
+			uuid: this.uuid,
+			x: this.x,
+			y: this.y,
+			domain: this.domain?.uuid,
+			name: this.name,
+			parents: this.parents.map(parent => parent.uuid),
+			children: this.children.map(child => child.uuid)
+		}
 	}
 
 	delete(): void {
