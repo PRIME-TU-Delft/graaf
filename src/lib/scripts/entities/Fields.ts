@@ -16,8 +16,8 @@ export { Field, Domain, Subject }
 abstract class Field<T extends Domain | Subject> {
 	constructor(
 		public graph: Graph,
-		public uuid: string,
 		public index: number,
+		public uuid: string,
 		public x: number,
 		public y: number,
 		public name: string,
@@ -36,8 +36,8 @@ class Domain extends Field<Domain> {
 
 	constructor(
 		graph: Graph,
-		uuid: string,
 		index: number,
+		uuid: string,
 		x: number = 0,
 		y: number = 0,
 		style?: string,
@@ -45,7 +45,7 @@ class Domain extends Field<Domain> {
 		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
-		super(graph, uuid, index, x, y, name, parents, children)
+		super(graph, index, uuid, x, y, name, parents, children)
 		this.style = style
 	}
 
@@ -111,8 +111,8 @@ class Domain extends Field<Domain> {
 		// Create domain
 		const domain = new Domain(
 			graph,
-			Graph.generateUUID(),
 			graph.domains.length,
+			Graph.generateUUID(),
 			0, 0, // TODO find non-overlapping coordinates
 			style
 		)
@@ -211,8 +211,8 @@ class Subject extends Field<Subject> {
 
 	constructor(
 		graph: Graph,
-		uuid: string,
 		index: number,
+		uuid: string,
 		x: number = 0,
 		y: number = 0,
 		domain?: Domain,
@@ -220,7 +220,7 @@ class Subject extends Field<Subject> {
 		parents: Subject[] = [],
 		children: Subject[] = []
 	) {
-		super(graph, uuid, index, x, y, name, parents, children)
+		super(graph, index, uuid, x, y, name, parents, children)
 		this.domain = domain
 	}
 
@@ -262,8 +262,8 @@ class Subject extends Field<Subject> {
 
 		const subject = new Subject(
 			graph,
-			Graph.generateUUID(),
 			graph.subjects.length,
+			Graph.generateUUID(),
 			0, 0 // TODO find non-overlapping coordinates
 		)
 

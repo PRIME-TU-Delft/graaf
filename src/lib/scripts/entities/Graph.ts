@@ -1,7 +1,6 @@
 
 // External imports
 import * as uuid from 'uuid'
-import * as devalue from 'devalue'
 
 // Internal imports
 import { DropdownOption } from './DropdownOption'
@@ -140,8 +139,8 @@ class Graph {
 			graph.domains.push(
 				new Domain(
 					graph,
-					domain_data.uuid,
 					graph.domains.length,
+					domain_data.uuid,
 					domain_data.x,
 					domain_data.y,
 					domain_data.style,
@@ -164,7 +163,7 @@ class Graph {
 				relation.child = child
 			}
 		}
-
+		
 		// Define subjects
 		for (const subject_data of data.subjects) {
 			const domain = graph.domains.find(domain => domain.uuid === subject_data.domain)
@@ -173,8 +172,8 @@ class Graph {
 			graph.subjects.push(
 				new Subject(
 					graph,
-					subject_data.uuid,
 					graph.subjects.length,
+					subject_data.uuid,
 					subject_data.x,
 					subject_data.y,
 					domain,
@@ -218,6 +217,8 @@ class Graph {
 				lecture_subject.subject = subject
 			}
 		}
+
+		return graph
 	}
 
 	static generateUUID(): string {
