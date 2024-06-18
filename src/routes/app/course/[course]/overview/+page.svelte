@@ -60,11 +60,11 @@
 	path={[
 		{
 			name: 'Dashboard',
-			href: '/dashboard'
+			href: '/app/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
-			href: `/course/${course.code}/overview`
+			href: `/app/course/${course.code}/overview`
 		}
 	]}
 >
@@ -79,7 +79,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/course/{course.code}/settings">
+		<LinkButton href="/app/course/{course.code}/settings">
 			<img src={gearIcon} alt=""> Settings
 		</LinkButton>
 
@@ -118,7 +118,7 @@
 					<IconButton
 						src={pencilIcon}
 						description="Edit Graph"
-						href="/course/{course.code}/graph/{graph.id}/settings"
+						href="/app/course/{course.code}/graph/{graph.id}/settings"
 						scale
 					/>
 

@@ -6,10 +6,13 @@
 
 	// Components
 	import Button from '$components/Button.svelte'
+	import DomainSettings from './DomainSettings.svelte';
 	import GeneralSettings from './GeneralSettings.svelte'
 	import Layout from '$layouts/DefaultLayout.svelte'
+	import LectureSettings from './LectureSettings.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
 	import Response from '$components/Validation.svelte'
-	import UserSettings from './UserSettings.svelte'
+	import SubjectSettings from './SubjectSettings.svelte';
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
@@ -18,20 +21,19 @@
 	export let data: PageData
 
 	// Variables
-	let { course } = data
+	let { course, graph } = data
 	let active_tab: number = 0
 
-	$: validation = course.validate()
+	$: validation = graph.validate()
 
 	// Functions
 	function update() {
-
 		/* Force Svelte update 
 		 * I hate this but svelte forces my hand
 		 * Maybe I should just use a store or wait for Svelte 5
 		 */
 
-		course = course
+		graph = graph
 	}
 
 </script>
@@ -45,22 +47,27 @@
 	path={[
 		{
 			name: 'Dashboard',
-			href: '/dashboard'
+			href: '/app/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
-			href: `/course/${course.code}/overview`
+			href: `/app/course/${course.code}/overview`
+		},
+		{
+			name: graph.name,
+			href: `/app/course/${course.code}/graph/${graph.uuid}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/course/${course.code}/settings`
+			href: `/app/course/${course.code}/graph/${graph.uuid}/settings`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
 		<Response data={validation} />
 		<div class="flex-spacer" />
-		<Button disabled={validation.severity === 'error'} on:click={() => course.save()}>
+		<LinkButton href="/app/course/{course.code}/graph/{graph.uuid}/layout"> Edit layout </LinkButton>
+		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes 
 		</Button>
 	</svelte:fragment>
@@ -76,15 +83,29 @@
 				class="tab"
 				class:active={active_tab === 1}
 				on:click={() => active_tab = 1}
-			> Assigned Users </button>
+			> Domains </button>
+			<button 
+				class="tab"
+				class:active={active_tab === 2}
+				on:click={() => active_tab = 2}
+			> Subjects </button>
+			<button 
+				class="tab"
+				class:active={active_tab === 3}
+				on:click={() => active_tab = 3}
+			> Lectures </button>
 
 			<div class="dynamic-border" />
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings {course} {update} />
+			<GeneralSettings {graph} {update} />
 		{:else if active_tab === 1}
-			<UserSettings {course} {update} />
+			<DomainSettings {graph} {update} />
+		{:else if active_tab === 2}
+			<SubjectSettings {graph} {update} />
+		{:else if active_tab === 3}
+			<LectureSettings {graph} {update} />
 		{/if}
 	</div>
 </Layout>

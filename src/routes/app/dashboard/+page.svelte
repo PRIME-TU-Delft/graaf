@@ -27,9 +27,9 @@
 	const modals: { [key: string]: Modal } = {}
 	var createProgramModal: Modal
 	var createCourseModal: Modal
+
 	$: courses = data.courses
 	$: programs = data.programs
-
 	$: programOptions = programs.map(program => {
 		return { name: program.name, value: program.id, validation: new ValidationData() }
 	})
@@ -45,9 +45,7 @@
 </script>
 
 
-
 <!-- Markup -->
-
 
 
 <Layout
@@ -55,7 +53,7 @@
 	path={[
 		{
 			name: 'Dashboard',
-			href: '/dashboard'
+			href: '/app/dashboard'
 		}
 	]}
 >
@@ -113,7 +111,7 @@
 		<h3 slot="header"> My Courses </h3>
 		<div slot="body" class="grid">
 			{#each courses as { code, name }}
-				<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
+				<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
 			{/each}
 		</div>
 	</Card>
@@ -132,7 +130,7 @@
 					scale
 				/>
 
-				<LinkButton href="/program/{name}/settings">Settings</LinkButton>
+				<LinkButton href="./program/{name}/settings">Settings</LinkButton>
 
 				<Modal bind:this={modals[name]}>
 					<h3 slot="header"> Program Coordinators </h3>
@@ -150,7 +148,7 @@
 
 			<div slot="body" class="grid">
 				{#each courses as { code, name }}
-					<a class="cell" href="/course/{code}/overview"> {code} {name} </a>
+					<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
 				{/each}
 			</div>
 		</Card>

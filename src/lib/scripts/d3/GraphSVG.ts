@@ -259,9 +259,6 @@ class GraphSVG {
 
 		// D3 setup
 		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
-			.attr('width', '100%')
-			.attr('height', '100%')
-
 		const definitions = svg.append('defs')
 
 		svg.append('g')
