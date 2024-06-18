@@ -43,28 +43,7 @@
 
 <!-- Markup -->
 
-
-{#if short}
-
-	{#if data.severity === 'error'}
-
-		<span class="error">
-			<img src={errorIcon} alt="" /> {data.errors[0].short}
-		</span>
-
-	{:else if data.severity === 'warning'}
-
-		<span class="warning">
-			<img src={warningIcon} alt="" /> {data.warnings[0].short}
-		</span>
-
-	{/if}
-
-{:else if data.severity === 'success'}
-
-	<span class="success"> <img src={successIcon} alt=""> Everything is good! </span>
-
-{:else}
+{#if !short && data.errors.length + data.warnings.length > 1}
 
 	<div class="multiple">
 		<button class="error" on:click={show_errors} use:tooltip={error_dropdown ? 'Hide errors' : 'Show errors'} >
@@ -111,6 +90,24 @@
 			</div>
 		{/if}
 	</div>
+
+{:else if data.severity === 'error'}
+
+	<span class="error">
+		<img src={errorIcon} alt="" /> {data.errors[0].short}
+	</span>
+
+{:else if data.severity === 'warning'}
+
+	<span class="warning">
+		<img src={warningIcon} alt="" /> {data.warnings[0].short}
+	</span>
+
+{:else if !short}
+
+	<span class="success">
+		<img src={successIcon} alt=""> Everything is good!
+	</span>
 
 {/if}
 

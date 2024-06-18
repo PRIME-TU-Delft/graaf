@@ -2,20 +2,21 @@
 // Internal imports
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
-import { styles } from '../settings'
+
 import { Graph } from './Graph'
+import { styles } from '../settings'
 
 import type { UUID } from './Graph'
 
 // Exports
 export { Field, Domain, Subject }
-export type { SerializedDomain, SerializedSubject }
+export type { DomainData, SubjectData }
 
 
 // --------------------> Types
 
 
-type SerializedDomain = {
+type DomainData = {
 	uuid: UUID,
 	x: number,
 	y: number,
@@ -25,7 +26,7 @@ type SerializedDomain = {
 	children: UUID[]
 }
 
-type SerializedSubject = {
+type SubjectData = {
 	uuid: UUID,
 	x: number,
 	y: number,
@@ -189,7 +190,7 @@ class Domain extends Field<Domain> {
 		return response
 	}
 
-	reduce(): SerializedDomain {
+	reduce(): DomainData {
 		/* Serialize domain to a POJO */
 
 		if (this.validate().severity === 'error')
@@ -329,7 +330,7 @@ class Subject extends Field<Subject> {
 		return response
 	}
 
-	reduce(): SerializedSubject {
+	reduce(): SubjectData {
 		/* Serialize subject to a POJO */
 
 		if (this.validate().severity === 'error')

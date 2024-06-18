@@ -2,18 +2,22 @@
 // Internal imports
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
-import { SubjectRelation } from './Relations'
+
+import { Graph } from './Graph'
 import { Subject } from './Fields'
-import { Graph, type UUID } from './Graph'
+import { SubjectRelation } from './Relations'
+
+import type { UUID } from './Graph'
 
 // Exports
-export { Lecture, LectureSubject, type SerializedLecture }
+export { Lecture, LectureSubject }
+export type { LectureData }
 
 
 // --------------------> Type
 
 
-type SerializedLecture = {
+type LectureData = {
 	uuid: UUID,
 	name: string,
 	subjects: UUID[]
@@ -206,7 +210,7 @@ class Lecture {
 		return response
 	}
 
-	reduce(): SerializedLecture {
+	reduce(): LectureData {
 		/* Serialize lecture to a POJO */
 
 		if (this.validate().severity === 'error')

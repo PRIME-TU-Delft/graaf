@@ -8,9 +8,8 @@
 	import Button from '$components/Button.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import IconButton from '$components/IconButton.svelte';
-	import Modal from '$components/Modal.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
-	import Textfield from '$components/Textfield.svelte'
+	import Textfield from '$components/Textfield.svelte';
 
 	// Assets
 	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
@@ -24,9 +23,8 @@
 
 	// Variables
 	let query: string = ''
-	let nameSort: boolean | undefined
-	let permissionSort: boolean | undefined
-	let addUserModal: Modal
+	let name_sort: boolean | undefined
+	let permission_sort: boolean | undefined
 
 	// Functions
 	function userMatchesQuery(query: string, user: AssignedUser) {
@@ -36,7 +34,7 @@
 		query = query.toLowerCase()
 
 		let name = user.name.toLowerCase()
-		let permissions = user.permissions.toString().toLowerCase()
+		let permissions = user.permissions?.toString().toLowerCase() || ''
 
 		return name.includes(query) || permissions.includes(query)
 	}
@@ -69,19 +67,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={query} />
-		<Button on:click={addUserModal?.show}> Add User </Button>
-		<Modal bind:this={addUserModal}>
-			<h3 slot="header"> Add User </h3>
-			Assigning a user to this course. Read permissions allow the user to view the course and its graphs. With write permissions users can edit graphs. Admins can edit the course settings.
-
-			<form>
-				<label for="name"> Name </label>
-				<Textfield label="Name" />
-				<label for="permissions"> Permissions </label>
-				<Dropdown label="Permissions" placeholder="Permission" options={course.permission_options} />
-				<Button submit> Add </Button>
-			</form>
-		</Modal>
+		<Button on:click={() => { AssignedUser.create(course); update() }}> Add User </Button>
 	</div>
 
 	<!-- Header -->
@@ -91,11 +77,11 @@
 		<div class="header" style="grid-area: name;">
 			<span> Name </span>
 			<IconButton
-				src={icon(nameSort)}
+				src={icon(name_sort)}
 				on:click={() => {
-					permissionSort = undefined
-					nameSort = !nameSort
-					alphabetize(course.users, assigned => assigned.name, nameSort)
+					permission_sort = undefined
+					name_sort = !name_sort
+					alphabetize(course.users, user => user.name, name_sort)
 					update()
 				}}
 			/>
@@ -105,11 +91,11 @@
 		<div class="header" style="grid-area: permissions;">
 			<span> Permissions </span>
 			<IconButton
-				src={icon(permissionSort)}
+				src={icon(permission_sort)}
 				on:click={() => {
-					nameSort = undefined
-					permissionSort = !permissionSort
-					alphabetize(course.users, assigned => assigned.permissions.toString(), permissionSort)
+					name_sort = undefined
+					permission_sort = !permission_sort
+					alphabetize(course.users, assigned => assigned.permissions?.toString() || '', permission_sort)
 					update()
 				}}
 			/>
@@ -117,12 +103,12 @@
 	</div>
 
 	<!-- Domain list -->
-	{#each course.users as user, n}
+	{#each course.users as user}
 		{#if userMatchesQuery(query, user)}
 			<div class="row">
-				{n + 1}
+				{user.index + 1}
 				<IconButton scale src={trashIcon} on:click={() => { user.delete(); update() }} />
-				<span> {user.name} </span>
+				<Textfield label="Name" bind:value={user.name} on:input={update}/>
 				<Dropdown label="Permissions" placeholder="Permission" options={course.permission_options} bind:value={user.permissions} on:input={update}/>
 			</div>
 		{/if}
@@ -166,23 +152,5 @@
 				align-content: center
 				justify-content: right
 				width: 100%
-		
-		form
-			display: grid
-			grid-template: "label content" auto / 1fr 2fr
-			gap: $form-small-gap $form-medium-gap
-			place-items: center start
-
-			margin-top: $form-big-gap
-
-			label
-				grid-column: label
-				justify-self: end
-
-			:global(.textfield), :global(.dropdown)
-				grid-column: content
-
-			:global(.button)
-				grid-column: content
 
 </style>

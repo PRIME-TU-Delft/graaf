@@ -5,10 +5,22 @@ import { DropdownOption } from "./DropdownOption"
 
 // Exports
 export { Course, AssignedUser }
+export type { Permissions, CourseData, AssignedUserData }
 
 
-// --------------------> Enums
+// --------------------> Types
 
+type AssignedUserData = {
+	name: string,
+	permissions: string
+}
+
+type CourseData = {
+	code: string,
+	name: string,
+	users: AssignedUserData[]
+
+}
 
 enum Permissions {
 	read,
@@ -23,16 +35,48 @@ enum Permissions {
 class AssignedUser {
 	constructor(
 		public course: Course,
-		public name: string,
-		public permissions: Permissions
+		public index: number,
+		public name: string = '',
+		public permissions?: Permissions
 	) { }
 
-	static create(course: Course, name: string, permissions: Permissions) {
+	static create(course: Course) {
 		/* Create a new assigned user */
 
-		const user = new AssignedUser(course, name, permissions)
+		const user = new AssignedUser(course, course.users.length)
 		course.users.push(user)
 		return user
+	}
+
+	validate(): ValidationData {
+		/* Validate the assigned user */
+
+		const response = new ValidationData()
+
+		// Check if the user name is valid
+		if (this.name === '') {
+			response.add(new Error(`User (${this.index + 1}) must have a name`))
+		}
+
+		// Check if the user has permissions
+		if (this.permissions === undefined) {
+			response.add(new Error(`User (${this.index + 1}) must have permissions`))
+		}
+
+		return response
+	}
+
+	reduce(): AssignedUserData {
+		/* Reduce the assigned user to a POJO */
+
+		if (this.validate().severity === 'error') {
+			throw new Error('Cannot reduce invalid user')
+		}
+
+		return {
+			name: this.name,
+			permissions: Permissions[this.permissions!]
+		}
 	}
 
 	delete() {
@@ -61,16 +105,16 @@ class Course {
 		]
 	}
 
-	static revive(obj: Object) {
+	static revive(data: CourseData) {
 		/* Load the course from a POGO */
 
-		// TODO this is a placeholder
-		const course = new Course(
-			'CSE1200',
-			'Calculus',
-		)
+		const course = new Course(data.code, data.name)
+		for (const user_data of data.users) {
+			const user = AssignedUser.create(course)
+			user.name = user_data.name
+			user.permissions = Permissions[user_data.permissions as keyof typeof Permissions]
+		}
 
-		AssignedUser.create(course, 'Bram Kreulen', Permissions.admin)
 		return course
 	}
 
@@ -89,7 +133,42 @@ class Course {
 			response.add(new Error('Course must have a name'))
 		}
 
+		// Check if the course has users
+		if (this.users.length === 0) {
+			response.add(new Error('Course must have users'))
+		}
+
+		// Check if the course has an admin
+		if (!this.users.some(user => user.permissions === Permissions.admin)) {
+			response.add(new Error('Course must have an admin'))
+		}
+
+		// Validate the users
+		for (const user of this.users) {
+			response.add(user.validate())
+		}
+
 		return response
+	}
+
+	reduce(): CourseData {
+		/* Reduce the course to a POJO */
+
+		if (this.validate().severity === 'error') {
+			throw new Error('Cannot reduce invalid course')
+		}
+
+		return {
+			code: this.code,
+			name: this.name,
+			users: this.users.map(user => user.reduce())
+		}
+	}
+
+	save() {
+		/* Save the course */
+
+		throw new Error('Not implemented')
 	}
 
 	delete() {

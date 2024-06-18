@@ -3,31 +3,32 @@
 import * as uuid from 'uuid'
 
 // Internal imports
-import { DomainRelation, SubjectRelation } from './Relations'
 import { ValidationData, Error } from './ValidationData'
-import { Lecture, LectureSubject } from './Lecture'
 import { DropdownOption } from './DropdownOption'
-import { Domain, Subject } from './Fields'
 
-import type { SerializedLecture } from './Lecture'
-import type { SerializedSubject } from './Fields'
-import type { SerializedDomain } from './Fields'
+import { Domain, Subject } from './Fields'
+import { DomainRelation, SubjectRelation } from './Relations'
+import { Lecture, LectureSubject } from './Lecture'
+
+import type { LectureData } from './Lecture'
+import type { SubjectData } from './Fields'
+import type { DomainData } from './Fields'
 
 // Exports
 export { Graph }
-export type { UUID, SerializedGraph }
+export type { UUID, GraphData }
 
 
 // --------------------> Types
 
 
 type UUID = string
-type SerializedGraph = {
+type GraphData = {
 	uuid: UUID,
 	name: string,
-	domains: SerializedDomain[],
-	subjects: SerializedSubject[],
-	lectures: SerializedLecture[]
+	domains: DomainData[],
+	subjects: SubjectData[],
+	lectures: LectureData[]
 }
 
 
@@ -146,8 +147,8 @@ class Graph {
 		return graph
 	}
 
-	static revive(data: SerializedGraph) {
-		/* Load the graph from a POJO */
+	static revive(data: GraphData) {
+		/* Revive graph from a POJO */
 
 		const graph = new Graph(data.uuid, data.name)
 
@@ -238,7 +239,7 @@ class Graph {
 		return graph
 	}
 
-	static generateUUID(): string {
+	static generateUUID(): UUID {
 		/* Generate a new UUID */
 
 		return uuid.v4()
@@ -268,8 +269,8 @@ class Graph {
 		return response
 	}
 
-	reduce(): SerializedGraph {
-		/* Serialize graph to a POJO */
+	reduce(): GraphData {
+		/* Reduce graph to a POJO */
 
 		if (this.validate().severity === 'error')
 			throw new Error('Cannot reduce with outstanding errors')

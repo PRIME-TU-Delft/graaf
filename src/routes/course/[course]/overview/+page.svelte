@@ -18,6 +18,7 @@
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
+	import gearIcon from '$assets/gear-icon.svg'
 
 	function newLink() {
 		// TODO add newLink function
@@ -78,10 +79,13 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/course/{course.code}/settings"> Settings </LinkButton>
+		<LinkButton href="/course/{course.code}/settings">
+			<img src={gearIcon} alt=""> Settings
+		</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
 			<h3 slot="header"> Create Graph </h3>
+			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
 			<form>
 				<label for="name"> Name </label>
@@ -145,22 +149,20 @@
 	form
 		display: grid
 		grid-template: "label content" auto / 1fr 2fr
+		gap: $form-small-gap $form-medium-gap
 		place-items: center start
+
+		margin-top: $form-big-gap
 
 		label
 			grid-column: label
 			justify-self: end
 
-			margin-top: $form-small-gap
-			padding-right: $form-medium-gap
-
-		:global(.textfield)
+		:global(.textfield), :global(.dropdown)
 			grid-column: content
-			margin-top: $form-small-gap
 
 		:global(.button)
 			grid-column: content
-			margin-top: $form-big-gap
 
 	.graph
 		display: flex
