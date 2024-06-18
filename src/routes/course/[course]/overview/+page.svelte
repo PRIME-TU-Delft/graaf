@@ -30,7 +30,26 @@
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
 
 	export let data;
-	$: course = data.course;
+	// $: course = data.course;
+
+	let course = {
+		code: 'CSE1200',
+		name: 'Calculus',
+		graphs: [
+			{
+				name: 'Graph 1',
+				id: 1,
+				hasLinks: () => true,
+				isVisible: () => true
+			},
+			{
+				name: 'Graph 2',
+				id: 2,
+				hasLinks: () => false,
+				isVisible: () => false
+			}
+		]
+	}
 
 </script>
 

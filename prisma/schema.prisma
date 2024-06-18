@@ -68,6 +68,7 @@ model Graph {
 	courseId		Int
 	domains			Domain[]
 	subjects		Subject[]
+	lectures		Lecture[]
 	// UI names
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
@@ -100,4 +101,15 @@ model Subject {
 	domainId		Int
 	parentSubjects	Subject[]	@relation("SubjectRelation")
 	childSubjects	Subject[]	@relation("SubjectRelation")
+	lectures		Lecture[]
+}
+
+
+model Lecture {
+	id				Int			@id @default(autoincrement())
+	graph			Graph		@relation(fields: [graphId], references: [id])
+	graphId			Int
+	index			Int
+	name			String
+	subjects		Subject[]
 }

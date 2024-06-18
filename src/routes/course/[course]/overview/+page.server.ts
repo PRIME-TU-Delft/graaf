@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
+
 export const actions = {
 	newGraph: async ({ params, request }) => {
 		const data = await request.formData();
@@ -9,16 +10,7 @@ export const actions = {
 
 		if (!name) return fail(400, { name, missing: true });
 
-		await prisma.graph.create({
-			data: {
-				name,
-				course: {
-					connect: {
-						code
-					}
-				}
-			}
-		});
+		await prisma.graph.createWithCourseCode(code, name);
 	}
 };
 
