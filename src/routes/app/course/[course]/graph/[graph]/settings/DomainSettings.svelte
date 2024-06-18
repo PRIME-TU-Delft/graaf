@@ -25,13 +25,13 @@
 	export let update: () => void
 
 	// Variables
-	let domainQuery: string = ''
-	let domainNameSort: boolean | undefined
-	let domainStyleSort: boolean | undefined
+	let domain_query: string = ''
+	let domain_name_sort: boolean | undefined
+	let domain_style_sort: boolean | undefined
 
-	let relationQuery: string = ''
-	let relationFromSort: boolean | undefined
-	let relationToSort: boolean | undefined
+	let relation_query: string = ''
+	let relation_parent_sort: boolean | undefined
+	let relation_child_sort: boolean | undefined
 
 	// Functions
 	function domainMatchesQuery(query: string, domain: Domain): boolean {
@@ -83,18 +83,18 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Domains </h2>
-		<LinkButton href="#relations"> goto relations </LinkButton>
+		<LinkButton href="#relations"> go to relations </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={domainQuery} />
+		<Searchbar bind:value={domain_query} />
 		<Button on:click={() => { Domain.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
 	
 	<!-- Header -->
-	{#if graph.domains.some(domain => domainMatchesQuery(domainQuery, domain))}
+	{#if graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
 
 		<!-- If any domains were found that match the search -->
 		<div class=row>
@@ -103,11 +103,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> Name </span>
 				<IconButton
-					src={icon(domainNameSort)}
+					src={icon(domain_name_sort)}
 					on:click={() => {
-						domainStyleSort = undefined
-						domainNameSort = !domainNameSort
-						alphabetize(graph.domains, domain => domain.name || '', domainNameSort)
+						domain_style_sort = undefined
+						domain_name_sort = !domain_name_sort
+						alphabetize(graph.domains, domain => domain.name || '', domain_name_sort)
 						update()
 					}}
 				/>
@@ -117,11 +117,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> Style </span>
 				<IconButton
-					src={icon(domainStyleSort)}
+					src={icon(domain_style_sort)}
 					on:click={() => {
-						domainNameSort = undefined
-						domainStyleSort = !domainStyleSort
-						alphabetize(graph.domains, domain => domain.style ? styles[domain.style].display_name : '', domainStyleSort)
+						domain_name_sort = undefined
+						domain_style_sort = !domain_style_sort
+						alphabetize(graph.domains, domain => domain.style ? styles[domain.style].display_name : '', domain_style_sort)
 						update()
 					}}
 				/>
@@ -137,7 +137,7 @@
 
 	<!-- Domain list -->
 	{#each graph.domains as domain}
-		{#if domainMatchesQuery(domainQuery, domain)}
+		{#if domainMatchesQuery(domain_query, domain)}
 			<div class="row">
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
@@ -155,18 +155,18 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Relations </h2>
-		<LinkButton href="#domains"> goto domains </LinkButton>
+		<LinkButton href="#domains"> go to domains </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={relationQuery} />
+		<Searchbar bind:value={relation_query} />
 		<Button on:click={() => { DomainRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.domain_relations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -175,11 +175,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={icon(relationFromSort)}
+					src={icon(relation_parent_sort)}
 					on:click={() => {
-						relationToSort = undefined
-						relationFromSort = !relationFromSort
-						alphabetize(graph.domain_relations, relation => relation.parent?.name || '', relationFromSort)
+						relation_child_sort = undefined
+						relation_parent_sort = !relation_parent_sort
+						alphabetize(graph.domain_relations, relation => relation.parent?.name || '', relation_parent_sort)
 						update()
 					}}
 				/>
@@ -189,11 +189,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={icon(relationToSort)}
+					src={icon(relation_child_sort)}
 					on:click={() => {
-						relationFromSort = undefined
-						relationToSort = !relationToSort
-						alphabetize(graph.domain_relations, relation => relation.child?.name || '', relationToSort)
+						relation_parent_sort = undefined
+						relation_child_sort = !relation_child_sort
+						alphabetize(graph.domain_relations, relation => relation.child?.name || '', relation_child_sort)
 						update()
 					}}
 				/>
@@ -209,7 +209,7 @@
 
 	<!-- List of relations -->
 	{#each graph.domain_relations as relation}
-		{#if relationMatchesQuery(relationQuery, relation)}
+		{#if relationMatchesQuery(relation_query, relation)}
 			<div class="row">
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />

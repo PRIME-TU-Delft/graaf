@@ -251,8 +251,9 @@ class Graph {
 		const response = new ValidationData()
 
 		// Check if the graph has a name
-		if (this.name === '')
-			response.add(new Error('Graph must have a name'))
+		if (this.name === '') {
+			response.add(new Error('Graph must have a name')) 
+		}
 
 		// Validate domains, subjects and lectures
 		for (const domain of this.domains)

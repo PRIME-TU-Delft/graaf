@@ -154,8 +154,9 @@ class Domain extends Field<Domain> {
 		const response = new ValidationData()
 
 		// Check if the domain has a name
-		if (this.name === '')
+		if (this.name === '') {
 			response.add(new Error(`Domain (${this.index + 1}) has no name`))
+		}
 
 		// Check if the domain has a unique name
 		else {
@@ -171,8 +172,9 @@ class Domain extends Field<Domain> {
 		}
 
 		// Check if the domain has a style
-		if (!this.style)
+		if (!this.style) {
 			response.add(new Error(`Domain (${this.index + 1}) has no style`))
+		}
 
 		// Check if the domain has a unique style
 		else {
@@ -185,6 +187,11 @@ class Domain extends Field<Domain> {
 					)
 				)
 			}
+		}
+
+		// Check if the domain has subjects
+		if (this.subjects.length === 0) {
+			response.add(new Warning(`Domain (${this.index + 1}) has no subjects`))
 		}
 
 		return response
@@ -307,8 +314,9 @@ class Subject extends Field<Subject> {
 		const response = new ValidationData()
 
 		// Check if the subject has a name
-		if (this.name === '')
+		if (this.name === '') {
 			response.add(new Error(`Subject (${this.index + 1}) has no name`))
+		}
 
 		// Check if the name is unique
 		else {
@@ -324,8 +332,9 @@ class Subject extends Field<Subject> {
 		}
 
 		// Check if the subject has a domain
-		if (!this.domain)
+		if (!this.domain) {
 			response.add(new Error(`Subject (${this.index + 1}) has no assigned domain`))
+		}
 
 		return response
 	}

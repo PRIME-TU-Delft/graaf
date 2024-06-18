@@ -25,13 +25,13 @@
 	export let update: () => void
 
 	// Variables
-	let subjectQuery: string = ''
-	let subjectNameSort: boolean | undefined
-	let subjectDomainSort: boolean | undefined
+	let subject_query: string = ''
+	let subject_name_sort: boolean | undefined
+	let subject_domain_sort: boolean | undefined
 
-	let relationQuery: string = ''
-	let relationFromSort: boolean | undefined
-	let relationToSort: boolean | undefined
+	let relation_query: string = ''
+	let relation_parent_sort: boolean | undefined
+	let relation_child_sort: boolean | undefined
 
 	// Functions
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
@@ -77,18 +77,18 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Subjects </h2>
-		<LinkButton href="#relations"> goto relations </LinkButton>
+		<LinkButton href="#relations"> go to relations </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={subjectQuery} />
+		<Searchbar bind:value={subject_query} />
 		<Button on:click={() => { Subject.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Subject
 		</Button>
 	</div>
 
 	<!-- If any subjects were found that match the search -->
-	{#if graph.subjects.some(subject => subjectMatchesQuery(subjectQuery, subject))}
+	{#if graph.subjects.some(subject => subjectMatchesQuery(subject_query, subject))}
 
 		<!-- Header -->
 		<div class=row>
@@ -97,11 +97,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> Name </span>
 				<IconButton
-					src={subjectNameSort === undefined ? neutralSortIcon : subjectNameSort ? ascendingSortIcon : descedingSortIcon}
+					src={subject_name_sort === undefined ? neutralSortIcon : subject_name_sort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						subjectDomainSort = undefined
-						subjectNameSort = !subjectNameSort
-						alphabetize(graph.subjects, subject => subject.name, subjectNameSort)
+						subject_domain_sort = undefined
+						subject_name_sort = !subject_name_sort
+						alphabetize(graph.subjects, subject => subject.name, subject_name_sort)
 						update()
 					}}
 				/>
@@ -111,11 +111,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> Domain </span>
 				<IconButton
-					src={subjectDomainSort === undefined ? neutralSortIcon : subjectDomainSort ? ascendingSortIcon : descedingSortIcon}
+					src={subject_domain_sort === undefined ? neutralSortIcon : subject_domain_sort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						subjectNameSort = undefined
-						subjectDomainSort = !subjectDomainSort
-						alphabetize(graph.subjects, subject => subject.domain?.name || '', subjectDomainSort)
+						subject_name_sort = undefined
+						subject_domain_sort = !subject_domain_sort
+						alphabetize(graph.subjects, subject => subject.domain?.name || '', subject_domain_sort)
 						update()
 					}}
 				/>
@@ -131,7 +131,7 @@
 
 	<!-- Subject list -->
 	{#each graph.subjects as subject}
-		{#if subjectMatchesQuery(subjectQuery, subject)}
+		{#if subjectMatchesQuery(subject_query, subject)}
 			<div class="row">
 				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
@@ -149,18 +149,18 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Relations </h2>
-		<LinkButton href="#subjects"> goto subjects </LinkButton>
+		<LinkButton href="#subjects"> go to subjects </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={relationQuery} />
+		<Searchbar bind:value={relation_query} />
 		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.subject_relations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if graph.subject_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -169,11 +169,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={relationFromSort === undefined ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={relation_parent_sort === undefined ? neutralSortIcon : relation_parent_sort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						relationToSort = undefined
-						relationFromSort = !relationFromSort
-						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relationFromSort)
+						relation_child_sort = undefined
+						relation_parent_sort = !relation_parent_sort
+						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relation_parent_sort)
 						update()
 					}}
 				/>
@@ -183,11 +183,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={relationToSort === undefined ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
+					src={relation_child_sort === undefined ? neutralSortIcon : relation_child_sort ? ascendingSortIcon : descedingSortIcon}
 					on:click={() => {
-						relationFromSort = undefined
-						relationToSort = !relationToSort
-						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relationToSort)
+						relation_parent_sort = undefined
+						relation_child_sort = !relation_child_sort
+						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relation_child_sort)
 						update()
 					}}
 				/>
@@ -203,7 +203,7 @@
 
 	<!-- List of relations -->
 	{#each graph.subject_relations as relation}
-		{#if relationMatchesQuery(relationQuery, relation)}
+		{#if relationMatchesQuery(relation_query, relation)}
 			<div class="row">
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
