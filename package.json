@@ -10,6 +10,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest",
+		"typecheck": "tsc --noEmit",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
