@@ -11,7 +11,7 @@
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import LectureSettings from './LectureSettings.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
-	import Response from '$components/Validation.svelte'
+	import Validation from '$components/Validation.svelte'
 	import SubjectSettings from './SubjectSettings.svelte';
 
 	// Assets
@@ -34,6 +34,13 @@
 		 */
 
 		graph = graph
+	}
+
+	function scroll_to_anchor(tab: number, id: string) {
+		active_tab = tab
+		document.getElementById(id)?.scrollIntoView({
+			behavior: 'smooth'
+		})
 	}
 
 </script>
@@ -64,7 +71,7 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Response data={validation} />
+		<Validation data={validation} {scroll_to_anchor} />
 		<div class="flex-spacer" />
 		<LinkButton href="/app/course/{course.code}/graph/{graph.uuid}/layout"> Edit layout </LinkButton>
 		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>

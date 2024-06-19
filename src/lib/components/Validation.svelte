@@ -13,7 +13,7 @@
 
 	// Exports
 	export let data: ValidationData
-	export let short: boolean = false
+	export let scroll_to_anchor: (tab: number, id: string) => void
 
 	// Variables
 	let error_dropdown: boolean = false
@@ -43,7 +43,7 @@
 
 <!-- Markup -->
 
-{#if !short && data.errors.length + data.warnings.length > 1}
+{#if data.errors.length + data.warnings.length > 1}
 
 	<div class="multiple">
 		<button class="error" on:click={show_errors} use:tooltip={error_dropdown ? 'Hide errors' : 'Show errors'} >
@@ -57,13 +57,16 @@
 		{#if error_dropdown}
 			<div class="dropdown" use:clickoutside={hide_errors}>
 				{#each data.errors as error}
-					<div class="item error">
+					<span class="error">
 						<img src={errorIcon} alt="" />
-						<span class="short"> {error.short} </span>
-						{#if error.long}
-							<span class="long"> {error.long} </span>
+						{error.short}
+						{#if error.tab !== undefined && error.tab !== null}
+							<button on:click={() => {
+								if (error.tab !== undefined && error.id !== undefined)
+									scroll_to_anchor(error.tab, error.id)
+							}}>(show)</button>
 						{/if}
-					</div>
+					</span>
 				{/each}
 
 				{#if data.errors.length === 0}
@@ -75,13 +78,16 @@
 		{#if warning_dropdown}
 			<div class="dropdown" use:clickoutside={hide_warnings}>
 				{#each data.warnings as warning}
-					<div class="item warning">
+					<span class="warning">
 						<img src={warningIcon} alt="" />
-						<span class="short"> {warning.short} </span>
-						{#if warning.long}
-							<span class="long"> {warning.long} </span>
+						{data.warnings[0].short}
+						{#if data.warnings[0].tab !== undefined}
+							<button on:click={() => {
+								if (warning.tab !== undefined && warning.id !== undefined)
+									scroll_to_anchor(warning.tab, warning.id)
+							}}>(show)</button>
 						{/if}
-					</div>
+					 </span>
 				{/each}
 
 				{#if data.warnings.length === 0}
@@ -94,16 +100,24 @@
 {:else if data.severity === 'error'}
 
 	<span class="error">
-		<img src={errorIcon} alt="" /> {data.errors[0].short}
+		<img src={errorIcon} alt="" />
+		{data.errors[0].short}
+		{#if data.errors[0].tab !== undefined}
+			jemeoder
+		{/if}
 	</span>
 
 {:else if data.severity === 'warning'}
 
 	<span class="warning">
-		<img src={warningIcon} alt="" /> {data.warnings[0].short}
+		<img src={warningIcon} alt="" />
+		{data.warnings[0].short}
+		{#if data.warnings[0].tab !== undefined}
+			jemeoder
+		{/if}
 	</span>
 
-{:else if !short}
+{:else}
 
 	<span class="success">
 		<img src={successIcon} alt=""> Everything is good!
@@ -131,6 +145,10 @@
 			grid-area: icon
 
 			pointer-events: none
+		
+		button
+			text-decoration: underline
+			font-size: 0.85rem
 
 	.grayed
 		color: $gray
