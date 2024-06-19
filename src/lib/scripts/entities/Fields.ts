@@ -5,8 +5,6 @@ import { DropdownOption } from './DropdownOption'
 import { styles } from '../settings'
 import { Graph } from './Graph'
 
-import type { UUID } from './Graph'
-
 // Exports
 export { Field, Domain, Subject }
 export type { SerializedDomain, SerializedSubject }
@@ -15,24 +13,26 @@ export type { SerializedDomain, SerializedSubject }
 // --------------------> Types
 
 
+type ID = number;
+
 type SerializedDomain = {
-	uuid: UUID,
+	id: ID,
 	x: number,
 	y: number,
 	style: string,
 	name: string,
-	parents: UUID[],
-	children: UUID[]
+	parents: ID[],
+	children: ID[]
 }
 
 type SerializedSubject = {
-	uuid: UUID,
+	id: number,
 	x: number,
 	y: number,
-	domain: UUID,
+	domain: ID,
 	name: string,
-	parents: UUID[],
-	children: UUID[]
+	parents: ID[],
+	children: ID[]
 }
 
 
@@ -43,7 +43,7 @@ abstract class Field<T extends Domain | Subject> {
 	constructor(
 		public graph: Graph,
 		public index: number,
-		public uuid: string,
+		public id: ID,
 		public x: number,
 		public y: number,
 		public name: string,
@@ -63,7 +63,7 @@ class Domain extends Field<Domain> {
 	constructor(
 		graph: Graph,
 		index: number,
-		uuid: string,
+		id: ID,
 		x: number = 0,
 		y: number = 0,
 		style?: string,
@@ -71,7 +71,7 @@ class Domain extends Field<Domain> {
 		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
-		super(graph, index, uuid, x, y, name, parents, children)
+		super(graph, index, id, x, y, name, parents, children)
 		this.style = style
 	}
 
@@ -134,14 +134,7 @@ class Domain extends Field<Domain> {
 			break
 		}
 
-		// Create domain
-		const domain = new Domain(
-			graph,
-			graph.domains.length,
-			Graph.generateUUID(),
-			0, 0, // TODO find non-overlapping coordinates
-			style
-		)
+		// TODO: create a new empty domain on the server side and return it
 
 		graph.domains.push(domain)
 		return domain
@@ -196,13 +189,13 @@ class Domain extends Field<Domain> {
 			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			x: this.x,
 			y: this.y,
 			style: this.style!,
 			name: this.name,
-			parents: this.parents.map(parent => parent.uuid),
-			children: this.children.map(child => child.uuid)
+			parents: this.parents.map(parent => parent.id),
+			children: this.children.map(child => child.id)
 		}
 	}
 
@@ -241,7 +234,7 @@ class Subject extends Field<Subject> {
 	constructor(
 		graph: Graph,
 		index: number,
-		uuid: string,
+		id: ID,
 		x: number = 0,
 		y: number = 0,
 		domain?: Domain,
@@ -249,7 +242,7 @@ class Subject extends Field<Subject> {
 		parents: Subject[] = [],
 		children: Subject[] = []
 	) {
-		super(graph, index, uuid, x, y, name, parents, children)
+		super(graph, index, id, x, y, name, parents, children)
 		this.domain = domain
 	}
 
@@ -289,12 +282,7 @@ class Subject extends Field<Subject> {
 	static create(graph: Graph): Subject {
 		/* Create this subject */
 
-		const subject = new Subject(
-			graph,
-			graph.subjects.length,
-			Graph.generateUUID(),
-			0, 0 // TODO find non-overlapping coordinates
-		)
+		// TODO: create a new empty subject on the server side and return it
 
 		graph.subjects.push(subject)
 		return subject
@@ -336,13 +324,13 @@ class Subject extends Field<Subject> {
 			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			x: this.x,
 			y: this.y,
-			domain: this.domain!.uuid,
+			domain: this.domain!.id,
 			name: this.name,
-			parents: this.parents.map(parent => parent.uuid),
-			children: this.children.map(child => child.uuid)
+			parents: this.parents.map(parent => parent.id),
+			children: this.children.map(child => child.id)
 		}
 	}
 

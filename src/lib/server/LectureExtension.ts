@@ -1,6 +1,7 @@
 import prisma from '$lib/server/prisma';
 
 import type { SerializedLecture } from '$scripts/entities';
+import type { Lecture } from '@prisma/client';
 
 
 const dto = {
@@ -8,7 +9,7 @@ const dto = {
 		id: true,
 		name: true
 	},
-	async compute(lecture): Promise<SerializedLecture> {
+	async compute(lecture: Lecture): Promise<SerializedLecture> {
 		let subjects = await prisma.subject.findMany({
 			where: {
 				lectures: {
@@ -19,7 +20,7 @@ const dto = {
 			}
 		});
 		return {
-			uuid: lecture.id,
+			id: lecture.id,
 			name: lecture.name,
 			subjects: subjects.map(s => s.dto)
 		}

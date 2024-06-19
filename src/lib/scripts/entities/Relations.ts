@@ -10,12 +10,12 @@ export { Relation, DomainRelation, SubjectRelation }
 
 
 // --------------------> Classes
-
+type ID = number;
 
 abstract class Relation<T extends Domain | Subject> {
 	constructor (
 		public graph: Graph,
-		public uuid: string,
+		public id: ID,
 		public index: number,
 		private _parent?: T,
 		private _child?: T
@@ -111,11 +111,7 @@ class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph): DomainRelation {
 		/* Create this domain relation */
 
-		const relation = new DomainRelation(
-			graph,
-			Graph.generateUUID(),
-			graph.domain_relations.length
-		)
+		// TODO: create a new empty domain relation on the server side and return it
 
 		graph.domain_relations.push(relation)
 		return relation
@@ -255,11 +251,7 @@ class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph): SubjectRelation {
 		/* Create this subject relation */
 
-		const relation = new SubjectRelation(
-			graph,
-			Graph.generateUUID(),
-			graph.subject_relations.length
-		)
+		// TODO: create a new empty subject relation on the server side and return it
 
 		graph.subject_relations.push(relation)
 		return relation

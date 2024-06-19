@@ -39,11 +39,11 @@
 		},
 		{
 			name: graph.name,
-			href: `/course/${course.code}/graph/${graph.uuid}/overview`
+			href: `/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
 			name: "Edit",
-			href: `/course/${course.code}/graph/${graph.uuid}/edit`
+			href: `/course/${course.code}/graph/${graph.id}/edit`
 		}
 	]}
 >
@@ -51,7 +51,7 @@
 	<svelte:fragment slot="toolbar">
 		<Button on:click={graphInterface.findGraph}> Find Graph </Button>
 		<div class="flex-spacer" />
-		<LinkButton href={`/course/${course.code}/graph/${graph.uuid}/settings`}> Settings </LinkButton>
+		<LinkButton href={`/course/${course.code}/graph/${graph.id}/settings`}> Settings </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 

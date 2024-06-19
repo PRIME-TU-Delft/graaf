@@ -481,7 +481,7 @@ class GraphSVG {
 
 		// Update Fields
 		content.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-			.data(fields, field => field.uuid)
+			.data(fields, field => field.id)
 			.join(
 				function(enter) {
 					return enter
@@ -510,7 +510,7 @@ class GraphSVG {
 
 		// Update relations
 		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
-			.data(relations, relation => relation.uuid)
+			.data(relations, relation => relation.id)
 			.join(
 				function(enter) {
 					return enter

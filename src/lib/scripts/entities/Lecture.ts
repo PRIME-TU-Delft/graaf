@@ -4,7 +4,7 @@ import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
 import { SubjectRelation } from './Relations'
 import { Subject } from './Fields'
-import { Graph, type UUID } from './Graph'
+import { Graph } from './Graph'
 
 // Exports
 export { Lecture, LectureSubject, type SerializedLecture }
@@ -12,11 +12,12 @@ export { Lecture, LectureSubject, type SerializedLecture }
 
 // --------------------> Type
 
+type ID = number;
 
 type SerializedLecture = {
-	uuid: UUID,
+	id: ID,
 	name: string,
-	subjects: UUID[]
+	subjects: ID[]
 }
 
 // --------------------> Classes
@@ -77,7 +78,7 @@ class LectureSubject {
 class Lecture {
 	constructor(
 		public graph: Graph,
-		public uuid: UUID,
+		public id: ID,
 		public index: number,
 		public name: string = '',
 		public lecture_subjects: LectureSubject[] = []
@@ -163,11 +164,7 @@ class Lecture {
 	static create(graph: Graph): Lecture {
 		/* Create a new lecture */
 
-		const lecture = new Lecture(
-			graph,
-			Graph.generateUUID(),
-			graph.lectures.length
-		)
+		// TODO: create a new empty lecture on the server side and return it
 
 		graph.lectures.push(lecture)
 		return lecture
@@ -213,9 +210,9 @@ class Lecture {
 			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			name: this.name,
-			subjects: this.present.map(subject => subject.uuid)
+			subjects: this.present.map(subject => subject.id)
 		}
 	}
 
