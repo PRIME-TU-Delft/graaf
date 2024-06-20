@@ -11,7 +11,7 @@
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import LectureSettings from './LectureSettings.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
-	import Response from '$components/Validation.svelte'
+	import Validation from '$components/Validation.svelte'
 	import SubjectSettings from './SubjectSettings.svelte';
 
 	// Assets
@@ -26,6 +26,22 @@
 
 	$: validation = graph.validate()
 
+	const shake = {
+		keyframes: [
+			{ transform: 'translate3d(0, 0, 0)'},
+			{ transform: 'translate3d(-10px, 0, 0)'},
+			{ transform: 'translate3d(8px, 0, 0)'},
+			{ transform: 'translate3d(-6px, 0, 0)'},
+			{ transform: 'translate3d(4px, 0, 0)'},
+			{ transform: 'translate3d(-2px, 0, 0)'},
+			{ transform: 'translate3d(0, 0, 0)'}
+		],
+		options: {
+			duration: 400,
+			easeing: 'cubic-bezier(.15,.5,.25,.95)',
+		}
+	}
+
 	// Functions
 	function update() {
 		/* Force Svelte update 
@@ -34,6 +50,23 @@
 		 */
 
 		graph = graph
+	}
+
+	function goto_anchor(tab: number, id: string) {
+		if (active_tab === tab) {
+			const element = document.getElementById(id)
+			element?.scrollIntoView({ behavior: 'smooth' })
+			element?.animate(shake.keyframes, shake.options)
+			return
+		}
+
+		active_tab = tab
+		setTimeout(() => {
+			const element = document.getElementById(id)
+			element?.scrollIntoView({ behavior: 'smooth' })
+			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, 150)
+		}, 0)
+		
 	}
 
 </script>
@@ -64,7 +97,7 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Response data={validation} />
+		<Validation data={validation} goto_anchor={goto_anchor} success_msg={'Ready to save'} />
 		<div class="flex-spacer" />
 		<LinkButton href="/app/course/{course.code}/graph/{graph.uuid}/layout"> Edit layout </LinkButton>
 		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>

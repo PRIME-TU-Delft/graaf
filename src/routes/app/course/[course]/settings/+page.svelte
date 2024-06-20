@@ -8,7 +8,7 @@
 	import Button from '$components/Button.svelte'
 	import GeneralSettings from './GeneralSettings.svelte'
 	import Layout from '$layouts/DefaultLayout.svelte'
-	import Response from '$components/Validation.svelte'
+	import Validation from '$components/Validation.svelte'
 	import UserSettings from './UserSettings.svelte'
 
 	// Assets
@@ -23,10 +23,42 @@
 
 	$: validation = course.validate()
 
+	const shake = {
+		keyframes: [
+			{ transform: 'translate3d(0, 0, 0)'},
+			{ transform: 'translate3d(-10px, 0, 0)'},
+			{ transform: 'translate3d(8px, 0, 0)'},
+			{ transform: 'translate3d(-6px, 0, 0)'},
+			{ transform: 'translate3d(4px, 0, 0)'},
+			{ transform: 'translate3d(-2px, 0, 0)'},
+			{ transform: 'translate3d(0, 0, 0)'}
+		],
+		options: {
+			duration: 400,
+			easeing: 'cubic-bezier(.15,.5,.25,.95)',
+		}
+	}
+
 	// Functions
+	function goto_anchor(tab: number, id: string) {
+		if (active_tab === tab) {
+			const element = document.getElementById(id)
+			element?.scrollIntoView({ behavior: 'smooth' })
+			element?.animate(shake.keyframes, shake.options)
+			return
+		}
+
+		active_tab = tab
+		setTimeout(() => {
+			const element = document.getElementById(id)
+			element?.scrollIntoView({ behavior: 'smooth' })
+			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, 150)
+		}, 0)
+	}
+
 	function update() {
 
-		/* Force Svelte update 
+		/* Force Svelte update
 		 * I hate this but svelte forces my hand
 		 * Maybe I should just use a store or wait for Svelte 5
 		 */
@@ -58,21 +90,21 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Response data={validation} />
+		<Validation data={validation} goto_anchor={goto_anchor} success_msg="Ready to save" />
 		<div class="flex-spacer" />
 		<Button disabled={validation.severity === 'error'} on:click={() => course.save()}>
-			<img src={saveIcon} alt=""> Save Changes 
+			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>
 
 	<div class="tabular">
 		<div class="tabs">
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 0}
 				on:click={() => active_tab = 0}
 			> General </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 1}
 				on:click={() => active_tab = 1}
@@ -127,7 +159,7 @@
 
 				&:first-child
 					border-left: none !important
-			
+
 			.dynamic-border
 				border-bottom: 1px solid $gray
 				flex: 1

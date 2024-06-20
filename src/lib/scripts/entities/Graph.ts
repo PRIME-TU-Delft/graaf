@@ -170,11 +170,11 @@ class Graph {
 		// Build domain relations
 		for (const parent_data of data.domains) {
 			const parent = graph.domains.find(domain => domain.uuid === parent_data.uuid)
-			if (!parent) throw new Error('Failed to revive, non-existent UUID in domain relations')
+			if (!parent) continue
 
 			for (const child_uuid of parent_data.children) {
 				const child = graph.domains.find(domain => domain.uuid === child_uuid)
-				if (!child) throw new Error('Failed to revive, non-existent UUID in domain relations')
+				if (!child) continue
 
 				const relation = DomainRelation.create(graph)
 				relation.parent = parent
@@ -185,7 +185,7 @@ class Graph {
 		// Define subjects
 		for (const subject_data of data.subjects) {
 			const domain = graph.domains.find(domain => domain.uuid === subject_data.domain)
-			if (!domain) throw new Error('Failed to revive, non-existent UUID in subjects')
+			if (!domain) continue
 
 			graph.subjects.push(
 				new Subject(
@@ -203,11 +203,11 @@ class Graph {
 		// Build subject relations
 		for (const parent_data of data.subjects) {
 			const parent = graph.subjects.find(subject => subject.uuid === parent_data.uuid)
-			if (!parent) throw new Error('Failed to revive, non-existent UUID in subject relations')
+			if (!parent) continue
 
 			for (const child_uuid of parent_data.children) {
 				const child = graph.subjects.find(subject => subject.uuid === child_uuid)
-				if (!child) throw new Error('Failed to revive, non-existent UUID in subject relations')
+				if (!child) continue
 
 				const relation = SubjectRelation.create(graph)
 				relation.parent = parent
@@ -229,7 +229,7 @@ class Graph {
 			// Define lecture subjects
 			for (const subject_uuid of lecture_data.subjects) {
 				const subject = graph.subjects.find(subject => subject.uuid === subject_uuid)
-				if (!subject) throw new Error('Failed to revive, non-existent UUID in lecture subjects')
+				if (!subject) continue
 
 				const lecture_subject = LectureSubject.create(lecture)
 				lecture_subject.subject = subject
@@ -252,7 +252,13 @@ class Graph {
 
 		// Check if the graph has a name
 		if (this.name === '') {
-			response.add(new Error('Graph must have a name')) 
+			response.add(
+				new Error(
+					'Graph must have a name',
+					undefined,
+					0, 'name'
+				)
+			)
 		}
 
 		// Validate domains, subjects and lectures
@@ -272,9 +278,6 @@ class Graph {
 
 	reduce(): GraphData {
 		/* Reduce graph to a POJO */
-
-		if (this.validate().severity === 'error')
-			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			uuid: this.uuid,

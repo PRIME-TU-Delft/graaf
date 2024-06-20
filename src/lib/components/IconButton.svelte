@@ -11,7 +11,6 @@
 	export let submit: boolean = false
 	export let disabled: boolean = false
 	export let scale: boolean = false
-	export let rotate: boolean = false
 
 	// Property validation
 	$: if (submit && href !== undefined) {
@@ -32,7 +31,7 @@
 		class="icon-button"
 		class:disabled
 		class:scale
-		class:rotate
+		tabindex="-1"
 		use:tooltip={description}
 		on:click
 	>
@@ -46,7 +45,7 @@
 		class="icon-button"
 		class:disabled
 		class:scale
-		class:rotate
+		tabindex="-1"
 		use:tooltip={description}
 		on:click
 	>
@@ -84,12 +83,11 @@
 			.icon
 				filter: $gray-filter
 
-		&:hover, &:focus
+		&:hover
 			.icon
 				filter: $dark-purple-filter
+
 			&.scale .icon
 				scale: $scale-on-hover
-			&.rotate .icon
-				rotate: $rotate-on-hover
 
 </style>

@@ -12,6 +12,7 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
@@ -65,11 +66,12 @@
 		if (!ascending) list.reverse()
 	}
 
-	function icon(state?: boolean): string {
+	function sortIcon(state?: boolean): string {
 		/* Returns the sort icon based on the state */
 
-		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon 
+		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
+
 
 </script>
 
@@ -92,7 +94,7 @@
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
-	
+
 	<!-- Header -->
 	{#if graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
 
@@ -103,11 +105,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> Name </span>
 				<IconButton
-					src={icon(domain_name_sort)}
+					src={sortIcon(domain_name_sort)}
 					on:click={() => {
 						domain_style_sort = undefined
 						domain_name_sort = !domain_name_sort
-						alphabetize(graph.domains, domain => domain.name || '', domain_name_sort)
+						alphabetize(graph.domains, domain => domain.name, domain_name_sort)
 						update()
 					}}
 				/>
@@ -117,7 +119,7 @@
 			<div class="header" style="grid-area: right;">
 				<span> Style </span>
 				<IconButton
-					src={icon(domain_style_sort)}
+					src={sortIcon(domain_style_sort)}
 					on:click={() => {
 						domain_name_sort = undefined
 						domain_style_sort = !domain_style_sort
@@ -138,7 +140,8 @@
 	<!-- Domain list -->
 	{#each graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
-			<div class="row">
+			<div class="row focus" id={domain.uuid}>
+				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
 				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:input={update} />
@@ -175,7 +178,7 @@
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={icon(relation_parent_sort)}
+					src={sortIcon(relation_parent_sort)}
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
@@ -189,7 +192,7 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={icon(relation_child_sort)}
+					src={sortIcon(relation_child_sort)}
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
@@ -210,7 +213,8 @@
 	<!-- List of relations -->
 	{#each graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row">
+			<div class="row" id={relation.uuid}>
+				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
@@ -253,6 +257,8 @@
 			place-items: center center
 			gap: $form-small-gap
 
+			padding-right: calc( $form-small-gap + $icon-width )
+
 			.preview
 				width: $input-icon-size
 				height: $input-icon-size
@@ -268,9 +274,9 @@
 					flex: 1
 
 	.domains .row
-		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
+		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
 
 	.relations .row
-		grid-template: "id delete left left-preview right right-preview" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+		grid-template: "validation id delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 
 </style>

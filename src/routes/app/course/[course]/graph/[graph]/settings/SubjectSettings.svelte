@@ -12,6 +12,7 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -65,6 +66,12 @@
 		if (!ascending) list.reverse()
 	}
 
+	function sortIcon(state?: boolean): string {
+		/* Returns the sort icon based on the state */
+
+		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
+	}
+
 </script>
 
 
@@ -97,7 +104,7 @@
 			<div class="header" style="grid-area: left;">
 				<span> Name </span>
 				<IconButton
-					src={subject_name_sort === undefined ? neutralSortIcon : subject_name_sort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(subject_name_sort)}
 					on:click={() => {
 						subject_domain_sort = undefined
 						subject_name_sort = !subject_name_sort
@@ -111,7 +118,7 @@
 			<div class="header" style="grid-area: right;">
 				<span> Domain </span>
 				<IconButton
-					src={subject_domain_sort === undefined ? neutralSortIcon : subject_domain_sort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(subject_domain_sort)}
 					on:click={() => {
 						subject_name_sort = undefined
 						subject_domain_sort = !subject_domain_sort
@@ -132,7 +139,8 @@
 	<!-- Subject list -->
 	{#each graph.subjects as subject}
 		{#if subjectMatchesQuery(subject_query, subject)}
-			<div class="row">
+			<div class="row" id={subject.uuid}>
+				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
@@ -169,7 +177,7 @@
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={relation_parent_sort === undefined ? neutralSortIcon : relation_parent_sort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(relation_parent_sort)}
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
@@ -183,7 +191,7 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={relation_child_sort === undefined ? neutralSortIcon : relation_child_sort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(relation_child_sort)}
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
@@ -204,7 +212,8 @@
 	<!-- List of relations -->
 	{#each graph.subject_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row">
+			<div class="row" id={relation.uuid}>
+				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
@@ -248,6 +257,8 @@
 			place-items: center center
 			gap: $form-small-gap
 
+			padding-right: calc( $form-small-gap + $icon-width )
+
 			.preview
 				width: $input-icon-size
 				height: $input-icon-size
@@ -261,11 +272,11 @@
 
 				span
 					flex: 1
-	
+
 	.subjects .row
-		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
+		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
 
 	.relations .row
-		grid-template: "id delete left left-preview right right-preview" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+		grid-template: "validation id delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 
 </style>

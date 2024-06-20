@@ -14,13 +14,27 @@
 	// Exports
 	export let data: ValidationData
 	export let short: boolean = false
+	export let success_msg: string = ''
+	export let goto_anchor: (tab: number, id: string) => void = () => {}
 
 	// Variables
+	let dropdown: boolean = false
 	let error_dropdown: boolean = false
 	let warning_dropdown: boolean = false
 
 	// Functions
+	function show_dropdown() {
+		dropdown = true
+		error_dropdown = false
+		warning_dropdown = false
+	}
+
+	function hide_dropdown() {
+		dropdown = false
+	}
+
 	function show_errors() {
+		dropdown = false
 		error_dropdown = true
 		warning_dropdown = false
 	}
@@ -30,6 +44,7 @@
 	}
 
 	function show_warnings() {
+		dropdown = false
 		warning_dropdown = true
 		error_dropdown = false
 	}
@@ -43,73 +58,130 @@
 
 <!-- Markup -->
 
-{#if !short && data.errors.length + data.warnings.length > 1}
 
-	<div class="multiple">
-		<button class="error" on:click={show_errors} use:tooltip={error_dropdown ? 'Hide errors' : 'Show errors'} >
-			<img src={errorIcon} alt="" /> {data.errors.length}
-		</button>
+<div class="validation">
 
-		<button class="warning" on:click={show_warnings} use:tooltip={warning_dropdown ? 'Hide warnings' : 'Show warnings'} >
-			<img src={warningIcon} alt=""> {data.warnings.length}
-		</button>
 
-		{#if error_dropdown}
-			<div class="dropdown" use:clickoutside={hide_errors}>
+
+	{#if short}
+
+		{#if data.severity !== 'success'}
+			<button
+				class={data.severity === 'error' ? 'error toggle' : 'warning toggle'}
+				on:click={show_dropdown} 
+				use:tooltip={`
+					${dropdown ? 'Hide' : 'Show'}
+					${data.errors.length > 0 ? 'errors' : ''}
+					${data.errors.length > 0 && data.warnings.length > 0 ? ' & ' : ''}
+					${data.warnings.length > 0 ? 'warnings' : ''}
+					`
+				}
+			>
+				<img 
+					src={data.severity === 'error' ? errorIcon : warningIcon}
+					alt=""
+				>
+			</button>
+		{/if}
+		
+		{#if dropdown}
+			<div class="dropdown" use:clickoutside={hide_dropdown}>
 				{#each data.errors as error}
-					<div class="item error">
+					<div class="error item">
 						<img src={errorIcon} alt="" />
 						<span class="short"> {error.short} </span>
-						{#if error.long}
+	
+						{#if error.long !== undefined}
 							<span class="long"> {error.long} </span>
 						{/if}
 					</div>
 				{/each}
 
-				{#if data.errors.length === 0}
-					<span class="grayed"> No errors </span>
-				{/if}
-			</div>
-		{/if}
-
-		{#if warning_dropdown}
-			<div class="dropdown" use:clickoutside={hide_warnings}>
 				{#each data.warnings as warning}
-					<div class="item warning">
+					<div class="warning item">
 						<img src={warningIcon} alt="" />
 						<span class="short"> {warning.short} </span>
-						{#if warning.long}
+						
+						{#if warning.long !== undefined}
 							<span class="long"> {warning.long} </span>
 						{/if}
 					</div>
 				{/each}
-
-				{#if data.warnings.length === 0}
-					<span class="grayed"> No warnings </span>
-				{/if}
 			</div>
 		{/if}
-	</div>
 
-{:else if data.severity === 'error'}
+	{:else}
 
-	<span class="error">
-		<img src={errorIcon} alt="" /> {data.errors[0].short}
-	</span>
+		{#if data.errors.length > 0}
+			<button class="error toggle" on:click={show_errors} use:tooltip={error_dropdown ? 'Hide errors' : 'Show errors'} >
+				<img src={errorIcon} alt="" /> {data.errors.length}
+			</button>
 
-{:else if data.severity === 'warning'}
+			{#if error_dropdown}
+				<div class="dropdown" use:clickoutside={hide_errors}>
+					{#each data.errors as error}
+						<div class="error item">
+							<img src={errorIcon} alt="" />
+							<span class="short"> {error.short} </span>
 
-	<span class="warning">
-		<img src={warningIcon} alt="" /> {data.warnings[0].short}
-	</span>
+							{#if error.tab !== undefined && error.id !== undefined}
+								<span class="show">
+									(<button on:click={() => {
+										hide_errors()
+										if (error.tab !== undefined && error.id !== undefined)
+											goto_anchor(error.tab, error.id)
+									}}> show </button>)
+								</span>
+							{/if}
 
-{:else if !short}
+							{#if error.long !== undefined}
+								<span class="long"> {error.long} </span>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
 
-	<span class="success">
-		<img src={successIcon} alt=""> Everything is good!
-	</span>
+		{#if data.warnings.length > 0}
+			<button class="warning toggle" on:click={show_warnings} use:tooltip={warning_dropdown ? 'Hide warnings' : 'Show warnings'} >
+				<img src={warningIcon} alt="" /> {data.warnings.length}
+			</button>
 
-{/if}
+			{#if warning_dropdown}
+				<div class="dropdown" use:clickoutside={hide_warnings}>
+					{#each data.warnings as warning}
+						<div class="warning item">
+							<img src={warningIcon} alt="" />
+							<span class="short"> {warning.short} </span>
+
+							{#if warning.tab !== undefined && warning.id !== undefined}
+								<span class="show">
+									(<button on:click={() => {
+										hide_warnings()
+										if (warning.tab !== undefined && warning.id !== undefined)
+											goto_anchor(warning.tab, warning.id)
+									}}> show </button>)
+								</span>
+							{/if}
+
+							{#if warning.long !== undefined}
+								<span class="long"> {warning.long} </span>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
+
+		{#if data.severity === 'success'}
+			<span class="success">
+				<img src={successIcon} alt=""> {success_msg} 
+			</span>
+		{/if}
+
+	{/if}
+</div>
 
 
 <!-- Styles -->
@@ -120,51 +192,48 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.error, .warning, .success, .multiple
+	.validation
 		display: flex
-		align-items: center
-		gap: $form-small-gap
+		position: relative
+		gap: $input-thin-padding
 
-		img
-			width: $input-icon-size
-			height: $input-icon-size
-			grid-area: icon
+		.success
+			display: flex
+			align-items: center
+			gap: $input-thin-padding
+			color: $green
 
-			pointer-events: none
+			img
+				width: $input-icon-size
+				height: $input-icon-size
+				filter: $green-filter
 
-	.grayed
-		color: $gray
-
-	.error
-		color: $red
-		img
-			filter: $red-filter
-
-	.warning
-		color: $yellow
-		img
+		.warning
+			color: $yellow
 			filter: $yellow-filter
 
-	.success
-		color: $green
-		img
-			filter: $green-filter
+		.error
+			color: $red
+			filter: $red-filter
 
-	.multiple
-		position: relative
-
-		button
+		.toggle
+			display: flex
+			align-items: center
+			gap: $input-thin-padding
 			cursor: pointer
+
+			img
+				width: $input-icon-size
+				height: $input-icon-size
+				cursor: pointer
 
 		.dropdown
 			position: absolute
-			top: calc(100% + $form-small-gap)
+			top: calc( 100% + $input-thin-padding )
 			z-index: 1
 
 			width: max-content
-			max-height: $max-dropdown-height
 			padding: $card-thin-padding
-			overflow-y: scroll
 
 			background: $white
 			border: 1px solid $gray
@@ -172,12 +241,26 @@
 
 			.item
 				display: grid
-				place-items: center start
-				grid-template: "icon short" auto ". long" auto / $input-icon-size 1fr
-				row-gap: 0 // I dont understand why gap is inherited, but oh well
+				grid-template: "icon short show" auto "icon long long" auto / $input-icon-size auto 1fr
+				column-gap: $input-thin-padding
+
+				img
+					grid-area: icon
+
+					width: $input-icon-size
+					height: $input-icon-size
+					margin-top: $input-icon-padding
 
 				.short
 					grid-area: short
+
+				.show
+					grid-area: show
+					place-self: center start
+					font-size: 0.8rem
+
+					button
+						text-decoration: underline
 
 				.long
 					grid-area: long

@@ -10,10 +10,12 @@
 	import IconButton from '$components/IconButton.svelte';
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte';
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
+	import { validate } from 'uuid';
 
 	// Exports
 	export let graph: Graph
@@ -25,7 +27,7 @@
 	// Functions
 	function lectureMatchesQuery(query: string, lecture: Lecture): boolean {
 		/* Checks if query appears in lecture */
-	
+
 		if (!query) return true
 		query = query.toLowerCase()
 
@@ -66,12 +68,13 @@
 		<!-- List of lectures -->
 		{#each graph.lectures as lecture}
 			{#if lectureMatchesQuery(query, lecture)}
-				<div class="lecture">
+				<div class="lecture" id={lecture.uuid}>
+					<Validation short data={lecture.validate()} />
 					<span> {lecture.index + 1} </span>
 					<IconButton scale src={trashIcon} on:click={() => { lecture.delete(); update() }} />
 					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} on:input={update} />
 					<Button on:click={() => { LectureSubject.create(lecture); update() }}> Add Subject </Button>
-					
+
 					<div class="subjects" style="grid-area: subjects;">
 						{#each lecture.lecture_subjects as lecture_subject, n}
 							<span> {n + 1} </span>
@@ -83,7 +86,7 @@
 				</div>
 			{/if}
 		{/each}
-	
+
 	{:else}
 
 		<!-- If no domains were found that match the search -->
@@ -102,7 +105,6 @@
 	@use "$styles/palette.sass" as *
 
 	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
-	$gutter-width: calc($icon-width + $form-small-gap)
 
 	.editor
 		display: flex
@@ -115,16 +117,18 @@
 			flex-flow: row nowrap
 			margin-bottom: $form-big-gap
 			gap: $form-small-gap
-	
+
 		.empty
 			margin: auto
 			color: $gray
 
 		.lecture
 			display: grid
-			grid-template: "id delete name add-lecture" auto "subjects subjects subjects subjects" auto / $icon-width $icon-width 1fr auto
+			grid-template: "validation id delete name add-lecture" auto "subjects subjects subjects subjects subjects" auto / $icon-width $icon-width $icon-width 1fr auto
 			place-items: center center
 			gap: $form-small-gap
+
+			padding-right: calc($icon-width + $form-small-gap)
 
 			.subjects
 				display: grid
@@ -133,9 +137,9 @@
 				gap: $form-small-gap
 
 				place-self: center stretch
-				padding-left: $gutter-width
+				margin-left: calc($icon-width * 2 + $form-small-gap * 1.5)
+				padding-left: calc($icon-width + $form-small-gap)
 				border-left: 1px solid $gray
-				margin-left: $gutter-width
 
 				.preview
 					width: $input-icon-size
