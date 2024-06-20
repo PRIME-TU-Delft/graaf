@@ -7,9 +7,10 @@
 	// Components
 	import Button from '$components/Button.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
-	import IconButton from '$components/IconButton.svelte';
+	import IconButton from '$components/IconButton.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
-	import Textfield from '$components/Textfield.svelte';
+	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
@@ -70,49 +71,60 @@
 		<Button on:click={() => { AssignedUser.create(course); update() }}> Add User </Button>
 	</div>
 
-	<!-- Header -->
-	<div class=row>
+	{#if course.users.some(user => userMatchesQuery(query, user))}
 
-		<!-- Name label and sort button -->
-		<div class="header" style="grid-area: name;">
-			<span> Name </span>
-			<IconButton
-				src={icon(name_sort)}
-				on:click={() => {
-					permission_sort = undefined
-					name_sort = !name_sort
-					alphabetize(course.users, user => user.name, name_sort)
-					update()
-				}}
-			/>
-		</div>
+		<!-- Header -->
+		<div class=row>
 
-		<!-- Permissions label and sort button -->
-		<div class="header" style="grid-area: permissions;">
-			<span> Permissions </span>
-			<IconButton
-				src={icon(permission_sort)}
-				on:click={() => {
-					name_sort = undefined
-					permission_sort = !permission_sort
-					alphabetize(course.users, assigned => assigned.permissions?.toString() || '', permission_sort)
-					update()
-				}}
-			/>
-		</div>
-	</div>
-
-	<!-- Domain list -->
-	{#each course.users as user}
-		{#if userMatchesQuery(query, user)}
-			<div class="row">
-				{user.index + 1}
-				<IconButton scale src={trashIcon} on:click={() => { user.delete(); update() }} />
-				<Textfield label="Name" bind:value={user.name} on:input={update}/>
-				<Dropdown label="Permissions" placeholder="Permission" options={course.permission_options} bind:value={user.permissions} on:input={update}/>
+			<!-- Name label and sort button -->
+			<div class="header" style="grid-area: name;">
+				<span> Name </span>
+				<IconButton
+					src={icon(name_sort)}
+					on:click={() => {
+						permission_sort = undefined
+						name_sort = !name_sort
+						alphabetize(course.users, user => user.name, name_sort)
+						update()
+					}}
+				/>
 			</div>
-		{/if}
-	{/each}
+
+			<!-- Permissions label and sort button -->
+			<div class="header" style="grid-area: permissions;">
+				<span> Permissions </span>
+				<IconButton
+					src={icon(permission_sort)}
+					on:click={() => {
+						name_sort = undefined
+						permission_sort = !permission_sort
+						alphabetize(course.users, assigned => assigned.permissions?.toString() || '', permission_sort)
+						update()
+					}}
+				/>
+			</div>
+		</div>
+
+		<!-- Domain list -->
+		{#each course.users as user}
+			{#if userMatchesQuery(query, user)}
+				<div class="row" id={user.uuid}>
+					<Validation short data={user.validate()} />
+					{user.index + 1}
+					<IconButton scale src={trashIcon} on:click={() => { user.delete(); update() }} />
+					<Textfield label="Name" bind:value={user.name} on:input={update}/>
+					<Dropdown label="Permissions" placeholder="Permission" options={course.permission_options} bind:value={user.permissions} on:input={update}/>
+				</div>
+			{/if}
+		{/each}
+
+	{:else}
+
+		<!-- If no relations were found that match the search -->
+		<h6 class="grayed"> No relations found </h6>
+
+	{/if}
+
 </div>
 
 
@@ -132,6 +144,10 @@
 		padding: $card-thick-padding
 		gap: $form-small-gap
 
+		.grayed
+			margin: auto
+			color: $gray
+
 		.toolbar
 			display: flex
 			margin-bottom: $form-big-gap
@@ -139,9 +155,11 @@
 
 		.row
 			display: grid
-			grid-template: "id delete name permissions" auto / $icon-width $icon-width 1fr 1fr
+			grid-template: "validation id delete name permissions" auto / $icon-width $icon-width $icon-width 1fr 1fr
 			place-items: center center
 			gap: $form-small-gap
+
+			padding-right: calc($icon-width + $form-small-gap)
 
 			span
 				width: 100%

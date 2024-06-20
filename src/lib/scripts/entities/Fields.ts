@@ -115,8 +115,10 @@ class Domain extends Field<Domain> {
 			const response = new ValidationData()
 
 			// Check if the style is already used
-			if (this.graph.domains.some(domain => this !== domain && domain.style === style)) {
-				response.add(new Warning('Duplicate style'))
+			const first = this.graph.domains.findIndex(domain => domain.style === style)
+			const index = this.graph.domains.indexOf(this, first + 1)
+			if (first !== -1) {
+				response.add(new Warning('Style is already used by another domain',))
 			}
 
 			options.push(new DropdownOption(value.display_name, style, response))
@@ -157,37 +159,47 @@ class Domain extends Field<Domain> {
 		// Check if the domain has a name
 		if (this.name === '') {
 			response.add(new Error(
-				'Domain must have a name', 
-				'Please provide a name for this domain',
+				'Domain must have a name',
+				undefined,
 				1, this.uuid
 			))
 		}
 
 		// Check if the domain has a unique name
-		else if (this.graph.domains.some(domain => domain !== this && domain.name === this.name)) {
-			response.add(new Error(
-				'Domain has duplicate name',
-				'Please provide a name no other domain has', 
-				1, this.uuid
-			))
+		else {
+			const first = this.graph.domains.findIndex(domain => domain === this)
+			const index = this.graph.domains.indexOf(this, first + 1)
+
+			if (index !== -1) {
+				response.add(new Error(
+					'Domain must have a unique name',
+					`Name first used by Domain nr. ${first + 1}`,
+					1, this.uuid
+				))
+			}
 		}
 
 		// Check if the domain has a style
 		if (this.style === undefined) {
 			response.add(new Error(
 				'Domain must have a style',
-				'Please select a style for this domain',
+				undefined,
 				1, this.uuid
 			))
 		}
 
 		// Check if the domain has a unique style
-		else if (this.graph.domains.some(domain => domain !== this && domain.style === this.style)) {
-			response.add(new Error(
-				'Domain has duplicate style',
-				'It might be hard to distinguish between domains with the same style',
-				1, this.uuid
-			))
+		else {
+			const first = this.graph.domains.findIndex(domain => domain === this)
+			const index = this.graph.domains.indexOf(this, first + 1)
+
+			if (index !== -1) {
+				response.add(new Error(
+					'Domain must have a unique style',
+					`Style first used by Domain nr. ${first + 1}`,
+					1, this.uuid
+				))
+			}
 		}
 
 		// Check if the domain has subjects
@@ -319,26 +331,31 @@ class Subject extends Field<Subject> {
 		if (this.name === '') {
 			response.add(new Error(
 				'Subject must have a name',
-				'Please provide a name for this subject',
-				1, this.uuid
+				undefined,
+				2, this.uuid
 			))
 		}
 
 		// Check if the name is unique
-		else if (this.graph.subjects.some(subject => subject !== this && subject.name === this.name)) {
-			response.add(new Error(
-				'Subject has duplicate name',
-				'Please provide a name no other subject has',
-				1, this.uuid
-			))
+		else {
+			const first = this.graph.subjects.findIndex(subject => subject === this)
+			const index = this.graph.subjects.indexOf(this, first + 1)
+
+			if (index !== -1) {
+				response.add(new Error(
+					'Subject must have a unique name',
+					`Name first used by Subject nr. ${first + 1}`,
+					2, this.uuid
+				))
+			}
 		}
 
 		// Check if the subject has a domain
 		if (this.domain === undefined) {
 			response.add(new Error(
 				'Subject must have a domain',
-				'Please assign a domain to this subject',
-				1, this.uuid
+				undefined,
+				2, this.uuid
 			))
 		}
 

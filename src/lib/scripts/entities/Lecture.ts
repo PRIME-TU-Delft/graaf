@@ -1,6 +1,6 @@
 
 // Internal imports
-import { ValidationData, Error, Warning } from './ValidationData'
+import { ValidationData, Error } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
 
 import { Graph } from './Graph'
@@ -183,38 +183,59 @@ class Lecture {
 		const response = new ValidationData()
 
 		// Check if the lecture has a name
-		if (this.name === '')
-			response.add(new Error(`Lecture (${this.index + 1}) has no name`))
+		if (this.name === '') {
+			response.add(
+				new Error(
+					'Lecture has no name',
+					undefined,
+					3, this.uuid
+				)
+			)
+		}
 
 		// Check if the name is unique
 		else {
-			const first = this.graph.lectures.findIndex(lecture => lecture.name === this.name)
-			if (first < this.graph.lectures.indexOf(this)) {
+			const first = this.graph.lectures.findIndex(lecture => lecture === this)
+			const index = this.graph.lectures.indexOf(this, first + 1)
+
+			if (index !== -1) {
 				response.add(
-					new Warning(
-						`Lecture (${this.index + 1}) name isn\'t unique`,
-						`First used by lecture (${this.graph.lectures[first].index + 1})`
+					new Error(
+						'Lecture name must be unique',
+						`Name first used by Lecture nr. ${first + 1}`,
+						3, this.uuid
 					)
 				)
 			}
 		}
 
 		// Check if the lecture has subjects
-		if (!this.lecture_subjects.length)
-			response.add(new Error(`Lecture (${this.index + 1}) has no subjects`))
+		if (this.lecture_subjects.length === 0) {
+			response.add(
+				new Error(
+					'Lecture has no subjects',
+					undefined,
+					3, this.uuid
+				)
+			)
+		}
 
 		// Check if the lecture has undefined subjects
-		else if (this.lecture_subjects.some(subject => !subject))
-			response.add(new Error(`Lecture (${this.index + 1}) has undefined subjects`))
+		else if (this.lecture_subjects.some(lecture_subject => !lecture_subject.subject)) {
+			response.add(
+				new Error(
+					'Lecture has undefined subjects',
+					'Make sure all subjects are defined',
+					3, this.uuid
+				)
+			)
+		}
 
 		return response
 	}
 
 	reduce(): LectureData {
 		/* Serialize lecture to a POJO */
-
-		if (this.validate().severity === 'error')
-			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			uuid: this.uuid,

@@ -81,6 +81,9 @@
 
 		color: $dark-gray
 		cursor: text
+
+		&:focus
+			border-color: $tudelft-blue
 	
 	div
 		width: 100%

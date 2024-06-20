@@ -1,4 +1,6 @@
 
+import * as uuid from 'uuid'
+
 // Internal imports
 import { ValidationData, Error } from "./ValidationData"
 import { DropdownOption } from "./DropdownOption"
@@ -35,6 +37,7 @@ enum Permissions {
 class AssignedUser {
 	constructor(
 		public course: Course,
+		public uuid: string,
 		public index: number,
 		public name: string = '',
 		public permissions?: Permissions
@@ -43,7 +46,11 @@ class AssignedUser {
 	static create(course: Course) {
 		/* Create a new assigned user */
 
-		const user = new AssignedUser(course, course.users.length)
+		const user = new AssignedUser(
+			course,
+			uuid.v4(),
+			course.users.length
+		)
 		course.users.push(user)
 		return user
 	}
@@ -55,12 +62,24 @@ class AssignedUser {
 
 		// Check if the user name is valid
 		if (this.name === '') {
-			response.add(new Error(`User (${this.index + 1}) must have a name`))
+			response.add(
+				new Error(
+					'User must have a name',
+					undefined,
+					1, this.uuid
+				)
+			)
 		}
 
 		// Check if the user has permissions
 		if (this.permissions === undefined) {
-			response.add(new Error(`User (${this.index + 1}) must have permissions`))
+			response.add(
+				new Error(
+					'User must have permissions',
+					undefined,
+					1, this.uuid
+				)
+			)
 		}
 
 		return response
@@ -68,10 +87,6 @@ class AssignedUser {
 
 	reduce(): AssignedUserData {
 		/* Reduce the assigned user to a POJO */
-
-		if (this.validate().severity === 'error') {
-			throw new Error('Cannot reduce invalid user')
-		}
 
 		return {
 			name: this.name,
@@ -125,22 +140,46 @@ class Course {
 
 		// Check if the course code is valid
 		if (this.code === '') {
-			response.add(new Error('Course must have a code'))
+			response.add(
+				new Error(
+					'Course must have a code',
+					undefined,
+					0, 'code'
+				)
+			)
 		}
 
 		// Check if the course name is valid
 		if (this.name === '') {
-			response.add(new Error('Course must have a name'))
+			response.add(
+				new Error(
+					'Course must have a name',
+					undefined,
+					0, 'name'
+				)
+			)
 		}
 
 		// Check if the course has users
 		if (this.users.length === 0) {
-			response.add(new Error('Course must have users'))
+			response.add(
+				new Error(
+					'Course must have users',
+					undefined,
+					1, ''
+				)
+			)
 		}
 
 		// Check if the course has an admin
-		if (!this.users.some(user => user.permissions === Permissions.admin)) {
-			response.add(new Error('Course must have an admin'))
+		else if (!this.users.some(user => user.permissions === Permissions.admin)) {
+			response.add(
+				new Error(
+					'Course must have an admin',
+					undefined,
+					1, ''
+				)
+			)
 		}
 
 		// Validate the users
@@ -154,10 +193,6 @@ class Course {
 	reduce(): CourseData {
 		/* Reduce the course to a POJO */
 
-		if (this.validate().severity === 'error') {
-			throw new Error('Cannot reduce invalid course')
-		}
-
 		return {
 			code: this.code,
 			name: this.name,
@@ -167,13 +202,9 @@ class Course {
 
 	save() {
 		/* Save the course */
-
-		throw new Error('Not implemented')
 	}
 
 	delete() {
 		/* Delete the course */
-
-		throw new Error('Not implemented')
 	}
 }

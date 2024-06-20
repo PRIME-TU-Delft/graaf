@@ -127,9 +127,9 @@ class DomainRelation extends Relation<Domain> {
 		if (!parent || !child) return false
 
 		const first = this.graph.domain_relations.findIndex(relation => relation.parent === parent && relation.child === child)
-		const index = this.graph.domain_relations.indexOf(this)
+		const index = this.graph.domain_relations.indexOf(this, first + 1)
 
-		return first >= 0 && first < index
+		return index !== -1
 	}
 
 	private isConsistent(parent?: Domain, child?: Domain): boolean {
@@ -220,12 +220,26 @@ class DomainRelation extends Relation<Domain> {
 		const response = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.defined)
-			response.add(new Error(`Domain relation (${this.index + 1}) is not fully defined`))
+		if (!this.defined) {
+			response.add(
+				new Error(
+					'Domain relation is not fully defined',
+					'Both the parent and child domains must be selected',
+					1, this.uuid
+				)
+			)
+		}
 
 		// Check if the relation is consistent
-		if (!this.isConsistent(this.parent, this.child))
-			response.add(new Warning(`Domain relation (${this.index + 1}) is inconsistent`, 'The subjects of these domains are not related'))
+		if (!this.isConsistent(this.parent, this.child)) {
+			response.add(
+				new Warning(
+					'Domain relation is inconsistent',
+					'The subjects of these domains are not related',
+					1, this.uuid
+				)
+			)
+		}
 
 		return response
 	}
@@ -367,12 +381,26 @@ class SubjectRelation extends Relation<Subject> {
 		const response = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.defined)
-			response.add(new Error(`Subject relation (${this.index + 1}) is not fully defined`))
+		if (!this.defined) {
+			response.add(
+				new Error(
+					'Subject relation is not fully defined',
+					'Both the parent and child subjects must be selected',
+					2, this.uuid
+				)
+			)
+		}
 
 		// Check if the relation is consistent
-		if (!this.isConsistent(this.parent, this.child))
-			response.add(new Warning(`Subject relation (${this.index + 1}) is inconsistent`, 'The subjects of these domains are not related'))
+		if (!this.isConsistent(this.parent, this.child)) {
+			response.add(
+				new Warning(
+					'Subject relation is inconsistent',
+					'The domains of these subjects are not related',
+					2, this.uuid
+				)
+			)
+		}
 
 		return response
 	}
