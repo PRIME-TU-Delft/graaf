@@ -245,13 +245,19 @@ class Graph {
 		return uuid.v4()
 	}
 
+	private hasName(): boolean {
+		/* Check if the graph has a name */
+
+		return this.name !== ''
+	}
+
 	validate(): ValidationData {
 		/* Validate the graph */
 
 		const response = new ValidationData()
 
 		// Check if the graph has a name
-		if (this.name === '') {
+		if (!this.hasName()) {
 			response.add(
 				new Error(
 					'Graph must have a name',

@@ -2,7 +2,7 @@
 // Internal imports
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
-import { Domain, Subject } from './Fields'
+import { Field, Domain, Subject } from './Fields'
 import { Graph } from './Graph'
 
 // Exports
@@ -75,16 +75,24 @@ abstract class Relation<T extends Domain | Subject> {
 		return this.child?.color || 'transparent'
 	}
 
-	get defined(): boolean {
-		return this.parent !== undefined && this.child !== undefined
+	protected hasName(field: Domain | Subject) {
+		/* Check if the field has a name */
+
+		return field.name !== ''
+	}
+
+	protected isDefined(...values: (any | undefined)[]): boolean {
+		/* Check if the relation is defined */
+
+		return values.every(value => value !== undefined)
 	}
 
 	protected isCyclic(parent?: T, child?: T): boolean {
 		/* Depth first check if the relation is cyclic */
 
-		if (!parent || !child) return false
+		if (!this.isDefined(parent, child)) return false
 
-		let stack: (Domain | Subject)[] = [child]
+		let stack: (Domain | Subject)[] = [child!]
 		while (stack.length > 0) {
 			const current = stack.pop()!
 			if (current === parent) return true
@@ -97,7 +105,7 @@ abstract class Relation<T extends Domain | Subject> {
 	protected isSelfReferential(parent?: T, child?: T): boolean {
 		/* Check if the relation is self-referential */
 
-		if (!parent || !child) return false
+		if (!this.isDefined(parent, child)) return false
 		return parent === child
 	}
 
@@ -108,66 +116,6 @@ abstract class Relation<T extends Domain | Subject> {
 }
 
 class DomainRelation extends Relation<Domain> {
-	static create(graph: Graph): DomainRelation {
-		/* Create this domain relation */
-
-		const relation = new DomainRelation(
-			graph,
-			Graph.generateUUID(),
-			graph.domain_relations.length
-		)
-
-		graph.domain_relations.push(relation)
-		return relation
-	}
-
-	private isDuplicate(parent?: Domain, child?: Domain): boolean {
-		/* Check if the relation is a duplicate */
-
-		if (!parent || !child) return false
-
-		const first = this.graph.domain_relations.findIndex(relation => relation.parent === parent && relation.child === child)
-		const index = this.graph.domain_relations.indexOf(this, first + 1)
-
-		return index !== -1
-	}
-
-	private isConsistent(parent?: Domain, child?: Domain): boolean {
-		/* Check if the relation is consistent */
-
-		if (!parent || !child) return true
-
-		for (const relation of this.graph.subject_relations) {
-			if (relation.parent?.domain === parent && relation.child?.domain === child) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	private validateOption(parent?: Domain, child?: Domain): ValidationData {
-		const validation = new ValidationData()
-
-		// Check if the relation is self-referential
-		if (this.isSelfReferential(parent, child))
-			validation.add(new Error('Self-referential'))
-
-		// Check if the relation is cyclic
-		else if (this.isCyclic(parent, child))
-			validation.add(new Error('Cyclic relation'))
-
-		// Check if the relation is a duplicate
-		else if (this.isDuplicate(parent, child))
-			validation.add(new Error('Duplicate relation'))
-
-		// Check if the relation is consistent
-		else if (!this.isConsistent(parent, child))
-			validation.add(new Warning('Inconsistent with subjects'))
-
-		return validation
-	}
-
 	get parent_options(): DropdownOption<Domain>[] {
 		/* Return the parent options for this domain relation */
 
@@ -175,8 +123,7 @@ class DomainRelation extends Relation<Domain> {
 		for (const domain of this.graph.domains) {
 
 			// Check if the domain has a name
-			if (domain.name === '')
-				continue
+			if (!this.hasName(domain)) continue
 
 			// Add the domain to options
 			options.push(
@@ -198,8 +145,7 @@ class DomainRelation extends Relation<Domain> {
 		for (const domain of this.graph.domains) {
 
 			// Check if the domain has a name
-			if (domain.name === '')
-				continue
+			if (!this.hasName(domain)) continue
 
 			// Add the domain to options
 			options.push(
@@ -214,13 +160,72 @@ class DomainRelation extends Relation<Domain> {
 		return options
 	}
 
+	static create(graph: Graph): DomainRelation {
+		/* Create this domain relation */
+
+		const relation = new DomainRelation(
+			graph,
+			Graph.generateUUID(),
+			graph.domain_relations.length
+		)
+
+		graph.domain_relations.push(relation)
+		return relation
+	}
+
+	private isDuplicate(parent?: Domain, child?: Domain): boolean {
+		/* Check if the relation is a duplicate */
+
+		if (!this.isDefined(parent, child)) return false
+
+		const first = this.graph.domain_relations.findIndex(relation => relation.parent === parent && relation.child === child)
+		const index = this.graph.domain_relations.indexOf(this, first + 1)
+		return index !== -1
+	}
+
+	private isInconsistent(parent?: Domain, child?: Domain): boolean {
+		/* Check if the relation is consistent */
+
+		if (!this.isDefined(parent, child)) return true
+
+		for (const relation of this.graph.subject_relations) {
+			if (relation.parent?.domain === parent && relation.child?.domain === child) {
+				return false
+			}
+		}
+
+		return true
+	}
+
+	private validateOption(parent?: Domain, child?: Domain): ValidationData {
+		const validation = new ValidationData()
+
+		// Check if the relation is self-referential
+		if (this.isSelfReferential(parent, child))
+			validation.add(new Error('Self-referential'))
+
+		// Check if the relation is cyclic
+		else if (this.isCyclic(parent, child))
+			validation.add(new Error('Cyclic relation'))
+
+		// Check if the relation is a duplicate
+		else if (this.isDuplicate(parent, child))
+			validation.add(new Error('Duplicate relation'))
+
+		// Check if the relation is consistent
+		else if (this.isInconsistent(parent, child))
+			validation.add(new Warning('Inconsistent with subjects'))
+
+		return validation
+	}
+
 	validate(): ValidationData {
 		/* Validate this domain relation */
 
 		const response = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.defined) {
+		if (!this.isDefined(this.parent, this.child)) {
 			response.add(
 				new Error(
 					'Domain relation is not fully defined',
@@ -231,7 +236,7 @@ class DomainRelation extends Relation<Domain> {
 		}
 
 		// Check if the relation is consistent
-		if (!this.isConsistent(this.parent, this.child)) {
+		if (this.isInconsistent(this.parent, this.child)) {
 			response.add(
 				new Warning(
 					'Domain relation is inconsistent',
@@ -255,7 +260,7 @@ class DomainRelation extends Relation<Domain> {
 		}
 
 		// Remove references in the parent and child
-		if (this.defined) {
+		if (this.isDefined(this.parent, this.child)) {
 			this.parent!.children = this.parent!.children.filter(child => child !== this.child)
 			this.child!.parents = this.child!.parents.filter(parent => parent !== this.parent)
 		}
@@ -279,17 +284,15 @@ class SubjectRelation extends Relation<Subject> {
 		return relation
 	}
 
-	private isConsistent(parent?: Subject, child?: Subject): boolean {
+	private isInconsistent(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is consistent */
 
-		if (
-			!child?.domain ||
-			!parent?.domain ||
-			parent.domain === child.domain
-		) return true
+		if (!this.isDefined(parent?.domain, child?.domain) || parent!.domain === child!.domain) {
+			return false
+		}
 
-		for (const domain_child of parent.domain.children) {
-			if (domain_child === child.domain) return true
+		for (const domain_child of parent!.domain!.children) {
+			if (domain_child === child!.domain) return true
 		}
 
 		return false
@@ -299,7 +302,7 @@ class SubjectRelation extends Relation<Subject> {
 	private isDuplicate(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is a duplicate */
 
-		if (!parent || !child) return false
+		if (!this.isDefined(parent, child)) return false
 
 		const first = this.graph.subject_relations.findIndex(relation => relation.parent === parent && relation.child === child)
 		const index = this.graph.subject_relations.indexOf(this)
@@ -323,7 +326,7 @@ class SubjectRelation extends Relation<Subject> {
 			validation.add(new Error('Duplicate relation'))
 
 		// Check if the relation is consistent
-		else if (!this.isConsistent(parent, child))
+		else if (this.isInconsistent(parent, child))
 			validation.add(new Warning('Inconsistent with domains'))
 
 		return validation
@@ -336,8 +339,7 @@ class SubjectRelation extends Relation<Subject> {
 		for (const subject of this.graph.subjects) {
 
 			// Check if the subject has a name
-			if (subject.name === '')
-				continue
+			if (!this.hasName(subject)) continue
 
 			// Add the subject to options
 			options.push(
@@ -359,8 +361,7 @@ class SubjectRelation extends Relation<Subject> {
 		for (const subject of this.graph.subjects) {
 
 			// Check if the subject has a name
-			if (subject.name === '')
-				continue
+			if (!this.hasName(subject)) continue
 
 			// Add the subject to options
 			options.push(
@@ -381,7 +382,7 @@ class SubjectRelation extends Relation<Subject> {
 		const response = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.defined) {
+		if (!this.isDefined(this.parent, this.child)) {
 			response.add(
 				new Error(
 					'Subject relation is not fully defined',
@@ -392,7 +393,7 @@ class SubjectRelation extends Relation<Subject> {
 		}
 
 		// Check if the relation is consistent
-		if (!this.isConsistent(this.parent, this.child)) {
+		if (this.isInconsistent(this.parent, this.child)) {
 			response.add(
 				new Warning(
 					'Subject relation is inconsistent',
@@ -416,7 +417,7 @@ class SubjectRelation extends Relation<Subject> {
 		}
 
 		// Remove references in the parent and child
-		if (this.defined) {
+		if (this.isDefined(this.parent, this.child)) {
 			this.parent!.children = this.parent!.children.filter(child => child !== this.child)
 			this.child!.parents = this.child!.parents.filter(parent => parent !== this.parent)
 		}

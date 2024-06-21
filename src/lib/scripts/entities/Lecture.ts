@@ -177,13 +177,42 @@ class Lecture {
 		return lecture
 	}
 
+	private hasName(): boolean {
+		/* Check if the lecture has a name */
+
+		return this.name !== ''
+	}
+
+	private hasSubjects(): boolean {
+		/* Check if the lecture has subjects */
+
+		return this.lecture_subjects.length > 0
+	}
+
+	private isDefined(): boolean {
+		/* Check if the lecture is defined */
+
+		return this.lecture_subjects.every(lecture_subject => lecture_subject.subject)
+	}
+
+	private findOriginal<S, T>(list: S[], value: S, key: (item: S) => T): number {
+		/* Find the original item in a list
+		 * Returns -1 if value doesn't exist, or isnt a duplicate
+		 * Returns the index of the first duplicate otherwise
+		 */
+
+		const first = list.findIndex(item => key(item) === key(value))
+		const index = list.indexOf(value, first + 1)
+		return index === -1 ? -1 : first
+	}
+
 	validate(): ValidationData {
 		/* Validate the lecture */
 
 		const response = new ValidationData()
 
 		// Check if the lecture has a name
-		if (this.name === '') {
+		if (!this.hasName()){
 			response.add(
 				new Error(
 					'Lecture has no name',
@@ -195,10 +224,8 @@ class Lecture {
 
 		// Check if the name is unique
 		else {
-			const first = this.graph.lectures.findIndex(lecture => lecture === this)
-			const index = this.graph.lectures.indexOf(this, first + 1)
-
-			if (index !== -1) {
+			const first = this.findOriginal(this.graph.lectures, this, lecture => lecture.name)
+			if (first !== -1) {
 				response.add(
 					new Error(
 						'Lecture name must be unique',
@@ -210,7 +237,7 @@ class Lecture {
 		}
 
 		// Check if the lecture has subjects
-		if (this.lecture_subjects.length === 0) {
+		if (this.hasSubjects()) {
 			response.add(
 				new Error(
 					'Lecture has no subjects',
@@ -221,7 +248,7 @@ class Lecture {
 		}
 
 		// Check if the lecture has undefined subjects
-		else if (this.lecture_subjects.some(lecture_subject => !lecture_subject.subject)) {
+		else if (!this.isDefined()) {
 			response.add(
 				new Error(
 					'Lecture has undefined subjects',
