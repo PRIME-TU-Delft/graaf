@@ -8,8 +8,9 @@
 	import { DropdownOption } from '$scripts/entities/DropdownOption'
 	import { clickoutside } from '$scripts/clickoutside'
 
-	// Components
-	import Validation from '$components/Validation.svelte'
+	// Assets
+	import errorIcon from '$assets/error-icon.svg'
+	import warningIcon from '$assets/warning-icon.svg'
 
 	// Types
 	type T = $$Generic
@@ -86,10 +87,19 @@
 				on:click={() => { set(option.value) }}
 			>
 				{option.name}
-				<div class="flex-spacer" />
-				<Validation short data={option.validation} />
-			</button>
-		{/each}
+				
+				{#if option.validation.severity === 'error'}
+					<span class="error">
+						<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
+					</span>
+				{:else if option.validation.severity === 'warning'}
+					<span class="warning">
+						<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
+					</span>
+				{/if}
+
+				</button>
+			{/each}
 
 		{#if options.length === 0}
 			<button type="button" disabled class="option grayed">
@@ -172,16 +182,42 @@
 
 			.option
 				display: flex
+				flex-flow: row nowrap
+				align-items: center
+
 				padding: $input-thin-padding $input-thick-padding
+
 				text-align: left
 				cursor: pointer
 
-				&:hover:not(:disabled)
+				&:hover
 					background-color: $light-gray
 
 				&:disabled
 					cursor: not-allowed
 					color: $placeholder-color
+
+				.error, .warning
+					display: flex
+					align-items: center
+					justify-content: end
+					gap: $form-small-gap
+
+					pointer-events: none
+					color: $red
+					flex: 1
+
+					img
+						width: $input-icon-size
+						height: $input-icon-size
+						filter: $red-filter
+				
+				.warning
+					color: $yellow
+					
+					img
+						filter: $yellow-filter
+
 
 		&.visible
 			.header

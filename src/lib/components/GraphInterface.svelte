@@ -46,9 +46,7 @@
 		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lecture_options} />
     </div>
 
-    <div class="editor">
-        <svg use:graphSVG.create />
-    </div>
+	<svg use:graphSVG.create />
 </div>
 
 
@@ -60,13 +58,19 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.editor
-		height: 600px
-
 	.tabular
+		display: flex
+		flex-flow: column nowrap
+
+		height: 100%
+
 		border-radius: $border-radius
 		border: 1px solid $gray
 
+		svg
+			width: 100%
+			height: 100%
+		
 		.tabs
 			display: flex
 			flex-flow: row nowrap

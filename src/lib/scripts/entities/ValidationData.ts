@@ -33,13 +33,17 @@ class ValidationData {
 class Error {
 	constructor (
 		public short: string,
-		public long?: string
+		public long?: string,
+		public tab?: number,
+		public id?: string
 	) { }
 }
 
 class Warning {
 	constructor (
 		public short: string,
-		public long?: string
+		public long?: string,
+		public tab?: number,
+		public id?: string
 	) { }
 }

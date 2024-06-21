@@ -1,30 +1,31 @@
 // Internal imports
-import { DomainRelation, SubjectRelation } from './Relations'
 import { ValidationData, Error } from './ValidationData'
-import { Lecture, LectureSubject } from './Lecture'
 import { DropdownOption } from './DropdownOption'
-import { Domain, Subject } from './Fields'
 
-import type { SerializedLecture } from './Lecture'
-import type { SerializedSubject } from './Fields'
-import type { SerializedDomain } from './Fields'
+import { Domain, Subject } from './Fields'
+import { DomainRelation, SubjectRelation } from './Relations'
+import { Lecture, LectureSubject } from './Lecture'
+
+import type { LectureData } from './Lecture'
+import type { SubjectData } from './Fields'
+import type { DomainData } from './Fields'
 
 // Exports
 export { Graph }
-export type { ID, SerializedGraph }
+export type { GraphData }
 
 
 // --------------------> Types
 
 
-type ID = number;
+type ID = number
 
-type SerializedGraph = {
+type GraphData = {
 	id: ID,
 	name: string,
-	domains: SerializedDomain[],
-	subjects: SerializedSubject[],
-	lectures: SerializedLecture[]
+	domains: DomainData[],
+	subjects: SubjectData[],
+	lectures: LectureData[]
 }
 
 
@@ -61,8 +62,8 @@ class Graph {
 		return options
 	}
 
-	static revive(data: SerializedGraph) {
-		/* Load the graph from a POJO */
+	static revive(data: GraphData) {
+		/* Revive graph from a POJO */
 
 		const graph = new Graph(data.id, data.name)
 
@@ -84,11 +85,11 @@ class Graph {
 		// Build domain relations
 		for (const parent_data of data.domains) {
 			const parent = graph.domains.find(domain => domain.id === parent_data.id)
-			if (!parent) throw new Error('Failed to revive, non-existent ID in domain relations')
+			if (!parent) continue
 
 			for (const child_id of parent_data.children) {
 				const child = graph.domains.find(domain => domain.id === child_id)
-				if (!child) throw new Error('Failed to revive, non-existent ID in domain relations')
+				if (!child) continue
 
 				const relation = DomainRelation.create(graph)
 				relation.parent = parent
@@ -99,7 +100,7 @@ class Graph {
 		// Define subjects
 		for (const subject_data of data.subjects) {
 			const domain = graph.domains.find(domain => domain.id === subject_data.domain)
-			if (!domain) throw new Error('Failed to revive, non-existent ID in subjects')
+			if (!domain) continue
 
 			graph.subjects.push(
 				new Subject(
@@ -117,11 +118,11 @@ class Graph {
 		// Build subject relations
 		for (const parent_data of data.subjects) {
 			const parent = graph.subjects.find(subject => subject.id === parent_data.id)
-			if (!parent) throw new Error('Failed to revive, non-existent ID in subject relations')
+			if (!parent) continue
 
-			for (const child_id of parent_data.children) {
-				const child = graph.subjects.find(subject => subject.id === child_id)
-				if (!child) throw new Error('Failed to revive, non-existent ID in subject relations')
+			for (const child_uuid of parent_data.children) {
+				const child = graph.subjects.find(subject => subject.id === child_uuid)
+				if (!child) continue
 
 				const relation = SubjectRelation.create(graph)
 				relation.parent = parent
@@ -143,7 +144,7 @@ class Graph {
 			// Define lecture subjects
 			for (const subject_id of lecture_data.subjects) {
 				const subject = graph.subjects.find(subject => subject.id === subject_id)
-				if (!subject) throw new Error('Failed to revive, non-existent ID in lecture subjects')
+				if (!subject) continue
 
 				const lecture_subject = LectureSubject.create(lecture)
 				lecture_subject.subject = subject
@@ -153,14 +154,27 @@ class Graph {
 		return graph
 	}
 
+	private hasName(): boolean {
+		/* Check if the graph has a name */
+
+		return this.name !== ''
+	}
+
 	validate(): ValidationData {
 		/* Validate the graph */
 
 		const response = new ValidationData()
 
 		// Check if the graph has a name
-		if (this.name === '')
-			response.add(new Error('Graph must have a name'))
+		if (!this.hasName()) {
+			response.add(
+				new Error(
+					'Graph must have a name',
+					undefined,
+					0, 'name'
+				)
+			)
+		}
 
 		// Validate domains, subjects and lectures
 		for (const domain of this.domains)
@@ -177,11 +191,8 @@ class Graph {
 		return response
 	}
 
-	reduce(): SerializedGraph {
-		/* Serialize graph to a POJO */
-
-		if (this.validate().severity === 'error')
-			throw new Error('Cannot reduce with outstanding errors')
+	reduce(): GraphData {
+		/* Reduce graph to a POJO */
 
 		return {
 			id: this.id,
@@ -194,13 +205,9 @@ class Graph {
 
 	save() {
 		/* Save the graph to the database */
-
-		console.log(this.reduce())
 	}
 
 	delete() {
 		/* Delete the graph from the database */
-
-		throw new Error('Not implemented')
 	}
 }

@@ -20,6 +20,7 @@
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
+	import gearIcon from '$assets/gear-icon.svg'
 
 	function newLink() {
 		// TODO add newLink function
@@ -64,11 +65,11 @@
 	path={[
 		{
 			name: 'Dashboard',
-			href: '/dashboard'
+			href: '/app/dashboard'
 		},
 		{
 			name: `${course.code} ${course.name}`,
-			href: `/course/${course.code}/overview`
+			href: `/app/course/${course.code}/overview`
 		}
 	]}
 >
@@ -83,16 +84,18 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/course/{course.code}/settings">Settings</LinkButton>
+		<LinkButton href="/app/course/{course.code}/settings">
+			<img src={gearIcon} alt=""> Settings
+		</LinkButton>
 
 		<Modal bind:this={createGraphModal}>
-			<h3 slot="header">Create Graph</h3>
+			<h3 slot="header"> Create Graph </h3>
+			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
 			<form method="POST" action="?/newGraph" use:enhance={createGraphModal.hide}>
 				<label for="name"> Name </label>
 				<Textfield label="Name" />
-
-				<Button submit>Create</Button>
+				<Button submit on:click={createGraphModal.hide}> Create </Button>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -120,7 +123,7 @@
 					<IconButton
 						src={pencilIcon}
 						description="Edit Graph"
-						href="/course/{course.code}/graph/{graph.id}/settings"
+						href="/app/course/{course.code}/graph/{graph.id}/settings"
 						scale
 					/>
 
@@ -151,22 +154,20 @@
 	form
 		display: grid
 		grid-template: "label content" auto / 1fr 2fr
+		gap: $form-small-gap $form-medium-gap
 		place-items: center start
+
+		margin-top: $form-big-gap
 
 		label
 			grid-column: label
 			justify-self: end
 
-			margin-top: $form-small-gap
-			padding-right: $form-medium-gap
-
-		:global(.textfield)
+		:global(.textfield), :global(.dropdown)
 			grid-column: content
-			margin-top: $form-small-gap
 
 		:global(.button)
 			grid-column: content
-			margin-top: $form-big-gap
 
 	.graph
 		display: flex

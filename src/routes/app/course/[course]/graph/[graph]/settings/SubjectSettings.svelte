@@ -12,6 +12,7 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -25,13 +26,13 @@
 	export let update: () => void
 
 	// Variables
-	let subjectQuery: string = ''
-	let subjectNameSort: boolean | undefined
-	let subjectDomainSort: boolean | undefined
+	let subject_query: string = ''
+	let subject_name_sort: boolean | undefined
+	let subject_domain_sort: boolean | undefined
 
-	let relationQuery: string = ''
-	let relationFromSort: boolean | undefined
-	let relationToSort: boolean | undefined
+	let relation_query: string = ''
+	let relation_parent_sort: boolean | undefined
+	let relation_child_sort: boolean | undefined
 
 	// Functions
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
@@ -65,6 +66,12 @@
 		if (!ascending) list.reverse()
 	}
 
+	function sortIcon(state?: boolean): string {
+		/* Returns the sort icon based on the state */
+
+		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
+	}
+
 </script>
 
 
@@ -77,18 +84,18 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Subjects </h2>
-		<LinkButton href="#relations"> goto relations </LinkButton>
+		<LinkButton href="#relations"> go to relations </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={subjectQuery} />
+		<Searchbar bind:value={subject_query} />
 		<Button on:click={() => { Subject.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Subject
 		</Button>
 	</div>
 
 	<!-- If any subjects were found that match the search -->
-	{#if graph.subjects.some(subject => subjectMatchesQuery(subjectQuery, subject))}
+	{#if graph.subjects.some(subject => subjectMatchesQuery(subject_query, subject))}
 
 		<!-- Header -->
 		<div class=row>
@@ -97,11 +104,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> Name </span>
 				<IconButton
-					src={subjectNameSort === undefined ? neutralSortIcon : subjectNameSort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(subject_name_sort)}
 					on:click={() => {
-						subjectDomainSort = undefined
-						subjectNameSort = !subjectNameSort
-						alphabetize(graph.subjects, subject => subject.name, subjectNameSort)
+						subject_domain_sort = undefined
+						subject_name_sort = !subject_name_sort
+						alphabetize(graph.subjects, subject => subject.name, subject_name_sort)
 						update()
 					}}
 				/>
@@ -111,11 +118,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> Domain </span>
 				<IconButton
-					src={subjectDomainSort === undefined ? neutralSortIcon : subjectDomainSort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(subject_domain_sort)}
 					on:click={() => {
-						subjectNameSort = undefined
-						subjectDomainSort = !subjectDomainSort
-						alphabetize(graph.subjects, subject => subject.domain?.name || '', subjectDomainSort)
+						subject_name_sort = undefined
+						subject_domain_sort = !subject_domain_sort
+						alphabetize(graph.subjects, subject => subject.domain?.name || '', subject_domain_sort)
 						update()
 					}}
 				/>
@@ -131,8 +138,9 @@
 
 	<!-- Subject list -->
 	{#each graph.subjects as subject}
-		{#if subjectMatchesQuery(subjectQuery, subject)}
-			<div class="row">
+		{#if subjectMatchesQuery(subject_query, subject)}
+			<div class="row" id={subject.uuid}>
+				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
@@ -149,18 +157,18 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Relations </h2>
-		<LinkButton href="#subjects"> goto subjects </LinkButton>
+		<LinkButton href="#subjects"> go to subjects </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={relationQuery} />
+		<Searchbar bind:value={relation_query} />
 		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.subject_relations.some(relation => relationMatchesQuery(relationQuery, relation))}
+	{#if graph.subject_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -169,11 +177,11 @@
 			<div class="header" style="grid-area: left;">
 				<span> From </span>
 				<IconButton
-					src={relationFromSort === undefined ? neutralSortIcon : relationFromSort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(relation_parent_sort)}
 					on:click={() => {
-						relationToSort = undefined
-						relationFromSort = !relationFromSort
-						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relationFromSort)
+						relation_child_sort = undefined
+						relation_parent_sort = !relation_parent_sort
+						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relation_parent_sort)
 						update()
 					}}
 				/>
@@ -183,11 +191,11 @@
 			<div class="header" style="grid-area: right;">
 				<span> To </span>
 				<IconButton
-					src={relationToSort === undefined ? neutralSortIcon : relationToSort ? ascendingSortIcon : descedingSortIcon}
+					src={sortIcon(relation_child_sort)}
 					on:click={() => {
-						relationFromSort = undefined
-						relationToSort = !relationToSort
-						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relationToSort)
+						relation_parent_sort = undefined
+						relation_child_sort = !relation_child_sort
+						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relation_child_sort)
 						update()
 					}}
 				/>
@@ -203,8 +211,9 @@
 
 	<!-- List of relations -->
 	{#each graph.subject_relations as relation}
-		{#if relationMatchesQuery(relationQuery, relation)}
-			<div class="row">
+		{#if relationMatchesQuery(relation_query, relation)}
+			<div class="row" id={relation.uuid}>
+				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
 				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
@@ -248,6 +257,8 @@
 			place-items: center center
 			gap: $form-small-gap
 
+			padding-right: calc( $form-small-gap + $icon-width )
+
 			.preview
 				width: $input-icon-size
 				height: $input-icon-size
@@ -261,11 +272,11 @@
 
 				span
 					flex: 1
-	
+
 	.subjects .row
-		grid-template: "id delete left right right-preview" auto / $icon-width $icon-width 1fr 1fr $icon-width
+		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
 
 	.relations .row
-		grid-template: "id delete left left-preview right right-preview" auto / $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+		grid-template: "validation id delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 
 </style>

@@ -5,8 +5,6 @@
 	export let href: string | undefined = undefined
 	export let submit: boolean = false
 	export let disabled: boolean = false
-	export let scale: boolean = false
-	export let rotate: boolean = false
 
 	// Property validation
 	$: if (submit && href !== undefined) {
@@ -26,8 +24,6 @@
 		type={submit ? 'submit' : 'button'}
 		class="link-button"
 		class:disabled
-		class:scale
-		class:rotate
 		on:click
 	>
 		<slot />
@@ -38,9 +34,7 @@
 	<a 
 		{href}
 		class="link-button" 
-		class:disabled 
-		class:scale 
-		class:rotate 
+		class:disabled  
 		on:click
 	>
 		<slot />
@@ -92,9 +86,5 @@
 
 			:global(img)
 				filter: $dark-purple-filter
-			&.scale :global(img)
-				scale: $scale-on-hover
-			&.rotate :global(img)
-				rotate: $rotate-on-hover
 
 </style>

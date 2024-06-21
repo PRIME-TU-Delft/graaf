@@ -2,20 +2,21 @@
 // Internal imports
 import { ValidationData, Error, Warning } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
-import { styles } from '../settings'
+
 import { Graph } from './Graph'
+import { styles } from '../settings'
 
 // Exports
 export { Field, Domain, Subject }
-export type { SerializedDomain, SerializedSubject }
+export type { DomainData, SubjectData }
 
 
 // --------------------> Types
 
 
-type ID = number;
+type ID = number
 
-type SerializedDomain = {
+type DomainData = {
 	id: ID,
 	x: number,
 	y: number,
@@ -25,8 +26,8 @@ type SerializedDomain = {
 	children: ID[]
 }
 
-type SerializedSubject = {
-	id: number,
+type SubjectData = {
+	id: ID,
 	x: number,
 	y: number,
 	domain: ID,
@@ -50,6 +51,23 @@ abstract class Field<T extends Domain | Subject> {
 		public parents: T[],
 		public children: T[]
 	) { }
+
+	protected hasName(field: Domain | Subject): boolean {
+		/* Check if the name of a field is undefined */
+
+		return field.name !== ''
+	}
+
+	protected findOriginal<S, T>(list: S[], value: S, key: (item: S) => T): number {
+		/* Find the original item in a list
+		 * Returns -1 if value doesn't exist, or isnt a duplicate
+		 * Returns the index of the first duplicate otherwise
+		 */
+
+		const first = list.findIndex(item => key(item) === key(value))
+		const index = list.indexOf(value, first + 1)
+		return index === -1 ? -1 : first
+	}
 
 	abstract get style(): string | undefined
 	abstract get color(): string
@@ -114,13 +132,27 @@ class Domain extends Field<Domain> {
 			const response = new ValidationData()
 
 			// Check if the style is already used
-			if (this.graph.domains.some(domain => this !== domain && domain.style === style))
+			if (this.findOriginal(this.graph.domains, this, domain => domain.style) !== -1) {
 				response.add(new Warning('Duplicate style'))
+			}
 
 			options.push(new DropdownOption(value.display_name, style, response))
 		}
 
 		return options
+	}
+
+	private hasStyle(): boolean {
+		/* Check if the style of a domain is undefined */
+
+		return this.style !== undefined
+	}
+
+	private hasSubjects(): boolean {
+		/* Check if the domain has subjects */
+
+		return this.subjects.length > 0
+	
 	}
 
 	validate(): ValidationData {
@@ -129,47 +161,61 @@ class Domain extends Field<Domain> {
 		const response = new ValidationData()
 
 		// Check if the domain has a name
-		if (this.name === '')
-			response.add(new Error(`Domain (${this.index + 1}) has no name`))
+		if (!this.hasName(this)) {
+			response.add(new Error(
+				'Domain must have a name',
+				undefined,
+				1, this.id.toString()
+			))
+		}
 
 		// Check if the domain has a unique name
 		else {
-			const first = this.graph.domains.findIndex(domain => domain.name === this.name)
-			if (first < this.graph.domains.indexOf(this)) {
-				response.add(
-					new Warning(
-						`Domain (${this.index + 1}) name isn\'t unique`,
-						`First used by domain (${this.graph.domains[first].index})`
-					)
-				)
+			const first = this.findOriginal(this.graph.domains, this, domain => domain.name)
+			if (first !== -1) {
+				response.add(new Error(
+					'Domain must have a unique name',
+					`Name first used by Domain nr. ${first + 1}`,
+					1, this.id.toString()
+				))
 			}
 		}
 
 		// Check if the domain has a style
-		if (!this.style)
-			response.add(new Error(`Domain (${this.index + 1}) has no style`))
+		if (!this.hasStyle()) {
+			response.add(new Error(
+				'Domain must have a style',
+				undefined,
+				1, this.id.toString()
+			))
+		}
 
 		// Check if the domain has a unique style
 		else {
-			const first = this.graph.domains.findIndex(domain => domain.style === this.style)
-			if (first < this.graph.domains.indexOf(this)) {
-				response.add(
-					new Warning(
-						`Domain (${this.index + 1}) style isn\'t unique`,
-						`First used by domain (${this.graph.domains[first].index + 1})`
-					)
-				)
+			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
+			if (first !== -1) {
+				response.add(new Error(
+					'Domain must have a unique style',
+					`Style first used by Domain nr. ${first + 1}`,
+					1, this.id.toString()
+				))
 			}
+		}
+
+		// Check if the domain has subjects
+		if (!this.hasSubjects()) {
+			response.add(new Warning(
+				'Domain has no subjects',
+				'You might want to assign subjects to this domain',
+				1, this.id.toString()
+			))
 		}
 
 		return response
 	}
 
-	reduce(): SerializedDomain {
+	reduce(): DomainData {
 		/* Serialize domain to a POJO */
-
-		if (this.validate().severity === 'error')
-			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			id: this.id,
@@ -248,7 +294,7 @@ class Subject extends Field<Subject> {
 		for (const domain of this.graph.domains) {
 
 			// Check if the domain has a name
-			if (domain.name === '') continue
+			if (!this.hasName(domain)) continue
 
 			options.push(
 				new DropdownOption(
@@ -262,40 +308,52 @@ class Subject extends Field<Subject> {
 		return options
 	}
 
+		private hasDomain(): boolean {
+		/* Check if the domain of a subject is undefined */
+
+		return this.domain !== undefined
+	}
+
 	validate(): ValidationData {
 		/* Validate this subject */
 
 		const response = new ValidationData()
 
 		// Check if the subject has a name
-		if (this.name === '')
-			response.add(new Error(`Subject (${this.index + 1}) has no name`))
+		if (!this.hasName(this)) {
+			response.add(new Error(
+				'Subject must have a name',
+				undefined,
+				2, this.id.toString()
+			))
+		}
 
 		// Check if the name is unique
 		else {
-			const first = this.graph.subjects.findIndex(subject => subject.name === this.name)
-			if (first < this.graph.subjects.indexOf(this)) {
-				response.add(
-					new Warning(
-						`Subject (${this.index + 1}) name isn\'t unique`,
-						`First used by subject (${this.graph.subjects[first].index + 1})`
-					)
-				)
+			const first = this.findOriginal(this.graph.subjects, this, subject => subject.name)
+			if (first !== -1) {
+				response.add(new Error(
+					'Subject must have a unique name',
+					`Name first used by Subject nr. ${first + 1}`,
+					2, this.id.toString()
+				))
 			}
 		}
 
 		// Check if the subject has a domain
-		if (!this.domain)
-			response.add(new Error(`Subject (${this.index + 1}) has no assigned domain`))
+		if (!this.hasDomain()) {
+			response.add(new Error(
+				'Subject must have a domain',
+				undefined,
+				2, this.id.toString()
+			))
+		}
 
 		return response
 	}
 
-	reduce(): SerializedSubject {
+	reduce(): SubjectData {
 		/* Serialize subject to a POJO */
-
-		if (this.validate().severity === 'error')
-			throw new Error('Cannot reduce with outstanding errors')
 
 		return {
 			id: this.id,

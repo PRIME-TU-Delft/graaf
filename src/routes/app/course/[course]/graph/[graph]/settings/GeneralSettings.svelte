@@ -9,6 +9,7 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Modal from '$components/Modal.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
@@ -18,7 +19,7 @@
 	export let update: () => void
 
 	// Variables
-	let deleteGraphModal: Modal
+	let delete_modal: Modal
 
 </script>
 
@@ -29,7 +30,7 @@
 <div class="editor">
 
 	<!-- Settings -->
-	<div class="settings">
+	<div class="setting">
 		<label for="name"> Name </label>
 		<Textfield label="Name" bind:value={graph.name} on:input={update} />
 	</div>
@@ -38,14 +39,14 @@
 	<div class="button-row">
 
 		<!-- Delete graph button -->
-		<Button on:click={deleteGraphModal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
-		<Modal bind:this={deleteGraphModal}>
+		<Button dangerous on:click={delete_modal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
+		<Modal bind:this={delete_modal}>
 			<h3 slot="header"> Delete Graph </h3>
 			Are you sure you want to delete {graph.name}? This action <b>cannot</b> be undone.
 
 			<div slot="button-row">
-				<LinkButton on:click={deleteGraphModal.hide}> Cancel </LinkButton>
-				<Button dangerous on:click={graph.delete}> Delete Graph </Button> <!-- TODO redirect to course overview -->
+				<LinkButton on:click={delete_modal.hide}> Cancel </LinkButton>
+				<Button dangerous on:click={graph.delete}> Delete </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</div>
