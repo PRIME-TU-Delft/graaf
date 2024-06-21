@@ -61,10 +61,6 @@ class Graph {
 		return options
 	}
 
-	static create(): Graph {
-		// TODO: create a new empty graph on the server side and return it
-	}
-
 	static revive(data: SerializedGraph) {
 		/* Load the graph from a POJO */
 

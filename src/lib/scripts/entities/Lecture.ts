@@ -161,15 +161,6 @@ class Lecture {
 		return relations
 	}
 
-	static create(graph: Graph): Lecture {
-		/* Create a new lecture */
-
-		// TODO: create a new empty lecture on the server side and return it
-
-		graph.lectures.push(lecture)
-		return lecture
-	}
-
 	validate(): ValidationData {
 		/* Validate the lecture */
 

@@ -123,23 +123,6 @@ class Domain extends Field<Domain> {
 		return options
 	}
 
-	static create(graph: Graph): Domain {
-		/* Create this domain */
-
-		// Find unused style
-		let style = undefined
-		for (const key of Object.keys(styles)) {
-			if (graph.domains.some(domain => domain.style === key)) continue
-			style = key
-			break
-		}
-
-		// TODO: create a new empty domain on the server side and return it
-
-		graph.domains.push(domain)
-		return domain
-	}
-
 	validate(): ValidationData {
 		/* Validate this domain */
 
@@ -277,15 +260,6 @@ class Subject extends Field<Subject> {
 		}
 
 		return options
-	}
-
-	static create(graph: Graph): Subject {
-		/* Create this subject */
-
-		// TODO: create a new empty subject on the server side and return it
-
-		graph.subjects.push(subject)
-		return subject
 	}
 
 	validate(): ValidationData {
