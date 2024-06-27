@@ -22,44 +22,6 @@ enum State {
 	lecture,
 }
 
-class BoundingBox {
-	constructor(
-		public x: number,
-		public y: number,
-		public width: number,
-		public height: number
-	) { }
-
-	static from(fields: Domain[] | Subject[]): BoundingBox {
-		/* Create a bounding box around a list of fields */
-
-		let min_x = Infinity
-		let min_y = Infinity
-		let max_x = -Infinity
-		let max_y = -Infinity
-
-		for (const field of fields) {
-			min_x = Math.min(min_x, field.x - settings.FIELD_MARGIN)
-			min_y = Math.min(min_y, field.y - settings.FIELD_MARGIN)
-			max_x = Math.max(max_x, field.x + settings.FIELD_WIDTH + settings.FIELD_MARGIN)
-			max_y = Math.max(max_y, field.y + settings.FIELD_HEIGHT + settings.FIELD_MARGIN)
-		}
-
-		return new BoundingBox(
-			(max_x + min_x) / 2,
-			(max_y + min_y) / 2,
-			max_x - min_x,
-			max_y - min_y
-		)
-	}
-
-	static origin(): BoundingBox {
-		/* Create an empty bounding box around the origin */
-
-		return new BoundingBox(0, 0, 0, 0)
-	}
-}
-
 enum View {
 	domains,
 	subjects,
@@ -68,10 +30,10 @@ enum View {
 
 class GraphSVG {
 	private graph: Graph
-	private state: State
 	private interactive: boolean
 
 	private _view: View
+	private _state: State
 	private _lecture?: Lecture
 
 	private svg!: SVGSVGElement
@@ -126,6 +88,27 @@ class GraphSVG {
 		}
 
 		this._view = view
+	}
+
+	get state() {
+		return this._state
+	}
+
+	private set state(state: State) {
+		if (this.state === state) return
+
+		this._state = state
+
+		if (
+			this.state !== State.dynamic &&
+			this.state !== State.simulating
+		) {
+			d3.select(this.svg)
+				.attr('pointer-events', 'none')
+		} else {
+			d3.select(this.svg)
+				.attr('pointer-events', 'all')
+		}
 	}
 
 	get lecture() {
@@ -246,21 +229,10 @@ class GraphSVG {
 		svg.call(this.zoom)
 
 		// Background & content
-		const bbx = BoundingBox.from(this.graph.domains)
+		const bbx = this.boundingBox(this.graph.domains)
+		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground(View.domains)
 		this.setContent(this.graph.domains, this.graph.domain_relations)
-		this.moveCamera(
-			bbx.x * settings.GRID_UNIT,
-			bbx.y * settings.GRID_UNIT,
-			Math.max(
-				settings.GRID_MIN_ZOOM,
-				Math.min(
-					settings.GRID_MAX_ZOOM,
-					this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-					this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
-				)
-			)
-		)
 	}
 
 	findGraph() {
@@ -269,27 +241,44 @@ class GraphSVG {
 			this.state === State.lecture
 		) return
 
-		this.state = State.animating
-		const bbx = BoundingBox.from(this.view === View.domains ? this.graph.domains : this.graph.subjects)
 		const state = this.state
+		this.state = State.animating
 
-		this.moveCamera(
-			bbx.x * settings.GRID_UNIT,
-			bbx.y * settings.GRID_UNIT,
-			Math.max(
+		const bbx = this.boundingBox(this.view === View.domains ? this.graph.domains : this.graph.subjects)
+		this.moveCamera(bbx.x, bbx.y, bbx.k, () => {
+			this.state = state
+		})
+	}
+
+	private boundingBox(fields: Field<Domain | Subject>[]) {
+		let min_x = Infinity
+		let min_y = Infinity
+		let max_x = -Infinity
+		let max_y = -Infinity
+
+		for (const field of fields) {
+			min_x = Math.min(min_x, field.x - settings.FIELD_MARGIN)
+			min_y = Math.min(min_y, field.y - settings.FIELD_MARGIN)
+			max_x = Math.max(max_x, field.x + settings.FIELD_WIDTH + settings.FIELD_MARGIN)
+			max_y = Math.max(max_y, field.y + settings.FIELD_HEIGHT + settings.FIELD_MARGIN)
+		}
+
+		return {
+			x: (max_x + min_x) / 2,
+			y: (max_y + min_y) / 2,
+			k: Math.max(
 				settings.GRID_MIN_ZOOM,
 				Math.min(
 					settings.GRID_MAX_ZOOM,
-					this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-					this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
+					this.svg.clientWidth / (max_x - min_x),
+					this.svg.clientHeight / (max_y - min_y)
 				)
-			),
-			() => { this.state = state }
-		)
+			)
+		}
 	}
 
 	private moveCamera(
-		x: number, y: number, k: number, 
+		x: number, y: number, k: number,
 		callback?: () => void
 	) {
 		// Call zoom with custom transform
@@ -301,18 +290,55 @@ class GraphSVG {
 			this.zoom.transform,
 			d3.zoomIdentity
 				.translate(
-					this.svg.clientWidth / 2 - k * x,
-					this.svg.clientHeight / 2 - k * y
+					this.svg.clientWidth / 2 - k * x * settings.GRID_UNIT,
+					this.svg.clientHeight / 2 - k * y * settings.GRID_UNIT
 				)
 				.scale(k)
 		)
-	
+
 		// Post-transition
 		if (callback) {
 			setTimeout(() => {
 				callback()
 			}, settings.ANIMATION_DURATION)
 		}
+	}
+
+	private panCamera(x: number, y: number, callback?: () => void) {
+		// Call zoom with custom transform
+		d3.select<SVGSVGElement, unknown>(this.svg)
+		.transition()
+			.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+			.ease(d3.easeSinInOut)
+		.call(
+			this.zoom.translateTo,
+			x * settings.GRID_UNIT,
+			y * settings.GRID_UNIT
+		)
+
+		// Post-transition
+		if (callback) {
+			setTimeout(() => {
+				callback()
+			}, settings.ANIMATION_DURATION)
+		}
+	}
+
+	private zoomCamera(k: number, callback?: () => void) {
+		// Call zoom with custom transform
+		d3.select<SVGSVGElement, unknown>(this.svg)
+		.transition()
+			.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+			.ease(d3.easeSinInOut)
+		.call(this.zoom.scaleTo, k)
+
+		// Post-transition
+		if (callback) {
+			setTimeout(() => {
+				callback()
+			}, settings.ANIMATION_DURATION)
+		}
+
 	}
 
 	private setBackground(view: View) {
@@ -328,7 +354,7 @@ class GraphSVG {
 			const size = this.lecture?.size ?? 0
 			const dx = (this.svg.clientWidth - 3 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2
 			const dy = (this.svg.clientHeight - (size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING + settings.LECTURE_HEADER_HEIGHT) * settings.GRID_UNIT) / 2
-		
+
 			// Past subject colunm
 			background.append('rect')
 				.attr('x', dx + settings.STROKE_WIDTH / 2)
@@ -391,11 +417,11 @@ class GraphSVG {
 					.attr('fill', 'url(#grid)')
 					.attr('width', '100%')
 					.attr('height', '100%')
-		}	
+		}
 	}
 
 	private setContent(
-		fields: Field<Domain | Subject>[], 
+		fields: Field<Domain | Subject>[],
 		relations: Relation<Domain | Subject>[],
 		callback?: () => void
 	) {
@@ -414,12 +440,12 @@ class GraphSVG {
 								.call(FieldSVG.updateHighlight, lecture)
 								.style('opacity', 0)
 					},
-				
+
 					function(update) {
 						return update
 							.call(FieldSVG.updateHighlight, lecture)
 					},
-				
+
 					function(exit) {
 						return exit
 							.transition()
@@ -533,23 +559,10 @@ class GraphSVG {
 	}
 
 	private domainToSubject() {
+		const bbx = this.boundingBox(this.graph.subjects)
 		this.state = State.animating
-	
-		const bbx = BoundingBox.from(this.graph.subjects)
-		this.moveCamera(
-			bbx.x * settings.GRID_UNIT,
-			bbx.y * settings.GRID_UNIT,
-			Math.max(
-				settings.GRID_MIN_ZOOM,
-				Math.min(
-					settings.GRID_MAX_ZOOM,
-					this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-					this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
-				)
-			),
-			ANIMATE
-		)
 
+		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.setContent(this.graph.subjects, this.graph.subject_relations)
 		this.moveContent(this.graph.subjects, this.domainTransform)
 		this.restoreContent(() => {
@@ -558,60 +571,31 @@ class GraphSVG {
 	}
 
 	private domainToLecture() {
-		const bbx = BoundingBox.from(this.graph.domains)
+		const bbx = this.boundingBox(this.graph.domains)
 
 		if (this.lecture) {
 			this.state = State.animating
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				1, 
-				ANIMATE
-			)
-
-			this.setContent(
-				this.lecture.subjects, 
-				this.lecture.relations
-			)
-
+			this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
+			this.setContent(this.lecture.subjects, this.lecture.relations)
 			this.moveContent(this.lecture.subjects, this.domainTransform)
 			this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
 				this.setBackground(View.lectures)
 				this.state = State.lecture
 			})
-		} 
-		
-		else {
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				1
-			)
+		}
 
-			this.setBackground(View.lectures)
+		else {
 			this.clearContent()
+			this.setBackground(View.lectures)
 			this.state = State.lecture
 		}
 	}
 
 	private subjectToDomain() {
+		const bbx = this.boundingBox(this.graph.domains)
 		this.state = State.animating
-		
-		const bbx = BoundingBox.from(this.graph.domains)
-		this.moveCamera(
-			bbx.x * settings.GRID_UNIT,
-			bbx.y * settings.GRID_UNIT,
-			Math.max(
-				settings.GRID_MIN_ZOOM,
-				Math.min(
-					this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-					this.svg.clientHeight / (bbx.height * settings.GRID_UNIT),
-					settings.GRID_MAX_ZOOM
-				)
-			),
-			ANIMATE
-		)
 
+		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.moveContent(this.graph.subjects, this.domainTransform, () => {
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
@@ -620,17 +604,11 @@ class GraphSVG {
 	}
 
 	private subjectToLecture() {
-		const bbx = BoundingBox.from(this.graph.domains)
+		const bbx = this.boundingBox(this.graph.subjects)
 
 		if (this.lecture) {
 			this.state = State.animating
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				1, 
-				ANIMATE
-			)
-
+			this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
 			this.setContent(this.lecture.subjects, this.lecture.relations, () => {
 				this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
 					this.setBackground(View.lectures)
@@ -640,38 +618,21 @@ class GraphSVG {
 		}
 
 		else {
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				1
-			)
-			
-			this.setBackground(View.lectures)
 			this.clearContent()
+			this.setBackground(View.lectures)
 			this.state = State.lecture
 		}
 	}
 
 	private lectureToDomain() {
-		const bbx = BoundingBox.from(this.graph.domains)
-		this.setBackground(View.domains)
+		const bbx = this.boundingBox(this.graph.domains)
+		this.state = State.animating
 
 		if (this.lecture) {
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				Math.max(
-					settings.GRID_MIN_ZOOM,
-					Math.min(
-						settings.GRID_MAX_ZOOM,
-						this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-						this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
-					)
-				), 
-				ANIMATE
-			)
-
+			this.panCamera(bbx.x, bbx.y)
 			this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
+			this.setBackground(View.domains)
+			this.zoomCamera(bbx.k, ANIMATE)
 			this.moveContent(this.lecture.subjects, this.domainTransform, () => {
 				this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 					this.state = this.interactive ? State.dynamic : State.static
@@ -680,45 +641,23 @@ class GraphSVG {
 		}
 
 		else {
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				Math.max(
-					settings.GRID_MIN_ZOOM,
-					Math.min(
-						settings.GRID_MAX_ZOOM,
-						this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-						this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
-					)
-				),
-			)
-
+			this.setBackground(View.domains)
+			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
 			})
 		}
 	}
-	
+
 	private lectureToSubject() {
-		const bbx = BoundingBox.from(this.graph.subjects)
-		this.setBackground(View.subjects)
+		const bbx = this.boundingBox(this.graph.subjects)
+		this.state = State.animating
 
 		if (this.lecture) {
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				Math.max(
-					settings.GRID_MIN_ZOOM,
-					Math.min(
-						settings.GRID_MAX_ZOOM,
-						this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-						this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
-					)
-				), 
-				ANIMATE
-			)
-
-			this.moveContent(this.lecture.subjects, this.lectureTransform)
+			this.panCamera(bbx.x, bbx.y)
+			this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
+			this.setBackground(View.subjects)
+			this.zoomCamera(bbx.k, ANIMATE)
 			this.restoreContent(() => {
 				this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 					this.state = this.interactive ? State.dynamic : State.static
@@ -727,19 +666,8 @@ class GraphSVG {
 		}
 
 		else {
-			this.moveCamera(
-				bbx.x * settings.GRID_UNIT,
-				bbx.y * settings.GRID_UNIT,
-				Math.max(
-					settings.GRID_MIN_ZOOM,
-					Math.min(
-						settings.GRID_MAX_ZOOM,
-						this.svg.clientWidth / (bbx.width * settings.GRID_UNIT),
-						this.svg.clientHeight / (bbx.height * settings.GRID_UNIT)
-					)
-				),
-			)
-
+			this.setBackground(View.subjects)
+			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
 			})
@@ -757,7 +685,7 @@ class GraphSVG {
 			const size = graphSVG.lecture?.size ?? 0
 			const dx = x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
 			const dy = y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2
-			
+
 			// Set past subject positions to the right column
 			const past = graphSVG.lecture?.past
 			if (past?.includes(subject)) {
@@ -766,7 +694,7 @@ class GraphSVG {
 				subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
 				return
 			}
-		
+
 			// Set present subject positions to the middle column
 			const present = graphSVG.lecture?.present
 			if (present?.includes(subject)) {
@@ -775,7 +703,7 @@ class GraphSVG {
 				subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.FIELD_HEIGHT
 				return
 			}
-		
+
 			// Set future subject positions to the left column
 			const future = graphSVG.lecture?.future
 			if (future?.includes(subject)) {
