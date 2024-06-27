@@ -4,7 +4,7 @@
 
 	// Lib imports
     import { Graph } from '$scripts/entities'
-	import { GraphSVG, GraphType } from '$scripts/d3'
+	import { GraphSVG, View } from '$scripts/d3'
 	
 	// Components
 	import Dropdown from './Dropdown.svelte';
@@ -13,6 +13,7 @@
 	export let graph: Graph
 	export let interactive: boolean = true
 	export function findGraph() { graphSVG.findGraph() }
+	export function toggleForces() { }
 
 	// Variables
 	let graphSVG: GraphSVG = new GraphSVG(graph, interactive)
@@ -27,20 +28,20 @@
     <div class="tabs">
         <button
 			class="tab first"
-            class:active={graphSVG.type === GraphType.domains}
-            on:click={() => graphSVG.type = GraphType.domains}
+            class:active={graphSVG.view === View.domains}
+            on:click={() => graphSVG.view = View.domains}
         > Domains </button>
 
         <button
 			class="tab"
-            class:active={graphSVG.type === GraphType.subjects}
-            on:click={() => graphSVG.type = GraphType.subjects}
+            class:active={graphSVG.view === View.subjects}
+            on:click={() => graphSVG.view = View.subjects}
         > Subjects </button>
 
         <button
 			class="tab last"
-            class:active={graphSVG.type === GraphType.lectures}
-            on:click={() => graphSVG.type = GraphType.lectures}
+            class:active={graphSVG.view === View.lectures}
+            on:click={() => graphSVG.view = View.lectures}
         > Lectures </button>
 
 		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lecture_options} />
