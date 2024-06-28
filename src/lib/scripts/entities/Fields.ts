@@ -49,7 +49,9 @@ abstract class Field<T extends Domain | Subject> {
 		public y: number,
 		public name: string,
 		public parents: T[],
-		public children: T[]
+		public children: T[],
+		public fx?: number,
+		public fy?: number
 	) { }
 
 	protected hasName(field: Domain | Subject): boolean {

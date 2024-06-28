@@ -8,7 +8,7 @@ import { FieldSVG, RelationSVG } from '.'
 import * as settings from '../settings'
 
 // Exports
-export { GraphSVG, View }
+export { GraphSVG, View, State }
 
 // --------------------> Types
 
@@ -38,13 +38,14 @@ class GraphSVG {
 
 	private svg!: SVGSVGElement
 	private zoom!: d3.ZoomBehavior<SVGSVGElement, unknown>
+	private simulation!: d3.Simulation<d3.SimulationNodeDatum, undefined>
 
 	constructor(graph: Graph, interactive: boolean = true) {
 		this.graph = graph
-		this.state = interactive ? State.dynamic : State.static
 		this.interactive = interactive
 
 		this._view = View.domains
+		this._state = interactive ? State.dynamic : State.static
 	}
 
 	get view() {
@@ -109,6 +110,18 @@ class GraphSVG {
 			d3.select(this.svg)
 				.attr('pointer-events', 'all')
 		}
+
+		if (this.state === State.simulating) {
+			this.microwaveSimulation()
+			d3.select('#content')
+				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+					.call(FieldSVG.setFixed, false)
+		} else {
+			this.simulation.stop()
+			d3.select('#content')
+				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+					.call(FieldSVG.setFixed, true)
+		}
 	}
 
 	get lecture() {
@@ -136,20 +149,6 @@ class GraphSVG {
 			.select('#content')
 				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
 					.call(FieldSVG.updateHighlight, this.lecture)
-	}
-
-	get autolayout() {
-		return this.state === State.simulating
-	}
-
-	set autolayout(autolayout: boolean) {
-		if (
-			this.autolayout === autolayout ||
-			this.state !== State.dynamic &&
-			this.state !== State.simulating
-		) return
-
-		this.state = autolayout ? State.simulating : State.dynamic
 	}
 
 	create(element: SVGSVGElement) {
@@ -228,11 +227,29 @@ class GraphSVG {
 
 		svg.call(this.zoom)
 
+		// Simulation
+		this.simulation = d3.forceSimulation<d3.SimulationNodeDatum>(this.view === View.domains ? this.graph.domains : this.graph.subjects)
+			.force('x', d3.forceX(0).strength(0.01))
+			.force('y', d3.forceY(0).strength(0.01))
+			.on('tick', () => {
+				d3.select(this.svg)
+					.select('#content')
+						.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+							.call(FieldSVG.updatePosition)
+			})
+
 		// Background & content
 		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground(View.domains)
 		this.setContent(this.graph.domains, this.graph.domain_relations)
+	}
+
+	toggleForces() {
+		if (this.state === State.simulating) 
+			this.state = State.dynamic
+		else if (this.state === State.dynamic)
+			this.state = State.simulating
 	}
 
 	findGraph() {
@@ -248,6 +265,12 @@ class GraphSVG {
 		this.moveCamera(bbx.x, bbx.y, bbx.k, () => {
 			this.state = state
 		})
+	}
+
+	microwaveSimulation() {
+		this.simulation
+			.alpha(1)
+			.restart()
 	}
 
 	private boundingBox(fields: Field<Domain | Subject>[]) {
@@ -427,6 +450,7 @@ class GraphSVG {
 	) {
 		const content = d3.select<SVGGElement, unknown>('#content')
 		const lecture = this.lecture
+		const graphSVG = this
 
 		// Update Fields
 		content
@@ -436,7 +460,7 @@ class GraphSVG {
 					function(enter) {
 						return enter
 							.append('g')
-								.call(FieldSVG.create)
+								.call(FieldSVG.create, graphSVG)
 								.call(FieldSVG.updateHighlight, lecture)
 								.style('opacity', 0)
 					},

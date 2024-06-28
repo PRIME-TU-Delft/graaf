@@ -23,6 +23,7 @@ export const LECTURE_FONT_SIZE: Pixels        = 22
 export const LECTURE_COLUMN_WIDTH: GridUnits  = 2 * LECTURE_PADDING + FIELD_WIDTH
 
 export const STROKE_WIDTH: Pixels             = 2
+export const STROKE_DASHARRAY: string            = '10,5'
 export const FADE_DURATION: Milliseconds      = 500
 export const ANIMATION_DURATION: Milliseconds = 1000
 

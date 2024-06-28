@@ -13,7 +13,7 @@
 	export let graph: Graph
 	export let interactive: boolean = true
 	export function findGraph() { graphSVG.findGraph() }
-	export function toggleForces() { }
+	export function toggleForces() { graphSVG.toggleForces() }
 
 	// Variables
 	let graphSVG: GraphSVG = new GraphSVG(graph, interactive)

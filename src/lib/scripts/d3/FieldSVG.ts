@@ -3,7 +3,7 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { RelationSVG } from '../d3'
+import { GraphSVG, RelationSVG, State } from '../d3'
 import { Field, Domain, Subject, Relation, Lecture } from '../entities'
 import * as settings from '../settings'
 import { styles } from '../settings'
@@ -12,13 +12,13 @@ import { styles } from '../settings'
 export { FieldSVG }
 
 class FieldSVG {
-	static create(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>) {
+	static create(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>, graphSVG: GraphSVG) {
 		if (selection.empty()) return
 
 		// Field attrs
 		selection
 			.attr('id', field => field.uuid)
-			.attr('class', 'field')
+			.classed('field', true)
 			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},
 				${field.y * settings.GRID_UNIT}
@@ -46,13 +46,18 @@ class FieldSVG {
 		selection.call(
 			d3.drag<SVGGElement, Field<Domain | Subject>>()
 				.on('start', function() {
-					d3.select(this)
+					d3.select<SVGGElement, Field<Domain | Subject>>(this)
+						.call(FieldSVG.setFixed, true)
 						.raise()
 				})
 				.on('drag', function(event, field) {
 					field.x = field.x + event.dx / settings.GRID_UNIT
 					field.y = field.y + event.dy / settings.GRID_UNIT
 					FieldSVG.updatePosition(d3.select(this))
+
+					field.fx = field.x
+					field.fy = field.y
+					graphSVG.microwaveSimulation()
 				})
 				.on('end', function(_ ,field) {
 					field.x = Math.round(field.x)
@@ -60,6 +65,13 @@ class FieldSVG {
 					FieldSVG.updatePosition(d3.select(this))
 				})
 		)
+
+		// Click behaviour
+		selection.on('click', function() {
+			const selection = d3.select<SVGGElement, Field<Domain | Subject>>(this)
+			const fixed = selection.classed('fixed')
+			selection.call(FieldSVG.setFixed, !fixed)
+		})
 	}
 
 	static updatePosition(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>, animated: boolean = false) {
@@ -100,6 +112,16 @@ class FieldSVG {
 					d3.select(this)
 						.attr('filter', lecture?.present.includes(field) ? 'url(#shadow)' : null)
 				}
+			})
+	}
+
+	static setFixed(selection: d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>, fixed: boolean) {
+		selection
+			.classed('fixed', fixed)
+			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
+			.each((field) => {
+				field.fx = fixed ? field.x : undefined
+				field.fy = fixed ? field.y : undefined
 			})
 	}
 }
