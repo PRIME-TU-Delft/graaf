@@ -62,12 +62,13 @@ const dto = {
 		style: true
 	},
 	async compute(domain: Domain): Promise<SerializedDomain> {
+		// TODO: what if a domain has no name/style? Validate before converting and throw error?
 		return {
 			id: domain.id,
-			name: domain.name,
+			name: domain.name!,
 			x: domain.x,
 			y: domain.y,
-			style: domain.style,
+			style: domain.style!,
 			parents: await getParentIds.compute(domain),
 			children: await getChildIds.compute(domain)
 		}
