@@ -10,12 +10,12 @@ export { Relation, DomainRelation, SubjectRelation }
 
 
 // --------------------> Classes
-
+type ID = number;
 
 abstract class Relation<T extends Domain | Subject> {
 	constructor (
 		public graph: Graph,
-		public uuid: string,
+		public id: ID,
 		public index: number,
 		private _parent?: T,
 		private _child?: T
@@ -160,19 +160,6 @@ class DomainRelation extends Relation<Domain> {
 		return options
 	}
 
-	static create(graph: Graph): DomainRelation {
-		/* Create this domain relation */
-
-		const relation = new DomainRelation(
-			graph,
-			Graph.generateUUID(),
-			graph.domain_relations.length
-		)
-
-		graph.domain_relations.push(relation)
-		return relation
-	}
-
 	private isDuplicate(parent?: Domain, child?: Domain): boolean {
 		/* Check if the relation is a duplicate */
 
@@ -230,7 +217,7 @@ class DomainRelation extends Relation<Domain> {
 				new Error(
 					'Domain relation is not fully defined',
 					'Both the parent and child domains must be selected',
-					1, this.uuid
+					1, this.id.toString()
 				)
 			)
 		}
@@ -241,7 +228,7 @@ class DomainRelation extends Relation<Domain> {
 				new Warning(
 					'Domain relation is inconsistent',
 					'The subjects of these domains are not related',
-					1, this.uuid
+					1, this.id.toString()
 				)
 			)
 		}
@@ -271,17 +258,48 @@ class DomainRelation extends Relation<Domain> {
 }
 
 class SubjectRelation extends Relation<Subject> {
-	static create(graph: Graph): SubjectRelation {
-		/* Create this subject relation */
+	get parent_options(): DropdownOption<Subject>[] {
+		/* Return the parent options for this subject relation */
 
-		const relation = new SubjectRelation(
-			graph,
-			Graph.generateUUID(),
-			graph.subject_relations.length
-		)
+		const options: DropdownOption<Subject>[] = []
+		for (const subject of this.graph.subjects) {
 
-		graph.subject_relations.push(relation)
-		return relation
+			// Check if the subject has a name
+			if (!this.hasName(subject)) continue
+
+			// Add the subject to options
+			options.push(
+				new DropdownOption(
+					subject.name,
+					subject,
+					this.validateOption(subject, this.child)
+				)
+			)
+		}
+
+		return options
+	}
+
+	get child_options(): DropdownOption<Subject>[] {
+		/* Return the child options for this subject relation */
+
+		const options: DropdownOption<Subject>[] = []
+		for (const subject of this.graph.subjects) {
+
+			// Check if the subject has a name
+			if (!this.hasName(subject)) continue
+
+			// Add the subject to options
+			options.push(
+				new DropdownOption(
+					subject.name,
+					subject,
+					this.validateOption(this.parent, subject)
+				)
+			)
+		}
+
+		return options
 	}
 
 	private isInconsistent(parent?: Subject, child?: Subject): boolean {
@@ -332,50 +350,6 @@ class SubjectRelation extends Relation<Subject> {
 		return validation
 	}
 
-	get parent_options(): DropdownOption<Subject>[] {
-		/* Return the parent options for this subject relation */
-
-		const options: DropdownOption<Subject>[] = []
-		for (const subject of this.graph.subjects) {
-
-			// Check if the subject has a name
-			if (!this.hasName(subject)) continue
-
-			// Add the subject to options
-			options.push(
-				new DropdownOption(
-					subject.name,
-					subject,
-					this.validateOption(subject, this.child)
-				)
-			)
-		}
-
-		return options
-	}
-
-	get child_options(): DropdownOption<Subject>[] {
-		/* Return the child options for this subject relation */
-
-		const options: DropdownOption<Subject>[] = []
-		for (const subject of this.graph.subjects) {
-
-			// Check if the subject has a name
-			if (!this.hasName(subject)) continue
-
-			// Add the subject to options
-			options.push(
-				new DropdownOption(
-					subject.name,
-					subject,
-					this.validateOption(this.parent, subject)
-				)
-			)
-		}
-
-		return options
-	}
-
 	validate(): ValidationData {
 		/* Validate this subject relation */
 
@@ -387,7 +361,7 @@ class SubjectRelation extends Relation<Subject> {
 				new Error(
 					'Subject relation is not fully defined',
 					'Both the parent and child subjects must be selected',
-					2, this.uuid
+					2, this.id.toString()
 				)
 			)
 		}
@@ -398,7 +372,7 @@ class SubjectRelation extends Relation<Subject> {
 				new Warning(
 					'Subject relation is inconsistent',
 					'The domains of these subjects are not related',
-					2, this.uuid
+					2, this.id.toString()
 				)
 			)
 		}

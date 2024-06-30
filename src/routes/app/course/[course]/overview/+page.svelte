@@ -1,6 +1,8 @@
 
 <script lang="ts">
 
+	import { enhance } from '$app/forms'
+
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import Card from '$components/Card.svelte'
@@ -27,6 +29,9 @@
 	let createGraphModal: Modal
 
 	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
+
+	export let data;
+	// $: course = data.course;
 
 	let course = {
 		code: 'CSE1200',
@@ -87,7 +92,7 @@
 			<h3 slot="header"> Create Graph </h3>
 			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<form>
+			<form method="POST" action="?/newGraph" use:enhance={createGraphModal.hide}>
 				<label for="name"> Name </label>
 				<Textfield label="Name" />
 				<Button submit on:click={createGraphModal.hide}> Create </Button>

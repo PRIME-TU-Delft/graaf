@@ -10,6 +10,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"test": "vitest",
+		"typecheck": "tsc --noEmit",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write ."
 	},
@@ -41,10 +42,7 @@
 	"type": "module",
 	"dependencies": {
 		"@types/d3": "^7.4.3",
-		"@types/uuid": "^9.0.8",
 		"d3": "^7.9.0",
-		"devalue": "^5.0.0",
-		"dotenv": "^16.4.5",
-		"uuid": "^10.0.0"
+		"dotenv": "^16.4.5"
 	}
 }

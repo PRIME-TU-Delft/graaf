@@ -1,7 +1,3 @@
-
-// External imports
-import * as uuid from 'uuid'
-
 // Internal imports
 import { ValidationData, Error } from './ValidationData'
 import { DropdownOption } from './DropdownOption'
@@ -16,15 +12,16 @@ import type { DomainData } from './Fields'
 
 // Exports
 export { Graph }
-export type { UUID, GraphData }
+export type { GraphData }
 
 
 // --------------------> Types
 
 
-type UUID = string
+type ID = number
+
 type GraphData = {
-	uuid: UUID,
+	id: ID,
 	name: string,
 	domains: DomainData[],
 	subjects: SubjectData[],
@@ -37,7 +34,7 @@ type GraphData = {
 
 class Graph {
 	constructor(
-		public uuid: string,
+		public id: ID,
 		public name: string = '',
 		public domains: Domain[] = [],
 		public subjects: Subject[] = [],
@@ -65,92 +62,10 @@ class Graph {
 		return options
 	}
 
-	static create(): Graph {
-		/* Create a new graph */
-
-		const graph = new Graph(Graph.generateUUID())
-		graph.name = 'New Graph'
-
-		let domain = Domain.create(graph)
-		domain.name = 'Domain 1'
-		domain.style = 'prosperous-red'
-
-		domain = Domain.create(graph)
-		domain.name = 'Domain 2'
-		domain.style = 'energizing-orange'
-
-		domain = Domain.create(graph)
-		domain.name = 'Domain 3'
-		domain.style = 'sunny-yellow'
-
-		let domain_relation = DomainRelation.create(graph)
-		domain_relation.parent = graph.domains[0]
-		domain_relation.child = graph.domains[1]
-
-		domain_relation = DomainRelation.create(graph)
-		domain_relation.parent = graph.domains[0]
-		domain_relation.child = graph.domains[2]
-
-		domain_relation = DomainRelation.create(graph)
-		domain_relation.parent = graph.domains[1]
-		domain_relation.child = graph.domains[2]
-
-		let subject = Subject.create(graph)
-		subject.name = 'Subject 1'
-		subject.domain = graph.domains[0]
-
-		subject = Subject.create(graph)
-		subject.name = 'Subject 2'
-		subject.domain = graph.domains[0]
-
-		subject = Subject.create(graph)
-		subject.name = 'Subject 3'
-		subject.domain = graph.domains[1]
-
-		subject = Subject.create(graph)
-		subject.name = 'Subject 4'
-		subject.domain = graph.domains[2]
-
-		subject = Subject.create(graph)
-		subject.name = 'Subject 5'
-		subject.domain = graph.domains[2]
-
-		let subject_relation = SubjectRelation.create(graph)
-		subject_relation.parent = graph.subjects[0]
-		subject_relation.child = graph.subjects[1]
-
-		subject_relation = SubjectRelation.create(graph)
-		subject_relation.parent = graph.subjects[0]
-		subject_relation.child = graph.subjects[2]
-
-		subject_relation = SubjectRelation.create(graph)
-		subject_relation.parent = graph.subjects[1]
-		subject_relation.child = graph.subjects[2]
-
-		subject_relation = SubjectRelation.create(graph)
-		subject_relation.parent = graph.subjects[2]
-		subject_relation.child = graph.subjects[3]
-
-		subject_relation = SubjectRelation.create(graph)
-		subject_relation.parent = graph.subjects[2]
-		subject_relation.child = graph.subjects[4]
-
-		let lecture = Lecture.create(graph)
-		lecture.name = 'Lecture 1'
-
-		let lecture_subject = LectureSubject.create(lecture)
-		lecture_subject.subject = graph.subjects[1]
-
-		lecture_subject = LectureSubject.create(lecture)
-		lecture_subject.subject = graph.subjects[2]
-
-		return graph
-	}
-
 	static revive(data: GraphData) {
 		/* Revive graph from a POJO */
 
-		const graph = new Graph(data.uuid, data.name)
+		const graph = new Graph(data.id, data.name)
 
 		// Define domains
 		for (const domain_data of data.domains) {
@@ -158,7 +73,7 @@ class Graph {
 				new Domain(
 					graph,
 					graph.domains.length,
-					domain_data.uuid,
+					domain_data.id,
 					domain_data.x,
 					domain_data.y,
 					domain_data.style,
@@ -169,11 +84,11 @@ class Graph {
 
 		// Build domain relations
 		for (const parent_data of data.domains) {
-			const parent = graph.domains.find(domain => domain.uuid === parent_data.uuid)
+			const parent = graph.domains.find(domain => domain.id === parent_data.id)
 			if (!parent) continue
 
-			for (const child_uuid of parent_data.children) {
-				const child = graph.domains.find(domain => domain.uuid === child_uuid)
+			for (const child_id of parent_data.children) {
+				const child = graph.domains.find(domain => domain.id === child_id)
 				if (!child) continue
 
 				const relation = DomainRelation.create(graph)
@@ -184,14 +99,14 @@ class Graph {
 
 		// Define subjects
 		for (const subject_data of data.subjects) {
-			const domain = graph.domains.find(domain => domain.uuid === subject_data.domain)
+			const domain = graph.domains.find(domain => domain.id === subject_data.domain)
 			if (!domain) continue
 
 			graph.subjects.push(
 				new Subject(
 					graph,
 					graph.subjects.length,
-					subject_data.uuid,
+					subject_data.id,
 					subject_data.x,
 					subject_data.y,
 					domain,
@@ -202,11 +117,11 @@ class Graph {
 
 		// Build subject relations
 		for (const parent_data of data.subjects) {
-			const parent = graph.subjects.find(subject => subject.uuid === parent_data.uuid)
+			const parent = graph.subjects.find(subject => subject.id === parent_data.id)
 			if (!parent) continue
 
 			for (const child_uuid of parent_data.children) {
-				const child = graph.subjects.find(subject => subject.uuid === child_uuid)
+				const child = graph.subjects.find(subject => subject.id === child_uuid)
 				if (!child) continue
 
 				const relation = SubjectRelation.create(graph)
@@ -219,7 +134,7 @@ class Graph {
 		for (const lecture_data of data.lectures) {
 			const lecture = new Lecture(
 				graph,
-				lecture_data.uuid,
+				lecture_data.id,
 				graph.lectures.length,
 				lecture_data.name
 			)
@@ -227,8 +142,8 @@ class Graph {
 			graph.lectures.push(lecture)
 
 			// Define lecture subjects
-			for (const subject_uuid of lecture_data.subjects) {
-				const subject = graph.subjects.find(subject => subject.uuid === subject_uuid)
+			for (const subject_id of lecture_data.subjects) {
+				const subject = graph.subjects.find(subject => subject.id === subject_id)
 				if (!subject) continue
 
 				const lecture_subject = LectureSubject.create(lecture)
@@ -237,12 +152,6 @@ class Graph {
 		}
 
 		return graph
-	}
-
-	static generateUUID(): UUID {
-		/* Generate a new UUID */
-
-		return uuid.v4()
 	}
 
 	private hasName(): boolean {
@@ -286,7 +195,7 @@ class Graph {
 		/* Reduce graph to a POJO */
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			name: this.name,
 			domains: this.domains.map(domain => domain.reduce()),
 			subjects: this.subjects.map(subject => subject.reduce()),
@@ -302,7 +211,5 @@ class Graph {
 
 	delete() {
 		/* Delete the graph from the database */
-
-		throw new Error('Not implemented')
 	}
 }

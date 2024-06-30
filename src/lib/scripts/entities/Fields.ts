@@ -6,8 +6,6 @@ import { DropdownOption } from './DropdownOption'
 import { Graph } from './Graph'
 import { styles } from '../settings'
 
-import type { UUID } from './Graph'
-
 // Exports
 export { Field, Domain, Subject }
 export type { DomainData, SubjectData }
@@ -16,24 +14,26 @@ export type { DomainData, SubjectData }
 // --------------------> Types
 
 
+type ID = number
+
 type DomainData = {
-	uuid: UUID,
+	id: ID,
 	x: number,
 	y: number,
 	style: string,
 	name: string,
-	parents: UUID[],
-	children: UUID[]
+	parents: ID[],
+	children: ID[]
 }
 
 type SubjectData = {
-	uuid: UUID,
+	id: ID,
 	x: number,
 	y: number,
-	domain: UUID,
+	domain: ID,
 	name: string,
-	parents: UUID[],
-	children: UUID[]
+	parents: ID[],
+	children: ID[]
 }
 
 
@@ -47,7 +47,7 @@ abstract class Field<T extends Domain | Subject> {
 	constructor(
 		public graph: Graph,
 		public index: number,
-		public uuid: string,
+		public id: ID,
 		public x: number,
 		public y: number,
 		public name: string,
@@ -95,7 +95,7 @@ class Domain extends Field<Domain> {
 	constructor(
 		graph: Graph,
 		index: number,
-		uuid: string,
+		id: ID,
 		x: number = 0,
 		y: number = 0,
 		style?: string,
@@ -103,7 +103,7 @@ class Domain extends Field<Domain> {
 		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
-		super(graph, index, uuid, x, y, name, parents, children)
+		super(graph, index, id, x, y, name, parents, children)
 		this.style = style
 	}
 
@@ -156,30 +156,6 @@ class Domain extends Field<Domain> {
 		return options
 	}
 
-	static create(graph: Graph): Domain {
-		/* Create this domain */
-
-		// Find unused style
-		let style = undefined
-		for (const key of Object.keys(styles)) {
-			if (graph.domains.some(domain => domain.style === key)) continue
-			style = key
-			break
-		}
-
-		// Create domain
-		const domain = new Domain(
-			graph,
-			graph.domains.length,
-			Graph.generateUUID(),
-			0, 0, // TODO find non-overlapping coordinates
-			style
-		)
-
-		graph.domains.push(domain)
-		return domain
-	}
-
 	private hasStyle(): boolean {
 		/* Check if the style of a domain is undefined */
 
@@ -203,7 +179,7 @@ class Domain extends Field<Domain> {
 			response.add(new Error(
 				'Domain must have a name',
 				undefined,
-				1, this.uuid
+				1, this.id.toString()
 			))
 		}
 
@@ -214,7 +190,7 @@ class Domain extends Field<Domain> {
 				response.add(new Error(
 					'Domain must have a unique name',
 					`Name first used by Domain nr. ${first + 1}`,
-					1, this.uuid
+					1, this.id.toString()
 				))
 			}
 		}
@@ -224,7 +200,7 @@ class Domain extends Field<Domain> {
 			response.add(new Error(
 				'Domain must have a style',
 				undefined,
-				1, this.uuid
+				1, this.id.toString()
 			))
 		}
 
@@ -235,7 +211,7 @@ class Domain extends Field<Domain> {
 				response.add(new Error(
 					'Domain must have a unique style',
 					`Style first used by Domain nr. ${first + 1}`,
-					1, this.uuid
+					1, this.id.toString()
 				))
 			}
 		}
@@ -245,7 +221,7 @@ class Domain extends Field<Domain> {
 			response.add(new Warning(
 				'Domain has no subjects',
 				'You might want to assign subjects to this domain',
-				1, this.uuid
+				1, this.id.toString()
 			))
 		}
 
@@ -264,13 +240,13 @@ class Domain extends Field<Domain> {
 		/* Serialize domain to a POJO */
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			x: this.x,
 			y: this.y,
 			style: this.style!,
 			name: this.name,
-			parents: this.parents.map(parent => parent.uuid),
-			children: this.children.map(child => child.uuid)
+			parents: this.parents.map(parent => parent.id),
+			children: this.children.map(child => child.id)
 		}
 	}
 
@@ -309,7 +285,7 @@ class Subject extends Field<Subject> {
 	constructor(
 		graph: Graph,
 		index: number,
-		uuid: string,
+		id: ID,
 		x: number = 0,
 		y: number = 0,
 		domain?: Domain,
@@ -317,7 +293,7 @@ class Subject extends Field<Subject> {
 		parents: Subject[] = [],
 		children: Subject[] = []
 	) {
-		super(graph, index, uuid, x, y, name, parents, children)
+		super(graph, index, id, x, y, name, parents, children)
 		this.domain = domain
 	}
 
@@ -354,21 +330,7 @@ class Subject extends Field<Subject> {
 		return options
 	}
 
-	static create(graph: Graph): Subject {
-		/* Create this subject */
-
-		const subject = new Subject(
-			graph,
-			graph.subjects.length,
-			Graph.generateUUID(),
-			0, 0 // TODO find non-overlapping coordinates
-		)
-
-		graph.subjects.push(subject)
-		return subject
-	}
-
-	private hasDomain(): boolean {
+		private hasDomain(): boolean {
 		/* Check if the domain of a subject is undefined */
 
 		return this.domain !== undefined
@@ -384,7 +346,7 @@ class Subject extends Field<Subject> {
 			response.add(new Error(
 				'Subject must have a name',
 				undefined,
-				2, this.uuid
+				2, this.id.toString()
 			))
 		}
 
@@ -395,7 +357,7 @@ class Subject extends Field<Subject> {
 				response.add(new Error(
 					'Subject must have a unique name',
 					`Name first used by Subject nr. ${first + 1}`,
-					2, this.uuid
+					2, this.id.toString()
 				))
 			}
 		}
@@ -405,7 +367,7 @@ class Subject extends Field<Subject> {
 			response.add(new Error(
 				'Subject must have a domain',
 				undefined,
-				2, this.uuid
+				2, this.id.toString()
 			))
 		}
 
@@ -424,13 +386,13 @@ class Subject extends Field<Subject> {
 		/* Serialize subject to a POJO */
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			x: this.x,
 			y: this.y,
-			domain: this.domain!.uuid,
+			domain: this.domain!.id,
 			name: this.name,
-			parents: this.parents.map(parent => parent.uuid),
-			children: this.children.map(child => child.uuid)
+			parents: this.parents.map(parent => parent.id),
+			children: this.children.map(child => child.id)
 		}
 	}
 

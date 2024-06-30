@@ -88,18 +88,18 @@
 		},
 		{
 			name: graph.name,
-			href: `/app/course/${course.code}/graph/${graph.uuid}/overview`
+			href: `/app/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/app/course/${course.code}/graph/${graph.uuid}/settings`
+			href: `/app/course/${course.code}/graph/${graph.id}/settings`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={validation} goto_anchor={goto_anchor} success_msg={'Ready to save'} />
+		<Validation data={validation} success_msg={'Ready to save'} {goto_anchor} />
 		<div class="flex-spacer" />
-		<LinkButton href="/app/course/{course.code}/graph/{graph.uuid}/layout"> Edit layout </LinkButton>
+		<LinkButton href="/app/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
 		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes 
 		</Button>

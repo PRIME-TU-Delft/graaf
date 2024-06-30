@@ -35,6 +35,12 @@
 	let relation_child_sort: boolean | undefined
 
 	// Functions
+	async function createDomain() {
+		/* Creates a new domain */
+
+		const response = await fetch('newDomain')
+	}
+
 	function domainMatchesQuery(query: string, domain: Domain): boolean {
 		/* Checks if query appears in domain */
 
@@ -90,7 +96,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domain_query} />
-		<Button on:click={() => { Domain.create(graph); update() }}>
+		<Button on:click={() => { createDomain(); update() }}>
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
@@ -213,7 +219,7 @@
 	<!-- List of relations -->
 	{#each graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.uuid}>
+			<div class="row" id={relation.id.toString()}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />

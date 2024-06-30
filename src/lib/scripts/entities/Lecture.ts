@@ -7,8 +7,6 @@ import { Graph } from './Graph'
 import { Subject } from './Fields'
 import { SubjectRelation } from './Relations'
 
-import type { UUID } from './Graph'
-
 // Exports
 export { Lecture, LectureSubject }
 export type { LectureData }
@@ -16,11 +14,12 @@ export type { LectureData }
 
 // --------------------> Type
 
+type ID = number
 
 type LectureData = {
-	uuid: UUID,
+	id: ID,
 	name: string,
-	subjects: UUID[]
+	subjects: ID[]
 }
 
 // --------------------> Classes
@@ -81,7 +80,7 @@ class LectureSubject {
 class Lecture {
 	constructor(
 		public graph: Graph,
-		public uuid: UUID,
+		public id: ID,
 		public index: number,
 		public name: string = '',
 		public lecture_subjects: LectureSubject[] = []
@@ -164,19 +163,6 @@ class Lecture {
 		return relations
 	}
 
-	static create(graph: Graph): Lecture {
-		/* Create a new lecture */
-
-		const lecture = new Lecture(
-			graph,
-			Graph.generateUUID(),
-			graph.lectures.length
-		)
-
-		graph.lectures.push(lecture)
-		return lecture
-	}
-
 	private hasName(): boolean {
 		/* Check if the lecture has a name */
 
@@ -217,7 +203,7 @@ class Lecture {
 				new Error(
 					'Lecture has no name',
 					undefined,
-					3, this.uuid
+					3, this.id.toString()
 				)
 			)
 		}
@@ -230,7 +216,7 @@ class Lecture {
 					new Error(
 						'Lecture name must be unique',
 						`Name first used by Lecture nr. ${first + 1}`,
-						3, this.uuid
+						3, this.id.toString()
 					)
 				)
 			}
@@ -242,7 +228,7 @@ class Lecture {
 				new Error(
 					'Lecture has no subjects',
 					undefined,
-					3, this.uuid
+					3, this.id.toString()
 				)
 			)
 		}
@@ -253,7 +239,7 @@ class Lecture {
 				new Error(
 					'Lecture has undefined subjects',
 					'Make sure all subjects are defined',
-					3, this.uuid
+					3, this.id.toString()
 				)
 			)
 		}
@@ -265,9 +251,9 @@ class Lecture {
 		/* Serialize lecture to a POJO */
 
 		return {
-			uuid: this.uuid,
+			id: this.id,
 			name: this.name,
-			subjects: this.present.map(subject => subject.uuid)
+			subjects: this.present.map(subject => subject.id)
 		}
 	}
 

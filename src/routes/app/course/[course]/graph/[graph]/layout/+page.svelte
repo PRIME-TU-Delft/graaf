@@ -40,11 +40,11 @@
 		},
 		{
 			name: graph.name,
-			href: `/app/course/${course.code}/graph/${graph.uuid}/overview`
+			href: `/app/course/${course.code}/graph/${graph.id}/overview`
 		},
 		{
 			name: "Edit",
-			href: `/app/course/${course.code}/graph/${graph.uuid}/edit`
+			href: `/app/course/${course.code}/graph/${graph.id}/edit`
 		}
 	]}
 >
@@ -54,7 +54,7 @@
 		<Button on:click={graphInterface.unlockAllFields}> Unlock Fields </Button>
 		<Validation data={graph.validate()} />
 		<div class="flex-spacer" />
-		<LinkButton href={`/app/course/${course.code}/graph/${graph.uuid}/settings`}> Settings </LinkButton>
+		<LinkButton href={`/app/course/${course.code}/graph/${graph.id}/settings`}> Settings </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
