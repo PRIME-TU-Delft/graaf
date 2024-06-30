@@ -7,7 +7,11 @@
 	import { GraphSVG, View } from '$scripts/d3'
 	
 	// Components
-	import Dropdown from './Dropdown.svelte';
+	import Dropdown from './Dropdown.svelte'
+
+	// Assets
+	import zoomInIcon from '$assets/zoom-in-icon.svg'
+	import zoomOutIcon from '$assets/zoom-out-icon.svg'
 
 	// Exports
 	export let graph: Graph
@@ -48,6 +52,13 @@
     </div>
 
 	<svg use:graphSVG.create />
+
+	{#if interactive}
+		<div class="controls">
+			<button on:click={() => graphSVG.zoomIn()}><img src={zoomInIcon} alt=""></button>
+			<button on:click={() => graphSVG.zoomOut()}><img src={zoomOutIcon} alt=""></button>
+		</div>
+	{/if}
 </div>
 
 
@@ -62,6 +73,7 @@
 	.tabular
 		display: flex
 		flex-flow: column nowrap
+		position: relative
 
 		height: 100%
 
@@ -71,6 +83,25 @@
 		svg
 			width: 100%
 			height: 100%
+
+		.controls
+			position: absolute
+			bottom: 0
+			right: 0
+
+			display: flex
+			flex-flow: column nowrap
+			padding: $card-thin-padding
+
+			button
+				width: 2rem
+				height: 2rem
+				cursor: pointer
+
+				img
+					width: 100%
+					height: 100%
+					pointer-events: none
 		
 		.tabs
 			display: flex

@@ -85,6 +85,8 @@
 		width: 100vw
 		height: $footer-height
 
+		pointer-events: none
+
 		#TUDelft-logo
 			width: $tudelft-logo-size
 			margin: $tudelft-logo-margin

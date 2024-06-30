@@ -181,7 +181,7 @@ class GraphSVG {
 		grid.append('line')
 			.attr('x1', 0)
 			.attr('y1', 0)
-			.attr('x2', settings.GRID_UNIT * settings.GRID_MAX_ZOOM)
+			.attr('x2', settings.GRID_UNIT * settings.MAX_ZOOM)
 			.attr('y2', 0)
 			.attr('stroke', settings.GRID_COLOR)
 
@@ -189,7 +189,7 @@ class GraphSVG {
 			.attr('x1', 0)
 			.attr('y1', 0)
 			.attr('x2', 0)
-			.attr('y2', settings.GRID_UNIT * settings.GRID_MAX_ZOOM)
+			.attr('y2', settings.GRID_UNIT * settings.MAX_ZOOM)
 			.attr('stroke', settings.GRID_COLOR)
 
 		// Shadow filter
@@ -204,7 +204,7 @@ class GraphSVG {
 
 		// Zoom & pan
 		this.zoom = d3.zoom<SVGSVGElement, unknown>()
-			.scaleExtent([settings.GRID_MIN_ZOOM, settings.GRID_MAX_ZOOM])
+			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
 			.on('zoom', event => {
 
 				// Update content
@@ -241,6 +241,26 @@ class GraphSVG {
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground(View.domains)
 		this.setContent(this.graph.domains, this.graph.domain_relations)
+	}
+
+	zoomIn() {
+		if (this.state !== State.dynamic) return
+
+		d3.select<SVGSVGElement, unknown>(this.svg)
+			.transition()
+				.duration(settings.ANIMATION_DURATION)
+				.ease(d3.easeSinInOut)
+			.call(this.zoom.scaleBy, settings.ZOOM_STEP)
+	}
+
+	zoomOut() {
+		if (this.state !== State.dynamic) return
+
+		d3.select<SVGSVGElement, unknown>(this.svg)
+			.transition()
+				.duration(settings.ANIMATION_DURATION)
+				.ease(d3.easeSinInOut)
+			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP)
 	}
 
 	findGraph() {
@@ -300,9 +320,9 @@ class GraphSVG {
 			x: (max_x + min_x) / 2,
 			y: (max_y + min_y) / 2,
 			k: Math.max(
-				settings.GRID_MIN_ZOOM,
+				settings.MIN_ZOOM,
 				Math.min(
-					settings.GRID_MAX_ZOOM,
+					settings.MAX_ZOOM,
 					this.svg.clientWidth / ((max_x - min_x) * settings.GRID_UNIT),
 					this.svg.clientHeight / ((max_y - min_y) * settings.GRID_UNIT)
 				)
@@ -360,10 +380,10 @@ class GraphSVG {
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
-		.transition()
-			.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-		.call(this.zoom.scaleTo, k)
+			.transition()
+				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.ease(d3.easeSinInOut)
+			.call(this.zoom.scaleTo, k)
 
 		// Post-transition
 		if (callback) {

@@ -62,7 +62,9 @@ class FieldSVG {
 					const selection = d3.select<SVGGElement, Field<Domain | Subject>>(this)
 					field.x = field.x + event.dx / settings.GRID_UNIT
 					field.y = field.y + event.dy / settings.GRID_UNIT
-
+					field.fx = field.x
+					field.fy = field.y
+					
 					FieldSVG.updatePosition(selection)
 					graphSVG.microwaveSimulation()
 				})
