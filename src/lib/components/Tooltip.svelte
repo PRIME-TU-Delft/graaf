@@ -32,7 +32,7 @@
 
 	.tooltip
 		position: absolute
-		translate: -50% -100%
+		translate: -50% calc(-100% - 10px)
 		z-index: 9999
 
 		width: max-content

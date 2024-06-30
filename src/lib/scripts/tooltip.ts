@@ -13,12 +13,13 @@ export function tooltip(element: HTMLElement, text: string) {
 
 	function mouseEnter() {
 		timeout = setTimeout(() => {
+			const rect = element.getBoundingClientRect()
 			instance = new Tooltip({
 				target: document.body,
 				props: {
 					text: text,
-					x: element.getBoundingClientRect().left + element.getBoundingClientRect().width / 2,
-					y: element.getBoundingClientRect().top - 6
+					x: rect.left + rect.width / 2,
+					y: rect.top
 				}
 			})
 		}, 800)
