@@ -202,25 +202,25 @@ class GraphSVG {
 				.attr('flood-opacity', settings.FIELD_SHADOW_OPACITY)
 				.attr('flood-color', settings.FIELD_SHADOW_COLOR)
 
-		// Shift warning
+		// Zoom warning
 		const warning = svg.append('g')
 			.attr('pointer-events', 'none')
-			.attr('opacity', 0)
+			.style('opacity', 0)
 
 		warning.append('rect')
 			.attr('width', '100%')
 			.attr('height', '100%')
 			.attr('background-color', 'black')
-			.attr('opacity', 0.75)
-		
+			.style('opacity', 0.75)
+
 		warning.append('text')
 			.text('Shift + Scroll to zoom')
 			.attr('font-size', '2em')
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'middle')
+			.attr('fill', 'white')
 			.attr('x', '50%')
 			.attr('y', '50%')
-			.attr('fill', 'white')
 
 		// Keylogging
 		let shift = false
@@ -231,10 +231,24 @@ class GraphSVG {
 			.on('keyup', event => {
 				if (event.key === 'Shift') { shift = false }
 			})
-		
+
+		// Show zoom warning
+		svg.on('wheel', () => {
+			if (shift) return
+
+			warning
+				.interrupt()
+				.style('opacity', 1)
+				.transition()
+					.duration(500)
+					.delay(1000)
+				.style('opacity', 0)
+		})
+
 		// Zoom & pan
 		this.zoom = d3.zoom<SVGSVGElement, unknown>()
 			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
+			.filter((event) => shift || event.type === 'mousedown')
 			.on('zoom', event => {
 
 				// Update content
@@ -250,39 +264,25 @@ class GraphSVG {
 					.selectAll('line')
 						.style('opacity', Math.min(1, event.transform.k))
 			})
-			.filter((event) => shift || event.type === 'mousedown')
 
 		svg
 			.call(this.zoom)
 			.on('dblclick.zoom', null)
 
-		// Zoom warning
-		svg.on('wheel', () => {
-			if (shift) return
-
-			warning
-				.interrupt()
-				.attr('opacity', 1)
-				.transition()
-					.duration(500)
-					.delay(1000)
-				.attr('opacity', 0)
-		})
-
 		// Simulation
-		const links = this.graph.domain_relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
-		this.simulation = d3.forceSimulation<d3.SimulationNodeDatum>(this.graph.domains)
+		this.simulation = d3.forceSimulation<d3.SimulationNodeDatum>()
 			.force('x', d3.forceX(0).strength(settings.CENTER_FORCE))
 			.force('y', d3.forceY(0).strength(settings.CENTER_FORCE))
 			.force('charge', d3.forceManyBody().strength(settings.CHARGE_FORCE))
-			.force('link', d3.forceLink(links))
 			.on('tick', () => {
 				d3.select('#content')
 					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
 						.call(FieldSVG.updatePosition)
 			})
 
-		// Background & content
+		this.setSimulation(this.graph.domains, this.graph.domain_relations)
+
+		// First view
 		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground(View.domains)
