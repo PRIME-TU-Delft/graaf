@@ -35,6 +35,27 @@
 	let relation_child_sort: boolean | undefined
 
 	// Functions
+	async function createSubject() {
+		/* Creates a new subject */
+
+		const response = await fetch('newDomain')
+		if (!response.ok) {
+			console.error('Failed to create domain')
+			return
+		}
+
+		const data = await response.json()
+		Subject.create(graph, data.id)
+		update()
+	}
+
+	async function createSubjectRelation() {
+		/* Creates a new subject relation */
+
+		SubjectRelation.create(graph)
+		update()
+	}
+
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
 		/* Checks if query appears in subject */
 
@@ -89,7 +110,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={subject_query} />
-		<Button on:click={() => { Subject.create(graph); update() }}>
+		<Button on:click={createSubject}>
 			<img src={plusIcon} alt=""> New Subject
 		</Button>
 	</div>
@@ -139,7 +160,7 @@
 	<!-- Subject list -->
 	{#each graph.subjects as subject}
 		{#if subjectMatchesQuery(subject_query, subject)}
-			<div class="row" id={subject.uuid}>
+			<div class="row" id={subject.id.toString()}>
 				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
@@ -162,7 +183,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={() => { SubjectRelation.create(graph); update() }}>
+		<Button on:click={createSubjectRelation}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
@@ -212,7 +233,7 @@
 	<!-- List of relations -->
 	{#each graph.subject_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.uuid}>
+			<div class="row" id={relation.index.toString()}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
