@@ -77,6 +77,12 @@ abstract class Field<T extends Domain | Subject> {
 		return index === -1 ? -1 : first
 	}
 
+	protected isLocked(): boolean {
+		/* Check if the field is locked */
+
+		return this.fx !== undefined && this.fy !== undefined
+	}
+
 	abstract get style(): string | undefined
 	abstract get color(): string
 	abstract validate(): ValidationData
@@ -243,6 +249,14 @@ class Domain extends Field<Domain> {
 			))
 		}
 
+		// Check if the domain is locked
+		if (!this.isLocked()) {
+			response.add(new Error(
+				'Domain is not locked',
+				'Click or move domains with a dashed outline to lock them in place'
+			))
+		}
+
 		return response
 	}
 
@@ -392,6 +406,14 @@ class Subject extends Field<Subject> {
 				'Subject must have a domain',
 				undefined,
 				2, this.uuid
+			))
+		}
+
+		// Check if the subject is locked
+		if (!this.isLocked()) {
+			response.add(new Error(
+				'Subject is not locked',
+				'Click or move subjects with a dashed outline to lock them in place'
 			))
 		}
 

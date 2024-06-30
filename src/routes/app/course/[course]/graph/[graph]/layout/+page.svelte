@@ -12,6 +12,7 @@
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
 	import LinkButton from '$components/LinkButton.svelte'
+	import Validation from '$components/Validation.svelte';
 
 	// Exports
 	export let data: PageData
@@ -51,6 +52,7 @@
 	<svelte:fragment slot="toolbar">
 		<Button on:click={graphInterface.findGraph}> Find Graph </Button>
 		<Button on:click={graphInterface.unlockAllFields}> Unlock Fields </Button>
+		<Validation data={graph.validate()} />
 		<div class="flex-spacer" />
 		<LinkButton href={`/app/course/${course.code}/graph/${graph.uuid}/settings`}> Settings </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
