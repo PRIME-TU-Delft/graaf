@@ -77,10 +77,10 @@ model Graph {
 
 model Domain {
 	id				Int			@id @default(autoincrement())
-	name			String
+	name			String?
 	x				Int			@default(0)
 	y				Int			@default(0)
-	style			String
+	style			String?
 	graph			Graph		@relation(fields: [graphId], references: [id])
 	graphId			Int
 	subjects		Subject[]
@@ -91,14 +91,14 @@ model Domain {
 
 model Subject {
 	id				Int			@id @default(autoincrement())
-	name			String
+	name			String?
 	x				Int			@default(0)
 	y				Int			@default(0)
-	style			String
+	style			String?
 	graph			Graph		@relation(fields: [graphId], references: [id])
 	graphId			Int
-	domain			Domain		@relation(fields: [domainId], references: [id])
-	domainId		Int
+	domain			Domain?		@relation(fields: [domainId], references: [id])
+	domainId		Int?
 	parentSubjects	Subject[]	@relation("SubjectRelation")
 	childSubjects	Subject[]	@relation("SubjectRelation")
 	lectures		Lecture[]

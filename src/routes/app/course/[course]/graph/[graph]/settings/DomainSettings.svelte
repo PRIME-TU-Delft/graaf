@@ -38,7 +38,9 @@
 	async function createDomain() {
 		/* Creates a new domain */
 
-		const response = await fetch('newDomain')
+		let body = new FormData();
+		body.append('graph', graph.id.toString());
+		const response = await fetch('newDomain', { method: 'POST', body });
 		if (!response.ok) {
 			console.error('Failed to create domain')
 			return
