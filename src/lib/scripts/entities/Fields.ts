@@ -156,6 +156,14 @@ class Domain extends Field<Domain> {
 		return options
 	}
 
+	static create(graph: Graph, id: ID) {
+		/* Create a new domain */
+
+		graph.domains.push(
+			new Domain(graph, graph.domains.length, id)
+		)
+	}
+
 	private hasStyle(): boolean {
 		/* Check if the style of a domain is undefined */
 
@@ -334,6 +342,14 @@ class Subject extends Field<Subject> {
 		/* Check if the domain of a subject is undefined */
 
 		return this.domain !== undefined
+	}
+
+	static create(graph: Graph, id: ID) {
+		/* Create a new subject */
+
+		graph.subjects.push(
+			new Subject(graph, graph.subjects.length, id)
+		)
 	}
 
 	validate(): ValidationData {

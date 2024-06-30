@@ -10,12 +10,11 @@ export { Relation, DomainRelation, SubjectRelation }
 
 
 // --------------------> Classes
-type ID = number;
+
 
 abstract class Relation<T extends Domain | Subject> {
 	constructor (
 		public graph: Graph,
-		public id: ID,
 		public index: number,
 		private _parent?: T,
 		private _child?: T
@@ -160,6 +159,14 @@ class DomainRelation extends Relation<Domain> {
 		return options
 	}
 
+	static create(graph: Graph) {
+		/* Create a new domain relation */
+
+		graph.domain_relations.push(
+			new DomainRelation(graph, graph.domain_relations.length)
+		)
+	}
+
 	private isDuplicate(parent?: Domain, child?: Domain): boolean {
 		/* Check if the relation is a duplicate */
 
@@ -217,7 +224,7 @@ class DomainRelation extends Relation<Domain> {
 				new Error(
 					'Domain relation is not fully defined',
 					'Both the parent and child domains must be selected',
-					1, this.id.toString()
+					1, this.index.toString()
 				)
 			)
 		}
@@ -228,7 +235,7 @@ class DomainRelation extends Relation<Domain> {
 				new Warning(
 					'Domain relation is inconsistent',
 					'The subjects of these domains are not related',
-					1, this.id.toString()
+					1, this.index.toString()
 				)
 			)
 		}
@@ -302,6 +309,14 @@ class SubjectRelation extends Relation<Subject> {
 		return options
 	}
 
+	static create(graph: Graph) {
+		/* Create a new subject relation */
+
+		graph.subject_relations.push(
+			new SubjectRelation(graph, graph.subject_relations.length)
+		)
+	}
+
 	private isInconsistent(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is consistent */
 
@@ -361,7 +376,7 @@ class SubjectRelation extends Relation<Subject> {
 				new Error(
 					'Subject relation is not fully defined',
 					'Both the parent and child subjects must be selected',
-					2, this.id.toString()
+					2, this.index.toString()
 				)
 			)
 		}
@@ -372,7 +387,7 @@ class SubjectRelation extends Relation<Subject> {
 				new Warning(
 					'Subject relation is inconsistent',
 					'The domains of these subjects are not related',
-					2, this.id.toString()
+					2, this.index.toString()
 				)
 			)
 		}

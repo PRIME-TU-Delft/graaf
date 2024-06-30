@@ -39,6 +39,21 @@
 		/* Creates a new domain */
 
 		const response = await fetch('newDomain')
+		if (!response.ok) {
+			console.error('Failed to create domain')
+			return
+		}
+
+		const data = await response.json()
+		Domain.create(graph, data.id)
+		update()
+	}
+
+	async function createDomainRelation() {
+		/* Creates a new domain relation */
+
+		DomainRelation.create(graph)
+		update()
 	}
 
 	function domainMatchesQuery(query: string, domain: Domain): boolean {
@@ -96,7 +111,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domain_query} />
-		<Button on:click={() => { createDomain(); update() }}>
+		<Button on:click={createDomain}>
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
@@ -146,7 +161,7 @@
 	<!-- Domain list -->
 	{#each graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
-			<div class="row focus" id={domain.uuid}>
+			<div class="row focus" id={domain.id.toString()}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
@@ -169,7 +184,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={() => { DomainRelation.create(graph); update() }}>
+		<Button on:click={createDomainRelation}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
@@ -219,7 +234,7 @@
 	<!-- List of relations -->
 	{#each graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.id.toString()}>
+			<div class="row" id={relation.index.toString()}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
