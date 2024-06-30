@@ -7,6 +7,8 @@ export const actions = {
 		const data = await request.formData();
 		const graphId = Number(data.get('graph'));
 
+		if (!graphId) return fail(400, { graphId, missing: true });
+
 		await prisma.domain.create({
 			data: {
 				graph: {
@@ -22,7 +24,8 @@ export const actions = {
 	newSubject: async ({ params, request }) => {
 		const data = await request.formData();
 		const graphId = Number(data.get('graph'));
-		const domainId = Number(data.get('domain'));
+
+		if (!graphId) return fail(400, { graphId, missing: true });
 
 		await prisma.subject.create({
 			data: {
