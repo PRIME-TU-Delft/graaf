@@ -43,7 +43,16 @@ class AssignedUser {
 	) { }
 
 	static create(course: Course) {
-		// TODO
+		/* Create a new assigned user */
+		// TODO make not this
+
+		const user = new AssignedUser(
+			course,
+			1,
+			course.users.length
+		)
+		course.users.push(user)
+		return user
 	}
 
 	validate(): ValidationData {
