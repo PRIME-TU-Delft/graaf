@@ -15,7 +15,6 @@
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-	import { validate } from 'uuid';
 
 	// Exports
 	export let graph: Graph
@@ -68,7 +67,7 @@
 		<!-- List of lectures -->
 		{#each graph.lectures as lecture}
 			{#if lectureMatchesQuery(query, lecture)}
-				<div class="lecture" id={lecture.uuid}>
+				<div class="lecture" id={`lecture-${lecture.id}`}>
 					<Validation short data={lecture.validate()} />
 					<span> {lecture.index + 1} </span>
 					<IconButton scale src={trashIcon} on:click={() => { lecture.delete(); update() }} />

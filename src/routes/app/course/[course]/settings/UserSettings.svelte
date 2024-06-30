@@ -108,7 +108,7 @@
 		<!-- Domain list -->
 		{#each course.users as user}
 			{#if userMatchesQuery(query, user)}
-				<div class="row" id={user.uuid}>
+				<div class="row" id={`user-${user.id}`}>
 					<Validation short data={user.validate()} />
 					{user.index + 1}
 					<IconButton scale src={trashIcon} on:click={() => { user.delete(); update() }} />

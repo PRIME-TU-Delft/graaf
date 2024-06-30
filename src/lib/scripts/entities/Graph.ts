@@ -120,8 +120,8 @@ class Graph {
 			const parent = graph.subjects.find(subject => subject.id === parent_data.id)
 			if (!parent) continue
 
-			for (const child_uuid of parent_data.children) {
-				const child = graph.subjects.find(subject => subject.id === child_uuid)
+			for (const child_id of parent_data.children) {
+				const child = graph.subjects.find(subject => subject.id === child_id)
 				if (!child) continue
 
 				const relation = SubjectRelation.create(graph)

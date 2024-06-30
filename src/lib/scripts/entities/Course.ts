@@ -1,6 +1,4 @@
 
-import * as uuid from 'uuid'
-
 // Internal imports
 import { ValidationData, Error } from "./ValidationData"
 import { DropdownOption } from "./DropdownOption"
@@ -33,26 +31,19 @@ enum Permissions {
 
 // --------------------> Classes
 
+type ID = number;
 
 class AssignedUser {
 	constructor(
 		public course: Course,
-		public uuid: string,
+		public id: ID,
 		public index: number,
 		public name: string = '',
 		public permissions?: Permissions
 	) { }
 
 	static create(course: Course) {
-		/* Create a new assigned user */
-
-		const user = new AssignedUser(
-			course,
-			uuid.v4(),
-			course.users.length
-		)
-		course.users.push(user)
-		return user
+		// TODO
 	}
 
 	validate(): ValidationData {
@@ -66,7 +57,7 @@ class AssignedUser {
 				new Error(
 					'User must have a name',
 					undefined,
-					1, this.uuid
+					1, `user-${this.id}`
 				)
 			)
 		}
@@ -77,7 +68,7 @@ class AssignedUser {
 				new Error(
 					'User must have permissions',
 					undefined,
-					1, this.uuid
+					1, `user-${this.id}`
 				)
 			)
 		}
