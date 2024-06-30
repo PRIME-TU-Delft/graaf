@@ -5,9 +5,12 @@ type GridUnits = number
 type Milliseconds = number
 
 export const GRID_COLOR = '#a4a4a4'
-export const GRID_UNIT: Scalar     = 10
+export const GRID_UNIT: Scalar = 10
 export const GRID_MIN_ZOOM: Scalar = 0.5
 export const GRID_MAX_ZOOM: Scalar = 1.5
+
+export const STROKE_WIDTH: Pixels = 2
+export const STROKE_DASHARRAY: string  = '10,5'
 
 export const FIELD_WIDTH: GridUnits  = 16
 export const FIELD_HEIGHT: GridUnits = 8
@@ -17,15 +20,16 @@ export const FIELD_SHADOW_DEVIATION: Pixels = 5
 export const FIELD_SHADOW_OPACITY: Scalar = 0.75
 export const FIELD_SHADOW_COLOR: string = 'green'
 
-export const LECTURE_PADDING: GridUnits       = 5
+export const LECTURE_PADDING: GridUnits = 5
 export const LECTURE_HEADER_HEIGHT: GridUnits = 3
-export const LECTURE_FONT_SIZE: Pixels        = 22
-export const LECTURE_COLUMN_WIDTH: GridUnits  = 2 * LECTURE_PADDING + FIELD_WIDTH
+export const LECTURE_COLUMN_WIDTH: GridUnits = 2 * LECTURE_PADDING + FIELD_WIDTH
+export const LECTURE_FONT_SIZE: Pixels = 22
 
-export const STROKE_WIDTH: Pixels             = 2
-export const STROKE_DASHARRAY: string            = '10,5'
-export const FADE_DURATION: Milliseconds      = 500
+export const FADE_DURATION: Milliseconds = 500
 export const ANIMATION_DURATION: Milliseconds = 1000
+
+export const CENTER_FORCE: Scalar = 0.05
+export const CHARGE_FORCE: Scalar = -20
 
 const top = STROKE_WIDTH / 2
 const right = FIELD_WIDTH * GRID_UNIT - STROKE_WIDTH / 2

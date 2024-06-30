@@ -17,7 +17,6 @@ const ANIMATE = () => {}
 enum State {
 	static,
 	dynamic,
-	simulating,
 	animating,
 	lecture,
 }
@@ -98,29 +97,26 @@ class GraphSVG {
 	private set state(state: State) {
 		if (this.state === state) return
 
-		this._state = state
-
-		if (
-			this.state !== State.dynamic &&
-			this.state !== State.simulating
-		) {
+		if (this.state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'none')
-		} else {
-			d3.select(this.svg)
-				.attr('pointer-events', 'all')
+				.select('#content')
+					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+						.call(FieldSVG.setFixed, true)
+
+			this.simulation.stop()
 		}
 
-		if (this.state === State.simulating) {
+		this._state = state
+
+		if (this.state === State.dynamic) {
+			d3.select(this.svg)
+				.attr('pointer-events', 'all')
+				.select('#content')
+					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+						.call(FieldSVG.setFixed, true)
+
 			this.microwaveSimulation()
-			d3.select('#content')
-				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-					.call(FieldSVG.setFixed, false)
-		} else {
-			this.simulation.stop()
-			d3.select('#content')
-				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-					.call(FieldSVG.setFixed, true)
 		}
 	}
 
@@ -228,14 +224,16 @@ class GraphSVG {
 		svg.call(this.zoom)
 
 		// Simulation
-		this.simulation = d3.forceSimulation<d3.SimulationNodeDatum>(this.view === View.domains ? this.graph.domains : this.graph.subjects)
-			.force('x', d3.forceX(0).strength(0.01))
-			.force('y', d3.forceY(0).strength(0.01))
+		const links = this.graph.domain_relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
+		this.simulation = d3.forceSimulation<d3.SimulationNodeDatum>(this.graph.domains)
+			.force('x', d3.forceX(0).strength(settings.CENTER_FORCE))
+			.force('y', d3.forceY(0).strength(settings.CENTER_FORCE))
+			.force('charge', d3.forceManyBody().strength(settings.CHARGE_FORCE))
+			.force('link', d3.forceLink(links))
 			.on('tick', () => {
-				d3.select(this.svg)
-					.select('#content')
-						.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-							.call(FieldSVG.updatePosition)
+				d3.select('#content')
+					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+						.call(FieldSVG.updatePosition)
 			})
 
 		// Background & content
@@ -245,17 +243,10 @@ class GraphSVG {
 		this.setContent(this.graph.domains, this.graph.domain_relations)
 	}
 
-	toggleForces() {
-		if (this.state === State.simulating) 
-			this.state = State.dynamic
-		else if (this.state === State.dynamic)
-			this.state = State.simulating
-	}
-
 	findGraph() {
 		if (
-			this.state === State.animating ||
-			this.state === State.lecture
+			this.state !== State.dynamic &&
+			this.state !== State.static
 		) return
 
 		const state = this.state
@@ -267,10 +258,27 @@ class GraphSVG {
 		})
 	}
 
+	unlockAllFields() {
+		if (this.state !== State.dynamic)
+			return
+
+		d3.select('#content')
+			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+				.call(FieldSVG.setFixed, false)
+		this.microwaveSimulation()
+	}
+
 	microwaveSimulation() {
 		this.simulation
 			.alpha(1)
 			.restart()
+	}
+
+	private setSimulation(fields: Field<Domain | Subject>[], Relations: Relation<Domain | Subject>[]) {
+		const links = Relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
+		this.simulation
+			.nodes(fields)
+			.force('link', d3.forceLink(links))
 	}
 
 	private boundingBox(fields: Field<Domain | Subject>[]) {
@@ -279,6 +287,7 @@ class GraphSVG {
 		let max_x = -Infinity
 		let max_y = -Infinity
 
+		// Find most outer fields
 		for (const field of fields) {
 			min_x = Math.min(min_x, field.x - settings.FIELD_MARGIN)
 			min_y = Math.min(min_y, field.y - settings.FIELD_MARGIN)
@@ -286,6 +295,7 @@ class GraphSVG {
 			max_y = Math.max(max_y, field.y + settings.FIELD_HEIGHT + settings.FIELD_MARGIN)
 		}
 
+		// Find center and zoom
 		return {
 			x: (max_x + min_x) / 2,
 			y: (max_y + min_y) / 2,
@@ -293,31 +303,29 @@ class GraphSVG {
 				settings.GRID_MIN_ZOOM,
 				Math.min(
 					settings.GRID_MAX_ZOOM,
-					this.svg.clientWidth / (max_x - min_x),
-					this.svg.clientHeight / (max_y - min_y)
+					this.svg.clientWidth / ((max_x - min_x) * settings.GRID_UNIT),
+					this.svg.clientHeight / ((max_y - min_y) * settings.GRID_UNIT)
 				)
 			)
 		}
 	}
 
-	private moveCamera(
-		x: number, y: number, k: number,
-		callback?: () => void
-	) {
+	private moveCamera(x: number, y: number, k: number, callback?: () => void) {
+
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
-		.transition()
-			.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-		.call(
-			this.zoom.transform,
-			d3.zoomIdentity
-				.translate(
-					this.svg.clientWidth / 2 - k * x * settings.GRID_UNIT,
-					this.svg.clientHeight / 2 - k * y * settings.GRID_UNIT
-				)
-				.scale(k)
-		)
+			.transition()
+				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.ease(d3.easeSinInOut)
+			.call(
+				this.zoom.transform,
+				d3.zoomIdentity
+					.translate(
+						this.svg.clientWidth / 2 - k * x * settings.GRID_UNIT,
+						this.svg.clientHeight / 2 - k * y * settings.GRID_UNIT
+					)
+					.scale(k)
+			)
 
 		// Post-transition
 		if (callback) {
@@ -328,16 +336,17 @@ class GraphSVG {
 	}
 
 	private panCamera(x: number, y: number, callback?: () => void) {
+
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
-		.transition()
-			.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-		.call(
-			this.zoom.translateTo,
-			x * settings.GRID_UNIT,
-			y * settings.GRID_UNIT
-		)
+			.transition()
+				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.ease(d3.easeSinInOut)
+			.call(
+				this.zoom.translateTo,
+				x * settings.GRID_UNIT,
+				y * settings.GRID_UNIT
+			)
 
 		// Post-transition
 		if (callback) {
@@ -348,6 +357,7 @@ class GraphSVG {
 	}
 
 	private zoomCamera(k: number, callback?: () => void) {
+
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 		.transition()
@@ -361,16 +371,14 @@ class GraphSVG {
 				callback()
 			}, settings.ANIMATION_DURATION)
 		}
-
 	}
 
 	private setBackground(view: View) {
 		const background = d3.select<SVGGElement, unknown>('#background')
 
 		// Remove old background
-		background
-			.selectAll('*')
-				.remove()
+		background.selectAll('*')
+			.remove()
 
 		// Lecture background
 		if (view === View.lectures) {
@@ -435,80 +443,73 @@ class GraphSVG {
 
 		// Grid background
 		else {
-			background
-				.append('rect')
-					.attr('fill', 'url(#grid)')
-					.attr('width', '100%')
-					.attr('height', '100%')
+			background.append('rect')
+				.attr('fill', 'url(#grid)')
+				.attr('width', '100%')
+				.attr('height', '100%')
 		}
 	}
 
-	private setContent(
-		fields: Field<Domain | Subject>[],
-		relations: Relation<Domain | Subject>[],
-		callback?: () => void
-	) {
+	private setContent(fields: Field<Domain | Subject>[], relations: Relation<Domain | Subject>[], callback?: () => void) {
 		const content = d3.select<SVGGElement, unknown>('#content')
 		const lecture = this.lecture
 		const graphSVG = this
 
 		// Update Fields
-		content
-			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-				.data(fields, field => field.uuid)
-				.join(
-					function(enter) {
-						return enter
-							.append('g')
-								.call(FieldSVG.create, graphSVG)
-								.call(FieldSVG.updateHighlight, lecture)
-								.style('opacity', 0)
-					},
-
-					function(update) {
-						return update
+		content.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+			.data(fields, field => field.uuid)
+			.join(
+				function(enter) {
+					return enter
+						.append('g')
+							.call(FieldSVG.create, graphSVG)
 							.call(FieldSVG.updateHighlight, lecture)
-					},
-
-					function(exit) {
-						return exit
-							.transition()
-								.duration(callback !== undefined ? settings.FADE_DURATION : 0)
-								.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 							.style('opacity', 0)
-					}
-				)
-				.transition()
-					.duration(callback !== undefined ? settings.FADE_DURATION : 0)
-				.style('opacity', 1)
+				},
+
+				function(update) {
+					return update
+						.call(FieldSVG.updateHighlight, lecture)
+				},
+
+				function(exit) {
+					return exit
+						.transition()
+							.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
+						.style('opacity', 0)
+				}
+			)
+			.transition()
+				.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+			.style('opacity', 1)
 
 		// Update relations
-		content
-			.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
-				.data(relations, relation => relation.uuid)
-				.join(
-					function(enter) {
-						return enter
-							.append('line')
-								.call(RelationSVG.create)
-								.style('opacity', 0)
-					},
-
-					function(update) {
-						return update
-					},
-
-					function(exit) {
-						return exit
-							.transition()
-								.duration(callback !== undefined ? settings.FADE_DURATION : 0)
-								.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
+		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
+			.data(relations, relation => relation.uuid)
+			.join(
+				function(enter) {
+					return enter
+						.append('line')
+							.call(RelationSVG.create)
 							.style('opacity', 0)
-					}
-				)
-				.transition()
-					.duration(callback !== undefined ? settings.FADE_DURATION : 0)
-				.style('opacity', 1)
+				},
+
+				function(update) {
+					return update
+				},
+
+				function(exit) {
+					return exit
+						.transition()
+							.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
+						.style('opacity', 0)
+				}
+			)
+			.transition()
+				.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+			.style('opacity', 1)
 
 		// Post-transition
 		if (callback) {
@@ -518,11 +519,8 @@ class GraphSVG {
 		}
 	}
 
-	private moveContent(
-		fields: Subject[],
-		transform: (field: Subject) => void,
-		callback?: () => void
-	) {
+	private moveContent(fields: Subject[], transform: (field: Subject) => void, callback?: () => void) {
+
 		// Buffer field positions
 		const buffers = fields.map(field => ({ field, x: field.x, y: field.y }))
 
@@ -548,9 +546,8 @@ class GraphSVG {
 		}
 	}
 
-	private restoreContent(
-		callback?: () => void
-	) {
+	private restoreContent(callback?: () => void) {
+
 		// Update fields
 		d3.select<SVGGElement, unknown>('#content')
 			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
@@ -564,9 +561,7 @@ class GraphSVG {
 		}
 	}
 
-	private clearContent(
-		callback?: () => void
-	) {
+	private clearContent(callback?: () => void) {
 		d3.select<SVGGElement, unknown>('#content')
 			.selectAll('*')
 				.transition()
@@ -583,22 +578,23 @@ class GraphSVG {
 	}
 
 	private domainToSubject() {
-		const bbx = this.boundingBox(this.graph.subjects)
 		this.state = State.animating
 
+		const bbx = this.boundingBox(this.graph.subjects)
 		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.setContent(this.graph.subjects, this.graph.subject_relations)
 		this.moveContent(this.graph.subjects, this.domainTransform)
 		this.restoreContent(() => {
 			this.state = this.interactive ? State.dynamic : State.static
+			this.setSimulation(this.graph.subjects, this.graph.subject_relations)
 		})
 	}
 
 	private domainToLecture() {
-		const bbx = this.boundingBox(this.graph.domains)
-
 		if (this.lecture) {
 			this.state = State.animating
+
+			const bbx = this.boundingBox(this.graph.domains)
 			this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
 			this.setContent(this.lecture.subjects, this.lecture.relations)
 			this.moveContent(this.lecture.subjects, this.domainTransform)
@@ -616,22 +612,23 @@ class GraphSVG {
 	}
 
 	private subjectToDomain() {
-		const bbx = this.boundingBox(this.graph.domains)
 		this.state = State.animating
 
+		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.moveContent(this.graph.subjects, this.domainTransform, () => {
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
+				this.setSimulation(this.graph.domains, this.graph.domain_relations)
 			})
 		})
 	}
 
 	private subjectToLecture() {
-		const bbx = this.boundingBox(this.graph.subjects)
-
 		if (this.lecture) {
 			this.state = State.animating
+
+			const bbx = this.boundingBox(this.graph.subjects)
 			this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
 			this.setContent(this.lecture.subjects, this.lecture.relations, () => {
 				this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
@@ -660,6 +657,7 @@ class GraphSVG {
 			this.moveContent(this.lecture.subjects, this.domainTransform, () => {
 				this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 					this.state = this.interactive ? State.dynamic : State.static
+					this.setSimulation(this.graph.domains, this.graph.domain_relations)
 				})
 			})
 		}
@@ -669,6 +667,7 @@ class GraphSVG {
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
+				this.setSimulation(this.graph.domains, this.graph.domain_relations)
 			})
 		}
 	}
@@ -685,6 +684,7 @@ class GraphSVG {
 			this.restoreContent(() => {
 				this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 					this.state = this.interactive ? State.dynamic : State.static
+					this.setSimulation(this.graph.subjects, this.graph.subject_relations)
 				})
 			})
 		}
@@ -694,6 +694,7 @@ class GraphSVG {
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
+				this.setSimulation(this.graph.subjects, this.graph.subject_relations)
 			})
 		}
 	}

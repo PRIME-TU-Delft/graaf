@@ -41,6 +41,9 @@ type SubjectData = {
 
 
 abstract class Field<T extends Domain | Subject> {
+	fx?: number
+	fy?: number
+
 	constructor(
 		public graph: Graph,
 		public index: number,
@@ -50,9 +53,12 @@ abstract class Field<T extends Domain | Subject> {
 		public name: string,
 		public parents: T[],
 		public children: T[],
-		public fx?: number,
-		public fy?: number
-	) { }
+	) {
+		/* Create a new field */
+
+		this.fx = x
+		this.fy = y
+	}
 
 	protected hasName(field: Domain | Subject): boolean {
 		/* Check if the name of a field is undefined */

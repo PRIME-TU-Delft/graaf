@@ -3,16 +3,25 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Relation } from '../entities'
+import { Relation, Domain, Subject } from '../entities'
 import * as settings from '../settings'
 import { styles } from '../settings'
 
 // Exports
 export { RelationSVG }
 
+
+// --------------------> Types
+
+
+type RelationSelection = d3.Selection<SVGLineElement, Relation<Domain | Subject>, d3.BaseType, unknown>
+
+
+// --------------------> Classes
+
+
 class RelationSVG {
-	static create(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>) {
-		if (selection.empty()) return
+	static create(selection: RelationSelection) {
 		selection
 			.attr('class', 'relation')
 			.attr('stroke-width', settings.STROKE_WIDTH)
@@ -22,8 +31,7 @@ class RelationSVG {
 			.call(RelationSVG.update)
 	}
 
-	static update(selection: d3.Selection<SVGLineElement, Relation, d3.BaseType, unknown>, animated: boolean = false) {
-		if (selection.empty()) return
+	static update(selection: RelationSelection, animated: boolean = false) {
 
 		// Lower relations
 		selection.lower()
