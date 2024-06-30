@@ -29,7 +29,7 @@ export const FADE_DURATION: Milliseconds = 500
 export const ANIMATION_DURATION: Milliseconds = 1000
 
 export const CENTER_FORCE: Scalar = 0.05
-export const CHARGE_FORCE: Scalar = -20
+export const CHARGE_FORCE: Scalar = -15
 
 const top = STROKE_WIDTH / 2
 const right = FIELD_WIDTH * GRID_UNIT - STROKE_WIDTH / 2
