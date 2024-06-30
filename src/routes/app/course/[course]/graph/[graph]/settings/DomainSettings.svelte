@@ -46,8 +46,8 @@
 			return
 		}
 
-		const data = await response.json()
-		Domain.create(graph, data.id)
+		const id = Number(await response.text())
+		Domain.create(graph, id)
 		update()
 	}
 

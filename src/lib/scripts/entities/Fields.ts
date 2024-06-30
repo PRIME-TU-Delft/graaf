@@ -156,12 +156,12 @@ class Domain extends Field<Domain> {
 		return options
 	}
 
-	static create(graph: Graph, id: ID) {
+	static create(graph: Graph, id: ID): Domain {
 		/* Create a new domain */
 
-		graph.domains.push(
-			new Domain(graph, graph.domains.length, id)
-		)
+		const domain = new Domain(graph, graph.domains.length, id)
+		graph.domains.push(domain)
+		return domain
 	}
 
 	private hasStyle(): boolean {
@@ -347,9 +347,9 @@ class Subject extends Field<Subject> {
 	static create(graph: Graph, id: ID) {
 		/* Create a new subject */
 
-		graph.subjects.push(
-			new Subject(graph, graph.subjects.length, id)
-		)
+		const subject = new Subject(graph, graph.subjects.length, id)
+		graph.subjects.push(subject)
+		return subject
 	}
 
 	validate(): ValidationData {

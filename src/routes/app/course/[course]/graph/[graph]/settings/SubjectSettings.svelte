@@ -46,8 +46,8 @@
 			return
 		}
 
-		const data = await response.json()
-		Subject.create(graph, data.id)
+		const id = Number(await response.text())
+		Subject.create(graph, id)
 		update()
 	}
 

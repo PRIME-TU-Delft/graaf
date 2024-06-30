@@ -159,12 +159,12 @@ class DomainRelation extends Relation<Domain> {
 		return options
 	}
 
-	static create(graph: Graph) {
+	static create(graph: Graph): DomainRelation {
 		/* Create a new domain relation */
 
-		graph.domain_relations.push(
-			new DomainRelation(graph, graph.domain_relations.length)
-		)
+		const relation = new DomainRelation(graph, graph.domain_relations.length)
+		graph.domain_relations.push(relation)
+		return relation
 	}
 
 	private isDuplicate(parent?: Domain, child?: Domain): boolean {
@@ -174,7 +174,7 @@ class DomainRelation extends Relation<Domain> {
 
 		const first = this.graph.domain_relations.findIndex(relation => relation.parent === parent && relation.child === child)
 		const index = this.graph.domain_relations.indexOf(this, first + 1)
-		return index !== -1
+		return first !== -1 && index !== -1
 	}
 
 	private isInconsistent(parent?: Domain, child?: Domain): boolean {
@@ -309,12 +309,12 @@ class SubjectRelation extends Relation<Subject> {
 		return options
 	}
 
-	static create(graph: Graph) {
+	static create(graph: Graph): SubjectRelation {
 		/* Create a new subject relation */
 
-		graph.subject_relations.push(
-			new SubjectRelation(graph, graph.subject_relations.length)
-		)
+		const relation = new SubjectRelation(graph, graph.subject_relations.length)
+		graph.subject_relations.push(relation)
+		return relation
 	}
 
 	private isInconsistent(parent?: Subject, child?: Subject): boolean {
@@ -338,9 +338,8 @@ class SubjectRelation extends Relation<Subject> {
 		if (!this.isDefined(parent, child)) return false
 
 		const first = this.graph.subject_relations.findIndex(relation => relation.parent === parent && relation.child === child)
-		const index = this.graph.subject_relations.indexOf(this)
-
-		return first >= 0 && first < index
+		const index = this.graph.subject_relations.indexOf(this, first + 1)
+		return first !== -1 && index !== -1
 	}
 
 	private validateOption(parent?: Subject, child?: Subject): ValidationData {
