@@ -6,13 +6,13 @@ import { Domain, Subject } from './Fields'
 import { DomainRelation, SubjectRelation } from './Relations'
 import { Lecture, LectureSubject } from './Lecture'
 
-import type { LectureData } from './Lecture'
-import type { SubjectData } from './Fields'
-import type { DomainData } from './Fields'
+import type { SerializedLecture } from './Lecture'
+import type { SerializedSubject } from './Fields'
+import type { SerializedDomain } from './Fields'
 
 // Exports
 export { Graph }
-export type { GraphData }
+export type { SerializedGraph }
 
 
 // --------------------> Types
@@ -20,12 +20,12 @@ export type { GraphData }
 
 type ID = number
 
-type GraphData = {
+type SerializedGraph = {
 	id: ID,
 	name: string,
-	domains: DomainData[],
-	subjects: SubjectData[],
-	lectures: LectureData[]
+	domains: SerializedDomain[],
+	subjects: SerializedSubject[],
+	lectures: SerializedLecture[]
 }
 
 
@@ -62,7 +62,7 @@ class Graph {
 		return options
 	}
 
-	static revive(data: GraphData) {
+	static revive(data: SerializedGraph) {
 		/* Revive graph from a POJO */
 
 		const graph = new Graph(data.id, data.name)
@@ -191,7 +191,7 @@ class Graph {
 		return response
 	}
 
-	reduce(): GraphData {
+	reduce(): SerializedGraph {
 		/* Reduce graph to a POJO */
 
 		return {

@@ -9,14 +9,14 @@ import { SubjectRelation } from './Relations'
 
 // Exports
 export { Lecture, LectureSubject }
-export type { LectureData }
+export type { SerializedLecture }
 
 
 // --------------------> Type
 
 type ID = number
 
-type LectureData = {
+type SerializedLecture = {
 	id: ID,
 	name: string,
 	subjects: ID[]
@@ -247,7 +247,7 @@ class Lecture {
 		return response
 	}
 
-	reduce(): LectureData {
+	reduce(): SerializedLecture {
 		/* Serialize lecture to a POJO */
 
 		return {

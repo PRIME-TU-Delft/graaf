@@ -8,7 +8,7 @@ import { styles } from '../settings'
 
 // Exports
 export { Field, Domain, Subject }
-export type { DomainData, SubjectData }
+export type { SerializedDomain, SerializedSubject }
 
 
 // --------------------> Types
@@ -16,7 +16,7 @@ export type { DomainData, SubjectData }
 
 type ID = number
 
-type DomainData = {
+type SerializedDomain = {
 	id: ID,
 	x: number,
 	y: number,
@@ -26,7 +26,7 @@ type DomainData = {
 	children: ID[]
 }
 
-type SubjectData = {
+type SerializedSubject = {
 	id: ID,
 	x: number,
 	y: number,
@@ -244,7 +244,7 @@ class Domain extends Field<Domain> {
 		return response
 	}
 
-	reduce(): DomainData {
+	reduce(): SerializedDomain {
 		/* Serialize domain to a POJO */
 
 		return {
@@ -398,7 +398,7 @@ class Subject extends Field<Subject> {
 		return response
 	}
 
-	reduce(): SubjectData {
+	reduce(): SerializedSubject {
 		/* Serialize subject to a POJO */
 
 		return {

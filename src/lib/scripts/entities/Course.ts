@@ -5,20 +5,20 @@ import { DropdownOption } from "./DropdownOption"
 
 // Exports
 export { Course, AssignedUser }
-export type { Permissions, CourseData, AssignedUserData }
+export type { Permissions, SerializedCourse, SerializedAssignedUser }
 
 
 // --------------------> Types
 
-type AssignedUserData = {
+type SerializedAssignedUser = {
 	name: string,
 	permissions: string
 }
 
-type CourseData = {
+type SerializedCourse = {
 	code: string,
 	name: string,
-	users: AssignedUserData[]
+	users: SerializedAssignedUser[]
 
 }
 
@@ -76,7 +76,7 @@ class AssignedUser {
 		return response
 	}
 
-	reduce(): AssignedUserData {
+	reduce(): SerializedAssignedUser {
 		/* Reduce the assigned user to a POJO */
 
 		return {
@@ -111,7 +111,7 @@ class Course {
 		]
 	}
 
-	static revive(data: CourseData) {
+	static revive(data: SerializedCourse) {
 		/* Load the course from a POGO */
 
 		const course = new Course(data.code, data.name)
@@ -181,7 +181,7 @@ class Course {
 		return response
 	}
 
-	reduce(): CourseData {
+	reduce(): SerializedCourse {
 		/* Reduce the course to a POJO */
 
 		return {
