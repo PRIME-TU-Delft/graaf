@@ -94,14 +94,23 @@
 			padding: $card-thin-padding
 
 			button
-				width: 2rem
-				height: 2rem
+				box-sizing: content-box
+
+				width: 1.75rem
+				height: 1.75rem
+				padding: $input-icon-padding
+
 				cursor: pointer
 
 				img
 					width: 100%
 					height: 100%
+
+					transform-origin: center
 					pointer-events: none
+
+				&:hover img
+					scale: $scale-on-hover
 		
 		.tabs
 			display: flex

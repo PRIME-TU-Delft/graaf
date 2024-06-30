@@ -202,6 +202,36 @@ class GraphSVG {
 				.attr('flood-opacity', settings.FIELD_SHADOW_OPACITY)
 				.attr('flood-color', settings.FIELD_SHADOW_COLOR)
 
+		// Shift warning
+		const warning = svg.append('g')
+			.attr('pointer-events', 'none')
+			.attr('opacity', 0)
+
+		warning.append('rect')
+			.attr('width', '100%')
+			.attr('height', '100%')
+			.attr('background-color', 'black')
+			.attr('opacity', 0.75)
+		
+		warning.append('text')
+			.text('Shift + Scroll to zoom')
+			.attr('font-size', '2em')
+			.attr('text-anchor', 'middle')
+			.attr('dominant-baseline', 'middle')
+			.attr('x', '50%')
+			.attr('y', '50%')
+			.attr('fill', 'white')
+
+		// Keylogging
+		let shift = false
+		d3.select('body')
+			.on('keydown', event => {
+				if (event.key === 'Shift') { shift = true }
+			})
+			.on('keyup', event => {
+				if (event.key === 'Shift') { shift = false }
+			})
+		
 		// Zoom & pan
 		this.zoom = d3.zoom<SVGSVGElement, unknown>()
 			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
@@ -220,8 +250,24 @@ class GraphSVG {
 					.selectAll('line')
 						.style('opacity', Math.min(1, event.transform.k))
 			})
+			.filter((event) => shift || event.type === 'mousedown')
 
-		svg.call(this.zoom)
+		svg
+			.call(this.zoom)
+			.on('dblclick.zoom', null)
+
+		// Zoom warning
+		svg.on('wheel', () => {
+			if (shift) return
+
+			warning
+				.interrupt()
+				.attr('opacity', 1)
+				.transition()
+					.duration(500)
+					.delay(1000)
+				.attr('opacity', 0)
+		})
 
 		// Simulation
 		const links = this.graph.domain_relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))

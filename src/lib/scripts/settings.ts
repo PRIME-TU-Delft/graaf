@@ -16,7 +16,7 @@ export const ZOOM_STEP: Scalar = 1.5
 // Field settings
 export const FIELD_WIDTH: GridUnits  = 16
 export const FIELD_HEIGHT: GridUnits = 8
-export const FIELD_MARGIN: GridUnits = 0.75
+export const FIELD_MARGIN: GridUnits = 2
 export const FIELD_FONT_SIZE: Pixels = 15
 export const FIELD_SHADOW_DEVIATION: Pixels = 5
 export const FIELD_SHADOW_OPACITY: Scalar = 0.75
