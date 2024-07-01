@@ -10,16 +10,20 @@ export type { Permissions, SerializedCourse, SerializedAssignedUser }
 
 // --------------------> Types
 
+type UserRole = 'admin' | 'user';
+
 type SerializedAssignedUser = {
-	name: string,
-	permissions: string
+	netid: string,
+	first_name: string,
+	last_name: string,
+	email?: string,
+	role: UserRole
 }
 
 type SerializedCourse = {
 	code: string,
 	name: string,
 	users: SerializedAssignedUser[]
-
 }
 
 enum Permissions {

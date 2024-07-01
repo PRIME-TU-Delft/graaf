@@ -76,6 +76,7 @@ const dto = {
 export default {
 	model: {
 		graph: {
+			dto,
 			createWithCourseCode
 		}
 	}

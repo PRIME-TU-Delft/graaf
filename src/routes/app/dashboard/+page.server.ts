@@ -39,8 +39,11 @@ export const actions = {
 
 
 export async function load() {
+	const programs = await prisma.program.findMany({ include: { courses: true, coordinators: true } })
+	const courses = await prisma.course.findMany({ include: { program: true } })
+
 	return {
-		programs: await prisma.program.findMany({ include: { courses: true, coordinators: true } }),
-		courses: await prisma.course.findMany({ include: { program: true } })
+		programs,
+		courses
 	};
 }

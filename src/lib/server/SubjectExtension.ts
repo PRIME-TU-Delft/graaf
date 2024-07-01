@@ -38,7 +38,7 @@ const getParentIds = {
 	async compute(subject: Subject): Promise<number[]> {
 		return (await prisma.subject.findMany({
 			where: {
-				parentSubjects: {
+				childSubjects: {
 					some: {
 						id: subject.id
 					}

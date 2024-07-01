@@ -38,3 +38,17 @@ export const actions = {
 		});
 	}
 };
+
+
+export const load = async ({ params }) => {
+	const courseCode = params.course;
+	const graphId = Number(params.graph);
+
+	const course = await (await prisma.course.findUnique({
+		where: { code: courseCode }
+	}))?.dto;
+
+	const graph = await (await prisma.graph.findUnique({
+		where: { id: graphId }
+	}))?.dto;
+};
