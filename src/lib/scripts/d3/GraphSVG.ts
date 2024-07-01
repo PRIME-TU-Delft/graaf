@@ -107,9 +107,7 @@ class GraphSVG {
 			this.simulation.stop()
 		}
 
-		this._state = state
-
-		if (this.state === State.dynamic) {
+		else if (state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'all')
 				.select('#content')
@@ -118,6 +116,8 @@ class GraphSVG {
 
 			this.microwaveSimulation()
 		}
+
+		this._state = state
 	}
 
 	get lecture() {
@@ -221,6 +221,11 @@ class GraphSVG {
 			.attr('fill', 'white')
 			.attr('x', '50%')
 			.attr('y', '50%')
+
+		// Set pointer-events
+		if (this.state !== State.dynamic) {
+			svg.attr('pointer-events', 'none')
+		}
 
 		// Keylogging
 		let shift = false

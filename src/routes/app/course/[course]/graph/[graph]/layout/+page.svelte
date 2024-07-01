@@ -74,6 +74,6 @@
 	@use "$styles/palette.sass" as *
 
 	.editor
-		height: 600px
+		height: 800px
 
 </style>

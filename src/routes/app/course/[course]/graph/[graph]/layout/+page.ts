@@ -25,7 +25,7 @@ export const load: PageLoad = ({ params }) => {
 					style: 'electric-green',
 					name: 'Domain B',
 					parents: [1],
-					children: [2]
+					children: [3]
 				},
 				{
 					id: 3,
