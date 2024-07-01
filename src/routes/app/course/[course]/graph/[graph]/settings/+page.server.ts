@@ -1,6 +1,9 @@
 import { fail } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
+import * as CourseHelper from '$lib/server/CourseHelper';
+import * as GraphHelper from '$lib/server/GraphHelper';
+
 
 export const actions = {
 	newDomain: async ({ params, request }) => {
@@ -44,11 +47,17 @@ export const load = async ({ params }) => {
 	const courseCode = params.course;
 	const graphId = Number(params.graph);
 
-	const course = await (await prisma.course.findUnique({
-		where: { code: courseCode }
-	}))?.dto;
+	const course = await CourseHelper.toDTO(
+		(await prisma.course.findUnique({
+			where: { code: courseCode }
+		}))!
+	);
 
-	const graph = await (await prisma.graph.findUnique({
-		where: { id: graphId }
-	}))?.dto;
+	const graph = await GraphHelper.toDTO(
+		(await prisma.graph.findUnique({
+			where: { id: graphId }
+		}))!
+	);
+
+	return { course, graph };
 };
