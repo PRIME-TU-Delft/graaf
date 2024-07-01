@@ -552,7 +552,7 @@ class GraphSVG {
 
 		// Update relations
 		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
-			.data(relations, relation => relation.id)
+			.data(relations, relation => relation.index)
 			.join(
 				function(enter) {
 					return enter
