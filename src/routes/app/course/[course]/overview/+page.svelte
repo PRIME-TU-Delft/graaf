@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms'
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/entities'
+	import { ValidationData, Severity, DropdownOption } from '$scripts/entities'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -28,10 +28,10 @@
 	import gearIcon from '$assets/gear-icon.svg'
 
 	// Helpers
-	class GraphHelper {
+	class Graph {
 		name: string = ''
 
-		get options() {
+		get options(): DropdownOption<number>[] {
 			return graphs.map(graph => {
 				return { name: graph.name, value: graph.id, validation: ValidationData.success() }
 			})
@@ -55,9 +55,9 @@
 		}
 	}
 
-	class LinkHelper {
+	class Link {
 		name: string = ''
-		graph?: string
+		graph?: number
 
 		validate(): ValidationData {
 			const result = new ValidationData()
@@ -89,8 +89,9 @@
 	$: course = data.course
 	$: graphs = course.graphs
 
-	const graph = new GraphHelper()
-	const link = new LinkHelper()
+	const graph = new Graph()
+	const link = new Link()
+	
 	let graph_modal: Modal
 	let link_modal: Modal
 

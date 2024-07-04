@@ -23,11 +23,8 @@
 	import plusIcon from '$assets/plus-icon.svg'
 	import peopleIcon from '$assets/people-icon.svg'
 
-	// Exports
-	export let data
-
 	// Helpers
-	class SandboxHelper {
+	class Sandbox {
 		code: string = ''
 		name: string = ''
 
@@ -56,7 +53,7 @@
 		}
 	}
 
-	class ProgramHelper {
+	class Program {
 		name: string = ''
 
 		get options() {
@@ -83,7 +80,7 @@
 		}
 	}
 
-	class CourseHelper {
+	class Course {
 		code: string = ''
 		name: string = ''
 		program?: number
@@ -132,19 +129,20 @@
 	}
 
 	// Variables
+	export let data
+	$: courses = data.courses
+	$: programs = data.programs
+
+	const sandbox: Sandbox = new Sandbox()
+	const program: Program = new Program()
+	const course: Course = new Course()
+
 	const modals: { [key: string]: Modal } = {}
 	let sandbox_modal: Modal
 	let program_modal: Modal
 	let course_modal: Modal
-
-	const sandbox: SandboxHelper = new SandboxHelper()
-	const program: ProgramHelper = new ProgramHelper()
-	const course: CourseHelper = new CourseHelper()
-
+	
 	let query: string = ''
-
-	$: courses = data.courses
-	$: programs = data.programs
 
 </script>
 
