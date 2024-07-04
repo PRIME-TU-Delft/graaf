@@ -3,6 +3,9 @@
 
 	import { enhance } from '$app/forms'
 
+	// Internal imports
+	import { ValidationData, Severity } from '$scripts/entities'
+
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import Card from '$components/Card.svelte'
@@ -11,6 +14,8 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -22,35 +27,72 @@
 	import trashIcon from '$assets/trash-icon.svg'
 	import gearIcon from '$assets/gear-icon.svg'
 
-	function newLink() {
-		// TODO add newLink function
-	}
+	// Helpers
+	class GraphHelper {
+		name: string = ''
 
-	let createGraphModal: Modal
+		get options() {
+			return graphs.map(graph => {
+				return { name: graph.name, value: graph.id, validation: ValidationData.success() }
+			})
+		}
 
-	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
+		validate(): ValidationData {
+			const result = new ValidationData()
 
-	export let data;
-	// $: course = data.course;
-
-	let course = {
-		code: 'CSE1200',
-		name: 'Calculus',
-		graphs: [
-			{
-				name: 'Graph 1',
-				id: 1,
-				hasLinks: () => true,
-				isVisible: () => true
-			},
-			{
-				name: 'Graph 2',
-				id: 2,
-				hasLinks: () => false,
-				isVisible: () => false
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
 			}
-		]
+
+			return result
+		}
+
+		canSubmit() {
+			return this.name.length > 0
+		}
 	}
+
+	class LinkHelper {
+		name: string = ''
+		graph?: string
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			if (this.graph === undefined) {
+				result.add({
+					severity: Severity.error,
+					short: 'Graph is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.name.length > 0 && this.graph !== undefined
+		}
+	}
+
+	// Variables
+	export let data
+	$: course = data.course
+	$: graphs = course.graphs
+
+	const graph = new GraphHelper()
+	const link = new LinkHelper()
+	let graph_modal: Modal
+	let link_modal: Modal
 
 </script>
 
@@ -74,11 +116,11 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={createGraphModal?.show}>
+		<Button on:click={graph_modal?.show}>
 			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
-		<Button on:click={newLink}>
+		<Button on:click={link_modal?.show}>
 			<img src={plusIcon} alt="" /> New Link
 		</Button>
 
@@ -88,14 +130,36 @@
 			<img src={gearIcon} alt=""> Settings
 		</LinkButton>
 
-		<Modal bind:this={createGraphModal}>
+		<Modal bind:this={graph_modal}>
 			<h3 slot="header"> Create Graph </h3>
 			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<form method="POST" action="?/newGraph" use:enhance={createGraphModal.hide}>
+			<form method="POST" action="?/newGraph" use:enhance={graph_modal?.hide}>
 				<label for="name"> Name </label>
-				<Textfield label="Name" />
-				<Button submit on:click={createGraphModal.hide}> Create </Button>
+				<Textfield label="Name" bind:value={graph.name} />
+
+				<footer>
+					<Button submit disabled={!graph.canSubmit()}> Create </Button>
+					<Validation data={graph.validate()} />
+				</footer>
+			</form>
+		</Modal>
+
+		<Modal bind:this={link_modal}>
+			<h3 slot="header"> Create Link </h3>
+			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
+
+			<form method="POST" action="?/newLink" use:enhance={link_modal?.hide}>
+				<label for="name"> Name </label>
+				<Textfield label="Name" bind:value={link.name} />
+
+				<label for="graph"> Graph </label>
+				<Dropdown label="Graph" placeholder="Select a graph" options={graph.options} bind:value={link.graph} />
+
+				<footer>
+					<Button submit disabled={!link.canSubmit()}> Create </Button>
+					<Validation data={link.validate()} />
+				</footer>
 			</form>
 		</Modal>
 	</svelte:fragment>

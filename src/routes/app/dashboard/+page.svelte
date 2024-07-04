@@ -26,15 +26,10 @@
 	// Exports
 	export let data
 
+	// Helpers
 	class SandboxHelper {
 		code: string = ''
 		name: string = ''
-
-		create() {
-			sandbox_modal?.show()
-			this.code = ''
-			this.name = ''
-		}
 
 		validate(): ValidationData {
 			const result = new ValidationData()
@@ -70,11 +65,6 @@
 			})
 		}
 
-		create() {
-			program_modal?.show()
-			this.name = ''
-		}
-
 		validate(): ValidationData {
 			const result = new ValidationData()
 
@@ -97,13 +87,6 @@
 		code: string = ''
 		name: string = ''
 		program?: number
-
-		create() {
-			course_modal?.show()
-			this.code = ''
-			this.name = ''
-			this.program = undefined
-		}
 
 		validate(): ValidationData {
 			const result = new ValidationData()
@@ -137,6 +120,17 @@
 		}
 	}
 
+	// Functions
+	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
+		if (!query) return true
+		
+		query = query.toLowerCase()
+		let code = course.code.toLowerCase()
+		let name = course.name.toLowerCase()
+
+		return code.includes(query) || name.includes(query)
+	}
+
 	// Variables
 	const modals: { [key: string]: Modal } = {}
 	let sandbox_modal: Modal
@@ -151,20 +145,6 @@
 
 	$: courses = data.courses
 	$: programs = data.programs
-
-	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
-		if (!query) return true
-		
-		query = query.toLowerCase()
-		let code = course.code.toLowerCase()
-		let name = course.name.toLowerCase()
-
-		return code.includes(query) || name.includes(query)
-	}
-
-	function newSandbox() {
-		// TODO add newSandbox function
-	}
 
 </script>
 
@@ -182,15 +162,15 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={sandbox.create}>
+		<Button on:click={sandbox_modal?.show}>
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
-		<Button on:click={program.create}>
+		<Button on:click={program_modal?.show}>
 			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
-		<Button on:click={course.create}>
+		<Button on:click={course_modal?.show}>
 			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
@@ -336,30 +316,6 @@
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
-
-	form
-		display: grid
-		grid-template: "label content" auto / 1fr 2fr
-		place-items: center start
-		row-gap: $form-small-gap
-
-		label
-			grid-column: label
-			justify-self: end
-
-			margin-top: $form-small-gap
-			padding-right: $form-medium-gap
-
-		.textfield, .dropdown, .checkbox
-			grid-column: content
-			margin-top: $form-small-gap
-
-		footer
-			display: flex
-			flex-flow: row nowrap
-			grid-column: content
-
-			margin-top: $form-big-gap
 
 	.grayed
 		margin: auto
