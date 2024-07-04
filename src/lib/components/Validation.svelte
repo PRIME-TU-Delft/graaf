@@ -67,7 +67,8 @@
 			<button
 				type="button"
 				class={data.severity === 'error' ? 'error toggle' : 'warning toggle'}
-				on:click={show_all} 
+				tabindex="-1"
+				on:click={show_all}
 				use:tooltip={`
 					${all_visible ? 'Hide' : 'Show'}
 					${data.errors.length > 0 ? 'errors' : ''}
@@ -76,20 +77,20 @@
 					`
 				}
 			>
-				<img 
+				<img
 					src={data.severity === 'error' ? errorIcon : warningIcon}
 					alt=""
 				>
 			</button>
 		{/if}
-		
+
 		{#if all_visible}
 			<div class="dropdown" use:clickoutside={hide_all}>
 				{#each data.errors as error}
 					<div class="error item">
 						<img src={errorIcon} alt="" />
 						<span class="short"> {error.short} </span>
-	
+
 						{#if error.long !== undefined}
 							<span class="long"> {error.long} </span>
 						{/if}
@@ -100,7 +101,7 @@
 					<div class="warning item">
 						<img src={warningIcon} alt="" />
 						<span class="short"> {warning.short} </span>
-						
+
 						{#if warning.long !== undefined}
 							<span class="long"> {warning.long} </span>
 						{/if}
@@ -114,8 +115,9 @@
 		{#if data.errors.length > 0}
 			<button
 				type="button"
-				class="error toggle" 
-				on:click={show_errors} 
+				class="error toggle"
+				tabindex="-1"
+				on:click={show_errors}
 				use:tooltip={errors_visible ? 'Hide errors' : 'Show errors'}
 			>
 				<img src={errorIcon} alt="" /> {
@@ -152,7 +154,12 @@
 		{/if}
 
 		{#if data.warnings.length > 0}
-			<button class="warning toggle" on:click={show_warnings} use:tooltip={warnings_visible ? 'Hide warnings' : 'Show warnings'} >
+			<button
+				class="warning toggle"
+				tabindex="-1"
+				on:click={show_warnings}
+				use:tooltip={warnings_visible ? 'Hide warnings' : 'Show warnings'}
+			>
 				<img src={warningIcon} alt="" /> {
 					data.errors.length || data.warnings.length > 1
 						? data.warnings.length
@@ -188,7 +195,7 @@
 
 		{#if data.severity === 'success'}
 			<span class="success">
-				<img src={successIcon} alt=""> {success_msg} 
+				<img src={successIcon} alt=""> {success_msg}
 			</span>
 		{/if}
 

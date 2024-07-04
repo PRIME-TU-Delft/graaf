@@ -7,13 +7,17 @@
 	// Exports
 	export function show() {
 		visible = true
+		setTimeout(() => first?.focus(), 0)
 	}
+
 	export function hide() {
 		visible = false
 	}
 
 	// Variables
 	let visible: boolean = false
+	let modal: HTMLDialogElement
+	$: first = modal?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')[1]
 
 </script>
 
@@ -23,7 +27,7 @@
 
 {#if visible}
 	<div class="background" />
-	<dialog class="modal">
+	<dialog class="modal" bind:this={modal}>
 		<header>
 			<slot name="header" />
 			<button class="exit" on:click={hide}>
@@ -54,29 +58,6 @@
 
 		opacity: 0.25
 		background-color: black
-
-	form
-		display: grid
-		grid-template: "label content" auto / 1fr 2fr
-		place-items: center start
-
-		label
-			grid-column: label
-			justify-self: end
-
-			margin-top: $form-small-gap
-			padding-right: $form-medium-gap
-
-		.textfield, .dropdown, .checkbox
-			grid-column: content
-			margin-top: $form-small-gap
-
-		footer
-			display: flex
-			flex-flow: row nowrap
-			grid-column: content
-
-			margin-top: $form-big-gap
 
 	.modal
 		display: flex

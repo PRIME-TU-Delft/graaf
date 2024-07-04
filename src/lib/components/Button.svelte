@@ -25,6 +25,7 @@
 		class="button"
 		class:disabled
 		class:dangerous
+		tabindex={disabled ? -1 : 0}
 		type={submit ? 'submit' : 'button'}
 		on:click
 	>
@@ -38,6 +39,7 @@
 		class="button"
 		class:disabled
 		class:dangerous
+		tabindex={disabled ? -1 : 0}
 		on:click
 	>
 		<slot />
@@ -66,6 +68,8 @@
 
 		color: $white
 		background: $purple
+		overflow: hidden
+		white-space: nowrap
 
 		cursor: pointer
 		transition: all $default-transition
@@ -90,6 +94,7 @@
 			transition: all $default-transition
 
 		&:hover, &:focus
+			
 			background: $dark-purple
 			
 			&.dangerous
