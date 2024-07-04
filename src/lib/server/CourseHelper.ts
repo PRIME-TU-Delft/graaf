@@ -1,6 +1,6 @@
 import prisma from '$lib/server/prisma';
 
-import type { SerializedCourse, SerializedAssignedUser } from '$scripts/entities';
+import { type SerializedCourse, type SerializedAssignedUser, Permissions } from '$scripts/entities';
 import type { Course } from '@prisma/client';
 
 import * as GraphHelper from './GraphHelper';
@@ -26,7 +26,7 @@ async function getSerializedUser(course: Course) {
 		first_name: u.first_name,
 		last_name: u.last_name,
 		email: u.email ?? undefined,
-		permissions: 'admin'  // TODO: join table for course-user permissions
+		permissions: Permissions.admin  // TODO: join table for course-user permissions
 	}));
 }
 
