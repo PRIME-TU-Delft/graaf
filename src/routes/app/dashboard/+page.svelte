@@ -26,6 +26,41 @@
 	// Exports
 	export let data
 
+	class SandboxHelper {
+		code: string = ''
+		name: string = ''
+
+		create() {
+			sandbox_modal?.show()
+			this.code = ''
+			this.name = ''
+		}
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.code.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Code is required'
+				})
+			}
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.code.length > 0 && this.name.length > 0
+		}
+	}
+
 	class ProgramHelper {
 		name: string = ''
 
@@ -104,9 +139,11 @@
 
 	// Variables
 	const modals: { [key: string]: Modal } = {}
+	let sandbox_modal: Modal
 	let program_modal: Modal
 	let course_modal: Modal
 
+	const sandbox: SandboxHelper = new SandboxHelper()
 	const program: ProgramHelper = new ProgramHelper()
 	const course: CourseHelper = new CourseHelper()
 
@@ -145,7 +182,7 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={newSandbox}>
+		<Button on:click={sandbox.create}>
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
@@ -160,6 +197,25 @@
 		<div class="flex-spacer" />
 
 		<Searchbar placeholder="Search courses" bind:value={query} />
+
+		<Modal bind:this={sandbox_modal}>
+			<h3 slot="header"> Create Sandbox </h3>
+
+			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
+
+			<form method="POST" action="?/newSandbox" use:enhance={sandbox_modal?.hide}>
+				<label for="code"> Code </label>
+				<Textfield label="Code" bind:value={sandbox.code} />
+
+				<label for="name"> Name </label>
+				<Textfield label="Name" bind:value={sandbox.name} />
+
+				<footer>
+					<Button submit disabled={!sandbox.canSubmit()} > Create </Button>
+					<Validation data={sandbox.validate()} />
+				</footer>
+			</form>
+		</Modal>
 
 		<Modal bind:this={program_modal}>
 			<h3 slot="header"> Create Program </h3>
