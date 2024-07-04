@@ -110,11 +110,19 @@
 	const program: ProgramHelper = new ProgramHelper()
 	const course: CourseHelper = new CourseHelper()
 
+	let query: string = ''
+
 	$: courses = data.courses
 	$: programs = data.programs
 
-	function onSearch(event: Event) {
-		// TODO add onSearch event
+	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
+		if (!query) return true
+		
+		query = query.toLowerCase()
+		let code = course.code.toLowerCase()
+		let name = course.name.toLowerCase()
+
+		return code.includes(query) || name.includes(query)
 	}
 
 	function newSandbox() {
@@ -151,7 +159,7 @@
 
 		<div class="flex-spacer" />
 
-		<Searchbar on:input={onSearch} placeholder="Search courses" />
+		<Searchbar placeholder="Search courses" bind:value={query} />
 
 		<Modal bind:this={program_modal}>
 			<h3 slot="header"> Create Program </h3>
@@ -163,7 +171,7 @@
 				<Textfield label="Name" bind:value={program.name} />
 
 				<footer>
-					<Button submit disabled={program.canSubmit()} > Create </Button>
+					<Button submit disabled={!program.canSubmit()} > Create </Button>
 					<Validation data={program.validate()} />
 				</footer>
 			</form>
@@ -190,7 +198,7 @@
 				/>
 
 				<footer>
-					<Button submit disabled={course.canSubmit()} > Create </Button>
+					<Button submit disabled={!course.canSubmit()} > Create </Button>
 					<Validation data={course.validate()} />
 				</footer>
 			</form>
@@ -199,12 +207,22 @@
 
 	<Card>
 		<h3 slot="header"> My Courses </h3>
-		<div slot="body" class="grid">
-			{#each courses as { code, name }}
-				<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
-			{/each}
 
-		</div>
+		<svelte:fragment slot="body">
+			{#if !courses.some(course => courseMatchesQuery(query, course))}
+				<span class="grayed"> There's nothing here </span>
+			{:else}
+
+				<div class="grid">
+					{#each courses as { code, name }}
+						{#if courseMatchesQuery(query, { code, name })}
+							<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+						{/if}
+					{/each}
+				</div>
+
+			{/if}
+		</svelte:fragment>
 	</Card>
 
 	{#each programs as { name, courses, coordinators }}
@@ -237,11 +255,21 @@
 				</Modal>
 			</svelte:fragment>
 
-			<div slot="body" class="grid">
-				{#each courses as { code, name }}
-					<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
-				{/each}
-			</div>
+			<svelte:fragment slot="body">
+				{#if !courses.some(course => courseMatchesQuery(query, course))}
+					<span class="grayed"> There's nothing here </span>
+				{:else}
+
+					<div class="grid">
+						{#each courses as { code, name }}
+							{#if courseMatchesQuery(query, { code, name })}
+								<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+							{/if}
+						{/each}
+					</div>
+
+				{/if}
+			</svelte:fragment>
 		</Card>
 	{/each}
 </Layout>
@@ -276,6 +304,10 @@
 			grid-column: content
 
 			margin-top: $form-big-gap
+
+	.grayed
+		margin: auto
+		color: $placeholder-color
 
 	.grid
 		display: flex
