@@ -216,24 +216,6 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	form
-		display: grid
-		grid-template: "label content" auto / 1fr 2fr
-		gap: $form-small-gap $form-medium-gap
-		place-items: center start
-
-		margin-top: $form-big-gap
-
-		label
-			grid-column: label
-			justify-self: end
-
-		:global(.textfield), :global(.dropdown)
-			grid-column: content
-
-		:global(.button)
-			grid-column: content
-
 	.graph
 		display: flex
 		flex-flow: row nowrap
