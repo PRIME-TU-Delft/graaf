@@ -18,39 +18,39 @@
 	export let goto_anchor: (tab: number, id: string) => void = () => {}
 
 	// Variables
-	let dropdown: boolean = false
-	let error_dropdown: boolean = false
-	let warning_dropdown: boolean = false
+	let all_visible: boolean = false
+	let errors_visible: boolean = false
+	let warnings_visible: boolean = false
 
 	// Functions
-	function show_dropdown() {
-		dropdown = true
-		error_dropdown = false
-		warning_dropdown = false
+	export function show_all() {
+		all_visible = true
+		errors_visible = false
+		warnings_visible = false
 	}
 
-	function hide_dropdown() {
-		dropdown = false
+	export function hide_all() {
+		all_visible = false
 	}
 
-	function show_errors() {
-		dropdown = false
-		error_dropdown = true
-		warning_dropdown = false
+	export function show_errors() {
+		all_visible = false
+		errors_visible = true
+		warnings_visible = false
 	}
 
-	function hide_errors() {
-		error_dropdown = false
+	export function hide_errors() {
+		errors_visible = false
 	}
 
-	function show_warnings() {
-		dropdown = false
-		warning_dropdown = true
-		error_dropdown = false
+	export function show_warnings() {
+		all_visible = false
+		warnings_visible = true
+		errors_visible = false
 	}
 
-	function hide_warnings() {
-		warning_dropdown = false
+	export function hide_warnings() {
+		warnings_visible = false
 	}
 
 </script>
@@ -61,36 +61,36 @@
 
 <div class="validation">
 
-
-
 	{#if short}
 
 		{#if data.severity !== 'success'}
 			<button
+				type="button"
 				class={data.severity === 'error' ? 'error toggle' : 'warning toggle'}
-				on:click={show_dropdown} 
+				tabindex="-1"
+				on:click={show_all}
 				use:tooltip={`
-					${dropdown ? 'Hide' : 'Show'}
+					${all_visible ? 'Hide' : 'Show'}
 					${data.errors.length > 0 ? 'errors' : ''}
 					${data.errors.length > 0 && data.warnings.length > 0 ? ' & ' : ''}
 					${data.warnings.length > 0 ? 'warnings' : ''}
 					`
 				}
 			>
-				<img 
+				<img
 					src={data.severity === 'error' ? errorIcon : warningIcon}
 					alt=""
 				>
 			</button>
 		{/if}
-		
-		{#if dropdown}
-			<div class="dropdown" use:clickoutside={hide_dropdown}>
+
+		{#if all_visible}
+			<div class="dropdown" use:clickoutside={hide_all}>
 				{#each data.errors as error}
 					<div class="error item">
 						<img src={errorIcon} alt="" />
 						<span class="short"> {error.short} </span>
-	
+
 						{#if error.long !== undefined}
 							<span class="long"> {error.long} </span>
 						{/if}
@@ -101,7 +101,7 @@
 					<div class="warning item">
 						<img src={warningIcon} alt="" />
 						<span class="short"> {warning.short} </span>
-						
+
 						{#if warning.long !== undefined}
 							<span class="long"> {warning.long} </span>
 						{/if}
@@ -113,11 +113,21 @@
 	{:else}
 
 		{#if data.errors.length > 0}
-			<button class="error toggle" on:click={show_errors} use:tooltip={error_dropdown ? 'Hide errors' : 'Show errors'} >
-				<img src={errorIcon} alt="" /> {data.errors.length}
+			<button
+				type="button"
+				class="error toggle"
+				tabindex="-1"
+				on:click={show_errors}
+				use:tooltip={errors_visible ? 'Hide errors' : 'Show errors'}
+			>
+				<img src={errorIcon} alt="" /> {
+					data.warnings.length || data.errors.length > 1
+						? data.errors.length
+						: data.errors[0].short
+				}
 			</button>
 
-			{#if error_dropdown}
+			{#if errors_visible}
 				<div class="dropdown" use:clickoutside={hide_errors}>
 					{#each data.errors as error}
 						<div class="error item">
@@ -144,11 +154,20 @@
 		{/if}
 
 		{#if data.warnings.length > 0}
-			<button class="warning toggle" on:click={show_warnings} use:tooltip={warning_dropdown ? 'Hide warnings' : 'Show warnings'} >
-				<img src={warningIcon} alt="" /> {data.warnings.length}
+			<button
+				class="warning toggle"
+				tabindex="-1"
+				on:click={show_warnings}
+				use:tooltip={warnings_visible ? 'Hide warnings' : 'Show warnings'}
+			>
+				<img src={warningIcon} alt="" /> {
+					data.errors.length || data.warnings.length > 1
+						? data.warnings.length
+						: data.warnings[0].short
+				}
 			</button>
 
-			{#if warning_dropdown}
+			{#if warnings_visible}
 				<div class="dropdown" use:clickoutside={hide_warnings}>
 					{#each data.warnings as warning}
 						<div class="warning item">
@@ -176,7 +195,7 @@
 
 		{#if data.severity === 'success'}
 			<span class="success">
-				<img src={successIcon} alt=""> {success_msg} 
+				<img src={successIcon} alt=""> {success_msg}
 			</span>
 		{/if}
 
@@ -196,6 +215,8 @@
 		display: flex
 		position: relative
 		gap: $input-thin-padding
+
+		margin: 0 $form-medium-gap
 
 		.success
 			display: flex

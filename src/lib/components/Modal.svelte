@@ -1,22 +1,23 @@
 
 <script lang="ts">
 
-	// Internal imports
-	import { clickoutside } from '$scripts/clickoutside'
-
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 
 	// Exports
 	export function show() {
 		visible = true
+		setTimeout(() => first?.focus(), 0)
 	}
+
 	export function hide() {
 		visible = false
 	}
 
 	// Variables
 	let visible: boolean = false
+	let modal: HTMLDialogElement
+	$: first = modal?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')[1]
 
 </script>
 
@@ -24,20 +25,16 @@
 <!-- Markup -->
 
 
-<!-- TODO: Replace with shadcn-svelte dialog: https://www.shadcn-svelte.com/docs/components/alert-dialog -->
 {#if visible}
 	<div class="background" />
-	<dialog class="modal" use:clickoutside={hide}>
+	<dialog class="modal" bind:this={modal}>
 		<header>
-			<slot name="header"> Modal </slot>
+			<slot name="header" />
 			<button class="exit" on:click={hide}>
 				<img src={plusIcon} alt="Exit icon" class="icon" />
 			</button>
 		</header>
-		<section>
-			<slot />
-			<div class="button-row"><slot name="button-row" /></div>
-		</section>
+		<slot />
 	</dialog>
 {/if}
 
@@ -79,14 +76,6 @@
 
 		background-color: $white
 		border-radius: $border-radius
-
-		.button-row
-			display: flex
-			flex-flow: row nowrap
-			justify-content: end
-			gap: $form-small-gap
-
-			margin-top: $form-big-gap
 
 		.exit
 			display: flex

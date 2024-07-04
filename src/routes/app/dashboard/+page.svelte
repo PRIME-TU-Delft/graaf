@@ -4,6 +4,9 @@
 	// Svelte imports
 	import { enhance } from '$app/forms'
 
+	// Internal imports
+	import { ValidationData, Severity } from '$scripts/entities'
+
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import Card from '$components/Card.svelte'
@@ -14,33 +17,132 @@
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 	import peopleIcon from '$assets/people-icon.svg'
-	import { ValidationData } from '$scripts/entities/ValidationData.js';
 
-	// Exports
-	export let data
+	// Helpers
+	class Sandbox {
+		code: string = ''
+		name: string = ''
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.code.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Code is required'
+				})
+			}
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.code.length > 0 && this.name.length > 0
+		}
+	}
+
+	class Program {
+		name: string = ''
+
+		get options() {
+			return data.programs.map(program => {
+				return { name: program.name, value: program.id, validation: ValidationData.success() }
+			})
+		}
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.name.length > 0
+		}
+	}
+
+	class Course {
+		code: string = ''
+		name: string = ''
+		program?: number
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.code.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Code is required'
+				})
+			}
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			if (this.program === undefined) {
+				result.add({
+					severity: Severity.error,
+					short: 'Program is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.code.length > 0 && this.name.length > 0 && this.program !== undefined
+		}
+	}
+
+	// Functions
+	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
+		if (!query) return true
+		
+		query = query.toLowerCase()
+		let code = course.code.toLowerCase()
+		let name = course.name.toLowerCase()
+
+		return code.includes(query) || name.includes(query)
+	}
 
 	// Variables
-	const modals: { [key: string]: Modal } = {}
-	var createProgramModal: Modal
-	var createCourseModal: Modal
-
+	export let data
 	$: courses = data.courses
 	$: programs = data.programs
-	$: programOptions = programs.map(program => {
-		return { name: program.name, value: program.id, validation: new ValidationData() }
-	})
 
-	function onSearch(event: Event) {
-		// TODO add onSearch event
-	}
+	const sandbox: Sandbox = new Sandbox()
+	const program: Program = new Program()
+	const course: Course = new Course()
 
-	function newSandbox() {
-		// TODO add newSandbox function
-	}
+	const modals: { [key: string]: Modal } = {}
+	let sandbox_modal: Modal
+	let program_modal: Modal
+	let course_modal: Modal
+	
+	let query: string = ''
 
 </script>
 
@@ -58,62 +160,103 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={newSandbox}>
+		<Button on:click={sandbox_modal?.show}>
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
-		<Button on:click={createProgramModal?.show}>
+		<Button on:click={program_modal?.show}>
 			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
-		<Button on:click={createCourseModal?.show}>
+		<Button on:click={course_modal?.show}>
 			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<Searchbar on:input={onSearch} placeholder="Search courses" />
+		<Searchbar placeholder="Search courses" bind:value={query} />
 
-		<Modal bind:this={createProgramModal}>
-			<h3 slot="header"> Create Program </h3>
+		<Modal bind:this={sandbox_modal}>
+			<h3 slot="header"> Create Sandbox </h3>
 
-			<form method="POST" action="?/newProgram" use:enhance={createProgramModal?.hide}>
+			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
+
+			<form method="POST" action="?/newSandbox" use:enhance={sandbox_modal?.hide}>
+				<label for="code"> Code </label>
+				<Textfield label="Code" bind:value={sandbox.code} />
+
 				<label for="name"> Name </label>
-				<Textfield label="Name" />
+				<Textfield label="Name" bind:value={sandbox.name} />
 
-				<Button submit> Create </Button>
+				<footer>
+					<Button submit disabled={!sandbox.canSubmit()} > Create </Button>
+					<Validation data={sandbox.validate()} />
+				</footer>
 			</form>
 		</Modal>
 
-		<Modal bind:this={createCourseModal}>
+		<Modal bind:this={program_modal}>
+			<h3 slot="header"> Create Program </h3>
+
+			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
+
+			<form method="POST" action="?/newProgram" use:enhance={program_modal?.hide}>
+				<label for="name"> Name </label>
+				<Textfield label="Name" bind:value={program.name} />
+
+				<footer>
+					<Button submit disabled={!program.canSubmit()} > Create </Button>
+					<Validation data={program.validate()} />
+				</footer>
+			</form>
+		</Modal>
+
+		<Modal bind:this={course_modal}>
 			<h3 slot="header"> Create Course </h3>
 
-			<form method="POST" action="?/newCourse" use:enhance={createCourseModal?.hide}>
+			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
+
+			<form method="POST" action="?/newCourse" use:enhance={course_modal?.hide}>
 				<label for="code"> Code </label>
-				<Textfield label="Code" />
+				<Textfield label="Code" bind:value={course.code} />
 
 				<label for="name"> Name </label>
-				<Textfield label="Name" />
+				<Textfield label="Name" bind:value={course.name} />
 
 				<label for="program"> Program </label>
 				<Dropdown
 					label="Program"
 					placeholder="Select a program"
-					options={programOptions}
+					options={program.options}
+					bind:value={course.program}
 				/>
 
-				<Button submit> Create </Button>
+				<footer>
+					<Button submit disabled={!course.canSubmit()} > Create </Button>
+					<Validation data={course.validate()} />
+				</footer>
 			</form>
 		</Modal>
 	</svelte:fragment>
 
 	<Card>
 		<h3 slot="header"> My Courses </h3>
-		<div slot="body" class="grid">
-			{#each courses as { code, name }}
-				<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
-			{/each}
-		</div>
+
+		<svelte:fragment slot="body">
+			{#if !courses.some(course => courseMatchesQuery(query, course))}
+				<span class="grayed"> There's nothing here </span>
+			{:else}
+
+				<div class="grid">
+					{#each courses as { code, name }}
+						{#if courseMatchesQuery(query, { code, name })}
+							<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+						{/if}
+					{/each}
+				</div>
+
+			{/if}
+		</svelte:fragment>
 	</Card>
 
 	{#each programs as { name, courses, coordinators }}
@@ -146,11 +289,21 @@
 				</Modal>
 			</svelte:fragment>
 
-			<div slot="body" class="grid">
-				{#each courses as { code, name }}
-					<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
-				{/each}
-			</div>
+			<svelte:fragment slot="body">
+				{#if !courses.some(course => courseMatchesQuery(query, course))}
+					<span class="grayed"> There's nothing here </span>
+				{:else}
+
+					<div class="grid">
+						{#each courses as { code, name }}
+							{#if courseMatchesQuery(query, { code, name })}
+								<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+							{/if}
+						{/each}
+					</div>
+
+				{/if}
+			</svelte:fragment>
 		</Card>
 	{/each}
 </Layout>
@@ -162,25 +315,9 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	form
-		display: grid
-		grid-template: "label content" auto / 1fr 2fr
-		place-items: center start
-
-		label
-			grid-column: label
-			justify-self: end
-
-			margin-top: $form-small-gap
-			padding-right: $form-medium-gap
-
-		:global(.textfield), :global(.dropdown)
-			grid-column: content
-			margin-top: $form-small-gap
-
-		:global(.button)
-			grid-column: content
-			margin-top: $form-big-gap
+	.grayed
+		margin: auto
+		color: $placeholder-color
 
 	.grid
 		display: flex

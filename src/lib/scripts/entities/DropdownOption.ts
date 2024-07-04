@@ -1,6 +1,6 @@
 
 // Internal imports
-import { ValidationData } from './ValidationData'
+import { ValidationData } from './Validation'
 
 // Exports
 export { DropdownOption }

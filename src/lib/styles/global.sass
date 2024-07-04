@@ -56,9 +56,8 @@ html, body
 	scroll-behavior: smooth
 	color: $black
 
-p, h1, h2, h3, h4, h5, h6, a, button, input, label
+p, h1, h2, h3, h4, h5, h6, a, button, input, label, span
 	color: inherit
-	user-select: none
 	font-size: inherit
 	font-weight: inherit
 	font-family: inherit
@@ -82,3 +81,27 @@ ul
 .flex-spacer
 	flex-grow: 1
 	pointer-events: none
+
+.modal form
+	display: grid
+	grid-template: "label content" auto / 1fr 2fr
+	place-items: center start
+	row-gap: $form-small-gap
+
+	& > label
+		grid-column: label
+		justify-self: end
+
+		margin-top: $form-small-gap
+		padding-right: $form-medium-gap
+
+	.textfield, .dropdown, .checkbox
+		grid-column: content
+		margin-top: $form-small-gap
+
+	footer
+		display: flex
+		flex-flow: row nowrap
+		grid-column: content
+
+		margin-top: $form-big-gap
