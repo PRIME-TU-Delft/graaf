@@ -169,6 +169,10 @@
 		<h3 slot="header">Graphs</h3>
 
 		<svelte:fragment slot="body">
+			{#if graphs.length === 0}
+				<p class="grayed"> There's nothing here. </p>
+			{/if}
+			
 			{#each course.graphs as graph}
 				<span class="graph">
 					{#if graph.hasLinks()}
@@ -202,6 +206,12 @@
 
 	<Card>
 		<h3 slot="header">Links</h3>
+		
+		<svelte:fragment slot="body">
+			{#if true}
+				<p class="grayed"> There's nothing here. </p>
+			{/if}
+		</svelte:fragment>
 	</Card>
 </Layout>
 
@@ -215,6 +225,10 @@
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
+
+	.grayed
+		margin: auto
+		color: $placeholder-color
 
 	.graph
 		display: flex
