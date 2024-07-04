@@ -1,6 +1,6 @@
 
 // Internal imports
-import { ValidationData, Error } from "./ValidationData"
+import { ValidationData, Error } from "./Validation"
 import { DropdownOption } from "./DropdownOption"
 
 // Exports

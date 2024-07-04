@@ -4,6 +4,9 @@
 	// Svelte imports
 	import { enhance } from '$app/forms'
 
+	// Internal imports
+	import { ValidationData, Severity } from '$scripts/entities'
+
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import Card from '$components/Card.svelte'
@@ -14,25 +17,101 @@
 	import Searchbar from '$components/Searchbar.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 	import peopleIcon from '$assets/people-icon.svg'
-	import { ValidationData } from '$scripts/entities/ValidationData.js';
 
 	// Exports
 	export let data
 
+	class ProgramHelper {
+		name: string = ''
+
+		get options() {
+			return data.programs.map(program => {
+				return { name: program.name, value: program.id, validation: ValidationData.success() }
+			})
+		}
+
+		create() {
+			program_modal?.show()
+			this.name = ''
+		}
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.name.length > 0
+		}
+	}
+
+	class CourseHelper {
+		code: string = ''
+		name: string = ''
+		program?: number
+
+		create() {
+			course_modal?.show()
+			this.code = ''
+			this.name = ''
+			this.program = undefined
+		}
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.code.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Code is required'
+				})
+			}
+
+			if (this.name.length < 1) {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			if (this.program === undefined) {
+				result.add({
+					severity: Severity.error,
+					short: 'Program is required'
+				})
+			}
+
+			return result
+		}
+
+		canSubmit() {
+			return this.code.length > 0 && this.name.length > 0 && this.program !== undefined
+		}
+	}
+
 	// Variables
 	const modals: { [key: string]: Modal } = {}
-	var createProgramModal: Modal
-	var createCourseModal: Modal
+	let program_modal: Modal
+	let course_modal: Modal
+
+	const program: ProgramHelper = new ProgramHelper()
+	const course: CourseHelper = new CourseHelper()
 
 	$: courses = data.courses
 	$: programs = data.programs
-	$: programOptions = programs.map(program => {
-		return { name: program.name, value: program.id, validation: new ValidationData() }
-	})
 
 	function onSearch(event: Event) {
 		// TODO add onSearch event
@@ -62,11 +141,11 @@
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
-		<Button on:click={createProgramModal?.show}>
+		<Button on:click={program.create}>
 			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
-		<Button on:click={createCourseModal?.show}>
+		<Button on:click={course.create}>
 			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
@@ -74,35 +153,46 @@
 
 		<Searchbar on:input={onSearch} placeholder="Search courses" />
 
-		<Modal bind:this={createProgramModal}>
+		<Modal bind:this={program_modal}>
 			<h3 slot="header"> Create Program </h3>
 
-			<form method="POST" action="?/newProgram" use:enhance={createProgramModal?.hide}>
-				<label for="name"> Name </label>
-				<Textfield label="Name" />
+			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-				<Button submit> Create </Button>
+			<form method="POST" action="?/newProgram" use:enhance={program_modal?.hide}>
+				<label for="name"> Name </label>
+				<Textfield label="Name" bind:value={program.name} />
+
+				<footer>
+					<Button submit disabled={program.canSubmit()} > Create </Button>
+					<Validation data={program.validate()} />
+				</footer>
 			</form>
 		</Modal>
 
-		<Modal bind:this={createCourseModal}>
+		<Modal bind:this={course_modal}>
 			<h3 slot="header"> Create Course </h3>
 
-			<form method="POST" action="?/newCourse" use:enhance={createCourseModal?.hide}>
+			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
+
+			<form method="POST" action="?/newCourse" use:enhance={course_modal?.hide}>
 				<label for="code"> Code </label>
-				<Textfield label="Code" />
+				<Textfield label="Code" bind:value={course.code} />
 
 				<label for="name"> Name </label>
-				<Textfield label="Name" />
+				<Textfield label="Name" bind:value={course.name} />
 
 				<label for="program"> Program </label>
 				<Dropdown
 					label="Program"
 					placeholder="Select a program"
-					options={programOptions}
+					options={program.options}
+					bind:value={course.program}
 				/>
 
-				<Button submit> Create </Button>
+				<footer>
+					<Button submit disabled={course.canSubmit()} > Create </Button>
+					<Validation data={course.validate()} />
+				</footer>
 			</form>
 		</Modal>
 	</svelte:fragment>
@@ -113,6 +203,7 @@
 			{#each courses as { code, name }}
 				<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
 			{/each}
+
 		</div>
 	</Card>
 
@@ -166,6 +257,7 @@
 		display: grid
 		grid-template: "label content" auto / 1fr 2fr
 		place-items: center start
+		row-gap: $form-small-gap
 
 		label
 			grid-column: label
@@ -174,12 +266,15 @@
 			margin-top: $form-small-gap
 			padding-right: $form-medium-gap
 
-		:global(.textfield), :global(.dropdown)
+		.textfield, .dropdown, .checkbox
 			grid-column: content
 			margin-top: $form-small-gap
 
-		:global(.button)
+		footer
+			display: flex
+			flex-flow: row nowrap
 			grid-column: content
+
 			margin-top: $form-big-gap
 
 	.grid

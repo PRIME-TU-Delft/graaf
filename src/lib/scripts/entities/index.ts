@@ -1,6 +1,6 @@
 
 export { DropdownOption } from './DropdownOption'
-export { ValidationData } from './ValidationData'
+export { ValidationData, Severity } from './Validation'
 
 export { Graph } from './Graph'
 export { Course, AssignedUser } from './Course'
@@ -12,3 +12,4 @@ export type { Permissions, SerializedCourse, SerializedAssignedUser } from './Co
 export type { SerializedGraph } from './Graph'
 export type { SerializedDomain, SerializedSubject } from './Fields'
 export type { SerializedLecture } from './Lecture'
+export type { Violation } from './Validation'
