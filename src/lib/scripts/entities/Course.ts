@@ -10,14 +10,13 @@ export type { Permissions, SerializedCourse, SerializedAssignedUser }
 
 // --------------------> Types
 
-type UserRole = 'admin' | 'user';
-
 type SerializedAssignedUser = {
+	id: ID,
 	netid: string,
 	first_name: string,
 	last_name: string,
 	email?: string,
-	role: UserRole
+	permissions: string
 }
 
 type SerializedCourse = {
@@ -130,7 +129,7 @@ class Course {
 		const course = new Course(data.code, data.name)
 		for (const user_data of data.users) {
 			const user = AssignedUser.create(course)
-			user.name = user_data.name
+			user.name = user_data.first_name + ' ' + user_data.last_name
 			user.permissions = Permissions[user_data.permissions as keyof typeof Permissions]
 		}
 

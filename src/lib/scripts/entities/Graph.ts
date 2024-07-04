@@ -212,4 +212,8 @@ class Graph {
 	delete() {
 		/* Delete the graph from the database */
 	}
+
+	// TODO: Temp because these were used in mocked data in course overview
+	hasLinks = () => true
+	isVisible = () => true
 }

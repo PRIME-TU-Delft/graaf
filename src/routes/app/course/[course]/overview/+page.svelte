@@ -22,35 +22,18 @@
 	import trashIcon from '$assets/trash-icon.svg'
 	import gearIcon from '$assets/gear-icon.svg'
 
+	import { Course } from '$scripts/entities/Course.js';
+	import { Graph } from '$scripts/entities/Graph.js';
+
 	function newLink() {
 		// TODO add newLink function
 	}
 
 	let createGraphModal: Modal
 
-	// TODO EVERYTHING BELOW THIS LINE IS TEMPORARY
-
 	export let data;
-	// $: course = data.course;
-
-	let course = {
-		code: 'CSE1200',
-		name: 'Calculus',
-		graphs: [
-			{
-				name: 'Graph 1',
-				id: 1,
-				hasLinks: () => true,
-				isVisible: () => true
-			},
-			{
-				name: 'Graph 2',
-				id: 2,
-				hasLinks: () => false,
-				isVisible: () => false
-			}
-		]
-	}
+	$: course = Course.revive(data.course);
+	$: graphs = data.graphs.map(graph => Graph.revive(graph));
 
 </script>
 
@@ -104,7 +87,7 @@
 		<h3 slot="header">Graphs</h3>
 
 		<svelte:fragment slot="body">
-			{#each course.graphs as graph}
+			{#each graphs as graph}
 				<span class="graph">
 					{#if graph.hasLinks()}
 						<img src={linkIcon} alt="Link icon" />
