@@ -56,3 +56,30 @@ export async function toDTO(graph: Graph): Promise<SerializedGraph> {
 		lectures: await Promise.all((await getLectures(graph)).map(l => LectureHelper.toDTO(l)))
 	}
 }
+
+
+export async function updateFromDTO(dto: SerializedGraph): Promise<void> {
+	await Promise.all([
+		...dto.domains.map(d => DomainHelper.updateFromDTO(d)),
+		...dto.subjects.map(s => SubjectHelper.updateFromDTO(s)),
+		...dto.lectures.map(l => LectureHelper.updateFromDTO(l))
+	]);
+
+	await prisma.graph.update({
+		where: {
+			id: dto.id
+		},
+		data: {
+			name: dto.name,
+			domains: {
+				connect: dto.domains.map(d => ({ id: d.id }))
+			},
+			subjects: {
+				connect: dto.subjects.map(s => ({ id: s.id }))
+			},
+			lectures: {
+				connect: dto.lectures.map(l => ({ id: l.id }))
+			}
+		}
+	});
+}

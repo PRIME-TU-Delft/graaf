@@ -71,3 +71,28 @@ export async function toDTO(domain: Domain): Promise<SerializedDomain> {
 		parents: await getParentIds(domain)
 	}
 }
+
+
+/**
+ * Updates a Domain object in the database to a SerializedDomain object sent by the client.
+ * @param dto SerializedDomain object
+ */
+export async function updateFromDTO(dto: SerializedDomain): Promise<void> {
+	await prisma.domain.update({
+		where: {
+			id: dto.id
+		},
+		data: {
+			name: dto.name,
+			x: dto.x,
+			y: dto.y,
+			style: dto.style,
+			childDomains: {
+				connect: dto.children.map(id => ({ id }))
+			},
+			parentDomains: {
+				connect: dto.parents.map(id => ({ id }))
+			}
+		}
+	});
+}
