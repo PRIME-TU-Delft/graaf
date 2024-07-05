@@ -1,6 +1,9 @@
 import { fail } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
+import { CourseHelper } from '$lib/server/helpers';
+
+
 export const actions = {
 	newCourse: async ({ request }) => {
 		const data = await request.formData();
@@ -11,17 +14,7 @@ export const actions = {
 		if (!code) return fail(400, { code, missing: true });
 		if (!name) return fail(400, { name, missing: true });
 
-		await prisma.course.create({
-			data: {
-				code,
-				name,
-				program: {
-					connect: {
-						id: programId
-					}
-				}
-			}
-		});
+		await CourseHelper.create(code, name, programId);
 	},
 
 

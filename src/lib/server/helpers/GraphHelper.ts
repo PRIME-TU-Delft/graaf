@@ -3,9 +3,7 @@ import prisma from '$lib/server/prisma';
 import type { SerializedGraph } from '$scripts/entities';
 import type { Graph, Domain, Subject, Lecture } from '@prisma/client';
 
-import * as DomainHelper from '$lib/server/DomainHelper';
-import * as SubjectHelper from '$lib/server/SubjectHelper';
-import * as LectureHelper from '$lib/server/LectureHelper';
+import { DomainHelper, SubjectHelper, LectureHelper } from '$lib/server/helpers';
 
 
 export async function createWithCourseCode(courseCode: string, name: string) {

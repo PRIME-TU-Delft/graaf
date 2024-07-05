@@ -3,10 +3,23 @@ import prisma from '$lib/server/prisma';
 import { type SerializedCourse, type SerializedAssignedUser, Permissions } from '$scripts/entities';
 import type { Course } from '@prisma/client';
 
-import * as GraphHelper from './GraphHelper';
+
+export async function create(code: string, name: string, programId: number) {
+	await prisma.course.create({
+		data: {
+			code,
+			name,
+			program: {
+				connect: {
+					id: programId
+				}
+			}
+		}
+	});
+}
 
 
-async function getSerializedUser(course: Course) {
+async function getSerializedUsers(course: Course): Promise<SerializedAssignedUser[]> {
 	const user = (await prisma.user.findMany({
 		where: {
 			programs: {
@@ -35,6 +48,6 @@ export async function toDTO(course: Course): Promise<SerializedCourse> {
 	return {
 		code: course.code,
 		name: course.name,
-		users: await getSerializedUser(course)
+		users: await getSerializedUsers(course)
 	}
 }

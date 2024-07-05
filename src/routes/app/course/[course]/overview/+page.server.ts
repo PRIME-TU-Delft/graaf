@@ -1,8 +1,7 @@
 import { fail } from '@sveltejs/kit';
-import prisma from '$lib/server/prisma';
 
-import * as GraphHelper from '$lib/server/GraphHelper';
-import * as CourseHelper from '$lib/server/CourseHelper';
+import { GraphHelper } from '$lib/server/helpers';
+import { CourseController, GraphController } from '$lib/server/controllers';
 
 
 export const actions = {
@@ -19,20 +18,11 @@ export const actions = {
 
 
 export async function load({ params }) {
-	const course = await prisma.course.findUniqueOrThrow({
-		where: {
-			code: params.course
-		}
-	});
-
-	const graphs = await prisma.graph.findMany({
-		where: {
-			courseId: course.id
-		}
-	});
+	const course = await CourseController.getCourseByCode(params.course);
+	const graphs = await GraphController.getGraphsByCourseCode(params.course);
 
 	return {
-		course: await CourseHelper.toDTO(course),
-		graphs: await Promise.all(graphs.map(g => GraphHelper.toDTO(g)))
+		course,
+		graphs
 	};
 }

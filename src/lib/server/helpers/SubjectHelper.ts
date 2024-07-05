@@ -4,6 +4,19 @@ import type { SerializedSubject } from '$scripts/entities';
 import type { Subject } from '@prisma/client';
 
 
+export async function create(graphId: number) {
+	await prisma.subject.create({
+		data: {
+			graph: {
+				connect: {
+					id: graphId
+				}
+			}
+		}
+	});
+}
+
+
 // TODO: what if a subject has no domain yet?
 async function getDomainId(subject: Subject): Promise<number> {
 	return (await prisma.subject.findUnique({

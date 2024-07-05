@@ -1,8 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
-import * as CourseHelper from '$lib/server/CourseHelper';
-import * as GraphHelper from '$lib/server/GraphHelper';
+import { CourseHelper, GraphHelper, DomainHelper, SubjectHelper } from '$lib/server/helpers';
 
 
 export const actions = {
@@ -12,15 +11,7 @@ export const actions = {
 
 		if (!graphId) return fail(400, { graphId, missing: true });
 
-		await prisma.domain.create({
-			data: {
-				graph: {
-					connect: {
-						id: graphId
-					}
-				}
-			}
-		});
+		await DomainHelper.create(graphId);
 	},
 
 
@@ -30,15 +21,7 @@ export const actions = {
 
 		if (!graphId) return fail(400, { graphId, missing: true });
 
-		await prisma.subject.create({
-			data: {
-				graph: {
-					connect: {
-						id: graphId
-					}
-				}
-			}
-		});
+		await SubjectHelper.create(graphId);
 	}
 };
 
