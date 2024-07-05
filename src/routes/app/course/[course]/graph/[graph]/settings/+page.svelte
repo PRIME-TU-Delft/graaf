@@ -16,12 +16,14 @@
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
+	import { Course, Graph } from '$scripts/entities';
 
 	// Exports
 	export let data: PageData
+	$: course = Course.revive(data.course)
+	$: graph = Graph.revive(data.graph)
 
 	// Variables
-	let { course, graph } = data
 	let active_tab: number = 0
 
 	$: validation = graph.validate()
