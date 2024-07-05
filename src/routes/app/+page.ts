@@ -1,4 +1,6 @@
 
 import { redirect } from '@sveltejs/kit'
 
-redirect(302, '/app/dashboard')
+export async function load() {
+	redirect(302, '/app/dashboard')
+}
