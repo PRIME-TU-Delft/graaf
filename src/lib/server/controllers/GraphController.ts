@@ -11,6 +11,9 @@ export async function getGraphsByCourseCode(code: string) {
 			course: {
 				code
 			}
+		},
+		orderBy: {
+			createdAt: 'asc'
 		}
 	});
 	return await Promise.all(graphs.map(g => GraphHelper.toDTO(g)));

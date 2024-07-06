@@ -36,6 +36,9 @@ async function getChildIds(subject: Subject): Promise<number[]> {
 					id: subject.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }
@@ -49,6 +52,9 @@ async function getParentIds(subject: Subject): Promise<number[]> {
 					id: subject.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }

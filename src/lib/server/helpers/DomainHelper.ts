@@ -32,6 +32,9 @@ async function getChildIds(domain: Domain): Promise<number[]> {
 					id: domain.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }
@@ -51,6 +54,9 @@ async function getParentIds(domain: Domain): Promise<number[]> {
 					id: domain.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }

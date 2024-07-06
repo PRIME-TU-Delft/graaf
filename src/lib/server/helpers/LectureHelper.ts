@@ -12,6 +12,9 @@ async function getSubjectIds(lecture: Lecture): Promise<number[]> {
 					id: lecture.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(s => s.id);
 }

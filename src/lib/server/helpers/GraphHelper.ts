@@ -24,6 +24,9 @@ async function getDomains(graph: Graph): Promise<Domain[]> {
 	return await prisma.domain.findMany({
 		where: {
 			graphId: graph.id
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	});
 }
@@ -33,6 +36,9 @@ async function getSubjects(graph: Graph): Promise<Subject[]> {
 	return await prisma.subject.findMany({
 		where: {
 			graphId: graph.id
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	});
 }
@@ -42,6 +48,9 @@ async function getLectures(graph: Graph): Promise<Lecture[]> {
 	return await prisma.lecture.findMany({
 		where: {
 			graphId: graph.id
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	});
 }
