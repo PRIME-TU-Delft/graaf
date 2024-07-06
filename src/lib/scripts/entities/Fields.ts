@@ -159,6 +159,7 @@ class Domain extends Field<Domain> {
 	static create(graph: Graph, id: ID): Domain {
 		/* Create a new domain */
 
+		//! WARNING: using length as index seems dangerous, what happens when domains get deleted?
 		const domain = new Domain(graph, graph.domains.length, id)
 		graph.domains.push(domain)
 		return domain

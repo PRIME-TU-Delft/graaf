@@ -4,8 +4,8 @@ import type { SerializedDomain } from '$scripts/entities';
 import type { Domain } from '@prisma/client';
 
 
-export async function create(graphId: number) {
-	await prisma.domain.create({
+export async function create(graphId: number): Promise<number> {
+	const domain = await prisma.domain.create({
 		data: {
 			graph: {
 				connect: {
@@ -14,6 +14,7 @@ export async function create(graphId: number) {
 			}
 		}
 	});
+	return domain.id;
 }
 
 

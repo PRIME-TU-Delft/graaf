@@ -4,8 +4,8 @@ import type { SerializedSubject } from '$scripts/entities';
 import type { Subject } from '@prisma/client';
 
 
-export async function create(graphId: number) {
-	await prisma.subject.create({
+export async function create(graphId: number): Promise<number> {
+	const subject = await prisma.subject.create({
 		data: {
 			graph: {
 				connect: {
@@ -14,6 +14,7 @@ export async function create(graphId: number) {
 			}
 		}
 	});
+	return subject.id;
 }
 
 

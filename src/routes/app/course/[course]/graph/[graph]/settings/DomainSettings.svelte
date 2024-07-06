@@ -23,7 +23,9 @@
 
 	// Exports
 	export let graph: Graph
-	export let update: () => void
+	export function update() {
+		graph = graph;
+	}
 
 	// Variables
 	let domain_query: string = ''
@@ -46,7 +48,7 @@
 			return
 		}
 
-		const id = Number(await response.text())
+		const id = Number(JSON.parse((await response.json()).data)[0])
 		Domain.create(graph, id)
 		update()
 	}
