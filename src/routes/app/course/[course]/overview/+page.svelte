@@ -27,8 +27,12 @@
 	import trashIcon from '$assets/trash-icon.svg'
 	import gearIcon from '$assets/gear-icon.svg'
 
+	import { Graph } from '$scripts/entities/Graph'
+	import { Course } from '$scripts/entities/Course'
+
+
 	// Helpers
-	class Graph {
+	class GraphInput {
 		name: string = ''
 
 		get options(): DropdownOption<number>[] {
@@ -86,10 +90,10 @@
 
 	// Variables
 	export let data
-	$: course = data.course
-	$: graphs = course.graphs
+	$: course = Course.revive(data.course);
+	$: graphs = data.graphs.map(graph => Graph.revive(graph));
 
-	const graph = new Graph()
+	const graphInput = new GraphInput()
 	const link = new Link()
 	
 	let graph_modal: Modal
@@ -137,11 +141,11 @@
 
 			<form method="POST" action="?/newGraph" use:enhance={graph_modal?.hide}>
 				<label for="name"> Name </label>
-				<Textfield label="Name" bind:value={graph.name} />
+				<Textfield label="Name" bind:value={graphInput.name} />
 
 				<footer>
-					<Button submit disabled={!graph.canSubmit()}> Create </Button>
-					<Validation data={graph.validate()} />
+					<Button submit disabled={!graphInput.canSubmit()}> Create </Button>
+					<Validation data={graphInput.validate()} />
 				</footer>
 			</form>
 		</Modal>
@@ -155,7 +159,7 @@
 				<Textfield label="Name" bind:value={link.name} />
 
 				<label for="graph"> Graph </label>
-				<Dropdown label="Graph" placeholder="Select a graph" options={graph.options} bind:value={link.graph} />
+				<Dropdown label="Graph" placeholder="Select a graph" options={graphInput.options} bind:value={link.graph} />
 
 				<footer>
 					<Button submit disabled={!link.canSubmit()}> Create </Button>
@@ -171,9 +175,9 @@
 		<svelte:fragment slot="body">
 			{#if graphs.length === 0}
 				<p class="grayed"> There's nothing here. </p>
-			{/if}
-			
-			{#each course.graphs as graph}
+			{/if}	
+		
+			{#each graphs as graph}
 				<span class="graph">
 					{#if graph.hasLinks()}
 						<img src={linkIcon} alt="Link icon" />

@@ -4,6 +4,20 @@ import type { SerializedSubject } from '$scripts/entities';
 import type { Subject } from '@prisma/client';
 
 
+export async function create(graphId: number): Promise<number> {
+	const subject = await prisma.subject.create({
+		data: {
+			graph: {
+				connect: {
+					id: graphId
+				}
+			}
+		}
+	});
+	return subject.id;
+}
+
+
 // TODO: what if a subject has no domain yet?
 async function getDomainId(subject: Subject): Promise<number> {
 	return (await prisma.subject.findUnique({
@@ -22,6 +36,9 @@ async function getChildIds(subject: Subject): Promise<number[]> {
 					id: subject.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }
@@ -35,6 +52,9 @@ async function getParentIds(subject: Subject): Promise<number[]> {
 					id: subject.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }
@@ -55,4 +75,33 @@ export async function toDTO(subject: Subject): Promise<SerializedSubject> {
 		children: await getChildIds(subject),
 		parents: await getParentIds(subject)
 	}
+}
+
+
+/**
+ * Updates a Subject object in the database to a SerializedSubject object sent by the client.
+ * @param dto SerializedSubject object
+ */
+export async function updateFromDTO(dto: SerializedSubject): Promise<void> {
+	await prisma.subject.update({
+		where: {
+			id: dto.id
+		},
+		data: {
+			x: dto.x,
+			y: dto.y,
+			domain: {
+				connect: {
+					id: dto.domain
+				}
+			},
+			name: dto.name,
+			childSubjects: {
+				connect: dto.children.map(id => ({ id }))
+			},
+			parentSubjects: {
+				connect: dto.parents.map(id => ({ id }))
+			}
+		}
+	});
 }

@@ -12,6 +12,9 @@ async function getSubjectIds(lecture: Lecture): Promise<number[]> {
 					id: lecture.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(s => s.id);
 }
@@ -23,4 +26,19 @@ export async function toDTO(lecture: Lecture): Promise<SerializedLecture> {
 		name: lecture.name,
 		subjects: await getSubjectIds(lecture)
 	}
+}
+
+
+export async function updateFromDTO(dto: SerializedLecture) {
+	await prisma.lecture.update({
+		where: {
+			id: dto.id
+		},
+		data: {
+			name: dto.name,
+			subjects: {
+				connect: dto.subjects.map(s => ({ id: s }))
+			}
+		}
+	});
 }

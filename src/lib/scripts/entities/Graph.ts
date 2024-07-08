@@ -203,13 +203,25 @@ class Graph {
 		}
 	}
 
-	save() {
+	async save() {
 		/* Save the graph to the database */
 
-		console.log(this.reduce())
+		const response = await fetch(`/api/graph/${this.id}`, {
+			method: 'PUT',
+			body: JSON.stringify(this.reduce())
+		});
+
+		if (!response.ok) {
+			const message = await response.text();
+			console.error(`Failed to save graph: ${message}`);
+		}
 	}
 
 	delete() {
 		/* Delete the graph from the database */
 	}
+
+	// TODO: Temp because these were used in mocked data in course overview
+	hasLinks = () => true
+	isVisible = () => true
 }

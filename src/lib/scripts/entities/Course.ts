@@ -4,20 +4,19 @@ import { ValidationData, Error } from "./Validation"
 import { DropdownOption } from "./DropdownOption"
 
 // Exports
-export { Course, AssignedUser }
-export type { Permissions, SerializedCourse, SerializedAssignedUser }
+export { Course, AssignedUser, Permissions }
+export type { SerializedCourse, SerializedAssignedUser }
 
 
 // --------------------> Types
 
-type UserRole = 'admin' | 'user';
-
 type SerializedAssignedUser = {
+	id: ID,
 	netid: string,
 	first_name: string,
 	last_name: string,
 	email?: string,
-	role: UserRole
+	permissions: Permissions
 }
 
 type SerializedCourse = {
@@ -41,8 +40,10 @@ class AssignedUser {
 	constructor(
 		public course: Course,
 		public id: ID,
+		public netid: string,
 		public index: number,
-		public name: string = '',
+		public first_name: string,
+		public last_name: string,
 		public permissions?: Permissions
 	) { }
 
@@ -53,7 +54,10 @@ class AssignedUser {
 		const user = new AssignedUser(
 			course,
 			1,
-			course.users.length
+			'jsmith',
+			course.users.length,
+			'John',
+			'Smith'
 		)
 		course.users.push(user)
 		return user
@@ -65,7 +69,7 @@ class AssignedUser {
 		const response = new ValidationData()
 
 		// Check if the user name is valid
-		if (this.name === '') {
+		if (this.first_name === '' || this.last_name === '') {
 			response.add(
 				new Error(
 					'User must have a name',
@@ -91,10 +95,12 @@ class AssignedUser {
 
 	reduce(): SerializedAssignedUser {
 		/* Reduce the assigned user to a POJO */
-
 		return {
-			name: this.name,
-			permissions: Permissions[this.permissions!]
+			id: this.id,
+			netid: this.netid,
+			first_name: this.first_name,
+			last_name: this.last_name,
+			permissions: this.permissions!
 		}
 	}
 
@@ -130,8 +136,11 @@ class Course {
 		const course = new Course(data.code, data.name)
 		for (const user_data of data.users) {
 			const user = AssignedUser.create(course)
-			user.name = user_data.name
-			user.permissions = Permissions[user_data.permissions as keyof typeof Permissions]
+			user.id = user_data.id
+			user.netid = user_data.netid
+			user.first_name = user_data.first_name
+			user.last_name = user_data.last_name
+			user.permissions = user_data.permissions
 		}
 
 		return course

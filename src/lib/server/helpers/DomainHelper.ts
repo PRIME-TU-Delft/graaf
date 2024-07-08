@@ -4,6 +4,20 @@ import type { SerializedDomain } from '$scripts/entities';
 import type { Domain } from '@prisma/client';
 
 
+export async function create(graphId: number): Promise<number> {
+	const domain = await prisma.domain.create({
+		data: {
+			graph: {
+				connect: {
+					id: graphId
+				}
+			}
+		}
+	});
+	return domain.id;
+}
+
+
 /**
  * Plain Domain objects dont have a children (many-to-many) field,
  * this method makes them available.
@@ -18,6 +32,9 @@ async function getChildIds(domain: Domain): Promise<number[]> {
 					id: domain.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }
@@ -37,6 +54,9 @@ async function getParentIds(domain: Domain): Promise<number[]> {
 					id: domain.id
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	})).map(d => d.id);
 }
@@ -57,4 +77,29 @@ export async function toDTO(domain: Domain): Promise<SerializedDomain> {
 		children: await getChildIds(domain),
 		parents: await getParentIds(domain)
 	}
+}
+
+
+/**
+ * Updates a Domain object in the database to a SerializedDomain object sent by the client.
+ * @param dto SerializedDomain object
+ */
+export async function updateFromDTO(dto: SerializedDomain): Promise<void> {
+	await prisma.domain.update({
+		where: {
+			id: dto.id
+		},
+		data: {
+			name: dto.name,
+			x: dto.x,
+			y: dto.y,
+			style: dto.style,
+			childDomains: {
+				connect: dto.children.map(id => ({ id }))
+			},
+			parentDomains: {
+				connect: dto.parents.map(id => ({ id }))
+			}
+		}
+	});
 }

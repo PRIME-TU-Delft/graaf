@@ -1,44 +1,27 @@
-import { fail } from '@sveltejs/kit';
+import { fail, type ActionFailure } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
-import * as CourseHelper from '$lib/server/CourseHelper';
-import * as GraphHelper from '$lib/server/GraphHelper';
+import { CourseHelper, GraphHelper, DomainHelper, SubjectHelper } from '$lib/server/helpers';
 
 
 export const actions = {
-	newDomain: async ({ params, request }) => {
+	newDomain: async ({ params, request }): Promise<number> => {
 		const data = await request.formData();
 		const graphId = Number(data.get('graph'));
 
 		if (!graphId) return fail(400, { graphId, missing: true });
 
-		await prisma.domain.create({
-			data: {
-				graph: {
-					connect: {
-						id: graphId
-					}
-				}
-			}
-		});
+		return await DomainHelper.create(graphId);
 	},
 
 
-	newSubject: async ({ params, request }) => {
+	newSubject: async ({ params, request }): Promise<number> => {
 		const data = await request.formData();
 		const graphId = Number(data.get('graph'));
 
 		if (!graphId) return fail(400, { graphId, missing: true });
 
-		await prisma.subject.create({
-			data: {
-				graph: {
-					connect: {
-						id: graphId
-					}
-				}
-			}
-		});
+		return await SubjectHelper.create(graphId);
 	}
 };
 
