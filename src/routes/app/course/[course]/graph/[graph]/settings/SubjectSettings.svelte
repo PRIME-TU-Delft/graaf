@@ -23,7 +23,9 @@
 
 	// Exports
 	export let graph: Graph
-	export let update: () => void
+	export function update() {
+		graph = graph;
+	}
 
 	// Variables
 	let subject_query: string = ''

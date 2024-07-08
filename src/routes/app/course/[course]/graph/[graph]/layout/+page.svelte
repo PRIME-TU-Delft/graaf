@@ -13,12 +13,13 @@
 	import saveIcon from '$assets/save-icon.svg'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Validation from '$components/Validation.svelte';
+	import { Course, Graph } from '$scripts/entities';
 
 	// Exports
 	export let data: PageData
+	$: course = Course.revive(data.course)
+	$: graph = Graph.revive(data.graph)
 
-	// Variables
-	let { course, graph } = data
 	let graphInterface: GraphInterface
 
 </script>
