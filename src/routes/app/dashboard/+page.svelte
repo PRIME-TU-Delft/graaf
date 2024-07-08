@@ -24,9 +24,17 @@
 	import peopleIcon from '$assets/people-icon.svg'
 
 	// Helpers
-	class Sandbox {
+	class SandboxModal {
 		code: string = ''
 		name: string = ''
+
+		show() {
+			sandbox_modal.show()
+		}
+
+		hide() {
+			sandbox_modal.hide()
+		}
 
 		validate(): ValidationData {
 			const result = new ValidationData()
@@ -53,13 +61,21 @@
 		}
 	}
 
-	class Program {
+	class ProgramModal {
 		name: string = ''
 
 		get options() {
 			return data.programs.map(program => {
 				return { name: program.name, value: program.id, validation: ValidationData.success() }
 			})
+		}
+
+		show() {
+			program_modal?.show()
+		}
+
+		hide() {
+			program_modal?.hide()
 		}
 
 		validate(): ValidationData {
@@ -80,10 +96,18 @@
 		}
 	}
 
-	class Course {
+	class CourseModal {
 		code: string = ''
 		name: string = ''
 		program?: number
+
+		show() {
+			course_modal?.show()
+		}
+		
+		hide() {
+			course_modal?.hide()
+		}
 
 		validate(): ValidationData {
 			const result = new ValidationData()
@@ -133,9 +157,9 @@
 	$: courses = data.courses
 	$: programs = data.programs
 
-	const sandbox: Sandbox = new Sandbox()
-	const program: Program = new Program()
-	const course: Course = new Course()
+	const sandbox: SandboxModal = new SandboxModal()
+	const program: ProgramModal = new ProgramModal()
+	const course: CourseModal = new CourseModal()
 
 	const modals: { [key: string]: Modal } = {}
 	let sandbox_modal: Modal
@@ -160,15 +184,15 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={sandbox_modal?.show}>
+		<Button on:click={sandbox.show}>
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
-		<Button on:click={program_modal?.show}>
+		<Button on:click={program.show}>
 			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
-		<Button on:click={course_modal?.show}>
+		<Button on:click={course.show}>
 			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
@@ -181,7 +205,7 @@
 
 			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
 
-			<form method="POST" action="?/newSandbox" use:enhance={sandbox_modal?.hide}>
+			<form method="POST" action="?/newSandbox" use:enhance={sandbox.hide}>
 				<label for="code"> Code </label>
 				<Textfield label="Code" bind:value={sandbox.code} />
 
@@ -200,7 +224,7 @@
 
 			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-			<form method="POST" action="?/newProgram" use:enhance={program_modal?.hide}>
+			<form method="POST" action="?/newProgram" use:enhance={program.hide}>
 				<label for="name"> Name </label>
 				<Textfield label="Name" bind:value={program.name} />
 
@@ -216,7 +240,7 @@
 
 			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-			<form method="POST" action="?/newCourse" use:enhance={course_modal?.hide}>
+			<form method="POST" action="?/newCourse" use:enhance={course.hide}>
 				<label for="code"> Code </label>
 				<Textfield label="Code" bind:value={course.code} />
 
