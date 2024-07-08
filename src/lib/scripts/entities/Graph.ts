@@ -91,8 +91,8 @@ class Graph {
 					domain_data.id,
 					domain_data.x,
 					domain_data.y,
-					domain_data.style,
-					domain_data.name
+					domain_data.style ?? undefined,
+					domain_data.name ?? ''
 				)
 			)
 		}
@@ -125,7 +125,7 @@ class Graph {
 					subject_data.x,
 					subject_data.y,
 					domain,
-					subject_data.name
+					subject_data.name ?? ''
 				)
 			)
 		}
@@ -151,7 +151,7 @@ class Graph {
 				graph,
 				lecture_data.id,
 				graph.lectures.length,
-				lecture_data.name
+				lecture_data.name ?? ''
 			)
 
 			graph.lectures.push(lecture)
