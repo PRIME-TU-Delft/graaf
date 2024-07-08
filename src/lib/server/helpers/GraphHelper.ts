@@ -57,12 +57,16 @@ async function getLectures(graph: Graph): Promise<Lecture[]> {
 
 
 export async function toDTO(graph: Graph): Promise<SerializedGraph> {
+	const domains = await Promise.all((await getDomains(graph)).map(d => DomainHelper.toDTO(d)));
+	const subjects = await Promise.all((await getSubjects(graph)).map(s => SubjectHelper.toDTO(s)));
+	const lectures = await Promise.all((await getLectures(graph)).map(l => LectureHelper.toDTO(l)));
+
 	return {
 		id: graph.id,
 		name: graph.name,
-		domains: await Promise.all((await getDomains(graph)).map(d => DomainHelper.toDTO(d))),
-		subjects: await Promise.all((await getSubjects(graph)).map(s => SubjectHelper.toDTO(s))),
-		lectures: await Promise.all((await getLectures(graph)).map(l => LectureHelper.toDTO(l)))
+		domains,
+		subjects,
+		lectures
 	}
 }
 
