@@ -4,45 +4,23 @@
 	// Svelte imports
 	import type { PageData } from './$types'
 
+	// Internal imports
+	import { ValidationData, Severity } from '$scripts/entities'
+
 	// Components
 	import Button from '$components/Button.svelte'
-	import DomainSettings from './DomainSettings.svelte';
-	import GeneralSettings from './GeneralSettings.svelte'
 	import Layout from '$layouts/DefaultLayout.svelte'
-	import LectureSettings from './LectureSettings.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Validation from '$components/Validation.svelte'
+	
+	import GeneralSettings from './GeneralSettings.svelte'
+	import DomainSettings from './DomainSettings.svelte';
 	import SubjectSettings from './SubjectSettings.svelte';
+	import LectureSettings from './LectureSettings.svelte'
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
 	import { Course, Graph } from '$scripts/entities';
-
-	// Exports
-	export let data: PageData
-	$: course = Course.revive(data.course)
-	$: graph = Graph.revive(data.graph)
-
-	// Variables
-	let active_tab: number = 0
-
-	$: validation = graph.validate()
-
-	const shake = {
-		keyframes: [
-			{ transform: 'translate3d(0, 0, 0)'},
-			{ transform: 'translate3d(-10px, 0, 0)'},
-			{ transform: 'translate3d(8px, 0, 0)'},
-			{ transform: 'translate3d(-6px, 0, 0)'},
-			{ transform: 'translate3d(4px, 0, 0)'},
-			{ transform: 'translate3d(-2px, 0, 0)'},
-			{ transform: 'translate3d(0, 0, 0)'}
-		],
-		options: {
-			duration: 400,
-			easeing: 'cubic-bezier(.15,.5,.25,.95)',
-		}
-	}
 
 	// Functions
 	function update() {
@@ -66,9 +44,33 @@
 		setTimeout(() => {
 			const element = document.getElementById(id)
 			element?.scrollIntoView({ behavior: 'smooth' })
-			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, 150)
+			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, shake.delay)
 		}, 0)
-		
+	}
+
+	// Variables
+	export let data: PageData
+	$: course = Course.revive(data.course)
+	$: graph = Graph.revive(data.graph)
+	$: validation = graph.validate()
+
+	let active_tab: number = 0
+
+	const shake = {
+		delay: 150,
+		keyframes: [
+			{ transform: 'translate3d(0, 0, 0)'},
+			{ transform: 'translate3d(-10px, 0, 0)'},
+			{ transform: 'translate3d(8px, 0, 0)'},
+			{ transform: 'translate3d(-6px, 0, 0)'},
+			{ transform: 'translate3d(4px, 0, 0)'},
+			{ transform: 'translate3d(-2px, 0, 0)'},
+			{ transform: 'translate3d(0, 0, 0)'}
+		],
+		options: {
+			duration: 400,
+			easeing: 'cubic-bezier(.15,.5,.25,.95)',
+		}
 	}
 
 </script>
@@ -102,7 +104,7 @@
 		<Validation data={validation} success_msg={'Ready to save'} {goto_anchor} />
 		<div class="flex-spacer" />
 		<LinkButton href="/app/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
-		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>
+		<Button disabled={validation.severity === Severity.error} on:click={() => graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes 
 		</Button>
 	</svelte:fragment>

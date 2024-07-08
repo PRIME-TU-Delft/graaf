@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Domain, DomainRelation } from '$scripts/entities'
+	import { Graph, Domain, DomainRelation, SortOption } from '$scripts/entities'
 	import { styles } from '$scripts/settings'
 
 	// Components
@@ -20,22 +20,7 @@
 	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-
-	// Exports
-	export let graph: Graph
-	export function update() {
-		graph = graph;
-	}
-
-	// Variables
-	let domain_query: string = ''
-	let domain_name_sort: boolean | undefined
-	let domain_style_sort: boolean | undefined
-
-	let relation_query: string = ''
-	let relation_parent_sort: boolean | undefined
-	let relation_child_sort: boolean | undefined
-
+	
 	// Functions
 	async function createDomain() {
 		/* Creates a new domain */
@@ -84,19 +69,25 @@
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
-	function alphabetize<T>(list: T[], key: (item: T) => string, ascending: boolean = true) {
-		/* Alphabetizes list */
-
-		list.sort((a, b) => key(a).localeCompare(key(b)))
-		if (!ascending) list.reverse()
-	}
-
 	function sortIcon(state?: boolean): string {
 		/* Returns the sort icon based on the state */
 
 		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
 
+	// Variables
+	export let graph: Graph
+	export function update() {
+		graph = graph;
+	}
+
+	let domain_query: string = ''
+	let domain_name_sort: boolean | undefined
+	let domain_style_sort: boolean | undefined
+
+	let relation_query: string = ''
+	let relation_parent_sort: boolean | undefined
+	let relation_child_sort: boolean | undefined
 
 </script>
 
@@ -134,7 +125,7 @@
 					on:click={() => {
 						domain_style_sort = undefined
 						domain_name_sort = !domain_name_sort
-						alphabetize(graph.domains, domain => domain.name, domain_name_sort)
+						graph.sort(SortOption.domains | SortOption.name, domain_name_sort)
 						update()
 					}}
 				/>
@@ -148,7 +139,7 @@
 					on:click={() => {
 						domain_name_sort = undefined
 						domain_style_sort = !domain_style_sort
-						alphabetize(graph.domains, domain => domain.style ? styles[domain.style].display_name : '', domain_style_sort)
+						graph.sort(SortOption.domains | SortOption.style, domain_style_sort)
 						update()
 					}}
 				/>
@@ -207,7 +198,7 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						alphabetize(graph.domain_relations, relation => relation.parent?.name || '', relation_parent_sort)
+						graph.sort(SortOption.relations | SortOption.domains | SortOption.parent, relation_parent_sort)
 						update()
 					}}
 				/>
@@ -221,7 +212,7 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						alphabetize(graph.domain_relations, relation => relation.child?.name || '', relation_child_sort)
+						graph.sort(SortOption.relations | SortOption.domains | SortOption.child, relation_child_sort)
 						update()
 					}}
 				/>

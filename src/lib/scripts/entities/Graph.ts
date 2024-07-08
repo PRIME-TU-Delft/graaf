@@ -3,16 +3,18 @@ import { ValidationData, Error } from './Validation'
 import { DropdownOption } from './DropdownOption'
 
 import { Domain, Subject } from './Fields'
-import { DomainRelation, SubjectRelation } from './Relations'
+import { Relation, DomainRelation, SubjectRelation } from './Relations'
 import { Lecture, LectureSubject } from './Lecture'
 
 import type { SerializedLecture } from './Lecture'
 import type { SerializedSubject } from './Fields'
 import type { SerializedDomain } from './Fields'
 
+import { styles } from '../settings'
+
 // Exports
-export { Graph }
-export type { SerializedGraph }
+export { Graph, SortOption }
+export type { SerializedGraph, SortOptions }
 
 
 // --------------------> Types
@@ -26,6 +28,19 @@ type SerializedGraph = {
 	domains: SerializedDomain[],
 	subjects: SerializedSubject[],
 	lectures: SerializedLecture[]
+}
+
+type SortOptions = number
+enum SortOption {
+	domains    = 0b10000000,
+	subjects   = 0b01000000,
+	relations  = 0b00100000,
+	name       = 0b00010000,
+	style      = 0b00001000,
+	domain     = 0b00000100,
+	parent     = 0b00000010,
+	child      = 0b00000001
+
 }
 
 
@@ -158,6 +173,43 @@ class Graph {
 		/* Check if the graph has a name */
 
 		return this.name !== ''
+	}
+
+	sort(options: SortOptions, descending: boolean) {
+		/* Sort the graph */
+
+		let key: (item: any) => string
+		if (options & SortOption.relations) {
+			if (options & SortOption.parent) {
+				key = relation => relation.parent?.name ?? ''
+			} else if (options & SortOption.child) { 
+				key = relation => relation.child?.name ?? ''
+			} else return
+		} else if (options & SortOption.name) {
+			key = field => field.name
+		} else if (options & SortOption.style) {
+			key = domain => domain.style ? styles[domain.style].display_name : ''
+		} else if (options & SortOption.domain) {
+			key = subject => subject.domain?.name ?? ''
+		} else return
+
+		if (options & SortOption.relations) {
+			if (options & SortOption.domains) {
+				this.domain_relations.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.domain_relations.reverse()
+			} else if (options & SortOption.subjects) {
+				this.subject_relations.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.subject_relations.reverse()
+			}
+		} else {
+			if (options & SortOption.domains) {
+				this.domains.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.domains.reverse()
+			} else if (options & SortOption.subjects) {
+				this.subjects.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.subjects.reverse()
+			}
+		}
 	}
 
 	validate(): ValidationData {

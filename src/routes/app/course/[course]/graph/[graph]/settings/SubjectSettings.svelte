@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, SubjectRelation } from '$scripts/entities'
+	import { Graph, Subject, SubjectRelation, SortOption } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -82,13 +82,6 @@
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
-	function alphabetize<T>(list: T[], key: (item: T) => string, ascending: boolean = true) {
-		/* Alphabetizes list */
-
-		list.sort((a, b) => key(a).localeCompare(key(b)))
-		if (!ascending) list.reverse()
-	}
-
 	function sortIcon(state?: boolean): string {
 		/* Returns the sort icon based on the state */
 
@@ -131,7 +124,7 @@
 					on:click={() => {
 						subject_domain_sort = undefined
 						subject_name_sort = !subject_name_sort
-						alphabetize(graph.subjects, subject => subject.name, subject_name_sort)
+						graph.sort(SortOption.subjects | SortOption.name, subject_name_sort)
 						update()
 					}}
 				/>
@@ -145,7 +138,7 @@
 					on:click={() => {
 						subject_name_sort = undefined
 						subject_domain_sort = !subject_domain_sort
-						alphabetize(graph.subjects, subject => subject.domain?.name || '', subject_domain_sort)
+						graph.sort(SortOption.subjects | SortOption.domain, subject_domain_sort)
 						update()
 					}}
 				/>
@@ -204,7 +197,7 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relation_parent_sort)
+						graph.sort(SortOption.relations | SortOption.subjects | SortOption.parent, relation_parent_sort)
 						update()
 					}}
 				/>
@@ -218,7 +211,7 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relation_child_sort)
+						graph.sort(SortOption.relations | SortOption.subjects | SortOption.child, relation_child_sort)
 						update()
 					}}
 				/>
