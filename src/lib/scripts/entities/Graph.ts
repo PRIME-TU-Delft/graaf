@@ -1,10 +1,10 @@
 // Internal imports
-import { ValidationData, Error } from './Validation'
-import { DropdownOption } from './DropdownOption'
-
 import { Domain, Subject } from './Fields'
-import { Relation, DomainRelation, SubjectRelation } from './Relations'
+import { DomainRelation, SubjectRelation } from './Relations'
 import { Lecture, LectureSubject } from './Lecture'
+
+import { ValidationData, Severity } from './Validation'
+import { DropdownOption } from './DropdownOption'
 
 import type { SerializedLecture } from './Lecture'
 import type { SerializedSubject } from './Fields'
@@ -219,13 +219,13 @@ class Graph {
 
 		// Check if the graph has a name
 		if (!this.hasName()) {
-			response.add(
-				new Error(
-					'Graph must have a name',
-					undefined,
-					0, 'name'
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Graph has no name',
+				long: 'The graph must have a name',
+				tab: 0,
+				anchor: 'name'
+			})
 		}
 
 		// Validate domains, subjects and lectures

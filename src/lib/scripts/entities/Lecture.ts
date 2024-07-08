@@ -1,6 +1,6 @@
 
 // Internal imports
-import { ValidationData, Error } from './Validation'
+import { ValidationData, Severity } from './Validation'
 import { DropdownOption } from './DropdownOption'
 
 import { Graph } from './Graph'
@@ -55,7 +55,7 @@ class LectureSubject {
 			// Check if the subject is already in the lecture
 			const validation = new ValidationData()
 			if (this.lecture.present.includes(subject)) {
-				validation.add(new Error('Subject already in lecture'))
+				validation.add({ severity: Severity.error, short: 'Duplicate subject'})
 			}
 
 			options.push(
@@ -199,49 +199,48 @@ class Lecture {
 
 		// Check if the lecture has a name
 		if (!this.hasName()){
-			response.add(
-				new Error(
-					'Lecture has no name',
-					undefined,
-					3, this.id.toString()
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Lecture has no name',
+				tab: 3,
+				anchor: this.id.toString()
+			})
 		}
 
 		// Check if the name is unique
 		else {
 			const first = this.findOriginal(this.graph.lectures, this, lecture => lecture.name)
 			if (first !== -1) {
-				response.add(
-					new Error(
-						'Lecture name must be unique',
-						`Name first used by Lecture nr. ${first + 1}`,
-						3, this.id.toString()
-					)
-				)
+				response.add({
+					severity: Severity.error,
+					short: 'Duplicate lecture name',
+					long: `Name first used by Lecture nr. ${first + 1}`,
+					tab: 3,
+					anchor: this.id.toString()
+				})
 			}
 		}
 
 		// Check if the lecture has subjects
 		if (this.hasSubjects()) {
-			response.add(
-				new Error(
-					'Lecture has no subjects',
-					undefined,
-					3, this.id.toString()
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Lecture has no subjects',
+				tab: 3,
+				anchor: this.id.toString()
+			})
 		}
 
+		// TODO maybe just save defined subjects and remove this error
 		// Check if the lecture has undefined subjects
 		else if (!this.isDefined()) {
-			response.add(
-				new Error(
-					'Lecture has undefined subjects',
-					'Make sure all subjects are defined',
-					3, this.id.toString()
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Lecture has undefined subjects',
+				long: 'Make sure all subjects are defined',
+				tab: 3,
+				anchor: this.id.toString()
+			})
 		}
 
 		return response

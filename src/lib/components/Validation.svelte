@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { ValidationData } from '$scripts/entities'
+	import { Severity, ValidationData } from '$scripts/entities'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { tooltip } from '$scripts/tooltip'
 
@@ -10,6 +10,7 @@
 	import errorIcon from '$assets/error-icon.svg'
 	import warningIcon from '$assets/warning-icon.svg'
 	import successIcon from '$assets/success-icon.svg'
+	import { error } from '@sveltejs/kit';
 
 	// Exports
 	export let data: ValidationData
@@ -63,22 +64,24 @@
 
 	{#if short}
 
-		{#if data.severity !== 'success'}
+		{#if data.severity !== Severity.success}
 			<button
-				type="button"
-				class={data.severity === 'error' ? 'error toggle' : 'warning toggle'}
+				type="button" 
+				class="toggle"
+				class:error={data.severity === Severity.error}
+				class:warning={data.severity === Severity.warning}
 				tabindex="-1"
 				on:click={show_all}
 				use:tooltip={`
 					${all_visible ? 'Hide' : 'Show'}
-					${data.errors.length > 0 ? 'errors' : ''}
+					${data.errors.length > 0 ? 'error' : ''}${data.errors.length > 1 ? 's' : ''}
 					${data.errors.length > 0 && data.warnings.length > 0 ? ' & ' : ''}
-					${data.warnings.length > 0 ? 'warnings' : ''}
+					${data.warnings.length > 0 ? 'warning' : ''}${data.warnings.length > 1 ? 's' : ''}
 					`
 				}
 			>
 				<img
-					src={data.severity === 'error' ? errorIcon : warningIcon}
+					src={data.severity === Severity.error ? errorIcon : warningIcon}
 					alt=""
 				>
 			</button>
@@ -134,12 +137,12 @@
 							<img src={errorIcon} alt="" />
 							<span class="short"> {error.short} </span>
 
-							{#if error.tab !== undefined && error.id !== undefined}
+							{#if error.tab !== undefined && error.anchor !== undefined}
 								<span class="show">
 									(<button on:click={() => {
 										hide_errors()
-										if (error.tab !== undefined && error.id !== undefined)
-											goto_anchor(error.tab, error.id)
+										if (error.tab !== undefined && error.anchor !== undefined)
+											goto_anchor(error.tab, error.anchor)
 									}}> show </button>)
 								</span>
 							{/if}
@@ -174,12 +177,12 @@
 							<img src={warningIcon} alt="" />
 							<span class="short"> {warning.short} </span>
 
-							{#if warning.tab !== undefined && warning.id !== undefined}
+							{#if warning.tab !== undefined && warning.anchor !== undefined}
 								<span class="show">
 									(<button on:click={() => {
 										hide_warnings()
-										if (warning.tab !== undefined && warning.id !== undefined)
-											goto_anchor(warning.tab, warning.id)
+										if (warning.tab !== undefined && warning.anchor !== undefined)
+											goto_anchor(warning.tab, warning.anchor)
 									}}> show </button>)
 								</span>
 							{/if}
@@ -193,7 +196,7 @@
 			{/if}
 		{/if}
 
-		{#if data.severity === 'success'}
+		{#if data.severity === Severity.success}
 			<span class="success">
 				<img src={successIcon} alt=""> {success_msg}
 			</span>

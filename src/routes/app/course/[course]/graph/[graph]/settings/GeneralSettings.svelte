@@ -9,7 +9,6 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Modal from '$components/Modal.svelte'
 	import Textfield from '$components/Textfield.svelte'
-	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
@@ -36,9 +35,9 @@
 	</div>
 
 	<!-- Button row -->
-	<div class="button-row">
+	<!-- <div class="button-row">
 
-		<!-- Delete graph button -->
+		<!-- Delete graph button
 		<Button dangerous on:click={delete_modal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
 		<Modal bind:this={delete_modal}>
 			<h3 slot="header"> Delete Graph </h3>
@@ -46,10 +45,10 @@
 
 			<div slot="button-row">
 				<LinkButton on:click={delete_modal.hide}> Cancel </LinkButton>
-				<Button dangerous on:click={graph.delete}> Delete </Button> <!-- TODO redirect to course overview -->
+				<Button dangerous on:click={graph.delete}> Delete </Button> <!-- TODO redirect to course overview
 			</div>
 		</Modal>
-	</div>
+	</div> -->
 </div>
 
 
@@ -63,17 +62,5 @@
 
 	.editor
 		padding: $card-thick-padding
-
-		.settings
-			display: flex
-			flex-flow: column
-
-		.button-row
-			display: flex
-			flex-flow: row nowrap
-			justify-content: end
-			gap: $form-small-gap
-
-			margin-top: $form-big-gap
 
 </style>

@@ -1,6 +1,6 @@
 
 // Internal imports
-import { ValidationData, Error } from "./Validation"
+import { ValidationData, Severity } from "./Validation"
 import { DropdownOption } from "./DropdownOption"
 
 // Exports
@@ -70,24 +70,22 @@ class AssignedUser {
 
 		// Check if the user name is valid
 		if (this.first_name === '' || this.last_name === '') {
-			response.add(
-				new Error(
-					'User must have a name',
-					undefined,
-					1, `user-${this.id}`
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'User must have a name',
+				tab: 1,
+				anchor: `user-${this.id}`
+			})
 		}
 
 		// Check if the user has permissions
 		if (this.permissions === undefined) {
-			response.add(
-				new Error(
-					'User must have permissions',
-					undefined,
-					1, `user-${this.id}`
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'User must have permissions',
+				tab: 1,
+				anchor: `user-${this.id}`
+			})
 		}
 
 		return response
@@ -153,46 +151,42 @@ class Course {
 
 		// Check if the course code is valid
 		if (this.code === '') {
-			response.add(
-				new Error(
-					'Course must have a code',
-					undefined,
-					0, 'code'
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Course has no code',
+				tab: 0,
+				anchor: 'code'
+			})
 		}
 
 		// Check if the course name is valid
 		if (this.name === '') {
-			response.add(
-				new Error(
-					'Course must have a name',
-					undefined,
-					0, 'name'
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Course has no name',
+				tab: 0,
+				anchor: 'name'
+			})
 		}
 
 		// Check if the course has users
 		if (this.users.length === 0) {
-			response.add(
-				new Error(
-					'Course must have users',
-					undefined,
-					1, ''
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Course has no users',
+				tab: 1,
+				anchor: 'users'
+			})
 		}
 
 		// Check if the course has an admin
 		else if (!this.users.some(user => user.permissions === Permissions.admin)) {
-			response.add(
-				new Error(
-					'Course must have an admin',
-					undefined,
-					1, ''
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Course has no admin',
+				tab: 1,
+				anchor: ''
+			})
 		}
 
 		// Validate the users
