@@ -45,11 +45,11 @@
 	export let data: PageData
 	const course = writable(Course.revive(data.course))
 	const graph = writable(Graph.revive(data.graph))
-	$: validation = $graph.validate()
 	setContext('course', course)
 	setContext('graph', graph)
 
 	let active_tab: number = 0
+	$: validation = $graph.validate()
 
 	const shake = {
 		delay: 150,

@@ -140,6 +140,7 @@
 						domain_style_sort = undefined
 						domain_name_sort = !domain_name_sort
 						$graph.sort(SortOption.domains | SortOption.name, domain_name_sort)
+						update()
 					}}
 				/>
 			</div>
@@ -153,6 +154,7 @@
 						domain_name_sort = undefined
 						domain_style_sort = !domain_style_sort
 						$graph.sort(SortOption.domains | SortOption.style, domain_style_sort)
+						update()
 					}}
 				/>
 			</div>
@@ -211,6 +213,7 @@
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
 						$graph.sort(SortOption.relations | SortOption.domains | SortOption.parent, relation_parent_sort)
+						update()
 					}}
 				/>
 			</div>
@@ -224,6 +227,7 @@
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
 						$graph.sort(SortOption.relations | SortOption.domains | SortOption.child, relation_child_sort)
+						update()
 					}}
 				/>
 			</div>

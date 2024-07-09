@@ -140,6 +140,7 @@
 						subject_domain_sort = undefined
 						subject_name_sort = !subject_name_sort
 						$graph.sort(SortOption.subjects | SortOption.name, subject_name_sort)
+						update()
 					}}
 				/>
 			</div>
@@ -153,6 +154,7 @@
 						subject_name_sort = undefined
 						subject_domain_sort = !subject_domain_sort
 						$graph.sort(SortOption.subjects | SortOption.domain, subject_domain_sort)
+						update()
 					}}
 				/>
 			</div>
@@ -211,6 +213,7 @@
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
 						$graph.sort(SortOption.relations | SortOption.subjects | SortOption.parent, relation_parent_sort)
+						update()
 					}}
 				/>
 			</div>
@@ -224,6 +227,7 @@
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
 						$graph.sort(SortOption.relations | SortOption.subjects | SortOption.child, relation_child_sort)
+						update()
 					}}
 				/>
 			</div>
