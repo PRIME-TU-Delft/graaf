@@ -83,6 +83,12 @@ export async function toDTO(subject: Subject): Promise<SerializedSubject> {
  * @param dto SerializedSubject object
  */
 export async function updateFromDTO(dto: SerializedSubject): Promise<void> {
+	const domain = dto.domain ? {
+		connect: {
+			id: dto.domain
+		}
+	} : undefined;
+
 	await prisma.subject.update({
 		where: {
 			id: dto.id
@@ -90,11 +96,7 @@ export async function updateFromDTO(dto: SerializedSubject): Promise<void> {
 		data: {
 			x: dto.x,
 			y: dto.y,
-			domain: {
-				connect: {
-					id: dto.domain
-				}
-			},
+			domain,
 			name: dto.name,
 			childSubjects: {
 				connect: dto.children.map(id => ({ id }))

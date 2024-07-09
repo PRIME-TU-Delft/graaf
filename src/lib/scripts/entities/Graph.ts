@@ -111,7 +111,6 @@ class Graph {
 		// Define subjects
 		for (const subject_data of data.subjects) {
 			const domain = graph.domains.find(domain => domain.id === subject_data.domain)
-			if (!domain) continue
 
 			graph.subjects.push(
 				new Subject(
