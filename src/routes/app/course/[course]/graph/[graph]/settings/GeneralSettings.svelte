@@ -3,7 +3,6 @@
 
 	// Svelte imports
 	import type { Writable } from 'svelte/store'
-	import { getContext } from 'svelte'
 
 	// Internal imports
 	import { Graph } from '$scripts/entities'
@@ -18,7 +17,7 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Variables
-	const graph = getContext<Writable<Graph>>('graph')
+	export let graph: Writable<Graph>
 	let delete_modal: Modal
 
 </script>
@@ -36,20 +35,19 @@
 	</div>
 
 	<!-- Button row -->
-	<!-- <div class="button-row">
+	<div class="button-row">
 
-		<!-- Delete graph button
+		<!-- Delete graph button -->
 		<Button dangerous on:click={delete_modal.show}> <img src={trashIcon} alt=""> Delete Graph </Button>
 		<Modal bind:this={delete_modal}>
 			<h3 slot="header"> Delete Graph </h3>
-			Are you sure you want to delete {graph.name}? This action <b>cannot</b> be undone.
+			<p> Are you sure you want to delete {$graph.name}? This action <b>cannot</b> be undone. </p>
 
-			<div slot="button-row">
-				<LinkButton on:click={delete_modal.hide}> Cancel </LinkButton>
-				<Button dangerous on:click={graph.delete}> Delete </Button> <!-- TODO redirect to course overview
+			<div class="button-row">
+				<Button dangerous on:click={$graph.delete}> Delete </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
-	</div> -->
+	</div>
 </div>
 
 
@@ -63,5 +61,10 @@
 
 	.editor
 		padding: $card-thick-padding
+	
+	.button-row
+		display: flex
+		justify-content: flex-end
+		margin-top: $form-big-gap
 
 </style>

@@ -3,7 +3,6 @@
 
 	// Svelte imports
 	import type { Writable } from 'svelte/store'
-	import { getContext } from 'svelte'
 
 	// Internal imports
 	import { Graph, Domain, DomainRelation, SortOption } from '$scripts/entities'
@@ -93,7 +92,7 @@
 	}
 
 	// Variables
-	const graph = getContext<Writable<Graph>>('graph')
+	export let graph: Writable<Graph>
 
 	let domain_query: string = ''
 	let domain_name_sort: boolean | undefined

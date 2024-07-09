@@ -4,7 +4,6 @@
 	// Svelte imports
 	import type { PageData } from './$types'
 	import { writable } from 'svelte/store'
-	import { setContext } from 'svelte'
 
 	// Internal imports
 	import { Severity } from '$scripts/entities'
@@ -45,9 +44,6 @@
 	export let data: PageData
 	const course = writable(Course.revive(data.course))
 	const graph = writable(Graph.revive(data.graph))
-	setContext('course', course)
-	setContext('graph', graph)
-
 	let active_tab: number = 0
 	$: validation = $graph.validate()
 
@@ -131,13 +127,13 @@
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings /> 
+			<GeneralSettings {graph} /> 
 		{:else if active_tab === 1}
-			<DomainSettings />
+			<DomainSettings {graph} />
 		{:else if active_tab === 2}
-			<SubjectSettings />
+			<SubjectSettings {graph} />
 		{:else if active_tab === 3}
-			<LectureSettings />
+			<LectureSettings {graph} />
 		{/if}
 	</div>
 </Layout>
