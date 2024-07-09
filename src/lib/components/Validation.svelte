@@ -196,7 +196,7 @@
 			{/if}
 		{/if}
 
-		{#if data.severity === Severity.success}
+		{#if data.severity === Severity.success && success !== ''}
 			<span class="success">
 				<img src={successIcon} alt=""> {success}
 			</span>
