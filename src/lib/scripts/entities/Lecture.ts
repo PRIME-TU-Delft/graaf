@@ -86,6 +86,12 @@ class Lecture {
 		public lecture_subjects: LectureSubject[] = []
 	) { }
 
+	static create(graph: Graph, id: ID) {
+		const lecture = new Lecture(graph, id, graph.lectures.length);
+		graph.lectures.push(lecture);
+		return lecture;
+	}
+
 	get size(): number {
 		/* Return the size of the lecture */
 

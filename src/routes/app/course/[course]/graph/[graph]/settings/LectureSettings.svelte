@@ -18,12 +18,28 @@
 
 	// Exports
 	export let graph: Graph
-	export let update: () => void
+	function update() {
+		graph = graph;
+	}
 
 	// Variables
 	let query: string = ''
 
 	// Functions
+	async function createLecture() {
+		let body = new FormData();
+		body.append('graph', graph.id.toString());
+		const response = await fetch('?/newLecture', { method: 'POST', body });
+		if (!response.ok) {
+			console.error('Failed to create lecture');
+			return;
+		}
+
+		const id = Number(JSON.parse((await response.json()).data)[0]);
+		Lecture.create(graph, id);
+		update();
+	}
+
 	function lectureMatchesQuery(query: string, lecture: Lecture): boolean {
 		/* Checks if query appears in lecture */
 
@@ -56,7 +72,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={query} />
-		<Button on:click={() => { Lecture.create(graph); update() }}>
+		<Button on:click={createLecture}>
 			<img src={plusIcon} alt=""> New Lecture
 		</Button>
 	</div>

@@ -45,15 +45,6 @@
 	}
 
 	// Functions
-	function update() {
-		/* Force Svelte update 
-		 * I hate this but svelte forces my hand
-		 * Maybe I should just use a store or wait for Svelte 5
-		 */
-
-		graph = graph
-	}
-
 	function goto_anchor(tab: number, id: string) {
 		if (active_tab === tab) {
 			const element = document.getElementById(id)
@@ -68,7 +59,7 @@
 			element?.scrollIntoView({ behavior: 'smooth' })
 			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, 150)
 		}, 0)
-		
+
 	}
 
 </script>
@@ -134,13 +125,13 @@
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings {graph} {update} />
+			<GeneralSettings {graph} />
 		{:else if active_tab === 1}
-			<DomainSettings {graph} {update} />
+			<DomainSettings {graph} />
 		{:else if active_tab === 2}
-			<SubjectSettings {graph} {update} />
+			<SubjectSettings {graph} />
 		{:else if active_tab === 3}
-			<LectureSettings {graph} {update} />
+			<LectureSettings {graph} />
 		{/if}
 	</div>
 </Layout>

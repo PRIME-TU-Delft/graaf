@@ -16,7 +16,9 @@
 
 	// Exports
 	export let graph: Graph
-	export let update: () => void
+	function update() {
+		graph = graph;
+	}
 
 	// Variables
 	let delete_modal: Modal

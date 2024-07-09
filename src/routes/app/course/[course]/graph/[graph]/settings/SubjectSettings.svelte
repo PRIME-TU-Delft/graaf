@@ -23,7 +23,7 @@
 
 	// Exports
 	export let graph: Graph
-	export function update() {
+	function update() {
 		graph = graph;
 	}
 

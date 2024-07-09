@@ -1,7 +1,7 @@
 import { fail, type ActionFailure } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
-import { CourseHelper, GraphHelper, DomainHelper, SubjectHelper } from '$lib/server/helpers';
+import { CourseHelper, GraphHelper, DomainHelper, SubjectHelper, LectureHelper } from '$lib/server/helpers';
 
 
 export const actions = {
@@ -22,6 +22,16 @@ export const actions = {
 		if (!graphId) return fail(400, { graphId, missing: true });
 
 		return await SubjectHelper.create(graphId);
+	},
+
+
+	newLecture: async ({ params, request }): Promise<number> => {
+		const data = await request.formData();
+		const graphId = Number(data.get('graph'));
+
+		if (!graphId) return fail(400, { graphId, missing: true });
+
+		return await LectureHelper.create(graphId);
 	}
 };
 

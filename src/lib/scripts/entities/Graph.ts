@@ -210,7 +210,10 @@ class Graph {
 			body: JSON.stringify(this.reduce())
 		});
 
-		if (!response.ok) {
+		if (response.ok) {
+			console.log('[*] Graph saved!');
+		}
+		else {
 			const message = await response.text();
 			console.error(`Failed to save graph: ${message}`);
 		}
