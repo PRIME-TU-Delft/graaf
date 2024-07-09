@@ -3,9 +3,11 @@
 
 	// Svelte imports
 	import type { PageData } from './$types'
+	import { writable } from 'svelte/store'
+	import { setContext } from 'svelte'
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/entities'
+	import { Severity } from '$scripts/entities'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -23,15 +25,6 @@
 	import { Course, Graph } from '$scripts/entities';
 
 	// Functions
-	function update() {
-		/* Force Svelte update 
-		 * I hate this but svelte forces my hand
-		 * Maybe I should just use a store or wait for Svelte 5
-		 */
-
-		graph = graph
-	}
-
 	function goto_anchor(tab: number, id: string) {
 		if (active_tab === tab) {
 			const element = document.getElementById(id)
@@ -50,9 +43,11 @@
 
 	// Variables
 	export let data: PageData
-	$: course = Course.revive(data.course)
-	$: graph = Graph.revive(data.graph)
-	$: validation = graph.validate()
+	const course = writable(Course.revive(data.course))
+	const graph = writable(Graph.revive(data.graph))
+	$: validation = $graph.validate()
+	setContext('course', course)
+	setContext('graph', graph)
 
 	let active_tab: number = 0
 
@@ -87,24 +82,24 @@
 			href: '/app/dashboard'
 		},
 		{
-			name: `${course.code} ${course.name}`,
-			href: `/app/course/${course.code}/overview`
+			name: `${$course.code} ${$course.name}`,
+			href: `/app/course/${$course.code}/overview`
 		},
 		{
-			name: graph.name,
-			href: `/app/course/${course.code}/graph/${graph.id}/overview`
+			name: $graph.name,
+			href: `/app/course/${$course.code}/graph/${$graph.id}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/app/course/${course.code}/graph/${graph.id}/settings`
+			href: `/app/course/${$course.code}/graph/${$graph.id}/settings`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={validation} success_msg={'Ready to save'} {goto_anchor} />
+		<Validation data={validation} success="Ready to save" {goto_anchor} />
 		<div class="flex-spacer" />
-		<LinkButton href="/app/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
-		<Button disabled={validation.severity === Severity.error} on:click={() => graph.save()}>
+		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </LinkButton>
+		<Button disabled={validation.severity === Severity.error} on:click={() => $graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes 
 		</Button>
 	</svelte:fragment>
@@ -136,13 +131,13 @@
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings {graph} {update} />
+			<GeneralSettings /> 
 		{:else if active_tab === 1}
-			<DomainSettings {graph} {update} />
+			<DomainSettings />
 		{:else if active_tab === 2}
-			<SubjectSettings {graph} {update} />
+			<SubjectSettings />
 		{:else if active_tab === 3}
-			<LectureSettings {graph} {update} />
+			<LectureSettings />
 		{/if}
 	</div>
 </Layout>

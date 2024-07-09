@@ -1,6 +1,10 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import type { Writable } from 'svelte/store'
+	import { getContext } from 'svelte'
+
 	// Internal imports
 	import { Graph } from '$scripts/entities'
 
@@ -13,11 +17,8 @@
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Exports
-	export let graph: Graph
-	export let update: () => void
-
 	// Variables
+	const graph = getContext<Writable<Graph>>('graph')
 	let delete_modal: Modal
 
 </script>
@@ -31,7 +32,7 @@
 	<!-- Settings -->
 	<div class="setting">
 		<label for="name"> Name </label>
-		<Textfield label="Name" bind:value={graph.name} on:input={update} />
+		<Textfield label="Name" bind:value={$graph.name} />
 	</div>
 
 	<!-- Button row -->

@@ -16,13 +16,6 @@
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Exports
-	export let graph: Graph
-	export let update: () => void
-
-	// Variables
-	let query: string = ''
-
 	// Functions
 	function lectureMatchesQuery(query: string, lecture: Lecture): boolean {
 		/* Checks if query appears in lecture */
@@ -40,6 +33,19 @@
 
 		return false
 	}
+
+	function update() {
+		/* Updates the graph */
+	
+		graph = graph
+		propagate_update()
+	}
+
+	// Variables
+	export let graph: Graph
+	export let propagate_update: () => void
+
+	let query: string = ''
 
 </script>
 

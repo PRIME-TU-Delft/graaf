@@ -1,6 +1,10 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import type { Writable } from 'svelte/store'
+	import { getContext } from 'svelte'
+
 	// Internal imports
 	import { Graph, Domain, DomainRelation, SortOption } from '$scripts/entities'
 	import { styles } from '$scripts/settings'
@@ -20,13 +24,13 @@
 	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-	
+
 	// Functions
 	async function createDomain() {
 		/* Creates a new domain */
 
 		let body = new FormData();
-		body.append('graph', graph.id.toString());
+		body.append('graph', $graph.id.toString());
 		const response = await fetch('?/newDomain', { method: 'POST', body });
 		if (!response.ok) {
 			console.error('Failed to create domain')
@@ -34,14 +38,14 @@
 		}
 
 		const id = Number(JSON.parse((await response.json()).data)[0])
-		Domain.create(graph, id)
+		Domain.create($graph, id)
 		update()
 	}
 
 	async function createDomainRelation() {
 		/* Creates a new domain relation */
 
-		DomainRelation.create(graph)
+		DomainRelation.create($graph)
 		update()
 	}
 
@@ -75,11 +79,21 @@
 		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
 
-	// Variables
-	export let graph: Graph
-	export function update() {
-		graph = graph;
+	function update() {
+		/* Force store update
+		 * Svelte is a lil dum dum, so subscribers are only notified if the store is reassigned.
+		 * This happens either explicitly (like here), or in bind:value={store} bindings.
+		 * So, if you want graph changes to reflect in the ui, you need to do either.
+		 * It is rumored this will be better in Svelte 5, so im leaving this todo here.
+		 */
+
+		// TODO remove this function when Svelte 5 is released
+
+		$graph = $graph
 	}
+
+	// Variables
+	const graph = getContext<Writable<Graph>>('graph')
 
 	let domain_query: string = ''
 	let domain_name_sort: boolean | undefined
@@ -112,7 +126,7 @@
 	</div>
 
 	<!-- Header -->
-	{#if graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
+	{#if $graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
 
 		<!-- If any domains were found that match the search -->
 		<div class=row>
@@ -125,8 +139,7 @@
 					on:click={() => {
 						domain_style_sort = undefined
 						domain_name_sort = !domain_name_sort
-						graph.sort(SortOption.domains | SortOption.name, domain_name_sort)
-						update()
+						$graph.sort(SortOption.domains | SortOption.name, domain_name_sort)
 					}}
 				/>
 			</div>
@@ -139,8 +152,7 @@
 					on:click={() => {
 						domain_name_sort = undefined
 						domain_style_sort = !domain_style_sort
-						graph.sort(SortOption.domains | SortOption.style, domain_style_sort)
-						update()
+						$graph.sort(SortOption.domains | SortOption.style, domain_style_sort)
 					}}
 				/>
 			</div>
@@ -154,14 +166,14 @@
 	{/if}
 
 	<!-- Domain list -->
-	{#each graph.domains as domain}
+	{#each $graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
 			<div class="row focus" id={domain.id.toString()}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { domain.delete(); update() }} />
-				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:input={update} />
-				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} on:input={update}/>
+				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
+				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} />
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
@@ -185,7 +197,7 @@
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
+	{#if $graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -198,8 +210,7 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						graph.sort(SortOption.relations | SortOption.domains | SortOption.parent, relation_parent_sort)
-						update()
+						$graph.sort(SortOption.relations | SortOption.domains | SortOption.parent, relation_parent_sort)
 					}}
 				/>
 			</div>
@@ -212,8 +223,7 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						graph.sort(SortOption.relations | SortOption.domains | SortOption.child, relation_child_sort)
-						update()
+						$graph.sort(SortOption.relations | SortOption.domains | SortOption.child, relation_child_sort)
 					}}
 				/>
 			</div>
@@ -227,15 +237,15 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each graph.domain_relations as relation}
+	{#each $graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
 			<div class="row" id={relation.index.toString()}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
+				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown label="Child" placeholder="To Domain" options={relation.child_options} bind:value={relation.child} on:input={update} />
+				<Dropdown label="Child" placeholder="To Domain" options={relation.child_options} bind:value={relation.child} />
 				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}

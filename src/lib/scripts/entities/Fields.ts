@@ -294,6 +294,7 @@ class Domain extends Field<Domain> {
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
+		console.log(this.graph.domains)
 	}
 }
 

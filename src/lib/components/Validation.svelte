@@ -15,7 +15,7 @@
 	// Exports
 	export let data: ValidationData
 	export let short: boolean = false
-	export let success_msg: string = ''
+	export let success: string = ''
 	export let goto_anchor: (tab: number, id: string) => void = () => {}
 
 	// Variables
@@ -198,7 +198,7 @@
 
 		{#if data.severity === Severity.success}
 			<span class="success">
-				<img src={successIcon} alt=""> {success_msg}
+				<img src={successIcon} alt=""> {success}
 			</span>
 		{/if}
 
