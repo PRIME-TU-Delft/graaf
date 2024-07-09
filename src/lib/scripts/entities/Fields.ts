@@ -259,7 +259,7 @@ class Domain extends Field<Domain> {
 		}
 	}
 
-	delete(): void {
+	async delete(): Promise<void> {
 		/* Delete this domain */
 
 		// Shift indexes
@@ -282,6 +282,10 @@ class Domain extends Field<Domain> {
 				subject.domain = undefined
 			}
 		}
+
+		// Call API to delete domain (should cascade automatically?)
+		// TODO: check if this is the case
+		const res = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' });
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
@@ -413,7 +417,7 @@ class Subject extends Field<Subject> {
 		}
 	}
 
-	delete(): void {
+	async delete(): Promise<void> {
 		/* Delete this subject */
 
 		// Shift indexes
@@ -434,6 +438,9 @@ class Subject extends Field<Subject> {
 		for (const lecture of this.graph.lectures) {
 			lecture.lecture_subjects = lecture.lecture_subjects.filter(ls => ls.subject !== this)
 		}
+
+		// Call API to delete subject
+		await fetch(`/api/subject/${this.id}`, { method: 'DELETE' });
 
 		// Remove this subject from the graph
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)

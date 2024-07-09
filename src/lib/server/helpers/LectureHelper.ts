@@ -18,6 +18,15 @@ export async function create(graphId: number): Promise<number> {
 }
 
 
+export async function remove(lectureId: number): Promise<void> {
+	await prisma.lecture.delete({
+		where: {
+			id: lectureId
+		}
+	});
+}
+
+
 async function getSubjectIds(lecture: Lecture): Promise<number[]> {
 	return (await prisma.subject.findMany({
 		where: {

@@ -18,6 +18,15 @@ export async function create(graphId: number): Promise<number> {
 }
 
 
+export async function remove(subjectId: number): Promise<void> {
+	await prisma.subject.delete({
+		where: {
+			id: subjectId
+		}
+	});
+}
+
+
 // TODO: what if a subject has no domain yet?
 async function getDomainId(subject: Subject): Promise<number> {
 	return (await prisma.subject.findUnique({

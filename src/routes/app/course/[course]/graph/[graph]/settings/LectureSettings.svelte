@@ -86,7 +86,7 @@
 				<div class="lecture" id={`lecture-${lecture.id}`}>
 					<Validation short data={lecture.validate()} />
 					<span> {lecture.index + 1} </span>
-					<IconButton scale src={trashIcon} on:click={() => { lecture.delete(); update() }} />
+					<IconButton scale src={trashIcon} on:click={async () => { await lecture.delete(); update() }} />
 					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} on:input={update} />
 					<Button on:click={() => { LectureSubject.create(lecture); update() }}> Add Subject </Button>
 

@@ -18,6 +18,15 @@ export async function create(graphId: number): Promise<number> {
 }
 
 
+export async function remove(domainId: number): Promise<void> {
+	await prisma.domain.delete({
+		where: {
+			id: domainId
+		}
+	});
+}
+
+
 /**
  * Plain Domain objects dont have a children (many-to-many) field,
  * this method makes them available.

@@ -167,7 +167,7 @@
 			<div class="row" id={subject.id.toString()}>
 				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
+				<IconButton scale src={trashIcon} on:click={async () => { await subject.delete(); update() }} />
 				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
 				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} on:input={update} />
 				<span class="preview" style:background-color={subject.color} />
