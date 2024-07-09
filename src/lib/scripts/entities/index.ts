@@ -1,5 +1,4 @@
 
-export { DropdownOption } from './DropdownOption'
 export { ValidationData, Severity } from './Validation'
 
 export { Graph, SortOption } from './Graph'

@@ -1,8 +1,6 @@
 
 // Internal imports
 import { ValidationData, Severity } from './Validation'
-import { DropdownOption } from './DropdownOption'
-
 import { Graph } from './Graph'
 import { styles } from '../settings'
 
@@ -138,19 +136,23 @@ class Domain extends Field<Domain> {
 		this._style = style
 	}
 
-	get style_options(): DropdownOption<string>[] {
+	get style_options() {
 		/* Return the style options of this domain */
 
 		const options = []
 		for (const [style, value] of Object.entries(styles)) {
-			const response = new ValidationData()
+			const validation = new ValidationData()
 
 			// Check if the style is already used
-			if (this.findOriginal(this.graph.domains, this, domain => domain.style) !== -1) {
-				response.add({ severity: Severity.warning, short:'Duplicate style' })
+			if (this.graph.domains.some(domain => domain.style === style && domain !== this)) {
+				validation.add({ severity: Severity.warning, short:'Duplicate style' })
 			}
 
-			options.push(new DropdownOption(value.display_name, style, response))
+			options.push({
+				name: value.display_name, 
+				value: style, 
+				validation
+			})
 		}
 
 		return options
@@ -222,7 +224,7 @@ class Domain extends Field<Domain> {
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
 			if (first !== -1) {
 				response.add({
-					severity: Severity.error,
+					severity: Severity.warning,
 					short: 'Domain has duplicate style',
 					long: `Style first used by Domain nr. ${first + 1}`,
 					tab: 1,
@@ -236,7 +238,6 @@ class Domain extends Field<Domain> {
 			response.add({
 				severity: Severity.warning,
 				short: 'Domain has no subjects',
-				long: 'You might want to assign subjects to this domain',
 				tab: 1,
 				anchor: this.id.toString()
 			})
@@ -328,7 +329,7 @@ class Subject extends Field<Subject> {
 		return this.domain?.style
 	}
 
-	get domain_options(): DropdownOption<Domain>[] {
+	get domain_options() {
 		/* Return the domain options of this subject */
 
 		const options = []
@@ -337,13 +338,11 @@ class Subject extends Field<Subject> {
 			// Check if the domain has a name
 			if (!this.hasName(domain)) continue
 
-			options.push(
-				new DropdownOption(
-					domain.name,
-					domain,
-					new ValidationData()
-				)
-			)
+			options.push({
+				name: domain.name,
+				value: domain,
+				validation: ValidationData.success()
+			})
 		}
 
 		return options

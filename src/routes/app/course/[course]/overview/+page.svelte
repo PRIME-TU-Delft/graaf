@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms'
 
 	// Internal imports
-	import { ValidationData, Severity, DropdownOption } from '$scripts/entities'
+	import { ValidationData, Severity } from '$scripts/entities'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -35,12 +35,6 @@
 	class GraphModal {
 		name: string = ''
 
-		get options(): DropdownOption<number>[] {
-			return graphs.map(graph => {
-				return { name: graph.name, value: graph.id, validation: ValidationData.success() }
-			})
-		}
-
 		show() {
 			graph_modal?.show()
 		}
@@ -70,6 +64,16 @@
 	class LinkModal {
 		name: string = ''
 		graph?: number
+
+		get graph_options() {
+			return graphs.map(graph => {
+				return { 
+					name: graph.name,
+					value: graph.id, 
+					validation: ValidationData.success()
+				}
+			})
+		}
 
 		show() {
 			link_modal?.show()
@@ -175,7 +179,7 @@
 				<Textfield label="Name" bind:value={link.name} />
 
 				<label for="graph"> Graph </label>
-				<Dropdown label="Graph" placeholder="Select a graph" options={graph.options} bind:value={link.graph} />
+				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
 
 				<footer>
 					<Button submit disabled={!link.canSubmit()}> Create </Button>

@@ -1,8 +1,6 @@
 
 // Internal imports
 import { ValidationData, Severity } from './Validation'
-import { DropdownOption } from './DropdownOption'
-
 import { Graph } from './Graph'
 import { Subject } from './Fields'
 import { SubjectRelation } from './Relations'
@@ -45,7 +43,7 @@ class LectureSubject {
 		return this.subject?.color || 'transparent'
 	}
 
-	get options(): DropdownOption<Subject>[] {
+	get options() {
 		/* Return the options of the subject */
 
 		const options = []
@@ -58,13 +56,11 @@ class LectureSubject {
 				validation.add({ severity: Severity.error, short: 'Duplicate subject'})
 			}
 
-			options.push(
-				new DropdownOption(
-					subject.name,
-					subject,
-					validation
-				)
-			)
+			options.push({
+				name: subject.name,
+				value: subject,
+				validation
+			})
 		}
 
 		return options

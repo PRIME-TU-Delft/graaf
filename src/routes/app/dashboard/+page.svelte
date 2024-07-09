@@ -64,12 +64,6 @@
 	class ProgramModal {
 		name: string = ''
 
-		get options() {
-			return data.programs.map(program => {
-				return { name: program.name, value: program.id, validation: ValidationData.success() }
-			})
-		}
-
 		show() {
 			program_modal?.show()
 		}
@@ -100,6 +94,16 @@
 		code: string = ''
 		name: string = ''
 		program?: number
+
+		get program_options() {
+			return data.programs.map(program => {
+				return {
+					name: program.name,
+					value: program.id,
+					validation: ValidationData.success()
+				}
+			})
+		}
 
 		show() {
 			course_modal?.show()
@@ -251,7 +255,7 @@
 				<Dropdown
 					label="Program"
 					placeholder="Select a program"
-					options={program.options}
+					options={course.program_options}
 					bind:value={course.program}
 				/>
 

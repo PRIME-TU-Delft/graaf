@@ -1,10 +1,8 @@
 // Internal imports
+import { ValidationData, Severity } from './Validation'
 import { Domain, Subject } from './Fields'
 import { DomainRelation, SubjectRelation } from './Relations'
 import { Lecture, LectureSubject } from './Lecture'
-
-import { ValidationData, Severity } from './Validation'
-import { DropdownOption } from './DropdownOption'
 
 import type { SerializedLecture } from './Lecture'
 import type { SerializedSubject } from './Fields'
@@ -60,18 +58,16 @@ class Graph {
 	domain_relations: DomainRelation[] = []
 	subject_relations: SubjectRelation[] = []
 
-	get lecture_options(): DropdownOption<Lecture>[] {
+	get lecture_options() {
 		/* Return the options of the lecture */
 
 		const options = []
 		for (const lecture of this.lectures) {
-			options.push(
-				new DropdownOption(
-					lecture.name,
-					lecture,
-					new ValidationData()
-				)
-			)
+			options.push({
+				name: lecture.name,
+				value: lecture,
+				validation: ValidationData.success()
+			})
 		}
 
 		return options

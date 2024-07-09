@@ -1,7 +1,6 @@
 
 // Internal imports
 import { ValidationData, Severity } from "./Validation"
-import { DropdownOption } from "./DropdownOption"
 
 // Exports
 export { Course, AssignedUser, Permissions }
@@ -116,15 +115,15 @@ class Course {
 		public users: AssignedUser[] = [],
 	) { }
 
-	get permission_options(): DropdownOption<Permissions>[] {
+	get permission_options() {
 		/* Get the permission options */
 
 		const validation = new ValidationData()
 
 		return [
-			new DropdownOption('Read', Permissions.read, validation),
-			new DropdownOption('Write', Permissions.write, validation),
-			new DropdownOption('Admin', Permissions.admin, validation)
+			{ name: 'Read',  value: Permissions.read,  validation },
+			{ name: 'Write', value: Permissions.write, validation },
+			{ name: 'Admin', value: Permissions.admin, validation }
 		]
 	}
 

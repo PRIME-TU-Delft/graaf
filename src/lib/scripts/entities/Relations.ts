@@ -1,10 +1,8 @@
 
 // Internal imports
+import { ValidationData, Severity } from './Validation'
 import { Domain, Subject } from './Fields'
 import { Graph } from './Graph'
-
-import { ValidationData, Severity } from './Validation'
-import { DropdownOption } from './DropdownOption'
 
 // Exports
 export { Relation, DomainRelation, SubjectRelation }
@@ -109,52 +107,48 @@ abstract class Relation<T extends Domain | Subject> {
 		return parent === child
 	}
 
-	abstract get parent_options(): DropdownOption<Domain | Subject>[]
-	abstract get child_options(): DropdownOption<Domain | Subject>[]
+	abstract get parent_options(): any[]
+	abstract get child_options(): any[]
 	abstract validate(): ValidationData
 	abstract delete(): void
 }
 
 class DomainRelation extends Relation<Domain> {
-	get parent_options(): DropdownOption<Domain>[] {
+	get parent_options() {
 		/* Return the parent options for this domain relation */
 
-		const options: DropdownOption<Domain>[] = []
+		const options = []
 		for (const domain of this.graph.domains) {
 
 			// Check if the domain has a name
 			if (!this.hasName(domain)) continue
 
 			// Add the domain to options
-			options.push(
-				new DropdownOption(
-					domain.name,
-					domain,
-					this.validateOption(domain, this.child)
-				)
-			)
+			options.push({
+				name: domain.name,
+				value: domain,
+				validation: this.validateOption(domain, this.child)
+			})
 		}
 
 		return options
 	}
 
-	get child_options(): DropdownOption<Domain>[] {
+	get child_options() {
 		/* Return the child options for this domain relation */
 
-		const options: DropdownOption<Domain>[] = []
+		const options = []
 		for (const domain of this.graph.domains) {
 
 			// Check if the domain has a name
 			if (!this.hasName(domain)) continue
 
 			// Add the domain to options
-			options.push(
-				new DropdownOption(
-					domain.name,
-					domain,
-					this.validateOption(this.parent, domain)
-				)
-			)
+			options.push({
+				name: domain.name,
+				value: domain,
+				validation: this.validateOption(this.parent, domain)
+			})
 		}
 
 		return options
@@ -266,45 +260,41 @@ class DomainRelation extends Relation<Domain> {
 }
 
 class SubjectRelation extends Relation<Subject> {
-	get parent_options(): DropdownOption<Subject>[] {
+	get parent_options() {
 		/* Return the parent options for this subject relation */
 
-		const options: DropdownOption<Subject>[] = []
+		const options = []
 		for (const subject of this.graph.subjects) {
 
 			// Check if the subject has a name
 			if (!this.hasName(subject)) continue
 
 			// Add the subject to options
-			options.push(
-				new DropdownOption(
-					subject.name,
-					subject,
-					this.validateOption(subject, this.child)
-				)
-			)
+			options.push({
+				name: subject.name,
+				value: subject,
+				validation: this.validateOption(subject, this.child)
+			})
 		}
 
 		return options
 	}
 
-	get child_options(): DropdownOption<Subject>[] {
+	get child_options() {
 		/* Return the child options for this subject relation */
 
-		const options: DropdownOption<Subject>[] = []
+		const options = []
 		for (const subject of this.graph.subjects) {
 
 			// Check if the subject has a name
 			if (!this.hasName(subject)) continue
 
 			// Add the subject to options
-			options.push(
-				new DropdownOption(
-					subject.name,
-					subject,
-					this.validateOption(this.parent, subject)
-				)
-			)
+			options.push({
+				name: subject.name,
+				value: subject,
+				validation: this.validateOption(this.parent, subject)
+			})
 		}
 
 		return options
