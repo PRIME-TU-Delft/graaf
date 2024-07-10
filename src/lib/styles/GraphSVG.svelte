@@ -53,12 +53,10 @@
 
 	<svg use:graphSVG.create />
 
-	{#if interactive}
-		<div class="controls">
-			<button on:click={() => graphSVG.zoomIn()}><img src={zoomInIcon} alt=""></button>
-			<button on:click={() => graphSVG.zoomOut()}><img src={zoomOutIcon} alt=""></button>
-		</div>
-	{/if}
+	<div class="controls">
+		<button on:click={() => graphSVG.zoomIn()}><img src={zoomInIcon} alt=""></button>
+		<button on:click={() => graphSVG.zoomOut()}><img src={zoomOutIcon} alt=""></button>
+	</div>
 </div>
 
 

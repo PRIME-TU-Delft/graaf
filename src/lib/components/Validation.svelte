@@ -10,7 +10,6 @@
 	import errorIcon from '$assets/error-icon.svg'
 	import warningIcon from '$assets/warning-icon.svg'
 	import successIcon from '$assets/success-icon.svg'
-	import { error } from '@sveltejs/kit';
 
 	// Exports
 	export let data: ValidationData

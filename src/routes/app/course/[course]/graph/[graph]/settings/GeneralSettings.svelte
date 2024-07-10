@@ -56,7 +56,7 @@
 
 	.editor
 		padding: $card-thick-padding
-	
+
 	.button-row
 		display: flex
 		justify-content: flex-end

@@ -54,7 +54,7 @@
 			easeing: 'cubic-bezier(.15,.5,.25,.95)',
 		}
 	}
-	
+
 </script>
 
 
