@@ -161,6 +161,9 @@ class Graph {
 			}
 		}
 
+		// Delete invalid domains and subjects from the db
+		graph.garbageCollect()
+
 		return graph
 	}
 
@@ -169,6 +172,19 @@ class Graph {
 
 		return this.name !== ''
 	}
+
+	/* Delete invalid domains and subjects from the db */
+	garbageCollect() {
+		for (const domain of this.domains) {
+			if (domain.validate().errors.length > 0)
+				domain.delete();
+		}
+		for (const subject of this.subjects) {
+			if (subject.validate().errors.length > 0)
+				subject.delete();
+		}
+	}
+
 
 	sort(options: SortOptions, descending: boolean) {
 		/* Sort the graph */

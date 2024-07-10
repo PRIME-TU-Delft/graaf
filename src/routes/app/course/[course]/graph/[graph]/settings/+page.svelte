@@ -3,7 +3,7 @@
 
 	// Svelte imports
 	import type { PageData } from './$types'
-	import { writable } from 'svelte/store'
+	import { writable, type Writable } from 'svelte/store'
 
 	// Internal imports
 	import { Severity } from '$scripts/entities'
@@ -22,6 +22,7 @@
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
 	import { Course, Graph } from '$scripts/entities';
+	import { onMount } from 'svelte';
 
 	// Functions
 	function goto_anchor(tab: number, id: string) {
@@ -42,8 +43,13 @@
 
 	// Variables
 	export let data: PageData
-	const course = writable(Course.revive(data.course))
-	const graph = writable(Graph.revive(data.graph))
+	const course = writable(new Course('', ''))
+	const graph = writable(new Graph(-1, '', [], [], []))
+
+	onMount(() => {
+		$course = Course.revive(data.course)
+		$graph = Graph.revive(data.graph)
+	})
 
 	$: validation = $graph.validate()
 	let active_tab: number = 0
