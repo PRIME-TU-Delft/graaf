@@ -88,8 +88,6 @@ abstract class Relation<T extends Domain | Subject> {
 	protected isCyclic(parent?: T, child?: T): boolean {
 		/* Depth first check if the relation is cyclic */
 
-		if (!this.isDefined(parent, child)) return false
-
 		let stack: (Domain | Subject)[] = [child!]
 		while (stack.length > 0) {
 			const current = stack.pop()!
@@ -165,41 +163,40 @@ class DomainRelation extends Relation<Domain> {
 	private isDuplicate(parent?: Domain, child?: Domain): boolean {
 		/* Check if the relation is a duplicate */
 
-		if (!this.isDefined(parent, child)) return false
-
-		const first = this.graph.domain_relations.findIndex(relation => relation.parent === parent && relation.child === child)
-		const index = this.graph.domain_relations.indexOf(this, first + 1)
-		return first !== -1 && index !== -1
+		return -1 !== this.graph.domain_relations.findIndex(
+			relation => relation !== this && 
+			relation.parent === parent && 
+			relation.child === child
+		)
 	}
 
 	private isInconsistent(parent?: Domain, child?: Domain): boolean {
 		/* Check if the relation is consistent */
 
-		if (!this.isDefined(parent, child)) return true
-
-		for (const relation of this.graph.subject_relations) {
-			if (relation.parent?.domain === parent && relation.child?.domain === child) {
-				return false
-			}
-		}
-
-		return true
+		return this.graph.subject_relations.every(relation => 
+			relation.parent?.domain !== parent || 
+			relation.child?.domain !== child
+		)
 	}
 
 	private validateOption(parent?: Domain, child?: Domain): ValidationData {
 		const validation = new ValidationData()
 
+		// Check if the relation is defined
+		if (!this.isDefined(parent, child))
+			return validation
+
 		// Check if the relation is self-referential
 		if (this.isSelfReferential(parent, child))
 			validation.add({ severity: Severity.error, short: 'Self-referential'})
 
-		// Check if the relation is cyclic
-		else if (this.isCyclic(parent, child))
-			validation.add({ severity: Severity.error, short: 'Cyclic relation'})
-
 		// Check if the relation is a duplicate
 		else if (this.isDuplicate(parent, child))
 			validation.add({ severity: Severity.error, short: 'Duplicate relation'})
+
+		// Check if the relation is cyclic
+		else if (this.isCyclic(parent, child))
+			validation.add({ severity: Severity.error, short: 'Cyclic relation'})
 
 		// Check if the relation is consistent
 		else if (this.isInconsistent(parent, child))
@@ -311,42 +308,39 @@ class SubjectRelation extends Relation<Subject> {
 	private isInconsistent(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is consistent */
 
-		if (!this.isDefined(parent?.domain, child?.domain) || parent!.domain === child!.domain) {
+		if (!this.isDefined(parent?.domain, child?.domain) || parent!.domain === child!.domain)
 			return false
-		}
-
-		for (const domain_child of parent!.domain!.children) {
-			if (domain_child === child!.domain) return true
-		}
-
-		return false
-
+		return parent!.domain!.children.every(domain_child => domain_child !== child!.domain)
 	}
 
 	private isDuplicate(parent?: Subject, child?: Subject): boolean {
 		/* Check if the relation is a duplicate */
 
-		if (!this.isDefined(parent, child)) return false
-
-		const first = this.graph.subject_relations.findIndex(relation => relation.parent === parent && relation.child === child)
-		const index = this.graph.subject_relations.indexOf(this, first + 1)
-		return first !== -1 && index !== -1
+		return -1 !== this.graph.subject_relations.findIndex(relation =>
+			relation !== this && 
+			relation.parent === parent && 
+			relation.child === child
+		)
 	}
 
 	private validateOption(parent?: Subject, child?: Subject): ValidationData {
 		const validation = new ValidationData()
 
+		// Check if the relation is defined
+		if (!this.isDefined(parent, child))
+			return validation
+
 		// Check if the relation is self-referential
 		if (this.isSelfReferential(parent, child))
 			validation.add({ severity: Severity.error, short: 'Self-referential' })
 
-		// Check if the relation is cyclic
-		else if (this.isCyclic(parent, child))
-			validation.add({ severity: Severity.error, short: 'Cyclic relation' })
-
 		// Check if the relation is a duplicate
 		else if (this.isDuplicate(parent, child))
 			validation.add({ severity: Severity.error, short: 'Duplicate relation' })
+		
+		// Check if the relation is cyclic
+		else if (this.isCyclic(parent, child))
+			validation.add({ severity: Severity.error, short: 'Cyclic relation' })
 
 		// Check if the relation is consistent
 		else if (this.isInconsistent(parent, child))
