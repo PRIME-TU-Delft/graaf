@@ -1,0 +1,11 @@
+[Container]
+Environment=POSTGRES_USER=user POSTGRES_PASSWORD=FUNNY_PLACEHOLDER_PASSWORD_REPLACE_ME POSTGRES_DB=db
+Image=docker.io/postgres:16
+Volume=postgres_data:/var/lib/postgresql/data
+HealthCmd=pg_isready -d db
+Network=graph.network
+HostName=db
+AutoUpdate=registry
+
+[Install]
+WantedBy=default.target

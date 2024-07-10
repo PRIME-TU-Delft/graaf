@@ -1,0 +1,13 @@
+[Unit]
+Requires=graph-db.service
+After=graph-db.service
+
+[Container]
+Environment=DATABASE_URL=postgres://user:FUNNY_PLACEHOLDER_PASSWORD_REPLACE_ME@db/db
+Image=ghcr.io/prime-tu-delft/graph
+Network=graph.network
+HostName=web
+AutoUpdate=registry
+
+[Install]
+WantedBy=default.target
