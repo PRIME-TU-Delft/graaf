@@ -1,11 +1,8 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { Writable } from 'svelte/store'
-
 	// Internal imports
-	import { Graph } from '$scripts/entities'
+	import { graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -16,7 +13,6 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Variables
-	export let graph: Writable<Graph>
 	let delete_modal: Modal
 
 </script>

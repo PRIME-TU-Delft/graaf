@@ -1,11 +1,9 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { Writable } from 'svelte/store'
-
 	// Internal imports
-	import { Graph, Lecture, LectureSubject } from '$scripts/entities'
+	import { Lecture, LectureSubject } from '$scripts/entities'
+	import { graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -65,7 +63,6 @@
 	}
 
 	// Variables
-	export let graph: Writable<Graph>
 	let query: string = ''
 
 </script>

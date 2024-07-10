@@ -2,11 +2,9 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { Writable } from 'svelte/store'
-
 	// Internal imports
-	import { Graph, Subject, SubjectRelation, SortOption } from '$scripts/entities'
+	import { Subject, SubjectRelation, SortOption } from '$scripts/entities'
+	import { graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -92,8 +90,6 @@
 	}
 
 	// Variables
-	export let graph: Writable<Graph>
-
 	let subject_query: string = ''
 	let subject_name_sort: boolean | undefined
 	let subject_domain_sort: boolean | undefined

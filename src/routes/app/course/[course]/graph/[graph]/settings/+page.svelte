@@ -1,28 +1,23 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { PageData } from './$types'
-	import { writable, type Writable } from 'svelte/store'
-
 	// Internal imports
 	import { Severity } from '$scripts/entities'
+	import { course, graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
 	import Layout from '$layouts/DefaultLayout.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Validation from '$components/Validation.svelte'
-	
+
 	import GeneralSettings from './GeneralSettings.svelte'
-	import DomainSettings from './DomainSettings.svelte';
-	import SubjectSettings from './SubjectSettings.svelte';
+	import DomainSettings from './DomainSettings.svelte'
+	import SubjectSettings from './SubjectSettings.svelte'
 	import LectureSettings from './LectureSettings.svelte'
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
-	import { Course, Graph } from '$scripts/entities';
-	import { onMount } from 'svelte';
 
 	// Functions
 	function goto_anchor(tab: number, id: string) {
@@ -42,19 +37,8 @@
 	}
 
 	// Variables
-	export let data: PageData
-	const course = writable(new Course('', ''))
-	const graph = writable(new Graph(-1, '', [], [], []))
-
-	onMount(() => {
-		$course = Course.revive(data.course)
-		$graph = Graph.revive(data.graph)
-	})
-
-	$: validation = $graph.validate()
-	let active_tab: number = 0
-
-	const shake = {
+	let active_tab = 0
+	let shake = {
 		delay: 150,
 		keyframes: [
 			{ transform: 'translate3d(0, 0, 0)'},
@@ -70,7 +54,7 @@
 			easeing: 'cubic-bezier(.15,.5,.25,.95)',
 		}
 	}
-
+	
 </script>
 
 
@@ -99,32 +83,34 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={validation} success="Ready to save" {goto_anchor} />
+		<Validation data={$graph.validate()} success="Ready to save" {goto_anchor} />
+
 		<div class="flex-spacer" />
+
 		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </LinkButton>
-		<Button disabled={validation.severity === Severity.error} on:click={() => $graph.save()}>
-			<img src={saveIcon} alt=""> Save Changes 
+		<Button disabled={$graph.validate().severity === Severity.error} on:click={() => $graph.save()}>
+			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>
 
 	<div class="tabular">
 		<div class="tabs">
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 0}
 				on:click={() => active_tab = 0}
 			> General </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 1}
 				on:click={() => active_tab = 1}
 			> Domains </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 2}
 				on:click={() => active_tab = 2}
 			> Subjects </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 3}
 				on:click={() => active_tab = 3}
@@ -134,13 +120,13 @@
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings {graph} />
+			<GeneralSettings />
 		{:else if active_tab === 1}
-			<DomainSettings {graph} />
+			<DomainSettings />
 		{:else if active_tab === 2}
-			<SubjectSettings {graph} />
+			<SubjectSettings />
 		{:else if active_tab === 3}
-			<LectureSettings {graph} />
+			<LectureSettings />
 		{/if}
 	</div>
 </Layout>
@@ -183,7 +169,7 @@
 
 				&:first-child
 					border-left: none !important
-			
+
 			.dynamic-border
 				border-bottom: 1px solid $gray
 				flex: 1

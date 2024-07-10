@@ -14,12 +14,13 @@
 	import zoomOutIcon from '$assets/zoom-out-icon.svg'
 
 	// Exports
-	export let graph: Graph
-	export let interactive: boolean = true
 	export function findGraph() { graphSVG.findGraph() }
 	export function autolayout() { graphSVG.autolayout() }
 
 	// Variables
+	export let graph: Graph
+	export let interactive: boolean = true
+
 	let graphSVG: GraphSVG = new GraphSVG(graph, interactive)
 
 </script>
@@ -48,17 +49,15 @@
             on:click={() => graphSVG.view = View.lectures}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lecture_options} />
+		<Dropdown label="Lecture" placeholder="Choose a Lecture" options={graph.lecture_options} bind:value={graphSVG.lecture} />
     </div>
 
 	<svg use:graphSVG.create />
 
-	{#if interactive}
-		<div class="controls">
-			<button on:click={() => graphSVG.zoomIn()}><img src={zoomInIcon} alt=""></button>
-			<button on:click={() => graphSVG.zoomOut()}><img src={zoomOutIcon} alt=""></button>
-		</div>
-	{/if}
+	<div class="controls">
+		<button on:click={() => graphSVG.zoomIn()}><img src={zoomInIcon} alt=""></button>
+		<button on:click={() => graphSVG.zoomOut()}><img src={zoomOutIcon} alt=""></button>
+	</div>
 </div>
 
 

@@ -1,12 +1,10 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { Writable } from 'svelte/store'
-
 	// Internal imports
-	import { Graph, Domain, DomainRelation, SortOption } from '$scripts/entities'
+	import { Domain, DomainRelation, SortOption } from '$scripts/entities'
 	import { styles } from '$scripts/settings'
+	import { graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -28,9 +26,9 @@
 	async function createDomain() {
 		/* Creates a new domain */
 
-		let body = new FormData();
-		body.append('graph', $graph.id.toString());
-		const response = await fetch('?/newDomain', { method: 'POST', body });
+		let body = new FormData()
+		body.append('graph', $graph.id.toString())
+		const response = await fetch('?/newDomain', { method: 'POST', body })
 		if (!response.ok) {
 			console.error('Failed to create domain')
 			return
@@ -92,8 +90,6 @@
 	}
 
 	// Variables
-	export let graph: Writable<Graph>
-
 	let domain_query: string = ''
 	let domain_name_sort: boolean | undefined
 	let domain_style_sort: boolean | undefined
