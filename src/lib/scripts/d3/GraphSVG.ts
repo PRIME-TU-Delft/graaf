@@ -329,7 +329,7 @@ class GraphSVG {
 		})
 	}
 
-	unlockAllFields() {
+	autolayout() {
 		if (this.state !== State.dynamic)
 			return
 

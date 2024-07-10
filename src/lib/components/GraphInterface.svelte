@@ -17,7 +17,7 @@
 	export let graph: Graph
 	export let interactive: boolean = true
 	export function findGraph() { graphSVG.findGraph() }
-	export function unlockAllFields() { graphSVG.unlockAllFields() }
+	export function autolayout() { graphSVG.autolayout() }
 
 	// Variables
 	let graphSVG: GraphSVG = new GraphSVG(graph, interactive)
