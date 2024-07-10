@@ -1,8 +1,9 @@
 
-// Internal imports
-import { ValidationData, Error, Warning } from './Validation'
-import { DropdownOption } from './DropdownOption'
+// External imports
+import * as uuid from 'uuid'
 
+// Internal imports
+import { ValidationData, Severity } from './Validation'
 import { Graph } from './Graph'
 import { styles } from '../settings'
 
@@ -30,7 +31,7 @@ type SerializedSubject = {
 	id: ID,
 	x: number,
 	y: number,
-	domain: ID,
+	domain?: ID,
 	name: string,
 	parents: ID[],
 	children: ID[]
@@ -41,18 +42,19 @@ type SerializedSubject = {
 
 
 abstract class Field<T extends Domain | Subject> {
-	fx?: number
-	fy?: number
+	fx?: number					// The locked x-coordinate of this field
+	fy?: number					// The locked y-coordinate of this field
 
 	constructor(
-		public graph: Graph,
-		public index: number,
-		public id: ID,
-		public x: number,
-		public y: number,
-		public name: string,
-		public parents: T[],
-		public children: T[],
+		public graph: Graph,	// The graph this field belongs to
+		public anchor: string,	// The anchor of this field, unique for every DOM element, used for finding errors and d3 selections
+		public index: number,	// The index of this field in the list of its type, based on creation order, consistent after sorting, deleting etc
+		public id: ID,			// The ID of this field in the database, unique among its type, NOT among all fields
+		public x: number,		// The current x-coordinate of this field
+		public y: number,		// The current y-coordinate of this field
+		public name: string,	// The name of this field
+		public parents: T[],	// The parents of this field
+		public children: T[],	// The children of this field
 	) {
 		/* Create a new field */
 
@@ -77,12 +79,6 @@ abstract class Field<T extends Domain | Subject> {
 		return index === -1 ? -1 : first
 	}
 
-	protected isLocked(): boolean {
-		/* Check if the field is locked */
-
-		return this.fx !== undefined && this.fy !== undefined
-	}
-
 	abstract get style(): string | undefined
 	abstract get color(): string
 	abstract validate(): ValidationData
@@ -103,7 +99,7 @@ class Domain extends Field<Domain> {
 		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
-		super(graph, index, id, x, y, name, parents, children)
+		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
 		this.style = style
 	}
 
@@ -138,19 +134,23 @@ class Domain extends Field<Domain> {
 		this._style = style
 	}
 
-	get style_options(): DropdownOption<string>[] {
+	get style_options() {
 		/* Return the style options of this domain */
 
 		const options = []
 		for (const [style, value] of Object.entries(styles)) {
-			const response = new ValidationData()
+			const validation = new ValidationData()
 
 			// Check if the style is already used
-			if (this.findOriginal(this.graph.domains, this, domain => domain.style) !== -1) {
-				response.add(new Warning('Duplicate style'))
+			if (this.graph.domains.some(domain => domain.style === style && domain !== this)) {
+				validation.add({ severity: Severity.warning, short:'Duplicate style' })
 			}
 
-			options.push(new DropdownOption(value.display_name, style, response))
+			options.push({
+				name: value.display_name, 
+				value: style, 
+				validation
+			})
 		}
 
 		return options
@@ -184,61 +184,60 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a name
 		if (!this.hasName(this)) {
-			response.add(new Error(
-				'Domain must have a name',
-				undefined,
-				1, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Domain has no name',
+				tab: 1,
+				anchor: this.anchor
+			})
 		}
 
 		// Check if the domain has a unique name
 		else {
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.name)
 			if (first !== -1) {
-				response.add(new Error(
-					'Domain must have a unique name',
-					`Name first used by Domain nr. ${first + 1}`,
-					1, this.id.toString()
-				))
+				response.add({
+					severity: Severity.error,
+					short: 'Domain has duplicate name',
+					long: `Name first used by Domain nr. ${first + 1}`,
+					tab: 1,
+					anchor: this.anchor
+				})
 			}
 		}
 
 		// Check if the domain has a style
 		if (!this.hasStyle()) {
-			response.add(new Error(
-				'Domain must have a style',
-				undefined,
-				1, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Domain has no style',
+				tab: 1,
+				anchor: this.anchor
+			})
 		}
 
 		// Check if the domain has a unique style
 		else {
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
 			if (first !== -1) {
-				response.add(new Error(
-					'Domain must have a unique style',
-					`Style first used by Domain nr. ${first + 1}`,
-					1, this.id.toString()
-				))
+				response.add({
+					severity: Severity.warning,
+					short: 'Domain has duplicate style',
+					long: `Style first used by Domain nr. ${first + 1}`,
+					tab: 1,
+					anchor: this.anchor
+				})
 			}
 		}
 
 		// Check if the domain has subjects
 		if (!this.hasSubjects()) {
-			response.add(new Warning(
-				'Domain has no subjects',
-				'You might want to assign subjects to this domain',
-				1, this.id.toString()
-			))
-		}
-
-		// Check if the domain is locked
-		if (!this.isLocked()) {
-			response.add(new Error(
-				'Domain is not locked',
-				'Click or move domains with a dashed outline to lock them in place'
-			))
+			response.add({
+				severity: Severity.warning,
+				short: 'Domain has no subjects',
+				tab: 1,
+				anchor: this.anchor
+			})
 		}
 
 		return response
@@ -258,7 +257,7 @@ class Domain extends Field<Domain> {
 		}
 	}
 
-	delete(): void {
+	async delete(): Promise<void> {
 		/* Delete this domain */
 
 		// Shift indexes
@@ -282,6 +281,10 @@ class Domain extends Field<Domain> {
 			}
 		}
 
+		// Call API to delete domain (should cascade automatically?)
+		// TODO: check if this is the case
+		const res = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' });
+
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
 	}
@@ -301,7 +304,7 @@ class Subject extends Field<Subject> {
 		parents: Subject[] = [],
 		children: Subject[] = []
 	) {
-		super(graph, index, id, x, y, name, parents, children)
+		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
 		this.domain = domain
 	}
 
@@ -317,7 +320,7 @@ class Subject extends Field<Subject> {
 		return this.domain?.style
 	}
 
-	get domain_options(): DropdownOption<Domain>[] {
+	get domain_options() {
 		/* Return the domain options of this subject */
 
 		const options = []
@@ -326,13 +329,11 @@ class Subject extends Field<Subject> {
 			// Check if the domain has a name
 			if (!this.hasName(domain)) continue
 
-			options.push(
-				new DropdownOption(
-					domain.name,
-					domain,
-					new ValidationData()
-				)
-			)
+			options.push({
+				name: domain.name,
+				value: domain,
+				validation: ValidationData.success()
+			})
 		}
 
 		return options
@@ -359,40 +360,36 @@ class Subject extends Field<Subject> {
 
 		// Check if the subject has a name
 		if (!this.hasName(this)) {
-			response.add(new Error(
-				'Subject must have a name',
-				undefined,
-				2, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Subject has no name',
+				tab: 2,
+				anchor: this.anchor
+			})
 		}
 
 		// Check if the name is unique
 		else {
 			const first = this.findOriginal(this.graph.subjects, this, subject => subject.name)
 			if (first !== -1) {
-				response.add(new Error(
-					'Subject must have a unique name',
-					`Name first used by Subject nr. ${first + 1}`,
-					2, this.id.toString()
-				))
+				response.add({
+					severity: Severity.error,
+					short: 'Subject has duplicate name',
+					long: `Name first used by Subject nr. ${first + 1}`,
+					tab: 2,
+					anchor: this.anchor
+				})
 			}
 		}
 
 		// Check if the subject has a domain
 		if (!this.hasDomain()) {
-			response.add(new Error(
-				'Subject must have a domain',
-				undefined,
-				2, this.id.toString()
-			))
-		}
-
-		// Check if the subject is locked
-		if (!this.isLocked()) {
-			response.add(new Error(
-				'Subject is not locked',
-				'Click or move subjects with a dashed outline to lock them in place'
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Subject has no domain',
+				tab: 2,
+				anchor: this.anchor
+			})
 		}
 
 		return response
@@ -405,14 +402,14 @@ class Subject extends Field<Subject> {
 			id: this.id,
 			x: this.x,
 			y: this.y,
-			domain: this.domain!.id,
+			domain: this.domain ? this.domain.id : undefined,
 			name: this.name,
 			parents: this.parents.map(parent => parent.id),
 			children: this.children.map(child => child.id)
 		}
 	}
 
-	delete(): void {
+	async delete(): Promise<void> {
 		/* Delete this subject */
 
 		// Shift indexes
@@ -433,6 +430,9 @@ class Subject extends Field<Subject> {
 		for (const lecture of this.graph.lectures) {
 			lecture.lecture_subjects = lecture.lecture_subjects.filter(ls => ls.subject !== this)
 		}
+
+		// Call API to delete subject
+		await fetch(`/api/subject/${this.id}`, { method: 'DELETE' });
 
 		// Remove this subject from the graph
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)

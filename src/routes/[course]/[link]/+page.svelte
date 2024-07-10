@@ -1,17 +1,8 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { PageData } from './$types'
-
 	// Components
-	import GraphInterface from '$components/GraphInterface.svelte'
-
-	// Exports
-	export let data: PageData
-
-	// Variables
-	let { graph } = data
+	import GraphSVG from '$components/GraphSVG.svelte'
 
 </script>
 
@@ -19,4 +10,4 @@
 <!-- Markup -->
 
 
-<GraphInterface graph={graph} interactive={false} />
+<GraphSVG interactive={false} />

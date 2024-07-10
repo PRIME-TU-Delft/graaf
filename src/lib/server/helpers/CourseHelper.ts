@@ -31,6 +31,9 @@ async function getSerializedUsers(course: Course): Promise<SerializedAssignedUse
 					}
 				}
 			}
+		},
+		orderBy: {
+			id: 'asc'
 		}
 	}));
 	return user.map(u => ({

@@ -2,9 +2,9 @@
 <script lang="ts">
 
 
-	// Lib imports
-    import { Graph } from '$scripts/entities'
+	// Internal imports
 	import { GraphSVG, View } from '$scripts/d3'
+	import { graph } from '$stores'
 	
 	// Components
 	import Dropdown from './Dropdown.svelte'
@@ -14,13 +14,13 @@
 	import zoomOutIcon from '$assets/zoom-out-icon.svg'
 
 	// Exports
-	export let graph: Graph
-	export let interactive: boolean = true
 	export function findGraph() { graphSVG.findGraph() }
-	export function unlockAllFields() { graphSVG.unlockAllFields() }
+	export function autolayout() { graphSVG.autolayout() }
 
 	// Variables
-	let graphSVG: GraphSVG = new GraphSVG(graph, interactive)
+	export let interactive: boolean = true
+
+	let graphSVG: GraphSVG = new GraphSVG($graph, interactive)
 
 </script>
 
@@ -48,7 +48,7 @@
             on:click={() => graphSVG.view = View.lectures}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" bind:value={graphSVG.lecture} options={graph.lecture_options} />
+		<Dropdown label="Lecture" placeholder="Choose a Lecture" options={$graph.lecture_options} bind:value={graphSVG.lecture} />
     </div>
 
 	<svg use:graphSVG.create />

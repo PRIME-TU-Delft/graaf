@@ -1,11 +1,8 @@
 
 <script lang="ts">
 
-	// External imports
-	import { createEventDispatcher } from 'svelte'
-
 	// Internal imports
-	import { DropdownOption } from '$scripts/entities/DropdownOption'
+	import { ValidationData, Severity } from '$scripts/entities'
 	import { clickoutside } from '$scripts/clickoutside'
 
 	// Assets
@@ -14,27 +11,26 @@
 
 	// Types
 	type T = $$Generic
+	type Option = {
+		name: string
+		value: T
+		validation: ValidationData
+	}
 
 	// Exports
 	export let label: string
 	export let placeholder: string
 	export let value: T | undefined = undefined
-	export let options: DropdownOption<T>[]
+	export let options: Option[]
 
 	// Variables
-	const dispatch = createEventDispatcher()
-	const id = label.toLowerCase().replace(/\s/g, '_')
-
 	let visible: boolean = false
 
-	// Unset value if value not in options
+	$: id = label.toLowerCase().replace(/\s/g, '_')
 	$: choice = options.find(option => option.value === value)
-	$: set(choice?.value)
-
-	// Sort options so errors are at the bottom
 	$: options = options.sort((a, b) => {
-		if (a.validation.severity === 'error') return 1
-		if (b.validation.severity === 'error') return -1
+		if (a.validation.severity === Severity.error) return 1
+		if (b.validation.severity === Severity.error) return -1
 		return 0
 	})
 
@@ -49,13 +45,6 @@
 
 	export function toggle() {
 		visible = !visible
-	}
-
-	function set(next?: T) {
-		if (next === value)
-			return
-		value = next
-		dispatch('input', next)
 	}
 
 </script>
@@ -83,16 +72,16 @@
 			<button
 				type="button"
 				class="option"
-				disabled={option.validation.severity === 'error'}
-				on:click={() => { set(option.value) }}
+				disabled={option.validation.severity === Severity.error}
+				on:click={() => value = option.value}
 			>
 				{option.name}
 				
-				{#if option.validation.severity === 'error'}
+				{#if option.validation.severity === Severity.error}
 					<span class="error">
 						<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
 					</span>
-				{:else if option.validation.severity === 'warning'}
+				{:else if option.validation.severity === Severity.warning}
 					<span class="warning">
 						<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
 					</span>
@@ -108,7 +97,7 @@
 		{/if}
 
 		{#if value !== undefined}
-			<button type="button" class="option grayed" on:click={() => { set(undefined) }}>
+			<button type="button" class="option grayed" on:click={() => value = undefined}>
 				<i> Remove choice </i>
 			</button>
 		{/if}

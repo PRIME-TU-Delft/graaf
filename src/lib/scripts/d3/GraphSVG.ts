@@ -329,7 +329,7 @@ class GraphSVG {
 		})
 	}
 
-	unlockAllFields() {
+	autolayout() {
 		if (this.state !== State.dynamic)
 			return
 
@@ -528,7 +528,7 @@ class GraphSVG {
 
 		// Update Fields
 		content.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-			.data(fields, field => field.id)
+			.data(fields, field => field.anchor)
 			.join(
 				function(enter) {
 					return enter
@@ -557,7 +557,7 @@ class GraphSVG {
 
 		// Update relations
 		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
-			.data(relations, relation => relation.index)
+			.data(relations, relation => relation.anchor)
 			.join(
 				function(enter) {
 					return enter

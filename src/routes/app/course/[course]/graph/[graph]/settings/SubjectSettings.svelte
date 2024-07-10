@@ -3,7 +3,8 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Graph, Subject, SubjectRelation } from '$scripts/entities'
+	import { Subject, SubjectRelation, SortOption } from '$scripts/entities'
+	import { graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -21,40 +22,27 @@
 	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
 	import descedingSortIcon from '$assets/descending-sort-icon.svg'
 
-	// Exports
-	export let graph: Graph
-	export let update: () => void
-
-	// Variables
-	let subject_query: string = ''
-	let subject_name_sort: boolean | undefined
-	let subject_domain_sort: boolean | undefined
-
-	let relation_query: string = ''
-	let relation_parent_sort: boolean | undefined
-	let relation_child_sort: boolean | undefined
-
 	// Functions
 	async function createSubject() {
 		/* Creates a new subject */
 
 		let body = new FormData();
-		body.append('graph', graph.id.toString());
+		body.append('graph', $graph.id.toString());
 		const response = await fetch('?/newSubject', { method: 'POST', body });
 		if (!response.ok) {
 			console.error('Failed to create subject')
 			return
 		}
 
-		const id = Number(await response.text())
-		Subject.create(graph, id)
+		const id = Number(JSON.parse((await response.json()).data)[0])
+		Subject.create($graph, id)
 		update()
 	}
 
 	async function createSubjectRelation() {
 		/* Creates a new subject relation */
 
-		SubjectRelation.create(graph)
+		SubjectRelation.create($graph)
 		update()
 	}
 
@@ -82,18 +70,33 @@
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
-	function alphabetize<T>(list: T[], key: (item: T) => string, ascending: boolean = true) {
-		/* Alphabetizes list */
-
-		list.sort((a, b) => key(a).localeCompare(key(b)))
-		if (!ascending) list.reverse()
-	}
-
 	function sortIcon(state?: boolean): string {
-		/* Returns the sort icon based on the state */
+		/* Returns the sort icon based on its state */
 
 		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
+
+	function update() {
+		/* Force store update
+		 * Svelte is a lil dum dum, so subscribers are only notified if the store is reassigned.
+		 * This happens either explicitly (like here), or in bind:value={store} bindings.
+		 * So, if you want graph changes to reflect in the ui, you need to do either.
+		 * It is rumored this will be better in Svelte 5, so im leaving this todo here.
+		 */
+
+		// TODO remove this function when Svelte 5 is released
+
+		$graph = $graph
+	}
+
+	// Variables
+	let subject_query: string = ''
+	let subject_name_sort: boolean | undefined
+	let subject_domain_sort: boolean | undefined
+
+	let relation_query: string = ''
+	let relation_parent_sort: boolean | undefined
+	let relation_child_sort: boolean | undefined
 
 </script>
 
@@ -118,7 +121,7 @@
 	</div>
 
 	<!-- If any subjects were found that match the search -->
-	{#if graph.subjects.some(subject => subjectMatchesQuery(subject_query, subject))}
+	{#if $graph.subjects.some(subject => subjectMatchesQuery(subject_query, subject))}
 
 		<!-- Header -->
 		<div class=row>
@@ -131,7 +134,7 @@
 					on:click={() => {
 						subject_domain_sort = undefined
 						subject_name_sort = !subject_name_sort
-						alphabetize(graph.subjects, subject => subject.name, subject_name_sort)
+						$graph.sort(SortOption.subjects | SortOption.name, subject_name_sort)
 						update()
 					}}
 				/>
@@ -145,7 +148,7 @@
 					on:click={() => {
 						subject_name_sort = undefined
 						subject_domain_sort = !subject_domain_sort
-						alphabetize(graph.subjects, subject => subject.domain?.name || '', subject_domain_sort)
+						$graph.sort(SortOption.subjects | SortOption.domain, subject_domain_sort)
 						update()
 					}}
 				/>
@@ -160,14 +163,14 @@
 	{/if}
 
 	<!-- Subject list -->
-	{#each graph.subjects as subject}
+	{#each $graph.subjects as subject}
 		{#if subjectMatchesQuery(subject_query, subject)}
-			<div class="row" id={subject.id.toString()}>
+			<div class="row" id={subject.anchor}>
 				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => { subject.delete(); update() }} />
-				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} on:input={update} />
-				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} on:input={update} />
+				<IconButton scale src={trashIcon} on:click={async () => { await subject.delete(); update() }} />
+				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
+				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} />
 				<span class="preview" style:background-color={subject.color} />
 			</div>
 		{/if}
@@ -191,7 +194,7 @@
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.subject_relations.some(relation => relationMatchesQuery(relation_query, relation))}
+	{#if $graph.subject_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -204,7 +207,7 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						alphabetize(graph.subject_relations, relation => relation.parent?.name || '', relation_parent_sort)
+						$graph.sort(SortOption.relations | SortOption.subjects | SortOption.parent, relation_parent_sort)
 						update()
 					}}
 				/>
@@ -218,7 +221,7 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						alphabetize(graph.subject_relations, relation => relation.child?.name || '', relation_child_sort)
+						$graph.sort(SortOption.relations | SortOption.subjects | SortOption.child, relation_child_sort)
 						update()
 					}}
 				/>
@@ -233,15 +236,15 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each graph.subject_relations as relation}
+	{#each $graph.subject_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.index.toString()}>
+			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
+				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown label="Child" placeholder="To Subject" options={relation.child_options} bind:value={relation.child} on:input={update} />
+				<Dropdown label="Child" placeholder="To Subject" options={relation.child_options} bind:value={relation.child} />
 				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}

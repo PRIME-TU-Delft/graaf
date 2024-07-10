@@ -109,7 +109,6 @@ model Lecture {
 	id				Int			@id @default(autoincrement())
 	graph			Graph		@relation(fields: [graphId], references: [id])
 	graphId			Int
-	index			Int
-	name			String
+	name			String?
 	subjects		Subject[]
 }

@@ -90,7 +90,7 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={validation} goto_anchor={goto_anchor} success_msg="Ready to save" />
+		<Validation data={validation} goto_anchor={goto_anchor} success="Ready to save" />
 		<div class="flex-spacer" />
 		<Button disabled={validation.severity === 'error'} on:click={() => course.save()}>
 			<img src={saveIcon} alt=""> Save Changes

@@ -1,34 +1,45 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { PageData } from './$types'
+	// Internal imports
+	import { Severity } from '$scripts/entities'
+	import { course, graph } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
-	import DomainSettings from './DomainSettings.svelte';
-	import GeneralSettings from './GeneralSettings.svelte'
 	import Layout from '$layouts/DefaultLayout.svelte'
-	import LectureSettings from './LectureSettings.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Validation from '$components/Validation.svelte'
-	import SubjectSettings from './SubjectSettings.svelte';
+
+	import GeneralSettings from './GeneralSettings.svelte'
+	import DomainSettings from './DomainSettings.svelte'
+	import SubjectSettings from './SubjectSettings.svelte'
+	import LectureSettings from './LectureSettings.svelte'
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
-	import { Course, Graph } from '$scripts/entities';
 
-	// Exports
-	export let data: PageData
-	$: course = Course.revive(data.course)
-	$: graph = Graph.revive(data.graph)
+	// Functions
+	function goto_anchor(tab: number, id: string) {
+		if (active_tab === tab) {
+			const element = document.getElementById(id)
+			element?.scrollIntoView({ behavior: 'smooth' })
+			element?.animate(shake.keyframes, shake.options)
+			return
+		}
+
+		active_tab = tab
+		setTimeout(() => {
+			const element = document.getElementById(id)
+			element?.scrollIntoView({ behavior: 'smooth' })
+			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, shake.delay)
+		}, 0)
+	}
 
 	// Variables
-	let active_tab: number = 0
-
-	$: validation = graph.validate()
-
-	const shake = {
+	let active_tab = 0
+	let shake = {
+		delay: 150,
 		keyframes: [
 			{ transform: 'translate3d(0, 0, 0)'},
 			{ transform: 'translate3d(-10px, 0, 0)'},
@@ -42,33 +53,6 @@
 			duration: 400,
 			easeing: 'cubic-bezier(.15,.5,.25,.95)',
 		}
-	}
-
-	// Functions
-	function update() {
-		/* Force Svelte update 
-		 * I hate this but svelte forces my hand
-		 * Maybe I should just use a store or wait for Svelte 5
-		 */
-
-		graph = graph
-	}
-
-	function goto_anchor(tab: number, id: string) {
-		if (active_tab === tab) {
-			const element = document.getElementById(id)
-			element?.scrollIntoView({ behavior: 'smooth' })
-			element?.animate(shake.keyframes, shake.options)
-			return
-		}
-
-		active_tab = tab
-		setTimeout(() => {
-			const element = document.getElementById(id)
-			element?.scrollIntoView({ behavior: 'smooth' })
-			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, 150)
-		}, 0)
-		
 	}
 
 </script>
@@ -85,46 +69,48 @@
 			href: '/app/dashboard'
 		},
 		{
-			name: `${course.code} ${course.name}`,
-			href: `/app/course/${course.code}/overview`
+			name: `${$course.code} ${$course.name}`,
+			href: `/app/course/${$course.code}/overview`
 		},
 		{
-			name: graph.name,
-			href: `/app/course/${course.code}/graph/${graph.id}/overview`
+			name: $graph.name,
+			href: `/app/course/${$course.code}/graph/${$graph.id}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/app/course/${course.code}/graph/${graph.id}/settings`
+			href: `/app/course/${$course.code}/graph/${$graph.id}/settings`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={validation} success_msg={'Ready to save'} {goto_anchor} />
+		<Validation data={$graph.validate()} success="Ready to save" {goto_anchor} />
+
 		<div class="flex-spacer" />
-		<LinkButton href="/app/course/{course.code}/graph/{graph.id}/layout"> Edit layout </LinkButton>
-		<Button disabled={validation.severity === 'error'} on:click={() => graph.save()}>
-			<img src={saveIcon} alt=""> Save Changes 
+
+		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </LinkButton>
+		<Button disabled={$graph.validate().severity === Severity.error} on:click={() => $graph.save()}>
+			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>
 
 	<div class="tabular">
 		<div class="tabs">
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 0}
 				on:click={() => active_tab = 0}
 			> General </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 1}
 				on:click={() => active_tab = 1}
 			> Domains </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 2}
 				on:click={() => active_tab = 2}
 			> Subjects </button>
-			<button 
+			<button
 				class="tab"
 				class:active={active_tab === 3}
 				on:click={() => active_tab = 3}
@@ -134,13 +120,13 @@
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings {graph} {update} />
+			<GeneralSettings />
 		{:else if active_tab === 1}
-			<DomainSettings {graph} {update} />
+			<DomainSettings />
 		{:else if active_tab === 2}
-			<SubjectSettings {graph} {update} />
+			<SubjectSettings />
 		{:else if active_tab === 3}
-			<LectureSettings {graph} {update} />
+			<LectureSettings />
 		{/if}
 	</div>
 </Layout>
@@ -183,7 +169,7 @@
 
 				&:first-child
 					border-left: none !important
-			
+
 			.dynamic-border
 				border-bottom: 1px solid $gray
 				flex: 1

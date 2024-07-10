@@ -1,7 +1,5 @@
 // Internal imports
-import { ValidationData, Error } from './Validation'
-import { DropdownOption } from './DropdownOption'
-
+import { ValidationData, Severity } from './Validation'
 import { Domain, Subject } from './Fields'
 import { DomainRelation, SubjectRelation } from './Relations'
 import { Lecture, LectureSubject } from './Lecture'
@@ -10,9 +8,11 @@ import type { SerializedLecture } from './Lecture'
 import type { SerializedSubject } from './Fields'
 import type { SerializedDomain } from './Fields'
 
+import { styles } from '../settings'
+
 // Exports
-export { Graph }
-export type { SerializedGraph }
+export { Graph, SortOption }
+export type { SerializedGraph, SortOptions }
 
 
 // --------------------> Types
@@ -26,6 +26,19 @@ type SerializedGraph = {
 	domains: SerializedDomain[],
 	subjects: SerializedSubject[],
 	lectures: SerializedLecture[]
+}
+
+type SortOptions = number
+enum SortOption {
+	domains    = 0b10000000,
+	subjects   = 0b01000000,
+	relations  = 0b00100000,
+	name       = 0b00010000,
+	style      = 0b00001000,
+	domain     = 0b00000100,
+	parent     = 0b00000010,
+	child      = 0b00000001
+
 }
 
 
@@ -45,18 +58,16 @@ class Graph {
 	domain_relations: DomainRelation[] = []
 	subject_relations: SubjectRelation[] = []
 
-	get lecture_options(): DropdownOption<Lecture>[] {
+	get lecture_options() {
 		/* Return the options of the lecture */
 
 		const options = []
 		for (const lecture of this.lectures) {
-			options.push(
-				new DropdownOption(
-					lecture.name,
-					lecture,
-					new ValidationData()
-				)
-			)
+			options.push({
+				name: lecture.name,
+				value: lecture,
+				validation: ValidationData.success()
+			})
 		}
 
 		return options
@@ -76,8 +87,8 @@ class Graph {
 					domain_data.id,
 					domain_data.x,
 					domain_data.y,
-					domain_data.style,
-					domain_data.name
+					domain_data.style ?? undefined,
+					domain_data.name ?? ''
 				)
 			)
 		}
@@ -100,7 +111,6 @@ class Graph {
 		// Define subjects
 		for (const subject_data of data.subjects) {
 			const domain = graph.domains.find(domain => domain.id === subject_data.domain)
-			if (!domain) continue
 
 			graph.subjects.push(
 				new Subject(
@@ -110,7 +120,7 @@ class Graph {
 					subject_data.x,
 					subject_data.y,
 					domain,
-					subject_data.name
+					subject_data.name ?? ''
 				)
 			)
 		}
@@ -134,9 +144,9 @@ class Graph {
 		for (const lecture_data of data.lectures) {
 			const lecture = new Lecture(
 				graph,
-				lecture_data.id,
 				graph.lectures.length,
-				lecture_data.name
+				lecture_data.id,
+				lecture_data.name ?? ''
 			)
 
 			graph.lectures.push(lecture)
@@ -151,6 +161,9 @@ class Graph {
 			}
 		}
 
+		// Delete invalid domains and subjects from the db
+		graph.garbageCollect()
+
 		return graph
 	}
 
@@ -160,6 +173,56 @@ class Graph {
 		return this.name !== ''
 	}
 
+	/* Delete invalid domains and subjects from the db */
+	garbageCollect() {
+		for (const domain of this.domains) {
+			if (domain.validate().errors.length > 0)
+				domain.delete();
+		}
+		for (const subject of this.subjects) {
+			if (subject.validate().errors.length > 0)
+				subject.delete();
+		}
+	}
+
+
+	sort(options: SortOptions, descending: boolean) {
+		/* Sort the graph */
+
+		let key: (item: any) => string
+		if (options & SortOption.relations) {
+			if (options & SortOption.parent) {
+				key = relation => relation.parent?.name ?? ''
+			} else if (options & SortOption.child) { 
+				key = relation => relation.child?.name ?? ''
+			} else return
+		} else if (options & SortOption.name) {
+			key = field => field.name
+		} else if (options & SortOption.style) {
+			key = domain => domain.style ? styles[domain.style].display_name : ''
+		} else if (options & SortOption.domain) {
+			key = subject => subject.domain?.name ?? ''
+		} else return
+
+		if (options & SortOption.relations) {
+			if (options & SortOption.domains) {
+				this.domain_relations.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.domain_relations.reverse()
+			} else if (options & SortOption.subjects) {
+				this.subject_relations.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.subject_relations.reverse()
+			}
+		} else {
+			if (options & SortOption.domains) {
+				this.domains.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.domains.reverse()
+			} else if (options & SortOption.subjects) {
+				this.subjects.sort((a, b) => key(b).localeCompare(key(a)))
+				if (descending) this.subjects.reverse()
+			}
+		}
+	}
+
 	validate(): ValidationData {
 		/* Validate the graph */
 
@@ -167,13 +230,13 @@ class Graph {
 
 		// Check if the graph has a name
 		if (!this.hasName()) {
-			response.add(
-				new Error(
-					'Graph must have a name',
-					undefined,
-					0, 'name'
-				)
-			)
+			response.add({
+				severity: Severity.error,
+				short: 'Graph has no name',
+				long: 'The graph must have a name',
+				tab: 0,
+				anchor: 'name'
+			})
 		}
 
 		// Validate domains, subjects and lectures
@@ -203,10 +266,21 @@ class Graph {
 		}
 	}
 
-	save() {
+	async save() {
 		/* Save the graph to the database */
 
-		console.log(this.reduce())
+		const response = await fetch(`/api/graph/${this.id}`, {
+			method: 'PUT',
+			body: JSON.stringify(this.reduce())
+		});
+
+		if (response.ok) {
+			console.log('[*] Graph saved!');
+		}
+		else {
+			const message = await response.text();
+			console.error(`Failed to save graph: ${message}`);
+		}
 	}
 
 	delete() {

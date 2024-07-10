@@ -1,6 +1,8 @@
+import { error } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
 import { GraphHelper } from '$lib/server/helpers';
+import { type SerializedGraph } from '$scripts/entities';
 
 
 export async function getGraphsByCourseCode(code: string) {
@@ -9,7 +11,23 @@ export async function getGraphsByCourseCode(code: string) {
 			course: {
 				code
 			}
+		},
+		orderBy: {
+			createdAt: 'asc'
 		}
 	});
 	return await Promise.all(graphs.map(g => GraphHelper.toDTO(g)));
+}
+
+
+export async function getGraphById(id: number): Promise<SerializedGraph> {
+	const graph = await prisma.graph.findUnique({
+		where: {
+			id
+		}
+	});
+
+	if (!graph) error(404, 'Graph not found');
+
+	return await GraphHelper.toDTO(graph);
 }
