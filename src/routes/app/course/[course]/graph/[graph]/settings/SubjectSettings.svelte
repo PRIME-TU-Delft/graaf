@@ -169,7 +169,7 @@
 	<!-- Subject list -->
 	{#each $graph.subjects as subject}
 		{#if subjectMatchesQuery(subject_query, subject)}
-			<div class="row" id={subject.id.toString()}>
+			<div class="row" id={subject.anchor}>
 				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={async () => { await subject.delete(); update() }} />
@@ -242,7 +242,7 @@
 	<!-- List of relations -->
 	{#each $graph.subject_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.index.toString()}>
+			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />

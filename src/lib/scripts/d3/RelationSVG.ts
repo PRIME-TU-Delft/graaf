@@ -23,6 +23,7 @@ type RelationSelection = d3.Selection<SVGLineElement, Relation<Domain | Subject>
 class RelationSVG {
 	static create(selection: RelationSelection) {
 		selection
+			.attr('id', relation => relation.anchor)
 			.attr('class', 'relation')
 			.attr('stroke-width', settings.STROKE_WIDTH)
 			.attr('stroke', relation => styles[relation.parent!.style!].stroke)
@@ -50,7 +51,7 @@ class RelationSVG {
 			 */
 
 			// Half the width and height of the nodes
-			const halfWidth  = settings.FIELD_WIDTH  / 2 + settings.FIELD_MARGIN
+			const halfWidth  = settings.FIELD_WIDTH / 2 + settings.FIELD_MARGIN
 			const halfHeight = settings.FIELD_HEIGHT / 2 + settings.FIELD_MARGIN
 
 			// Center of the nodes

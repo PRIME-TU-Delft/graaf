@@ -26,7 +26,7 @@ class FieldSVG {
 
 		// Field attrs
 		selection
-			.attr('id', field => field.id)
+			.attr('id', field => field.anchor)
 			.attr('class', 'field')
 			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},

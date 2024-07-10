@@ -169,7 +169,7 @@
 	<!-- Domain list -->
 	{#each $graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
-			<div class="row focus" id={domain.id.toString()}>
+			<div class="row focus" id={domain.anchor}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={async () => { await domain.delete(); update() }} />
@@ -242,7 +242,7 @@
 	<!-- List of relations -->
 	{#each $graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.index.toString()}>
+			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />

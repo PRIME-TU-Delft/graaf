@@ -1,4 +1,7 @@
 
+// Extrnal imports
+import * as uuid from 'uuid'
+
 // Internal imports
 import { ValidationData, Severity } from './Validation'
 import { Domain, Subject } from './Fields'
@@ -13,10 +16,11 @@ export { Relation, DomainRelation, SubjectRelation }
 
 abstract class Relation<T extends Domain | Subject> {
 	constructor (
-		public graph: Graph,
-		public index: number,
-		private _parent?: T,
-		private _child?: T
+		public graph: Graph,	// The graph the relation belongs to
+		public anchor: string,	// The anchor of the relation, unique for every DOM element, used for finding errors and d3 selection
+		public index: number,	// The index of the relation in the list of its type, based on creation order, consistent after sorting, deleting etc
+		private _parent?: T,	// The parent of the relation, exposed setter automatically updates field parents/children
+		private _child?: T		// The child of the relation, exposed setter automatically updates field parents/children
 	) { }
 
 	get parent(): T | undefined {
@@ -155,7 +159,7 @@ class DomainRelation extends Relation<Domain> {
 	static create(graph: Graph): DomainRelation {
 		/* Create a new domain relation */
 
-		const relation = new DomainRelation(graph, graph.domain_relations.length)
+		const relation = new DomainRelation(graph, uuid.v4(), graph.domain_relations.length)
 		graph.domain_relations.push(relation)
 		return relation
 	}
@@ -217,7 +221,7 @@ class DomainRelation extends Relation<Domain> {
 				short: 'Domain relation is not fully defined',
 				long: 'Both the parent and child domains must be selected',
 				tab: 1,
-				anchor: this.index.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -228,7 +232,7 @@ class DomainRelation extends Relation<Domain> {
 				short: 'Domain relation is inconsistent',
 				long: 'The subjects of these domains are not related',
 				tab: 1,
-				anchor: this.index.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -300,7 +304,7 @@ class SubjectRelation extends Relation<Subject> {
 	static create(graph: Graph): SubjectRelation {
 		/* Create a new subject relation */
 
-		const relation = new SubjectRelation(graph, graph.subject_relations.length)
+		const relation = new SubjectRelation(graph, uuid.v4(), graph.subject_relations.length)
 		graph.subject_relations.push(relation)
 		return relation
 	}
@@ -361,7 +365,7 @@ class SubjectRelation extends Relation<Subject> {
 				short: 'Subject relation is not fully defined',
 				long: 'Both the parent and child subjects must be selected',
 				tab: 2,
-				anchor: this.index.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -372,7 +376,7 @@ class SubjectRelation extends Relation<Subject> {
 				short: 'Subject relation is inconsistent',
 				long: 'The domains of these subjects are not related',
 				tab: 2, 
-				anchor: this.index.toString()
+				anchor: this.anchor
 			})
 		}
 

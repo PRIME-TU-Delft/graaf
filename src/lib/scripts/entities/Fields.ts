@@ -1,4 +1,7 @@
 
+// External imports
+import * as uuid from 'uuid'
+
 // Internal imports
 import { ValidationData, Severity } from './Validation'
 import { Graph } from './Graph'
@@ -39,18 +42,19 @@ type SerializedSubject = {
 
 
 abstract class Field<T extends Domain | Subject> {
-	fx?: number
-	fy?: number
+	fx?: number					// The locked x-coordinate of this field
+	fy?: number					// The locked y-coordinate of this field
 
 	constructor(
-		public graph: Graph,
-		public index: number,
-		public id: ID,
-		public x: number,
-		public y: number,
-		public name: string,
-		public parents: T[],
-		public children: T[],
+		public graph: Graph,	// The graph this field belongs to
+		public anchor: string,	// The anchor of this field, unique for every DOM element, used for finding errors and d3 selections
+		public index: number,	// The index of this field in the list of its type, based on creation order, consistent after sorting, deleting etc
+		public id: ID,			// The ID of this field in the database, unique among its type, NOT among all fields
+		public x: number,		// The current x-coordinate of this field
+		public y: number,		// The current y-coordinate of this field
+		public name: string,	// The name of this field
+		public parents: T[],	// The parents of this field
+		public children: T[],	// The children of this field
 	) {
 		/* Create a new field */
 
@@ -101,7 +105,7 @@ class Domain extends Field<Domain> {
 		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
-		super(graph, index, id, x, y, name, parents, children)
+		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
 		this.style = style
 	}
 
@@ -191,7 +195,7 @@ class Domain extends Field<Domain> {
 				severity: Severity.error,
 				short: 'Domain has no name',
 				tab: 1,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -204,7 +208,7 @@ class Domain extends Field<Domain> {
 					short: 'Domain has duplicate name',
 					long: `Name first used by Domain nr. ${first + 1}`,
 					tab: 1,
-					anchor: this.id.toString()
+					anchor: this.anchor
 				})
 			}
 		}
@@ -215,7 +219,7 @@ class Domain extends Field<Domain> {
 				severity: Severity.error,
 				short: 'Domain has no style',
 				tab: 1,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -228,7 +232,7 @@ class Domain extends Field<Domain> {
 					short: 'Domain has duplicate style',
 					long: `Style first used by Domain nr. ${first + 1}`,
 					tab: 1,
-					anchor: this.id.toString()
+					anchor: this.anchor
 				})
 			}
 		}
@@ -239,7 +243,7 @@ class Domain extends Field<Domain> {
 				severity: Severity.warning,
 				short: 'Domain has no subjects',
 				tab: 1,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -317,7 +321,7 @@ class Subject extends Field<Subject> {
 		parents: Subject[] = [],
 		children: Subject[] = []
 	) {
-		super(graph, index, id, x, y, name, parents, children)
+		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
 		this.domain = domain
 	}
 
@@ -377,7 +381,7 @@ class Subject extends Field<Subject> {
 				severity: Severity.error,
 				short: 'Subject has no name',
 				tab: 2,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -390,7 +394,7 @@ class Subject extends Field<Subject> {
 					short: 'Subject has duplicate name',
 					long: `Name first used by Subject nr. ${first + 1}`,
 					tab: 2,
-					anchor: this.id.toString()
+					anchor: this.anchor
 				})
 			}
 		}
@@ -401,7 +405,7 @@ class Subject extends Field<Subject> {
 				severity: Severity.error,
 				short: 'Subject has no domain',
 				tab: 2,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
