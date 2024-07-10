@@ -16,6 +16,7 @@ services:
     image: ghcr.io/prime-tu-delft/graph
     depends_on:
       - db
+    restart: always
     environment:
       DATABASE_URL: ${DATABASE_URL}
 

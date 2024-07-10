@@ -9,5 +9,8 @@ Network=graph.network
 HostName=web
 AutoUpdate=registry
 
+[Service]
+Restart=always
+
 [Install]
 WantedBy=default.target
