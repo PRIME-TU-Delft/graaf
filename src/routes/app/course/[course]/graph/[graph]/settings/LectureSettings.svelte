@@ -92,7 +92,7 @@
 		<!-- List of lectures -->
 		{#each $graph.lectures as lecture}
 			{#if lectureMatchesQuery(query, lecture)}
-				<div class="lecture" id={`lecture-${lecture.id}`}>
+				<div class="lecture" id={lecture.anchor}>
 					<Validation short data={lecture.validate()} />
 					<span> {lecture.index + 1} </span>
 					<IconButton scale src={trashIcon} on:click={async () => { await lecture.delete(); update() }} />

@@ -144,8 +144,8 @@ class Graph {
 		for (const lecture_data of data.lectures) {
 			const lecture = new Lecture(
 				graph,
-				lecture_data.id,
 				graph.lectures.length,
+				lecture_data.id,
 				lecture_data.name ?? ''
 			)
 

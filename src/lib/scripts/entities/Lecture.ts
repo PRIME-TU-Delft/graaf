@@ -1,4 +1,7 @@
 
+// External imports
+import * as uuid from 'uuid'
+
 // Internal imports
 import { ValidationData, Severity } from './Validation'
 import { Graph } from './Graph'
@@ -74,16 +77,22 @@ class LectureSubject {
 }
 
 class Lecture {
+	anchor: string
+
 	constructor(
 		public graph: Graph,
-		public id: ID,
 		public index: number,
+		public id: ID,
 		public name: string = '',
 		public lecture_subjects: LectureSubject[] = []
-	) { }
+	) {
+		/* Create a new lecture */
+
+		this.anchor = uuid.v4()
+	}
 
 	static create(graph: Graph, id: ID) {
-		const lecture = new Lecture(graph, id, graph.lectures.length);
+		const lecture = new Lecture(graph, graph.lectures.length, id);
 		graph.lectures.push(lecture);
 		return lecture;
 	}
@@ -205,7 +214,7 @@ class Lecture {
 				severity: Severity.error,
 				short: 'Lecture has no name',
 				tab: 3,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -218,18 +227,18 @@ class Lecture {
 					short: 'Duplicate lecture name',
 					long: `Name first used by Lecture nr. ${first + 1}`,
 					tab: 3,
-					anchor: this.id.toString()
+					anchor: this.anchor
 				})
 			}
 		}
 
 		// Check if the lecture has subjects
-		if (this.hasSubjects()) {
+		if (!this.hasSubjects()) {
 			response.add({
 				severity: Severity.error,
 				short: 'Lecture has no subjects',
 				tab: 3,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
@@ -241,7 +250,7 @@ class Lecture {
 				short: 'Lecture has undefined subjects',
 				long: 'Make sure all subjects are defined',
 				tab: 3,
-				anchor: this.id.toString()
+				anchor: this.anchor
 			})
 		}
 
