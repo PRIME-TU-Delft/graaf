@@ -1,8 +1,11 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import type { Writable } from 'svelte/store'
+
 	// Internal imports
-	import { Graph, Domain, DomainRelation } from '$scripts/entities'
+	import { Graph, Domain, DomainRelation, SortOption } from '$scripts/entities'
 	import { styles } from '$scripts/settings'
 
 	// Components
@@ -21,27 +24,12 @@
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Exports
-	export let graph: Graph
-	function update() {
-		graph = graph;
-	}
-
-	// Variables
-	let domain_query: string = ''
-	let domain_name_sort: boolean | undefined
-	let domain_style_sort: boolean | undefined
-
-	let relation_query: string = ''
-	let relation_parent_sort: boolean | undefined
-	let relation_child_sort: boolean | undefined
-
 	// Functions
 	async function createDomain() {
 		/* Creates a new domain */
 
 		let body = new FormData();
-		body.append('graph', graph.id.toString());
+		body.append('graph', $graph.id.toString());
 		const response = await fetch('?/newDomain', { method: 'POST', body });
 		if (!response.ok) {
 			console.error('Failed to create domain')
@@ -49,14 +37,14 @@
 		}
 
 		const id = Number(JSON.parse((await response.json()).data)[0])
-		Domain.create(graph, id)
+		Domain.create($graph, id)
 		update()
 	}
 
 	async function createDomainRelation() {
 		/* Creates a new domain relation */
 
-		DomainRelation.create(graph)
+		DomainRelation.create($graph)
 		update()
 	}
 
@@ -84,19 +72,35 @@
 		return parent?.includes(query) || child?.includes(query) || false
 	}
 
-	function alphabetize<T>(list: T[], key: (item: T) => string, ascending: boolean = true) {
-		/* Alphabetizes list */
-
-		list.sort((a, b) => key(a).localeCompare(key(b)))
-		if (!ascending) list.reverse()
-	}
-
 	function sortIcon(state?: boolean): string {
 		/* Returns the sort icon based on the state */
 
 		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
 
+	function update() {
+		/* Force store update
+		 * Svelte is a lil dum dum, so subscribers are only notified if the store is reassigned.
+		 * This happens either explicitly (like here), or in bind:value={store} bindings.
+		 * So, if you want graph changes to reflect in the ui, you need to do either.
+		 * It is rumored this will be better in Svelte 5, so im leaving this todo here.
+		 */
+
+		// TODO remove this function when Svelte 5 is released
+
+		$graph = $graph
+	}
+
+	// Variables
+	export let graph: Writable<Graph>
+
+	let domain_query: string = ''
+	let domain_name_sort: boolean | undefined
+	let domain_style_sort: boolean | undefined
+
+	let relation_query: string = ''
+	let relation_parent_sort: boolean | undefined
+	let relation_child_sort: boolean | undefined
 
 </script>
 
@@ -121,7 +125,7 @@
 	</div>
 
 	<!-- Header -->
-	{#if graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
+	{#if $graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
 
 		<!-- If any domains were found that match the search -->
 		<div class=row>
@@ -134,7 +138,7 @@
 					on:click={() => {
 						domain_style_sort = undefined
 						domain_name_sort = !domain_name_sort
-						alphabetize(graph.domains, domain => domain.name, domain_name_sort)
+						$graph.sort(SortOption.domains | SortOption.name, domain_name_sort)
 						update()
 					}}
 				/>
@@ -148,7 +152,7 @@
 					on:click={() => {
 						domain_name_sort = undefined
 						domain_style_sort = !domain_style_sort
-						alphabetize(graph.domains, domain => domain.style ? styles[domain.style].display_name : '', domain_style_sort)
+						$graph.sort(SortOption.domains | SortOption.style, domain_style_sort)
 						update()
 					}}
 				/>
@@ -163,14 +167,14 @@
 	{/if}
 
 	<!-- Domain list -->
-	{#each graph.domains as domain}
+	{#each $graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
 			<div class="row focus" id={domain.id.toString()}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={async () => { await domain.delete(); update() }} />
-				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:input={update} />
-				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} on:input={update}/>
+				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
+				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} />
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
@@ -194,7 +198,7 @@
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
+	{#if $graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -207,7 +211,7 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						alphabetize(graph.domain_relations, relation => relation.parent?.name || '', relation_parent_sort)
+						$graph.sort(SortOption.relations | SortOption.domains | SortOption.parent, relation_parent_sort)
 						update()
 					}}
 				/>
@@ -221,7 +225,7 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						alphabetize(graph.domain_relations, relation => relation.child?.name || '', relation_child_sort)
+						$graph.sort(SortOption.relations | SortOption.domains | SortOption.child, relation_child_sort)
 						update()
 					}}
 				/>
@@ -236,15 +240,15 @@
 	{/if}
 
 	<!-- List of relations -->
-	{#each graph.domain_relations as relation}
+	{#each $graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
 			<div class="row" id={relation.index.toString()}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} on:input={update} />
+				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} />
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown label="Child" placeholder="To Domain" options={relation.child_options} bind:value={relation.child} on:input={update} />
+				<Dropdown label="Child" placeholder="To Domain" options={relation.child_options} bind:value={relation.child} />
 				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}

@@ -1,8 +1,6 @@
 
 // Internal imports
-import { ValidationData, Error, Warning } from './Validation'
-import { DropdownOption } from './DropdownOption'
-
+import { ValidationData, Severity } from './Validation'
 import { Graph } from './Graph'
 import { styles } from '../settings'
 
@@ -138,19 +136,23 @@ class Domain extends Field<Domain> {
 		this._style = style
 	}
 
-	get style_options(): DropdownOption<string>[] {
+	get style_options() {
 		/* Return the style options of this domain */
 
 		const options = []
 		for (const [style, value] of Object.entries(styles)) {
-			const response = new ValidationData()
+			const validation = new ValidationData()
 
 			// Check if the style is already used
-			if (this.findOriginal(this.graph.domains, this, domain => domain.style) !== -1) {
-				response.add(new Warning('Duplicate style'))
+			if (this.graph.domains.some(domain => domain.style === style && domain !== this)) {
+				validation.add({ severity: Severity.warning, short:'Duplicate style' })
 			}
 
-			options.push(new DropdownOption(value.display_name, style, response))
+			options.push({
+				name: value.display_name, 
+				value: style, 
+				validation
+			})
 		}
 
 		return options
@@ -185,61 +187,69 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a name
 		if (!this.hasName(this)) {
-			response.add(new Error(
-				'Domain must have a name',
-				undefined,
-				1, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Domain has no name',
+				tab: 1,
+				anchor: this.id.toString()
+			})
 		}
 
 		// Check if the domain has a unique name
 		else {
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.name)
 			if (first !== -1) {
-				response.add(new Error(
-					'Domain must have a unique name',
-					`Name first used by Domain nr. ${first + 1}`,
-					1, this.id.toString()
-				))
+				response.add({
+					severity: Severity.error,
+					short: 'Domain has duplicate name',
+					long: `Name first used by Domain nr. ${first + 1}`,
+					tab: 1,
+					anchor: this.id.toString()
+				})
 			}
 		}
 
 		// Check if the domain has a style
 		if (!this.hasStyle()) {
-			response.add(new Error(
-				'Domain must have a style',
-				undefined,
-				1, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Domain has no style',
+				tab: 1,
+				anchor: this.id.toString()
+			})
 		}
 
 		// Check if the domain has a unique style
 		else {
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
 			if (first !== -1) {
-				response.add(new Error(
-					'Domain must have a unique style',
-					`Style first used by Domain nr. ${first + 1}`,
-					1, this.id.toString()
-				))
+				response.add({
+					severity: Severity.warning,
+					short: 'Domain has duplicate style',
+					long: `Style first used by Domain nr. ${first + 1}`,
+					tab: 1,
+					anchor: this.id.toString()
+				})
 			}
 		}
 
 		// Check if the domain has subjects
 		if (!this.hasSubjects()) {
-			response.add(new Warning(
-				'Domain has no subjects',
-				'You might want to assign subjects to this domain',
-				1, this.id.toString()
-			))
+			response.add({
+				severity: Severity.warning,
+				short: 'Domain has no subjects',
+				tab: 1,
+				anchor: this.id.toString()
+			})
 		}
 
 		// Check if the domain is locked
 		if (!this.isLocked()) {
-			response.add(new Error(
-				'Domain is not locked',
-				'Click or move domains with a dashed outline to lock them in place'
-			))
+			response.add({
+				severity: Severity.warning,
+				short: 'Domain is not locked',
+				long: 'Click or move domains with a dashed outline to lock them in place'
+			})
 		}
 
 		return response
@@ -289,6 +299,7 @@ class Domain extends Field<Domain> {
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
+		console.log(this.graph.domains)
 	}
 }
 
@@ -322,7 +333,7 @@ class Subject extends Field<Subject> {
 		return this.domain?.style
 	}
 
-	get domain_options(): DropdownOption<Domain>[] {
+	get domain_options() {
 		/* Return the domain options of this subject */
 
 		const options = []
@@ -331,13 +342,11 @@ class Subject extends Field<Subject> {
 			// Check if the domain has a name
 			if (!this.hasName(domain)) continue
 
-			options.push(
-				new DropdownOption(
-					domain.name,
-					domain,
-					new ValidationData()
-				)
-			)
+			options.push({
+				name: domain.name,
+				value: domain,
+				validation: ValidationData.success()
+			})
 		}
 
 		return options
@@ -364,40 +373,45 @@ class Subject extends Field<Subject> {
 
 		// Check if the subject has a name
 		if (!this.hasName(this)) {
-			response.add(new Error(
-				'Subject must have a name',
-				undefined,
-				2, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Subject has no name',
+				tab: 2,
+				anchor: this.id.toString()
+			})
 		}
 
 		// Check if the name is unique
 		else {
 			const first = this.findOriginal(this.graph.subjects, this, subject => subject.name)
 			if (first !== -1) {
-				response.add(new Error(
-					'Subject must have a unique name',
-					`Name first used by Subject nr. ${first + 1}`,
-					2, this.id.toString()
-				))
+				response.add({
+					severity: Severity.error,
+					short: 'Subject has duplicate name',
+					long: `Name first used by Subject nr. ${first + 1}`,
+					tab: 2,
+					anchor: this.id.toString()
+				})
 			}
 		}
 
 		// Check if the subject has a domain
 		if (!this.hasDomain()) {
-			response.add(new Error(
-				'Subject must have a domain',
-				undefined,
-				2, this.id.toString()
-			))
+			response.add({
+				severity: Severity.error,
+				short: 'Subject has no domain',
+				tab: 2,
+				anchor: this.id.toString()
+			})
 		}
 
 		// Check if the subject is locked
 		if (!this.isLocked()) {
-			response.add(new Error(
-				'Subject is not locked',
-				'Click or move subjects with a dashed outline to lock them in place'
-			))
+			response.add({
+				severity: Severity.warning,
+				short: 'Subject is not locked',
+				long: 'Click or move subjects with a dashed outline to lock them in place'
+			})
 		}
 
 		return response

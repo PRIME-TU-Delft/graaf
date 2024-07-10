@@ -1,6 +1,9 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import type { Writable } from 'svelte/store'
+
 	// Internal imports
 	import { Graph, Lecture, LectureSubject } from '$scripts/entities'
 
@@ -16,19 +19,10 @@
 	import plusIcon from '$assets/plus-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Exports
-	export let graph: Graph
-	function update() {
-		graph = graph;
-	}
-
-	// Variables
-	let query: string = ''
-
 	// Functions
 	async function createLecture() {
 		let body = new FormData();
-		body.append('graph', graph.id.toString());
+		body.append('graph', $graph.id.toString());
 		const response = await fetch('?/newLecture', { method: 'POST', body });
 		if (!response.ok) {
 			console.error('Failed to create lecture');
@@ -36,7 +30,7 @@
 		}
 
 		const id = Number(JSON.parse((await response.json()).data)[0]);
-		Lecture.create(graph, id);
+		Lecture.create($graph, id);
 		update();
 	}
 
@@ -57,6 +51,23 @@
 		return false
 	}
 
+	function update() {
+		/* Force store update
+		 * Svelte is a lil dum dum, so subscribers are only notified if the store is reassigned.
+		 * This happens either explicitly (like here), or in bind:value={store} bindings.
+		 * So, if you want graph changes to reflect in the ui, you need to do either.
+		 * It is rumored this will be better in Svelte 5, so im leaving this todo here.
+		 */
+
+		// TODO remove this function when Svelte 5 is released
+
+		$graph = $graph
+	}
+
+	// Variables
+	export let graph: Writable<Graph>
+	let query: string = ''
+
 </script>
 
 
@@ -68,9 +79,7 @@
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Lectures </h2>
-
 		<div class="flex-spacer" />
-
 		<Searchbar bind:value={query} />
 		<Button on:click={createLecture}>
 			<img src={plusIcon} alt=""> New Lecture
@@ -78,23 +87,23 @@
 	</div>
 
 	<!-- If any lectures were found that match the search -->
-	{#if graph.lectures.some(lecture => lectureMatchesQuery(query, lecture))}
+	{#if $graph.lectures.some(lecture => lectureMatchesQuery(query, lecture))}
 
 		<!-- List of lectures -->
-		{#each graph.lectures as lecture}
+		{#each $graph.lectures as lecture}
 			{#if lectureMatchesQuery(query, lecture)}
 				<div class="lecture" id={`lecture-${lecture.id}`}>
 					<Validation short data={lecture.validate()} />
 					<span> {lecture.index + 1} </span>
 					<IconButton scale src={trashIcon} on:click={async () => { await lecture.delete(); update() }} />
-					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} on:input={update} />
+					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} />
 					<Button on:click={() => { LectureSubject.create(lecture); update() }}> Add Subject </Button>
 
 					<div class="subjects" style="grid-area: subjects;">
 						{#each lecture.lecture_subjects as lecture_subject, n}
 							<span> {n + 1} </span>
 							<IconButton scale src={trashIcon} on:click={() => { lecture_subject.delete(); update() }} />
-							<Dropdown label="Subject" placeholder="Choose subject" options={lecture_subject.options} bind:value={lecture_subject.subject} on:input={update}/>
+							<Dropdown label="Subject" placeholder="Choose subject" options={lecture_subject.options} bind:value={lecture_subject.subject} />
 							<span class="preview" style:background-color={lecture_subject.color} />
 						{/each}
 					</div>

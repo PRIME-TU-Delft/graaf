@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms'
 
 	// Internal imports
-	import { ValidationData, Severity, DropdownOption } from '$scripts/entities'
+	import { ValidationData, Severity } from '$scripts/entities'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -32,13 +32,15 @@
 
 
 	// Helpers
-	class GraphInput {
+	class GraphModal {
 		name: string = ''
 
-		get options(): DropdownOption<number>[] {
-			return graphs.map(graph => {
-				return { name: graph.name, value: graph.id, validation: ValidationData.success() }
-			})
+		show() {
+			graph_modal?.show()
+		}
+
+		hide() {
+			graph_modal?.hide()
 		}
 
 		validate(): ValidationData {
@@ -59,9 +61,27 @@
 		}
 	}
 
-	class Link {
+	class LinkModal {
 		name: string = ''
 		graph?: number
+
+		get graph_options() {
+			return graphs.map(graph => {
+				return { 
+					name: graph.name,
+					value: graph.id, 
+					validation: ValidationData.success()
+				}
+			})
+		}
+
+		show() {
+			link_modal?.show()
+		}
+
+		hide() {
+			link_modal?.hide()
+		}
 
 		validate(): ValidationData {
 			const result = new ValidationData()
@@ -93,8 +113,8 @@
 	$: course = Course.revive(data.course);
 	$: graphs = data.graphs.map(graph => Graph.revive(graph));
 
-	const graphInput = new GraphInput()
-	const link = new Link()
+	const graph = new GraphModal()
+	const link = new LinkModal()
 	
 	let graph_modal: Modal
 	let link_modal: Modal
@@ -121,11 +141,11 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={graph_modal?.show}>
+		<Button on:click={graph.show}>
 			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
-		<Button on:click={link_modal?.show}>
+		<Button on:click={link.show}>
 			<img src={plusIcon} alt="" /> New Link
 		</Button>
 
@@ -139,13 +159,13 @@
 			<h3 slot="header"> Create Graph </h3>
 			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<form method="POST" action="?/newGraph" use:enhance={graph_modal?.hide}>
+			<form method="POST" action="?/newGraph" use:enhance={graph.hide}>
 				<label for="name"> Name </label>
-				<Textfield label="Name" bind:value={graphInput.name} />
+				<Textfield label="Name" bind:value={graph.name} />
 
 				<footer>
-					<Button submit disabled={!graphInput.canSubmit()}> Create </Button>
-					<Validation data={graphInput.validate()} />
+					<Button submit disabled={!graph.canSubmit()}> Create </Button>
+					<Validation data={graph.validate()} />
 				</footer>
 			</form>
 		</Modal>
@@ -154,12 +174,12 @@
 			<h3 slot="header"> Create Link </h3>
 			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
-			<form method="POST" action="?/newLink" use:enhance={link_modal?.hide}>
+			<form method="POST" action="?/newLink" use:enhance={link.hide}>
 				<label for="name"> Name </label>
 				<Textfield label="Name" bind:value={link.name} />
 
 				<label for="graph"> Graph </label>
-				<Dropdown label="Graph" placeholder="Select a graph" options={graphInput.options} bind:value={link.graph} />
+				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
 
 				<footer>
 					<Button submit disabled={!link.canSubmit()}> Create </Button>
@@ -173,6 +193,10 @@
 		<h3 slot="header">Graphs</h3>
 
 		<svelte:fragment slot="body">
+			{#if graphs.length === 0}
+				<p class="grayed"> There's nothing here. </p>
+			{/if}	
+		
 			{#each graphs as graph}
 				<span class="graph">
 					{#if graph.hasLinks()}
@@ -206,6 +230,12 @@
 
 	<Card>
 		<h3 slot="header">Links</h3>
+		
+		<svelte:fragment slot="body">
+			{#if true}
+				<p class="grayed"> There's nothing here. </p>
+			{/if}
+		</svelte:fragment>
 	</Card>
 </Layout>
 
@@ -220,23 +250,9 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	form
-		display: grid
-		grid-template: "label content" auto / 1fr 2fr
-		gap: $form-small-gap $form-medium-gap
-		place-items: center start
-
-		margin-top: $form-big-gap
-
-		label
-			grid-column: label
-			justify-self: end
-
-		:global(.textfield), :global(.dropdown)
-			grid-column: content
-
-		:global(.button)
-			grid-column: content
+	.grayed
+		margin: auto
+		color: $placeholder-color
 
 	.graph
 		display: flex

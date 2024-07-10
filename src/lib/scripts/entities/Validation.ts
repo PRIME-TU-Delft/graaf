@@ -6,9 +6,6 @@ export type { Violation }
 
 // --------------------> Classes
  
-// TODO error suppression REMOVE THIS
-export class Error {}
-export class Warning {}
 
 enum Severity {
 	success,
