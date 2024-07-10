@@ -79,12 +79,6 @@ abstract class Field<T extends Domain | Subject> {
 		return index === -1 ? -1 : first
 	}
 
-	protected isLocked(): boolean {
-		/* Check if the field is locked */
-
-		return this.fx !== undefined && this.fy !== undefined
-	}
-
 	abstract get style(): string | undefined
 	abstract get color(): string
 	abstract validate(): ValidationData
@@ -165,7 +159,6 @@ class Domain extends Field<Domain> {
 	static create(graph: Graph, id: ID): Domain {
 		/* Create a new domain */
 
-		//! WARNING: using length as index seems dangerous, what happens when domains get deleted?
 		const domain = new Domain(graph, graph.domains.length, id)
 		graph.domains.push(domain)
 		return domain
@@ -247,15 +240,6 @@ class Domain extends Field<Domain> {
 			})
 		}
 
-		// Check if the domain is locked
-		if (!this.isLocked()) {
-			response.add({
-				severity: Severity.warning,
-				short: 'Domain is not locked',
-				long: 'Click or move domains with a dashed outline to lock them in place'
-			})
-		}
-
 		return response
 	}
 
@@ -303,7 +287,6 @@ class Domain extends Field<Domain> {
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
-		console.log(this.graph.domains)
 	}
 }
 
@@ -406,15 +389,6 @@ class Subject extends Field<Subject> {
 				short: 'Subject has no domain',
 				tab: 2,
 				anchor: this.anchor
-			})
-		}
-
-		// Check if the subject is locked
-		if (!this.isLocked()) {
-			response.add({
-				severity: Severity.warning,
-				short: 'Subject is not locked',
-				long: 'Click or move subjects with a dashed outline to lock them in place'
 			})
 		}
 

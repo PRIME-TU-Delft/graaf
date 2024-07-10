@@ -56,7 +56,6 @@
 	<svelte:fragment slot="toolbar">
 		<Button on:click={graph_interface.findGraph}> Find Graph </Button>
 		<Button on:click={autolayout_modal.show}> Autolayout </Button>
-		<Validation data={graph.validate()} />
 		<div class="flex-spacer" />
 		<LinkButton href={`/app/course/${course.code}/graph/${graph.id}/settings`}> Settings </LinkButton>
 		<Button on:click={() => graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
