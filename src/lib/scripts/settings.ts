@@ -35,6 +35,22 @@ export const LECTURE_FONT_SIZE: Pixels = 22
 // Animation settings
 export const FADE_DURATION: Milliseconds = 500
 export const ANIMATION_DURATION: Milliseconds = 1000
+export const SHAKE = {
+	delay: 150,
+	keyframes: [
+		{ transform: 'translate3d(0, 0, 0)'},
+		{ transform: 'translate3d(-10px, 0, 0)'},
+		{ transform: 'translate3d(8px, 0, 0)'},
+		{ transform: 'translate3d(-6px, 0, 0)'},
+		{ transform: 'translate3d(4px, 0, 0)'},
+		{ transform: 'translate3d(-2px, 0, 0)'},
+		{ transform: 'translate3d(0, 0, 0)'}
+	],
+	options: {
+		duration: 400,
+		easeing: 'cubic-bezier(.15,.5,.25,.95)',
+	}
+}
 
 // Simulation settings
 export const CENTER_FORCE: Scalar = 0.05

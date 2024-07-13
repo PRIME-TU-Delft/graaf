@@ -2,7 +2,8 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Course, AssignedUser } from '$scripts/entities'
+	import { AssignedUser } from '$scripts/entities'
+	import { course } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -17,15 +18,6 @@
 	import descedingSortIcon from '$assets/descending-sort-icon.svg'
 	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-
-	// Exports
-	export let course: Course
-	export let update: () => void
-
-	// Variables
-	let query: string = ''
-	let name_sort: boolean | undefined
-	let permission_sort: boolean | undefined
 
 	// Functions
 	function userMatchesQuery(query: string, user: AssignedUser) {
@@ -52,6 +44,11 @@
 
 		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
+
+	// Variables
+	let query: string = ''
+	let name_sort: boolean | undefined
+	let permission_sort: boolean | undefined
 
 </script>
 

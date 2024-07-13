@@ -57,9 +57,9 @@
 	.editor
 		padding: $card-thick-padding
 
-	.button-row
-		display: flex
-		justify-content: flex-end
-		margin-top: $form-big-gap
+		.button-row
+			display: flex
+			justify-content: flex-end
+			margin-top: $form-big-gap
 
 </style>

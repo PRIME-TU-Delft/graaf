@@ -124,11 +124,11 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={graph.show}>
+		<Button on:click={() => graph.show()}>
 			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
-		<Button on:click={link.show}>
+		<Button on:click={() => link.show()}>
 			<img src={plusIcon} alt="" /> New Link
 		</Button>
 

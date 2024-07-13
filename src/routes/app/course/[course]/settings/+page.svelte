@@ -1,8 +1,9 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import type { PageData } from './$types'
+	// Internal imports
+	import * as settings from '$scripts/settings'
+	import { course } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -13,38 +14,14 @@
 
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
-
-	// Exports
-	export let data: PageData
-
-	// Variables
-	let { course } = data
-	let active_tab: number = 0
-
-	$: validation = course.validate()
-
-	const shake = {
-		keyframes: [
-			{ transform: 'translate3d(0, 0, 0)'},
-			{ transform: 'translate3d(-10px, 0, 0)'},
-			{ transform: 'translate3d(8px, 0, 0)'},
-			{ transform: 'translate3d(-6px, 0, 0)'},
-			{ transform: 'translate3d(4px, 0, 0)'},
-			{ transform: 'translate3d(-2px, 0, 0)'},
-			{ transform: 'translate3d(0, 0, 0)'}
-		],
-		options: {
-			duration: 400,
-			easeing: 'cubic-bezier(.15,.5,.25,.95)',
-		}
-	}
+	import { Severity } from '$scripts/entities';
 
 	// Functions
 	function goto_anchor(tab: number, id: string) {
 		if (active_tab === tab) {
 			const element = document.getElementById(id)
 			element?.scrollIntoView({ behavior: 'smooth' })
-			element?.animate(shake.keyframes, shake.options)
+			element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)
 			return
 		}
 
@@ -52,19 +29,12 @@
 		setTimeout(() => {
 			const element = document.getElementById(id)
 			element?.scrollIntoView({ behavior: 'smooth' })
-			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, 150)
+			setTimeout(() => {element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)}, settings.SHAKE.delay)
 		}, 0)
 	}
 
-	function update() {
-
-		/* Force Svelte update
-		 * I hate this but svelte forces my hand
-		 * Maybe I should just use a store or wait for Svelte 5
-		 */
-
-		course = course
-	}
+	// Variables
+	let active_tab = 0
 
 </script>
 
@@ -80,19 +50,19 @@
 			href: '/app/dashboard'
 		},
 		{
-			name: `${course.code} ${course.name}`,
-			href: `/app/course/${course.code}/overview`
+			name: `${$course.code} ${$course.name}`,
+			href: `/app/course/${$course.code}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/app/course/${course.code}/settings`
+			href: `/app/course/${$course.code}/settings`
 		}
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={validation} goto_anchor={goto_anchor} success="Ready to save" />
+		<Validation data={$course.validate()} goto_anchor={goto_anchor} success="Ready to save" />
 		<div class="flex-spacer" />
-		<Button disabled={validation.severity === 'error'} on:click={() => course.save()}>
+		<Button disabled={$course.validate().severity === Severity.error} on:click={() => $course.save()}>
 			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>
@@ -114,9 +84,9 @@
 		</div>
 
 		{#if active_tab === 0}
-			<GeneralSettings {course} {update} />
+			<GeneralSettings />
 		{:else if active_tab === 1}
-			<UserSettings {course} {update} />
+			<UserSettings />
 		{/if}
 	</div>
 </Layout>
