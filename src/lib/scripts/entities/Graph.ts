@@ -173,8 +173,9 @@ class Graph {
 		return this.name !== ''
 	}
 
-	/* Delete invalid domains and subjects from the db */
 	garbageCollect() {
+		/* Delete invalid domains and subjects from the db */
+
 		for (const domain of this.domains) {
 			if (domain.validate().errors.length > 0)
 				domain.delete();
@@ -185,6 +186,12 @@ class Graph {
 		}
 	}
 
+	nextDomainStyle(): string | undefined {
+		/* Return the next available domain style */
+
+		const used_styles = this.domains.map(domain => domain.style)
+		return Object.keys(styles).find(style => !used_styles.includes(style))
+	}
 
 	sort(options: SortOptions, descending: boolean) {
 		/* Sort the graph */

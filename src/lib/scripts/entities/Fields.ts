@@ -159,7 +159,11 @@ class Domain extends Field<Domain> {
 	static create(graph: Graph, id: ID): Domain {
 		/* Create a new domain */
 
-		const domain = new Domain(graph, graph.domains.length, id)
+		const domain = new Domain(
+			graph, graph.domains.length, id,
+			0, 0, // TODO find non-overlapping x and y
+			graph.nextDomainStyle()
+		)
 		graph.domains.push(domain)
 		return domain
 	}
