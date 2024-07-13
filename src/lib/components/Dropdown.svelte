@@ -125,6 +125,7 @@
 	@use '$styles/palette.sass' as *
 
 	$caret-size: calc($input-icon-size / sqrt(2))
+	
 
 	.dropdown
 		display: flex

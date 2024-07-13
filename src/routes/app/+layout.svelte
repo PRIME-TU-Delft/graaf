@@ -1,6 +1,6 @@
-<!-- Script -->
 
 <script lang="ts">
+
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 
@@ -8,6 +8,7 @@
 	import TUDelft_logo from '$assets/TUD-logo.svg';
 
 	let loggedIn = false; // TODO temporary
+
 </script>
 
 <!-- Markup -->
@@ -64,20 +65,19 @@
 		h1
 			color: $purple
 
-			@media screen and (max-width: $phone-breakpoint)
-				display: none
-
 	main
-		display: flex
-		flex-flow: column nowrap
-		place-items: center start
+		box-sizing: content-box
+		min-width: $small-column
+		max-width: $big-column
 
+		margin: auto
 		padding: $main-padding $tudelft-logo-width
 
 		@media screen and (max-width: $phone-breakpoint)
+			width: $small-column
 			padding: $main-padding
 			padding-bottom: $footer-height
-
+			
 	footer
 		position: fixed
 		bottom: 0
@@ -93,5 +93,6 @@
 
 		@media screen and (max-width: $phone-breakpoint)
 			background-color: $white
+			pointer-events: auto
 
 </style>
