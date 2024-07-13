@@ -210,10 +210,10 @@
 			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
 
 			<form method="POST" action="?/newSandbox" use:enhance={sandbox.hide}>
-				<label for="code"> Code </label>
+				<label for="code"> Sandbox Code </label>
 				<Textfield label="Code" bind:value={sandbox.code} />
 
-				<label for="name"> Name </label>
+				<label for="name"> Sandbox Name </label>
 				<Textfield label="Name" bind:value={sandbox.name} />
 
 				<footer>
@@ -229,7 +229,7 @@
 			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
 			<form method="POST" action="?/newProgram" use:enhance={program.hide}>
-				<label for="name"> Name </label>
+				<label for="name"> Program Name </label>
 				<Textfield label="Name" bind:value={program.name} />
 
 				<footer>
@@ -245,10 +245,10 @@
 			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
 			<form method="POST" action="?/newCourse" use:enhance={course.hide}>
-				<label for="code"> Code </label>
+				<label for="code"> Course Code </label>
 				<Textfield label="Code" bind:value={course.code} />
 
-				<label for="name"> Name </label>
+				<label for="name"> Course Name </label>
 				<Textfield label="Name" bind:value={course.name} />
 
 				<label for="program"> Program </label>
