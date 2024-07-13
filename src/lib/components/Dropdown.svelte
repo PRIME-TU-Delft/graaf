@@ -140,6 +140,7 @@
 		.header
 			position: relative
 
+			width: 100%
 			padding: $input-thin-padding $input-thick-padding
 			padding-right: $input-thick-padding * 2 + $caret-size
 

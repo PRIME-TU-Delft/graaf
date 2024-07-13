@@ -146,8 +146,6 @@
 
 		.tabs
 			display: flex
-			overflow-x: scroll
-
 			background: $light-gray
 			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 
