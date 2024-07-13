@@ -134,9 +134,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/app/course/{course.code}/settings">
-			<img src={gearIcon} alt=""> Settings
-		</LinkButton>
+		<LinkButton href="/app/course/{course.code}/settings"> Course settings </LinkButton>
 
 		<Modal bind:this={graph.modal}>
 			<h3 slot="header"> Create Graph </h3>

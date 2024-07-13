@@ -276,7 +276,7 @@
 					scale
 				/>
 
-				<LinkButton href="./program/{name}/settings">Settings</LinkButton>
+				<LinkButton href="./program/{name}/settings"> Program settings </LinkButton>
 
 				<Modal bind:this={modals[name]}>
 					<h3 slot="header"> Program Coordinators </h3>
