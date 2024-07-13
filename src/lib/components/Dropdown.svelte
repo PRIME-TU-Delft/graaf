@@ -24,6 +24,7 @@
 	export let options: Option[]
 
 	// Variables
+	let dropdown: HTMLElement
 	let visible: boolean = false
 
 	$: id = label.toLowerCase().replace(/\s/g, '_')
@@ -33,6 +34,17 @@
 		if (b.validation.severity === Severity.error) return -1
 		return 0
 	})
+
+	// Scroll down so the entire dropdown is visible
+	$: if (visible) {
+		setTimeout(() => { // Wait for the DOM to update
+			const rect = dropdown.getBoundingClientRect()
+			if (rect.bottom > window.innerHeight) {
+				dropdown.scrollIntoView(false)
+			}
+		}, 0)
+		
+	}
 
 	// Functions
 	export function show() {
@@ -67,7 +79,7 @@
 		{choice?.name || placeholder}
 	</label>
 
-	<div class="options">
+	<div class="options" bind:this={dropdown}>
 		{#each options as option}
 			<button
 				type="button"
