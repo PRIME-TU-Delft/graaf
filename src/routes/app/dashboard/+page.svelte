@@ -34,6 +34,8 @@
 
 		hide() {
 			sandbox_modal.hide()
+			this.code = ''
+			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -70,6 +72,7 @@
 
 		hide() {
 			program_modal?.hide()
+			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -108,9 +111,12 @@
 		show() {
 			course_modal?.show()
 		}
-		
+
 		hide() {
 			course_modal?.hide()
+			this.program = undefined
+			this.code = ''
+			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -148,7 +154,7 @@
 	// Functions
 	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
 		if (!query) return true
-		
+
 		query = query.toLowerCase()
 		let code = course.code.toLowerCase()
 		let name = course.name.toLowerCase()
@@ -169,7 +175,7 @@
 	let sandbox_modal: Modal
 	let program_modal: Modal
 	let course_modal: Modal
-	
+
 	let query: string = ''
 
 </script>
@@ -209,7 +215,7 @@
 
 			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
 
-			<form method="POST" action="?/newSandbox" use:enhance={sandbox.hide}>
+			<form method="POST" action="?/newSandbox" use:enhance={() => sandbox.hide()}>
 				<label for="code"> Sandbox Code </label>
 				<Textfield label="Code" bind:value={sandbox.code} />
 
@@ -228,7 +234,7 @@
 
 			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-			<form method="POST" action="?/newProgram" use:enhance={program.hide}>
+			<form method="POST" action="?/newProgram" use:enhance={() => program.hide()}>
 				<label for="name"> Program Name </label>
 				<Textfield label="Name" bind:value={program.name} />
 
@@ -244,7 +250,7 @@
 
 			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-			<form method="POST" action="?/newCourse" use:enhance={course.hide}>
+			<form method="POST" action="?/newCourse" use:enhance={() => course.hide()}>
 				<label for="code"> Course Code </label>
 				<Textfield label="Code" bind:value={course.code} />
 

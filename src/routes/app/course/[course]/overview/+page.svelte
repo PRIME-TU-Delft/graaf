@@ -41,6 +41,7 @@
 
 		hide() {
 			graph_modal?.hide()
+			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -81,6 +82,8 @@
 
 		hide() {
 			link_modal?.hide()
+			this.graph = undefined
+			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -159,8 +162,8 @@
 			<h3 slot="header"> Create Graph </h3>
 			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<form method="POST" action="?/newGraph" use:enhance={graph.hide}>
-				<label for="name"> Name </label>
+			<form method="POST" action="?/newGraph" use:enhance={() => graph.hide()}>
+				<label for="name"> Graph Name </label>
 				<Textfield label="Name" bind:value={graph.name} />
 
 				<footer>
@@ -174,8 +177,8 @@
 			<h3 slot="header"> Create Link </h3>
 			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
-			<form method="POST" action="?/newLink" use:enhance={link.hide}>
-				<label for="name"> Name </label>
+			<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
+				<label for="name"> Graph Name </label>
 				<Textfield label="Name" bind:value={link.name} />
 
 				<label for="graph"> Graph </label>
