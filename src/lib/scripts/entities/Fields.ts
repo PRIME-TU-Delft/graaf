@@ -5,6 +5,8 @@ import * as uuid from 'uuid'
 // Internal imports
 import { ValidationData, Severity } from './Validation'
 import { Graph } from './Graph'
+
+import * as settings from '../settings'
 import { styles } from '../settings'
 
 // Exports
@@ -147,8 +149,8 @@ class Domain extends Field<Domain> {
 			}
 
 			options.push({
-				name: value.display_name, 
-				value: style, 
+				name: value.display_name,
+				value: style,
 				validation
 			})
 		}
@@ -178,7 +180,7 @@ class Domain extends Field<Domain> {
 		/* Check if the domain has subjects */
 
 		return this.subjects.length > 0
-	
+
 	}
 
 	validate(): ValidationData {
@@ -196,14 +198,26 @@ class Domain extends Field<Domain> {
 			})
 		}
 
-		// Check if the domain has a unique name
 		else {
+
+			// Check if the domain has a unique name
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.name)
 			if (first !== -1) {
 				response.add({
 					severity: Severity.error,
 					short: 'Domain has duplicate name',
 					long: `Name first used by Domain nr. ${first + 1}`,
+					tab: 1,
+					anchor: this.anchor
+				})
+			}
+
+			// Check if the name is too long
+			if (this.name.length > settings.FIELD_MAX_CHARS) {
+				response.add({
+					severity: Severity.error,
+					short: 'Domain name too long',
+					long: `Name exceeds ${settings.FIELD_MAX_CHARS} characters`,
 					tab: 1,
 					anchor: this.anchor
 				})
@@ -220,8 +234,9 @@ class Domain extends Field<Domain> {
 			})
 		}
 
-		// Check if the domain has a unique style
 		else {
+
+			// Check if the domain has a unique style
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
 			if (first !== -1) {
 				response.add({
@@ -372,14 +387,26 @@ class Subject extends Field<Subject> {
 			})
 		}
 
-		// Check if the name is unique
 		else {
+
+			// Check if the name is unique
 			const first = this.findOriginal(this.graph.subjects, this, subject => subject.name)
 			if (first !== -1) {
 				response.add({
 					severity: Severity.error,
 					short: 'Subject has duplicate name',
 					long: `Name first used by Subject nr. ${first + 1}`,
+					tab: 2,
+					anchor: this.anchor
+				})
+			}
+
+			// Check if the name is too long
+			if (this.name.length > settings.FIELD_MAX_CHARS) {
+				response.add({
+					severity: Severity.error,
+					short: 'Subject name too long',
+					long: `Name exceeds ${settings.FIELD_MAX_CHARS} characters`,
 					tab: 2,
 					anchor: this.anchor
 				})

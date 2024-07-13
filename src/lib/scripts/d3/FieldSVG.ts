@@ -43,13 +43,60 @@ class FieldSVG {
 		// Field text
 		selection.append('text')
 			.text(field => field.name!)
+			.style('text-anchor', 'middle')
+			.style('dominant-baseline', 'middle')
 			.style('font-size', settings.FIELD_FONT_SIZE)
-			.attr('text-anchor', 'middle')
-			.attr('dominant-baseline', 'middle')
-			.attr('transform', `translate(
-				${settings.FIELD_WIDTH / 2 * settings.GRID_UNIT},
-				${settings.FIELD_HEIGHT / 2 * settings.GRID_UNIT}
-			)`)
+			
+		// Wrap text
+		selection
+			.selectAll('text')
+				.each(function() {
+					const max_width = (settings.FIELD_WIDTH - 2 * settings.FIELD_PADDING) * settings.GRID_UNIT
+					const middle_height = settings.FIELD_HEIGHT / 2 * settings.GRID_UNIT
+					const middle_width = settings.FIELD_WIDTH / 2 * settings.GRID_UNIT
+
+					// Select elements
+					const element = d3.select(this)
+					const text = element.text()
+					const words = text.split(/\s+/)
+					element.text(null)
+
+					// Make tspan
+					let tspan = element
+						.append('tspan')
+						.attr('x', middle_width)
+
+					// Get longest word
+					const longest = words.reduce((a, b) => a.length > b.length ? a : b)
+					tspan.text(longest)
+
+					// Scale font size
+					const scale = Math.min(1, max_width / tspan.node()!.getComputedTextLength())
+					const font_size = settings.FIELD_FONT_SIZE * scale
+					element.attr('font-size', font_size)
+					
+					// Wrap text
+					let line_count = 0
+					let line: string[] = []
+					for (const word of words) {
+						line.push(word)
+						tspan.text(line.join(' '))
+						if (tspan.node()!.getComputedTextLength() > max_width) {
+							line.pop()
+							tspan.text(line.join(' '))
+							line = [word]
+							tspan = element.append('tspan')
+								.attr('x', middle_width)
+								.attr('y', 0)
+								.attr('dy', ++line_count * 1.1 + 'em')
+								.text(word)
+						}
+					}
+
+					// Center vertically
+					element.selectAll('tspan')
+						.attr('y', middle_height - font_size * line_count * 1.1 / 2)
+				})
 
 		// Drag behaviour
 		selection.call(

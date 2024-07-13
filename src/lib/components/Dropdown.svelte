@@ -43,7 +43,6 @@
 				dropdown.scrollIntoView(false)
 			}
 		}, 0)
-		
 	}
 
 	// Functions
@@ -134,18 +133,24 @@
 		position: relative
 		width: 100%
 
+		overflow-x: hidden
 		color: $dark-gray
 
 		.header
 			position: relative
-			width: 100%
 
 			padding: $input-thin-padding $input-thick-padding
+			padding-right: $input-thick-padding * 2 + $caret-size
 
 			border: 1px solid $gray
 			border-radius: $border-radius
 			background-color: $white
+
 			text-align: left
+			text-overflow: ellipsis
+			white-space: nowrap
+			overflow: hidden
+			
 			cursor: pointer
 
 			&::after
@@ -182,9 +187,9 @@
 			border-radius: 0 0 $border-radius $border-radius
 
 			.option
-				display: flex
-				flex-flow: row nowrap
-				align-items: center
+				display: grid
+				grid-template: "option validation" auto / 1fr auto
+				column-gap: $input-thick-padding
 
 				padding: $input-thin-padding $input-thick-padding
 
