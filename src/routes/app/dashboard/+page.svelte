@@ -5,7 +5,7 @@
 	import { enhance } from '$app/forms'
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/entities'
+	import { ValidationData, Severity, BaseModal } from '$scripts/entities'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -24,18 +24,13 @@
 	import peopleIcon from '$assets/people-icon.svg'
 
 	// Helpers
-	class SandboxModal {
+	class SandboxModal extends BaseModal {
 		code: string = ''
 		name: string = ''
 
-		show() {
-			sandbox_modal.show()
-		}
-
-		hide() {
-			sandbox_modal.hide()
-			this.code = ''
-			this.name = ''
+		constructor() {
+			super()
+			this.initialize()
 		}
 
 		validate(): ValidationData {
@@ -57,22 +52,14 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.code.length > 0 && this.name.length > 0
-		}
 	}
 
-	class ProgramModal {
+	class ProgramModal extends BaseModal {
 		name: string = ''
 
-		show() {
-			program_modal?.show()
-		}
-
-		hide() {
-			program_modal?.hide()
-			this.name = ''
+		constructor() {
+			super()
+			this.initialize()
 		}
 
 		validate(): ValidationData {
@@ -87,16 +74,17 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.name.length > 0
-		}
 	}
 
-	class CourseModal {
+	class CourseModal extends BaseModal {
 		code: string = ''
 		name: string = ''
 		program?: number
+
+		constructor() {
+			super()
+			this.initialize()
+		}
 
 		get program_options() {
 			return data.programs.map(program => {
@@ -106,17 +94,6 @@
 					validation: ValidationData.success()
 				}
 			})
-		}
-
-		show() {
-			course_modal?.show()
-		}
-
-		hide() {
-			course_modal?.hide()
-			this.program = undefined
-			this.code = ''
-			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -145,10 +122,6 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.code.length > 0 && this.name.length > 0 && this.program !== undefined
-		}
 	}
 
 	// Functions
@@ -167,14 +140,10 @@
 	$: courses = data.courses
 	$: programs = data.programs
 
+	const modals: { [key: string]: Modal } = {}
 	const sandbox: SandboxModal = new SandboxModal()
 	const program: ProgramModal = new ProgramModal()
 	const course: CourseModal = new CourseModal()
-
-	const modals: { [key: string]: Modal } = {}
-	let sandbox_modal: Modal
-	let program_modal: Modal
-	let course_modal: Modal
 
 	let query: string = ''
 
@@ -185,7 +154,7 @@
 
 
 <Layout
-	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to expermient with the Graph Editor."
+	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to experiment with the Graph Editor."
 	path={[
 		{
 			name: 'Dashboard',
@@ -194,15 +163,15 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={sandbox.show}>
+		<Button on:click={() => sandbox.show()}>
 			<img src={plusIcon} alt="" /> New Sandbox
 		</Button>
 
-		<Button on:click={program.show}>
+		<Button on:click={() => program.show()}>
 			<img src={plusIcon} alt="" /> New Program
 		</Button>
 
-		<Button on:click={course.show}>
+		<Button on:click={() => course.show()}>
 			<img src={plusIcon} alt="" /> New Course
 		</Button>
 
@@ -210,7 +179,7 @@
 
 		<Searchbar placeholder="Search courses" bind:value={query} />
 
-		<Modal bind:this={sandbox_modal}>
+		<Modal bind:this={sandbox.modal}>
 			<h3 slot="header"> Create Sandbox </h3>
 
 			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
@@ -223,13 +192,13 @@
 				<Textfield label="Name" bind:value={sandbox.name} />
 
 				<footer>
-					<Button submit disabled={!sandbox.canSubmit()} > Create </Button>
+					<Button submit disabled={sandbox.validate().severity === Severity.error} > Create </Button>
 					<Validation data={sandbox.validate()} />
 				</footer>
 			</form>
 		</Modal>
 
-		<Modal bind:this={program_modal}>
+		<Modal bind:this={program.modal}>
 			<h3 slot="header"> Create Program </h3>
 
 			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
@@ -239,13 +208,13 @@
 				<Textfield label="Name" bind:value={program.name} />
 
 				<footer>
-					<Button submit disabled={!program.canSubmit()} > Create </Button>
+					<Button submit disabled={program.validate().severity === Severity.error} > Create </Button>
 					<Validation data={program.validate()} />
 				</footer>
 			</form>
 		</Modal>
 
-		<Modal bind:this={course_modal}>
+		<Modal bind:this={course.modal}>
 			<h3 slot="header"> Create Course </h3>
 
 			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
@@ -266,7 +235,7 @@
 				/>
 
 				<footer>
-					<Button submit disabled={!course.canSubmit()} > Create </Button>
+					<Button submit disabled={course.validate().severity === Severity.error} > Create </Button>
 					<Validation data={course.validate()} />
 				</footer>
 			</form>

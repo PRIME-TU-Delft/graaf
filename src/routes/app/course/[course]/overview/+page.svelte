@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms'
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/entities'
+	import { ValidationData, Severity, BaseModal } from '$scripts/entities'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -32,16 +32,12 @@
 
 
 	// Helpers
-	class GraphModal {
+	class GraphModal extends BaseModal {
 		name: string = ''
 
-		show() {
-			graph_modal?.show()
-		}
-
-		hide() {
-			graph_modal?.hide()
-			this.name = ''
+		constructor() {
+			super()
+			this.initialize()
 		}
 
 		validate(): ValidationData {
@@ -56,15 +52,16 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.name.length > 0
-		}
 	}
 
-	class LinkModal {
+	class LinkModal extends BaseModal {
 		name: string = ''
 		graph?: number
+
+		constructor() {
+			super()
+			this.initialize()
+		}
 
 		get graph_options() {
 			return graphs.map(graph => {
@@ -74,16 +71,6 @@
 					validation: ValidationData.success()
 				}
 			})
-		}
-
-		show() {
-			link_modal?.show()
-		}
-
-		hide() {
-			link_modal?.hide()
-			this.graph = undefined
-			this.name = ''
 		}
 
 		validate(): ValidationData {
@@ -105,10 +92,6 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.name.length > 0 && this.graph !== undefined
-		}
 	}
 
 	// Variables
@@ -118,9 +101,6 @@
 
 	const graph = new GraphModal()
 	const link = new LinkModal()
-	
-	let graph_modal: Modal
-	let link_modal: Modal
 
 </script>
 
@@ -158,7 +138,7 @@
 			<img src={gearIcon} alt=""> Settings
 		</LinkButton>
 
-		<Modal bind:this={graph_modal}>
+		<Modal bind:this={graph.modal}>
 			<h3 slot="header"> Create Graph </h3>
 			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
@@ -167,13 +147,13 @@
 				<Textfield label="Name" bind:value={graph.name} />
 
 				<footer>
-					<Button submit disabled={!graph.canSubmit()}> Create </Button>
+					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
 					<Validation data={graph.validate()} />
 				</footer>
 			</form>
 		</Modal>
 
-		<Modal bind:this={link_modal}>
+		<Modal bind:this={link.modal}>
 			<h3 slot="header"> Create Link </h3>
 			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
@@ -185,7 +165,7 @@
 				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
 
 				<footer>
-					<Button submit disabled={!link.canSubmit()}> Create </Button>
+					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
 					<Validation data={link.validate()} />
 				</footer>
 			</form>

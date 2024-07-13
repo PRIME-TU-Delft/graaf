@@ -1,6 +1,6 @@
 
 export { ValidationData, Severity } from './Validation'
-
+export { BaseModal } from './BaseModal'
 export { Graph, SortOption } from './Graph'
 export { Course, AssignedUser, Permissions } from './Course'
 export { Field, Domain, Subject } from './Fields'
