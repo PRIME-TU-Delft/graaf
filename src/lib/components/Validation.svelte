@@ -218,7 +218,7 @@
 		position: relative
 		gap: $input-thin-padding
 
-		margin: 0 $form-medium-gap
+		margin-left: $form-medium-gap
 
 		.success
 			display: flex
