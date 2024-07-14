@@ -43,6 +43,7 @@
 
 
 <div class="dropdown">
+	you shouldn't see this
 	<div class="wrapper" use:losefocus={() => visible = false}>
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
@@ -114,11 +115,13 @@
 	.dropdown
 		position: relative
 		width: 100%
-		height: 100%
+
+		padding: $input-thin-padding $input-thick-padding
 
 		.wrapper
 			position: absolute
 			top: 0
+			left: 0
 
 			width: 100%
 			height: 2 * $max-dropdown-height // This is ugly I know, but its a workaround for proper overflow
