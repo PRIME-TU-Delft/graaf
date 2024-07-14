@@ -53,7 +53,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href={`/app/course/${$course.code}/graph/${$graph.id}/settings`}> Settings </LinkButton>
+		<LinkButton href={`/app/course/${$course.code}/graph/${$graph.id}/settings`} preload="tap"> Edit fields & relations </LinkButton>
 		<Button on:click={() => $graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 
 		<Modal bind:this={autolayout_modal}>

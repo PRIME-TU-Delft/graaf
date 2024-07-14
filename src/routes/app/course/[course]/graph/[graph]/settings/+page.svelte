@@ -87,7 +87,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </LinkButton>
+		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout" preload="tap"> Edit layout </LinkButton>
 		<Button disabled={$graph.validate().severity === Severity.error} on:click={() => $graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes
 		</Button>

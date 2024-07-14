@@ -5,6 +5,7 @@
 	export let href: string | undefined = undefined
 	export let submit: boolean = false
 	export let disabled: boolean = false
+	export let preload: string = "hover"
 
 	// Property validation
 	$: if (submit && href !== undefined) {
@@ -32,7 +33,8 @@
 {:else}
 
 	<a 
-		{href}
+		data-sveltekit-preload-data={preload}
+		href={href}
 		class="link-button" 
 		class:disabled  
 		on:click
