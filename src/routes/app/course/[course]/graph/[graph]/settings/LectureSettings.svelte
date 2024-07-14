@@ -9,7 +9,7 @@
 	import Button from '$components/Button.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import IconButton from '$components/IconButton.svelte';
-	import Searchbar from '$components/Searchbar.svelte'
+	import Searchbar from '$components/Search.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Validation from '$components/Validation.svelte';
 

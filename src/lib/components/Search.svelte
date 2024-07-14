@@ -14,8 +14,8 @@
 <!-- Markup -->
 
 
-<div class="searchbar">
-	<input type="search" placeholder={placeholder} bind:value on:input on:change/>
+<div class="search">
+	<input type="text" placeholder={placeholder} bind:value on:input on:change/>
 	<img src={search_icon} alt="search-icon" />
 </div>
 
@@ -28,7 +28,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.searchbar
+	.search
 		position: relative
 
 		width: 100%
@@ -36,21 +36,25 @@
 
 		input
 			width: 100%
-			padding: $input-thin-padding $input-thick-padding
+			padding: 
+				top: $input-thin-padding 
+				right: $input-icon-size + 1.3rem
+				bottom: $input-thin-padding
+				left: $input-thick-padding
 
 			border: 1px solid $gray
 			border-radius: $border-radius
 
 			color: $dark-gray
 
-			&:hover
-				cursor: text
+			&:focus
+				border-color: $tudelft-blue
 
 		img
 			position: absolute
-			translate: -50% -50%
+			translate: 0 -50%
 			top: 50%
-			right: 0
+			right: 0.75rem
 
 			width: $input-icon-size
 
