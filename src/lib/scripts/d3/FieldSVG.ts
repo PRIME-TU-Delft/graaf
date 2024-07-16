@@ -27,7 +27,7 @@ class FieldSVG {
 		// Field attrs
 		selection
 			.attr('id', field => field.anchor)
-			.attr('class', 'field')
+			.attr('class', 'field fixed')
 			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},
 				${field.y * settings.GRID_UNIT}
@@ -169,8 +169,12 @@ class FieldSVG {
 			.classed('fixed', fixed)
 			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
 			.each((field) => {
-				field.fx = fixed ? Math.round(field.x) : undefined
-				field.fy = fixed ? Math.round(field.y) : undefined
+				field.x = fixed ? Math.round(field.x) : field.x
+				field.y = fixed ? Math.round(field.y) : field.y
+				field.fx = fixed ? field.x : undefined
+				field.fy = fixed ? field.y : undefined
 			})
+		
+		FieldSVG.updatePosition(selection)
 	}
 }

@@ -35,9 +35,12 @@ class GraphSVG {
 	private _state: State
 	private _lecture?: Lecture
 
-	private svg!: SVGSVGElement
-	private zoom!: d3.ZoomBehavior<SVGSVGElement, unknown>
-	private simulation!: d3.Simulation<d3.SimulationNodeDatum, undefined>
+	private svg?: SVGSVGElement
+	private zoom?: d3.ZoomBehavior<SVGSVGElement, unknown>
+	private simulation?: d3.Simulation<d3.SimulationNodeDatum, undefined>
+
+	private keys: { [key: string]: boolean } = {}
+	private shift_required: boolean = true
 
 	constructor(graph: Graph, interactive: boolean = true) {
 		this.graph = graph
@@ -52,8 +55,7 @@ class GraphSVG {
 	}
 
 	set view(view: View) {
-		if (
-			this.view === view ||
+		if (this.view === view ||
 			this.state === State.animating
 		) return
 
@@ -95,8 +97,12 @@ class GraphSVG {
 	}
 
 	private set state(state: State) {
-		if (this.state === state) return
+		if (this.svg === undefined || this.simulation === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
+		if (this.state === state) 
+			return
 
+		// If moving out of dynamic state
 		if (this.state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'none')
@@ -107,14 +113,10 @@ class GraphSVG {
 			this.simulation.stop()
 		}
 
+		// If moving into dynamic state
 		else if (state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'all')
-				.select('#content')
-					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-						.call(FieldSVG.setFixed, true)
-
-			this.microwaveSimulation()
 		}
 
 		this._state = state
@@ -125,10 +127,10 @@ class GraphSVG {
 	}
 
 	set lecture(lecture: Lecture | undefined) {
-		if (
-			this.lecture === lecture ||
-			this.state === State.animating
-		) return
+		if (this.svg === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
+		if (this.lecture === lecture || this.state === State.animating) 
+			return
 
 		this._lecture = lecture
 
@@ -147,16 +149,27 @@ class GraphSVG {
 					.call(FieldSVG.updateHighlight, this.lecture)
 	}
 
-	create(element: SVGSVGElement) {
+	get autolayout_enabled() {
+		return d3.select('#content')
+			.selectAll<SVGGElement, Field<Domain | Subject>>('.field:not(.fixed)')
+				.size() > 0
+	}
+
+	attach(element: SVGSVGElement) {
+
+		// SVG setup
 		this.svg = element
 
 		// D3 setup
 		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
+			.attr('pointer-events', this.state === State.dynamic ? 'all' : 'none')
 		const definitions = svg.append('defs')
-		svg.append('g')
+		const background = svg.append('g')
 			.attr('id', 'background')
-		svg.append('g')
+		const content = svg.append('g')
 			.attr('id', 'content')
+		const overlay = svg.append('g')
+			.attr('id', 'overlay')
 
 		// Arrowhead pattern
 		definitions.append('marker')
@@ -192,68 +205,84 @@ class GraphSVG {
 			.attr('y2', settings.GRID_UNIT * settings.MAX_ZOOM)
 			.attr('stroke', settings.GRID_COLOR)
 
-		// Shadow filter
+		// Highlight filter
 		definitions.append('filter')
-			.attr('id', 'shadow')
+			.attr('id', 'highlight')
 			.append('feDropShadow')
 				.attr('dx', 0)
 				.attr('dy', 0)
-				.attr('stdDeviation', settings.FIELD_SHADOW_DEVIATION)
-				.attr('flood-opacity', settings.FIELD_SHADOW_OPACITY)
-				.attr('flood-color', settings.FIELD_SHADOW_COLOR)
+				.attr('stdDeviation', settings.FIELD_HIGHLIGHT_DEVIATION)
+				.attr('flood-opacity', settings.FIELD_HIGHLIGHT_OPACITY)
+				.attr('flood-color', settings.FIELD_HIGHLIGHT_COLOR)
 
 		// Zoom warning
-		const warning = svg.append('g')
-			.attr('pointer-events', 'none')
+		overlay
 			.style('opacity', 0)
+			.style('pointer-events', 'none')
 
-		warning.append('rect')
+		overlay.append('rect')
 			.attr('width', '100%')
 			.attr('height', '100%')
 			.attr('background-color', 'black')
-			.style('opacity', 0.75)
+			.style('opacity', settings.OVERLAY_OPACITY)
 
-		warning.append('text')
+		const overlay_text = overlay.append('text')
+		overlay_text.append('tspan')
 			.text('Shift + Scroll to zoom')
-			.attr('font-size', '2em')
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'middle')
+			.attr('font-size', settings.OVERLAY_BIG_FONT)
 			.attr('fill', 'white')
 			.attr('x', '50%')
 			.attr('y', '50%')
 
-		// Set pointer-events
-		if (this.state !== State.dynamic) {
-			svg.attr('pointer-events', 'none')
-		}
-
-		// Keylogging
-		let shift = false
-		d3.select('body')
-			.on('keydown', event => {
-				if (event.key === 'Shift') { shift = true }
+		overlay_text.append('tspan')
+			.text('Disable this')
+			.attr('text-anchor', 'middle')
+			.attr('dominant-baseline', 'middle')
+			.attr('font-size', settings.OVERLAY_SMALL_FONT)
+			.style('text-decoration', 'underline')
+			.style('cursor', 'pointer')
+			.attr('fill', 'white')
+			.attr('x', '50%')
+			.attr('y', '50%')
+			.attr('dy', settings.OVERLAY_BIG_FONT)
+			.on('click', () => {
+				this.shift_required = false
+				overlay.style('opacity', 0)
 			})
-			.on('keyup', event => {
-				if (event.key === 'Shift') { shift = false }
-			})
 
-		// Show zoom warning
 		svg.on('wheel', () => {
-			if (shift) return
+			if (
+				this.state !== State.dynamic || 
+				!this.shift_required ||
+				this.keys.Shift
+			) return
 
-			warning
+			overlay
 				.interrupt()
 				.style('opacity', 1)
+				.style('pointer-events', 'all')
 				.transition()
-					.duration(500)
-					.delay(1000)
+					.duration(settings.OVERLAY_FADE_OUT)
+					.delay(settings.OVERLAY_LINGER)
 				.style('opacity', 0)
+				.style('pointer-events', 'none')
 		})
+
+		// Keylogging
+		d3.select('body')
+			.on('keydown', event => {
+				this.keys[event.key] = true
+			})
+			.on('keyup', event => {
+				this.keys[event.key] = false
+			})
 
 		// Zoom & pan
 		this.zoom = d3.zoom<SVGSVGElement, unknown>()
 			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
-			.filter((event) => shift || event.type === 'mousedown')
+			.filter((event) => !this.shift_required || this.keys.Shift || event.type === 'mousedown')
 			.on('zoom', event => {
 
 				// Update content
@@ -285,7 +314,6 @@ class GraphSVG {
 						.call(FieldSVG.updatePosition)
 			})
 
-		this.setSimulation(this.graph.domains, this.graph.domain_relations)
 
 		// First view
 		const bbx = this.boundingBox(this.graph.domains)
@@ -295,7 +323,10 @@ class GraphSVG {
 	}
 
 	zoomIn() {
-		if (this.state !== State.dynamic) return
+		if (this.svg === undefined || this.zoom === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
+		if (this.state !== State.dynamic) 
+			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
@@ -305,7 +336,10 @@ class GraphSVG {
 	}
 
 	zoomOut() {
-		if (this.state !== State.dynamic) return
+		if (this.svg === undefined || this.zoom === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
+		if (this.state !== State.dynamic) 
+			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
@@ -315,44 +349,45 @@ class GraphSVG {
 	}
 
 	findGraph() {
-		if (
-			this.state !== State.dynamic &&
-			this.state !== State.static
-		) return
+		if (this.state !== State.dynamic) return
 
-		const state = this.state
 		this.state = State.animating
-
 		const bbx = this.boundingBox(this.view === View.domains ? this.graph.domains : this.graph.subjects)
 		this.moveCamera(bbx.x, bbx.y, bbx.k, () => {
-			this.state = state
+			this.state = State.dynamic
 		})
 	}
 
-	autolayout() {
+	toggleAutolayout() {
+		if (this.simulation === undefined)
+			throw new Error('GraphSVG not attached to DOM')
 		if (this.state !== State.dynamic)
 			return
 
+		const autolayout_enabled = this.autolayout_enabled
 		d3.select('#content')
 			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-				.call(FieldSVG.setFixed, false)
-		this.microwaveSimulation()
+				.call(FieldSVG.setFixed, autolayout_enabled)
+
+		if (autolayout_enabled) {
+			this.simulation.stop()
+		} else {
+			this.microwaveSimulation()
+		}
 	}
 
 	microwaveSimulation() {
+		if (this.simulation === undefined)
+			throw new Error('GraphSVG not attached to DOM')
 		this.simulation
 			.alpha(1)
 			.restart()
 	}
 
-	private setSimulation(fields: Field<Domain | Subject>[], Relations: Relation<Domain | Subject>[]) {
-		const links = Relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
-		this.simulation
-			.nodes(fields)
-			.force('link', d3.forceLink(links))
-	}
-
 	private boundingBox(fields: Field<Domain | Subject>[]) {
+		if (this.svg === undefined)
+			throw new Error('GraphSVG not attached to DOM')
+
 		let min_x = Infinity
 		let min_y = Infinity
 		let max_x = -Infinity
@@ -382,6 +417,8 @@ class GraphSVG {
 	}
 
 	private moveCamera(x: number, y: number, k: number, callback?: () => void) {
+		if (this.svg === undefined || this.zoom === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -407,6 +444,8 @@ class GraphSVG {
 	}
 
 	private panCamera(x: number, y: number, callback?: () => void) {
+		if (this.svg === undefined || this.zoom === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -428,6 +467,8 @@ class GraphSVG {
 	}
 
 	private zoomCamera(k: number, callback?: () => void) {
+		if (this.svg === undefined || this.zoom === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -445,6 +486,8 @@ class GraphSVG {
 	}
 
 	private setBackground(view: View) {
+		if (this.svg === undefined)
+			throw new Error('GraphSVG not attached to DOM')
 		const background = d3.select<SVGGElement, unknown>('#background')
 
 		// Remove old background
@@ -522,6 +565,9 @@ class GraphSVG {
 	}
 
 	private setContent(fields: Field<Domain | Subject>[], relations: Relation<Domain | Subject>[], callback?: () => void) {
+		if (this.simulation === undefined) 
+			throw new Error('GraphSVG not attached to DOM')
+
 		const content = d3.select<SVGGElement, unknown>('#content')
 		const lecture = this.lecture
 		const graphSVG = this
@@ -581,6 +627,12 @@ class GraphSVG {
 			.transition()
 				.duration(callback !== undefined ? settings.FADE_DURATION : 0)
 			.style('opacity', 1)
+	
+		// Update simulation
+		const links = relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
+		this.simulation
+			.nodes(fields)
+			.force('link', d3.forceLink(links))
 
 		// Post-transition
 		if (callback) {
@@ -657,7 +709,6 @@ class GraphSVG {
 		this.moveContent(this.graph.subjects, this.domainTransform)
 		this.restoreContent(() => {
 			this.state = this.interactive ? State.dynamic : State.static
-			this.setSimulation(this.graph.subjects, this.graph.subject_relations)
 		})
 	}
 
@@ -690,7 +741,6 @@ class GraphSVG {
 		this.moveContent(this.graph.subjects, this.domainTransform, () => {
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
-				this.setSimulation(this.graph.domains, this.graph.domain_relations)
 			})
 		})
 	}
@@ -728,7 +778,6 @@ class GraphSVG {
 			this.moveContent(this.lecture.subjects, this.domainTransform, () => {
 				this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 					this.state = this.interactive ? State.dynamic : State.static
-					this.setSimulation(this.graph.domains, this.graph.domain_relations)
 				})
 			})
 		}
@@ -738,7 +787,6 @@ class GraphSVG {
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
-				this.setSimulation(this.graph.domains, this.graph.domain_relations)
 			})
 		}
 	}
@@ -755,7 +803,6 @@ class GraphSVG {
 			this.restoreContent(() => {
 				this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 					this.state = this.interactive ? State.dynamic : State.static
-					this.setSimulation(this.graph.subjects, this.graph.subject_relations)
 				})
 			})
 		}
@@ -765,7 +812,6 @@ class GraphSVG {
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
-				this.setSimulation(this.graph.subjects, this.graph.subject_relations)
 			})
 		}
 	}

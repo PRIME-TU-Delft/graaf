@@ -20,9 +20,9 @@ export const FIELD_MARGIN: GridUnits = 1.5
 export const FIELD_PADDING: GridUnits = 1
 export const FIELD_FONT_SIZE: Pixels = 15
 export const FIELD_MAX_CHARS: Scalar = 35
-export const FIELD_SHADOW_DEVIATION: Pixels = 5
-export const FIELD_SHADOW_OPACITY: Scalar = 0.75
-export const FIELD_SHADOW_COLOR: string = 'green'
+export const FIELD_HIGHLIGHT_DEVIATION: Pixels = 5
+export const FIELD_HIGHLIGHT_OPACITY: Scalar = 0.75
+export const FIELD_HIGHLIGHT_COLOR: string = 'green'
 
 // Stroke settings
 export const STROKE_WIDTH: Pixels = 2
@@ -33,6 +33,14 @@ export const LECTURE_PADDING: GridUnits = 5
 export const LECTURE_HEADER_HEIGHT: GridUnits = 3
 export const LECTURE_COLUMN_WIDTH: GridUnits = 2 * LECTURE_PADDING + FIELD_WIDTH
 export const LECTURE_FONT_SIZE: Pixels = 22
+
+// Overlay settings
+export const OVERLAY_OPACITY: Scalar = 0.5
+export const OVERLAY_BIG_FONT: Pixels = 30
+export const OVERLAY_SMALL_FONT: Pixels = 20
+export const OVERLAY_FADE_IN: Milliseconds = 500
+export const OVERLAY_FADE_OUT: Milliseconds = 500
+export const OVERLAY_LINGER: Milliseconds = 2000
 
 // Animation settings
 export const FADE_DURATION: Milliseconds = 500

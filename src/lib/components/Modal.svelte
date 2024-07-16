@@ -12,6 +12,10 @@
 		visible = true
 	}
 
+	export function hide() {
+		visible = false
+	}
+
 	// Variables
 	let visible: boolean = false
 	let modal: HTMLDialogElement

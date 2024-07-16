@@ -24,6 +24,14 @@
 		goto(`/app/course/${$course.code}/graph/${$graph.id}/settings`)
 	}
 
+	function toggle_autolayout() {
+		if (graphSVG.controller.autolayout_enabled) {
+			graphSVG.controller.toggleAutolayout()
+		} else {
+			autolayout_modal.show()
+		}
+	}
+
 	// Variables
 	let graphSVG: GraphSVG
 	let autolayout_modal: Modal
@@ -57,14 +65,8 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<Button on:click={graphSVG.findGraph}> Find Graph </Button>
-		<Button on:click={autolayout_modal.show}> Autolayout </Button>
-
-		<div class="flex-spacer" />
-
-		<LinkButton on:click={goto_settings}> Edit layout </LinkButton>
-
-		<Button on:click={() => $graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
+		<Button on:click={graphSVG.controller.findGraph}> Find Graph </Button>
+		<Button on:click={toggle_autolayout}> Toggle Autolayout </Button>
 
 		<Modal bind:this={autolayout_modal}>
 			<h3 slot="header"> Autolayout </h3>
@@ -75,9 +77,14 @@
 			</Infobox>
 
 			<div class="button-row">
-				<Button dangerous on:click={() => { graphSVG.autolayout(); autolayout_modal.hide() }}> Activate autolayout </Button> <!-- TODO redirect to course overview -->
+				<Button on:click={() => { graphSVG.controller.toggleAutolayout(); autolayout_modal.hide() }}> Enable autolayout </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
+
+		<div class="flex-spacer" />
+
+		<LinkButton on:click={goto_settings}> Edit layout </LinkButton>
+		<Button on:click={() => $graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 
 	<div class="editor">
