@@ -154,13 +154,12 @@ class FieldSVG {
 	static updateHighlight(selection: FieldSelection, lecture?: Lecture) {
 		selection
 			.each(function(field) {
-				if (field instanceof Domain) {
-					d3.select(this)
-						.attr('filter', lecture?.present.some(subject => subject.domain === field) ? 'url(#shadow)' : null)
-				} else if (field instanceof Subject) {
-					d3.select(this)
-						.attr('filter', lecture?.present.includes(field) ? 'url(#shadow)' : null)
-				}
+				const highlight = 
+					field instanceof Domain  && lecture?.present.some(subject => subject.domain === field) ||
+					field instanceof Subject && lecture?.present.includes(field)
+
+				d3.select(this)
+					.attr('filter', highlight ? 'url(#highlight)' : null)
 			})
 	}
 
