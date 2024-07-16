@@ -371,8 +371,13 @@ class GraphSVG {
 		switch (view) {
 			case View.domains:
 				return this.graph.domains.every(domain => domain.validate().severity !== Severity.error)
+
 			case View.subjects:
-				return this.graph.subjects.every(subject => subject.validate().severity !== Severity.error)
+				return this.graph.subjects.every(subject => 
+					subject.domain?.style !== undefined &&
+					subject.validate().severity !== Severity.error
+				)
+
 			case View.lectures:
 				return (
 					this.lecture === undefined ||
