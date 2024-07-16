@@ -3,8 +3,8 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Graph, Field, Domain, Subject, Relation, Lecture } from '../entities'
-import { FieldSVG, RelationSVG } from '.'
+import { Graph, Field, Domain, Subject, Relation, Lecture, Severity } from '../entities'
+import { FieldSVG, RelationSVG, OverlaySVG } from '.'
 import * as settings from '../settings'
 
 // Exports
@@ -19,6 +19,7 @@ enum State {
 	dynamic,
 	animating,
 	lecture,
+	broken
 }
 
 enum View {
@@ -40,7 +41,7 @@ class GraphSVG {
 	private simulation?: d3.Simulation<d3.SimulationNodeDatum, undefined>
 
 	private keys: { [key: string]: boolean } = {}
-	private shift_required: boolean = true
+	shift_required: boolean = true
 
 	constructor(graph: Graph, interactive: boolean = true) {
 		this.graph = graph
@@ -59,6 +60,14 @@ class GraphSVG {
 			this.state === State.animating
 		) return
 
+		// Validate view
+		if (!this.validateView(view)) {
+			this.state = State.broken
+			this._view = view
+			return
+		}
+
+		// Transition to new view
 		switch (this.view) {
 			case View.domains:
 				switch (view) {
@@ -113,13 +122,26 @@ class GraphSVG {
 			this.simulation.stop()
 		}
 
+		// If moving out of broken state
+		if (this.state === State.broken) {
+			d3.select<SVGGElement, unknown>('#overlay')
+				.call(OverlaySVG.reset)
+		}
+
+		this._state = state // NEW STATE
+
+
 		// If moving into dynamic state
-		else if (state === State.dynamic) {
+		if (state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'all')
 		}
 
-		this._state = state
+		// If moving into broken state
+		if (state === State.broken) {
+			d3.select<SVGGElement, unknown>('#overlay')
+				.call(OverlaySVG.brokenGraph)
+		}
 	}
 
 	get lecture() {
@@ -134,12 +156,24 @@ class GraphSVG {
 
 		this._lecture = lecture
 
+		// Validate lecture
+		if (!this.validateView(this.view)) {
+			this.state = State.broken
+			return
+		}
+
 		// Update content
 		if (this.view === View.lectures) {
-			this.moveCamera(0, 0, 1)
+			this.state = State.lecture
 			this.setBackground(View.lectures)
-			this.setContent(this.lecture?.subjects ?? [], this.lecture?.relations ?? [])
-			this.moveContent(this.lecture?.subjects ?? [], this.lectureTransform(0, 0))
+			this.moveCamera(0, 0, 1)
+
+			if (this.lecture === undefined) {
+				this.clearContent()
+			} else {
+				this.setContent(this.lecture.subjects, this.lecture.relations)
+				this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
+			}
 		}
 
 		// Update highlights
@@ -164,12 +198,9 @@ class GraphSVG {
 		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
 			.attr('pointer-events', this.state === State.dynamic ? 'all' : 'none')
 		const definitions = svg.append('defs')
-		const background = svg.append('g')
-			.attr('id', 'background')
-		const content = svg.append('g')
-			.attr('id', 'content')
-		const overlay = svg.append('g')
-			.attr('id', 'overlay')
+		svg.append('g').attr('id', 'background')
+		svg.append('g').attr('id', 'content')
+		svg.append('g').attr('id', 'overlay')
 
 		// Arrowhead pattern
 		definitions.append('marker')
@@ -216,58 +247,10 @@ class GraphSVG {
 				.attr('flood-color', settings.FIELD_HIGHLIGHT_COLOR)
 
 		// Zoom warning
-		overlay
-			.style('opacity', 0)
-			.style('pointer-events', 'none')
-
-		overlay.append('rect')
-			.attr('width', '100%')
-			.attr('height', '100%')
-			.attr('background-color', 'black')
-			.style('opacity', settings.OVERLAY_OPACITY)
-
-		const overlay_text = overlay.append('text')
-		overlay_text.append('tspan')
-			.text('Shift + Scroll to zoom')
-			.attr('text-anchor', 'middle')
-			.attr('dominant-baseline', 'middle')
-			.attr('font-size', settings.OVERLAY_BIG_FONT)
-			.attr('fill', 'white')
-			.attr('x', '50%')
-			.attr('y', '50%')
-
-		overlay_text.append('tspan')
-			.text('disable this')
-			.attr('text-anchor', 'middle')
-			.attr('dominant-baseline', 'middle')
-			.attr('font-size', settings.OVERLAY_SMALL_FONT)
-			.style('text-decoration', 'underline')
-			.style('cursor', 'pointer')
-			.attr('fill', 'white')
-			.attr('x', '50%')
-			.attr('y', '50%')
-			.attr('dy', settings.OVERLAY_BIG_FONT)
-			.on('click', () => {
-				this.shift_required = false
-				overlay.style('opacity', 0)
-			})
-
 		svg.on('wheel', () => {
-			if (
-				this.state !== State.dynamic || 
-				!this.shift_required ||
-				this.keys.Shift
-			) return
-
-			overlay
-				.interrupt()
-				.style('opacity', 1)
-				.style('pointer-events', 'all')
-				.transition()
-					.duration(settings.OVERLAY_FADE_OUT)
-					.delay(settings.OVERLAY_LINGER)
-				.style('opacity', 0)
-				.style('pointer-events', 'none')
+			if (this.keys.Shift || !this.shift_required) return
+			d3.select<SVGGElement, unknown>('#overlay')
+				.call(OverlaySVG.shiftScroll, this)
 		})
 
 		// Keylogging
@@ -384,6 +367,21 @@ class GraphSVG {
 			.restart()
 	}
 
+	private validateView(view: View) {
+		switch (view) {
+			case View.domains:
+				return this.graph.domains.every(domain => domain.validate().severity !== Severity.error)
+			case View.subjects:
+				return this.graph.subjects.every(subject => subject.validate().severity !== Severity.error)
+			case View.lectures:
+				return (
+					this.lecture === undefined ||
+					this.lecture.validate().severity !== Severity.error && 
+					this.lecture.subjects.every(subject => subject.validate().severity !== Severity.error)
+				)
+		}
+	}
+
 	private boundingBox(fields: Field<Domain | Subject>[]) {
 		if (this.svg === undefined)
 			throw new Error('GraphSVG not attached to DOM')
@@ -491,8 +489,7 @@ class GraphSVG {
 		const background = d3.select<SVGGElement, unknown>('#background')
 
 		// Remove old background
-		background.selectAll('*')
-			.remove()
+		this.clearBackground()
 
 		// Lecture background
 		if (view === View.lectures) {
@@ -562,6 +559,12 @@ class GraphSVG {
 				.attr('width', '100%')
 				.attr('height', '100%')
 		}
+	}
+
+	private clearBackground() {
+		d3.select<SVGGElement, unknown>('#background')
+			.selectAll('*')
+				.remove()
 	}
 
 	private setContent(fields: Field<Domain | Subject>[], relations: Relation<Domain | Subject>[], callback?: () => void) {
@@ -701,42 +704,75 @@ class GraphSVG {
 	}
 
 	private domainToSubject() {
+		const bbx = this.boundingBox(this.graph.subjects)
+
+		if (this.state === State.broken) {
+			this.state = State.animating
+			this.moveCamera(bbx.x, bbx.y, bbx.k)
+			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
+				this.state = this.interactive ? State.dynamic : State.static
+			})
+
+			return
+		}
+
 		this.state = State.animating
 
-		const bbx = this.boundingBox(this.graph.subjects)
-		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.setContent(this.graph.subjects, this.graph.subject_relations)
 		this.moveContent(this.graph.subjects, this.domainTransform)
+
+		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)		
 		this.restoreContent(() => {
 			this.state = this.interactive ? State.dynamic : State.static
 		})
 	}
 
 	private domainToLecture() {
-		if (this.lecture) {
-			this.state = State.animating
-
-			const bbx = this.boundingBox(this.graph.domains)
-			this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
-			this.setContent(this.lecture.subjects, this.lecture.relations)
-			this.moveContent(this.lecture.subjects, this.domainTransform)
-			this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
-				this.setBackground(View.lectures)
-				this.state = State.lecture
-			})
-		}
-
-		else {
-			this.clearContent()
+		if (this.lecture === undefined) {
 			this.setBackground(View.lectures)
+			this.clearContent()
 			this.state = State.lecture
-		}
-	}
 
-	private subjectToDomain() {
+			return
+		}
+
+		if (this.state === State.broken) {
+			this.moveCamera(0, 0, 1)
+			this.setBackground(View.lectures)
+			this.setContent(this.lecture.subjects, this.lecture.relations)
+			this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
+			this.state = State.lecture
+
+			return
+		}
+
 		this.state = State.animating
 
 		const bbx = this.boundingBox(this.graph.domains)
+		this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
+		this.setContent(this.lecture.subjects, this.lecture.relations)
+		this.moveContent(this.lecture.subjects, this.domainTransform)
+		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
+			this.setBackground(View.lectures)
+			this.state = State.lecture
+		})
+	}
+
+	private subjectToDomain() {
+		const bbx = this.boundingBox(this.graph.domains)
+	
+		if (this.state === State.broken) {
+			this.state = State.animating
+			this.moveCamera(bbx.x, bbx.y, bbx.k)
+			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
+				this.state = this.interactive ? State.dynamic : State.static
+			})
+
+			return
+		}
+
+		this.state = State.animating
+
 		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.moveContent(this.graph.subjects, this.domainTransform, () => {
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
@@ -746,74 +782,90 @@ class GraphSVG {
 	}
 
 	private subjectToLecture() {
-		if (this.lecture) {
-			this.state = State.animating
-
-			const bbx = this.boundingBox(this.graph.subjects)
-			this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
-			this.setContent(this.lecture.subjects, this.lecture.relations, () => {
-				this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
-					this.setBackground(View.lectures)
-					this.state = State.lecture
-				})
-			})
-		}
-
-		else {
-			this.clearContent()
+		if (this.lecture === undefined) {
 			this.setBackground(View.lectures)
+			this.clearContent()
 			this.state = State.lecture
+
+			return
 		}
+
+		if (this.state === State.broken) {
+			this.moveCamera(0, 0, 1)
+			this.setBackground(View.lectures)
+			this.setContent(this.lecture.subjects, this.lecture.relations)
+			this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
+			this.state = State.lecture
+
+			return
+		}
+
+		this.state = State.animating
+
+		const bbx = this.boundingBox(this.graph.subjects)
+		this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
+		this.setContent(this.lecture.subjects, this.lecture.relations, () => {
+			this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
+				this.setBackground(View.lectures)
+				this.state = State.lecture
+			})
+		})
 	}
 
 	private lectureToDomain() {
 		const bbx = this.boundingBox(this.graph.domains)
-		this.state = State.animating
 
-		if (this.lecture) {
-			this.panCamera(bbx.x, bbx.y)
-			this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
-			this.setBackground(View.domains)
-			this.zoomCamera(bbx.k, ANIMATE)
-			this.moveContent(this.lecture.subjects, this.domainTransform, () => {
-				this.setContent(this.graph.domains, this.graph.domain_relations, () => {
-					this.state = this.interactive ? State.dynamic : State.static
-				})
-			})
-		}
-
-		else {
+		if (this.state === State.broken || this.lecture === undefined) {
+			this.state = State.animating
 			this.setBackground(View.domains)
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
 			})
+
+			return
 		}
+
+		this.state = State.animating
+		
+		this.panCamera(bbx.x, bbx.y)
+		this.setBackground(View.domains)
+		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
+
+		this.zoomCamera(bbx.k, ANIMATE)
+		this.moveContent(this.lecture.subjects, this.domainTransform, () => {
+			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
+				this.state = this.interactive ? State.dynamic : State.static
+			})
+		})
 	}
 
 	private lectureToSubject() {
 		const bbx = this.boundingBox(this.graph.subjects)
-		this.state = State.animating
 
-		if (this.lecture) {
-			this.panCamera(bbx.x, bbx.y)
-			this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
-			this.setBackground(View.subjects)
-			this.zoomCamera(bbx.k, ANIMATE)
-			this.restoreContent(() => {
-				this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
-					this.state = this.interactive ? State.dynamic : State.static
-				})
-			})
-		}
-
-		else {
+		if (this.state === State.broken || this.lecture === undefined) {
+			this.state = State.animating
 			this.setBackground(View.subjects)
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
 			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
 				this.state = this.interactive ? State.dynamic : State.static
 			})
+
+			return
 		}
+
+		this.state = State.animating
+
+		this.panCamera(bbx.x, bbx.y)
+		this.setBackground(View.subjects)
+		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
+
+		this.zoomCamera(bbx.k, ANIMATE)
+		this.restoreContent(() => {
+			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
+				this.state = this.interactive ? State.dynamic : State.static
+			})
+		})
 	}
 
 	private domainTransform(subject: Subject) {

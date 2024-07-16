@@ -40,7 +40,7 @@
 		}, 0)
 	}
 
-	function goto_layout() {
+	async function goto_layout() {
 		$graph.save()
 		goto(`/app/course/${$course.code}/graph/${$graph.id}/layout`)
 	}
@@ -81,7 +81,7 @@
 		<div class="flex-spacer" />
 
 		<LinkButton on:click={goto_layout}> Edit layout </LinkButton>
-		<Button disabled={$graph.validate().severity === Severity.error} on:click={() => $graph.save()}>
+		<Button on:click={() => $graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>
