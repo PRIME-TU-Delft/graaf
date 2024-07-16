@@ -65,7 +65,7 @@
 >
 
 	<svelte:fragment slot="toolbar">
-		<Button on:click={graphSVG.controller.findGraph}> Find Graph </Button>
+		<Button on:click={() => graphSVG.controller.findGraph()}> Find Graph </Button>
 		<Button on:click={toggle_autolayout}> Toggle Autolayout </Button>
 
 		<Modal bind:this={autolayout_modal}>

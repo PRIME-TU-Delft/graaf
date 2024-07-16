@@ -237,7 +237,7 @@ class GraphSVG {
 			.attr('y', '50%')
 
 		overlay_text.append('tspan')
-			.text('Disable this')
+			.text('disable this')
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'middle')
 			.attr('font-size', settings.OVERLAY_SMALL_FONT)

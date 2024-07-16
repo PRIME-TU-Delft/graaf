@@ -9,7 +9,7 @@ export const GRID_COLOR = '#a4a4a4'
 export const GRID_UNIT: Scalar = 10
 
 // Zoom settings
-export const MIN_ZOOM: Scalar = 0.5
+export const MIN_ZOOM: Scalar = 0
 export const MAX_ZOOM: Scalar = 1.5
 export const ZOOM_STEP: Scalar = 1.5
 
