@@ -25,8 +25,17 @@
 	export let value: T | undefined = undefined
 	export let options: Option[]
 
+	// Functions
+	function set(value: boolean) {
+
+		// Manually set the height of the wrapper, as options are positioned absolutely
+		setTimeout(() => wrapper.style.height = value ? wrapper.scrollHeight + 'px' : 'auto', 0)
+		visible = value
+	}
+
 	// Variables
 	let visible: boolean = false
+	let wrapper: HTMLDivElement
 
 	$: id = label.toLowerCase().replace(/\s/g, '_')
 	$: choice = options.find(option => option.value === value)
@@ -44,15 +53,15 @@
 
 <div class="dropdown">
 	you shouldn't see this
-	<div class="wrapper" use:losefocus={() => visible = false}>
+	<div class="wrapper" use:losefocus={() => set(false)} bind:this={wrapper}>
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
 		<button
 			class="header"
 			class:visible
 			class:grayed={!choice}
-			on:click={() => visible = !visible}
-			use:clickoutside={() => visible = false}
+			on:click={() => set(!visible)}
+			use:clickoutside={() => set(false)}
 		>
 			{choice?.name || placeholder}
 		</button>
@@ -124,7 +133,6 @@
 			left: 0
 
 			width: 100%
-			height: 2 * $max-dropdown-height // This is ugly I know, but its a workaround for proper overflow
 			overflow: hidden
 
 			.header
@@ -167,13 +175,13 @@
 
 					border: 1px solid $black
 					border-width: 0 1px 1px 0
-				
+
 				&.visible
 					border-color: $tudelft-blue
 					border-bottom-color: $gray
 					border-bottom-style: dashed
 					border-radius: $border-radius $border-radius 0 0
-	
+
 					&::after
 						translate: 0 80%
 						rotate: -135deg
@@ -231,7 +239,7 @@
 
 						img
 							filter: $yellow-filter
-			
+
 			&.visible .header
 				border-color: $tudelft-blue
 				border-bottom-color: $gray
