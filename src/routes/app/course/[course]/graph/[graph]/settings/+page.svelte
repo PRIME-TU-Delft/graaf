@@ -1,6 +1,9 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import { goto } from '$app/navigation'
+
 	// Internal imports
 	import { Severity } from '$scripts/entities'
 	import { course, graph } from '$stores'
@@ -34,6 +37,11 @@
 			element?.scrollIntoView({ behavior: 'smooth' })
 			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, shake.delay)
 		}, 0)
+	}
+
+	function goto_layout() {
+		$graph.save()
+		goto(`/app/course/${$course.code}/graph/${$graph.id}/layout`)
 	}
 
 	// Variables
@@ -87,7 +95,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout" preload="tap"> Edit layout </LinkButton>
+		<LinkButton on:click={goto_layout}> Edit layout </LinkButton>
 		<Button disabled={$graph.validate().severity === Severity.error} on:click={() => $graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes
 		</Button>

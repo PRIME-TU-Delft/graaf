@@ -1,6 +1,9 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import { goto } from '$app/navigation'
+
 	// Internal imports
 	import { course, graph } from '$stores'
 
@@ -14,6 +17,12 @@
 	// Assets
 	import saveIcon from '$assets/save-icon.svg'
 	import LinkButton from '$components/LinkButton.svelte'
+
+	// Functions
+	function goto_settings() {
+		$graph.save()
+		goto(`/app/course/${$course.code}/graph/${$graph.id}/settings`)
+	}
 
 	// Variables
 	let graphSVG: GraphSVG
@@ -53,7 +62,8 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href={`/app/course/${$course.code}/graph/${$graph.id}/settings`} preload="tap"> Edit fields & relations </LinkButton>
+		<LinkButton on:click={goto_settings}> Edit layout </LinkButton>
+
 		<Button on:click={() => $graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 
 		<Modal bind:this={autolayout_modal}>
