@@ -38,9 +38,8 @@ export const LECTURE_FONT_SIZE: Pixels = 22
 export const OVERLAY_OPACITY: Scalar = 0.5
 export const OVERLAY_BIG_FONT: Pixels = 30
 export const OVERLAY_SMALL_FONT: Pixels = 20
-export const OVERLAY_FADE_IN: Milliseconds = 500
 export const OVERLAY_FADE_OUT: Milliseconds = 500
-export const OVERLAY_LINGER: Milliseconds = 2000
+export const OVERLAY_LINGER: Milliseconds = 1500
 
 // Animation settings
 export const FADE_DURATION: Milliseconds = 500

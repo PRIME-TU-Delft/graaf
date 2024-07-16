@@ -83,7 +83,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton on:click={goto_settings}> Edit layout </LinkButton>
+		<LinkButton on:click={goto_settings}> Edit fields & relations </LinkButton>
 		<Button on:click={() => $graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
 	</svelte:fragment>
 

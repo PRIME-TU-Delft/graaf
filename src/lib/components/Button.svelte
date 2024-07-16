@@ -1,11 +1,23 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import { createEventDispatcher } from "svelte"
+
 	// Exports
 	export let href: string | undefined = undefined
 	export let submit: boolean = false
 	export let disabled: boolean = false
 	export let dangerous: boolean = false
+
+	function click() {
+		button.blur()
+		dispatch('click')
+	}
+
+	// Variables
+	const dispatch = createEventDispatcher()
+	let button: HTMLButtonElement | HTMLAnchorElement
 
 	// Property validation
 	$: if (submit && href !== undefined) {
@@ -27,7 +39,8 @@
 		class:dangerous
 		tabindex={disabled ? -1 : 0}
 		type={submit ? 'submit' : 'button'}
-		on:click
+		on:click={click}
+		bind:this={button}
 	>
 		<slot />
 	</button>
@@ -40,7 +53,8 @@
 		class:disabled
 		class:dangerous
 		tabindex={disabled ? -1 : 0}
-		on:click
+		on:click={click}
+		bind:this={button}
 	>
 		<slot />
 	</a>
