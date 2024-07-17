@@ -14,25 +14,66 @@ datasource db {
 }
 
 
-enum UserRole {
-	USER
-	ADMIN
+// START AUTH STUFF
+model User {
+    id					String		@id @default(cuid())
+	firstName			String?
+	lastName			String?
+    email				String		@unique
+    emailVerified		DateTime?
+    image				String?
+    accounts			Account[]
+    sessions			Session[]
+
+    createdAt			DateTime	@default(now())
+    updatedAt			DateTime	@updatedAt
+
+	programs			Program[]
 }
 
-model User {
-	id				Int			@id @default(autoincrement())
-	netid			String		@unique
-	first_name		String
-	last_name		String
-	role			UserRole	@default(USER)
-	createdAt		DateTime	@default(now())
-	email			String?
-	programs		Program[]
+model Account {
+    userId				String
+    type				String
+    provider			String
+    providerAccountId	String
+    refresh_token		String?
+    access_token		String?
+    expires_at			Int?
+    token_type			String?
+    scope				String?
+    id_token			String?
+    session_state		String?
+
+    createdAt			DateTime	@default(now())
+    updatedAt			DateTime	@updatedAt
+
+    user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@id([provider, providerAccountId])
 }
+
+model Session {
+    sessionToken		String		@unique
+    userId				String
+    expires				DateTime
+    user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    createdAt			DateTime	@default(now())
+    updatedAt			DateTime	@updatedAt
+}
+
+model VerificationToken {
+    identifier			String
+    token				String
+    expires				DateTime
+
+    @@id([identifier, token])
+}
+// END AUTH STUFF
 
 
 model Program {
-	id				Int     	@id @default(autoincrement())
+	id				Int			@id @default(autoincrement())
 	name			String
 	description		String?
 	createdAt		DateTime	@default(now())
