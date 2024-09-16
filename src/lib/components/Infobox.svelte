@@ -30,9 +30,11 @@
         display: flex
         flex-flow: row nowrap
 
+        margin: $card-thin-padding $card-thick-padding
+
         border: 1px solid $purple
         border-radius: $border-radius
-        background-color: rgba($purple, 0.15)
+        background-color: rgba($purple, 0.1)
 
         .sidebar
             display: flex

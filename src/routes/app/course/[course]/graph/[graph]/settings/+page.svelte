@@ -1,9 +1,13 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import { goto } from '$app/navigation'
+
 	// Internal imports
 	import { Severity } from '$scripts/entities'
 	import { course, graph } from '$stores'
+	import * as settings from '$scripts/settings'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -24,7 +28,7 @@
 		if (active_tab === tab) {
 			const element = document.getElementById(id)
 			element?.scrollIntoView({ behavior: 'smooth' })
-			element?.animate(shake.keyframes, shake.options)
+			setTimeout(() => {element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)}, settings.SHAKE.delay)
 			return
 		}
 
@@ -32,28 +36,17 @@
 		setTimeout(() => {
 			const element = document.getElementById(id)
 			element?.scrollIntoView({ behavior: 'smooth' })
-			setTimeout(() => {element?.animate(shake.keyframes, shake.options)}, shake.delay)
+			setTimeout(() => {element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)}, settings.SHAKE.delay)
 		}, 0)
+	}
+
+	async function goto_layout() {
+		$graph.save()
+		goto(`/app/course/${$course.code}/graph/${$graph.id}/layout`)
 	}
 
 	// Variables
 	let active_tab = 0
-	let shake = {
-		delay: 150,
-		keyframes: [
-			{ transform: 'translate3d(0, 0, 0)'},
-			{ transform: 'translate3d(-10px, 0, 0)'},
-			{ transform: 'translate3d(8px, 0, 0)'},
-			{ transform: 'translate3d(-6px, 0, 0)'},
-			{ transform: 'translate3d(4px, 0, 0)'},
-			{ transform: 'translate3d(-2px, 0, 0)'},
-			{ transform: 'translate3d(0, 0, 0)'}
-		],
-		options: {
-			duration: 400,
-			easeing: 'cubic-bezier(.15,.5,.25,.95)',
-		}
-	}
 
 </script>
 
@@ -87,8 +80,8 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </LinkButton>
-		<Button disabled={$graph.validate().severity === Severity.error} on:click={() => $graph.save()}>
+		<LinkButton on:click={goto_layout}> Edit layout </LinkButton>
+		<Button on:click={() => $graph.save()}>
 			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>
@@ -146,8 +139,6 @@
 
 		.tabs
 			display: flex
-			overflow-x: scroll
-
 			background: $light-gray
 			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 

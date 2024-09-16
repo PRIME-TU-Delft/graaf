@@ -1,13 +1,15 @@
 
 <script lang="ts">
 
+	// Internal imports
+	import { focusfirst } from '$scripts/hocusfocus'
+
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 
 	// Exports
 	export function show() {
 		visible = true
-		setTimeout(() => first?.focus(), 0)
 	}
 
 	export function hide() {
@@ -17,7 +19,6 @@
 	// Variables
 	let visible: boolean = false
 	let modal: HTMLDialogElement
-	$: first = modal?.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')[1]
 
 </script>
 
@@ -27,14 +28,16 @@
 
 {#if visible}
 	<div class="background" />
-	<dialog class="modal" bind:this={modal}>
+	<dialog class="modal" bind:this={modal} >
 		<header>
 			<slot name="header" />
-			<button class="exit" on:click={hide}>
+			<button class="exit" on:click={() => visible = false}>
 				<img src={plusIcon} alt="Exit icon" class="icon" />
 			</button>
 		</header>
-		<slot />
+		<section use:focusfirst>
+			<slot />
+		</section>
 	</dialog>
 {/if}
 
@@ -96,8 +99,8 @@
 				cursor: pointer
 				filter: $purple-filter
 
-				&:hover
-					scale: $scale-on-hover
-					filter: $dark-purple-filter
+			&:focus, .icon:hover
+				scale: $scale-on-hover
+				filter: $dark-purple-filter
 
 </style>

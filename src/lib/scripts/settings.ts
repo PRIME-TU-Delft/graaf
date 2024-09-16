@@ -9,7 +9,7 @@ export const GRID_COLOR = '#a4a4a4'
 export const GRID_UNIT: Scalar = 10
 
 // Zoom settings
-export const MIN_ZOOM: Scalar = 0.5
+export const MIN_ZOOM: Scalar = 0
 export const MAX_ZOOM: Scalar = 1.5
 export const ZOOM_STEP: Scalar = 1.5
 
@@ -17,10 +17,12 @@ export const ZOOM_STEP: Scalar = 1.5
 export const FIELD_WIDTH: GridUnits  = 16
 export const FIELD_HEIGHT: GridUnits = 8
 export const FIELD_MARGIN: GridUnits = 1.5
+export const FIELD_PADDING: GridUnits = 1
 export const FIELD_FONT_SIZE: Pixels = 15
-export const FIELD_SHADOW_DEVIATION: Pixels = 5
-export const FIELD_SHADOW_OPACITY: Scalar = 0.75
-export const FIELD_SHADOW_COLOR: string = 'green'
+export const FIELD_MAX_CHARS: Scalar = 35
+export const FIELD_HIGHLIGHT_DEVIATION: Pixels = 5
+export const FIELD_HIGHLIGHT_OPACITY: Scalar = 0.75
+export const FIELD_HIGHLIGHT_COLOR: string = 'green'
 
 // Stroke settings
 export const STROKE_WIDTH: Pixels = 2
@@ -32,9 +34,32 @@ export const LECTURE_HEADER_HEIGHT: GridUnits = 3
 export const LECTURE_COLUMN_WIDTH: GridUnits = 2 * LECTURE_PADDING + FIELD_WIDTH
 export const LECTURE_FONT_SIZE: Pixels = 22
 
+// Overlay settings
+export const OVERLAY_OPACITY: Scalar = 0.5
+export const OVERLAY_BIG_FONT: Pixels = 30
+export const OVERLAY_SMALL_FONT: Pixels = 20
+export const OVERLAY_FADE_OUT: Milliseconds = 500
+export const OVERLAY_LINGER: Milliseconds = 1500
+
 // Animation settings
 export const FADE_DURATION: Milliseconds = 500
 export const ANIMATION_DURATION: Milliseconds = 1000
+export const SHAKE = {
+	delay: 150,
+	keyframes: [
+		{ transform: 'translate3d(0, 0, 0)'},
+		{ transform: 'translate3d(-10px, 0, 0)'},
+		{ transform: 'translate3d(8px, 0, 0)'},
+		{ transform: 'translate3d(-6px, 0, 0)'},
+		{ transform: 'translate3d(4px, 0, 0)'},
+		{ transform: 'translate3d(-2px, 0, 0)'},
+		{ transform: 'translate3d(0, 0, 0)'}
+	],
+	options: {
+		duration: 400,
+		easeing: 'cubic-bezier(.15,.5,.25,.95)',
+	}
+}
 
 // Simulation settings
 export const CENTER_FORCE: Scalar = 0.05

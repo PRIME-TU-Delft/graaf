@@ -204,7 +204,7 @@ class DomainRelation extends Relation<Domain> {
 
 		// Check if the relation is consistent
 		else if (this.isInconsistent(parent, child))
-			validation.add({ severity: Severity.warning, short: 'Inconsistent with subjects'})
+			validation.add({ severity: Severity.warning, short: 'Inconsistent'})
 
 		return validation
 	}
@@ -348,7 +348,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Check if the relation is consistent
 		else if (this.isInconsistent(parent, child))
-			validation.add({ severity: Severity.warning, short: 'Inconsistent with domains' })
+			validation.add({ severity: Severity.warning, short: 'Inconsistent' })
 
 		return validation
 	}

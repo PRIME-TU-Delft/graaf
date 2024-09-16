@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Course } from '$scripts/entities'
+	import { course } from '$stores'
 
 	// Components
 	import Button from '$components/Button.svelte'
@@ -12,10 +12,6 @@
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
-
-	// Exports
-	export let course: Course
-	export let update: () => void
 
 	// Variables
 	let deleteCourseModal: Modal
@@ -31,9 +27,9 @@
 	<!-- Settings -->
 	<div class="settings">
 		<label for="code"> Code </label>
-		<Textfield label="Code" bind:value={course.code} on:input={update} />
+		<Textfield label="Code" bind:value={$course.code} />
 		<label for="name"> Name </label>
-		<Textfield label="Name" bind:value={course.name} on:input={update} />
+		<Textfield label="Name" bind:value={$course.name} />
 	</div>
 
 	<!-- Button row -->
@@ -43,11 +39,11 @@
 		<Button dangerous on:click={deleteCourseModal.show}> <img src={trashIcon} alt=""> Delete Course </Button>
 		<Modal bind:this={deleteCourseModal}>
 			<h3 slot="header"> Delete Course </h3>
-			Are you sure you want to delete {course.code} {course.name}? This action <b>cannot</b> be undone.
+			<p> Are you sure you want to delete {$course.code} {$course.name}? This action <b>cannot</b> be undone. </p>
 
-			<div slot="button-row">
+			<div class="button-row">
 				<LinkButton on:click={deleteCourseModal.hide}> Cancel </LinkButton>
-				<Button dangerous on:click={course.delete}> Delete </Button> <!-- TODO redirect to course overview -->
+				<Button dangerous on:click={$course.delete}> Delete </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</div>
@@ -74,10 +70,7 @@
 
 		.button-row
 			display: flex
-			flex-flow: row nowrap
-			justify-content: end
-			gap: $form-small-gap
-
+			justify-content: flex-end
 			margin-top: $form-big-gap
 
 </style>

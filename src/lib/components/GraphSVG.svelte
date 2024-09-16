@@ -14,13 +14,8 @@
 	import zoomOutIcon from '$assets/zoom-out-icon.svg'
 
 	// Exports
-	export function findGraph() { graphSVG.findGraph() }
-	export function autolayout() { graphSVG.autolayout() }
-
-	// Variables
-	export let interactive: boolean = true
-
-	let graphSVG: GraphSVG = new GraphSVG($graph, interactive)
+	export let interactive = true
+	export const controller = new GraphSVG($graph, interactive)
 
 </script>
 
@@ -32,31 +27,31 @@
     <div class="tabs">
         <button
 			class="tab first"
-            class:active={graphSVG.view === View.domains}
-            on:click={() => graphSVG.view = View.domains}
+            class:active={controller.view === View.domains}
+            on:click={() => controller.view = View.domains}
         > Domains </button>
 
         <button
 			class="tab"
-            class:active={graphSVG.view === View.subjects}
-            on:click={() => graphSVG.view = View.subjects}
+            class:active={controller.view === View.subjects}
+            on:click={() => controller.view = View.subjects}
         > Subjects </button>
 
         <button
 			class="tab last"
-            class:active={graphSVG.view === View.lectures}
-            on:click={() => graphSVG.view = View.lectures}
+            class:active={controller.view === View.lectures}
+            on:click={() => controller.view = View.lectures}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" options={$graph.lecture_options} bind:value={graphSVG.lecture} />
+		<Dropdown label="Lecture" placeholder="Choose a Lecture" options={$graph.lecture_options} bind:value={controller.lecture} />
     </div>
 
-	<svg use:graphSVG.create />
+	<svg use:controller.attach />
 
 	{#if interactive}
 		<div class="controls">
-			<button on:click={() => graphSVG.zoomIn()}><img src={zoomInIcon} alt=""></button>
-			<button on:click={() => graphSVG.zoomOut()}><img src={zoomOutIcon} alt=""></button>
+			<button on:click={() => controller.zoomIn()}><img src={zoomInIcon} alt=""></button>
+			<button on:click={() => controller.zoomOut()}><img src={zoomOutIcon} alt=""></button>
 		</div>
 	{/if}
 </div>

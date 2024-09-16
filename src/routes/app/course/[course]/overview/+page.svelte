@@ -4,7 +4,7 @@
 	import { enhance } from '$app/forms'
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/entities'
+	import { ValidationData, Severity, BaseModal } from '$scripts/entities'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -25,22 +25,18 @@
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-	import gearIcon from '$assets/gear-icon.svg'
 
 	import { Graph } from '$scripts/entities/Graph'
 	import { Course } from '$scripts/entities/Course'
 
 
 	// Helpers
-	class GraphModal {
+	class GraphModal extends BaseModal {
 		name: string = ''
 
-		show() {
-			graph_modal?.show()
-		}
-
-		hide() {
-			graph_modal?.hide()
+		constructor() {
+			super()
+			this.initialize()
 		}
 
 		validate(): ValidationData {
@@ -55,15 +51,16 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.name.length > 0
-		}
 	}
 
-	class LinkModal {
+	class LinkModal extends BaseModal {
 		name: string = ''
 		graph?: number
+
+		constructor() {
+			super()
+			this.initialize()
+		}
 
 		get graph_options() {
 			return graphs.map(graph => {
@@ -73,14 +70,6 @@
 					validation: ValidationData.success()
 				}
 			})
-		}
-
-		show() {
-			link_modal?.show()
-		}
-
-		hide() {
-			link_modal?.hide()
 		}
 
 		validate(): ValidationData {
@@ -102,10 +91,6 @@
 
 			return result
 		}
-
-		canSubmit() {
-			return this.name.length > 0 && this.graph !== undefined
-		}
 	}
 
 	// Variables
@@ -115,9 +100,6 @@
 
 	const graph = new GraphModal()
 	const link = new LinkModal()
-	
-	let graph_modal: Modal
-	let link_modal: Modal
 
 </script>
 
@@ -141,48 +123,46 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Button on:click={graph.show}>
+		<Button on:click={() => graph.show()}>
 			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
-		<Button on:click={link.show}>
+		<Button on:click={() => link.show()}>
 			<img src={plusIcon} alt="" /> New Link
 		</Button>
 
 		<div class="flex-spacer" />
 
-		<LinkButton href="/app/course/{course.code}/settings">
-			<img src={gearIcon} alt=""> Settings
-		</LinkButton>
+		<LinkButton href="/app/course/{course.code}/settings"> Course settings </LinkButton>
 
-		<Modal bind:this={graph_modal}>
+		<Modal bind:this={graph.modal}>
 			<h3 slot="header"> Create Graph </h3>
 			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<form method="POST" action="?/newGraph" use:enhance={graph.hide}>
-				<label for="name"> Name </label>
+			<form method="POST" action="?/newGraph" use:enhance={() => graph.hide()}>
+				<label for="name"> Graph Name </label>
 				<Textfield label="Name" bind:value={graph.name} />
 
 				<footer>
-					<Button submit disabled={!graph.canSubmit()}> Create </Button>
+					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
 					<Validation data={graph.validate()} />
 				</footer>
 			</form>
 		</Modal>
 
-		<Modal bind:this={link_modal}>
+		<Modal bind:this={link.modal}>
 			<h3 slot="header"> Create Link </h3>
 			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
-			<form method="POST" action="?/newLink" use:enhance={link.hide}>
-				<label for="name"> Name </label>
+			<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
+				<label for="name"> Graph Name </label>
 				<Textfield label="Name" bind:value={link.name} />
 
 				<label for="graph"> Graph </label>
 				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
 
 				<footer>
-					<Button submit disabled={!link.canSubmit()}> Create </Button>
+					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
 					<Validation data={link.validate()} />
 				</footer>
 			</form>

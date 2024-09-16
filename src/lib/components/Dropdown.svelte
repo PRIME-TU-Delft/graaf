@@ -4,6 +4,8 @@
 	// Internal imports
 	import { ValidationData, Severity } from '$scripts/entities'
 	import { clickoutside } from '$scripts/clickoutside'
+	import { scrollintoview } from '$scripts/scrollintoview'
+	import { focusfirst, focusonhover, losefocus } from '$scripts/hocusfocus'
 
 	// Assets
 	import errorIcon from '$assets/error-icon.svg'
@@ -23,8 +25,17 @@
 	export let value: T | undefined = undefined
 	export let options: Option[]
 
+	// Functions
+	function set(value: boolean) {
+
+		// Manually set the height of the wrapper, as options are positioned absolutely
+		setTimeout(() => wrapper.style.height = value ? wrapper.scrollHeight + 'px' : 'auto', 0)
+		visible = value
+	}
+
 	// Variables
 	let visible: boolean = false
+	let wrapper: HTMLDivElement
 
 	$: id = label.toLowerCase().replace(/\s/g, '_')
 	$: choice = options.find(option => option.value === value)
@@ -34,75 +45,67 @@
 		return 0
 	})
 
-	// Functions
-	export function show() {
-		visible = true
-	}
-
-	export function hide() {
-		visible = false
-	}
-
-	export function toggle() {
-		visible = !visible
-	}
-
 </script>
 
 
 <!-- Markup -->
 
 
-<button
-	type="button"
-	class="dropdown"
-	class:visible
-	tabindex="-1"
-	on:click={toggle}
-	use:clickoutside={hide}
->
-	<!-- Hidden input to bind the selected value to a submittable element -->
-	<input id={id} name={id} type="hidden" bind:value />
-	<label for={id} class="header" class:grayed={!choice}>
-		{choice?.name || placeholder}
-	</label>
+<div class="dropdown">
+	you shouldn't see this
+	<div class="wrapper" use:losefocus={() => set(false)} bind:this={wrapper}>
+		<!-- Hidden input to bind the selected value to a submittable element -->
+		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
+		<button
+			class="header"
+			class:visible
+			class:grayed={!choice}
+			on:click={() => set(!visible)}
+			use:clickoutside={() => set(false)}
+		>
+			{choice?.name || placeholder}
+		</button>
 
-	<div class="options">
-		{#each options as option}
-			<button
-				type="button"
-				class="option"
-				disabled={option.validation.severity === Severity.error}
-				on:click={() => value = option.value}
-			>
-				{option.name}
-				
-				{#if option.validation.severity === Severity.error}
-					<span class="error">
-						<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
-					</span>
-				{:else if option.validation.severity === Severity.warning}
-					<span class="warning">
-						<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
-					</span>
+		{#if visible}
+			<div class="options" use:focusfirst use:scrollintoview>
+				{#each options as option}
+					<button
+						type="button"
+						class="option"
+						disabled={option.validation.severity === Severity.error}
+						on:click={() => value = option.value}
+						use:focusonhover
+					>
+						{option.name}
+
+						{#if option.validation.severity === Severity.error}
+							<span class="error">
+								<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
+							</span>
+						{:else if option.validation.severity === Severity.warning}
+							<span class="warning">
+								<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
+							</span>
+						{/if}
+
+					</button>
+				{/each}
+
+				{#if options.length === 0}
+					<button type="button" disabled class="option grayed">
+						<i> No options available </i>
+					</button>
 				{/if}
 
-				</button>
-			{/each}
-
-		{#if options.length === 0}
-			<button type="button" disabled class="option grayed">
-				<i> No options available </i>
-			</button>
-		{/if}
-
-		{#if value !== undefined}
-			<button type="button" class="option grayed" on:click={() => value = undefined}>
-				<i> Remove choice </i>
-			</button>
+				{#if value !== undefined}
+					<button type="button" class="option grayed" on:click={() => value = undefined} use:focusonhover>
+						<i> Remove choice </i>
+					</button>
+				{/if}
+			</div>
 		{/if}
 	</div>
-</button>
+</div>
 
 
 <!-- Styles -->
@@ -115,112 +118,136 @@
 
 	$caret-size: calc($input-icon-size / sqrt(2))
 
-	.dropdown
-		display: flex
-		flex-flow: column nowrap
+	.grayed
+		color: $placeholder-color
 
+	.dropdown
 		position: relative
 		width: 100%
 
-		color: $dark-gray
+		padding: $input-thin-padding $input-thick-padding
 
-		.header
-			position: relative
-			width: 100%
-
-			padding: $input-thin-padding $input-thick-padding
-
-			border: 1px solid $gray
-			border-radius: $border-radius
-			background-color: $white
-			text-align: left
-			cursor: pointer
-
-			&::after
-				content: ""
-
-				position: absolute
-				translate: 0 15%
-				rotate: 45deg
-				right: $input-thick-padding
-				bottom: 50%
-
-				box-sizing: border-box
-				width: $caret-size
-				height: $caret-size
-
-				border: 1px solid $black
-				border-width: 0 1px 1px 0
-
-		.options
-			display: none
-			flex-flow: column nowrap
-
+		.wrapper
 			position: absolute
-			z-index: 1
-			top: 100%
+			top: 0
+			left: 0
 
 			width: 100%
-			max-height: $max-dropdown-height
-			overflow-y: scroll
+			overflow: hidden
 
-			background-color: $white
-			border: 1px solid $gray
-			border-width: 0 1px 1px 1px
-			border-radius: 0 0 $border-radius $border-radius
+			.header
+				position: relative
+				display: block
 
-			.option
-				display: flex
-				flex-flow: row nowrap
-				align-items: center
+				width: 100%
+				padding:
+					top: $input-thin-padding
+					right: $caret-size + 2 * $input-thick-padding
+					bottom: $input-thin-padding
+					left: $input-thick-padding
 
-				padding: $input-thin-padding $input-thick-padding
 
+				overflow: hidden
+				text-overflow: ellipsis
+				white-space: nowrap
+
+				border: 1px solid $gray
+				border-radius: $border-radius
+				background-color: $white
 				text-align: left
 				cursor: pointer
 
-				&:hover
-					background-color: $light-gray
+				&:focus
+					border-color: $tudelft-blue
 
-				&:disabled
-					cursor: not-allowed
-					color: $placeholder-color
+				&::after
+					content: ""
 
-				.error, .warning
+					position: absolute
+					translate: 0 15%
+					rotate: 45deg
+					right: $input-thick-padding
+					bottom: 50%
+
+					box-sizing: border-box
+					width: $caret-size
+					height: $caret-size
+
+					border: 1px solid $black
+					border-width: 0 1px 1px 0
+
+				&.visible
+					border-color: $tudelft-blue
+					border-bottom-color: $gray
+					border-bottom-style: dashed
+					border-radius: $border-radius $border-radius 0 0
+
+					&::after
+						translate: 0 80%
+						rotate: -135deg
+
+			.options
+				position: absolute
+				z-index: 1
+
+				display: flex
+				flex-flow: column nowrap
+
+				width: 100%
+				max-height: $max-dropdown-height
+				overflow-y: auto
+
+				border: 1px solid $tudelft-blue
+				border-width: 0 1px 1px 1px
+				border-radius: 0 0 $border-radius $border-radius
+				background-color: $white
+
+				.option
 					display: flex
+					flex-flow: row nowrap
 					align-items: center
-					justify-content: end
-					gap: $form-small-gap
 
-					pointer-events: none
-					color: $red
-					flex: 1
+					padding: $input-thin-padding $input-thick-padding
 
-					img
-						width: $input-icon-size
-						height: $input-icon-size
-						filter: $red-filter
-				
-				.warning
-					color: $yellow
-					
-					img
-						filter: $yellow-filter
+					text-align: left
+					cursor: pointer
 
+					&:focus
+						background-color: $light-gray
 
-		&.visible
-			.header
+					&:disabled
+						cursor: not-allowed
+						color: $placeholder-color
+
+					.error, .warning
+						display: flex
+						align-items: center
+						justify-content: end
+						gap: $form-small-gap
+
+						pointer-events: none
+						color: $red
+						flex: 1
+
+						img
+							width: $input-icon-size
+							height: $input-icon-size
+							filter: $red-filter
+
+					.warning
+						color: $yellow
+
+						img
+							filter: $yellow-filter
+
+			&.visible .header
+				border-color: $tudelft-blue
+				border-bottom-color: $gray
 				border-bottom-style: dashed
 				border-radius: $border-radius $border-radius 0 0
 
 				&::after
 					translate: 0 80%
 					rotate: -135deg
-
-			.options
-				display: flex
-
-		.grayed
-			color: $placeholder-color
 
 </style>

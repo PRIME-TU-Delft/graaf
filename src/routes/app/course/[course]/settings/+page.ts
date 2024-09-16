@@ -1,9 +1,9 @@
 
-import { Course } from '$scripts/entities'
-import type { PageLoad } from './$types'
+// Internal imports
+import { Course } from '$lib/scripts/entities'
+import { course } from '$stores'
 
-export const load: PageLoad = ({ params }) => {
-	return {
-		course: Course.revive({code: 'CSE1200', name: 'Calculus', users: [{name: 'Bram Kreulen', permissions: 'admin'}]})
-	}
+// Load
+export const load = ({ data }) => {
+	course.set(Course.revive(data.course))
 }

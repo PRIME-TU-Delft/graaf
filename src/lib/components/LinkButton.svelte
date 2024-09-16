@@ -32,7 +32,7 @@
 {:else}
 
 	<a 
-		{href}
+		href={href}
 		class="link-button" 
 		class:disabled  
 		on:click
