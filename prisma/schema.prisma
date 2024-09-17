@@ -15,8 +15,25 @@ datasource db {
 
 
 // START AUTH STUFF
+enum UserRole {
+	USER
+	ADMIN
+}
+
+enum ProgramRole {
+	COORDINATOR
+	ADMIN
+}
+
+enum CourseRole {
+	READ
+	WRITE
+	ADMIN
+}
+
 model User {
     id					String		@id @default(cuid())
+	role				UserRole	@default(USER)
 	firstName			String?
 	lastName			String?
     email				String		@unique
@@ -28,7 +45,8 @@ model User {
     createdAt			DateTime	@default(now())
     updatedAt			DateTime	@updatedAt
 
-	programs			Program[]
+	programs			ProgramCoordinator[]
+	courses				CourseCoordinator[]
 }
 
 model Account {
@@ -79,7 +97,31 @@ model Program {
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 	courses			Course[]
-	coordinators	User[]
+	coordinators	ProgramCoordinator[]
+}
+
+
+model ProgramCoordinator {
+	userId			String
+	programId		Int
+	role			ProgramRole		@default(COORDINATOR)
+
+	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
+	program			Program			@relation(fields: [programId], references: [id], onDelete: Cascade)
+
+	@@id([userId, programId])
+}
+
+
+model CourseCoordinator {
+	userId			String
+	courseId		Int
+	role			CourseRole		@default(READ)
+
+	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
+	course			Course			@relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+	@@id([userId, courseId])
 }
 
 
@@ -97,6 +139,8 @@ model Course {
 	program			Program		@relation(fields: [programId], references: [id])
 	programId		Int
 	graphs			Graph[]
+	links			GraphLink[]
+	coordinators	CourseCoordinator[]
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 }
@@ -110,6 +154,7 @@ model Graph {
 	domains			Domain[]
 	subjects		Subject[]
 	lectures		Lecture[]
+	links			GraphLink[]
 	// UI names
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
@@ -152,4 +197,15 @@ model Lecture {
 	graphId			Int
 	name			String?
 	subjects		Subject[]
+}
+
+
+model GraphLink {
+	id				Int			@id @default(autoincrement())
+	name			String
+	courseId		Int
+	graphId			Int?
+
+	course			Course		@relation(fields: [courseId], references: [id], onDelete: Cascade)
+	graph			Graph?		@relation(fields: [graphId], references: [id])
 }
