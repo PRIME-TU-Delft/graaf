@@ -4,7 +4,7 @@ import prisma from '$lib/server/prisma'
 import type { Domain as PrismaDomain } from '@prisma/client'
 import type { SerializedDomain } from '$scripts/entities'
 
-export { create, remove, setName, setStyle, toggleRelation, setPosition }
+export { create, remove, setPosition, setName, setStyle, toggleRelation }
 
 
 // ----------------> Helper functions <----------------
@@ -45,6 +45,37 @@ async function remove(domainId: number): Promise<void> {
 }
 
 /**
+ * Sets the position of a Domain object.
+ * @param domainId id of the Domain object to update
+ * @param x new x-coordinate of the Domain object
+ * @param y new y-coordinate of the Domain object
+ * @returns void
+ * @throws 'Domain not found' if the Domain object is not found
+ */
+
+async function setPosition(domainId: number, x: number, y: number): Promise<void> {
+
+	// Check if the Domain object exists
+	const domain = await prisma.domain.findUnique({
+		where: {
+			id: domainId
+		}
+	})
+
+	if (!domain) return Promise.reject('Domain not found')
+
+	// Update
+	await prisma.domain.update({
+		where: {
+			id: domainId
+		},
+		data: {
+			x, y
+		}
+	})
+}
+
+/**
  * Updates the name of a Domain object.
  * @param domainId id of the Domain object to update
  * @param name new name of the Domain object
@@ -52,7 +83,7 @@ async function remove(domainId: number): Promise<void> {
  * @throws 'Domain not found' if the Domain object is not found
  */
 
-async function setName(domainId: number, name: string): Promise<void> {
+async function setName(domainId: number, name?: string): Promise<void> {
 
 	// Check if the Domain object exists
 	const domain = await prisma.domain.findUnique({
@@ -82,7 +113,7 @@ async function setName(domainId: number, name: string): Promise<void> {
  * @throws 'Domain not found' if the Domain object is not found
  */
 
-async function setStyle(domainId: number, style: string): Promise<void> {
+async function setStyle(domainId: number, style?: string): Promise<void> {
 
 	// Check if the Domain object exists
 	const domain = await prisma.domain.findUnique({
@@ -194,41 +225,6 @@ async function toggleRelation(domainId: number, otherId: number): Promise<void> 
 		})
 	}
 }
-
-/**
- * Sets the position of a Domain object.
- * @param domainId id of the Domain object to update
- * @param x new x-coordinate of the Domain object
- * @param y new y-coordinate of the Domain object
- * @returns void
- * @throws 'Domain not found' if the Domain object is not found
- */
-
-async function setPosition(domainId: number, x: number, y: number): Promise<void> {
-
-	// Check if the Domain object exists
-	const domain = await prisma.domain.findUnique({
-		where: {
-			id: domainId
-		}
-	})
-
-	if (!domain) return Promise.reject('Domain not found')
-
-	// Update
-	await prisma.domain.update({
-		where: {
-			id: domainId
-		},
-		data: {
-			x, y
-		}
-	})
-}
-
-
-
-
 
 /**
  * Converts a Domain object to a SerializedDomain object, which can be sent to the client.
