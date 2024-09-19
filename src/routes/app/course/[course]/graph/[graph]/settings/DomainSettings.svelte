@@ -23,22 +23,6 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Functions
-	async function createDomain() {
-		/* Creates a new domain */
-
-		let body = new FormData()
-		body.append('graph', $graph.id.toString())
-		const response = await fetch('?/newDomain', { method: 'POST', body })
-		if (!response.ok) {
-			console.error('Failed to create domain')
-			return
-		}
-
-		const id = Number(JSON.parse((await response.json()).data)[0])
-		Domain.create($graph, id)
-		update()
-	}
-
 	async function createDomainRelation() {
 		/* Creates a new domain relation */
 
@@ -115,7 +99,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domain_query} />
-		<Button on:click={createDomain}>
+		<Button on:click={async () => { await Domain.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>

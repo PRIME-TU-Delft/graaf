@@ -158,14 +158,21 @@ class Domain extends Field<Domain> {
 		return options
 	}
 
-	static create(graph: Graph, id: ID): Domain {
+	static async create(graph: Graph): Promise<Domain> {
 		/* Create a new domain */
 
+		// Call API to create domain
+		const res = await fetch(`/api/graph/${graph.id}/domain`, { method: 'POST' })
+		if (!res.ok) throw new Error('Failed to create domain')
+		
+		// Parse response
+		const data = await res.json()
 		const domain = new Domain(
-			graph, graph.domains.length, id,
-			0, 0, // TODO find non-overlapping x and y
-			graph.nextDomainStyle()
+			graph,
+			graph.domains.length,
+			data.id
 		)
+		
 		graph.domains.push(domain)
 		return domain
 	}
@@ -300,9 +307,9 @@ class Domain extends Field<Domain> {
 			}
 		}
 
-		// Call API to delete domain (should cascade automatically?)
-		// TODO: check if this is the case
-		const res = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' });
+		// Call API to delete domain
+		const res = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
+		if (!res.ok) throw new Error('Failed to create domain')
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)

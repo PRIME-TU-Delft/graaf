@@ -5,7 +5,6 @@
 	import { goto } from '$app/navigation'
 
 	// Internal imports
-	import { Severity } from '$scripts/entities'
 	import { course, graph } from '$stores'
 	import * as settings from '$scripts/settings'
 

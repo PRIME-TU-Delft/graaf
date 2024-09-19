@@ -4,7 +4,7 @@ import prisma from '$lib/server/prisma'
 import type { Domain as PrismaDomain } from '@prisma/client'
 import type { SerializedDomain } from '$scripts/entities'
 
-export { create, remove, setPosition, setName, setStyle, toggleRelation }
+export { create, remove, setPosition, setName, setStyle, toggleRelation, makeDTO }
 
 
 // ----------------> Helper functions <----------------
