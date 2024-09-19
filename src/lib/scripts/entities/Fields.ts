@@ -23,8 +23,8 @@ type SerializedDomain = {
 	id: ID,
 	x: number,
 	y: number,
-	style: string,
-	name: string,
+	name?: string,
+	style?: string,
 	parents: ID[],
 	children: ID[]
 }
@@ -33,8 +33,8 @@ type SerializedSubject = {
 	id: ID,
 	x: number,
 	y: number,
+	name?: string,
 	domain?: ID,
-	name: string,
 	parents: ID[],
 	children: ID[]
 }
