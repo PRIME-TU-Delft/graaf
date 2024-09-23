@@ -334,7 +334,7 @@ class Domain extends Field<Domain> {
 
 		// Call API to delete domain
 		const res = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
-		if (!res.ok) throw new Error('Failed to create domain')
+		if (!res.ok) throw new Error('Failed to delete domain')
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
@@ -390,16 +390,27 @@ class Subject extends Field<Subject> {
 		return options
 	}
 
-		private hasDomain(): boolean {
+	private hasDomain(): boolean {
 		/* Check if the domain of a subject is undefined */
 
 		return this.domain !== undefined
 	}
 
-	static create(graph: Graph, id: ID) {
-		/* Create a new subject */
+	static async create(graph: Graph): Promise<Subject> {
+		/* Create a new domain */
 
-		const subject = new Subject(graph, graph.subjects.length, id)
+		// Call API to create domain
+		const res = await fetch(`/api/graph/${graph.id}/subject`, { method: 'POST' })
+		if (!res.ok) throw new Error('Failed to create domain')
+		
+		// Parse response
+		const data = await res.json()
+		const subject = new Subject(
+			graph,
+			graph.subjects.length,
+			data.id
+		)
+		
 		graph.subjects.push(subject)
 		return subject
 	}
@@ -472,6 +483,33 @@ class Subject extends Field<Subject> {
 		}
 	}
 
+	async save(...properties: ('name' | 'domain' | 'x' | 'y' | 'parents' | 'children')[]): Promise<void> {
+		/* Save the name of this subject */
+
+		// Create data object
+		const data = properties.reduce(
+			(acc, key) => { acc[key] = this[key]; return acc }, 
+			{} as { [key: string]: any }
+		)
+
+		// Repair parents, children, and domain
+		if (data.parents)
+			data.parents = data.parents.map((parent: Domain) => parent.id)
+		if (data.children)
+			data.children = data.children.map((child: Domain) => child.id)
+		if (data.domain)
+			data.domain = data.domain.id
+
+		// Call API to update subject
+		const res = await fetch(`/api/subject/${this.id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(data)
+		})
+
+		if (!res.ok) throw new Error('Failed to save subject properties')
+	}
+
 	async delete(): Promise<void> {
 		/* Delete this subject */
 
@@ -494,8 +532,9 @@ class Subject extends Field<Subject> {
 			lecture.lecture_subjects = lecture.lecture_subjects.filter(ls => ls.subject !== this)
 		}
 
-		// Call API to delete subject
-		await fetch(`/api/subject/${this.id}`, { method: 'DELETE' });
+		// Call API to delete domain
+		const res = await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
+		if (!res.ok) throw new Error('Failed to delete subject')
 
 		// Remove this subject from the graph
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)

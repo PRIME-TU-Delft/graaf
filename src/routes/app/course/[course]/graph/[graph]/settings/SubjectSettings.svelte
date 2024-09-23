@@ -23,29 +23,6 @@
 	import descedingSortIcon from '$assets/descending-sort-icon.svg'
 
 	// Functions
-	async function createSubject() {
-		/* Creates a new subject */
-
-		let body = new FormData();
-		body.append('graph', $graph.id.toString());
-		const response = await fetch('?/newSubject', { method: 'POST', body });
-		if (!response.ok) {
-			console.error('Failed to create subject')
-			return
-		}
-
-		const id = Number(JSON.parse((await response.json()).data)[0])
-		Subject.create($graph, id)
-		update()
-	}
-
-	async function createSubjectRelation() {
-		/* Creates a new subject relation */
-
-		SubjectRelation.create($graph)
-		update()
-	}
-
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
 		/* Checks if query appears in subject */
 
@@ -115,7 +92,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={subject_query} />
-		<Button on:click={createSubject}>
+		<Button on:click={async () => { await Subject.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Subject
 		</Button>
 	</div>
@@ -168,9 +145,29 @@
 			<div class="row" id={subject.anchor}>
 				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={async () => { await subject.delete(); update() }} />
-				<Textfield label="Name" placeholder="Subject Name" bind:value={subject.name} />
-				<Dropdown label="Domain" placeholder="Assigned Domain" options={subject.domain_options} bind:value={subject.domain} />
+				<IconButton scale
+					src={trashIcon}
+					on:click={async () => {
+						await subject.delete()
+						update()
+					}}
+					/>
+
+				<Textfield
+					label="Name"
+					placeholder="Subject Name"
+					bind:value={subject.name}
+					on:change={async () => await subject.save('name')}
+					/>
+
+				<Dropdown
+					label="Domain"
+					placeholder="Assigned Domain"
+					options={subject.domain_options}
+					bind:value={subject.domain}
+					on:change={async () => await subject.save('domain')}
+					/>
+
 				<span class="preview" style:background-color={subject.color} />
 			</div>
 		{/if}
@@ -188,7 +185,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={createSubjectRelation}>
+		<Button on:click={() => { SubjectRelation.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
@@ -241,10 +238,39 @@
 			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Subject" options={relation.parent_options} bind:value={relation.parent} />
+				<IconButton scale
+					src={trashIcon}
+					on:click={async () => {
+						relation.delete()
+						await relation.parent?.save('children')
+						await relation.child?.save('parents')
+						update()
+					}}
+					/>
+
+				<Dropdown
+					label="Parent"
+					placeholder="From Subject"
+					options={relation.parent_options}
+					bind:value={relation.parent}
+					on:change={async () => {
+						await relation.parent?.save('children')
+						await relation.child?.save('parents')
+					}}
+					/>
+
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown label="Child" placeholder="To Subject" options={relation.child_options} bind:value={relation.child} />
+				<Dropdown
+					label="Child"
+					placeholder="To Subject"
+					options={relation.child_options}
+					bind:value={relation.child}
+					on:change={async () => {
+						await relation.parent?.save('children')
+						await relation.child?.save('parents')
+					}}
+					/>
+
 				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}

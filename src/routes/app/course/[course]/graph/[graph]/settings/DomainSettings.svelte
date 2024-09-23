@@ -23,13 +23,6 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Functions
-	async function createDomainRelation() {
-		/* Creates a new domain relation */
-
-		DomainRelation.create($graph)
-		update()
-	}
-
 	function domainMatchesQuery(query: string, domain: Domain): boolean {
 		/* Checks if query appears in domain */
 
@@ -149,30 +142,30 @@
 	<!-- Domain list -->
 	{#each $graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
-			<div class="row focus" id={domain.anchor}>
+			<div class="row" id={domain.anchor}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
-				<IconButton scale 
-					src={trashIcon} 
-					on:click={async () => { 
+				<IconButton scale
+					src={trashIcon}
+					on:click={async () => {
 						await domain.delete()
-						update() 
-					}} 
-					/>
-					
-				<Textfield 
-					label="Name"
-					placeholder="Domain Name" 
-					bind:value={domain.name} 
-					on:change={async () => await domain.save('name')} 
+						update()
+					}}
 					/>
 
-				<Dropdown 
-					label="Style" 
-					placeholder="Domain Style" 
-					options={domain.style_options} 
-					bind:value={domain.style} 
-					on:change={async () => await domain.save('style')} 
+				<Textfield
+					label="Name"
+					placeholder="Domain Name"
+					bind:value={domain.name}
+					on:change={async () => await domain.save('name')}
+					/>
+
+				<Dropdown
+					label="Style"
+					placeholder="Domain Style"
+					options={domain.style_options}
+					bind:value={domain.style}
+					on:change={async () => await domain.save('style')}
 					/>
 
 				<span class="preview" style:background-color={domain.color} />
@@ -192,7 +185,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={createDomainRelation}>
+		<Button on:click={() => { DomainRelation.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
@@ -245,37 +238,37 @@
 			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
-				<IconButton scale 
-					src={trashIcon} 
-					on:click={async () => { 
+				<IconButton scale
+					src={trashIcon}
+					on:click={async () => {
 						relation.delete()
 						await relation.parent?.save('children')
 						await relation.child?.save('parents')
-						update() 
-					}} 
+						update()
+					}}
 					/>
 
-				<Dropdown 
-					label="Parent" 
-					placeholder="From Domain" 
-					options={relation.parent_options} 
-					bind:value={relation.parent} 
+				<Dropdown
+					label="Parent"
+					placeholder="From Domain"
+					options={relation.parent_options}
+					bind:value={relation.parent}
 					on:change={async () => {
 						await relation.parent?.save('children')
 						await relation.child?.save('parents')
-					}} 
+					}}
 					/>
 
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown 
-					label="Child" 
-					placeholder="To Domain" 
-					options={relation.child_options} 
-					bind:value={relation.child} 
+				<Dropdown
+					label="Child"
+					placeholder="To Domain"
+					options={relation.child_options}
+					bind:value={relation.child}
 					on:change={async () => {
 						await relation.parent?.save('children')
 						await relation.child?.save('parents')
-					}} 
+					}}
 					/>
 
 				<span class="preview" style:background-color={relation.child_color} />

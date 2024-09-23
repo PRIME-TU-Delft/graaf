@@ -10,16 +10,6 @@ import { CourseHelper, GraphHelper, DomainHelper, SubjectHelper, LectureHelper }
 
 // Actions
 export const actions = {
-	newSubject: async ({ params, request }): Promise<number> => {
-		const data = await request.formData()
-		const graphId = Number(data.get('graph'))
-
-		if (!graphId) return fail(400, { graphId, missing: true })
-
-		return await SubjectHelper.create(graphId)
-	},
-
-
 	newLecture: async ({ params, request }): Promise<number> => {
 		const data = await request.formData()
 		const graphId = Number(data.get('graph'))
