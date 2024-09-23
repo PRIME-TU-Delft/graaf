@@ -283,6 +283,25 @@ class Domain extends Field<Domain> {
 		}
 	}
 
+	async save(...properties: ('name' | 'style' | 'x' | 'y')[]): Promise<void> {
+		/* Save the name of this domain */
+
+		// Create data object
+		const data = properties.reduce(
+			(acc: { [key: string]: any }, key) => { acc[key] = this[key]; return acc }, 
+			{}
+		)
+
+		// Call API to update domain
+		const res = await fetch(`/api/domain/${this.id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(data)
+		})
+
+		if (!res.ok) throw new Error('Failed to save domain name')
+	}
+
 	async delete(): Promise<void> {
 		/* Delete this domain */
 

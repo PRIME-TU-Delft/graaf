@@ -153,8 +153,8 @@
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale src={trashIcon} on:click={async () => { await domain.delete(); update() }} />
-				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} />
-				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} />
+				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:change={async () => await domain.save('name')} />
+				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} on:change={async () => await domain.save('style')} />
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}

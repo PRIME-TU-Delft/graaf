@@ -1,6 +1,9 @@
 
 <script lang="ts">
 
+	// Svelte imports
+	import { createEventDispatcher } from "svelte"
+
 	// Internal imports
 	import { ValidationData, Severity } from '$scripts/entities'
 	import { clickoutside } from '$scripts/clickoutside'
@@ -26,14 +29,20 @@
 	export let options: Option[]
 
 	// Functions
-	function set(value: boolean) {
+	function visibility(value: boolean) {
 
 		// Manually set the height of the wrapper, as options are positioned absolutely
 		setTimeout(() => wrapper.style.height = value ? wrapper.scrollHeight + 'px' : 'auto', 0)
 		visible = value
 	}
 
+	function set(new_value?: T) {
+		value = new_value
+		dispatch('change', new_value)
+	}
+
 	// Variables
+	const dispatch = createEventDispatcher()
 	let visible: boolean = false
 	let wrapper: HTMLDivElement
 
@@ -53,15 +62,15 @@
 
 <div class="dropdown">
 	you shouldn't see this
-	<div class="wrapper" use:losefocus={() => set(false)} bind:this={wrapper}>
+	<div class="wrapper" use:losefocus={() => visibility(false)} bind:this={wrapper}>
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
 		<button
 			class="header"
 			class:visible
 			class:grayed={!choice}
-			on:click={() => set(!visible)}
-			use:clickoutside={() => set(false)}
+			on:click={() => visibility(!visible)}
+			use:clickoutside={() => visibility(false)}
 		>
 			{choice?.name || placeholder}
 		</button>
@@ -73,7 +82,7 @@
 						type="button"
 						class="option"
 						disabled={option.validation.severity === Severity.error}
-						on:click={() => value = option.value}
+						on:click={() => set(option.value)}
 						use:focusonhover
 					>
 						{option.name}
@@ -98,7 +107,7 @@
 				{/if}
 
 				{#if value !== undefined}
-					<button type="button" class="option grayed" on:click={() => value = undefined} use:focusonhover>
+					<button type="button" class="option grayed" on:click={() => set()} use:focusonhover>
 						<i> Remove choice </i>
 					</button>
 				{/if}

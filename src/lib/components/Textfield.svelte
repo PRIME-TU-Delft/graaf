@@ -57,7 +57,7 @@
 		type="text"
 		class="textfield"
 		bind:value
-		on:input
+		on:change on:input
 		/>
 
 {/if}
