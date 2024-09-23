@@ -42,6 +42,36 @@ function ensureQueryExists(queries: RelationalQuery[], id: number) {
 	}
 }
 
+async function getChildIds(subject: PrismaSubject): Promise<number[]> {
+	return (await prisma.subject.findMany({
+		where: {
+			parentSubjects: {
+				some: {
+					id: subject.id
+				}
+			}
+		},
+		orderBy: {
+			id: 'asc'
+		}
+	})).map(d => d.id)
+}
+
+async function getParentIds(subject: PrismaSubject): Promise<number[]> {
+	return (await prisma.subject.findMany({
+		where: {
+			childSubjects: {
+				some: {
+					id: subject.id
+				}
+			}
+		},
+		orderBy: {
+			id: 'asc'
+		}
+	})).map(d => d.id)
+}
+
 
 // ----------------> External
 
@@ -50,9 +80,18 @@ function ensureQueryExists(queries: RelationalQuery[], id: number) {
  * Creates a Subject object in the database.
  * @param graph_id ID of the Graph object to which the Subject object belongs
  * @returns ID of the created Subject object
+ * @throws 'Graph not found' if the Graph object does not exist
  */
 
 async function create(graph_id: number): Promise<number> {
+	const graph = await prisma.graph.findUnique({
+		where: {
+			id: graph_id
+		}
+	})
+
+	if (!graph) return Promise.reject('Graph not found')
+
 	const subject = await prisma.subject.create({
 		data: {
 			graph: {
@@ -70,9 +109,18 @@ async function create(graph_id: number): Promise<number> {
  * Removes a Subject object from the database.
  * @param subject_id ID of the Subject object to remove
  * @returns void
+ * @throws 'Subject not found' if the Subject object does not exist
  */
 
 async function remove(subject_id: number): Promise<void> {
+	const subject = await prisma.subject.findUnique({
+		where: {
+			id: subject_id
+		}
+	})
+
+	if (!subject) return Promise.reject('Subject not found')
+
 	await prisma.subject.delete({
 		where: {
 			id: subject_id
@@ -85,7 +133,7 @@ async function remove(subject_id: number): Promise<void> {
  * @param subject_id ID of the Subject object to update
  * @param x new x-coordinate of the Subject object
  * @returns void
- * @throws 'Subject not found' if the Subject object is not found
+ * @throws 'Subject not found' if the Subject object does not exist
  */
 
 async function setX(subject_id: number, x: number): Promise<void> {
@@ -115,11 +163,11 @@ async function setX(subject_id: number, x: number): Promise<void> {
  * @param subject_id ID of the Subject object to update
  * @param y new y-coordinate of the Subject object
  * @returns void
- * @throws 'Subject not found' if the Subject object is not found
+ * @throws 'Subject not found' if the Subject object does not exist
  */
 
 async function setY(subject_id: number, y: number): Promise<void> {
-	
+
 	// Check if the Subject object exists
 	const subject = await prisma.subject.findUnique({
 		where: {
@@ -145,7 +193,7 @@ async function setY(subject_id: number, y: number): Promise<void> {
  * @param subject_id ID of the Subject object to update
  * @param name new name of the Subject object
  * @returns void
- * @throws 'Subject not found' if the Subject object is not found
+ * @throws 'Subject not found' if the Subject object does not exist
  */
 
 async function setName(subject_id: number, name?: string): Promise<void> {
@@ -175,8 +223,8 @@ async function setName(subject_id: number, name?: string): Promise<void> {
  * @param subject_id ID of the Subject object to update
  * @param domain_id ID of the Domain object to set
  * @returns void
- * @throws 'Subject not found' if the Subject object is not found
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Subject not found' if the Subject object does not exist
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setDomain(subject_id: number, domain_id: number): Promise<void> {
@@ -216,7 +264,7 @@ async function setDomain(subject_id: number, domain_id: number): Promise<void> {
  * @param subject_id ID of the Subject object to update
  * @param parent_ids ids of the parent Subject objects
  * @returns void
- * @throws 'Subject not found' if the Subject object is not found
+ * @throws 'Subject not found' if the Subject object does not exist
  */
 
 async function setParents(subject_id: number, parent_ids: number[]): Promise<void> {
@@ -237,11 +285,11 @@ async function setParents(subject_id: number, parent_ids: number[]): Promise<voi
 
 	// Remove old parents
 	for (const parent of subject.parentSubjects) {
-		if (!parent_ids.includes(parent.id)) { 
+		if (!parent_ids.includes(parent.id)) {
 			ensureQueryExists(queries, subject_id)
 			queries.find(q => q.where.id === subject_id)!
 				.data.parentSubjects.disconnect.push({ id: parent.id })
-			
+
 			ensureQueryExists(queries, parent.id)
 			queries.find(q => q.where.id === parent.id)!
 				.data.childSubjects.disconnect.push({ id: subject_id })
@@ -262,7 +310,7 @@ async function setParents(subject_id: number, parent_ids: number[]): Promise<voi
 			ensureQueryExists(queries, subject_id)
 			queries.find(q => q.where.id === subject_id)!
 				.data.parentSubjects.connect.push({ id: parent_id })
-			
+
 			ensureQueryExists(queries, parent_id)
 			queries.find(q => q.where.id === parent_id)!
 				.data.childSubjects.connect.push({ id: subject_id })
@@ -281,7 +329,7 @@ async function setParents(subject_id: number, parent_ids: number[]): Promise<voi
  * @param subject_id ID of the Subject object to update
  * @param child_ids ids of the child Subject objects
  * @returns void
- * @throws 'Subject not found' if the Subject object is not found
+ * @throws 'Subject not found' if the Subject object does not exist
  */
 
 async function setChildren(subject_id: number, child_ids: number[]): Promise<void> {
@@ -302,11 +350,11 @@ async function setChildren(subject_id: number, child_ids: number[]): Promise<voi
 
 	// Remove old children
 	for (const child of subject.childSubjects) {
-		if (!child_ids.includes(child.id)) { 
+		if (!child_ids.includes(child.id)) {
 			ensureQueryExists(queries, subject_id)
 			queries.find(q => q.where.id === subject_id)!
 				.data.childSubjects.disconnect.push({ id: child.id })
-			
+
 			ensureQueryExists(queries, child.id)
 			queries.find(q => q.where.id === child.id)!
 				.data.parentSubjects.disconnect.push({ id: subject_id })
@@ -327,7 +375,7 @@ async function setChildren(subject_id: number, child_ids: number[]): Promise<voi
 			ensureQueryExists(queries, subject_id)
 			queries.find(q => q.where.id === subject_id)!
 				.data.childSubjects.connect.push({ id: child_id })
-			
+
 			ensureQueryExists(queries, child_id)
 			queries.find(q => q.where.id === child_id)!
 				.data.parentSubjects.connect.push({ id: subject_id })
@@ -342,8 +390,8 @@ async function setChildren(subject_id: number, child_ids: number[]): Promise<voi
 
 /**
  * Converts a Subject object to a SerializedSubject object, which can be sent to the client.
- * @param subject plain Subject object
- * @returns SerializedSubject object
+ * @param subject prisma Subject object
+ * @returns serialized Subject object
  */
 
 async function makeDTO(subject: PrismaSubject): Promise<SerializedSubject> {
@@ -356,48 +404,4 @@ async function makeDTO(subject: PrismaSubject): Promise<SerializedSubject> {
 		children: await getChildIds(subject),
 		parents: await getParentIds(subject)
 	}
-}
-
-/**
- * Plain Subject objects dont have a children (many-to-many) field,
- * this method makes them available.
- * @param subject plain Subject object
- * @returns the ids of the children of the subject
- */
-
-async function getChildIds(subject: PrismaSubject): Promise<number[]> {
-	return (await prisma.subject.findMany({
-		where: {
-			parentSubjects: {
-				some: {
-					id: subject.id
-				}
-			}
-		},
-		orderBy: {
-			id: 'asc'
-		}
-	})).map(d => d.id)
-}
-
-/**
- * Plain Subject objects dont have a parents (many-to-many) field,
- * this method makes them available.
- * @param subject plain Subject object
- * @returns the ids of the parents of the subject
- */
-
-async function getParentIds(subject: PrismaSubject): Promise<number[]> {
-	return (await prisma.subject.findMany({
-		where: {
-			childSubjects: {
-				some: {
-					id: subject.id
-				}
-			}
-		},
-		orderBy: {
-			id: 'asc'
-		}
-	})).map(d => d.id)
 }

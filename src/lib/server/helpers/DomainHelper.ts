@@ -42,6 +42,36 @@ function ensureQueryExists(queries: RelationalQuery[], id: number) {
 	}
 }
 
+async function getChildIds(domain: PrismaDomain): Promise<number[]> {
+	return (await prisma.domain.findMany({
+		where: {
+			parentDomains: {
+				some: {
+					id: domain.id
+				}
+			}
+		},
+		orderBy: {
+			id: 'asc'
+		}
+	})).map(d => d.id)
+}
+
+async function getParentIds(domain: PrismaDomain): Promise<number[]> {
+	return (await prisma.domain.findMany({
+		where: {
+			childDomains: {
+				some: {
+					id: domain.id
+				}
+			}
+		},
+		orderBy: {
+			id: 'asc'
+		}
+	})).map(d => d.id)
+}
+
 
 // ----------------> External
 
@@ -50,9 +80,18 @@ function ensureQueryExists(queries: RelationalQuery[], id: number) {
  * Creates a Domain object in the database.
  * @param graph_id ID of the Graph object to which the Domain object belongs
  * @returns ID of the created Domain object
+ * @throws 'Graph not found' if the Graph object does not exist
  */
 
 async function create(graph_id: number): Promise<number> {
+	const graph = await prisma.graph.findUnique({
+		where: {
+			id: graph_id
+		}
+	})
+
+	if (!graph) return Promise.reject('Graph not found')
+
 	const domain = await prisma.domain.create({
 		data: {
 			graph: {
@@ -70,9 +109,18 @@ async function create(graph_id: number): Promise<number> {
  * Removes a Domain object from the database.
  * @param domain_id ID of the Domain object to remove
  * @returns void
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function remove(domain_id: number): Promise<void> {
+	const domain = await prisma.domain.findUnique({
+		where: {
+			id: domain_id
+		}
+	})
+
+	if (!domain) return Promise.reject('Domain not found')
+
 	await prisma.domain.delete({
 		where: {
 			id: domain_id
@@ -85,7 +133,7 @@ async function remove(domain_id: number): Promise<void> {
  * @param domain_id ID of the Domain object to update
  * @param x new x-coordinate of the Domain object
  * @returns void
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setX(domain_id: number, x: number): Promise<void> {
@@ -115,11 +163,11 @@ async function setX(domain_id: number, x: number): Promise<void> {
  * @param domain_id ID of the Domain object to update
  * @param y new y-coordinate of the Domain object
  * @returns void
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setY(domain_id: number, y: number): Promise<void> {
-	
+
 	// Check if the Domain object exists
 	const domain = await prisma.domain.findUnique({
 		where: {
@@ -145,7 +193,7 @@ async function setY(domain_id: number, y: number): Promise<void> {
  * @param domain_id ID of the Domain object to update
  * @param name new name of the Domain object
  * @returns void
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setName(domain_id: number, name?: string): Promise<void> {
@@ -175,7 +223,7 @@ async function setName(domain_id: number, name?: string): Promise<void> {
  * @param domain_id ID of the Domain object to update
  * @param style new style of the Domain object
  * @returns void
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setStyle(domain_id: number, style?: string): Promise<void> {
@@ -206,7 +254,7 @@ async function setStyle(domain_id: number, style?: string): Promise<void> {
  * @param domain_id ID of the Domain object to update
  * @param parent_ids ids of the parent Domain objects
  * @returns void
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setParents(domain_id: number, parent_ids: number[]): Promise<void> {
@@ -227,11 +275,11 @@ async function setParents(domain_id: number, parent_ids: number[]): Promise<void
 
 	// Remove old parents
 	for (const parent of domain.parentDomains) {
-		if (!parent_ids.includes(parent.id)) { 
+		if (!parent_ids.includes(parent.id)) {
 			ensureQueryExists(queries, domain_id)
 			queries.find(q => q.where.id === domain_id)!
 				.data.parentDomains.disconnect.push({ id: parent.id })
-			
+
 			ensureQueryExists(queries, parent.id)
 			queries.find(q => q.where.id === parent.id)!
 				.data.childDomains.disconnect.push({ id: domain_id })
@@ -252,7 +300,7 @@ async function setParents(domain_id: number, parent_ids: number[]): Promise<void
 			ensureQueryExists(queries, domain_id)
 			queries.find(q => q.where.id === domain_id)!
 				.data.parentDomains.connect.push({ id: parent_id })
-			
+
 			ensureQueryExists(queries, parent_id)
 			queries.find(q => q.where.id === parent_id)!
 				.data.childDomains.connect.push({ id: domain_id })
@@ -271,7 +319,7 @@ async function setParents(domain_id: number, parent_ids: number[]): Promise<void
  * @param domain_id ID of the Domain object to update
  * @param child_ids ids of the child Domain objects
  * @returns void
- * @throws 'Domain not found' if the Domain object is not found
+ * @throws 'Domain not found' if the Domain object does not exist
  */
 
 async function setChildren(domain_id: number, child_ids: number[]): Promise<void> {
@@ -292,11 +340,11 @@ async function setChildren(domain_id: number, child_ids: number[]): Promise<void
 
 	// Remove old children
 	for (const child of domain.childDomains) {
-		if (!child_ids.includes(child.id)) { 
+		if (!child_ids.includes(child.id)) {
 			ensureQueryExists(queries, domain_id)
 			queries.find(q => q.where.id === domain_id)!
 				.data.childDomains.disconnect.push({ id: child.id })
-			
+
 			ensureQueryExists(queries, child.id)
 			queries.find(q => q.where.id === child.id)!
 				.data.parentDomains.disconnect.push({ id: domain_id })
@@ -317,7 +365,7 @@ async function setChildren(domain_id: number, child_ids: number[]): Promise<void
 			ensureQueryExists(queries, domain_id)
 			queries.find(q => q.where.id === domain_id)!
 				.data.childDomains.connect.push({ id: child_id })
-			
+
 			ensureQueryExists(queries, child_id)
 			queries.find(q => q.where.id === child_id)!
 				.data.parentDomains.connect.push({ id: domain_id })
@@ -346,48 +394,4 @@ async function makeDTO(domain: PrismaDomain): Promise<SerializedDomain> {
 		children: await getChildIds(domain),
 		parents: await getParentIds(domain)
 	}
-}
-
-/**
- * Plain Domain objects dont have a children (many-to-many) field,
- * this method makes them available.
- * @param domain plain Domain object
- * @returns the ids of the children of the domain
- */
-
-async function getChildIds(domain: PrismaDomain): Promise<number[]> {
-	return (await prisma.domain.findMany({
-		where: {
-			parentDomains: {
-				some: {
-					id: domain.id
-				}
-			}
-		},
-		orderBy: {
-			id: 'asc'
-		}
-	})).map(d => d.id)
-}
-
-/**
- * Plain Domain objects dont have a parents (many-to-many) field,
- * this method makes them available.
- * @param domain plain Domain object
- * @returns the ids of the parents of the domain
- */
-
-async function getParentIds(domain: PrismaDomain): Promise<number[]> {
-	return (await prisma.domain.findMany({
-		where: {
-			childDomains: {
-				some: {
-					id: domain.id
-				}
-			}
-		},
-		orderBy: {
-			id: 'asc'
-		}
-	})).map(d => d.id)
 }

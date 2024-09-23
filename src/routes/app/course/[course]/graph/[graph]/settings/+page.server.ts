@@ -6,7 +6,7 @@ import { fail } from '@sveltejs/kit'
 import prisma from '$lib/server/prisma'
 
 // Internal imports
-import { CourseHelper, GraphHelper, DomainHelper, SubjectHelper, LectureHelper } from '$lib/server/helpers'
+import { CourseHelper, GraphHelper, LectureHelper } from '$lib/server/helpers'
 
 // Actions
 export const actions = {
