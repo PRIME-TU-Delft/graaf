@@ -167,13 +167,11 @@ class Domain extends Field<Domain> {
 		
 		// Parse response
 		const data = await res.json()
-		const domain = new Domain(
-			graph,
-			graph.domains.length,
-			data.id
-		)
-		
+
+		// Create domain object
+		const domain = new Domain(graph, graph.domains.length, data.id)
 		graph.domains.push(domain)
+
 		return domain
 	}
 
@@ -287,16 +285,19 @@ class Domain extends Field<Domain> {
 		/* Save the name of this domain */
 
 		// Create data object
-		const data = properties.reduce(
-			(acc, key) => { acc[key] = this[key]; return acc }, 
-			{} as { [key: string]: any }
-		)
-
-		// Repair parents and children
-		if (data.parents)
-			data.parents = data.parents.map((parent: Domain) => parent.id)
-		if (data.children)
-			data.children = data.children.map((child: Domain) => child.id)
+		const data: { [key: string]: any } = {}
+		if (properties.includes('name'))
+			data.name = this.name
+		if (properties.includes('style'))
+			data.style = this.style
+		if (properties.includes('x'))
+			data.x = this.x
+		if (properties.includes('y'))
+			data.y = this.y
+		if (properties.includes('parents'))
+			data.parents = this.parents.map(parent => parent.id)
+		if (properties.includes('children'))
+			data.children = this.children.map(child => child.id)
 
 		// Call API to update domain
 		const res = await fetch(`/api/domain/${this.id}`, {
@@ -405,13 +406,11 @@ class Subject extends Field<Subject> {
 		
 		// Parse response
 		const data = await res.json()
-		const subject = new Subject(
-			graph,
-			graph.subjects.length,
-			data.id
-		)
-		
+
+		// Create subject object
+		const subject = new Subject(graph, graph.subjects.length, data.id)
 		graph.subjects.push(subject)
+
 		return subject
 	}
 
@@ -487,18 +486,19 @@ class Subject extends Field<Subject> {
 		/* Save the name of this subject */
 
 		// Create data object
-		const data = properties.reduce(
-			(acc, key) => { acc[key] = this[key]; return acc }, 
-			{} as { [key: string]: any }
-		)
-
-		// Repair parents, children, and domain
-		if (data.parents)
-			data.parents = data.parents.map((parent: Domain) => parent.id)
-		if (data.children)
-			data.children = data.children.map((child: Domain) => child.id)
-		if (data.domain)
-			data.domain = data.domain.id
+		const data: { [key: string]: any } = {}
+		if (properties.includes('name'))
+			data.name = this.name
+		if (properties.includes('domain'))
+			data.domain = this.domain?.id
+		if (properties.includes('x'))
+			data.x = this.x
+		if (properties.includes('y'))
+			data.y = this.y
+		if (properties.includes('parents'))
+			data.parents = this.parents.map(parent => parent.id)
+		if (properties.includes('children'))
+			data.children = this.children.map(child => child.id)
 
 		// Call API to update subject
 		const res = await fetch(`/api/subject/${this.id}`, {

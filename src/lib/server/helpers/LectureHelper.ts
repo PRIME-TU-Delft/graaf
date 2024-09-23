@@ -107,7 +107,7 @@ async function setName(lecture_id: number, name?: string): Promise<void> {
 	if (!lecture) return Promise.reject('Lecture not found')
 
 	// Update
-		await prisma.subject.update({
+	await prisma.lecture.update({
 		where: {
 			id: lecture_id
 		},

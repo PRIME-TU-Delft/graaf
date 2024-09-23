@@ -91,10 +91,21 @@ class Lecture {
 		this.anchor = uuid.v4()
 	}
 
-	static create(graph: Graph, id: ID) {
-		const lecture = new Lecture(graph, graph.lectures.length, id);
-		graph.lectures.push(lecture);
-		return lecture;
+	static async create(graph: Graph) {
+		/* Create a new lecture */
+
+		// Call API to create lecture
+		const res = await fetch(`/api/graph/${graph.id}/lecture`, { method: 'POST' })
+		if (!res.ok) throw new Error('Failed to create lecture')
+		
+		// Parse response
+		const data = await res.json()
+
+		// Create lecture object
+		const lecture = new Lecture(graph, graph.lectures.length, data.id)
+		graph.lectures.push(lecture)
+
+		return lecture
 	}
 
 	get size(): number {
@@ -267,7 +278,27 @@ class Lecture {
 		}
 	}
 
-	delete() {
+	async save(...properties: ('name' | 'subjects')[]): Promise<void> {
+		/* Save the name of this domain */
+
+		// Create data object
+		const data: { [key: string]: any } = {}
+		if (properties.includes('name')) 
+			data.name = this.name
+		if (properties.includes('subjects'))
+			data.subjects = this.present.map(subject => subject.id)
+
+		// Call API to update domain
+		const res = await fetch(`/api/lecture/${this.id}`, {
+			method: 'PATCH',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(data)
+		})
+
+		if (!res.ok) throw new Error('Failed to save lecture properties')
+	}
+
+	async delete() {
 		/* Delete this lecture */
 
 		// Shift indexes
@@ -275,6 +306,10 @@ class Lecture {
 			if (lecture.index > this.index)
 				lecture.index--
 		}
+
+		// Call API to delete lecture
+		const res = await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
+		if (!res.ok) throw new Error('Failed to delete lecture')
 
 		// Remove this lecture from the graph
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)

@@ -18,20 +18,6 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Functions
-	async function createLecture() {
-		let body = new FormData();
-		body.append('graph', $graph.id.toString());
-		const response = await fetch('?/newLecture', { method: 'POST', body });
-		if (!response.ok) {
-			console.error('Failed to create lecture');
-			return;
-		}
-
-		const id = Number(JSON.parse((await response.json()).data)[0]);
-		Lecture.create($graph, id);
-		update();
-	}
-
 	function lectureMatchesQuery(query: string, lecture: Lecture): boolean {
 		/* Checks if query appears in lecture */
 
@@ -78,7 +64,7 @@
 		<h2> Lectures </h2>
 		<div class="flex-spacer" />
 		<Searchbar bind:value={query} />
-		<Button on:click={createLecture}>
+		<Button on:click={async () => { await Lecture.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Lecture
 		</Button>
 	</div>
@@ -92,15 +78,45 @@
 				<div class="lecture" id={lecture.anchor}>
 					<Validation short data={lecture.validate()} />
 					<span> {lecture.index + 1} </span>
-					<IconButton scale src={trashIcon} on:click={async () => { await lecture.delete(); update() }} />
-					<Textfield label="Name" placeholder="Lecture name" bind:value={lecture.name} />
-					<Button on:click={() => { LectureSubject.create(lecture); update() }}> Add Subject </Button>
+					<IconButton scale
+						src={trashIcon}
+						on:click={async () => {
+							await lecture.delete()
+							update()
+						}}
+						/>
+
+					<Textfield
+						label="Name"
+						placeholder="Lecture name"
+						bind:value={lecture.name}
+						on:change={async () => await lecture.save('name')}
+						/>
+
+					<Button on:click={() => { LectureSubject.create(lecture); update() }}>
+						Add Subject
+					</Button>
 
 					<div class="subjects" style="grid-area: subjects;">
 						{#each lecture.lecture_subjects as lecture_subject, n}
 							<span> {n + 1} </span>
-							<IconButton scale src={trashIcon} on:click={() => { lecture_subject.delete(); update() }} />
-							<Dropdown label="Subject" placeholder="Choose subject" options={lecture_subject.options} bind:value={lecture_subject.subject} />
+							<IconButton scale
+								src={trashIcon}
+								on:click={async () => {
+									lecture_subject.delete()
+									await lecture.save('subjects')
+									update()
+								}}
+								/>
+
+							<Dropdown
+								label="Subject"
+								placeholder="Choose subject"
+								options={lecture_subject.options}
+								bind:value={lecture_subject.subject}
+								on:change={async () => await lecture.save('subjects')}
+								/>
+
 							<span class="preview" style:background-color={lecture_subject.color} />
 						{/each}
 					</div>
