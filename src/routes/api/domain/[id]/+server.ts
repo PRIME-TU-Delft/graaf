@@ -15,13 +15,19 @@ export async function PATCH({ params, request }) {
 	}
 
 	if (data.x) {
-		if (data.y) {
-			tasks.push(DomainHelper.setPosition(id, data.x, data.y))
-		} else {
-			tasks.push(DomainHelper.setX(id, data.x))
-		}
-	} else if (data.y) {
+		tasks.push(DomainHelper.setX(id, data.x))
+	}
+
+	if (data.y) {
 		tasks.push(DomainHelper.setY(id, data.y))
+	}
+
+	if (data.parents) {
+		tasks.push(DomainHelper.setParents(id, data.parents))
+	}
+
+	if (data.children) {
+		tasks.push(DomainHelper.setChildren(id, data.children))
 	}
 
 	return await Promise.all(tasks)

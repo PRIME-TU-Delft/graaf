@@ -152,9 +152,29 @@
 			<div class="row focus" id={domain.anchor}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={async () => { await domain.delete(); update() }} />
-				<Textfield label="Name" placeholder="Domain Name" bind:value={domain.name} on:change={async () => await domain.save('name')} />
-				<Dropdown label="Style" placeholder="Domain Style" options={domain.style_options} bind:value={domain.style} on:change={async () => await domain.save('style')} />
+				<IconButton scale 
+					src={trashIcon} 
+					on:click={async () => { 
+						await domain.delete()
+						update() 
+					}} 
+					/>
+					
+				<Textfield 
+					label="Name"
+					placeholder="Domain Name" 
+					bind:value={domain.name} 
+					on:change={async () => await domain.save('name')} 
+					/>
+
+				<Dropdown 
+					label="Style" 
+					placeholder="Domain Style" 
+					options={domain.style_options} 
+					bind:value={domain.style} 
+					on:change={async () => await domain.save('style')} 
+					/>
+
 				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
@@ -225,10 +245,39 @@
 			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
 				<span> {relation.index + 1} </span>
-				<IconButton scale src={trashIcon} on:click={() => { relation.delete(); update() }} />
-				<Dropdown label="Parent" placeholder="From Domain" options={relation.parent_options} bind:value={relation.parent} />
+				<IconButton scale 
+					src={trashIcon} 
+					on:click={async () => { 
+						relation.delete()
+						await relation.parent?.save('children')
+						await relation.child?.save('parents')
+						update() 
+					}} 
+					/>
+
+				<Dropdown 
+					label="Parent" 
+					placeholder="From Domain" 
+					options={relation.parent_options} 
+					bind:value={relation.parent} 
+					on:change={async () => {
+						await relation.parent?.save('children')
+						await relation.child?.save('parents')
+					}} 
+					/>
+
 				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown label="Child" placeholder="To Domain" options={relation.child_options} bind:value={relation.child} />
+				<Dropdown 
+					label="Child" 
+					placeholder="To Domain" 
+					options={relation.child_options} 
+					bind:value={relation.child} 
+					on:change={async () => {
+						await relation.parent?.save('children')
+						await relation.child?.save('parents')
+					}} 
+					/>
+
 				<span class="preview" style:background-color={relation.child_color} />
 			</div>
 		{/if}

@@ -283,14 +283,20 @@ class Domain extends Field<Domain> {
 		}
 	}
 
-	async save(...properties: ('name' | 'style' | 'x' | 'y')[]): Promise<void> {
+	async save(...properties: ('name' | 'style' | 'x' | 'y' | 'parents' | 'children')[]): Promise<void> {
 		/* Save the name of this domain */
 
 		// Create data object
 		const data = properties.reduce(
-			(acc: { [key: string]: any }, key) => { acc[key] = this[key]; return acc }, 
-			{}
+			(acc, key) => { acc[key] = this[key]; return acc }, 
+			{} as { [key: string]: any }
 		)
+
+		// Repair parents and children
+		if (data.parents)
+			data.parents = data.parents.map((parent: Domain) => parent.id)
+		if (data.children)
+			data.children = data.children.map((child: Domain) => child.id)
 
 		// Call API to update domain
 		const res = await fetch(`/api/domain/${this.id}`, {
