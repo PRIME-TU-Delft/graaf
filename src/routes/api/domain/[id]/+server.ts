@@ -1,6 +1,13 @@
 
 import { DomainHelper } from '$lib/server/helpers'
 
+/**
+ * API endpoint for updating a Domain object in the database.
+ * @param id ID of the Domain object to update
+ * @param body JSON object containing the new values for the Domain object
+ * @returns Response object
+ */
+
 export async function PATCH({ params, request }) {
 	const id = Number(params.id)
 	const data = await request.json()
@@ -36,6 +43,12 @@ export async function PATCH({ params, request }) {
 			(error) => new Response(error, { status: 400 })
 		)
 }
+
+/**
+ * API endpoint for deleting a Domain object from the database.
+ * @param id ID of the Domain object to delete
+ * @returns Response object 
+ */
 
 export async function DELETE({ params }) {
 	const id = Number(params.id)

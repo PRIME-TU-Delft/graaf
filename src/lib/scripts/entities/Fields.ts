@@ -305,7 +305,7 @@ class Domain extends Field<Domain> {
 			body: JSON.stringify(data)
 		})
 
-		if (!res.ok) throw new Error('Failed to save domain name')
+		if (!res.ok) throw new Error('Failed to save domain properties')
 	}
 
 	async delete(): Promise<void> {
