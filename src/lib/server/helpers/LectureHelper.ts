@@ -140,12 +140,17 @@ async function setSubjects(lecture_id: number, subjects: number[]): Promise<void
 
 	if (!lecture) return Promise.reject('Lecture not found')
 
-	// Check if the Subject objects exist
-	for (const subject_id of subjects) {
+	// Find subjects to connect and disconnect
+	const old_subjects = lecture.subjects
+		.filter(subject => !subjects.includes(subject.id))
+		.map(subject => subject.id)
+	const new_subjects = subjects
+		.filter(id => !lecture.subjects.some(subject => subject.id === id))
+
+	// Check if new subjects exist
+	for (const id of new_subjects) {
 		const subject = await prisma.subject.findUnique({
-			where: {
-				id: subject_id
-			}
+			where: { id }
 		})
 
 		if (!subject) return Promise.reject('Subject not found')
@@ -158,8 +163,8 @@ async function setSubjects(lecture_id: number, subjects: number[]): Promise<void
 		},
 		data: {
 			subjects: {
-				connect: subjects.map(s => ({ id: s })),
-				disconnect: lecture.subjects.map(s => ({ id: s.id }))
+				connect: new_subjects.map(id => ({ id })),
+				disconnect: old_subjects.map(id => ({ id }))
 			}
 		}
 	})
