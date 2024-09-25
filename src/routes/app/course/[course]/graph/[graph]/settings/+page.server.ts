@@ -16,11 +16,8 @@ export const load = async ({ params }) => {
 		}))!
 	)
 
-	const graph = await GraphHelper.toDTO(
-		(await prisma.graph.findUnique({
-			where: { id: graphId }
-		}))!
-	)
+	const graph = await GraphHelper.getById(graphId)
+		.catch(() => Promise.reject('Graph not found'))
 
 	return { course, graph }
 }

@@ -8,9 +8,9 @@ export { create, remove, update, reduce }
 
 /**
  * Creates a Subject object in the database.
- * @param graph_id ID of the Graph object to which the Subject object belongs
- * @returns Serialized Subject object
- * @throws 'Failed to create subject' if the Subject object could not be created
+ * @param graph_id ID of the Graph to which the Subject belongs
+ * @returns SerializedSubject object
+ * @throws 'Failed to create subject' if the Subject could not be created
  */
 
 async function create(graph_id: number): Promise<SerializedSubject> {
@@ -32,9 +32,9 @@ async function create(graph_id: number): Promise<SerializedSubject> {
 }
 
 /**
- * Removes a Subject object from the database.
- * @param subject_id ID of the Subject object to remove
- * @throws 'Failed to remove subject' if the Subject object could not be removed
+ * Removes a Subject from the database.
+ * @param subject_id ID of the Subject to remove
+ * @throws 'Failed to remove subject' if the Subject could not be removed
  */
 
 async function remove(subject_id: number): Promise<void> {
@@ -50,23 +50,22 @@ async function remove(subject_id: number): Promise<void> {
 }
 
 /**
- * Updates a Subject object in the database.
+ * Updates a Subject in the database.
  * @param data SerializedSubject object
- * @throws 'Subject not found' if the Subject object could not be found
- * @throws 'Failed to update subject' if the Subject object could not be updated
+ * @throws 'Subject not found' if the Subject could not be found
+ * @throws 'Failed to update subject' if the Subject could not be updated
  */
 
 async function update(data: SerializedSubject): Promise<void> {
 
 	// Get current relations
 	const { children, parents } = await getRelations(data.id)
-		.catch(() => Promise.reject('Subject not found'))
 
 	// Find changes in relations
-	const new_parents = data.parents.filter((parent) => !parents.includes(parent))
-	const old_parents = parents.filter((parent) => !data.parents.includes(parent))
-	const new_children = data.children.filter((child) => !children.includes(child))
-	const old_children = children.filter((child) => !data.children.includes(child))
+	const new_parents = data.parents.filter((parent) => !parents.some((subject) => subject.id === parent))
+	const old_parents = parents.filter((parent) => !data.parents.includes(parent.id))
+	const new_children = data.children.filter((child) => !children.some((subject) => subject.id === child))
+	const old_children = children.filter((child) => !data.children.includes(child.id))
 
 	// Update subject
 	try {
@@ -82,12 +81,12 @@ async function update(data: SerializedSubject): Promise<void> {
 
 				parentSubjects: {
 					connect: new_parents.map((parent) => ({ id: parent })),
-					disconnect: old_parents.map((parent) => ({ id: parent }))
+					disconnect: old_parents.map((parent) => ({ id: parent.id }))
 				},
 
 				childSubjects: {
 					connect: new_children.map((child) => ({ id: child })),
-					disconnect: old_children.map((child) => ({ id: child }))
+					disconnect: old_children.map((child) => ({ id: child.id }))
 				},
 			}
 		})
@@ -97,15 +96,14 @@ async function update(data: SerializedSubject): Promise<void> {
 }
 
 /**
- * Reduces a PrismaSubject object to a SerializedSubject object.
+ * Reduces a PrismaSubject to a SerializedSubject.
  * @param subject PrismaSubject object
  * @returns SerializedSubject object
- * @throws 'Subject not found' if the Subject object could not be found
+ * @throws 'Subject not found' if the Subject could not be found
  */
 
 async function reduce(subject: PrismaSubject): Promise<SerializedSubject> {
 	const { children, parents } = await getRelations(subject.id)
-		.catch(() => Promise.reject('Subject not found'))
 
 	return {
 		id: subject.id,
@@ -113,19 +111,19 @@ async function reduce(subject: PrismaSubject): Promise<SerializedSubject> {
 		y: subject.y,
 		name: subject.name || undefined,
 		domain: subject.domainId || undefined,
-		children: children,
-		parents: parents
+		children: children.map(subject => subject.id),
+		parents: parents.map(subject => subject.id)
 	}
 }
 
 /**
- * Retrieves the children and parents of a subject.
- * @param subject_id ID of the subject
- * @returns Object containing the IDs of the children and parents
- * @throws 'Subject not found' if the Subject object could not be found
+ * Retrieves the children and parents of a Subject.
+ * @param subject_id ID of the Subject
+ * @returns Object containing the children and parents
+ * @throws 'Subject not found' if the Subject could not be found
  */
 
-async function getRelations(subject_id: number): Promise<{ children: number[], parents: number[]}> {
+async function getRelations(subject_id: number): Promise<{ children: PrismaSubject[], parents: PrismaSubject[]}> {
 	try {
 		var subject = await prisma.subject.findUniqueOrThrow({
 			where: {
@@ -141,7 +139,7 @@ async function getRelations(subject_id: number): Promise<{ children: number[], p
 	}
 
 	return {
-		children: subject.childSubjects.map((subject) => subject.id),
-		parents: subject.parentSubjects.map((subject) => subject.id)
+		children: subject.childSubjects,
+		parents: subject.parentSubjects
 	}
 }
