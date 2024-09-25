@@ -9,7 +9,7 @@ export { create, remove, update, reduce, getRelations }
 /**
  * Creates a Subject object in the database.
  * @param graph_id ID of the Graph object to which the Subject object belongs
- * @returns ID of the created Subject object
+ * @returns Serialized Subject object
  * @throws 'Failed to create subject' if the Subject object could not be created
  */
 
@@ -53,6 +53,7 @@ async function remove(subject_id: number): Promise<void> {
  * Updates a Subject object in the database.
  * @param data SerializedSubject object
  * @throws 'Subject not found' if the Subject object could not be found
+ * @throws 'Failed to update subject' if the Subject object could not be updated
  */
 
 async function update(data: SerializedSubject): Promise<void> {
@@ -68,27 +69,31 @@ async function update(data: SerializedSubject): Promise<void> {
 	const old_children = children.filter((child) => !data.children.includes(child))
 	
 	// Update subject
-	await prisma.subject.update({
-		where: {
-			id: data.id
-		},	
-		data: {
-			x: data.x,
-			y: data.y,
-			name: data.name,
-			domainId: data.domain,
+	try {
+		await prisma.subject.update({
+			where: {
+				id: data.id
+			},	
+			data: {
+				x: data.x,
+				y: data.y,
+				name: data.name,
+				domainId: data.domain,
 
-			parentSubjects: {
-				connect: new_parents.map((parent) => ({ id: parent })),
-				disconnect: old_parents.map((parent) => ({ id: parent }))
-			},
+				parentSubjects: {
+					connect: new_parents.map((parent) => ({ id: parent })),
+					disconnect: old_parents.map((parent) => ({ id: parent }))
+				},
 
-			childSubjects: {
-				connect: new_children.map((child) => ({ id: child })),
-				disconnect: old_children.map((child) => ({ id: child }))
-			},
-		}
-	})
+				childSubjects: {
+					connect: new_children.map((child) => ({ id: child })),
+					disconnect: old_children.map((child) => ({ id: child }))
+				},
+			}
+		})
+	} catch (error) {
+		return Promise.reject('Failed to update subject')
+	}
 }
 
 /**

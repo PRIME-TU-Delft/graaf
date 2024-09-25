@@ -9,7 +9,7 @@ export { create, remove, update, reduce, getRelations }
 /**
  * Creates a Domain object in the database.
  * @param graph_id ID of the Graph object to which the Domain object belongs
- * @returns ID of the created Domain object
+ * @returns serialized Domain object
  * @throws 'Failed to create domain' if the Domain object could not be created
  */
 
@@ -53,6 +53,7 @@ async function remove(domain_id: number): Promise<void> {
  * Updates a Domain object in the database.
  * @param data SerializedDomain object
  * @throws 'Domain not found' if the Domain object could not be found
+ * @throws 'Failed to update domain' if the Domain object could not be updated
  */
 
 async function update(data: SerializedDomain): Promise<void> {
@@ -68,27 +69,31 @@ async function update(data: SerializedDomain): Promise<void> {
 	const old_children = children.filter((child) => !data.children.includes(child))
 	
 	// Update domain
-	await prisma.domain.update({
-		where: {
-			id: data.id
-		},
-		data: {
-			x: data.x,
-			y: data.y,
-			name: data.name,
-			style: data.style,
-
-			parentDomains: {
-				connect: new_parents.map((parent) => ({ id: parent })),
-				disconnect: old_parents.map((parent) => ({ id: parent }))
+	try {
+		await prisma.domain.update({
+			where: {
+				id: data.id
 			},
+			data: {
+				x: data.x,
+				y: data.y,
+				name: data.name,
+				style: data.style,
 
-			childDomains: {
-				connect: new_children.map((child) => ({ id: child })),
-				disconnect: old_children.map((child) => ({ id: child }))
-			},
-		}
-	})
+				parentDomains: {
+					connect: new_parents.map((parent) => ({ id: parent })),
+					disconnect: old_parents.map((parent) => ({ id: parent }))
+				},
+
+				childDomains: {
+					connect: new_children.map((child) => ({ id: child })),
+					disconnect: old_children.map((child) => ({ id: child }))
+				},
+			}
+		})
+	} catch (error) {
+		return Promise.reject('Failed to update domain')
+	}
 }
 
 /**

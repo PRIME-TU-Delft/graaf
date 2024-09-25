@@ -19,7 +19,7 @@ type ID = number
 
 type SerializedLecture = {
 	id: ID,
-	name: string,
+	name?: string,
 	subjects: ID[]
 }
 
@@ -97,7 +97,7 @@ class Lecture {
 		// Call API to create lecture
 		const res = await fetch(`/api/graph/${graph.id}/lecture`, { method: 'POST' })
 		if (!res.ok) throw new Error('Failed to create lecture')
-		
+
 		// Parse response
 		const data = await res.json()
 
@@ -278,24 +278,21 @@ class Lecture {
 		}
 	}
 
-	async save(...properties: ('name' | 'subjects')[]): Promise<void> {
-		/* Save the name of this domain */
+	async save(): Promise<void> {
+		/* Save this lecture */
 
-		// Create data object
-		const data: { [key: string]: any } = {}
-		if (properties.includes('name')) 
-			data.name = this.name
-		if (properties.includes('subjects'))
-			data.subjects = this.present.map(subject => subject.id)
+		// Serialize
+		const data = this.reduce()
 
 		// Call API to update domain
-		const res = await fetch(`/api/lecture/${this.id}`, {
-			method: 'PATCH',
+		const result = await fetch(`/api/lecture`, {
+			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		})
 
-		if (!res.ok) throw new Error('Failed to save lecture properties')
+		// Check if the request was successful
+		if (!result.ok) throw new Error('Failed to save lecture')
 	}
 
 	async delete() {
@@ -308,8 +305,8 @@ class Lecture {
 		}
 
 		// Call API to delete lecture
-		const res = await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
-		if (!res.ok) throw new Error('Failed to delete lecture')
+		const result = await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
+		if (!result.ok) throw new Error('Failed to delete lecture')
 
 		// Remove this lecture from the graph
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)

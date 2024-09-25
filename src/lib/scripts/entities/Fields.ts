@@ -464,7 +464,7 @@ class Subject extends Field<Subject> {
 			id: this.id,
 			x: this.x,
 			y: this.y,
-			domain: this.domain ? this.domain.id : undefined,
+			domain: this.domain?.id,
 			name: this.name,
 			parents: this.parents.map(parent => parent.id),
 			children: this.children.map(child => child.id)

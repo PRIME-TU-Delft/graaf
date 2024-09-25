@@ -90,7 +90,7 @@
 						label="Name"
 						placeholder="Lecture name"
 						bind:value={lecture.name}
-						on:change={async () => await lecture.save('name')}
+						on:change={async () => await lecture.save()}
 						/>
 
 					<Button on:click={() => { LectureSubject.create(lecture); update() }}>
@@ -104,7 +104,8 @@
 								src={trashIcon}
 								on:click={async () => {
 									lecture_subject.delete()
-									await lecture.save('subjects')
+									if (lecture_subject.subject)
+										await lecture.save()
 									update()
 								}}
 								/>
@@ -114,7 +115,7 @@
 								placeholder="Choose subject"
 								options={lecture_subject.options}
 								bind:value={lecture_subject.subject}
-								on:change={async () => await lecture.save('subjects')}
+								on:change={async () => await lecture.save()}
 								/>
 
 							<span class="preview" style:background-color={lecture_subject.color} />
