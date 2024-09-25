@@ -157,7 +157,7 @@
 					label="Name"
 					placeholder="Subject Name"
 					bind:value={subject.name}
-					on:change={async () => await subject.save('name')}
+					on:change={async () => await subject.save()}
 					/>
 
 				<Dropdown
@@ -165,7 +165,7 @@
 					placeholder="Assigned Domain"
 					options={subject.domain_options}
 					bind:value={subject.domain}
-					on:change={async () => await subject.save('domain')}
+					on:change={async () => await subject.save()}
 					/>
 
 				<span class="preview" style:background-color={subject.color} />
@@ -242,8 +242,8 @@
 					src={trashIcon}
 					on:click={async () => {
 						relation.delete()
-						await relation.parent?.save('children')
-						await relation.child?.save('parents')
+						await relation.parent?.save()
+						await relation.child?.save()
 						update()
 					}}
 					/>
@@ -254,8 +254,8 @@
 					options={relation.parent_options}
 					bind:value={relation.parent}
 					on:change={async () => {
-						await relation.parent?.save('children')
-						await relation.child?.save('parents')
+						await relation.parent?.save()
+						await relation.child?.save()
 					}}
 					/>
 
@@ -266,8 +266,8 @@
 					options={relation.child_options}
 					bind:value={relation.child}
 					on:change={async () => {
-						await relation.parent?.save('children')
-						await relation.child?.save('parents')
+						await relation.parent?.save()
+						await relation.child?.save()
 					}}
 					/>
 

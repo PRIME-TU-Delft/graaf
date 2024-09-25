@@ -34,7 +34,6 @@ async function create(graph_id: number): Promise<SerializedDomain> {
 /**
  * Removes a Domain object from the database.
  * @param domain_id ID of the Domain object to remove
- * @returns void
  * @throws 'Failed to remove domain' if the Domain object could not be removed
  */
 
@@ -53,7 +52,6 @@ async function remove(domain_id: number): Promise<void> {
 /**
  * Updates a Domain object in the database.
  * @param data SerializedDomain object
- * @returns void
  * @throws 'Domain not found' if the Domain object could not be found
  */
 
@@ -117,16 +115,16 @@ async function reduce(domain: PrismaDomain): Promise<SerializedDomain> {
 
 /**
  * Retrieves the children and parents of a domain.
- * @param id ID of the domain
- * @returns SerializedDomain object
+ * @param domain_id ID of the domain
+ * @returns Object containing the IDs of the children and parents
  * @throws 'Domain not found' if the Domain object could not be found
  */
 
-async function getRelations(id: number): Promise<{ children: number[], parents: number[]}> {
+async function getRelations(domain_id: number): Promise<{ children: number[], parents: number[]}> {
 	try {
 		var domain = await prisma.domain.findUniqueOrThrow({
 			where: {
-				id: id
+				id: domain_id
 			},
 			include: {
 				childDomains: true,

@@ -390,11 +390,11 @@ class Subject extends Field<Subject> {
 		/* Create a new domain */
 
 		// Call API to create domain
-		const res = await fetch(`/api/graph/${graph.id}/subject`, { method: 'POST' })
-		if (!res.ok) throw new Error('Failed to create domain')
+		const result = await fetch(`/api/graph/${graph.id}/subject`, { method: 'POST' })
+		if (!result.ok) throw new Error('Failed to create domain')
 		
 		// Parse response
-		const data = await res.json()
+		const data = await result.json()
 
 		// Create subject object
 		const subject = new Subject(graph, graph.subjects.length, data.id)
@@ -471,32 +471,21 @@ class Subject extends Field<Subject> {
 		}
 	}
 
-	async save(...properties: ('name' | 'domain' | 'x' | 'y' | 'parents' | 'children')[]): Promise<void> {
-		/* Save the name of this subject */
+	async save(): Promise<void> {
+		/* Save this subject */
 
-		// Create data object
-		const data: { [key: string]: any } = {}
-		if (properties.includes('name'))
-			data.name = this.name
-		if (properties.includes('domain'))
-			data.domain = this.domain?.id
-		if (properties.includes('x'))
-			data.x = this.x
-		if (properties.includes('y'))
-			data.y = this.y
-		if (properties.includes('parents'))
-			data.parents = this.parents.map(parent => parent.id)
-		if (properties.includes('children'))
-			data.children = this.children.map(child => child.id)
+		// Serialize
+		const data = this.reduce()
 
-		// Call API to update subject
-		const res = await fetch(`/api/subject/${this.id}`, {
-			method: 'PATCH',
+		// Call API to update domain
+		const result = await fetch(`/api/subject`, {
+			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		})
 
-		if (!res.ok) throw new Error('Failed to save subject properties')
+		// Check if the request was successful
+		if (!result.ok) throw new Error('Failed to save subject')
 	}
 
 	async delete(): Promise<void> {
@@ -522,8 +511,8 @@ class Subject extends Field<Subject> {
 		}
 
 		// Call API to delete domain
-		const res = await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
-		if (!res.ok) throw new Error('Failed to delete subject')
+		const result = await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
+		if (!result.ok) throw new Error('Failed to delete subject')
 
 		// Remove this subject from the graph
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
