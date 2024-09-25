@@ -4,7 +4,7 @@ import prisma from '$lib/server/prisma'
 import type { Lecture as PrismaLecture } from '@prisma/client'
 import type { SerializedLecture } from '$scripts/entities'
 
-export { create, remove, update, reduce, getSubjects }
+export { create, remove, update, reduce }
 
 
 /**

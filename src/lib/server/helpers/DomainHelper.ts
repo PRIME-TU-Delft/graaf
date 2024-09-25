@@ -4,7 +4,7 @@ import prisma from '$lib/server/prisma'
 import type { Domain as PrismaDomain } from '@prisma/client'
 import type { SerializedDomain } from '$scripts/entities'
 
-export { create, remove, update, reduce, getRelations }
+export { create, remove, update, reduce }
 
 /**
  * Creates a Domain object in the database.
@@ -67,7 +67,7 @@ async function update(data: SerializedDomain): Promise<void> {
 	const old_parents = parents.filter((parent) => !data.parents.includes(parent))
 	const new_children = data.children.filter((child) => !children.includes(child))
 	const old_children = children.filter((child) => !data.children.includes(child))
-	
+
 	// Update domain
 	try {
 		await prisma.domain.update({
