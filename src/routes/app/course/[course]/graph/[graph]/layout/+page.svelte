@@ -1,9 +1,6 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import { goto } from '$app/navigation'
-
 	// Internal imports
 	import { course, graph } from '$stores'
 
@@ -14,16 +11,7 @@
 	import Modal from '$components/Modal.svelte'
 	import Infobox from '$components/Infobox.svelte'
 
-	// Assets
-	import saveIcon from '$assets/save-icon.svg'
-	import LinkButton from '$components/LinkButton.svelte'
-
 	// Functions
-	function goto_settings() {
-		$graph.save()
-		goto(`/app/course/${$course.code}/graph/${$graph.id}/settings`)
-	}
-
 	function toggle_autolayout() {
 		if (graphSVG.controller.autolayout_enabled) {
 			graphSVG.controller.toggleAutolayout()
@@ -83,8 +71,7 @@
 
 		<div class="flex-spacer" />
 
-		<LinkButton on:click={goto_settings}> Edit fields & relations </LinkButton>
-		<Button on:click={() => $graph.save()}> <img src={saveIcon} alt=""> Save Changes </Button>
+		<Button href="/app/course/{$course.code}/graph/{$graph.id}/settings"> Edit fields & relations </Button>
 	</svelte:fragment>
 
 	<div class="editor">

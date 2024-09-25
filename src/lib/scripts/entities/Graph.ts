@@ -257,23 +257,6 @@ class Graph {
 		}
 	}
 
-	async save() {
-		/* Save the graph to the database */
-
-		const response = await fetch(`/api/graph/${this.id}`, {
-			method: 'PUT',
-			body: JSON.stringify(this.reduce())
-		});
-
-		if (response.ok) {
-			console.log('[*] Graph saved!');
-		}
-		else {
-			const message = await response.text();
-			console.error(`Failed to save graph: ${message}`);
-		}
-	}
-
 	delete() {
 		/* Delete the graph from the database */
 	}

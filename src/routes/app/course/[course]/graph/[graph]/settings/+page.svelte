@@ -1,9 +1,6 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import { goto } from '$app/navigation'
-
 	// Internal imports
 	import { course, graph } from '$stores'
 	import * as settings from '$scripts/settings'
@@ -11,7 +8,6 @@
 	// Components
 	import Button from '$components/Button.svelte'
 	import Layout from '$layouts/DefaultLayout.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
 	import Validation from '$components/Validation.svelte'
 
 	import GeneralSettings from './GeneralSettings.svelte'
@@ -19,13 +15,10 @@
 	import SubjectSettings from './SubjectSettings.svelte'
 	import LectureSettings from './LectureSettings.svelte'
 
-	// Assets
-	import saveIcon from '$assets/save-icon.svg'
-
 	// Functions
-	function goto_anchor(tab: number, id: string) {
+	function goto_anchor(tab: number, anchor: string) {
 		if (active_tab === tab) {
-			const element = document.getElementById(id)
+			const element = document.getElementById(anchor)
 			element?.scrollIntoView({ behavior: 'smooth' })
 			setTimeout(() => {element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)}, settings.SHAKE.delay)
 			return
@@ -33,15 +26,10 @@
 
 		active_tab = tab
 		setTimeout(() => {
-			const element = document.getElementById(id)
+			const element = document.getElementById(anchor)
 			element?.scrollIntoView({ behavior: 'smooth' })
 			setTimeout(() => {element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)}, settings.SHAKE.delay)
 		}, 0)
-	}
-
-	async function goto_layout() {
-		$graph.save()
-		goto(`/app/course/${$course.code}/graph/${$graph.id}/layout`)
 	}
 
 	// Variables
@@ -75,14 +63,11 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={$graph.validate()} success="Ready to save" {goto_anchor} />
+		<Validation data={$graph.validate()} success="Valid graph" {goto_anchor} />
 
 		<div class="flex-spacer" />
 
-		<LinkButton on:click={goto_layout}> Edit layout </LinkButton>
-		<Button on:click={() => $graph.save()}>
-			<img src={saveIcon} alt=""> Save Changes
-		</Button>
+		<Button href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </Button>
 	</svelte:fragment>
 
 	<div class="tabular">
