@@ -162,11 +162,11 @@ class Domain extends Field<Domain> {
 		/* Create a new domain */
 
 		// Call API to create domain
-		const res = await fetch(`/api/graph/${graph.id}/domain`, { method: 'POST' })
-		if (!res.ok) throw new Error('Failed to create domain')
+		const result = await fetch(`/api/graph/${graph.id}/domain`, { method: 'POST' })
+		if (!result.ok) throw new Error('Failed to create domain')
 		
 		// Parse response
-		const data = await res.json()
+		const data = await result.json()
 
 		// Create domain object
 		const domain = new Domain(graph, graph.domains.length, data.id)
@@ -281,32 +281,21 @@ class Domain extends Field<Domain> {
 		}
 	}
 
-	async save(...properties: ('name' | 'style' | 'x' | 'y' | 'parents' | 'children')[]): Promise<void> {
-		/* Save the name of this domain */
+	async save(): Promise<void> {
+		/* Save this domain */
 
-		// Create data object
-		const data: { [key: string]: any } = {}
-		if (properties.includes('name'))
-			data.name = this.name
-		if (properties.includes('style'))
-			data.style = this.style
-		if (properties.includes('x'))
-			data.x = this.x
-		if (properties.includes('y'))
-			data.y = this.y
-		if (properties.includes('parents'))
-			data.parents = this.parents.map(parent => parent.id)
-		if (properties.includes('children'))
-			data.children = this.children.map(child => child.id)
+		// Serialize
+		const data = this.reduce()
 
 		// Call API to update domain
-		const res = await fetch(`/api/domain/${this.id}`, {
-			method: 'PATCH',
+		const result = await fetch(`/api/domain`, {
+			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		})
 
-		if (!res.ok) throw new Error('Failed to save domain properties')
+		// Check if the request was successful
+		if (!result.ok) throw new Error('Failed to save domain')
 	}
 
 	async delete(): Promise<void> {
@@ -334,8 +323,8 @@ class Domain extends Field<Domain> {
 		}
 
 		// Call API to delete domain
-		const res = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
-		if (!res.ok) throw new Error('Failed to delete domain')
+		const result = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
+		if (!result.ok) throw new Error('Failed to delete domain')
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
