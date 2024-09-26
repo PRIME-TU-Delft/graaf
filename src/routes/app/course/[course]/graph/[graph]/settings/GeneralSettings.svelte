@@ -39,7 +39,7 @@
 			<p> Are you sure you want to delete {$graph.name}? This action <b>cannot</b> be undone. </p>
 
 			<div class="button-row">
-				<Button dangerous on:click={$graph.delete}> Delete </Button> <!-- TODO redirect to course overview -->
+				<Button dangerous on:click={() => $graph.delete()}> Delete </Button> <!-- TODO redirect to course overview -->
 			</div>
 		</Modal>
 	</div>

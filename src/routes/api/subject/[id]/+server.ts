@@ -2,7 +2,7 @@
 import { SubjectHelper } from '$lib/server/helpers'
 
 /**
- * API endpoint for deleting a Subject object from the database.
+ * API endpoint for deleting a Subject from the database.
  */
 
 export async function DELETE({ params }) {

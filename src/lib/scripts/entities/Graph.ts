@@ -257,8 +257,18 @@ class Graph {
 		}
 	}
 
-	delete() {
+	async delete() {
 		/* Delete the graph from the database */
+
+		console.log('Clientside', this)
+
+		// Call the API
+		const response = await fetch(`/api/graph/${this.id}`, {
+			method: 'DELETE'
+		})
+
+		// Check the response
+		if (!response.ok) throw new Error('Failed to delete graph')
 	}
 
 	// TODO: Temp because these were used in mocked data in course overview

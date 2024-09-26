@@ -11,7 +11,7 @@ import type {
 	Lecture as PrismaLecture 
 } from '@prisma/client'
 
-export { create, reduce, getByCourseCode, getById }
+export { create, remove, reduce, getByCourseCode, getById }
 
 /**
  * Retrieves all Graphs associated with a Course.
@@ -35,7 +35,6 @@ async function getByCourseCode(course_code: string): Promise<SerializedGraph[]> 
  * Retrieves a Graph by its ID.
  * @param graph_id
  * @returns SerializedGraph object
- * @throws 'Graph not found' if the Graph could not be found
  */
 
 async function getById(graph_id: number): Promise<SerializedGraph> {
@@ -46,7 +45,7 @@ async function getById(graph_id: number): Promise<SerializedGraph> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Graph not found')
+		return Promise.reject(error)
 	}
 
 	return await reduce(graph)
@@ -57,7 +56,6 @@ async function getById(graph_id: number): Promise<SerializedGraph> {
  * @param course_code The code of the Course to which the Graph belongs
  * @param name The name of the Graph
  * @returns SerializedGraph object
- * @throws 'Failed to create graph' if the Graph could not be created
  */
 
 async function create(course_code: string, name: string): Promise<SerializedGraph> {
@@ -73,17 +71,33 @@ async function create(course_code: string, name: string): Promise<SerializedGrap
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to create graph')
+		return Promise.reject(error)
 	}
 	
 	return await reduce(graph)
 }
 
 /**
+ * Removes a Graph from the database.
+ * @param graph_id ID of the Graph to remove
+ */
+
+async function remove(graph_id: number): Promise<void> {
+	try {
+		await prisma.graph.delete({
+			where: {
+				id: graph_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+}
+
+/**
  * Reduces a Graph to a SerializedGraph.
  * @param graph PrismaGraph object
  * @returns SerializedGraph object
- * @throws 'Graph not found' if the Graph could not be found
  */
 
 async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
@@ -104,7 +118,6 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
  * Retrieves PrismaDomains associated with a Graph.
  * @param graph_id ID of the Graph
  * @returns Array of PrismaDomains
- * @throws 'Graph not found' if the Graph could not be found
  */
 
 async function getDomains(graph_id: number): Promise<PrismaDomain[]> {
@@ -118,7 +131,7 @@ async function getDomains(graph_id: number): Promise<PrismaDomain[]> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Graph not found')
+		return Promise.reject(error)
 	}
 }
 
@@ -126,7 +139,6 @@ async function getDomains(graph_id: number): Promise<PrismaDomain[]> {
  * Retrieves PrismaSubjects associated with a Graph.
  * @param graph_id ID of the Graph
  * @returns Array of PrismaSubjects
- * @throws 'Graph not found' if the Graph could not be found
  */
 
 async function getSubjects(graph_id: number): Promise<PrismaSubject[]> {
@@ -140,7 +152,7 @@ async function getSubjects(graph_id: number): Promise<PrismaSubject[]> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Graph not found')
+		return Promise.reject(error)
 	}
 }
 
@@ -148,7 +160,6 @@ async function getSubjects(graph_id: number): Promise<PrismaSubject[]> {
  * Retrieves PrismaLectures associated with a Graph.
  * @param graph_id ID of the Graph
  * @returns Array of PrismaLectures
- * @throws 'Graph not found' if the Graph could not be found
  */
 
 async function getLectures(graph_id: number): Promise<PrismaLecture[]> {
@@ -162,6 +173,6 @@ async function getLectures(graph_id: number): Promise<PrismaLecture[]> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Graph not found')
+		return Promise.reject(error)
 	}
 }
