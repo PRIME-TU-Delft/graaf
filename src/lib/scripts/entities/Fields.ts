@@ -84,7 +84,8 @@ abstract class Field<T extends Domain | Subject> {
 	abstract get style(): string | undefined
 	abstract get color(): string
 	abstract validate(): ValidationData
-	abstract delete(): void
+	abstract delete(): Promise<void>
+	abstract save(): Promise<void>
 }
 
 class Domain extends Field<Domain> {

@@ -7,20 +7,17 @@ import { CourseHelper, GraphHelper } from '$lib/server/helpers'
 
 // Load
 export const load = async ({ params }) => {
-	const courseCode = params.course
-	const graphId = Number(params.graph)
+	const course_code = params.course
+	const graph_id = Number(params.graph)
 
 	const course = await CourseHelper.toDTO(
 		(await prisma.course.findUnique({
-			where: { code: courseCode }
+			where: { code: course_code }
 		}))!
 	)
 
-	const graph = await GraphHelper.toDTO(
-		(await prisma.graph.findUnique({
-			where: { id: graphId }
-		}))!
-	)
+	const graph = await GraphHelper.getById(graph_id)
+		.catch(() => Promise.reject('Graph not found'))
 
 	return { course, graph }
 }

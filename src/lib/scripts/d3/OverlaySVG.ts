@@ -53,7 +53,7 @@ class OverlaySVG {
 			.attr('fill', 'black')
 
 		text.append('tspan')
-			.text('There are outstanding errors')
+			.text('There are outstanding errors in this graph')
 			.attr('x', '50%')
 			.attr('y', '50%')
 			.attr('dy', settings.OVERLAY_BIG_FONT)

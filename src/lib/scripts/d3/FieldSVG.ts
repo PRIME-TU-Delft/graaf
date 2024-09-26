@@ -115,7 +115,7 @@ class FieldSVG {
 					FieldSVG.updatePosition(selection)
 					graphSVG.microwaveSimulation()
 				})
-				.on('end', function(_ ,field) {
+				.on('end', async function(_ ,field) {
 					const selection = d3.select<SVGGElement, Field<Domain | Subject>>(this)
 					field.x = Math.round(field.x)
 					field.y = Math.round(field.y)
@@ -123,6 +123,7 @@ class FieldSVG {
 					field.fy = field.y
 
 					FieldSVG.updatePosition(selection)
+					await field.save()
 				})
 		)
 	}
@@ -167,7 +168,7 @@ class FieldSVG {
 		selection
 			.classed('fixed', fixed)
 			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
-			.each((field) => {
+			.each(field => {
 				field.x = fixed ? Math.round(field.x) : field.x
 				field.y = fixed ? Math.round(field.y) : field.y
 				field.fx = fixed ? field.x : undefined

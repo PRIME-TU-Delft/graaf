@@ -118,6 +118,7 @@ class GraphSVG {
 				.select('#content')
 					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
 						.call(FieldSVG.setFixed, true)
+						.each(async field => await field.save())
 
 			this.simulation.stop()
 		}
@@ -351,6 +352,7 @@ class GraphSVG {
 		d3.select('#content')
 			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
 				.call(FieldSVG.setFixed, autolayout_enabled)
+				.each(async field => { if (autolayout_enabled) await field.save() })
 
 		if (autolayout_enabled) {
 			this.simulation.stop()
