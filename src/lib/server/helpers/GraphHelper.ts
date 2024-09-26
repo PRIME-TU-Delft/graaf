@@ -11,7 +11,7 @@ import type {
 	Lecture as PrismaLecture 
 } from '@prisma/client'
 
-export { create, remove, reduce, getByCourseCode, getById }
+export { create, remove, update, reduce, getByCourseCode, getById }
 
 /**
  * Retrieves all Graphs associated with a Course.
@@ -87,6 +87,26 @@ async function remove(graph_id: number): Promise<void> {
 		await prisma.graph.delete({
 			where: {
 				id: graph_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+}
+
+/**
+ * Updates a Graph in the database.
+ * @param data SerializedGraph object
+ */
+
+async function update(data: SerializedGraph): Promise<void> {
+	try {
+		await prisma.graph.update({
+			where: {
+				id: data.id
+			},
+			data: {
+				name: data.name
 			}
 		})
 	} catch (error) {

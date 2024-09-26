@@ -81,7 +81,7 @@ model Domain {
 	x				Int			@default(0)
 	y				Int			@default(0)
 	style			String?
-	graph			Graph		@relation(fields: [graphId], references: [id])
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	subjects		Subject[]
 	parentDomains	Domain[]	@relation("DomainRelation")
@@ -95,7 +95,7 @@ model Subject {
 	x				Int			@default(0)
 	y				Int			@default(0)
 	style			String?
-	graph			Graph		@relation(fields: [graphId], references: [id])
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	domain			Domain?		@relation(fields: [domainId], references: [id])
 	domainId		Int?
@@ -107,7 +107,7 @@ model Subject {
 
 model Lecture {
 	id				Int			@id @default(autoincrement())
-	graph			Graph		@relation(fields: [graphId], references: [id])
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	name			String?
 	subjects		Subject[]

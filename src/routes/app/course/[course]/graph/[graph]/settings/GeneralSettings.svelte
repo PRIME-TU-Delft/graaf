@@ -26,7 +26,7 @@
 	<!-- Settings -->
 	<div class="setting">
 		<label for="name"> Name </label>
-		<Textfield label="Name" bind:value={$graph.name} />
+		<Textfield label="Name" bind:value={$graph.name} on:change={async () => await $graph.save()} />
 	</div>
 
 	<!-- Button row -->

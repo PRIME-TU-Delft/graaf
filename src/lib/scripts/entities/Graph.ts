@@ -257,10 +257,24 @@ class Graph {
 		}
 	}
 
+	async save() {
+		/* Save the graph to the database */
+
+		// Call the API
+		const response = await fetch(`/api/graph`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(this.reduce())
+		})
+
+		// Check the response
+		if (!response.ok) throw new Error('Failed to save graph')
+	}
+
 	async delete() {
 		/* Delete the graph from the database */
-
-		console.log('Clientside', this)
 
 		// Call the API
 		const response = await fetch(`/api/graph/${this.id}`, {
