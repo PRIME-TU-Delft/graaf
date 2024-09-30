@@ -21,6 +21,7 @@
 	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
 	import descedingSortIcon from '$assets/descending-sort-icon.svg'
+	import { descending } from 'd3';
 
 	// Functions
 	function subjectMatchesQuery(query: string, subject: Subject): boolean {
@@ -111,7 +112,9 @@
 					on:click={() => {
 						subject_domain_sort = undefined
 						subject_name_sort = !subject_name_sort
-						$graph.sort(SortOption.subjects | SortOption.name, subject_name_sort)
+
+						const options = subject_name_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.subjects | SortOption.name)
 						update()
 					}}
 				/>
@@ -125,7 +128,9 @@
 					on:click={() => {
 						subject_name_sort = undefined
 						subject_domain_sort = !subject_domain_sort
-						$graph.sort(SortOption.subjects | SortOption.domain, subject_domain_sort)
+						
+						const options = subject_domain_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.subjects | SortOption.domain)
 						update()
 					}}
 				/>
@@ -204,7 +209,9 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						$graph.sort(SortOption.relations | SortOption.subjects | SortOption.parent, relation_parent_sort)
+						
+						const options = relation_parent_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.relations | SortOption.subjects | SortOption.parent)
 						update()
 					}}
 				/>
@@ -218,7 +225,9 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						$graph.sort(SortOption.relations | SortOption.subjects | SortOption.child, relation_child_sort)
+						
+						const options = relation_child_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.relations | SortOption.subjects | SortOption.child)
 						update()
 					}}
 				/>

@@ -22,23 +22,21 @@ type ID = number
 
 type SerializedGraph = {
 	id: ID,
-	name: string,
-	domains: SerializedDomain[],
-	subjects: SerializedSubject[],
-	lectures: SerializedLecture[]
+	name: string
 }
 
 type SortOptions = number
 enum SortOption {
-	domains    = 0b10000000,
-	subjects   = 0b01000000,
-	relations  = 0b00100000,
-	name       = 0b00010000,
-	style      = 0b00001000,
-	domain     = 0b00000100,
-	parent     = 0b00000010,
-	child      = 0b00000001
-
+	ascending  = 0b000000000,
+	descending = 0b100000000,
+	domains    = 0b010000000,
+	subjects   = 0b001000000,
+	relations  = 0b000100000,
+	name       = 0b000010000,
+	style      = 0b000001000,
+	domain     = 0b000000100,
+	parent     = 0b000000010,
+	child      = 0b000000001
 }
 
 
@@ -48,19 +46,28 @@ enum SortOption {
 class Graph {
 	constructor(
 		public id: ID,
-		public name: string = '',
+		public name: string,
 		public domains: Domain[] = [],
 		public subjects: Subject[] = [],
-		public lectures: Lecture[] = []
+		public lectures: Lecture[] = [],
+		private _lazy: boolean = true
 	) { }
 
 	// Inferred
 	domain_relations: DomainRelation[] = []
 	subject_relations: SubjectRelation[] = []
 
+	get lazy() {
+		return this._lazy
+	}
+
 	get lecture_options() {
 		/* Return the options of the lecture */
 
+		// Check if the graph is lazy
+		if (this._lazy) throw new Error('Graph is lazy')
+
+		// Find lecture options
 		const options = []
 		for (const lecture of this.lectures) {
 			options.push({
@@ -73,188 +80,114 @@ class Graph {
 		return options
 	}
 
-	static revive(data: SerializedGraph) {
+	static async revive(data: SerializedGraph, lazy: boolean = true): Promise<Graph> {
 		/* Revive graph from a POJO */
 
 		const graph = new Graph(data.id, data.name)
+		if (!lazy) await graph.unlazify()
+		return graph
+	}
+
+	async unlazify(): Promise<void> {
+
+		// Check if the graph is already loaded
+		if (!this._lazy) return
+
+		// Call the API
+		const responses = await Promise.all([
+			fetch(`/api/graph/${this.id}/domain`, { method: 'GET' }),
+			fetch(`/api/graph/${this.id}/subject`, { method: 'GET' }),
+			fetch(`/api/graph/${this.id}/lecture`, { method: 'GET' })
+		])
+
+		// Check the responses
+		if (!responses.every(response => response.ok)) {
+			console.error(responses)
+			throw new Error(`Failed to load Graph: Bad response`)
+		}
+
+		// Parse the responses
+		const json = await Promise.all(responses.map(response => response.json()))
+		const data = {
+			domains:  json[0] as SerializedDomain[],
+			subjects: json[1] as SerializedSubject[],
+			lectures: json[2] as SerializedLecture[]
+		}
 
 		// Define domains
 		for (const domain_data of data.domains) {
-			graph.domains.push(
+			this.domains.push(
 				new Domain(
-					graph,
-					graph.domains.length,
+					this,
+					this.domains.length,
 					domain_data.id,
 					domain_data.x,
 					domain_data.y,
-					domain_data.style ?? undefined,
-					domain_data.name ?? ''
+					domain_data.name ?? '',
+					domain_data.style ?? undefined
 				)
 			)
 		}
 
-		// Build domain relations
+		// Find domain references
 		for (const parent_data of data.domains) {
-			const parent = graph.domains.find(domain => domain.id === parent_data.id)
-			if (!parent) continue
-
+			const parent = this.domains.find(domain => domain.id === parent_data.id)
 			for (const child_id of parent_data.children) {
-				const child = graph.domains.find(domain => domain.id === child_id)
-				if (!child) continue
+				const child = this.domains.find(domain => domain.id === child_id)
 
-				const relation = DomainRelation.create(graph)
-				relation.parent = parent
-				relation.child = child
+				// Create relation
+				DomainRelation.create(this, parent, child)
 			}
 		}
 
 		// Define subjects
 		for (const subject_data of data.subjects) {
-			const domain = graph.domains.find(domain => domain.id === subject_data.domain)
+			const domain = this.domains.find(domain => domain.id === subject_data.domain)
 
-			graph.subjects.push(
+			this.subjects.push(
 				new Subject(
-					graph,
-					graph.subjects.length,
+					this,
+					this.subjects.length,
 					subject_data.id,
 					subject_data.x,
 					subject_data.y,
-					domain,
-					subject_data.name ?? ''
+					subject_data.name ?? '',
+					domain
 				)
 			)
 		}
 
-		// Build subject relations
+		// Find subject references
 		for (const parent_data of data.subjects) {
-			const parent = graph.subjects.find(subject => subject.id === parent_data.id)
-			if (!parent) continue
-
+			const parent = this.subjects.find(subject => subject.id === parent_data.id)
 			for (const child_id of parent_data.children) {
-				const child = graph.subjects.find(subject => subject.id === child_id)
-				if (!child) continue
+				const child = this.subjects.find(subject => subject.id === child_id)
 
-				const relation = SubjectRelation.create(graph)
-				relation.parent = parent
-				relation.child = child
+				// Create relation
+				SubjectRelation.create(this, parent, child)
 			}
 		}
 
 		// Define lectures
 		for (const lecture_data of data.lectures) {
 			const lecture = new Lecture(
-				graph,
-				graph.lectures.length,
+				this,
+				this.lectures.length,
 				lecture_data.id,
 				lecture_data.name ?? ''
 			)
 
-			graph.lectures.push(lecture)
+			this.lectures.push(lecture)
 
 			// Define lecture subjects
 			for (const subject_id of lecture_data.subjects) {
-				const subject = graph.subjects.find(subject => subject.id === subject_id)
-				if (!subject) continue
-
-				const lecture_subject = LectureSubject.create(lecture)
-				lecture_subject.subject = subject
+				const subject = this.subjects.find(subject => subject.id === subject_id)
+				LectureSubject.create(lecture, subject)
 			}
 		}
 
-		return graph
-	}
-
-	private hasName(): boolean {
-		/* Check if the graph has a name */
-
-		return this.name !== ''
-	}
-
-	nextDomainStyle(): string | undefined {
-		/* Return the next available domain style */
-
-		const used_styles = this.domains.map(domain => domain.style)
-		return Object.keys(styles).find(style => !used_styles.includes(style))
-	}
-
-	sort(options: SortOptions, descending: boolean) {
-		/* Sort the graph */
-
-		let key: (item: any) => string
-		if (options & SortOption.relations) {
-			if (options & SortOption.parent) {
-				key = relation => relation.parent?.name ?? ''
-			} else if (options & SortOption.child) { 
-				key = relation => relation.child?.name ?? ''
-			} else return
-		} else if (options & SortOption.name) {
-			key = field => field.name
-		} else if (options & SortOption.style) {
-			key = domain => domain.style ? styles[domain.style].display_name : ''
-		} else if (options & SortOption.domain) {
-			key = subject => subject.domain?.name ?? ''
-		} else return
-
-		if (options & SortOption.relations) {
-			if (options & SortOption.domains) {
-				this.domain_relations.sort((a, b) => key(b).localeCompare(key(a)))
-				if (descending) this.domain_relations.reverse()
-			} else if (options & SortOption.subjects) {
-				this.subject_relations.sort((a, b) => key(b).localeCompare(key(a)))
-				if (descending) this.subject_relations.reverse()
-			}
-		} else {
-			if (options & SortOption.domains) {
-				this.domains.sort((a, b) => key(b).localeCompare(key(a)))
-				if (descending) this.domains.reverse()
-			} else if (options & SortOption.subjects) {
-				this.subjects.sort((a, b) => key(b).localeCompare(key(a)))
-				if (descending) this.subjects.reverse()
-			}
-		}
-	}
-
-	validate(): ValidationData {
-		/* Validate the graph */
-
-		const response = new ValidationData()
-
-		// Check if the graph has a name
-		if (!this.hasName()) {
-			response.add({
-				severity: Severity.error,
-				short: 'Graph has no name',
-				long: 'The graph must have a name',
-				tab: 0,
-				anchor: 'name'
-			})
-		}
-
-		// Validate domains, subjects and lectures
-		for (const domain of this.domains)
-			response.add(domain.validate())
-		for (const relation of this.domain_relations)
-			response.add(relation.validate())
-		for (const subject of this.subjects)
-			response.add(subject.validate())
-		for (const relation of this.subject_relations)
-			response.add(relation.validate())
-		for (const lecture of this.lectures)
-			response.add(lecture.validate())
-
-		return response
-	}
-
-	reduce(): SerializedGraph {
-		/* Reduce graph to a POJO */
-
-		return {
-			id: this.id,
-			name: this.name,
-			domains: this.domains.map(domain => domain.reduce()),
-			subjects: this.subjects.map(subject => subject.reduce()),
-			lectures: this.lectures.map(lecture => lecture.reduce())
-		}
+		// Unlazify
+		this._lazy = false
 	}
 
 	async save() {
@@ -283,6 +216,103 @@ class Graph {
 
 		// Check the response
 		if (!response.ok) throw new Error('Failed to delete graph')
+	}
+
+	validate(): ValidationData {
+		/* Validate the graph */
+
+		// Check if the graph is lazy
+		if (this._lazy) throw new Error('Graph is lazy')
+
+		// Create response
+		const validation = new ValidationData()
+
+		// Check if the graph has a name
+		if (this.name === '') {
+			validation.add({
+				severity: Severity.error,
+				short: 'Graph has no name',
+				long: 'The graph must have a name',
+				tab: 0,
+				anchor: 'name'
+			})
+		}
+
+		// Validate domains, subjects and lectures
+		for (const domain of this.domains)
+			validation.add(domain.validate())
+		for (const relation of this.domain_relations)
+			validation.add(relation.validate())
+		for (const subject of this.subjects)
+			validation.add(subject.validate())
+		for (const relation of this.subject_relations)
+			validation.add(relation.validate())
+		for (const lecture of this.lectures)
+			validation.add(lecture.validate())
+
+		return validation
+	}
+
+	sort(options: SortOptions): void {
+		/* Sort the graph */
+
+		// Check if the graph is lazy
+		if (this._lazy) throw new Error('Graph is lazy')
+
+		// Define key function
+		let key: (item: any) => string
+		if (options & SortOption.relations) {
+			if (options & SortOption.parent) {
+				key = relation => relation.parent?.name ?? ''
+			} else if (options & SortOption.child) { 
+				key = relation => relation.child?.name ?? ''
+			} else return
+		} else if (options & SortOption.name) {
+			key = field => field.name
+		} else if (options & SortOption.style) {
+			key = domain => domain.style ? styles[domain.style].display_name : ''
+		} else if (options & SortOption.domain) {
+			key = subject => subject.domain?.name ?? ''
+		} else return
+
+		// Sort the appropriate fields
+		if (options & SortOption.relations) {
+			if (options & SortOption.domains) {
+				this.domain_relations.sort((a, b) => key(b).localeCompare(key(a)))
+				if (options & SortOption.descending) this.domain_relations.reverse()
+			} else if (options & SortOption.subjects) {
+				this.subject_relations.sort((a, b) => key(b).localeCompare(key(a)))
+				if (options & SortOption.descending) this.subject_relations.reverse()
+			}
+		} else {
+			if (options & SortOption.domains) {
+				this.domains.sort((a, b) => key(b).localeCompare(key(a)))
+				if (options & SortOption.descending) this.domains.reverse()
+			} else if (options & SortOption.subjects) {
+				this.subjects.sort((a, b) => key(b).localeCompare(key(a)))
+				if (options & SortOption.descending) this.subjects.reverse()
+			}
+		}
+	}
+	
+	nextDomainStyle(): string | undefined {
+		/* Return the next available domain style */
+
+		// Check if the graph is lazy
+		if (this._lazy) throw new Error('Graph is lazy')
+
+		// Find used styles
+		const used_styles = this.domains.map(domain => domain.style)
+		return Object.keys(styles).find(style => !used_styles.includes(style))
+	}
+
+	reduce(): SerializedGraph {
+		/* Reduce graph to a POJO */
+
+		return {
+			id: this.id,
+			name: this.name
+		}
 	}
 
 	// TODO: Temp because these were used in mocked data in course overview

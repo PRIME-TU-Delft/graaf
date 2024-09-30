@@ -5,11 +5,11 @@
 	import { course, graph } from '$stores'
 
 	// Components
-	import DefaultLayout from '$layouts/DefaultLayout.svelte'
 	import GraphSVG from '$components/GraphSVG.svelte'
 	import Button from '$components/Button.svelte'
 	import Modal from '$components/Modal.svelte'
 	import Infobox from '$components/Infobox.svelte'
+	import Layout from '$layouts/DefaultLayout.svelte'
 
 	// Functions
 	function toggle_autolayout() {
@@ -30,7 +30,7 @@
 <!-- Markup -->
 
 
-<DefaultLayout
+<Layout
 	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position. Use the autolayout button to allow the system to automatically arrange the nodes. Remember to save your changes before leaving the page."
 	path={[
 		{
@@ -78,7 +78,7 @@
 		<GraphSVG bind:this={graphSVG} />
 	</div>
 
-</DefaultLayout>
+</Layout>
 
 
 <!-- Styles -->

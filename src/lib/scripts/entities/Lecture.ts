@@ -32,10 +32,10 @@ class LectureSubject {
 		public subject?: Subject
 	) { }
 
-	static create(lecture: Lecture): LectureSubject {
+	static create(lecture: Lecture, subject?: Subject): LectureSubject {
 		/* Create a new lecture subject */
 
-		const lecture_subject = new LectureSubject(lecture)
+		const lecture_subject = new LectureSubject(lecture, subject)
 		lecture.lecture_subjects.push(lecture_subject)
 		return lecture_subject
 	}

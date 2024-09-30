@@ -4,7 +4,25 @@ import prisma from '$lib/server/prisma'
 import type { Domain as PrismaDomain } from '@prisma/client'
 import type { SerializedDomain } from '$scripts/entities'
 
-export { create, remove, update, reduce }
+export { create, remove, update, reduce, getByGraphId }
+
+/**
+ * Retrieves all Domain objects associated with a Graph.
+ * @param graph_id ID of the Graph
+ * @returns Array of Serialized Domain objects
+ */
+
+async function getByGraphId(graph_id: number): Promise<SerializedDomain[]> {
+	const domains = await prisma.domain.findMany({
+		where: {
+			graph: {
+				id: graph_id
+			}
+		}
+	})
+
+	return await Promise.all(domains.map(reduce))
+}
 
 /**
  * Creates a Domain object in the database.

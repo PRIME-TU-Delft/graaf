@@ -11,19 +11,19 @@ import type {
 	Lecture as PrismaLecture 
 } from '@prisma/client'
 
-export { create, remove, update, reduce, getByCourseCode, getById }
+export { create, remove, update, reduce, getByCourseId, getById }
 
 /**
  * Retrieves all Graphs associated with a Course.
- * @param course_code 
+ * @param course_id
  * @returns Array of SerializedGraph objects
  */
 
-async function getByCourseCode(course_code: string): Promise<SerializedGraph[]> {
+async function getByCourseId(course_id: number): Promise<SerializedGraph[]> {
 	const graphs = await prisma.graph.findMany({
 		where: {
 			course: {
-				code: course_code
+				id: course_id
 			}
 		}
 	})
@@ -121,78 +121,8 @@ async function update(data: SerializedGraph): Promise<void> {
  */
 
 async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
-	const domains = await Promise.all((await getDomains(graph.id)).map(DomainHelper.reduce))
-	const subjects = await Promise.all((await getSubjects(graph.id)).map(SubjectHelper.reduce))
-	const lectures = await Promise.all((await getLectures(graph.id)).map(LectureHelper.reduce))
-
 	return {
 		id: graph.id,
-		name: graph.name,
-		domains: domains,
-		subjects: subjects,
-		lectures: lectures
-	}
-}
-
-/**
- * Retrieves PrismaDomains associated with a Graph.
- * @param graph_id ID of the Graph
- * @returns Array of PrismaDomains
- */
-
-async function getDomains(graph_id: number): Promise<PrismaDomain[]> {
-	try {
-		return await prisma.domain.findMany({
-			where: {
-				graphId: graph_id
-			},
-			orderBy: {
-				id: 'asc'
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-
-/**
- * Retrieves PrismaSubjects associated with a Graph.
- * @param graph_id ID of the Graph
- * @returns Array of PrismaSubjects
- */
-
-async function getSubjects(graph_id: number): Promise<PrismaSubject[]> {
-	try {
-		return await prisma.subject.findMany({
-			where: {
-				graphId: graph_id
-			},
-			orderBy: {
-				id: 'asc'
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-
-/**
- * Retrieves PrismaLectures associated with a Graph.
- * @param graph_id ID of the Graph
- * @returns Array of PrismaLectures
- */
-
-async function getLectures(graph_id: number): Promise<PrismaLecture[]> {
-	try {
-		return await prisma.lecture.findMany({
-			where: {
-				graphId: graph_id
-			},
-			orderBy: {
-				id: 'asc'
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
+		name: graph.name
 	}
 }

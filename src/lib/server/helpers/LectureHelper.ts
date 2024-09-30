@@ -8,8 +8,26 @@ import type {
 } from '@prisma/client'
 
 
-export { create, remove, update, reduce }
+export { create, remove, update, reduce, getByGraphId }
 
+
+/**
+ * Retrieves all Lecture objects associated with a Graph.
+ * @param graph_id ID of the Graph
+ * @returns Array of Serialized Lecture objects
+ */ 
+
+async function getByGraphId(graph_id: number): Promise<SerializedLecture[]> {
+	const lectures = await prisma.lecture.findMany({
+		where: {
+			graph: {
+				id: graph_id
+			}
+		}
+	})
+
+	return await Promise.all(lectures.map(reduce))
+}
 
 /**
  * Creates a Lecture object in the database.

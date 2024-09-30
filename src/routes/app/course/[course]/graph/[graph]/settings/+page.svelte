@@ -33,7 +33,9 @@
 	}
 
 	// Variables
+	let loading = $graph.unlazify()
 	let active_tab = 0
+
 
 </script>
 
@@ -41,72 +43,76 @@
 <!-- Markup -->
 
 
-<Layout
-	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
-	path={[
-		{
-			name: 'Dashboard',
-			href: '/app/dashboard'
-		},
-		{
-			name: `${$course.code} ${$course.name}`,
-			href: `/app/course/${$course.code}/overview`
-		},
-		{
-			name: $graph.name,
-			href: `/app/course/${$course.code}/graph/${$graph.id}/overview`
-		},
-		{
-			name: 'Settings',
-			href: `/app/course/${$course.code}/graph/${$graph.id}/settings`
-		}
-	]}
->
-	<svelte:fragment slot="toolbar">
-		<Validation data={$graph.validate()} success="Valid graph" {goto_anchor} />
+{#await loading} {:then}
 
-		<div class="flex-spacer" />
+	<Layout
+		description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
+		path={[
+			{
+				name: 'Dashboard',
+				href: '/app/dashboard'
+			},
+			{
+				name: `${$course.code} ${$course.name}`,
+				href: `/app/course/${$course.code}/overview`
+			},
+			{
+				name: $graph.name,
+				href: `/app/course/${$course.code}/graph/${$graph.id}/overview`
+			},
+			{
+				name: 'Settings',
+				href: `/app/course/${$course.code}/graph/${$graph.id}/settings`
+			}
+		]}
+	>
 
-		<Button href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </Button>
-	</svelte:fragment>
+			<svelte:fragment slot="toolbar">
+				<Validation data={$graph.validate()} success="Valid graph" {goto_anchor} />
 
-	<div class="tabular">
-		<div class="tabs">
-			<button
-				class="tab"
-				class:active={active_tab === 0}
-				on:click={() => active_tab = 0}
-			> General </button>
-			<button
-				class="tab"
-				class:active={active_tab === 1}
-				on:click={() => active_tab = 1}
-			> Domains </button>
-			<button
-				class="tab"
-				class:active={active_tab === 2}
-				on:click={() => active_tab = 2}
-			> Subjects </button>
-			<button
-				class="tab"
-				class:active={active_tab === 3}
-				on:click={() => active_tab = 3}
-			> Lectures </button>
+				<div class="flex-spacer" />
 
-			<div class="dynamic-border" />
-		</div>
+				<Button href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </Button>
+			</svelte:fragment>
 
-		{#if active_tab === 0}
-			<GeneralSettings />
-		{:else if active_tab === 1}
-			<DomainSettings />
-		{:else if active_tab === 2}
-			<SubjectSettings />
-		{:else if active_tab === 3}
-			<LectureSettings />
-		{/if}
-	</div>
-</Layout>
+			<div class="tabular">
+				<div class="tabs">
+					<button
+						class="tab"
+						class:active={active_tab === 0}
+						on:click={() => active_tab = 0}
+					> General </button>
+					<button
+						class="tab"
+						class:active={active_tab === 1}
+						on:click={() => active_tab = 1}
+					> Domains </button>
+					<button
+						class="tab"
+						class:active={active_tab === 2}
+						on:click={() => active_tab = 2}
+					> Subjects </button>
+					<button
+						class="tab"
+						class:active={active_tab === 3}
+						on:click={() => active_tab = 3}
+					> Lectures </button>
+
+					<div class="dynamic-border" />
+				</div>
+
+				{#if active_tab === 0}
+					<GeneralSettings />
+				{:else if active_tab === 1}
+					<DomainSettings />
+				{:else if active_tab === 2}
+					<SubjectSettings />
+				{:else if active_tab === 3}
+					<LectureSettings />
+				{/if}
+			</div>
+	</Layout>
+{/await}
 
 
 <!-- Styles -->

@@ -4,7 +4,25 @@ import prisma from '$lib/server/prisma'
 import type { Subject as PrismaSubject } from '@prisma/client'
 import type { SerializedSubject } from '$scripts/entities'
 
-export { create, remove, update, reduce }
+export { create, remove, update, reduce, getByGraphId }
+
+/**
+ * Retrieves all Subject objects associated with a Graph.
+ * @param graph_id ID of the Graph
+ * @returns Array of Serialized Subject objects
+ */
+
+async function getByGraphId(graph_id: number): Promise<SerializedSubject[]> {
+	const subjects = await prisma.subject.findMany({
+		where: {
+			graph: {
+				id: graph_id
+			}
+		}
+	})
+
+	return await Promise.all(subjects.map(reduce))
+}
 
 /**
  * Creates a Subject object in the database.

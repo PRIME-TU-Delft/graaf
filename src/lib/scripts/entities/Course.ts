@@ -1,146 +1,98 @@
 
 // Internal imports
 import { ValidationData, Severity } from "./Validation"
+import { Graph, type SerializedGraph } from "./Graph"
 
 // Exports
-export { Course, AssignedUser, Permissions }
-export type { SerializedCourse, SerializedAssignedUser }
+export { Course }
+export type { SerializedCourse }
 
 
 // --------------------> Types
 
-type SerializedAssignedUser = {
-	id: ID,
-	netid: string,
-	first_name: string,
-	last_name: string,
-	email?: string,
-	permissions: Permissions
-}
+
+type ID = number
 
 type SerializedCourse = {
+	id: ID,
 	code: string,
-	name: string,
-	users: SerializedAssignedUser[]
-}
-
-enum Permissions {
-	read,
-	write,
-	admin
+	name: string
 }
 
 
 // --------------------> Classes
 
-type ID = number;
-
-class AssignedUser {
-	constructor(
-		public course: Course,
-		public id: ID,
-		public netid: string,
-		public index: number,
-		public first_name: string,
-		public last_name: string,
-		public permissions?: Permissions
-	) { }
-
-	static create(course: Course) {
-		/* Create a new assigned user */
-		// TODO make not this
-
-		const user = new AssignedUser(
-			course,
-			1,
-			'jsmith',
-			course.users.length,
-			'John',
-			'Smith'
-		)
-		course.users.push(user)
-		return user
-	}
-
-	validate(): ValidationData {
-		/* Validate the assigned user */
-
-		const response = new ValidationData()
-
-		// Check if the user name is valid
-		if (this.first_name === '' || this.last_name === '') {
-			response.add({
-				severity: Severity.error,
-				short: 'User must have a name',
-				tab: 1,
-				anchor: `user-${this.id}`
-			})
-		}
-
-		// Check if the user has permissions
-		if (this.permissions === undefined) {
-			response.add({
-				severity: Severity.error,
-				short: 'User must have permissions',
-				tab: 1,
-				anchor: `user-${this.id}`
-			})
-		}
-
-		return response
-	}
-
-	reduce(): SerializedAssignedUser {
-		/* Reduce the assigned user to a POJO */
-		return {
-			id: this.id,
-			netid: this.netid,
-			first_name: this.first_name,
-			last_name: this.last_name,
-			permissions: this.permissions!
-		}
-	}
-
-	delete() {
-		/* Delete the assigned user */
-
-		this.course.users = this.course.users.filter(user => user !== this)
-	}
-}
 
 class Course {
 	constructor(
+		public id: ID,
 		public code: string,
 		public name: string,
-		public users: AssignedUser[] = [],
+		// public links: Link[]l = [],
+		public graphs: Graph[]= [],
+		// public contributors: User[] = [],
+		private _lazy: boolean = true
 	) { }
 
-	get permission_options() {
-		/* Get the permission options */
-
-		const validation = new ValidationData()
-
-		return [
-			{ name: 'Read',  value: Permissions.read,  validation },
-			{ name: 'Write', value: Permissions.write, validation },
-			{ name: 'Admin', value: Permissions.admin, validation }
-		]
+	get lazy() {
+		return this._lazy
 	}
 
-	static revive(data: SerializedCourse) {
+	static async revive(data: SerializedCourse, lazy: boolean = true, cascade: boolean = false): Promise<Course> {
 		/* Load the course from a POGO */
 
-		const course = new Course(data.code, data.name)
-		for (const user_data of data.users) {
-			const user = AssignedUser.create(course)
-			user.id = user_data.id
-			user.netid = user_data.netid
-			user.first_name = user_data.first_name
-			user.last_name = user_data.last_name
-			user.permissions = user_data.permissions
-		}
-
+		const course = new Course(data.id, data.code, data.name)
+		if (!lazy) await course.unlazify(cascade)
 		return course
+	}
+
+	async unlazify(cascade: boolean = false): Promise<void> {
+		/* Load the course's graphs */
+
+		// Check if the course is already loaded
+		if (!this.lazy) return
+
+		// Call the API
+		const response = await fetch(`/api/courses/${this.id}/graphs`, { method: 'GET' })
+
+		// Check the response
+		if (!response.ok) throw new Error('Failed to delete graph')
+
+		// Parse the response
+		const data: SerializedGraph[] = await response.json()
+		this.graphs = await Promise.all(data.map(graph => Graph.revive(graph, cascade)))
+
+
+		// Unlazify
+		this._lazy = false
+	}
+
+	async save() {
+		/* Save the course to the database */
+
+		// Call the API
+		const response = await fetch(`/api/course`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(this.reduce())
+		})
+
+		// Check the response
+		if (!response.ok) throw new Error('Failed to save course')
+	}
+
+	async delete(): Promise<void> {
+		/* Delete the graph from the database */
+
+		// Call the API
+		const response = await fetch(`/api/course/${this.id}`, {
+			method: 'DELETE'
+		})
+
+		// Check the response
+		if (!response.ok) throw new Error('Failed to delete course')
 	}
 
 	validate(): ValidationData {
@@ -168,31 +120,6 @@ class Course {
 			})
 		}
 
-		// Check if the course has users
-		if (this.users.length === 0) {
-			response.add({
-				severity: Severity.error,
-				short: 'Course has no users',
-				tab: 1,
-				anchor: 'users'
-			})
-		}
-
-		// Check if the course has an admin
-		else if (!this.users.some(user => user.permissions === Permissions.admin)) {
-			response.add({
-				severity: Severity.error,
-				short: 'Course has no admin',
-				tab: 1,
-				anchor: ''
-			})
-		}
-
-		// Validate the users
-		for (const user of this.users) {
-			response.add(user.validate())
-		}
-
 		return response
 	}
 
@@ -200,17 +127,9 @@ class Course {
 		/* Reduce the course to a POJO */
 
 		return {
+			id: this.id,
 			code: this.code,
-			name: this.name,
-			users: this.users.map(user => user.reduce())
+			name: this.name
 		}
-	}
-
-	save() {
-		/* Save the course */
-	}
-
-	delete() {
-		/* Delete the course */
 	}
 }

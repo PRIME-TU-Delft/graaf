@@ -50,4 +50,30 @@ class ValidationData {
 	static success() {
 		return new ValidationData()
 	}
+
+	static warning(short: string, long?: string, tab?: number, anchor?: string) {
+		const data = new ValidationData()
+		data.add({
+			severity: Severity.warning,
+			short,
+			long,
+			tab,
+			anchor
+		})
+
+		return data
+	}
+
+	static error(short: string, long?: string, tab?: number, anchor?: string) {
+		const data = new ValidationData()
+		data.add({
+			severity: Severity.error,
+			short,
+			long,
+			tab,
+			anchor
+		})
+
+		return data
+	}
 }

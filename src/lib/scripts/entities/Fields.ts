@@ -97,8 +97,8 @@ class Domain extends Field<Domain> {
 		id: ID,
 		x: number = 0,
 		y: number = 0,
-		style?: string,
 		name: string = '',
+		style?: string,
 		parents: Domain[] = [],
 		children: Domain[] = []
 	) {
@@ -121,6 +121,9 @@ class Domain extends Field<Domain> {
 
 	get color(): string {
 		/* Return the preview color of this domain */
+
+		console.log(this.style)
+		console.log(styles)
 
 		return this.style ? styles[this.style].stroke : 'transparent'
 	}
@@ -341,8 +344,8 @@ class Subject extends Field<Subject> {
 		id: ID,
 		x: number = 0,
 		y: number = 0,
-		domain?: Domain,
 		name: string = '',
+		domain?: Domain,
 		parents: Subject[] = [],
 		children: Subject[] = []
 	) {

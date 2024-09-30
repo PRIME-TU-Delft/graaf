@@ -2,6 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
+	import { ValidationData } from '$scripts/entities'
 	import * as settings from '$scripts/settings'
 	import { course } from '$stores'
 
@@ -34,7 +35,10 @@
 	}
 
 	// Variables
+	let course_validation: ValidationData
 	let active_tab = 0
+
+	$: course_validation = $course.validate()
 
 </script>
 
@@ -60,9 +64,9 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={$course.validate()} goto_anchor={goto_anchor} success="Ready to save" />
+		<Validation data={course_validation} goto_anchor={goto_anchor} success="Ready to save" />
 		<div class="flex-spacer" />
-		<Button disabled={$course.validate().severity === Severity.error} on:click={() => $course.save()}>
+		<Button disabled={course_validation.severity === Severity.error} on:click={() => $course.save()}>
 			<img src={saveIcon} alt=""> Save Changes
 		</Button>
 	</svelte:fragment>

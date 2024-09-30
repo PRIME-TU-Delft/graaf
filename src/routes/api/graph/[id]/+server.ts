@@ -6,6 +6,8 @@ import { GraphHelper } from '$lib/server/helpers'
  */
 
 export async function DELETE({ params }) {
+	if (!params.id || isNaN(Number(params.id))) 
+		return new Response('Failed to delete graph: Invalid graph ID', { status: 400 })
 	const id = Number(params.id)
 
 	return await GraphHelper.remove(id)

@@ -21,7 +21,12 @@ abstract class Relation<T extends Domain | Subject> {
 		public index: number,	// The index of the relation in the list of its type, based on creation order, consistent after sorting, deleting etc
 		private _parent?: T,	// The parent of the relation, exposed setter automatically updates field parents/children
 		private _child?: T		// The child of the relation, exposed setter automatically updates field parents/children
-	) { }
+	) { 
+		if (this.parent && this.child) {
+			this.parent.children = [...this.parent.children, this.child] as Domain[] | Subject[]
+			this.child.parents = [...this.child.parents, this.parent] as Domain[] | Subject[]
+		}
+	}
 
 	get parent(): T | undefined {
 		return this._parent
@@ -156,10 +161,10 @@ class DomainRelation extends Relation<Domain> {
 		return options
 	}
 
-	static create(graph: Graph): DomainRelation {
+	static create(graph: Graph, parent?: Domain, child?: Domain): DomainRelation {
 		/* Create a new domain relation */
 
-		const relation = new DomainRelation(graph, uuid.v4(), graph.domain_relations.length)
+		const relation = new DomainRelation(graph, uuid.v4(), graph.domain_relations.length, parent, child)
 		graph.domain_relations.push(relation)
 		return relation
 	}
@@ -301,10 +306,10 @@ class SubjectRelation extends Relation<Subject> {
 		return options
 	}
 
-	static create(graph: Graph): SubjectRelation {
+	static create(graph: Graph, parent?: Subject, child?: Subject): SubjectRelation {
 		/* Create a new subject relation */
 
-		const relation = new SubjectRelation(graph, uuid.v4(), graph.subject_relations.length)
+		const relation = new SubjectRelation(graph, uuid.v4(), graph.subject_relations.length, parent, child)
 		graph.subject_relations.push(relation)
 		return relation
 	}

@@ -111,7 +111,9 @@
 					on:click={() => {
 						domain_style_sort = undefined
 						domain_name_sort = !domain_name_sort
-						$graph.sort(SortOption.domains | SortOption.name, domain_name_sort)
+
+						const options = domain_name_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.domains | SortOption.name)
 						update()
 					}}
 				/>
@@ -125,7 +127,9 @@
 					on:click={() => {
 						domain_name_sort = undefined
 						domain_style_sort = !domain_style_sort
-						$graph.sort(SortOption.domains | SortOption.style, domain_style_sort)
+						
+						const options = domain_style_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.domains | SortOption.style)
 						update()
 					}}
 				/>
@@ -204,7 +208,9 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						$graph.sort(SortOption.relations | SortOption.domains | SortOption.parent, relation_parent_sort)
+
+						const options = relation_parent_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.relations | SortOption.domains | SortOption.parent)
 						update()
 					}}
 				/>
@@ -218,7 +224,9 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						$graph.sort(SortOption.relations | SortOption.domains | SortOption.child, relation_child_sort)
+
+						const options = relation_child_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.relations | SortOption.domains | SortOption.child)
 						update()
 					}}
 				/>
