@@ -1,29 +1,21 @@
 // Internal imports
-import { ValidationData, Severity } from './Validation'
-import { Domain, Subject } from './Fields'
-import { DomainRelation, SubjectRelation } from './Relations'
-import { Lecture, LectureSubject } from './Lecture'
+import {
+	DomainController, DomainRelationController, 
+	SubjectController, SubjectRelationController,
+	LectureController, LectureSubject
+} from '$scripts/controllers'
 
-import type { SerializedLecture } from './Lecture'
-import type { SerializedSubject } from './Fields'
-import type { SerializedDomain } from './Fields'
+import { ValidationData, Severity } from '$scripts/validation'
+import { styles } from '$scripts/settings'
 
-import { styles } from '../settings'
+import type { SerializedGraph } from '$scripts/types'
 
 // Exports
-export { Graph, SortOption }
-export type { SerializedGraph, SortOptions }
+export { GraphController, SortOption }
 
 
-// --------------------> Types
+// --------------------> Classes
 
-
-type ID = number
-
-type SerializedGraph = {
-	id: ID,
-	name: string
-}
 
 type SortOptions = number
 enum SortOption {
@@ -39,23 +31,19 @@ enum SortOption {
 	child      = 0b000000001
 }
 
-
-// --------------------> Classes
-
-
-class Graph {
+class GraphController {
 	constructor(
-		public id: ID,
+		public id: number,
 		public name: string,
-		public domains: Domain[] = [],
-		public subjects: Subject[] = [],
-		public lectures: Lecture[] = [],
+		public domains: DomainController[] = [],
+		public subjects: SubjectController[] = [],
+		public lectures: LectureController[] = [],
 		private _lazy: boolean = true
 	) { }
 
 	// Inferred
-	domain_relations: DomainRelation[] = []
-	subject_relations: SubjectRelation[] = []
+	domain_relations: DomainRelationController[] = []
+	subject_relations: SubjectRelationController[] = []
 
 	get lazy() {
 		return this._lazy
@@ -80,10 +68,10 @@ class Graph {
 		return options
 	}
 
-	static async revive(data: SerializedGraph, lazy: boolean = true): Promise<Graph> {
+	static async revive(data: SerializedGraph, lazy: boolean = true): Promise<GraphController> {
 		/* Revive graph from a POJO */
 
-		const graph = new Graph(data.id, data.name)
+		const graph = new GraphController(data.id, data.name)
 		if (!lazy) await graph.unlazify()
 		return graph
 	}
@@ -110,7 +98,7 @@ class Graph {
 		// Define domains
 		for (const domain_data of domains) {
 			this.domains.push(
-				new Domain(
+				new DomainController(
 					this,
 					this.domains.length,
 					domain_data.id,
@@ -129,7 +117,7 @@ class Graph {
 				const child = this.domains.find(domain => domain.id === child_id)
 
 				// Create relation
-				DomainRelation.create(this, parent, child)
+				DomainRelationController.create(this, parent, child)
 			}
 		}
 
@@ -138,7 +126,7 @@ class Graph {
 			const domain = this.domains.find(domain => domain.id === subject_data.domain)
 
 			this.subjects.push(
-				new Subject(
+				new SubjectController(
 					this,
 					this.subjects.length,
 					subject_data.id,
@@ -157,13 +145,13 @@ class Graph {
 				const child = this.subjects.find(subject => subject.id === child_id)
 
 				// Create relation
-				SubjectRelation.create(this, parent, child)
+				SubjectRelationController.create(this, parent, child)
 			}
 		}
 
 		// Define lectures
 		for (const lecture_data of lectures) {
-			const lecture = new Lecture(
+			const lecture = new LectureController(
 				this,
 				this.lectures.length,
 				lecture_data.id,

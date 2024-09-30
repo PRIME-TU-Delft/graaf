@@ -1,16 +1,19 @@
 
+// External imports
 import prisma from '$lib/server/prisma'
-
-import type { SerializedLecture } from '$scripts/entities'
 import type {
 	Lecture as PrismaLecture,
 	Subject as PrismaSubject
 } from '@prisma/client'
 
+// Internal imports
+import type { SerializedLecture } from '$scripts/types'
+
+// Exports
 export { create, remove, update, reduce, getByGraphId }
 
 
-// --------------------> Helper Functions <-------------------- //
+// --------------------> Helper Functions
 
 
 /**

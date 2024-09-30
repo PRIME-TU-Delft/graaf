@@ -3,24 +3,24 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Relation, Domain, Subject } from '../entities'
-import * as settings from '../settings'
-import { styles } from '../settings'
+import {
+	DomainController, 
+	SubjectController, 
+	RelationController 
+} from '$scripts/controllers'
+
+import * as settings from '$scripts/settings'
+import { styles } from '$scripts/settings'
 
 // Exports
-export { RelationSVG }
-
-
-// --------------------> Types
-
-
-type RelationSelection = d3.Selection<SVGLineElement, Relation<Domain | Subject>, d3.BaseType, unknown>
+export { RelationSVGController }
 
 
 // --------------------> Classes
 
+type RelationSelection = d3.Selection<SVGLineElement, RelationController<DomainController | SubjectController>, d3.BaseType, unknown>
 
-class RelationSVG {
+class RelationSVGController {
 	static create(selection: RelationSelection) {
 		selection
 			.attr('id', relation => relation.anchor)
@@ -29,7 +29,7 @@ class RelationSVG {
 			.attr('stroke', relation => styles[relation.parent!.style!].stroke)
 			.attr('fill', relation => styles[relation.parent!.style!].stroke)
 			.attr('marker-end', 'url(#arrowhead)')
-			.call(RelationSVG.update)
+			.call(RelationSVGController.update)
 	}
 
 	static update(selection: RelationSelection, animated: boolean = false) {

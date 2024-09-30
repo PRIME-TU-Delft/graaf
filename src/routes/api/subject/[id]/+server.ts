@@ -1,5 +1,5 @@
 
-import { SubjectHelper } from '$lib/server/helpers'
+import { SubjectHelper } from '$scripts/helpers'
 
 /**
  * API endpoint for deleting a Subject from the database.
@@ -11,6 +11,6 @@ export async function DELETE({ params }) {
 	return await SubjectHelper.remove(id)
 		.then(
 			() => new Response(null, { status: 200 }),
-			(error) => new Response(error, { status: 400 })
+			error => new Response(error, { status: 400 })
 		)
 }

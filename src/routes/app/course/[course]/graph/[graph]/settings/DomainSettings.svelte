@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Domain, DomainRelation, SortOption } from '$scripts/entities'
+	import { DomainController, DomainRelationController, SortOption } from '$scripts/controllers'
 	import { styles } from '$scripts/settings'
 	import { graph } from '$stores'
 
@@ -23,7 +23,7 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Functions
-	function domainMatchesQuery(query: string, domain: Domain): boolean {
+	function domainMatchesQuery(query: string, domain: DomainController): boolean {
 		/* Checks if query appears in domain */
 
 		if (!query) return true
@@ -35,7 +35,7 @@
 		return name?.includes(query) || style?.includes(query) || false
 	}
 
-	function relationMatchesQuery(query: string, relation: DomainRelation): boolean {
+	function relationMatchesQuery(query: string, relation: DomainRelationController): boolean {
 		/* Checks if query appears in relation */
 
 		if (!query) return true
@@ -92,7 +92,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domain_query} />
-		<Button on:click={async () => { await Domain.create($graph); update() }}>
+		<Button on:click={async () => { await DomainController.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
@@ -189,7 +189,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={() => { DomainRelation.create($graph); update() }}>
+		<Button on:click={() => { DomainRelationController.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>

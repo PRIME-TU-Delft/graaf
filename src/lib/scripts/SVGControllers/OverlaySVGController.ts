@@ -1,25 +1,17 @@
 
-// External imports
-import * as d3 from 'd3'
-
 // Internal imports
-import { GraphSVG } from '.'
-import * as settings from '../settings'
+import { GraphSVGController } from '$scripts/SVGControllers'
+import * as settings from '$scripts/settings'
 
 // Exports
-export { OverlaySVG }
-
-
-// --------------------> 
-
-
-type OverlaySelection = d3.Selection<SVGGElement, unknown, HTMLElement, any>
+export { OverlaySVGController }
 
 
 // --------------------> Classes
 
+type OverlaySelection = d3.Selection<SVGGElement, unknown, HTMLElement, any>
 
-class OverlaySVG {
+class OverlaySVGController {
 	static reset(selection: OverlaySelection) {
 		selection
 			.interrupt()
@@ -32,7 +24,7 @@ class OverlaySVG {
 
 	static brokenGraph(selection: OverlaySelection) {
 		if (selection.classed('broken')) return
-		OverlaySVG.reset(selection)
+		OverlaySVGController.reset(selection)
 
 		selection
 			.attr('class', 'broken')
@@ -63,9 +55,9 @@ class OverlaySVG {
 			.attr('fill', 'black')
 	}
 
-	static shiftScroll(selection: OverlaySelection, graphSVG: GraphSVG) {
+	static shiftScroll(selection: OverlaySelection, graphSVG: GraphSVGController) {
 		if (!selection.classed('shift-scroll')) {
-			OverlaySVG.reset(selection)
+			OverlaySVGController.reset(selection)
 
 			selection
                 .attr('class', 'shift-scroll')
@@ -99,7 +91,7 @@ class OverlaySVG {
 		    	.attr('fill', 'white')
 				.on('click', () => {
 					graphSVG.shift_required = false
-					OverlaySVG.reset(selection)
+					OverlaySVGController.reset(selection)
 				})
 		}
 
@@ -112,7 +104,7 @@ class OverlaySVG {
 				.delay(settings.OVERLAY_LINGER)
 			.style('opacity', 0)
 			.on('end', () => {
-				OverlaySVG.reset(selection)
+				OverlaySVGController.reset(selection)
 			})
 	}
 }

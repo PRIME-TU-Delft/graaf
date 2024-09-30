@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 
-import { GraphHelper } from '$lib/server/helpers';
+import { GraphHelper } from '$scripts/helpers';
 import { CourseController, GraphController } from '$lib/server/controllers';
 
 

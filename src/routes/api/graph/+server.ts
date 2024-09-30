@@ -1,6 +1,6 @@
 
-import { GraphHelper } from '$lib/server/helpers'
-import type { SerializedGraph } from '$scripts/entities/Graph.js'
+import { GraphHelper } from '$scripts/helpers'
+import type { SerializedGraph } from '$scripts/types'
 
 /**
  * API endpoint for updating a Graph in the database.

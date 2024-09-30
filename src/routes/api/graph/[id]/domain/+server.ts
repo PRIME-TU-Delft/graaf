@@ -1,5 +1,5 @@
 
-import { DomainHelper } from '$lib/server/helpers'
+import { DomainHelper } from '$scripts/helpers'
 
 /**
  * API endpoint for creating a Domain in the database.
@@ -20,7 +20,7 @@ export async function POST({ params }) {
 
 /**
  * API endpoint for retrieving all Domains associated with a Graph.
- * @returns Array of Serialized Domains
+ * @returns Array of SerializedDomains
  */
 
 export async function GET({ params }) {

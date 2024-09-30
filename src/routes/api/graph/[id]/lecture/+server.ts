@@ -1,5 +1,5 @@
 
-import { LectureHelper } from '$lib/server/helpers'
+import { LectureHelper } from '$scripts/helpers'
 
 /**
  * API endpoint for creating a Lecture in the database.

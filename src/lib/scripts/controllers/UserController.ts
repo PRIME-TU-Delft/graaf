@@ -1,30 +1,17 @@
 
+// Internal imports
+import type { SerializedUser } from "$scripts/types"
+
 // Exports
-export { User}
-export type { SerializedUser }
-
-
-// --------------------> Types
-
-
-type ID = number
-
-type SerializedUser = {
-	id: ID,
-	netid: string,
-	first_name: string,
-	last_name: string,
-    role: string,
-	email?: string
-}
+export { UserController }
 
 
 // --------------------> Classes
 
 
-class User {
+class UserController {
 	constructor(
-		public id: ID,
+		public id: number,
 		public netid: string,
 		public first_name: string,
 		public last_name: string,
@@ -34,6 +21,7 @@ class User {
 
 	reduce(): SerializedUser {
 		/* Reduce the user to a POJO */
+
 		return {
 			id: this.id,
             netid: this.netid,

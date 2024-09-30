@@ -1,13 +1,16 @@
 
+// External imports
 import prisma from '$lib/server/prisma'
-
 import type { Subject as PrismaSubject } from '@prisma/client'
-import type { SerializedSubject } from '$scripts/entities'
 
+// Internal imports
+import type { SerializedSubject } from '$scripts/types'
+
+// Exports
 export { create, remove, update, reduce, getByGraphId }
 
 
-// --------------------> Helper Functions <-------------------- //
+// --------------------> Helper Functions
 
 
 /**

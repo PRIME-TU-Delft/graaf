@@ -26,8 +26,8 @@
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
 
-	import { Graph } from '$scripts/entities/Graph'
-	import { Course } from '$scripts/entities/Course'
+	import { Graph } from '$scripts/entities/GraphController.js'
+	import { Course } from '$scripts/controllers/CourseController.js'
 
 
 	// Helpers

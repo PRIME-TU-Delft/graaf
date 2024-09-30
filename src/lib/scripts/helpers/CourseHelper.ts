@@ -1,13 +1,16 @@
 
+// External imports
 import prisma from '$lib/server/prisma'
-
-import type { SerializedCourse } from '$scripts/entities'
 import type { Course as PrismaCourse } from '@prisma/client'
 
+// Internal imports
+import type { SerializedCourse } from '$scripts/types'
+
+// Exports
 export { create, remove, update, reduce, getById }
 
 
-// --------------------> Helper Functions <-------------------- //
+// --------------------> Helper Functions
 
 
 /**

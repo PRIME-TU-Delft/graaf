@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Lecture, LectureSubject } from '$scripts/entities'
+	import { LectureController, LectureSubject } from '$scripts/controllers'
 	import { graph } from '$stores'
 
 	// Components
@@ -18,7 +18,7 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Functions
-	function lectureMatchesQuery(query: string, lecture: Lecture): boolean {
+	function lectureMatchesQuery(query: string, lecture: LectureController): boolean {
 		/* Checks if query appears in lecture */
 
 		if (!query) return true
@@ -64,7 +64,7 @@
 		<h2> Lectures </h2>
 		<div class="flex-spacer" />
 		<Searchbar bind:value={query} />
-		<Button on:click={async () => { await Lecture.create($graph); update() }}>
+		<Button on:click={async () => { await LectureController.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Lecture
 		</Button>
 	</div>

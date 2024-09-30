@@ -3,14 +3,30 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { Graph, Field, Domain, Subject, Relation, Lecture, Severity } from '../entities'
-import { FieldSVG, RelationSVG, OverlaySVG } from '.'
-import * as settings from '../settings'
+import {
+	FieldSVGController,
+	RelationSVGController,
+	OverlaySVGController
+} from '$scripts/SVGControllers'
+
+import {
+	GraphController,
+	DomainController,
+	SubjectController,
+	RelationController,
+	LectureController,
+	FieldController
+} from '$scripts/controllers'
+
+import { Severity } from '$scripts/validation'
+import * as settings from '$scripts/settings'
 
 // Exports
-export { GraphSVG, View, State }
+export { GraphSVGController, View, State }
 
-// --------------------> Types
+
+// --------------------> Classes
+
 
 const ANIMATE = () => {}
 
@@ -28,13 +44,13 @@ enum View {
 	lectures
 }
 
-class GraphSVG {
-	private graph: Graph
+class GraphSVGController {
+	private graph: GraphController
 	private interactive: boolean
 
 	private _view: View
 	private _state: State
-	private _lecture?: Lecture
+	private _lecture?: LectureController
 
 	private svg?: SVGSVGElement
 	private zoom?: d3.ZoomBehavior<SVGSVGElement, unknown>
@@ -43,12 +59,16 @@ class GraphSVG {
 	private keys: { [key: string]: boolean } = {}
 	shift_required: boolean = true
 
-	constructor(graph: Graph, interactive: boolean = true) {
+	constructor(graph: GraphController, interactive: boolean = true) {
 		this.graph = graph
 		this.interactive = interactive
 
 		this._view = View.domains
-		this._state = interactive ? State.dynamic : State.static
+		if (this.validateView(this.view)) {
+			this._state = interactive ? State.dynamic : State.static
+		} else {
+			this._state = State.broken
+		}
 	}
 
 	get view() {
@@ -56,9 +76,8 @@ class GraphSVG {
 	}
 
 	set view(view: View) {
-		if (this.view === view ||
-			this.state === State.animating
-		) return
+		if (this.view === view || this.state === State.animating)
+			return
 
 		// Validate view
 		if (!this.validateView(view)) {
@@ -106,42 +125,45 @@ class GraphSVG {
 	}
 
 	private set state(state: State) {
-		if (this.svg === undefined || this.simulation === undefined) 
-			throw new Error('GraphSVG not attached to DOM')
-		if (this.state === state) 
+		if (this.svg === undefined || this.simulation === undefined)
+			throw new Error('Failed to set state: GraphSVG not attached to DOM')
+		if (this.state === state)
 			return
 
-		// If moving out of dynamic state
+		// If moving out of dynamic state:
+		// - Disable pointer events
+		// - Fix all fields
+		// - Save all fields
+		// - Stop simulation
 		if (this.state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'none')
 				.select('#content')
-					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-						.call(FieldSVG.setFixed, true)
+					.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
+						.call(FieldSVGController.setFixed, true)
 						.each(async field => await field.save())
 
 			this.simulation.stop()
 		}
 
-		// If moving out of broken state
+		// If moving out of broken state, reset overlay
 		if (this.state === State.broken) {
 			d3.select<SVGGElement, unknown>('#overlay')
-				.call(OverlaySVG.reset)
+				.call(OverlaySVGController.reset)
 		}
 
 		this._state = state // NEW STATE
 
-
-		// If moving into dynamic state
+		// If moving into dynamic state, enable pointer events
 		if (state === State.dynamic) {
 			d3.select(this.svg)
 				.attr('pointer-events', 'all')
 		}
 
-		// If moving into broken state
+		// If moving into broken state, set overlay to broken
 		if (state === State.broken) {
 			d3.select<SVGGElement, unknown>('#overlay')
-				.call(OverlaySVG.brokenGraph)
+				.call(OverlaySVGController.brokenGraph)
 		}
 	}
 
@@ -149,10 +171,10 @@ class GraphSVG {
 		return this._lecture
 	}
 
-	set lecture(lecture: Lecture | undefined) {
-		if (this.svg === undefined) 
-			throw new Error('GraphSVG not attached to DOM')
-		if (this.lecture === lecture || this.state === State.animating) 
+	set lecture(lecture: LectureController | undefined) {
+		if (this.svg === undefined)
+			throw new Error('Failed to set lecture: GraphSVG not attached to DOM')
+		if (this.lecture === lecture || this.state === State.animating)
 			return
 
 		this._lecture = lecture
@@ -165,7 +187,6 @@ class GraphSVG {
 
 		// Update content
 		if (this.view === View.lectures) {
-			this.state = State.lecture
 			this.setBackground(View.lectures)
 			this.moveCamera(0, 0, 1)
 
@@ -180,13 +201,13 @@ class GraphSVG {
 		// Update highlights
 		d3.select(this.svg)
 			.select('#content')
-				.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-					.call(FieldSVG.updateHighlight, this.lecture)
+				.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
+					.call(FieldSVGController.updateHighlight, this.lecture)
 	}
 
 	get autolayout_enabled() {
 		return d3.select('#content')
-			.selectAll<SVGGElement, Field<Domain | Subject>>('.field:not(.fixed)')
+			.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field:not(.fixed)')
 				.size() > 0
 	}
 
@@ -251,7 +272,7 @@ class GraphSVG {
 		svg.on('wheel', () => {
 			if (this.keys.Shift || !this.shift_required) return
 			d3.select<SVGGElement, unknown>('#overlay')
-				.call(OverlaySVG.shiftScroll, this)
+				.call(OverlaySVGController.shiftScroll, this)
 		})
 
 		// Keylogging
@@ -294,8 +315,8 @@ class GraphSVG {
 			.force('charge', d3.forceManyBody().strength(settings.CHARGE_FORCE))
 			.on('tick', () => {
 				d3.select('#content')
-					.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-						.call(FieldSVG.updatePosition)
+					.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
+						.call(FieldSVGController.updatePosition)
 			})
 
 
@@ -307,9 +328,9 @@ class GraphSVG {
 	}
 
 	zoomIn() {
-		if (this.svg === undefined || this.zoom === undefined) 
+		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
-		if (this.state !== State.dynamic) 
+		if (this.state !== State.dynamic)
 			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -320,9 +341,9 @@ class GraphSVG {
 	}
 
 	zoomOut() {
-		if (this.svg === undefined || this.zoom === undefined) 
+		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
-		if (this.state !== State.dynamic) 
+		if (this.state !== State.dynamic)
 			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -350,8 +371,8 @@ class GraphSVG {
 
 		const autolayout_enabled = this.autolayout_enabled
 		d3.select('#content')
-			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-				.call(FieldSVG.setFixed, autolayout_enabled)
+			.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
+				.call(FieldSVGController.setFixed, autolayout_enabled)
 				.each(async field => { if (autolayout_enabled) await field.save() })
 
 		if (autolayout_enabled) {
@@ -375,7 +396,7 @@ class GraphSVG {
 				return this.graph.domains.every(domain => domain.validate().severity !== Severity.error)
 
 			case View.subjects:
-				return this.graph.subjects.every(subject => 
+				return this.graph.subjects.every(subject =>
 					subject.domain?.style !== undefined &&
 					subject.validate().severity !== Severity.error
 				)
@@ -383,13 +404,13 @@ class GraphSVG {
 			case View.lectures:
 				return (
 					this.lecture === undefined ||
-					this.lecture.validate().severity !== Severity.error && 
+					this.lecture.validate().severity !== Severity.error &&
 					this.lecture.subjects.every(subject => subject.validate().severity !== Severity.error)
 				)
 		}
 	}
 
-	private boundingBox(fields: Field<Domain | Subject>[]) {
+	private boundingBox(fields: FieldController<DomainController | SubjectController>[]) {
 		if (this.svg === undefined)
 			throw new Error('GraphSVG not attached to DOM')
 
@@ -422,7 +443,7 @@ class GraphSVG {
 	}
 
 	private moveCamera(x: number, y: number, k: number, callback?: () => void) {
-		if (this.svg === undefined || this.zoom === undefined) 
+		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
@@ -449,7 +470,7 @@ class GraphSVG {
 	}
 
 	private panCamera(x: number, y: number, callback?: () => void) {
-		if (this.svg === undefined || this.zoom === undefined) 
+		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
@@ -472,7 +493,7 @@ class GraphSVG {
 	}
 
 	private zoomCamera(k: number, callback?: () => void) {
-		if (this.svg === undefined || this.zoom === undefined) 
+		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
@@ -574,8 +595,8 @@ class GraphSVG {
 				.remove()
 	}
 
-	private setContent(fields: Field<Domain | Subject>[], relations: Relation<Domain | Subject>[], callback?: () => void) {
-		if (this.simulation === undefined) 
+	private setContent(fields: FieldController<DomainController | SubjectController>[], relations: RelationController<DomainController | SubjectController>[], callback?: () => void) {
+		if (this.simulation === undefined)
 			throw new Error('GraphSVG not attached to DOM')
 
 		const content = d3.select<SVGGElement, unknown>('#content')
@@ -583,20 +604,20 @@ class GraphSVG {
 		const graphSVG = this
 
 		// Update Fields
-		content.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
+		content.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
 			.data(fields, field => field.anchor)
 			.join(
 				function(enter) {
 					return enter
 						.append('g')
-							.call(FieldSVG.create, graphSVG)
-							.call(FieldSVG.updateHighlight, lecture)
+							.call(FieldSVGController.create, graphSVG)
+							.call(FieldSVGController.updateHighlight, lecture)
 							.style('opacity', 0)
 				},
 
 				function(update) {
 					return update
-						.call(FieldSVG.updateHighlight, lecture)
+						.call(FieldSVGController.updateHighlight, lecture)
 				},
 
 				function(exit) {
@@ -612,13 +633,13 @@ class GraphSVG {
 			.style('opacity', 1)
 
 		// Update relations
-		content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
+		content.selectAll<SVGLineElement, RelationController<DomainController | SubjectController>>('.relation')
 			.data(relations, relation => relation.anchor)
 			.join(
 				function(enter) {
 					return enter
 						.append('line')
-							.call(RelationSVG.create)
+							.call(RelationSVGController.create)
 							.style('opacity', 0)
 				},
 
@@ -637,7 +658,7 @@ class GraphSVG {
 			.transition()
 				.duration(callback !== undefined ? settings.FADE_DURATION : 0)
 			.style('opacity', 1)
-	
+
 		// Update simulation
 		const links = relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
 		this.simulation
@@ -652,7 +673,7 @@ class GraphSVG {
 		}
 	}
 
-	private moveContent(fields: Subject[], transform: (field: Subject) => void, callback?: () => void) {
+	private moveContent(fields: SubjectController[], transform: (field: SubjectController) => void, callback?: () => void) {
 
 		// Buffer field positions
 		const buffers = fields.map(field => ({ field, x: field.x, y: field.y }))
@@ -662,8 +683,8 @@ class GraphSVG {
 
 		// Update fields
 		d3.select<SVGGElement, unknown>('#content')
-			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-				.call(FieldSVG.updatePosition, callback !== undefined)
+			.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
+				.call(FieldSVGController.updatePosition, callback !== undefined)
 
 		// Restore field positions
 		for (const buffer of buffers) {
@@ -683,8 +704,8 @@ class GraphSVG {
 
 		// Update fields
 		d3.select<SVGGElement, unknown>('#content')
-			.selectAll<SVGGElement, Field<Domain | Subject>>('.field')
-				.call(FieldSVG.updatePosition, callback !== undefined)
+			.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
+				.call(FieldSVGController.updatePosition, callback !== undefined)
 
 		// Post-transition
 		if (callback) {
@@ -728,7 +749,7 @@ class GraphSVG {
 		this.setContent(this.graph.subjects, this.graph.subject_relations)
 		this.moveContent(this.graph.subjects, this.domainTransform)
 
-		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)		
+		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.restoreContent(() => {
 			this.state = this.interactive ? State.dynamic : State.static
 		})
@@ -767,7 +788,7 @@ class GraphSVG {
 
 	private subjectToDomain() {
 		const bbx = this.boundingBox(this.graph.domains)
-	
+
 		if (this.state === State.broken) {
 			this.state = State.animating
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
@@ -834,7 +855,7 @@ class GraphSVG {
 		}
 
 		this.state = State.animating
-		
+
 		this.panCamera(bbx.x, bbx.y)
 		this.setBackground(View.domains)
 		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
@@ -875,14 +896,14 @@ class GraphSVG {
 		})
 	}
 
-	private domainTransform(subject: Subject) {
+	private domainTransform(subject: SubjectController) {
 		subject.x = subject.domain!.x
 		subject.y = subject.domain!.y
 	}
 
 	private lectureTransform(x: number, y: number) {
 		const graphSVG = this
-		return (subject: Subject) => {
+		return (subject: SubjectController) => {
 			const size = graphSVG.lecture?.size ?? 0
 			const dx = x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
 			const dy = y - (settings.LECTURE_HEADER_HEIGHT + size * settings.FIELD_HEIGHT + (size + 1) * settings.LECTURE_PADDING) / 2

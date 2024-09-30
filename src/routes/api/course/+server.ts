@@ -1,6 +1,6 @@
 
-import { CourseHelper } from '$lib/server/helpers'
-import type { SerializedCourse } from '$scripts/entities/Course.js'
+import { CourseHelper } from '$scripts/helpers'
+import type { SerializedCourse } from '$scripts/types'
 
 /**
  * API endpoint for updating a Course in the database.

@@ -1,13 +1,16 @@
 
+// External imports
 import prisma from '$lib/server/prisma'
-
 import type { Domain as PrismaDomain } from '@prisma/client'
-import type { SerializedDomain } from '$scripts/entities'
 
+// Internal imports
+import type { SerializedDomain } from '$scripts/types'
+
+// Exports
 export { create, remove, update, reduce, getByGraphId }
 
 
-// --------------------> Helper Functions <-------------------- //
+// --------------------> Helper Functions
 
 
 /**

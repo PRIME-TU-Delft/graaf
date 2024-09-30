@@ -3,28 +3,27 @@
 import * as uuid from 'uuid'
 
 // Internal imports
-import { ValidationData, Severity } from './Validation'
-import { Domain, Subject } from './Fields'
-import { Graph } from './Graph'
+import { GraphController, DomainController, SubjectController } from '$scripts/controllers'
+import { ValidationData, Severity } from '$scripts/validation'
 
 // Exports
-export { Relation, DomainRelation, SubjectRelation }
+export { RelationController, DomainRelationController, SubjectRelationController }
 
 
 // --------------------> Classes
 
 
-abstract class Relation<T extends Domain | Subject> {
+abstract class RelationController<T extends DomainController | SubjectController> {
 	constructor (
-		public graph: Graph,	// The graph the relation belongs to
+		public graph: GraphController,	// The graph the relation belongs to
 		public anchor: string,	// The anchor of the relation, unique for every DOM element, used for finding errors and d3 selection
 		public index: number,	// The index of the relation in the list of its type, based on creation order, consistent after sorting, deleting etc
 		private _parent?: T,	// The parent of the relation, exposed setter automatically updates field parents/children
 		private _child?: T		// The child of the relation, exposed setter automatically updates field parents/children
 	) { 
 		if (this.parent && this.child) {
-			this.parent.children = [...this.parent.children, this.child] as Domain[] | Subject[]
-			this.child.parents = [...this.child.parents, this.parent] as Domain[] | Subject[]
+			this.parent.children = [...this.parent.children, this.child] as DomainController[] | SubjectController[]
+			this.child.parents = [...this.child.parents, this.parent] as DomainController[] | SubjectController[]
 		}
 	}
 
@@ -38,13 +37,13 @@ abstract class Relation<T extends Domain | Subject> {
 		// Update parent and child references
 		if (this.child) {
 			if (this.parent) {
-				this.child.parents = this.child.parents.filter(field => field !== this.parent) as Domain[] | Subject[]
-				this.parent.children = this.parent.children.filter(field => field !== this.child) as Domain[] | Subject[]
+				this.child.parents = this.child.parents.filter(field => field !== this.parent) as DomainController[] | SubjectController[]
+				this.parent.children = this.parent.children.filter(field => field !== this.child) as DomainController[] | SubjectController[]
 			}
 
 			if (parent) {
-				this.child.parents = [...this.child.parents, parent] as Domain[] | Subject[]
-				parent.children = [...parent.children, this.child] as Domain[] | Subject[]
+				this.child.parents = [...this.child.parents, parent] as DomainController[] | SubjectController[]
+				parent.children = [...parent.children, this.child] as DomainController[] | SubjectController[]
 			}
 		}
 
@@ -65,13 +64,13 @@ abstract class Relation<T extends Domain | Subject> {
 		// Update parent and child references
 		if (this.parent) {
 			if (this.child) {
-				this.parent.children = this.parent.children.filter(field => field !== this.child) as Domain[] | Subject[]
-				this.child.parents = this.child.parents.filter(field => field !== this.parent) as Domain[] | Subject[]
+				this.parent.children = this.parent.children.filter(field => field !== this.child) as DomainController[] | SubjectController[]
+				this.child.parents = this.child.parents.filter(field => field !== this.parent) as DomainController[] | SubjectController[]
 			}
 
 			if (child) {
-				this.parent.children = [...this.parent.children, child] as Domain[] | Subject[]
-				child.parents = [...child.parents, this.parent] as Domain[] | Subject[]
+				this.parent.children = [...this.parent.children, child] as DomainController[] | SubjectController[]
+				child.parents = [...child.parents, this.parent] as DomainController[] | SubjectController[]
 			}
 		}
 
@@ -82,7 +81,7 @@ abstract class Relation<T extends Domain | Subject> {
 		return this.child?.color || 'transparent'
 	}
 
-	protected hasName(field: Domain | Subject) {
+	protected hasName(field: DomainController | SubjectController) {
 		/* Check if the field has a name */
 
 		return field.name !== ''
@@ -97,7 +96,7 @@ abstract class Relation<T extends Domain | Subject> {
 	protected isCyclic(parent?: T, child?: T): boolean {
 		/* Depth first check if the relation is cyclic */
 
-		let stack: (Domain | Subject)[] = [child!]
+		let stack: (DomainController | SubjectController)[] = [child!]
 		while (stack.length > 0) {
 			const current = stack.pop()!
 			if (current === parent) return true
@@ -120,7 +119,7 @@ abstract class Relation<T extends Domain | Subject> {
 	abstract delete(): void
 }
 
-class DomainRelation extends Relation<Domain> {
+class DomainRelationController extends RelationController<DomainController> {
 	get parent_options() {
 		/* Return the parent options for this domain relation */
 
@@ -161,15 +160,15 @@ class DomainRelation extends Relation<Domain> {
 		return options
 	}
 
-	static create(graph: Graph, parent?: Domain, child?: Domain): DomainRelation {
+	static create(graph: GraphController, parent?: DomainController, child?: DomainController): DomainRelationController {
 		/* Create a new domain relation */
 
-		const relation = new DomainRelation(graph, uuid.v4(), graph.domain_relations.length, parent, child)
+		const relation = new DomainRelationController(graph, uuid.v4(), graph.domain_relations.length, parent, child)
 		graph.domain_relations.push(relation)
 		return relation
 	}
 
-	private isDuplicate(parent?: Domain, child?: Domain): boolean {
+	private isDuplicate(parent?: DomainController, child?: DomainController): boolean {
 		/* Check if the relation is a duplicate */
 
 		return -1 !== this.graph.domain_relations.findIndex(
@@ -179,7 +178,7 @@ class DomainRelation extends Relation<Domain> {
 		)
 	}
 
-	private isInconsistent(parent?: Domain, child?: Domain): boolean {
+	private isInconsistent(parent?: DomainController, child?: DomainController): boolean {
 		/* Check if the relation is consistent */
 
 		return this.graph.subject_relations.every(relation => 
@@ -188,7 +187,7 @@ class DomainRelation extends Relation<Domain> {
 		)
 	}
 
-	private validateOption(parent?: Domain, child?: Domain): ValidationData {
+	private validateOption(parent?: DomainController, child?: DomainController): ValidationData {
 		const validation = new ValidationData()
 
 		// Check if the relation is defined
@@ -265,7 +264,7 @@ class DomainRelation extends Relation<Domain> {
 	}
 }
 
-class SubjectRelation extends Relation<Subject> {
+class SubjectRelationController extends RelationController<SubjectController> {
 	get parent_options() {
 		/* Return the parent options for this subject relation */
 
@@ -306,15 +305,15 @@ class SubjectRelation extends Relation<Subject> {
 		return options
 	}
 
-	static create(graph: Graph, parent?: Subject, child?: Subject): SubjectRelation {
+	static create(graph: GraphController, parent?: SubjectController, child?: SubjectController): SubjectRelationController {
 		/* Create a new subject relation */
 
-		const relation = new SubjectRelation(graph, uuid.v4(), graph.subject_relations.length, parent, child)
+		const relation = new SubjectRelationController(graph, uuid.v4(), graph.subject_relations.length, parent, child)
 		graph.subject_relations.push(relation)
 		return relation
 	}
 
-	private isInconsistent(parent?: Subject, child?: Subject): boolean {
+	private isInconsistent(parent?: SubjectController, child?: SubjectController): boolean {
 		/* Check if the relation is consistent */
 
 		if (!this.isDefined(parent?.domain, child?.domain) || parent!.domain === child!.domain)
@@ -322,7 +321,7 @@ class SubjectRelation extends Relation<Subject> {
 		return parent!.domain!.children.every(domain_child => domain_child !== child!.domain)
 	}
 
-	private isDuplicate(parent?: Subject, child?: Subject): boolean {
+	private isDuplicate(parent?: SubjectController, child?: SubjectController): boolean {
 		/* Check if the relation is a duplicate */
 
 		return -1 !== this.graph.subject_relations.findIndex(relation =>
@@ -332,7 +331,7 @@ class SubjectRelation extends Relation<Subject> {
 		)
 	}
 
-	private validateOption(parent?: Subject, child?: Subject): ValidationData {
+	private validateOption(parent?: SubjectController, child?: SubjectController): ValidationData {
 		const validation = new ValidationData()
 
 		// Check if the relation is defined

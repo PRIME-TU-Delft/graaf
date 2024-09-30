@@ -3,55 +3,30 @@
 import * as uuid from 'uuid'
 
 // Internal imports
-import { ValidationData, Severity } from './Validation'
-import { Graph } from './Graph'
+import { GraphController } from '$scripts/controllers'
+import { ValidationData, Severity } from '$scripts/validation'
 
-import * as settings from '../settings'
-import { styles } from '../settings'
+import * as settings from '$scripts/settings'
+import { styles } from '$scripts/settings'
+
+import type { SerializedDomain, SerializedSubject } from '$scripts/types'
 
 // Exports
-export { Field, Domain, Subject }
-export type { SerializedDomain, SerializedSubject }
-
-
-// --------------------> Types
-
-
-type ID = number
-
-type SerializedDomain = {
-	id: ID,
-	x: number,
-	y: number,
-	name?: string,
-	style?: string,
-	parents: ID[],
-	children: ID[]
-}
-
-type SerializedSubject = {
-	id: ID,
-	x: number,
-	y: number,
-	name?: string,
-	domain?: ID,
-	parents: ID[],
-	children: ID[]
-}
+export { FieldController, DomainController, SubjectController }
 
 
 // --------------------> Classes
 
 
-abstract class Field<T extends Domain | Subject> {
+abstract class FieldController<T extends DomainController | SubjectController> {
 	fx?: number					// The locked x-coordinate of this field
 	fy?: number					// The locked y-coordinate of this field
 
 	constructor(
-		public graph: Graph,	// The graph this field belongs to
+		public graph: GraphController,	// The graph this field belongs to
 		public anchor: string,	// The anchor of this field, unique for every DOM element, used for finding errors and d3 selections
 		public index: number,	// The index of this field in the list of its type, based on creation order, consistent after sorting, deleting etc
-		public id: ID,			// The ID of this field in the database, unique among its type, NOT among all fields
+		public id: number,		// The ID of this field in the database, unique among its type, NOT among all fields
 		public x: number,		// The current x-coordinate of this field
 		public y: number,		// The current y-coordinate of this field
 		public name: string,	// The name of this field
@@ -64,7 +39,7 @@ abstract class Field<T extends Domain | Subject> {
 		this.fy = y
 	}
 
-	protected hasName(field: Domain | Subject): boolean {
+	protected hasName(field: DomainController | SubjectController): boolean {
 		/* Check if the name of a field is undefined */
 
 		return field.name !== ''
@@ -88,25 +63,25 @@ abstract class Field<T extends Domain | Subject> {
 	abstract save(): Promise<void>
 }
 
-class Domain extends Field<Domain> {
+class DomainController extends FieldController<DomainController> {
 	private _style?: string
 
 	constructor(
-		graph: Graph,
+		graph: GraphController,
 		index: number,
-		id: ID,
+		id: number,
 		x: number = 0,
 		y: number = 0,
 		name: string = '',
 		style?: string,
-		parents: Domain[] = [],
-		children: Domain[] = []
+		parents: DomainController[] = [],
+		children: DomainController[] = []
 	) {
 		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
 		this.style = style
 	}
 
-	get subjects(): Subject[] {
+	get subjects(): SubjectController[] {
 		/* Return the subjects of this domain */
 
 		const subjects = []
@@ -162,7 +137,7 @@ class Domain extends Field<Domain> {
 		return options
 	}
 
-	static async create(graph: Graph): Promise<Domain> {
+	static async create(graph: GraphController): Promise<DomainController> {
 		/* Create a new domain */
 
 		// Call the API
@@ -173,7 +148,7 @@ class Domain extends Field<Domain> {
 		const data = await response.json()
 
 		// Create domain object
-		const domain = new Domain(graph, graph.domains.length, data.id)
+		const domain = new DomainController(graph, graph.domains.length, data.id)
 		graph.domains.push(domain)
 
 		return domain
@@ -337,19 +312,19 @@ class Domain extends Field<Domain> {
 	}
 }
 
-class Subject extends Field<Subject> {
-	domain?: Domain
+class SubjectController extends FieldController<SubjectController> {
+	domain?: DomainController
 
 	constructor(
-		graph: Graph,
+		graph: GraphController,
 		index: number,
-		id: ID,
+		id: number,
 		x: number = 0,
 		y: number = 0,
 		name: string = '',
-		domain?: Domain,
-		parents: Subject[] = [],
-		children: Subject[] = []
+		domain?: DomainController,
+		parents: SubjectController[] = [],
+		children: SubjectController[] = []
 	) {
 		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
 		this.domain = domain
@@ -392,7 +367,7 @@ class Subject extends Field<Subject> {
 		return this.domain !== undefined
 	}
 
-	static async create(graph: Graph): Promise<Subject> {
+	static async create(graph: GraphController): Promise<SubjectController> {
 		/* Create a new domain */
 
 		// Call the API
@@ -403,7 +378,7 @@ class Subject extends Field<Subject> {
 		const data = await response.json()
 
 		// Create subject object
-		const subject = new Subject(graph, graph.subjects.length, data.id)
+		const subject = new SubjectController(graph, graph.subjects.length, data.id)
 		graph.subjects.push(subject)
 
 		return subject

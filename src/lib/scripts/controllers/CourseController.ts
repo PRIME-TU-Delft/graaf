@@ -1,35 +1,23 @@
 
 // Internal imports
-import { ValidationData, Severity } from "./Validation"
-import { Graph, type SerializedGraph } from "./Graph"
+import { GraphController } from '$scripts/controllers'
+import { ValidationData, Severity } from '$scripts/validation'
+import type { SerializedCourse, SerializedGraph } from '$scripts/types'
 
 // Exports
-export { Course }
-export type { SerializedCourse }
-
-
-// --------------------> Types
-
-
-type ID = number
-
-type SerializedCourse = {
-	id: ID,
-	code: string,
-	name: string
-}
+export { CourseController }
 
 
 // --------------------> Classes
 
 
-class Course {
+class CourseController {
 	constructor(
-		public id: ID,
+		public id: number,
 		public code: string,
 		public name: string,
 		// public links: Link[]l = [],
-		public graphs: Graph[]= [],
+		public graphs: GraphController[]= [],
 		// public contributors: User[] = [],
 		private _lazy: boolean = true
 	) { }
@@ -38,10 +26,10 @@ class Course {
 		return this._lazy
 	}
 
-	static async revive(data: SerializedCourse, lazy: boolean = true, cascade: boolean = false): Promise<Course> {
+	static async revive(data: SerializedCourse, lazy: boolean = true, cascade: boolean = false): Promise<CourseController> {
 		/* Load the course from a POGO */
 
-		const course = new Course(data.id, data.code, data.name)
+		const course = new CourseController(data.id, data.code, data.name)
 		if (!lazy) await course.unlazify(cascade)
 		return course
 	}
@@ -58,7 +46,7 @@ class Course {
 
 		// Parse the response
 		const data: SerializedGraph[] = await response.json()
-		this.graphs = await Promise.all(data.map(graph => Graph.revive(graph, cascade)))
+		this.graphs = await Promise.all(data.map(graph => GraphController.revive(graph, cascade)))
 
 
 		// Unlazify

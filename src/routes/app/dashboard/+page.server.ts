@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import prisma from '$lib/server/prisma';
 
-import { CourseHelper } from '$lib/server/helpers';
+import { CourseHelper } from '$scripts/helpers';
 
 
 export const actions = {

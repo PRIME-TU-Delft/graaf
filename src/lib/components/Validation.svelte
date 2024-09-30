@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Severity, ValidationData } from '$scripts/entities'
+	import { Severity, ValidationData } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { tooltip } from '$scripts/tooltip'
 

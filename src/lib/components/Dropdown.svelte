@@ -5,7 +5,7 @@
 	import { createEventDispatcher } from "svelte"
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/entities'
+	import { ValidationData, Severity } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { scrollintoview } from '$scripts/scrollintoview'
 	import { focusfirst, focusonhover, losefocus } from '$scripts/hocusfocus'

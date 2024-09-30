@@ -1,5 +1,5 @@
 
-import { SubjectHelper } from '$lib/server/helpers'
+import { SubjectHelper } from '$scripts/helpers'
 
 /**
  * API endpoint for creating a Subject in the database.

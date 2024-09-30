@@ -3,7 +3,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Subject, SubjectRelation, SortOption } from '$scripts/entities'
+	import { SubjectController, SubjectRelationController, SortOption } from '$scripts/controllers'
 	import { graph } from '$stores'
 
 	// Components
@@ -24,7 +24,7 @@
 	import { descending } from 'd3';
 
 	// Functions
-	function subjectMatchesQuery(query: string, subject: Subject): boolean {
+	function subjectMatchesQuery(query: string, subject: SubjectController): boolean {
 		/* Checks if query appears in subject */
 
 		if (!query) return true
@@ -36,7 +36,7 @@
 		return name?.includes(query) || domain?.includes(query) || false
 	}
 
-	function relationMatchesQuery(query: string, relation: SubjectRelation): boolean {
+	function relationMatchesQuery(query: string, relation: SubjectRelationController): boolean {
 		/* Checks if query appears in relation */
 
 		if (!query) return true
@@ -93,7 +93,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={subject_query} />
-		<Button on:click={async () => { await Subject.create($graph); update() }}>
+		<Button on:click={async () => { await SubjectController.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Subject
 		</Button>
 	</div>
@@ -190,7 +190,7 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={() => { SubjectRelation.create($graph); update() }}>
+		<Button on:click={() => { SubjectRelationController.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>

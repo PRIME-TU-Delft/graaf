@@ -3,36 +3,24 @@
 import * as uuid from 'uuid'
 
 // Internal imports
-import { ValidationData, Severity } from './Validation'
-import { Graph } from './Graph'
-import { Subject } from './Fields'
-import { SubjectRelation } from './Relations'
+import { GraphController, SubjectController, SubjectRelationController } from '$scripts/controllers'
+import { ValidationData, Severity } from '$scripts/validation'
+import type { SerializedLecture } from '$scripts/types'
 
 // Exports
-export { Lecture, LectureSubject }
-export type { SerializedLecture }
+export { LectureController, LectureSubject }
 
-
-// --------------------> Type
-
-type ID = number
-
-type SerializedLecture = {
-	id: ID,
-	name?: string,
-	subjects: ID[]
-}
 
 // --------------------> Classes
 
 
 class LectureSubject {
 	constructor(
-		public lecture: Lecture,
-		public subject?: Subject
+		public lecture: LectureController,
+		public subject?: SubjectController
 	) { }
 
-	static create(lecture: Lecture, subject?: Subject): LectureSubject {
+	static create(lecture: LectureController, subject?: SubjectController): LectureSubject {
 		/* Create a new lecture subject */
 
 		const lecture_subject = new LectureSubject(lecture, subject)
@@ -76,13 +64,13 @@ class LectureSubject {
 	}
 }
 
-class Lecture {
+class LectureController {
 	anchor: string
 
 	constructor(
-		public graph: Graph,
+		public graph: GraphController,
 		public index: number,
-		public id: ID,
+		public id: number,
 		public name: string = '',
 		public lecture_subjects: LectureSubject[] = []
 	) {
@@ -91,7 +79,7 @@ class Lecture {
 		this.anchor = uuid.v4()
 	}
 
-	static async create(graph: Graph) {
+	static async create(graph: GraphController) {
 		/* Create a new lecture */
 
 		// Call API to create lecture
@@ -102,7 +90,7 @@ class Lecture {
 		const data = await response.json()
 
 		// Create lecture object
-		const lecture = new Lecture(graph, graph.lectures.length, data.id)
+		const lecture = new LectureController(graph, graph.lectures.length, data.id)
 		graph.lectures.push(lecture)
 
 		return lecture
@@ -118,10 +106,10 @@ class Lecture {
 		)
 	}
 
-	get past(): Subject[] {
+	get past(): SubjectController[] {
 		/* Return the past of this lecture */
 
-		const past: Subject[] = []
+		const past: SubjectController[] = []
 		for (const lecture_subject of this.lecture_subjects) {
 			if (!lecture_subject.subject) continue
 			for (const parent of lecture_subject.subject.parents) {
@@ -134,10 +122,10 @@ class Lecture {
 		return past
 	}
 
-	get present(): Subject[] {
+	get present(): SubjectController[] {
 		/* Return the present of this lecture */
 
-		const present: Subject[] = []
+		const present: SubjectController[] = []
 		for (const lecture_subject of this.lecture_subjects) {
 			if (!lecture_subject.subject) continue
 			present.push(lecture_subject.subject)
@@ -146,10 +134,10 @@ class Lecture {
 		return present
 	}
 
-	get future(): Subject[] {
+	get future(): SubjectController[] {
 		/* Return the future of this lecture */
 
-		const future: Subject[] = []
+		const future: SubjectController[] = []
 		for (const lecture_subject of this.lecture_subjects) {
 			if (!lecture_subject.subject) continue
 			for (const child of lecture_subject.subject.children) {
@@ -162,7 +150,7 @@ class Lecture {
 		return future
 	}
 
-	get subjects(): Subject[] {
+	get subjects(): SubjectController[] {
 		/* Return the fields of this lecture */
 
 		return this.past
@@ -170,10 +158,10 @@ class Lecture {
 			.concat(this.future)
 	}
 
-	get relations(): SubjectRelation[] {
+	get relations(): SubjectRelationController[] {
 		/* Return the relations of this lecture */
 
-		const relations: SubjectRelation[] = []
+		const relations: SubjectRelationController[] = []
 		for (const subject of this.present) {
 			for (const relation of this.graph.subject_relations) {
 				if (relation.child === subject || relation.parent === subject) {

@@ -1,12 +1,18 @@
 
 // Internal imports
-import { ValidationData } from '$scripts/entities'
+import { ValidationData } from '$scripts/validation'
 
 // External imports
 import Modal from '$components/Modal.svelte'
 
-// Base class for modals
-export abstract class BaseModal {
+// Exports
+export { BaseModal }
+
+
+// --------------------> Classes
+
+
+abstract class BaseModal {
 	private defaults: { [key: string]: any } = {}
 	modal?: Modal
 

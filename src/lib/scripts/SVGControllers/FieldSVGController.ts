@@ -3,28 +3,34 @@
 import * as d3 from 'd3'
 
 // Internal imports
-import { GraphSVG, RelationSVG } from '../d3'
-import { Field, Domain, Subject, Relation, Lecture } from '../entities'
-import * as settings from '../settings'
-import { styles } from '../settings'
+import {
+	GraphSVGController,
+	RelationSVGController
+} from '$scripts/SVGControllers'
+
+import {
+	FieldController,
+	DomainController,
+	SubjectController,
+	RelationController,
+	LectureController
+} from '$scripts/controllers'
+
+import * as settings from '$scripts/settings'
+import { styles } from '$scripts/settings'
 
 // Exports
-export { FieldSVG }
-
-
-// --------------------> Types
-
-
-type FieldSelection = d3.Selection<SVGGElement, Field<Domain | Subject>, d3.BaseType, unknown>
+export { FieldSVGController }
 
 
 // --------------------> Classes
 
+type FieldSelection = d3.Selection<SVGGElement, FieldController<DomainController | SubjectController>, d3.BaseType, unknown>
 
-class FieldSVG {
-	static create(selection: FieldSelection, graphSVG: GraphSVG) {
+class FieldSVGController {
+	static create(selection: FieldSelection, graphSVG: GraphSVGController) {
 
-		// Field attrs
+		// Field attributes
 		selection
 			.attr('id', field => field.anchor)
 			.attr('class', 'field fixed')
@@ -46,7 +52,7 @@ class FieldSVG {
 			.style('text-anchor', 'middle')
 			.style('dominant-baseline', 'middle')
 			.style('font-size', settings.FIELD_FONT_SIZE)
-			
+
 		// Wrap text
 		selection
 			.selectAll('text')
@@ -74,7 +80,7 @@ class FieldSVG {
 					const scale = Math.min(1, max_width / tspan.node()!.getComputedTextLength())
 					const font_size = settings.FIELD_FONT_SIZE * scale
 					element.attr('font-size', font_size)
-					
+
 					// Wrap text
 					let line_count = 0
 					let line: string[] = []
@@ -100,29 +106,29 @@ class FieldSVG {
 
 		// Drag behaviour
 		selection.call(
-			d3.drag<SVGGElement, Field<Domain | Subject>>()
+			d3.drag<SVGGElement, FieldController<DomainController | SubjectController>>()
 				.on('start', function() {
-					const selection = d3.select<SVGGElement, Field<Domain | Subject>>(this)
-					selection.call(FieldSVG.setFixed, true)
+					const selection = d3.select<SVGGElement, FieldController<DomainController | SubjectController>>(this)
+					selection.call(FieldSVGController.setFixed, true)
 				})
 				.on('drag', function(event, field) {
-					const selection = d3.select<SVGGElement, Field<Domain | Subject>>(this)
+					const selection = d3.select<SVGGElement, FieldController<DomainController | SubjectController>>(this)
 					field.x = field.x + event.dx / settings.GRID_UNIT
 					field.y = field.y + event.dy / settings.GRID_UNIT
 					field.fx = field.x
 					field.fy = field.y
-					
-					FieldSVG.updatePosition(selection)
+
+					FieldSVGController.updatePosition(selection)
 					graphSVG.microwaveSimulation()
 				})
 				.on('end', async function(_ ,field) {
-					const selection = d3.select<SVGGElement, Field<Domain | Subject>>(this)
+					const selection = d3.select<SVGGElement, FieldController<DomainController | SubjectController>>(this)
 					field.x = Math.round(field.x)
 					field.y = Math.round(field.y)
 					field.fx = field.x
 					field.fy = field.y
 
-					FieldSVG.updatePosition(selection)
+					FieldSVGController.updatePosition(selection)
 					await field.save()
 				})
 		)
@@ -146,18 +152,18 @@ class FieldSVG {
 
 		// Update relations
 		selection.each(function(field) {
-			content.selectAll<SVGLineElement, Relation<Domain | Subject>>('.relation')
+			content.selectAll<SVGLineElement, RelationController<DomainController | SubjectController>>('.relation')
 				.filter(relation => relation.parent === field || relation.child === field)
-				.call(RelationSVG.update, animated)
+				.call(RelationSVGController.update, animated)
 		})
 	}
 
-	static updateHighlight(selection: FieldSelection, lecture?: Lecture) {
+	static updateHighlight(selection: FieldSelection, lecture?: LectureController) {
 		selection
 			.each(function(field) {
-				const highlight = 
-					field instanceof Domain  && lecture?.present.some(subject => subject.domain === field) ||
-					field instanceof Subject && lecture?.present.includes(field)
+				const highlight =
+					field instanceof DomainController  && lecture?.present.some(subject => subject.domain === field) ||
+					field instanceof SubjectController && lecture?.present.includes(field)
 
 				d3.select(this)
 					.attr('filter', highlight ? 'url(#highlight)' : null)
@@ -174,7 +180,7 @@ class FieldSVG {
 				field.fx = fixed ? field.x : undefined
 				field.fy = fixed ? field.y : undefined
 			})
-		
-		FieldSVG.updatePosition(selection)
+
+		FieldSVGController.updatePosition(selection)
 	}
 }

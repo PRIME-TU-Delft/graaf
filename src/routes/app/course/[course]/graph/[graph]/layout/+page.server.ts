@@ -3,7 +3,7 @@
 import prisma from '$lib/server/prisma'
 
 // Internal imports
-import { CourseHelper, GraphHelper } from '$lib/server/helpers'
+import { CourseHelper, GraphHelper } from '$scripts/helpers'
 
 // Load
 export const load = async ({ params }) => {

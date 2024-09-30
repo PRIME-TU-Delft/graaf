@@ -1,5 +1,5 @@
 
-import { LectureHelper } from '$lib/server/helpers'
+import { LectureHelper } from '$scripts/helpers'
 
 /**
  * API endpoint for deleting a Lecture from the database.
@@ -11,6 +11,6 @@ export async function DELETE({ params }) {
 	return await LectureHelper.remove(id)
 		.then(
 			() => new Response(null, { status: 200 }),
-			(error) => new Response(error, { status: 400 })
+			error => new Response(error, { status: 400 })
 		)
 }

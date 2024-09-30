@@ -1,5 +1,5 @@
 
-import { GraphHelper } from '$lib/server/helpers'
+import { GraphHelper } from '$scripts/helpers'
 
 /**
  * API endpoint for requesting all Graphs from the database related to this course.
