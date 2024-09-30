@@ -2,11 +2,13 @@
 import prisma from '$lib/server/prisma'
 
 import type { SerializedCourse } from '$scripts/entities'
-import type { 
-	Course as PrismaCourse
-} from '@prisma/client'
+import type { Course as PrismaCourse } from '@prisma/client'
 
 export { create, remove, update, reduce, getById }
+
+
+// --------------------> Helper Functions <-------------------- //
+
 
 /**
  * Retrieves a Course by its ID.
@@ -39,20 +41,20 @@ async function getById(course_id: number): Promise<SerializedCourse> {
 async function create(program_id: number, code: string, name: string): Promise<SerializedCourse> {
 	try {
 		var course = await prisma.course.create({
-            data: {
-                code,
-                name,
-                program: {
-                    connect: {
-                        id: program_id
-                    }
-                }
-            }
-        })
+			data: {
+				code,
+				name,
+				program: {
+					connect: {
+						id: program_id
+					}
+				}
+			}
+		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
-	
+
 	return await reduce(course)
 }
 
@@ -103,7 +105,7 @@ async function update(data: SerializedCourse): Promise<void> {
 async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 	return {
 		id: course.id,
-        code: course.code,
+		code: course.code,
 		name: course.name
 	}
 }

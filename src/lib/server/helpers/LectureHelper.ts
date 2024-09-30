@@ -2,29 +2,35 @@
 import prisma from '$lib/server/prisma'
 
 import type { SerializedLecture } from '$scripts/entities'
-import type { 
+import type {
 	Lecture as PrismaLecture,
 	Subject as PrismaSubject
 } from '@prisma/client'
 
-
 export { create, remove, update, reduce, getByGraphId }
+
+
+// --------------------> Helper Functions <-------------------- //
 
 
 /**
  * Retrieves all Lecture objects associated with a Graph.
  * @param graph_id ID of the Graph
  * @returns Array of Serialized Lecture objects
- */ 
+ */
 
 async function getByGraphId(graph_id: number): Promise<SerializedLecture[]> {
-	const lectures = await prisma.lecture.findMany({
-		where: {
-			graph: {
-				id: graph_id
+	try {
+		var lectures = await prisma.lecture.findMany({
+			where: {
+				graph: {
+					id: graph_id
+				}
 			}
-		}
-	})
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
 	return await Promise.all(lectures.map(reduce))
 }
@@ -33,7 +39,6 @@ async function getByGraphId(graph_id: number): Promise<SerializedLecture[]> {
  * Creates a Lecture object in the database.
  * @param graph_id ID of the Graph to which the Lecture belongs
  * @returns SerializedLecture object
- * @throws 'Failed to create lecture' if the Lecture could not be created
  */
 
 async function create(graph_id: number): Promise<SerializedLecture> {
@@ -57,7 +62,6 @@ async function create(graph_id: number): Promise<SerializedLecture> {
 /**
  * Removes a Lecture from the database.
  * @param lecture_id ID of the Lecture to remove
- * @throws 'Failed to remove lecture' if the Lecture could not be removed
  */
 
 async function remove(lecture_id: number): Promise<void> {
@@ -75,14 +79,13 @@ async function remove(lecture_id: number): Promise<void> {
 /**
  * Updates a Lecture in the database.
  * @param data SerializedLecture object
- * @throws 'Lecture not found' if the Lecture could not be found
- * @throws 'Failed to update lecture' if the Lecture could not be updated
  */
 
 async function update(data: SerializedLecture): Promise<void> {
 
 	// Get current subjects
 	const subjects = await getSubjects(data.id)
+		.catch(error => Promise.reject(error))
 
 	// Find changes in subjects
 	const new_subjects = data.subjects.filter(id => !subjects.some(subject => subject.id === id))
@@ -111,11 +114,11 @@ async function update(data: SerializedLecture): Promise<void> {
  * Reduces a PrismaLecture to a SerializedLecture.
  * @param lecture PrismaLecture object
  * @returns SerializedLecture object
- * @throws 'Lecture not found' if the Lecture could not be found
  */
 
 async function reduce(lecture: PrismaLecture): Promise<SerializedLecture> {
 	const subjects = await getSubjects(lecture.id)
+		.catch(error => Promise.reject(error))
 
 	return {
 		id: lecture.id,
@@ -128,7 +131,6 @@ async function reduce(lecture: PrismaLecture): Promise<SerializedLecture> {
  * Gets the subjects of a Lecture.
  * @param lecture_id ID of the Lecture
  * @returns Array of PrismaSubjects
- * @throws 'Lecture not found' if the Lecture could not be found
  */
 
 async function getSubjects(lecture_id: number): Promise<PrismaSubject[]> {
@@ -142,7 +144,7 @@ async function getSubjects(lecture_id: number): Promise<PrismaSubject[]> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Lecture not found')
+		return Promise.reject(error)
 	}
 
 	return lecture.subjects

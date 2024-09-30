@@ -217,11 +217,11 @@ class DomainRelation extends Relation<Domain> {
 	validate(): ValidationData {
 		/* Validate this domain relation */
 
-		const response = new ValidationData()
+		const result = new ValidationData()
 
 		// Check if the relation is defined
 		if (!this.isDefined(this.parent, this.child)) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Domain relation is not fully defined',
 				long: 'Both the parent and child domains must be selected',
@@ -232,7 +232,7 @@ class DomainRelation extends Relation<Domain> {
 
 		// Check if the relation is consistent
 		if (this.isInconsistent(this.parent, this.child)) {
-			response.add({
+			result.add({
 				severity: Severity.warning,
 				short: 'Domain relation is inconsistent',
 				long: 'The subjects of these domains are not related',
@@ -241,7 +241,7 @@ class DomainRelation extends Relation<Domain> {
 			})
 		}
 
-		return response
+		return result
 	}
 
 	delete(): void {
@@ -361,11 +361,11 @@ class SubjectRelation extends Relation<Subject> {
 	validate(): ValidationData {
 		/* Validate this subject relation */
 
-		const response = new ValidationData()
+		const result = new ValidationData()
 
 		// Check if the relation is defined
 		if (!this.isDefined(this.parent, this.child)) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Subject relation is not fully defined',
 				long: 'Both the parent and child subjects must be selected',
@@ -376,7 +376,7 @@ class SubjectRelation extends Relation<Subject> {
 
 		// Check if the relation is consistent
 		if (this.isInconsistent(this.parent, this.child)) {
-			response.add({
+			result.add({
 				severity: Severity.warning,
 				short: 'Subject relation is inconsistent',
 				long: 'The domains of these subjects are not related',
@@ -385,7 +385,7 @@ class SubjectRelation extends Relation<Subject> {
 			})
 		}
 
-		return response
+		return result
 	}
 
 	delete(): void {

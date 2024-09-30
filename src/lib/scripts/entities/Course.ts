@@ -54,9 +54,7 @@ class Course {
 
 		// Call the API
 		const response = await fetch(`/api/courses/${this.id}/graphs`, { method: 'GET' })
-
-		// Check the response
-		if (!response.ok) throw new Error('Failed to delete graph')
+			.catch(error => { throw new Error(`Failed to load course: ${error}`) })
 
 		// Parse the response
 		const data: SerializedGraph[] = await response.json()
@@ -71,7 +69,7 @@ class Course {
 		/* Save the course to the database */
 
 		// Call the API
-		const response = await fetch(`/api/course`, {
+		await fetch(`/api/course`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
@@ -80,29 +78,27 @@ class Course {
 		})
 
 		// Check the response
-		if (!response.ok) throw new Error('Failed to save course')
+		.catch(error => { 
+			throw new Error(`Failed to save course: ${error}`) 
+		})
 	}
 
 	async delete(): Promise<void> {
 		/* Delete the graph from the database */
 
 		// Call the API
-		const response = await fetch(`/api/course/${this.id}`, {
-			method: 'DELETE'
-		})
-
-		// Check the response
-		if (!response.ok) throw new Error('Failed to delete course')
+		await fetch(`/api/course/${this.id}`, { method: 'DELETE' })
+			.catch(error => { throw new Error(`Failed to delete course: ${error}`) })
 	}
 
 	validate(): ValidationData {
 		/* Validate the course */
 
-		const response = new ValidationData()
+		const result = new ValidationData()
 
 		// Check if the course code is valid
 		if (this.code === '') {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Course has no code',
 				tab: 0,
@@ -112,7 +108,7 @@ class Course {
 
 		// Check if the course name is valid
 		if (this.name === '') {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Course has no name',
 				tab: 0,
@@ -120,7 +116,7 @@ class Course {
 			})
 		}
 
-		return response
+		return result
 	}
 
 	reduce(): SerializedCourse {

@@ -165,12 +165,12 @@ class Domain extends Field<Domain> {
 	static async create(graph: Graph): Promise<Domain> {
 		/* Create a new domain */
 
-		// Call API to create domain
-		const result = await fetch(`/api/graph/${graph.id}/domain`, { method: 'POST' })
-		if (!result.ok) throw new Error('Failed to create domain')
+		// Call the API
+		const response = await fetch(`/api/graph/${graph.id}/domain`, { method: 'POST' })
+			.catch(error => { throw new Error(`Failed to create domain: ${error}`) })
 		
 		// Parse response
-		const data = await result.json()
+		const data = await response.json()
 
 		// Create domain object
 		const domain = new Domain(graph, graph.domains.length, data.id)
@@ -195,11 +195,11 @@ class Domain extends Field<Domain> {
 	validate(): ValidationData {
 		/* Validate this domain */
 
-		const response = new ValidationData()
+		const result = new ValidationData()
 
 		// Check if the domain has a name
 		if (!this.hasName(this)) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Domain has no name',
 				tab: 1,
@@ -212,7 +212,7 @@ class Domain extends Field<Domain> {
 			// Check if the domain has a unique name
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.name)
 			if (first !== -1) {
-				response.add({
+				result.add({
 					severity: Severity.error,
 					short: 'Domain has duplicate name',
 					long: `Name first used by Domain nr. ${first + 1}`,
@@ -223,7 +223,7 @@ class Domain extends Field<Domain> {
 
 			// Check if the name is too long
 			if (this.name.length > settings.FIELD_MAX_CHARS) {
-				response.add({
+				result.add({
 					severity: Severity.error,
 					short: 'Domain name too long',
 					long: `Name exceeds ${settings.FIELD_MAX_CHARS} characters`,
@@ -235,7 +235,7 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has a style
 		if (!this.hasStyle()) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Domain has no style',
 				tab: 1,
@@ -248,7 +248,7 @@ class Domain extends Field<Domain> {
 			// Check if the domain has a unique style
 			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
 			if (first !== -1) {
-				response.add({
+				result.add({
 					severity: Severity.warning,
 					short: 'Domain has duplicate style',
 					long: `Style first used by Domain nr. ${first + 1}`,
@@ -260,7 +260,7 @@ class Domain extends Field<Domain> {
 
 		// Check if the domain has subjects
 		if (!this.hasSubjects()) {
-			response.add({
+			result.add({
 				severity: Severity.warning,
 				short: 'Domain has no subjects',
 				tab: 1,
@@ -268,7 +268,7 @@ class Domain extends Field<Domain> {
 			})
 		}
 
-		return response
+		return result
 	}
 
 	reduce(): SerializedDomain {
@@ -291,15 +291,17 @@ class Domain extends Field<Domain> {
 		// Serialize
 		const data = this.reduce()
 
-		// Call API to update domain
-		const result = await fetch(`/api/domain`, {
+		// Call the API
+		await fetch(`/api/domain`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		})
 
-		// Check if the request was successful
-		if (!result.ok) throw new Error('Failed to save domain')
+		// Check the response
+		.catch(error => { 
+			throw new Error(`Failed to save course: ${error}`) 
+		})
 	}
 
 	async delete(): Promise<void> {
@@ -326,9 +328,9 @@ class Domain extends Field<Domain> {
 			}
 		}
 
-		// Call API to delete domain
-		const result = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
-		if (!result.ok) throw new Error('Failed to delete domain')
+		// Call the API
+		await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
+			.catch(error => { throw new Error(`Failed to delete domain: ${error}`) })
 
 		// Remove this domain from the graph
 		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
@@ -393,12 +395,12 @@ class Subject extends Field<Subject> {
 	static async create(graph: Graph): Promise<Subject> {
 		/* Create a new domain */
 
-		// Call API to create domain
-		const result = await fetch(`/api/graph/${graph.id}/subject`, { method: 'POST' })
-		if (!result.ok) throw new Error('Failed to create domain')
+		// Call the API
+		const response = await fetch(`/api/graph/${graph.id}/subject`, { method: 'POST' })
+			.catch(error => { throw new Error(`Failed to create subject: ${error}`) })
 		
 		// Parse response
-		const data = await result.json()
+		const data = await response.json()
 
 		// Create subject object
 		const subject = new Subject(graph, graph.subjects.length, data.id)
@@ -410,11 +412,11 @@ class Subject extends Field<Subject> {
 	validate(): ValidationData {
 		/* Validate this subject */
 
-		const response = new ValidationData()
+		const result = new ValidationData()
 
 		// Check if the subject has a name
 		if (!this.hasName(this)) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Subject has no name',
 				tab: 2,
@@ -427,7 +429,7 @@ class Subject extends Field<Subject> {
 			// Check if the name is unique
 			const first = this.findOriginal(this.graph.subjects, this, subject => subject.name)
 			if (first !== -1) {
-				response.add({
+				result.add({
 					severity: Severity.error,
 					short: 'Subject has duplicate name',
 					long: `Name first used by Subject nr. ${first + 1}`,
@@ -438,7 +440,7 @@ class Subject extends Field<Subject> {
 
 			// Check if the name is too long
 			if (this.name.length > settings.FIELD_MAX_CHARS) {
-				response.add({
+				result.add({
 					severity: Severity.error,
 					short: 'Subject name too long',
 					long: `Name exceeds ${settings.FIELD_MAX_CHARS} characters`,
@@ -450,7 +452,7 @@ class Subject extends Field<Subject> {
 
 		// Check if the subject has a domain
 		if (!this.hasDomain()) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Subject has no domain',
 				tab: 2,
@@ -458,7 +460,7 @@ class Subject extends Field<Subject> {
 			})
 		}
 
-		return response
+		return result
 	}
 
 	reduce(): SerializedSubject {
@@ -481,15 +483,17 @@ class Subject extends Field<Subject> {
 		// Serialize
 		const data = this.reduce()
 
-		// Call API to update domain
-		const result = await fetch(`/api/subject`, {
+		// Call the API
+		await fetch(`/api/subject`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		})
 
-		// Check if the request was successful
-		if (!result.ok) throw new Error('Failed to save subject')
+		// Check the response
+		.catch(error => { 
+			throw new Error(`Failed to save subject: ${error}`) 
+		})
 	}
 
 	async delete(): Promise<void> {
@@ -514,9 +518,9 @@ class Subject extends Field<Subject> {
 			lecture.lecture_subjects = lecture.lecture_subjects.filter(ls => ls.subject !== this)
 		}
 
-		// Call API to delete domain
-		const result = await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
-		if (!result.ok) throw new Error('Failed to delete subject')
+		// Call the API
+		await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
+		 	.catch(error => { throw new Error(`Failed to delete subject: ${error}`) })
 
 		// Remove this subject from the graph
 		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)

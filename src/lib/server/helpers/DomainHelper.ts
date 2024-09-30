@@ -6,6 +6,10 @@ import type { SerializedDomain } from '$scripts/entities'
 
 export { create, remove, update, reduce, getByGraphId }
 
+
+// --------------------> Helper Functions <-------------------- //
+
+
 /**
  * Retrieves all Domain objects associated with a Graph.
  * @param graph_id ID of the Graph
@@ -13,13 +17,17 @@ export { create, remove, update, reduce, getByGraphId }
  */
 
 async function getByGraphId(graph_id: number): Promise<SerializedDomain[]> {
-	const domains = await prisma.domain.findMany({
-		where: {
-			graph: {
-				id: graph_id
+	try {
+		var domains = await prisma.domain.findMany({
+			where: {
+				graph: {
+					id: graph_id
+				}
 			}
-		}
-	})
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
 	return await Promise.all(domains.map(reduce))
 }
@@ -28,7 +36,6 @@ async function getByGraphId(graph_id: number): Promise<SerializedDomain[]> {
  * Creates a Domain object in the database.
  * @param graph_id ID of the Graph to which the Domain belongs
  * @returns SerializedDomain object
- * @throws 'Failed to create domain' if the Domain could not be created
  */
 
 async function create(graph_id: number): Promise<SerializedDomain> {
@@ -43,7 +50,7 @@ async function create(graph_id: number): Promise<SerializedDomain> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to create domain')
+		return Promise.reject(error)
 	}
 
 	return await reduce(domain)
@@ -52,7 +59,6 @@ async function create(graph_id: number): Promise<SerializedDomain> {
 /**
  * Removes a Domain from the database.
  * @param domain_id ID of the Domain to remove
- * @throws 'Failed to remove domain' if the Domain could not be removed
  */
 
 async function remove(domain_id: number): Promise<void> {
@@ -63,21 +69,20 @@ async function remove(domain_id: number): Promise<void> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to remove domain')
+		return Promise.reject(error)
 	}
 }
 
 /**
  * Updates a Domain in the database.
  * @param data SerializedDomain object
- * @throws 'Domain not found' if the Domain could not be found
- * @throws 'Failed to update domain' if the Domain could not be updated
  */
 
 async function update(data: SerializedDomain): Promise<void> {
 
 	// Get current relations
 	const { children, parents } = await getRelations(data.id)
+		.catch(error => Promise.reject(error))
 
 	// Find changes in relations
 	const new_parents = data.parents.filter((parent) => !parents.some((domain) => domain.id === parent))
@@ -109,7 +114,7 @@ async function update(data: SerializedDomain): Promise<void> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to update domain')
+		return Promise.reject(error)
 	}
 }
 
@@ -117,11 +122,11 @@ async function update(data: SerializedDomain): Promise<void> {
  * Reduces a PrismaDomain to a SerializedDomain.
  * @param domain PrismaDomain object
  * @returns SerializedDomain object
- * @throws 'Domain not found' if the Domain could not be found
  */
 
 async function reduce(domain: PrismaDomain): Promise<SerializedDomain> {
 	const { children, parents } = await getRelations(domain.id)
+		.catch(error => Promise.reject(error))
 
 	return {
 		id: domain.id,
@@ -138,7 +143,6 @@ async function reduce(domain: PrismaDomain): Promise<SerializedDomain> {
  * Retrieves the children and parents of a Domain.
  * @param domain_id ID of the Domain
  * @returns Object containing the children and parents
- * @throws 'Domain not found' if the Domain could not be found
  */
 
 async function getRelations(domain_id: number): Promise<{ children: PrismaDomain[], parents: PrismaDomain[]}> {
@@ -153,7 +157,7 @@ async function getRelations(domain_id: number): Promise<{ children: PrismaDomain
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Domain not found')
+		return Promise.reject(error)
 	}
 
 	return {

@@ -6,6 +6,10 @@ import type { SerializedSubject } from '$scripts/entities'
 
 export { create, remove, update, reduce, getByGraphId }
 
+
+// --------------------> Helper Functions <-------------------- //
+
+
 /**
  * Retrieves all Subject objects associated with a Graph.
  * @param graph_id ID of the Graph
@@ -13,13 +17,17 @@ export { create, remove, update, reduce, getByGraphId }
  */
 
 async function getByGraphId(graph_id: number): Promise<SerializedSubject[]> {
-	const subjects = await prisma.subject.findMany({
-		where: {
-			graph: {
-				id: graph_id
+	try {
+		var subjects = await prisma.subject.findMany({
+			where: {
+				graph: {
+					id: graph_id
+				}
 			}
-		}
-	})
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
 	return await Promise.all(subjects.map(reduce))
 }
@@ -28,7 +36,6 @@ async function getByGraphId(graph_id: number): Promise<SerializedSubject[]> {
  * Creates a Subject object in the database.
  * @param graph_id ID of the Graph to which the Subject belongs
  * @returns SerializedSubject object
- * @throws 'Failed to create subject' if the Subject could not be created
  */
 
 async function create(graph_id: number): Promise<SerializedSubject> {
@@ -43,7 +50,7 @@ async function create(graph_id: number): Promise<SerializedSubject> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to create subject')
+		return Promise.reject(error)
 	}
 
 	return await reduce(subject)
@@ -52,7 +59,6 @@ async function create(graph_id: number): Promise<SerializedSubject> {
 /**
  * Removes a Subject from the database.
  * @param subject_id ID of the Subject to remove
- * @throws 'Failed to remove subject' if the Subject could not be removed
  */
 
 async function remove(subject_id: number): Promise<void> {
@@ -63,21 +69,20 @@ async function remove(subject_id: number): Promise<void> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to remove subject')
+		return Promise.reject(error)
 	}
 }
 
 /**
  * Updates a Subject in the database.
  * @param data SerializedSubject object
- * @throws 'Subject not found' if the Subject could not be found
- * @throws 'Failed to update subject' if the Subject could not be updated
  */
 
 async function update(data: SerializedSubject): Promise<void> {
 
 	// Get current relations
 	const { children, parents } = await getRelations(data.id)
+		.catch(error => Promise.reject(error))
 
 	// Find changes in relations
 	const new_parents = data.parents.filter((parent) => !parents.some((subject) => subject.id === parent))
@@ -109,7 +114,7 @@ async function update(data: SerializedSubject): Promise<void> {
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Failed to update subject')
+		return Promise.reject(error)
 	}
 }
 
@@ -117,11 +122,11 @@ async function update(data: SerializedSubject): Promise<void> {
  * Reduces a PrismaSubject to a SerializedSubject.
  * @param subject PrismaSubject object
  * @returns SerializedSubject object
- * @throws 'Subject not found' if the Subject could not be found
  */
 
 async function reduce(subject: PrismaSubject): Promise<SerializedSubject> {
 	const { children, parents } = await getRelations(subject.id)
+		.catch(error => Promise.reject(error))
 
 	return {
 		id: subject.id,
@@ -138,7 +143,6 @@ async function reduce(subject: PrismaSubject): Promise<SerializedSubject> {
  * Retrieves the children and parents of a Subject.
  * @param subject_id ID of the Subject
  * @returns Object containing the children and parents
- * @throws 'Subject not found' if the Subject could not be found
  */
 
 async function getRelations(subject_id: number): Promise<{ children: PrismaSubject[], parents: PrismaSubject[]}> {
@@ -153,7 +157,7 @@ async function getRelations(subject_id: number): Promise<{ children: PrismaSubje
 			}
 		})
 	} catch (error) {
-		return Promise.reject('Subject not found')
+		return Promise.reject(error)
 	}
 
 	return {

@@ -1,17 +1,14 @@
 
 import prisma from '$lib/server/prisma'
 
-import { DomainHelper, SubjectHelper, LectureHelper } from '.'
-
 import type { SerializedGraph } from '$scripts/entities'
-import type { 
-	Graph as PrismaGraph, 
-	Domain as PrismaDomain, 
-	Subject as PrismaSubject, 
-	Lecture as PrismaLecture 
-} from '@prisma/client'
+import type { Graph as PrismaGraph } from '@prisma/client'
 
 export { create, remove, update, reduce, getByCourseId, getById }
+
+
+// --------------------> Helper Functions <-------------------- //
+
 
 /**
  * Retrieves all Graphs associated with a Course.
@@ -20,13 +17,17 @@ export { create, remove, update, reduce, getByCourseId, getById }
  */
 
 async function getByCourseId(course_id: number): Promise<SerializedGraph[]> {
-	const graphs = await prisma.graph.findMany({
-		where: {
-			course: {
-				id: course_id
+	try {
+		var graphs = await prisma.graph.findMany({
+			where: {
+				course: {
+					id: course_id
+				}
 			}
-		}
-	})
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
 	return await Promise.all(graphs.map(reduce))
 }
@@ -73,7 +74,7 @@ async function create(course_code: string, name: string): Promise<SerializedGrap
 	} catch (error) {
 		return Promise.reject(error)
 	}
-	
+
 	return await reduce(graph)
 }
 

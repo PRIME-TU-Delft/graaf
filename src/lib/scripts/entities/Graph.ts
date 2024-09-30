@@ -65,7 +65,7 @@ class Graph {
 		/* Return the options of the lecture */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Graph is lazy')
+		if (this._lazy) throw new Error('Failed to get lecture options: graph is lazy')
 
 		// Find lecture options
 		const options = []
@@ -94,28 +94,21 @@ class Graph {
 		if (!this._lazy) return
 
 		// Call the API
-		const responses = await Promise.all([
-			fetch(`/api/graph/${this.id}/domain`, { method: 'GET' }),
-			fetch(`/api/graph/${this.id}/subject`, { method: 'GET' }),
-			fetch(`/api/graph/${this.id}/lecture`, { method: 'GET' })
-		])
+		const urls = [
+			`/api/graph/${this.id}/domain`,
+			`/api/graph/${this.id}/subject`,
+			`/api/graph/${this.id}/lecture`
+		]
 
-		// Check the responses
-		if (!responses.every(response => response.ok)) {
-			console.error(responses)
-			throw new Error(`Failed to load Graph: Bad response`)
-		}
-
-		// Parse the responses
-		const json = await Promise.all(responses.map(response => response.json()))
-		const data = {
-			domains:  json[0] as SerializedDomain[],
-			subjects: json[1] as SerializedSubject[],
-			lectures: json[2] as SerializedLecture[]
-		}
+		const [domains, subjects, lectures] = await Promise.all(
+			urls.map(url => fetch(url, { method: 'GET' })
+				.then(response => response.json())
+				.catch(error => { throw new Error(`Failed to load graph: ${error}`) })
+			)
+		)
 
 		// Define domains
-		for (const domain_data of data.domains) {
+		for (const domain_data of domains) {
 			this.domains.push(
 				new Domain(
 					this,
@@ -130,7 +123,7 @@ class Graph {
 		}
 
 		// Find domain references
-		for (const parent_data of data.domains) {
+		for (const parent_data of domains) {
 			const parent = this.domains.find(domain => domain.id === parent_data.id)
 			for (const child_id of parent_data.children) {
 				const child = this.domains.find(domain => domain.id === child_id)
@@ -141,7 +134,7 @@ class Graph {
 		}
 
 		// Define subjects
-		for (const subject_data of data.subjects) {
+		for (const subject_data of subjects) {
 			const domain = this.domains.find(domain => domain.id === subject_data.domain)
 
 			this.subjects.push(
@@ -158,7 +151,7 @@ class Graph {
 		}
 
 		// Find subject references
-		for (const parent_data of data.subjects) {
+		for (const parent_data of subjects) {
 			const parent = this.subjects.find(subject => subject.id === parent_data.id)
 			for (const child_id of parent_data.children) {
 				const child = this.subjects.find(subject => subject.id === child_id)
@@ -169,7 +162,7 @@ class Graph {
 		}
 
 		// Define lectures
-		for (const lecture_data of data.lectures) {
+		for (const lecture_data of lectures) {
 			const lecture = new Lecture(
 				this,
 				this.lectures.length,
@@ -194,7 +187,7 @@ class Graph {
 		/* Save the graph to the database */
 
 		// Call the API
-		const response = await fetch(`/api/graph`, {
+		await fetch(`/api/graph`, {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
@@ -203,26 +196,24 @@ class Graph {
 		})
 
 		// Check the response
-		if (!response.ok) throw new Error('Failed to save graph')
+		.catch(error => {
+			throw new Error(`Failed to save graph: ${error}`)
+		})
 	}
 
 	async delete() {
 		/* Delete the graph from the database */
 
 		// Call the API
-		const response = await fetch(`/api/graph/${this.id}`, {
-			method: 'DELETE'
-		})
-
-		// Check the response
-		if (!response.ok) throw new Error('Failed to delete graph')
+		await fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
+			.catch(error => { throw new Error(`Failed to delete graph: ${error}`) })
 	}
 
 	validate(): ValidationData {
 		/* Validate the graph */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Graph is lazy')
+		if (this._lazy) throw new Error('Failed to validate graph: graph is lazy')
 
 		// Create response
 		const validation = new ValidationData()
@@ -257,7 +248,7 @@ class Graph {
 		/* Sort the graph */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Graph is lazy')
+		if (this._lazy) throw new Error('Failed to sort graph: graph is lazy')
 
 		// Define key function
 		let key: (item: any) => string
@@ -299,7 +290,7 @@ class Graph {
 		/* Return the next available domain style */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Graph is lazy')
+		if (this._lazy) throw new Error('Failed to get next domain style: graph is lazy')
 
 		// Find used styles
 		const used_styles = this.domains.map(domain => domain.style)

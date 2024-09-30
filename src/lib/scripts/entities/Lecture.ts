@@ -95,11 +95,11 @@ class Lecture {
 		/* Create a new lecture */
 
 		// Call API to create lecture
-		const res = await fetch(`/api/graph/${graph.id}/lecture`, { method: 'POST' })
-		if (!res.ok) throw new Error('Failed to create lecture')
+		const response = await fetch(`/api/graph/${graph.id}/lecture`, { method: 'POST' })
+			.catch(error => { throw new Error(`Failed to create lecture: ${error}`) })
 
 		// Parse response
-		const data = await res.json()
+		const data = await response.json()
 
 		// Create lecture object
 		const lecture = new Lecture(graph, graph.lectures.length, data.id)
@@ -217,11 +217,11 @@ class Lecture {
 	validate(): ValidationData {
 		/* Validate the lecture */
 
-		const response = new ValidationData()
+		const result = new ValidationData()
 
 		// Check if the lecture has a name
 		if (!this.hasName()){
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Lecture has no name',
 				tab: 3,
@@ -233,7 +233,7 @@ class Lecture {
 		else {
 			const first = this.findOriginal(this.graph.lectures, this, lecture => lecture.name)
 			if (first !== -1) {
-				response.add({
+				result.add({
 					severity: Severity.error,
 					short: 'Duplicate lecture name',
 					long: `Name first used by Lecture nr. ${first + 1}`,
@@ -245,7 +245,7 @@ class Lecture {
 
 		// Check if the lecture has subjects
 		if (!this.hasSubjects()) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Lecture has no subjects',
 				tab: 3,
@@ -256,7 +256,7 @@ class Lecture {
 		// TODO maybe just save defined subjects and remove this error
 		// Check if the lecture has undefined subjects
 		else if (!this.isDefined()) {
-			response.add({
+			result.add({
 				severity: Severity.error,
 				short: 'Lecture has undefined subjects',
 				long: 'Make sure all subjects are defined',
@@ -265,7 +265,7 @@ class Lecture {
 			})
 		}
 
-		return response
+		return result
 	}
 
 	reduce(): SerializedLecture {
@@ -284,15 +284,17 @@ class Lecture {
 		// Serialize
 		const data = this.reduce()
 
-		// Call API to update domain
-		const result = await fetch(`/api/lecture`, {
+		// Call the API
+		await fetch(`/api/lecture`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)
 		})
 
-		// Check if the request was successful
-		if (!result.ok) throw new Error('Failed to save lecture')
+		// Check the response
+		.catch(error => {
+			throw new Error(`Failed to save lecture: ${error}`)
+		})
 	}
 
 	async delete() {
@@ -305,8 +307,8 @@ class Lecture {
 		}
 
 		// Call API to delete lecture
-		const result = await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
-		if (!result.ok) throw new Error('Failed to delete lecture')
+		await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
+			.catch(error => { throw new Error(`Failed to delete lecture: ${error}`) })
 
 		// Remove this lecture from the graph
 		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
