@@ -1,4 +1,5 @@
 
+export { ProgramController } from './ProgramController'
 export { CourseController } from './CourseController'
 export { FieldController, DomainController, SubjectController } from './FieldsController'
 export { GraphController, SortOption } from './GraphController'

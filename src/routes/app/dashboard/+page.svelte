@@ -1,11 +1,10 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import { enhance } from '$app/forms'
-
 	// Internal imports
-	import { ValidationData, Severity, BaseModal } from '$scripts/entities'
+	import { ProgramController, CourseController } from '$scripts/controllers'
+	import { ValidationData, Severity } from '$scripts/validation'
+	import { BaseModal } from '$scripts/modals'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -79,21 +78,11 @@
 	class CourseModal extends BaseModal {
 		code: string = ''
 		name: string = ''
-		program?: number
+		program?: ProgramController
 
 		constructor() {
 			super()
 			this.initialize()
-		}
-
-		get program_options() {
-			return data.programs.map(program => {
-				return {
-					name: program.name,
-					value: program.id,
-					validation: ValidationData.success()
-				}
-			})
 		}
 
 		validate(): ValidationData {
@@ -125,6 +114,16 @@
 	}
 
 	// Functions
+	async function load() {
+		programs = await Promise.all(data.programs.map(program => program.expand()))
+		courses = programs.flatMap(program => program.courses)
+	}
+
+	function update() {
+		programs = [...programs]
+		courses = [...courses]
+	}
+
 	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
 		if (!query) return true
 
@@ -137,8 +136,8 @@
 
 	// Variables
 	export let data
-	$: courses = data.courses
-	$: programs = data.programs
+	$: programs = [] as ProgramController[]
+	$: courses = [] as CourseController[]
 
 	const modals: { [key: string]: Modal } = {}
 	const sandbox: SandboxModal = new SandboxModal()
@@ -153,144 +152,118 @@
 <!-- Markup -->
 
 
-<Layout
-	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to experiment with the Graph Editor."
-	path={[
-		{
-			name: 'Dashboard',
-			href: '/app/dashboard'
-		}
-	]}
->
-	<svelte:fragment slot="toolbar">
-		<Button on:click={() => sandbox.show()}>
-			<img src={plusIcon} alt="" /> New Sandbox
-		</Button>
+{#await load() then}
 
-		<Button on:click={() => program.show()}>
-			<img src={plusIcon} alt="" /> New Program
-		</Button>
+	<Layout
+		description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to experiment with the Graph Editor."
+		path={[
+			{
+				name: 'Dashboard',
+				href: '/app/dashboard'
+			}
+		]}
+	>
+		<svelte:fragment slot="toolbar">
+			<Button on:click={() => sandbox.show()}>
+				<img src={plusIcon} alt="" /> New Sandbox
+			</Button>
 
-		<Button on:click={() => course.show()}>
-			<img src={plusIcon} alt="" /> New Course
-		</Button>
+			<Button on:click={() => program.show()}>
+				<img src={plusIcon} alt="" /> New Program
+			</Button>
 
-		<div class="flex-spacer" />
+			<Button on:click={() => course.show()}>
+				<img src={plusIcon} alt="" /> New Course
+			</Button>
 
-		<Searchbar placeholder="Search courses" bind:value={query} />
+			<div class="flex-spacer" />
 
-		<Modal bind:this={sandbox.modal}>
-			<h3 slot="header"> Create Sandbox </h3>
+			<Searchbar placeholder="Search courses" bind:value={query} />
 
-			Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
+			<Modal bind:this={sandbox.modal}>
+				<h3 slot="header"> Create Sandbox </h3>
 
-			<form method="POST" action="?/newSandbox" use:enhance={() => sandbox.hide()}>
-				<label for="code"> Sandbox Code </label>
-				<Textfield label="Code" bind:value={sandbox.code} />
+				Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
 
-				<label for="name"> Sandbox Name </label>
-				<Textfield label="Name" bind:value={sandbox.name} />
+				<form>
+					<label for="code"> Sandbox Code </label>
+					<Textfield label="Code" bind:value={sandbox.code} />
 
-				<footer>
-					<Button submit disabled={sandbox.validate().severity === Severity.error} > Create </Button>
-					<Validation data={sandbox.validate()} />
-				</footer>
-			</form>
-		</Modal>
+					<label for="name"> Sandbox Name </label>
+					<Textfield label="Name" bind:value={sandbox.name} />
 
-		<Modal bind:this={program.modal}>
-			<h3 slot="header"> Create Program </h3>
+					<footer>
+						<Button submit disabled={sandbox.validate().severity === Severity.error} > Create </Button>
+						<Validation data={sandbox.validate()} />
+					</footer>
+				</form>
+			</Modal>
 
-			Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
+			<Modal bind:this={program.modal}>
+				<h3 slot="header"> Create Program </h3>
 
-			<form method="POST" action="?/newProgram" use:enhance={() => program.hide()}>
-				<label for="name"> Program Name </label>
-				<Textfield label="Name" bind:value={program.name} />
+				Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-				<footer>
-					<Button submit disabled={program.validate().severity === Severity.error} > Create </Button>
-					<Validation data={program.validate()} />
-				</footer>
-			</form>
-		</Modal>
+				<form>
+					<label for="name"> Program Name </label>
+					<Textfield label="Name" bind:value={program.name} />
 
-		<Modal bind:this={course.modal}>
-			<h3 slot="header"> Create Course </h3>
+					<footer>
+						<Button
+							disabled={program.validate().severity === Severity.error}
+							on:click={async () => {
+								programs.push(await ProgramController.create(program.name, 1))
+								program.hide()
+								update()
+							}}
+						> Create </Button>
+						<Validation data={program.validate()} />
+					</footer>
+				</form>
+			</Modal>
 
-			Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
+			<Modal bind:this={course.modal}>
+				<h3 slot="header"> Create Course </h3>
 
-			<form method="POST" action="?/newCourse" use:enhance={() => course.hide()}>
-				<label for="code"> Course Code </label>
-				<Textfield label="Code" bind:value={course.code} />
+				Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-				<label for="name"> Course Name </label>
-				<Textfield label="Name" bind:value={course.name} />
+				<form>
+					<label for="code"> Course Code </label>
+					<Textfield label="Code" bind:value={course.code} />
 
-				<label for="program"> Program </label>
-				<Dropdown
-					label="Program"
-					placeholder="Select a program"
-					options={course.program_options}
-					bind:value={course.program}
-				/>
+					<label for="name"> Course Name </label>
+					<Textfield label="Name" bind:value={course.name} />
 
-				<footer>
-					<Button submit disabled={course.validate().severity === Severity.error} > Create </Button>
-					<Validation data={course.validate()} />
-				</footer>
-			</form>
-		</Modal>
-	</svelte:fragment>
+					<label for="program"> Program </label>
+					<Dropdown
+						label="Program"
+						placeholder="Select a program"
+						options={programs.map(program => ({ 
+							value: program, 
+							name: program.name, 
+							validation: ValidationData.success()
+						}))}
 
-	<Card>
-		<h3 slot="header"> My Courses </h3>
+						bind:value={course.program}
+					/>
 
-		<svelte:fragment slot="body">
-			{#if !courses.some(course => courseMatchesQuery(query, course))}
-				<span class="grayed"> There's nothing here </span>
-			{:else}
-
-				<div class="grid">
-					{#each courses as { code, name }}
-						{#if courseMatchesQuery(query, { code, name })}
-							<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
-						{/if}
-					{/each}
-				</div>
-
-			{/if}
+					<footer>
+						<Button 
+							disabled={course.validate().severity === Severity.error}
+							on:click={async () => {
+								courses.push(await CourseController.create(course.code, course.name, course.program))
+								course.hide()
+								update()
+							}}
+						> Create </Button>
+						<Validation data={course.validate()} />
+					</footer>
+				</form>
+			</Modal>
 		</svelte:fragment>
-	</Card>
 
-	{#each programs as { name, courses, coordinators }}
 		<Card>
-			<svelte:fragment slot="header">
-				<h3> {name} </h3>
-
-				<div class="flex-spacer" />
-
-				<IconButton
-					src={peopleIcon}
-					description="Program Coordinators"
-					on:click={modals[name]?.show}
-					scale
-				/>
-
-				<LinkButton href="./program/{name}/settings"> Program settings </LinkButton>
-
-				<Modal bind:this={modals[name]}>
-					<h3 slot="header"> Program Coordinators </h3>
-					<p>
-						These are the coordinators of the {name} program. You can contact them via email to request
-						access to a course.
-					</p>
-					<ul>
-						{#each coordinators as coordinator}
-							<li> {coordinator} </li>
-						{/each}
-					</ul>
-				</Modal>
-			</svelte:fragment>
+			<h3 slot="header"> My Courses </h3>
 
 			<svelte:fragment slot="body">
 				{#if !courses.some(course => courseMatchesQuery(query, course))}
@@ -308,10 +281,62 @@
 				{/if}
 			</svelte:fragment>
 		</Card>
-	{/each}
-</Layout>
+
+		{#each programs as { name, courses }}
+			<Card>
+				<svelte:fragment slot="header">
+					<h3> {name} </h3>
+
+					<div class="flex-spacer" />
+
+					<IconButton
+						src={peopleIcon}
+						description="Program Coordinators"
+						on:click={modals[name]?.show}
+						scale
+					/>
+
+					<LinkButton href="./program/{name}/settings"> Program settings </LinkButton>
+
+					<Modal bind:this={modals[name]}>
+						<h3 slot="header"> Program Coordinators </h3>
+						<p>
+							These are the coordinators of the {name} program. You can contact them via email to request
+							access to a course.
+						</p>
+						<!--<ul>
+							{#each coordinators as coordinator}
+								<li> {coordinator} </li>
+							{/each}
+						</ul>-->
+					</Modal>
+				</svelte:fragment>
+
+				<svelte:fragment slot="body">
+					{#if !courses.some(course => courseMatchesQuery(query, course))}
+						<span class="grayed"> There's nothing here </span>
+					{:else}
+
+						<div class="grid">
+							{#each courses as { code, name }}
+								{#if courseMatchesQuery(query, { code, name })}
+									<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+								{/if}
+							{/each}
+						</div>
+
+					{/if}
+				</svelte:fragment>
+			</Card>
+		{/each}
+	</Layout>
+
+{/await}
+
+
 
 <!-- Styles -->
+
 
 <style lang="sass">
 

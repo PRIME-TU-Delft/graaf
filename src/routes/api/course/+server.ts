@@ -19,3 +19,18 @@ export async function PUT({ request }) {
 			error => new Response(error, { status: 400 })
 		)
 }
+
+/**
+ * API endpoint for requesting all Courses in the database.
+ * @returns Array of SerializedCourses
+ */
+
+export async function GET() {
+	
+	// Retrieve courses
+	return await CourseHelper.getAll()
+		.then(
+			courses => new Response(JSON.stringify(courses), { status: 200 }),
+			error => new Response(error, { status: 400 })
+		)
+}

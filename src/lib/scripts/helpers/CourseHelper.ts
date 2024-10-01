@@ -7,11 +7,26 @@ import type { Course as PrismaCourse } from '@prisma/client'
 import type { SerializedCourse } from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getById }
+export { create, remove, update, reduce, getAll, getById, getByProgramId }
 
 
 // --------------------> Helper Functions
 
+
+/**
+ * Retrieves all Courses from the database.
+ * @returns Array of SerializedCourses
+ */
+
+async function getAll(): Promise<SerializedCourse[]> {
+	try {
+		var courses = await prisma.course.findMany()
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await Promise.all(courses.map(reduce))
+}
 
 /**
  * Retrieves a Course by its ID.
@@ -31,6 +46,26 @@ async function getById(course_id: number): Promise<SerializedCourse> {
 	}
 
 	return await reduce(course)
+}
+
+/**
+ * Retrieves all Courses associated with a Program.
+ * @param program_id The ID of the Program
+ * @returns Array of SerializedCourses
+ */
+
+async function getByProgramId(program_id: number): Promise<SerializedCourse[]> {
+	try {
+		var courses = await prisma.course.findMany({
+			where: {
+				programId: program_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await Promise.all(courses.map(reduce))
 }
 
 /**

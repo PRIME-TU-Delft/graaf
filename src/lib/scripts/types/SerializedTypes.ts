@@ -1,10 +1,15 @@
 
 // Exports
-export type { SerializedCourse, SerializedGraph, SerializedDomain, SerializedSubject, SerializedLecture, SerializedUser }
+export type { SerializedProgram, SerializedCourse, SerializedGraph, SerializedDomain, SerializedSubject, SerializedLecture, SerializedUser }
 
 
 // --------------------> Types
 
+
+type SerializedProgram = {
+	id: number,
+	name: string
+}
 
 type SerializedCourse = {
 	id: number,

@@ -35,25 +35,70 @@ class GraphController {
 	constructor(
 		public id: number,
 		public name: string,
-		public domains: DomainController[] = [],
-		public subjects: SubjectController[] = [],
-		public lectures: LectureController[] = [],
-		private _lazy: boolean = true
+		private _domains: DomainController[] = [],
+		private _subjects: SubjectController[] = [],
+		private _lectures: LectureController[] = [],
+		private _compact: boolean = true
 	) { }
 
 	// Inferred
 	domain_relations: DomainRelationController[] = []
 	subject_relations: SubjectRelationController[] = []
 
-	get lazy() {
-		return this._lazy
+	get compact() {
+		return this._compact
+	}
+
+	private set compact(value: boolean) {
+		this._compact = value
+	}
+
+	get expanded() {
+		return !this._compact
+	}
+
+	private set expanded(value: boolean) {
+		this._compact = !value
+	}
+
+	get domains() {
+
+		// Check if the domains are expanded
+		if (this.compact) throw new Error('Failed to get domains: Graph is too compact')
+		return this._domains
+	}
+
+	set domains(value: DomainController[]) {
+		this._domains = value
+	}
+
+	get subjects() {
+
+		// Check if the subjects are expanded
+		if (this.compact) throw new Error('Failed to get subjects: Graph is too compact')
+		return this._subjects
+	}
+
+	set subjects(value: SubjectController[]) {
+		this._subjects = value
+	}
+
+	get lectures() {
+
+		// Check if the lectures are expanded
+		if (this.compact) throw new Error('Failed to get lectures: Graph is too compact')
+		return this._lectures
+	}
+
+	set lectures(value: LectureController[]) {
+		this._lectures = value
 	}
 
 	get lecture_options() {
 		/* Return the options of the lecture */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Failed to get lecture options: graph is lazy')
+		if (this._compact) throw new Error('Failed to get lecture options: graph is too compact')
 
 		// Find lecture options
 		const options = []
@@ -68,18 +113,20 @@ class GraphController {
 		return options
 	}
 
-	static async revive(data: SerializedGraph, lazy: boolean = true): Promise<GraphController> {
+	static async revive(data: SerializedGraph, depth: number = 0): Promise<GraphController> {
 		/* Revive graph from a POJO */
 
 		const graph = new GraphController(data.id, data.name)
-		if (!lazy) await graph.unlazify()
+		await graph.expand(depth)
 		return graph
 	}
 
-	async unlazify(): Promise<void> {
+	async expand(depth: number = 1): Promise<GraphController> {
 
-		// Check if the graph is already loaded
-		if (!this._lazy) return
+		/* Expand the program */
+
+		// Check if expansion is possible
+		if (this.expanded || depth < 1) return this
 
 		// Call the API
 		const urls = [
@@ -168,7 +215,8 @@ class GraphController {
 		}
 
 		// Unlazify
-		this._lazy = false
+		this.expanded = true
+		return this
 	}
 
 	async save() {
@@ -201,7 +249,7 @@ class GraphController {
 		/* Validate the graph */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Failed to validate graph: graph is lazy')
+		if (this.compact) throw new Error('Failed to validate graph: graph is too compact')
 
 		// Create response
 		const validation = new ValidationData()
@@ -236,7 +284,7 @@ class GraphController {
 		/* Sort the graph */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Failed to sort graph: graph is lazy')
+		if (this.compact) throw new Error('Failed to sort graph: graph is too compact')
 
 		// Define key function
 		let key: (item: any) => string
@@ -278,7 +326,7 @@ class GraphController {
 		/* Return the next available domain style */
 
 		// Check if the graph is lazy
-		if (this._lazy) throw new Error('Failed to get next domain style: graph is lazy')
+		if (this.compact) throw new Error('Failed to get next domain style: graph is too compact')
 
 		// Find used styles
 		const used_styles = this.domains.map(domain => domain.style)

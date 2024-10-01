@@ -66,6 +66,7 @@
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
 		<button
+			type="button"
 			class="header"
 			class:visible
 			class:grayed={!choice}
