@@ -1,28 +1,13 @@
-import { fail } from '@sveltejs/kit';
 
-import { GraphHelper } from '$scripts/helpers';
-import { CourseController, GraphController } from '$lib/server/controllers';
+// Internal imports
+import { CourseHelper } from '$scripts/helpers';
 
-
-export const actions = {
-	newGraph: async ({ params, request }) => {
-		const data = await request.formData();
-		const code = params.course;
-		const name = String(data.get('name'));
-
-		if (!name) return fail(400, { name, missing: true });
-
-		await GraphHelper.createWithCourseCode(code, name);
-	}
-};
-
-
+// Load
 export async function load({ params }) {
-	const course = await CourseController.getCourseByCode(params.course);
-	const graphs = await GraphController.getGraphsByCourseCode(params.course);
-
-	return {
-		course,
-		graphs
-	};
+		const course_id = Number(params.course)
+		if (isNaN(course_id)) return Promise.reject('Invalid course ID')
+		const course = await CourseHelper.getById(course_id)
+			.catch(error => Promise.reject(error))
+		
+		return { course }	
 }

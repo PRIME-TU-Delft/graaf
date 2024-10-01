@@ -97,9 +97,6 @@ class DomainController extends FieldController<DomainController> {
 	get color(): string {
 		/* Return the preview color of this domain */
 
-		console.log(this.style)
-		console.log(styles)
-
 		return this.style ? styles[this.style].stroke : 'transparent'
 	}
 

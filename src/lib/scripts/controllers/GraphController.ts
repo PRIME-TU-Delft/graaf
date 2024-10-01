@@ -2,7 +2,8 @@
 import {
 	DomainController, DomainRelationController, 
 	SubjectController, SubjectRelationController,
-	LectureController, LectureSubject
+	LectureController, LectureSubject,
+	CourseController
 } from '$scripts/controllers'
 
 import { ValidationData, Severity } from '$scripts/validation'
@@ -113,6 +114,28 @@ class GraphController {
 		return options
 	}
 
+	static async create(course: CourseController, name: string): Promise<GraphController> {
+		/* Create a new graph */
+
+		// Call the API
+		const response = await fetch(`/api/course/${course.id}/graph`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ name })
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`Failed to create graph: ${error}`)
+		})
+
+		// Revive the graph
+		const data: SerializedGraph = await response.json()
+		const graph = await GraphController.revive(data)
+		course.graphs.push(graph)
+		return graph
+	}
+
 	static async revive(data: SerializedGraph, depth: number = 0): Promise<GraphController> {
 		/* Revive graph from a POJO */
 
@@ -127,6 +150,7 @@ class GraphController {
 
 		// Check if expansion is possible
 		if (this.expanded || depth < 1) return this
+		this.expanded = true
 
 		// Call the API
 		const urls = [
@@ -214,8 +238,6 @@ class GraphController {
 			}
 		}
 
-		// Unlazify
-		this.expanded = true
 		return this
 	}
 
@@ -242,7 +264,7 @@ class GraphController {
 
 		// Call the API
 		await fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
-			.catch(error => { throw new Error(`Failed to delete graph: ${error}`) })
+			.catch(error => { throw new Error(`Failed to delete graph: ${error}`) })		
 	}
 
 	validate(): ValidationData {

@@ -16,6 +16,10 @@
 	import LectureSettings from './LectureSettings.svelte'
 
 	// Functions
+	async function load() {
+		await $graph.expand()
+	}
+
 	function goto_anchor(tab: number, anchor: string) {
 		if (active_tab === tab) {
 			const element = document.getElementById(anchor)
@@ -33,7 +37,6 @@
 	}
 
 	// Variables
-	let loading = $graph.unlazify()
 	let active_tab = 0
 
 
@@ -43,7 +46,7 @@
 <!-- Markup -->
 
 
-{#await loading} {:then}
+{#await load() then}
 
 	<Layout
 		description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
@@ -54,15 +57,15 @@
 			},
 			{
 				name: `${$course.code} ${$course.name}`,
-				href: `/app/course/${$course.code}/overview`
+				href: `/app/course/${$course.id}/overview`
 			},
 			{
 				name: $graph.name,
-				href: `/app/course/${$course.code}/graph/${$graph.id}/overview`
+				href: `/app/course/${$course.id}/graph/${$graph.id}/overview`
 			},
 			{
 				name: 'Settings',
-				href: `/app/course/${$course.code}/graph/${$graph.id}/settings`
+				href: `/app/course/${$course.id}/graph/${$graph.id}/settings`
 			}
 		]}
 	>
@@ -72,7 +75,7 @@
 
 				<div class="flex-spacer" />
 
-				<Button href="/app/course/{$course.code}/graph/{$graph.id}/layout"> Edit layout </Button>
+				<Button href="/app/course/{$course.id}/graph/{$graph.id}/layout"> Edit layout </Button>
 			</svelte:fragment>
 
 			<div class="tabular">

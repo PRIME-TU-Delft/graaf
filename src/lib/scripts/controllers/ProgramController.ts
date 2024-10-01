@@ -86,6 +86,8 @@ class ProgramController {
 		}
 
 		else {
+	
+			this.expanded = true
 
 			// Call the API
 			const response = await fetch(`/api/program/${this.id}/course`, { method: 'GET' })
@@ -94,7 +96,6 @@ class ProgramController {
 
 			// Revive the courses
 			this.courses = await Promise.all(data.map(graph => CourseController.revive(graph, depth - 1)))
-			this.expanded = true
 		}
 
 		return this

@@ -1,10 +1,12 @@
 
 <script lang="ts">
 
-	import { enhance } from '$app/forms'
+	import { writable } from 'svelte/store'
 
 	// Internal imports
-	import { ValidationData, Severity, BaseModal } from '$scripts/entities'
+	import { CourseController, GraphController } from '$scripts/controllers'
+	import { ValidationData, Severity } from '$scripts/validation'
+	import { BaseModal } from '$scripts/modals'
 
 	// Components
 	import Layout from '$layouts/DefaultLayout.svelte'
@@ -15,7 +17,6 @@
 	import IconButton from '$components/IconButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Validation from '$components/Validation.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -25,10 +26,6 @@
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-
-	import { Graph } from '$scripts/entities/GraphController.js'
-	import { Course } from '$scripts/controllers/CourseController.js'
-
 
 	// Helpers
 	class GraphModal extends BaseModal {
@@ -53,53 +50,20 @@
 		}
 	}
 
-	class LinkModal extends BaseModal {
-		name: string = ''
-		graph?: number
+	// Functions
+	async function load() {
+		$course = await data.course.expand()
+	}
 
-		constructor() {
-			super()
-			this.initialize()
-		}
-
-		get graph_options() {
-			return graphs.map(graph => {
-				return { 
-					name: graph.name,
-					value: graph.id, 
-					validation: ValidationData.success()
-				}
-			})
-		}
-
-		validate(): ValidationData {
-			const result = new ValidationData()
-
-			if (this.name.length < 1) {
-				result.add({
-					severity: Severity.error,
-					short: 'Name is required'
-				})
-			}
-
-			if (this.graph === undefined) {
-				result.add({
-					severity: Severity.error,
-					short: 'Graph is required'
-				})
-			}
-
-			return result
-		}
+	function update() {
+		$course = $course
 	}
 
 	// Variables
 	export let data
-	$: course = Course.revive(data.course);
-	$: graphs = data.graphs.map(graph => Graph.revive(graph));
 
-	const graph = new GraphModal()
-	const link = new LinkModal()
+	const course = writable<CourseController>()
+	const graph_modal = new GraphModal()
 
 </script>
 
@@ -108,116 +72,128 @@
 <!-- Markup -->
 
 
+{#await load() then}
 
-<Layout
-	description="Here you can view the graphs and links associated to this course, and edit their properties."
-	path={[
-		{
-			name: 'Dashboard',
-			href: '/app/dashboard'
-		},
-		{
-			name: `${course.code} ${course.name}`,
-			href: `/app/course/${course.code}/overview`
-		}
-	]}
->
-	<svelte:fragment slot="toolbar">
-		<Button on:click={() => graph.show()}>
-			<img src={plusIcon} alt="" /> New Graph
-		</Button>
+	<Layout
+		description="Here you can view the graphs and links associated to this course, and edit their properties."
+		path={[
+			{
+				name: 'Dashboard',
+				href: '/app/dashboard'
+			},
+			{
+				name: `${$course.code} ${$course.name}`,
+				href: `/app/course/${$course.code}/overview`
+			}
+		]}
+	>
+		<svelte:fragment slot="toolbar">
+			<Button on:click={() => graph_modal.show()}>
+				<img src={plusIcon} alt="" /> New Graph
+			</Button>
 
-		<Button on:click={() => link.show()}>
-			<img src={plusIcon} alt="" /> New Link
-		</Button>
+			<Button>
+				<img src={plusIcon} alt="" /> New Link
+			</Button>
 
-		<div class="flex-spacer" />
+			<div class="flex-spacer" />
 
-		<LinkButton href="/app/course/{course.code}/settings"> Course settings </LinkButton>
+			<LinkButton href="/app/course/{$course.id}/settings"> Course settings </LinkButton>
 
-		<Modal bind:this={graph.modal}>
-			<h3 slot="header"> Create Graph </h3>
-			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
+			<Modal bind:this={graph_modal.modal}>
+				<h3 slot="header"> Create Graph </h3>
+				Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<form method="POST" action="?/newGraph" use:enhance={() => graph.hide()}>
-				<label for="name"> Graph Name </label>
-				<Textfield label="Name" bind:value={graph.name} />
+				<form>
+					<label for="name"> Graph Name </label>
+					<Textfield label="Name" bind:value={graph_modal.name} />
 
-				<footer>
-					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
-					<Validation data={graph.validate()} />
-				</footer>
-			</form>
-		</Modal>
+					<footer>
+						<Button
+							disabled={graph_modal.validate().severity === Severity.error}
+							on:click={async () => {
+								await GraphController.create($course, graph_modal.name)
+								graph_modal.hide()
+								update()
+							}}
+						> Create </Button>
+						<Validation data={graph_modal.validate()} />
+					</footer>
+				</form>
+			</Modal>
 
-		<Modal bind:this={link.modal}>
-			<h3 slot="header"> Create Link </h3>
-			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
+			<!--
+			<Modal bind:this={link.modal}>
+				<h3 slot="header"> Create Link </h3>
+				Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
-			<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
-				<label for="name"> Graph Name </label>
-				<Textfield label="Name" bind:value={link.name} />
+				<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
+					<label for="name"> Graph Name </label>
+					<Textfield label="Name" bind:value={link.name} />
 
-				<label for="graph"> Graph </label>
-				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
+					<label for="graph"> Graph </label>
+					<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
 
-				<footer>
-					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
-					<Validation data={link.validate()} />
-				</footer>
-			</form>
-		</Modal>
-	</svelte:fragment>
-
-	<Card>
-		<h3 slot="header">Graphs</h3>
-
-		<svelte:fragment slot="body">
-			{#if graphs.length === 0}
-				<p class="grayed"> There's nothing here. </p>
-			{/if}	
-		
-			{#each graphs as graph}
-				<span class="graph">
-					{#if graph.hasLinks()}
-						<img src={linkIcon} alt="Link icon" />
-					{/if}
-					{graph.name}
-
-					<div class="flex-spacer" />
-
-					<IconButton
-						src={graph.isVisible() ? openEyeIcon : closedEyeIcon}
-						description="View Graph"
-						disabled={!graph.isVisible()}
-						scale
-					/>
-
-					<IconButton
-						src={pencilIcon}
-						description="Edit Graph"
-						href="/app/course/{course.code}/graph/{graph.id}/settings"
-						scale
-					/>
-
-					<IconButton src={copyIcon} description="Copy Graph" scale />
-
-					<IconButton src={trashIcon} description="Delete Graph" scale />
-				</span>
-			{/each}
+					<footer>
+						<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
+						<Validation data={link.validate()} />
+					</footer>
+				</form>
+			</Modal>
+			-->
 		</svelte:fragment>
-	</Card>
 
-	<Card>
-		<h3 slot="header">Links</h3>
-		
-		<svelte:fragment slot="body">
-			{#if true}
-				<p class="grayed"> There's nothing here. </p>
-			{/if}
-		</svelte:fragment>
-	</Card>
-</Layout>
+		<Card>
+			<h3 slot="header">Graphs</h3>
+
+			<svelte:fragment slot="body">
+				{#if $course.graphs.length === 0}
+					<p class="grayed"> There's nothing here. </p>
+				{/if}	
+
+				{#each $course.graphs as graph}
+					<span class="graph">
+						{#if graph.hasLinks()}
+							<img src={linkIcon} alt="Link icon" />
+						{/if}
+						{graph.name}
+
+						<div class="flex-spacer" />
+
+						<IconButton
+							src={graph.isVisible() ? openEyeIcon : closedEyeIcon}
+							description="View Graph"
+							disabled={!graph.isVisible()}
+							scale
+						/>
+
+						<IconButton
+							src={pencilIcon}
+							description="Edit Graph"
+							href="/app/course/{$course.id}/graph/{graph.id}/settings"
+							scale
+						/>
+
+						<IconButton src={copyIcon} description="Copy Graph" scale />
+
+						<IconButton src={trashIcon} description="Delete Graph" scale />
+					</span>
+				{/each}
+			</svelte:fragment>
+		</Card>
+
+		<Card>
+			<h3 slot="header">Links</h3>
+
+			<svelte:fragment slot="body">
+				{#if true}
+					<p class="grayed"> There's nothing here. </p>
+				{/if}
+			</svelte:fragment>
+		</Card>
+	</Layout>
+
+{/await}
 
 
 

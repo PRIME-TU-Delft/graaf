@@ -57,19 +57,19 @@ async function getById(graph_id: number): Promise<SerializedGraph> {
 
 /**
  * Creates a Graph object in the database.
- * @param course_code The code of the Course to which the Graph belongs
+ * @param course_id The id of the Course to which the Graph belongs
  * @param name The name of the Graph
  * @returns SerializedGraph object
  */
 
-async function create(course_code: string, name: string): Promise<SerializedGraph> {
+async function create(course_id: number, name: string): Promise<SerializedGraph> {
 	try {
 		var graph = await prisma.graph.create({
 			data: {
 				name,
 				course: {
 					connect: {
-						code: course_code
+						id: course_id
 					}
 				}
 			}

@@ -97,6 +97,8 @@ class CourseController {
 
 		else {
 
+			this.expanded = true
+
 			// Call the API
 			const response = await fetch(`/api/course/${this.id}/graph`, { method: 'GET' })
 				.catch(error => { throw new Error(`Failed to load course: ${error}`) })
@@ -104,7 +106,6 @@ class CourseController {
 
 			// Revive the courses
 			this.graphs = await Promise.all(data.map(graph => GraphController.revive(graph, depth - 1)))
-			this.expanded = true
 		}
 
 		return this

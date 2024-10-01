@@ -271,9 +271,9 @@
 				{:else}
 
 					<div class="grid">
-						{#each courses as { code, name }}
+						{#each courses as { id, code, name }}
 							{#if courseMatchesQuery(query, { code, name })}
-								<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+								<a class="cell" href="./course/{id}/overview"> {code} {name} </a>
 							{/if}
 						{/each}
 					</div>
@@ -282,7 +282,7 @@
 			</svelte:fragment>
 		</Card>
 
-		{#each programs as { name, courses }}
+		{#each programs as { id, name, courses }}
 			<Card>
 				<svelte:fragment slot="header">
 					<h3> {name} </h3>
@@ -296,7 +296,7 @@
 						scale
 					/>
 
-					<LinkButton href="./program/{name}/settings"> Program settings </LinkButton>
+					<LinkButton href="./program/{id}/settings"> Program settings </LinkButton>
 
 					<Modal bind:this={modals[name]}>
 						<h3 slot="header"> Program Coordinators </h3>
@@ -318,9 +318,9 @@
 					{:else}
 
 						<div class="grid">
-							{#each courses as { code, name }}
+							{#each courses as { id, code, name }}
 								{#if courseMatchesQuery(query, { code, name })}
-									<a class="cell" href="./course/{code}/overview"> {code} {name} </a>
+									<a class="cell" href="./course/{id}/overview"> {code} {name} </a>
 								{/if}
 							{/each}
 						</div>
