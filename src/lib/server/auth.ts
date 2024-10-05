@@ -34,5 +34,6 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 	providers: [SurfConextProvider],
 	adapter: PrismaAdapter(prisma),
 	secret: env.AUTH_SECRET,
+	debug: Boolean(env.DEBUG),
 	// trustHost: true
 });
