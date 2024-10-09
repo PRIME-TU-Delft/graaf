@@ -1,304 +1,273 @@
 
-// External imports
-import * as uuid from 'uuid'
+// Internal dependencies
+import {
+	ControllerEnvironment,
+	GraphController,
+	SubjectController
+} from '$scripts/controllers'
 
-// Internal imports
-import { GraphController, SubjectController, SubjectRelationController } from '$scripts/controllers'
 import { ValidationData, Severity } from '$scripts/validation'
+
 import type { SerializedLecture } from '$scripts/types'
 
+// External dependencies
+import * as uuid from 'uuid'
+
 // Exports
-export { LectureController, LectureSubject }
+export { LectureController }
 
 
 // --------------------> Classes
 
 
-class LectureSubject {
-	constructor(
-		public lecture: LectureController,
-		public subject?: SubjectController
-	) { }
-
-	static create(lecture: LectureController, subject?: SubjectController): LectureSubject {
-		/* Create a new lecture subject */
-
-		const lecture_subject = new LectureSubject(lecture, subject)
-		lecture.lecture_subjects.push(lecture_subject)
-		return lecture_subject
-	}
-
-	get color(): string {
-		/* Return the color of the subject */
-
-		return this.subject?.color || 'transparent'
-	}
-
-	get options() {
-		/* Return the options of the subject */
-
-		const options = []
-		for (const subject of this.lecture.graph.subjects) {
-			if (subject.name === '') continue
-
-			// Check if the subject is already in the lecture
-			const validation = new ValidationData()
-			if (this.lecture.present.includes(subject)) {
-				validation.add({ severity: Severity.error, short: 'Duplicate subject'})
-			}
-
-			options.push({
-				name: subject.name,
-				value: subject,
-				validation
-			})
-		}
-
-		return options
-	}
-
-	delete() {
-		/* Delete this lecture subject */
-
-		this.lecture.lecture_subjects = this.lecture.lecture_subjects.filter(subject => subject !== this)
-	}
-}
-
 class LectureController {
-	anchor: string
+	private _graph?: GraphController
+	private _subjects?: SubjectController[]
+
+	uuid: string
 
 	constructor(
-		public graph: GraphController,
-		public index: number,
+		public environment: ControllerEnvironment,
 		public id: number,
-		public name: string = '',
-		public lecture_subjects: LectureSubject[] = []
+		public name: string,
+		private _graph_id: number,
+		private _subject_ids: number[]
 	) {
-		/* Create a new lecture */
-
-		this.anchor = uuid.v4()
+		this.uuid = uuid.v4()
+		this.environment.add(this)
 	}
 
-	static async create(graph: GraphController) {
-		/* Create a new lecture */
-
-		// Call API to create lecture
-		const response = await fetch(`/api/graph/${graph.id}/lecture`, { method: 'POST' })
-			.catch(error => { throw new Error(`Failed to create lecture: ${error}`) })
-
-		// Parse response
-		const data = await response.json()
-
-		// Create lecture object
-		const lecture = new LectureController(graph, graph.lectures.length, data.id)
-		graph.lectures.push(lecture)
-
-		return lecture
+	get subjects(): Promise<SubjectController[]> {
+		return (async () => {
+			if (this._subjects) return this._subjects
+			this._subjects = await this.environment.getSubjects(this._subject_ids)
+			return this._subjects
+		})()
 	}
 
-	get size(): number {
-		/* Return the size of the lecture */
-
-		return Math.max(
-			this.past.length,
-			this.present.length,
-			this.future.length
-		)
+	get graph(): Promise<GraphController> {
+		return (async () => {
+			if (this._graph) return this._graph
+			this._graph = await this.environment.getGraph(this._graph_id) as GraphController
+			return this._graph
+		})()
 	}
 
-	get past(): SubjectController[] {
-		/* Return the past of this lecture */
-
-		const past: SubjectController[] = []
-		for (const lecture_subject of this.lecture_subjects) {
-			if (!lecture_subject.subject) continue
-			for (const parent of lecture_subject.subject.parents) {
-				if (this.present.includes(parent) || past.includes(parent))
-					continue
-				past.push(parent)
-			}
-		}
-
-		return past
+	get index(): Promise<number> {
+		return this.graph.then(graph => graph.lectureIndex(this))
 	}
 
-	get present(): SubjectController[] {
-		/* Return the present of this lecture */
+	/**
+	 * Create a new lecture
+	 * @param environment Environment to create the lecture in
+	 * @param graph Graph to assign the lecture to
+	 * @returns `Promise<LectureController>` The newly created LectureController
+	 * @throws `APIError` if the API call fails
+	 */
 
-		const present: SubjectController[] = []
-		for (const lecture_subject of this.lecture_subjects) {
-			if (!lecture_subject.subject) continue
-			present.push(lecture_subject.subject)
-		}
+	static async create(environment: ControllerEnvironment, graph: GraphController): Promise<LectureController> {
 
-		return present
-	}
-
-	get future(): SubjectController[] {
-		/* Return the future of this lecture */
-
-		const future: SubjectController[] = []
-		for (const lecture_subject of this.lecture_subjects) {
-			if (!lecture_subject.subject) continue
-			for (const child of lecture_subject.subject.children) {
-				if (this.present.includes(child) || future.includes(child))
-					continue
-				future.push(child)
-			}
-		}
-
-		return future
-	}
-
-	get subjects(): SubjectController[] {
-		/* Return the fields of this lecture */
-
-		return this.past
-			.concat(this.present)
-			.concat(this.future)
-	}
-
-	get relations(): SubjectRelationController[] {
-		/* Return the relations of this lecture */
-
-		const relations: SubjectRelationController[] = []
-		for (const subject of this.present) {
-			for (const relation of this.graph.subject_relations) {
-				if (relation.child === subject || relation.parent === subject) {
-					relations.push(relation)
-				}
-			}
-		}
-
-		return relations
-	}
-
-	private hasName(): boolean {
-		/* Check if the lecture has a name */
-
-		return this.name !== ''
-	}
-
-	private hasSubjects(): boolean {
-		/* Check if the lecture has subjects */
-
-		return this.lecture_subjects.length > 0
-	}
-
-	private isDefined(): boolean {
-		/* Check if the lecture is defined */
-
-		return this.lecture_subjects.every(lecture_subject => lecture_subject.subject)
-	}
-
-	private findOriginal<S, T>(list: S[], value: S, key: (item: S) => T): number {
-		/* Find the original item in a list
-		 * Returns -1 if value doesn't exist, or isnt a duplicate
-		 * Returns the index of the first duplicate otherwise
-		 */
-
-		const first = list.findIndex(item => key(item) === key(value))
-		const index = list.indexOf(value, first + 1)
-		return index === -1 ? -1 : first
-	}
-
-	validate(): ValidationData {
-		/* Validate the lecture */
-
-		const result = new ValidationData()
-
-		// Check if the lecture has a name
-		if (!this.hasName()){
-			result.add({
-				severity: Severity.error,
-				short: 'Lecture has no name',
-				tab: 3,
-				anchor: this.anchor
-			})
-		}
-
-		// Check if the name is unique
-		else {
-			const first = this.findOriginal(this.graph.lectures, this, lecture => lecture.name)
-			if (first !== -1) {
-				result.add({
-					severity: Severity.error,
-					short: 'Duplicate lecture name',
-					long: `Name first used by Lecture nr. ${first + 1}`,
-					tab: 3,
-					anchor: this.anchor
-				})
-			}
-		}
-
-		// Check if the lecture has subjects
-		if (!this.hasSubjects()) {
-			result.add({
-				severity: Severity.error,
-				short: 'Lecture has no subjects',
-				tab: 3,
-				anchor: this.anchor
-			})
-		}
-
-		// TODO maybe just save defined subjects and remove this error
-		// Check if the lecture has undefined subjects
-		else if (!this.isDefined()) {
-			result.add({
-				severity: Severity.error,
-				short: 'Lecture has undefined subjects',
-				long: 'Make sure all subjects are defined',
-				tab: 3,
-				anchor: this.anchor
-			})
-		}
-
-		return result
-	}
-
-	reduce(): SerializedLecture {
-		/* Serialize lecture to a POJO */
-
-		return {
-			id: this.id,
-			name: this.name,
-			subjects: this.present.map(subject => subject.id)
-		}
-	}
-
-	async save(): Promise<void> {
-		/* Save this lecture */
-
-		// Serialize
-		const data = this.reduce()
-
-		// Call the API
-		await fetch(`/api/lecture`, {
-			method: 'PUT',
+		// Call API to create a new lecture
+		const response = await fetch(`/api/lecture`, {
+			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(data)
+			body: JSON.stringify({ graph: graph.id })
 		})
 
 		// Check the response
 		.catch(error => {
-			throw new Error(`Failed to save lecture: ${error}`)
+			throw new Error(`APIError (/api/lecture POST): ${error}`)
+		})
+
+		// Revive the lecture
+		const data = await response.json()
+		const lecture = LectureController.revive(environment, data)
+		graph.assignLecture(lecture)
+
+		return lecture
+	}
+
+	/**
+	 * Revive a lecture from serialized data
+	 * @param environment Environment to revive the lecture in
+	 * @param data Serialized data to revive
+	 * @returns `LectureController` The revived LectureController
+	 */
+
+	static revive(environment: ControllerEnvironment, data: SerializedLecture): LectureController {
+		return new LectureController(environment, data.id, data.name, data.graph, data.subjects)
+	}
+
+	/**
+	 * Validate the lecture
+	 * @returns `Promise<ValidationData>` Validation data
+	 */
+
+	async validate(): Promise<ValidationData> {
+		const validation = new ValidationData()
+
+		if (!this.hasName()) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Lecture has no name',
+				tab: 3,
+				uuid: this.uuid
+			})
+		}
+
+		else {
+			const original = await this.findOriginalName()
+			if (original !== -1) {
+				validation.add({
+					severity: Severity.warning,
+					short: 'Lecture name is already in use',
+					long: `Name first used by Lecture nr. ${original + 1}`,
+					tab: 3,
+					uuid: this.uuid
+				})
+			}
+		}
+
+		if (!this.hasSubjects()) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Lecture has no subjects',
+				tab: 3,
+				uuid: this.uuid
+			})
+		}
+
+		return validation
+	}
+
+	/**
+	 * Serialize the lecture
+	 * @returns `SerializedLecture` Serialized lecture
+	 */
+
+	reduce(): SerializedLecture {
+		return {
+			id: this.id,
+			name: this.name,
+			graph: this._graph_id,
+			subjects: this._subject_ids
+		}
+	}
+
+	/**
+	 * Save the lecture
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async save(): Promise<void> {
+
+		// Call API to save the lecture
+		await fetch(`/api/lecture`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(this.reduce())
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/lecture PUT): ${error}`)
 		})
 	}
 
-	async delete() {
-		/* Delete this lecture */
+	/**
+	 * Delete the lecture
+	 * @throws `APIError` if the API call fails
+	 */
 
-		// Shift indexes
-		for (const lecture of this.graph.lectures) {
-			if (lecture.index > this.index)
-				lecture.index--
+	async delete(): Promise<void> {
+
+		// Call API to delete the lecture
+		await fetch(`/api/lecture`, {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: this.id })
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/lecture DELETE): ${error}`)
+		})
+
+		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
+		const graph = await this.environment.getGraph(this._graph_id, false)
+		graph?.unassignLecture(this)
+
+		const subjects = await this.environment.getSubjects(this._subject_ids, false)
+		subjects.forEach(subject => subject.unassignFromLecture(this, false))
+
+		// Remove from environment
+		this.environment.remove(this)
+	}
+
+	/**
+	 * Check if the lecture has a name
+	 * @returns `boolean` Whether the lecture has a name
+	 */
+
+	private hasName(): boolean {
+		return this.name.trim() !== ''
+	}
+
+	/**
+	 * Find the first occurrence of the lecture's name in the graph
+	 * @returns `Promise<number>` Index of the original name in the graph, or -1 if the name is unique/nonexistant
+	 */
+
+	private async findOriginalName(): Promise<number> {
+		const lectures = await this.graph.then(graph => graph.lectures)
+		const first = lectures.findIndex(item => item.name === this.name)
+		const second = lectures.indexOf(this, first + 1)
+
+		return first < second ? lectures[first].index : -1
+	}
+
+	/**
+	 * Check if the lecture has subjects
+	 * @returns `boolean` Whether the lecture has subjects
+	 */
+
+	private hasSubjects(): boolean {
+		return this._subject_ids.length > 0
+	}
+
+	/**
+	 * Assign a subject to the lecture
+	 * @param subject Subject to assign to the lecture
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `LectureError` if the subject is already assigned to the lecture
+	 */
+
+	assignSubject(subject: SubjectController, mirror: boolean = true): void {
+		if (this._subject_ids.includes(subject.id))
+			throw new Error(`LectureError: Lecture is already assigned to Subject with ID ${subject.id}`)
+		this._subject_ids.push(subject.id)
+		this._subjects?.push(subject)
+
+		if (mirror) {
+			subject.assignToLecture(this, false)
 		}
+	}
 
-		// Call API to delete lecture
-		await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
-			.catch(error => { throw new Error(`Failed to delete lecture: ${error}`) })
+	/**
+	 * Unassign a subject from the lecture
+	 * @param subject Subject to unassign from the lecture
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `LectureError` if the subject is not assigned to the lecture
+	 */
 
-		// Remove this lecture from the graph
-		this.graph.lectures = this.graph.lectures.filter(lecture => lecture !== this)
+	unassignSubject(subject: SubjectController, mirror: boolean = true): void {
+		if (!this._subject_ids.includes(subject.id))
+			throw new Error(`LectureError: Lecture is not assigned to Subject with ID ${subject.id}`)
+		this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
+		this._subjects = this._subjects?.filter(subject => subject.id !== subject.id)
+
+		if (mirror) {
+			subject.unassignFromLecture(this, false)
+		}
 	}
 }

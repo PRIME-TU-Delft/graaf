@@ -18,7 +18,7 @@ type Violation = {
 	short: string,
 	long?: string,
 	tab?: number,
-	anchor?: string
+	uuid?: string
 }
 
 class ValidationData {
@@ -51,27 +51,27 @@ class ValidationData {
 		return new ValidationData()
 	}
 
-	static warning(short: string, long?: string, tab?: number, anchor?: string) {
+	static warning(short: string, long?: string, tab?: number, uuid?: string) {
 		const data = new ValidationData()
 		data.add({
 			severity: Severity.warning,
 			short,
 			long,
 			tab,
-			anchor
+			uuid
 		})
 
 		return data
 	}
 
-	static error(short: string, long?: string, tab?: number, anchor?: string) {
+	static error(short: string, long?: string, tab?: number, uuid?: string) {
 		const data = new ValidationData()
 		data.add({
 			severity: Severity.error,
 			short,
 			long,
 			tab,
-			anchor
+			uuid
 		})
 
 		return data

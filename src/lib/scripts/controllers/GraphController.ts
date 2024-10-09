@@ -1,370 +1,432 @@
-// Internal imports
+
+// Internal dependencies
 import {
-	DomainController, DomainRelationController, 
-	SubjectController, SubjectRelationController,
-	LectureController, LectureSubject,
-	CourseController
+	ControllerEnvironment,
+	CourseController,
+	DomainController,
+	SubjectController,
+	LectureController
 } from '$scripts/controllers'
 
 import { ValidationData, Severity } from '$scripts/validation'
-import { styles } from '$scripts/settings'
 
-import type { SerializedGraph } from '$scripts/types'
+import type { SerializedGraph, DropdownOption } from '$scripts/types'
 
 // Exports
-export { GraphController, SortOption }
+export { GraphController }
 
 
-// --------------------> Classes
+// --------------------> Controller
 
-
-type SortOptions = number
-enum SortOption {
-	ascending  = 0b000000000,
-	descending = 0b100000000,
-	domains    = 0b010000000,
-	subjects   = 0b001000000,
-	relations  = 0b000100000,
-	name       = 0b000010000,
-	style      = 0b000001000,
-	domain     = 0b000000100,
-	parent     = 0b000000010,
-	child      = 0b000000001
-}
 
 class GraphController {
+	private _course?: CourseController
+	private _domains?: DomainController[]
+	private _subjects?: SubjectController[]
+	private _lectures?: LectureController[]
+
 	constructor(
+		public environment: ControllerEnvironment,
 		public id: number,
 		public name: string,
-		private _domains: DomainController[] = [],
-		private _subjects: SubjectController[] = [],
-		private _lectures: LectureController[] = [],
-		private _compact: boolean = true
-	) { }
-
-	// Inferred
-	domain_relations: DomainRelationController[] = []
-	subject_relations: SubjectRelationController[] = []
-
-	get compact() {
-		return this._compact
+		private _course_id: number,
+		private _domain_ids: number[],
+		private _subject_ids: number[],
+		private _lecture_ids: number[]
+	) {
+		this.environment.add(this)
 	}
 
-	private set compact(value: boolean) {
-		this._compact = value
+	get course(): Promise<CourseController> {
+		return (async () => {
+			if (this._course) return this._course
+			this._course = await this.environment.getCourse(this._course_id) as CourseController
+			return this._course
+		})()
 	}
 
-	get expanded() {
-		return !this._compact
+	get domains(): Promise<DomainController[]> {
+		return (async () => {
+			if (this._domains) return this._domains
+			this._domains = await this.environment.getDomains(this._domain_ids)
+			return this._domains
+		})()
 	}
 
-	private set expanded(value: boolean) {
-		this._compact = !value
+	get subjects(): Promise<SubjectController[]> {
+		return (async () => {
+			if (this._subjects) return this._subjects
+			this._subjects = await this.environment.getSubjects(this._subject_ids)
+			return this._subjects
+		})()
 	}
 
-	get domains() {
-
-		// Check if the domains are expanded
-		if (this.compact) throw new Error('Failed to get domains: Graph is too compact')
-		return this._domains
+	get lectures(): Promise<LectureController[]> {
+		return (async () => {
+			if (this._lectures) return this._lectures
+			this._lectures = await this.environment.getLectures(this._lecture_ids)
+			return this._lectures
+		})()
 	}
 
-	set domains(value: DomainController[]) {
-		this._domains = value
+	get lecture_options(): Promise<DropdownOption<LectureController>[]> {
+		return (async () => {
+			const lectures = await this.lectures
+			return Promise.all(
+				lectures.map(
+					async lecture => ({
+						value: lecture,
+						label: lecture.name,
+						validation: await lecture.validate()
+					})
+				)
+			)
+		})()
 	}
 
-	get subjects() {
-
-		// Check if the subjects are expanded
-		if (this.compact) throw new Error('Failed to get subjects: Graph is too compact')
-		return this._subjects
+	get index(): Promise<number> {
+		return this.course.then(course => course.graphIndex(this))
 	}
 
-	set subjects(value: SubjectController[]) {
-		this._subjects = value
-	}
+	/**
+	 * Create a new graph
+	 * @param environment Environment to create the graph in
+	 * @param course Course to assign the graph to
+	 * @returns `Promise<GraphController>` The newly created GraphController
+	 * @throws `APIError` if the API call fails
+	 */
 
-	get lectures() {
+	static async create(environment: ControllerEnvironment, course: CourseController): Promise<GraphController> {
 
-		// Check if the lectures are expanded
-		if (this.compact) throw new Error('Failed to get lectures: Graph is too compact')
-		return this._lectures
-	}
-
-	set lectures(value: LectureController[]) {
-		this._lectures = value
-	}
-
-	get lecture_options() {
-		/* Return the options of the lecture */
-
-		// Check if the graph is lazy
-		if (this._compact) throw new Error('Failed to get lecture options: graph is too compact')
-
-		// Find lecture options
-		const options = []
-		for (const lecture of this.lectures) {
-			options.push({
-				name: lecture.name,
-				value: lecture,
-				validation: ValidationData.success()
-			})
-		}
-
-		return options
-	}
-
-	static async create(course: CourseController, name: string): Promise<GraphController> {
-		/* Create a new graph */
-
-		// Call the API
-		const response = await fetch(`/api/course/${course.id}/graph`, {
+		// Call API to create a new graph
+		const response = await fetch(`/api/graph`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ name })
+			body: JSON.stringify({ course: course.id })
 		})
 
 		// Check the response
 		.catch(error => {
-			throw new Error(`Failed to create graph: ${error}`)
+			throw new Error(`APIError (/api/graph POST): ${error}`)
 		})
 
 		// Revive the graph
-		const data: SerializedGraph = await response.json()
-		const graph = await GraphController.revive(data)
-		course.graphs.push(graph)
+		const data = await response.json()
+		const graph = GraphController.revive(environment, data)
+		course.assignGraph(graph)
+
 		return graph
 	}
 
-	static async revive(data: SerializedGraph, depth: number = 0): Promise<GraphController> {
-		/* Revive graph from a POJO */
+	/**
+	 * Revive a graph from serialized data
+	 * @param environment Environment to revive the graph in
+	 * @param data Serialized data to revive
+	 * @returns `GraphController` The revived GraphController
+	 */
 
-		const graph = new GraphController(data.id, data.name)
-		await graph.expand(depth)
-		return graph
+	static revive(environment: ControllerEnvironment, data: SerializedGraph): GraphController {
+		return new GraphController(environment, data.id, data.name, data.course, data.domains, data.subjects, data.lectures)
 	}
 
-	async expand(depth: number = 1): Promise<GraphController> {
+	/**
+	 * Validate the graph
+	 * @returns `Promise<ValidationData>` Validation data
+	 */
 
-		/* Expand the program */
+	async validate(): Promise<ValidationData> {
+		const validation = new ValidationData()
 
-		// Check if expansion is possible
-		if (this.expanded || depth < 1) return this
-		this.expanded = true
+		if (!this.hasName()) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Graph has no name',
+				tab: 0,
+				uuid: 'graph-name'
+			})
+		} else {
 
-		// Call the API
-		const urls = [
-			`/api/graph/${this.id}/domain`,
-			`/api/graph/${this.id}/subject`,
-			`/api/graph/${this.id}/lecture`
-		]
-
-		const [domains, subjects, lectures] = await Promise.all(
-			urls.map(url => fetch(url, { method: 'GET' })
-				.then(response => response.json())
-				.catch(error => { throw new Error(`Failed to load graph: ${error}`) })
-			)
-		)
-
-		// Define domains
-		for (const domain_data of domains) {
-			this.domains.push(
-				new DomainController(
-					this,
-					this.domains.length,
-					domain_data.id,
-					domain_data.x,
-					domain_data.y,
-					domain_data.name ?? '',
-					domain_data.style ?? undefined
-				)
-			)
-		}
-
-		// Find domain references
-		for (const parent_data of domains) {
-			const parent = this.domains.find(domain => domain.id === parent_data.id)
-			for (const child_id of parent_data.children) {
-				const child = this.domains.find(domain => domain.id === child_id)
-
-				// Create relation
-				DomainRelationController.create(this, parent, child)
+			const original = await this.findOriginalName()
+			if (original !== -1) {
+				validation.add({
+					severity: Severity.error,
+					short: 'Graph name is not unique',
+					long: `Name first used by Graph nr. ${original + 1}`,
+					tab: 0,
+					uuid: 'graph-name'
+				})
 			}
 		}
 
-		// Define subjects
-		for (const subject_data of subjects) {
-			const domain = this.domains.find(domain => domain.id === subject_data.domain)
-
-			this.subjects.push(
-				new SubjectController(
-					this,
-					this.subjects.length,
-					subject_data.id,
-					subject_data.x,
-					subject_data.y,
-					subject_data.name ?? '',
-					domain
-				)
-			)
+		if (!this.hasDomains()) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Graph has no domains'
+			})
 		}
 
-		// Find subject references
-		for (const parent_data of subjects) {
-			const parent = this.subjects.find(subject => subject.id === parent_data.id)
-			for (const child_id of parent_data.children) {
-				const child = this.subjects.find(subject => subject.id === child_id)
-
-				// Create relation
-				SubjectRelationController.create(this, parent, child)
-			}
+		if (!this.hasSubjects()) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Graph has no subjects'
+			})
 		}
 
-		// Define lectures
-		for (const lecture_data of lectures) {
-			const lecture = new LectureController(
-				this,
-				this.lectures.length,
-				lecture_data.id,
-				lecture_data.name ?? ''
-			)
-
-			this.lectures.push(lecture)
-
-			// Define lecture subjects
-			for (const subject_id of lecture_data.subjects) {
-				const subject = this.subjects.find(subject => subject.id === subject_id)
-				LectureSubject.create(lecture, subject)
-			}
+		if (!this.hasLectures()) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Graph has no lectures'
+			})
 		}
 
-		return this
+		const [domains, subjects, lectures] = await Promise.all([this.domains, this.subjects, this.lectures])
+		for (const domain of domains)
+			validation.add(await domain.validate())
+		for (const subject of subjects)
+			validation.add(await subject.validate())
+		for (const lecture of lectures) {
+			validation.add(await lecture.validate())
+		}
+
+		return validation
 	}
 
-	async save() {
-		/* Save the graph to the database */
+	/**
+	 * Serialize the graph
+	 * @returns `SerializedGraph` Serialized graph
+	 */
 
-		// Call the API
+	reduce(): SerializedGraph {
+		return {
+			id: this.id,
+			name: this.name,
+			course: this._course_id,
+			domains: this._domain_ids,
+			subjects: this._subject_ids,
+			lectures: this._lecture_ids
+		}
+	}
+
+	/**
+	 * Save the graph
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async save(): Promise<void> {
+
+		// Call API to save the graph
 		await fetch(`/api/graph`, {
 			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
 		})
 
 		// Check the response
 		.catch(error => {
-			throw new Error(`Failed to save graph: ${error}`)
+			throw new Error(`APIError (/api/graph PUT): ${error}`)
 		})
 	}
 
-	async delete() {
-		/* Delete the graph from the database */
+	/**
+	 * Delete the graph, and all related domains, subjects, and lectures
+	 * @throws `APIError` if the API call fails
+	 */
 
-		// Call the API
-		await fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
-			.catch(error => { throw new Error(`Failed to delete graph: ${error}`) })		
+	async delete(): Promise<void> {
+		
+		// Call API to delete the graph
+		await fetch(`/api/graph`, {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: this.id })
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/graph DELETE): ${error}`)
+		})
+
+		// Unassign from course
+		const course = await this.environment.getCourse(this._course_id, false)
+		course?.unassignGraph(this)
+
+		// Delete all related domains, subjects, and lectures
+		const domains = await this.domains
+		await Promise.all(domains.map(domain => domain.delete()))
+
+		const subjects = await this.subjects
+		await Promise.all(subjects.map(subject => subject.delete()))
+
+		const lectures = await this.lectures
+		await Promise.all(lectures.map(lecture => lecture.delete()))
+
+		// Remove from environment
+		this.environment.remove(this)
 	}
 
-	validate(): ValidationData {
-		/* Validate the graph */
+	/**
+	 * Check if the graph has a name
+	 * @returns `boolean` Whether the graph has a name
+	 */
 
-		// Check if the graph is lazy
-		if (this.compact) throw new Error('Failed to validate graph: graph is too compact')
-
-		// Create response
-		const validation = new ValidationData()
-
-		// Check if the graph has a name
-		if (this.name === '') {
-			validation.add({
-				severity: Severity.error,
-				short: 'Graph has no name',
-				long: 'The graph must have a name',
-				tab: 0,
-				anchor: 'name'
-			})
-		}
-
-		// Validate domains, subjects and lectures
-		for (const domain of this.domains)
-			validation.add(domain.validate())
-		for (const relation of this.domain_relations)
-			validation.add(relation.validate())
-		for (const subject of this.subjects)
-			validation.add(subject.validate())
-		for (const relation of this.subject_relations)
-			validation.add(relation.validate())
-		for (const lecture of this.lectures)
-			validation.add(lecture.validate())
-
-		return validation
+	private hasName(): boolean {
+		return this.name.trim() !== ''
 	}
 
-	sort(options: SortOptions): void {
-		/* Sort the graph */
+	/**
+	 * Find the first occurrence of the graph's name in the course
+	 * @returns `Promise<number>` Index of the original name in the course, or -1 if the name is unique/nonexistant
+	 */
 
-		// Check if the graph is lazy
-		if (this.compact) throw new Error('Failed to sort graph: graph is too compact')
+	private async findOriginalName(): Promise<number> {
+		const graphs = await this.course.then(course => course.graphs)
+		const first = graphs.findIndex(graph => graph.name === this.name)
+		const second = graphs.indexOf(this, first + 1)
 
-		// Define key function
-		let key: (item: any) => string
-		if (options & SortOption.relations) {
-			if (options & SortOption.parent) {
-				key = relation => relation.parent?.name ?? ''
-			} else if (options & SortOption.child) { 
-				key = relation => relation.child?.name ?? ''
-			} else return
-		} else if (options & SortOption.name) {
-			key = field => field.name
-		} else if (options & SortOption.style) {
-			key = domain => domain.style ? styles[domain.style].display_name : ''
-		} else if (options & SortOption.domain) {
-			key = subject => subject.domain?.name ?? ''
-		} else return
-
-		// Sort the appropriate fields
-		if (options & SortOption.relations) {
-			if (options & SortOption.domains) {
-				this.domain_relations.sort((a, b) => key(b).localeCompare(key(a)))
-				if (options & SortOption.descending) this.domain_relations.reverse()
-			} else if (options & SortOption.subjects) {
-				this.subject_relations.sort((a, b) => key(b).localeCompare(key(a)))
-				if (options & SortOption.descending) this.subject_relations.reverse()
-			}
-		} else {
-			if (options & SortOption.domains) {
-				this.domains.sort((a, b) => key(b).localeCompare(key(a)))
-				if (options & SortOption.descending) this.domains.reverse()
-			} else if (options & SortOption.subjects) {
-				this.subjects.sort((a, b) => key(b).localeCompare(key(a)))
-				if (options & SortOption.descending) this.subjects.reverse()
-			}
-		}
-	}
-	
-	nextDomainStyle(): string | undefined {
-		/* Return the next available domain style */
-
-		// Check if the graph is lazy
-		if (this.compact) throw new Error('Failed to get next domain style: graph is too compact')
-
-		// Find used styles
-		const used_styles = this.domains.map(domain => domain.style)
-		return Object.keys(styles).find(style => !used_styles.includes(style))
+		return first < second ? graphs[first].index : -1
 	}
 
-	reduce(): SerializedGraph {
-		/* Reduce graph to a POJO */
+	/**
+	 * Check if the graph has domains
+	 * @returns `boolean` Whether the graph has domains
+	 */
 
-		return {
-			id: this.id,
-			name: this.name
-		}
+	private hasDomains(): boolean {
+		return this._domain_ids.length > 0
 	}
 
-	// TODO: Temp because these were used in mocked data in course overview
-	hasLinks = () => true
-	isVisible = () => true
+	/**
+	 * Check if the graph has subjects
+	 * @returns `boolean` Whether the graph has subjects
+	 */
+
+	private hasSubjects(): boolean {
+		return this._subject_ids.length > 0
+	}
+
+	/**
+	 * Check if the graph has lectures
+	 * @returns `boolean` Whether the graph has lectures
+	 */
+
+	private hasLectures(): boolean {
+		return this._lecture_ids.length > 0
+	}
+
+	/**
+	 * Get the index of a domain in the graph
+	 * @param domain Domain to get the index of
+	 * @returns `number` Index of the domain in the graph
+	 * @throws `GraphError` if the domain is not assigned to the graph
+	 */
+
+	domainIndex(domain: DomainController): number {
+		const index = this._domain_ids.indexOf(domain.id)
+		if (index === -1) throw new Error(`GraphError: Domain with ID ${domain.id} is not assigned to Graph`)
+		return index
+	}
+
+	/**
+	 * Get the index of a subject in the graph
+	 * @param subject Subject to get the index of
+	 * @returns `number` Index of the subject in the graph
+	 * @throws `GraphError` if the subject is not assigned to the graph
+	 */
+
+	subjectIndex(subject: SubjectController): number {
+		const index = this._subject_ids.indexOf(subject.id)
+		if (index === -1) throw new Error(`GraphError: Subject with ID ${subject.id} is not assigned to Graph`)
+		return index
+	}
+
+	/**
+	 * Get the index of a lecture in the graph
+	 * @param lecture Lecture to get the index of
+	 * @returns `number` Index of the lecture in the graph
+	 * @throws `GraphError` if the lecture is not assigned to the graph
+	 */
+
+	lectureIndex(lecture: LectureController): number {
+		const index = this._lecture_ids.indexOf(lecture.id)
+		if (index === -1) throw new Error(`GraphError: Lecture with ID ${lecture.id} is not assigned to Graph`)
+		return index
+	}
+
+	/**
+	 * Assign a domain to the graph
+	 * @param domain Domain to assign to the graph
+	 * @throws `GraphError` if the domain is already assigned to the graph
+	 */
+
+	assignDomain(domain: DomainController): void {
+		if (this._domain_ids.includes(domain.id))
+			throw new Error(`GraphError: Graph is already assigned to Domain with ID ${domain.id}`)
+		this._domain_ids.push(domain.id)
+		this._domains?.push(domain)
+	}
+
+	/**
+	 * Assign a subject to the graph
+	 * @param subject Subject to assign to the graph
+	 * @throws `GraphError` if the subject is already assigned to the graph
+	 */
+
+	assignSubject(subject: SubjectController): void {
+		if (this._subject_ids.includes(subject.id))
+			throw new Error(`GraphError: Graph is already assigned to Subject with ID ${subject.id}`)
+		this._subject_ids.push(subject.id)
+		this._subjects?.push(subject)
+	}
+
+	/**
+	 * Assign a lecture to the graph
+	 * @param lecture Lecture to assign to the graph
+	 * @throws `GraphError` if the lecture is already assigned to the graph
+	 */
+
+	assignLecture(lecture: LectureController): void {
+		if (this._lecture_ids.includes(lecture.id))
+			throw new Error(`GraphError: Graph is already assigned to Lecture with ID ${lecture.id}`)
+		this._lecture_ids.push(lecture.id)
+		this._lectures?.push(lecture)
+	}
+
+	/**
+	 * Unassign a domain from the graph
+	 * @param domain Domain to unassign from the graph
+	 * @throws `GraphError` if the domain is not assigned to the graph
+	 */
+
+	unassignDomain(domain: DomainController): void {
+		if (!this._domain_ids.includes(domain.id))
+			throw new Error(`GraphError: Graph is not assigned to Domain with ID ${domain.id}`)
+		this._domain_ids = this._domain_ids.filter(id => id !== domain.id)
+		this._domains = this._domains?.filter(domain => domain.id !== domain.id)
+	}
+
+	/**
+	 * Unassign a subject from the graph
+	 * @param subject Subject to unassign from the graph
+	 * @throws `GraphError` if the subject is not assigned to the graph
+	 */
+
+	unassignSubject(subject: SubjectController): void {
+		if (!this._subject_ids.includes(subject.id))
+			throw new Error(`GraphError: Graph is not assigned to Subject with ID ${subject.id}`)
+		this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
+		this._subjects = this._subjects?.filter(subject => subject.id !== subject.id)
+	}
+
+	/**
+	 * Unassign a lecture from the graph
+	 * @param lecture Lecture to unassign from the graph
+	 * @throws `GraphError` if the lecture is not assigned to the graph
+	 */
+
+	unassignLecture(lecture: LectureController): void {
+		if (!this._lecture_ids.includes(lecture.id))
+			throw new Error(`GraphError: Graph is not assigned to Lecture with ID ${lecture.id}`)
+		this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
+		this._lectures = this._lectures?.filter(lecture => lecture.id !== lecture.id)
+	}
 }

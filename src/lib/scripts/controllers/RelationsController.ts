@@ -225,7 +225,7 @@ class DomainRelationController extends RelationController<DomainController> {
 				short: 'Domain relation is not fully defined',
 				long: 'Both the parent and child domains must be selected',
 				tab: 1,
-				anchor: this.anchor
+				uuid: this.anchor
 			})
 		}
 
@@ -236,7 +236,7 @@ class DomainRelationController extends RelationController<DomainController> {
 				short: 'Domain relation is inconsistent',
 				long: 'The subjects of these domains are not related',
 				tab: 1,
-				anchor: this.anchor
+				uuid: this.anchor
 			})
 		}
 
@@ -369,7 +369,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 				short: 'Subject relation is not fully defined',
 				long: 'Both the parent and child subjects must be selected',
 				tab: 2,
-				anchor: this.anchor
+				uuid: this.anchor
 			})
 		}
 
@@ -380,7 +380,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 				short: 'Subject relation is inconsistent',
 				long: 'The domains of these subjects are not related',
 				tab: 2, 
-				anchor: this.anchor
+				uuid: this.anchor
 			})
 		}
 

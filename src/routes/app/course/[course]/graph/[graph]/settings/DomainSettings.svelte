@@ -146,7 +146,7 @@
 	<!-- Domain list -->
 	{#each $graph.domains as domain}
 		{#if domainMatchesQuery(domain_query, domain)}
-			<div class="row" id={domain.anchor}>
+			<div class="row" id={domain.uuid}>
 				<Validation short data={domain.validate()} />
 				<span> {domain.index + 1} </span>
 				<IconButton scale

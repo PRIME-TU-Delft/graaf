@@ -605,7 +605,7 @@ class GraphSVGController {
 
 		// Update Fields
 		content.selectAll<SVGGElement, FieldController<DomainController | SubjectController>>('.field')
-			.data(fields, field => field.anchor)
+			.data(fields, field => field.uuid)
 			.join(
 				function(enter) {
 					return enter

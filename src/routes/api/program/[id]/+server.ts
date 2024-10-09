@@ -1,6 +1,6 @@
 
 // Internal dependencies
-import { CourseHelper } from '$scripts/helpers'
+import { ProgramHelper } from '$scripts/helpers'
 
 // Exports
 export { GET, DELETE }
@@ -10,8 +10,8 @@ export { GET, DELETE }
 
 
 /**
- * API endpoint for fetching a Course from the database.
- * @returns `SerializedCourse`
+ * API endpoint for fetching a Program from the database.
+ * @returns `SerializedProgram`
  */
 
 async function GET({ params }) {
@@ -22,8 +22,8 @@ async function GET({ params }) {
 		return new Response('Missing ID', { status: 400 })
 	}
 
-	// Delete the course
-	return await CourseHelper.getById(id)
+	// Delete the program
+	return await ProgramHelper.getById(id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })
@@ -31,7 +31,7 @@ async function GET({ params }) {
 }
 
 /**
- * API endpoint for deleting a Course from the database.
+ * API endpoint for deleting a Program from the database.
  */
 
 async function DELETE({ params }) {
@@ -42,8 +42,8 @@ async function DELETE({ params }) {
 		return new Response('Missing ID', { status: 400 })
 	}
 
-	// Delete the course
-	return await CourseHelper.remove(id)
+	// Delete the program
+	return await ProgramHelper.remove(id)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })

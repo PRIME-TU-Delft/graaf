@@ -32,7 +32,7 @@ class FieldSVGController {
 
 		// Field attributes
 		selection
-			.attr('id', field => field.anchor)
+			.attr('id', field => field.uuid)
 			.attr('class', 'field fixed')
 			.attr('transform', field => `translate(
 				${field.x * settings.GRID_UNIT},

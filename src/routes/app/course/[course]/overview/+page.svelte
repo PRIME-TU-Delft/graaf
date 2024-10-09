@@ -1,6 +1,7 @@
 
 <script lang="ts">
 
+	// External imports
 	import { writable } from 'svelte/store'
 
 	// Internal imports
@@ -52,21 +53,23 @@
 
 	// Functions
 	async function load() {
-		$course = await data.course.expand()
+		course.set(
+			await CourseController.revive(data.course)
+				.then(course => course.expand())
+		)
 	}
 
 	function update() {
-		$course = $course
+		course.update(() => $course)
 	}
 
 	// Variables
 	export let data
-
 	const course = writable<CourseController>()
+
 	const graph_modal = new GraphModal()
 
 </script>
-
 
 
 <!-- Markup -->
@@ -149,7 +152,7 @@
 			<svelte:fragment slot="body">
 				{#if $course.graphs.length === 0}
 					<p class="grayed"> There's nothing here. </p>
-				{/if}	
+				{/if}
 
 				{#each $course.graphs as graph}
 					<span class="graph">

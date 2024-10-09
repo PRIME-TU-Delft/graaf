@@ -1,2 +1,5 @@
 
-export type { SerializedProgram, SerializedCourse, SerializedGraph, SerializedDomain, SerializedSubject, SerializedLecture, SerializedUser } from './SerializedTypes'
+export type { DropdownOption } from './Dropdown'
+export type { SerializedUser, SerializedProgram, SerializedCourse, SerializedGraph, SerializedDomain, SerializedSubject, SerializedLecture } from './Serialized'
+
+export { instanceOfSerializedUser, instanceOfSerializedProgram, instanceOfSerializedCourse, instanceOfSerializedGraph, instanceOfSerializedDomain, instanceOfSerializedSubject, instanceOfSerializedLecture } from './Serialized'

@@ -1,500 +1,902 @@
 
-// External imports
-import * as uuid from 'uuid'
+// Internal dependencies
+import {
+	ControllerEnvironment,
+	GraphController,
+	LectureController
+} from '$scripts/controllers'
 
-// Internal imports
-import { GraphController } from '$scripts/controllers'
+import { styles } from '$scripts/settings'
+import * as settings from '$scripts/settings'
 import { ValidationData, Severity } from '$scripts/validation'
 
-import * as settings from '$scripts/settings'
-import { styles } from '$scripts/settings'
-
 import type { SerializedDomain, SerializedSubject } from '$scripts/types'
+
+// External dependencies
+import * as uuid from 'uuid'
 
 // Exports
 export { FieldController, DomainController, SubjectController }
 
 
-// --------------------> Classes
+// --------------------> Controllers
 
 
 abstract class FieldController<T extends DomainController | SubjectController> {
-	fx?: number					// The locked x-coordinate of this field
-	fy?: number					// The locked y-coordinate of this field
+	protected _graph?: GraphController
+	protected _parents?: T[]
+	protected _children?: T[]
+
+	uuid: string
+	fx?: number
+	fy?: number
 
 	constructor(
-		public graph: GraphController,	// The graph this field belongs to
-		public anchor: string,	// The anchor of this field, unique for every DOM element, used for finding errors and d3 selections
-		public index: number,	// The index of this field in the list of its type, based on creation order, consistent after sorting, deleting etc
-		public id: number,		// The ID of this field in the database, unique among its type, NOT among all fields
-		public x: number,		// The current x-coordinate of this field
-		public y: number,		// The current y-coordinate of this field
-		public name: string,	// The name of this field
-		public parents: T[],	// The parents of this field
-		public children: T[],	// The children of this field
+		public environment: ControllerEnvironment,
+		public id: number,
+		public x: number,
+		public y: number,
+		public name: string,
+		protected _graph_id: number,
+		protected _parent_ids: number[],
+		protected _child_ids: number[]
 	) {
-		/* Create a new field */
-
-		this.fx = x
-		this.fy = y
+		this.uuid = uuid.v4()
 	}
 
-	protected hasName(field: DomainController | SubjectController): boolean {
-		/* Check if the name of a field is undefined */
-
-		return field.name !== ''
+	get graph(): Promise<GraphController> {
+		return (async () => {
+			if (this._graph) return this._graph
+			this._graph = await this.environment.getGraph(this._graph_id) as GraphController
+			return this._graph
+		})()
 	}
 
-	protected findOriginal<S, T>(list: S[], value: S, key: (item: S) => T): number {
-		/* Find the original item in a list
-		 * Returns -1 if value doesn't exist, or isnt a duplicate
-		 * Returns the index of the first duplicate otherwise
-		 */
+	/**
+	 * Check if the field has a name
+	 * @returns `boolean` Whether the field has a name
+	 */
 
-		const first = list.findIndex(item => key(item) === key(value))
-		const index = list.indexOf(value, first + 1)
-		return index === -1 ? -1 : first
+	protected hasName(): boolean {
+		return this.name.trim() !== ''
 	}
 
-	abstract get style(): string | undefined
-	abstract get color(): string
-	abstract validate(): ValidationData
-	abstract delete(): Promise<void>
-	abstract save(): Promise<void>
+	/**
+	 * Check if the field name is too long
+	 * @returns `boolean` Whether the field name is too long
+	 */
+
+	protected hasLongName(): boolean{
+		return this.name.length > settings.FIELD_MAX_CHARS
+	}
+
+	abstract get parents(): Promise<T[]>
+	abstract get children(): Promise<T[]>
+	abstract get style(): Promise<string | null>
+	abstract get color(): Promise<string>
+
+	abstract assignParent(parent: T, mirror: boolean): void
+	abstract assignChild(child: T, mirror: boolean): void
+	abstract unassignParent(parent: T, mirror: boolean): void
+	abstract unassignChild(child: T, mirror: boolean): void
 }
 
 class DomainController extends FieldController<DomainController> {
-	private _style?: string
+	private _subjects?: SubjectController[]
 
 	constructor(
-		graph: GraphController,
-		index: number,
+		environment: ControllerEnvironment,
 		id: number,
-		x: number = 0,
-		y: number = 0,
-		name: string = '',
-		style?: string,
-		parents: DomainController[] = [],
-		children: DomainController[] = []
+		x: number,
+		y: number,
+		name: string,
+		private _style: string | null,
+		_graph_id: number,
+		_parent_ids: number[],
+		_child_ids: number[],
+		private _subject_ids: number[]
 	) {
-		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
-		this.style = style
+		super(environment, id, x, y, name, _graph_id, _parent_ids, _child_ids)
+		this.environment.add(this)
 	}
 
-	get subjects(): SubjectController[] {
-		/* Return the subjects of this domain */
-
-		const subjects = []
-		for (const subject of this.graph.subjects) {
-			if (subject.domain === this) {
-				subjects.push(subject)
-			}
-		}
-
-		return subjects
+	get parents(): Promise<DomainController[]> {
+		return (async () => {
+			if (this._parents) return this._parents
+			this._parents = await this.environment.getDomains(this._parent_ids)
+			return this._parents
+		})()
 	}
 
-	get color(): string {
-		/* Return the preview color of this domain */
-
-		return this.style ? styles[this.style].stroke : 'transparent'
+	get children(): Promise<DomainController[]> {
+		return (async () => {
+			if (this._children) return this._children
+			this._children = await this.environment.getDomains(this._child_ids)
+			return this._children
+		})()
+	}
+	
+	get subjects(): Promise<SubjectController[]> {
+		return (async () => {
+			if (this._subjects) return this._subjects
+			this._subjects = await this.environment.getSubjects(this._subject_ids)
+			return this._subjects
+		})()
 	}
 
-	get style(): string | undefined {
-		/* Return the style of this domain */
-
-		return this._style
+	get index(): Promise<number> {
+		return this.graph.then(graph => graph.domainIndex(this))
 	}
 
-	set style(style: string | undefined) {
-		/* Set the style of this domain */
-
-		this._style = style
+	get style(): Promise<string | null> {
+		return Promise.resolve(
+			this._style
+		)
 	}
 
-	get style_options() {
-		/* Return the style options of this domain */
-
-		const options = []
-		for (const [style, value] of Object.entries(styles)) {
-			const validation = new ValidationData()
-
-			// Check if the style is already used
-			if (this.graph.domains.some(domain => domain.style === style && domain !== this)) {
-				validation.add({ severity: Severity.warning, short:'Duplicate style' })
-			}
-
-			options.push({
-				name: value.display_name,
-				value: style,
-				validation
-			})
-		}
-
-		return options
+	get color(): Promise<string> {
+		return (async () => {
+			const style = await this.style
+			return style ? styles[style].fill : 'transparent'
+		})()
 	}
 
-	static async create(graph: GraphController): Promise<DomainController> {
-		/* Create a new domain */
+	/**
+	 * Create a new domain
+	 * @param environment Environment to create the domain in
+	 * @param graph Graph to assign the domain to
+	 * @returns `Promise<DomainController>` The newly created DomainController
+	 * @throws `APIError` if the API call fails
+	 */
 
-		// Call the API
-		const response = await fetch(`/api/graph/${graph.id}/domain`, { method: 'POST' })
-			.catch(error => { throw new Error(`Failed to create domain: ${error}`) })
-		
-		// Parse response
+	static async create(environment: ControllerEnvironment, graph: GraphController): Promise<DomainController> {
+
+		// Call API to create a new domain
+		const response = await fetch(`/api/domain`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ graph: graph.id })
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/domain POST): ${error}`)
+		})
+
+		// Revive the domain
 		const data = await response.json()
-
-		// Create domain object
-		const domain = new DomainController(graph, graph.domains.length, data.id)
-		graph.domains.push(domain)
+		const domain = DomainController.revive(environment, data)
+		graph.assignDomain(domain)
 
 		return domain
 	}
 
-	private hasStyle(): boolean {
-		/* Check if the style of a domain is undefined */
+	/**
+	 * Revive a domain from serialized data
+	 * @param environment Environment to revive the domain in
+	 * @param data Serialized data to revive
+	 * @returns `DomainController` The revived Domain
+	 */
 
-		return this.style !== undefined
+	static revive(environment: ControllerEnvironment, data: SerializedDomain): DomainController {
+		return new DomainController(environment, data.id, data.x, data.y, data.name, data.style, data.graph, data.parents, data.children, data.subjects)
 	}
 
-	private hasSubjects(): boolean {
-		/* Check if the domain has subjects */
+	/**
+	 * Validate the domain
+	 * @returns `Promise<ValidationData>` Validation data
+	 */
 
-		return this.subjects.length > 0
+	async validate(): Promise<ValidationData> {
+		const validation = new ValidationData()
 
-	}
-
-	validate(): ValidationData {
-		/* Validate this domain */
-
-		const result = new ValidationData()
-
-		// Check if the domain has a name
-		if (!this.hasName(this)) {
-			result.add({
+		if (!this.hasName()) {
+			validation.add({
 				severity: Severity.error,
 				short: 'Domain has no name',
 				tab: 1,
-				anchor: this.anchor
+				uuid: this.uuid
 			})
 		}
 
 		else {
-
-			// Check if the domain has a unique name
-			const first = this.findOriginal(this.graph.domains, this, domain => domain.name)
-			if (first !== -1) {
-				result.add({
-					severity: Severity.error,
-					short: 'Domain has duplicate name',
-					long: `Name first used by Domain nr. ${first + 1}`,
+			const original = await this.findOriginalName()
+			if (original !== -1) {
+				validation.add({
+					severity: Severity.warning,
+					short: 'Domain name is already in use',
+					long: `Name first used by Domain nr. ${original + 1}`,
 					tab: 1,
-					anchor: this.anchor
+					uuid: this.uuid
 				})
 			}
 
-			// Check if the name is too long
-			if (this.name.length > settings.FIELD_MAX_CHARS) {
-				result.add({
+			if (this.hasLongName()) {
+				validation.add({
 					severity: Severity.error,
-					short: 'Domain name too long',
+					short: 'Domain name is too long',
 					long: `Name exceeds ${settings.FIELD_MAX_CHARS} characters`,
 					tab: 1,
-					anchor: this.anchor
+					uuid: this.uuid
 				})
 			}
 		}
 
-		// Check if the domain has a style
 		if (!this.hasStyle()) {
-			result.add({
+			validation.add({
 				severity: Severity.error,
 				short: 'Domain has no style',
 				tab: 1,
-				anchor: this.anchor
+				uuid: this.uuid
 			})
 		}
 
 		else {
 
-			// Check if the domain has a unique style
-			const first = this.findOriginal(this.graph.domains, this, domain => domain.style)
-			if (first !== -1) {
-				result.add({
+			const original = await this.findOriginalStyle()
+			if (original !== -1) {
+				validation.add({
 					severity: Severity.warning,
-					short: 'Domain has duplicate style',
-					long: `Style first used by Domain nr. ${first + 1}`,
+					short: 'Domain style is already in use',
+					long: `Style first used by Domain nr. ${original + 1}`,
 					tab: 1,
-					anchor: this.anchor
+					uuid: this.uuid
 				})
 			}
 		}
 
-		// Check if the domain has subjects
 		if (!this.hasSubjects()) {
-			result.add({
+			validation.add({
 				severity: Severity.warning,
 				short: 'Domain has no subjects',
 				tab: 1,
-				anchor: this.anchor
+				uuid: this.uuid
 			})
 		}
 
-		return result
+		return validation
 	}
 
-	reduce(): SerializedDomain {
-		/* Serialize domain to a POJO */
 
+	/**
+	 * Serialize the domain
+	 * @returns `Promise<SerializedDomain>` Serialized domain
+	 */
+
+	async reduce(): Promise<SerializedDomain> {
 		return {
 			id: this.id,
 			x: this.x,
 			y: this.y,
-			style: this.style!,
 			name: this.name,
-			parents: this.parents.map(parent => parent.id),
-			children: this.children.map(child => child.id)
+			style: await this.style,
+			graph: this._graph_id,
+			parents: this._parent_ids,
+			children: this._child_ids,
+			subjects: this._subject_ids
 		}
 	}
 
+	/**
+	 * Save the domain
+	 * @throws `APIError` if the API call fails
+	 */
+
 	async save(): Promise<void> {
-		/* Save this domain */
 
-		// Serialize
-		const data = this.reduce()
-
-		// Call the API
+		// Call API to save the domain
 		await fetch(`/api/domain`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(data)
+			body: JSON.stringify(this.reduce())
 		})
 
 		// Check the response
-		.catch(error => { 
-			throw new Error(`Failed to save course: ${error}`) 
+		.catch(error => {
+			throw new Error(`APIError (/api/domain PUT): ${error}`)
 		})
 	}
 
+	/**
+	 * Delete the domain
+	 * @throws `APIError` if the API call fails
+	 */
+
 	async delete(): Promise<void> {
-		/* Delete this domain */
+		
+		// Call API to delete the domain
+		await fetch(`/api/domain`, {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: this.id })
+		})
 
-		// Shift indexes
-		for (const domain of this.graph.domains) {
-			if (domain.index > this.index) {
-				domain.index--
-			}
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/domain DELETE): ${error}`)
+		})
+
+		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
+		const graph = await this.environment.getGraph(this._graph_id, false)
+		graph?.unassignDomain(this)
+
+		const parents = await this.environment.getDomains(this._parent_ids, false)
+		parents.forEach(parent => parent.unassignChild(this, false))
+
+		const children = await this.environment.getDomains(this._child_ids, false)
+		children.forEach(child => child.unassignParent(this, false))
+
+		const subjects = await this.environment.getSubjects(this._subject_ids, false)
+		subjects.forEach(subject => subject.unassignFromDomain(this, false))
+
+		// Remove from environment
+		this.environment.remove(this)
+	}
+
+	/**
+	 * Find the first occurrence of the domain's name in the graph
+	 * @returns `Promise<number>` Index of the original name in the graph, or -1 if the name is unique/nonexistant
+	 */
+
+	private async findOriginalName(): Promise<number> {
+		const domains = await this.graph.then(graph => graph.domains)
+		const first = domains.findIndex(item => item.name === this.name)	
+		const second = domains.indexOf(this, first + 1)
+
+		return first < second ? domains[first].index : -1
+	}
+
+	/**
+	 * Find the first occurrence of the domain's style in the graph
+	 * @returns `Promise<number>` Index of the original style in the graph, or -1 if the style is unique/nonexistant
+	 */
+
+	private async findOriginalStyle(): Promise<number> {
+		const domains = await this.graph.then(graph => graph.domains)
+		const first = domains.findIndex(async item => await item.style === await this.style)
+		const second = domains.indexOf(this, first + 1)
+
+		return first < second ? domains[first].index : -1
+	}
+
+	/**
+	 * Check if the domain has a style
+	 * @returns `boolean` Whether the domain has a style
+	 */
+
+	private hasStyle(): boolean {
+		return this.style !== null
+	}
+
+	/**
+	 * Check if the domain has subjects
+	 * @returns `boolean` Whether the domain has parents
+	 */
+
+	private hasSubjects(): boolean {
+		return this._subject_ids.length > 0
+	}
+
+	/**
+	 * Assign a parent domain to the domain
+	 * @param parent Domain to assign as a parent
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `DomainError` if the domain is already assigned as a parent
+	 */
+
+	assignParent(parent: DomainController, mirror: boolean = true): void {
+		if (this._parent_ids.includes(parent.id))
+			throw new Error(`DomainError: Domain is already assigned as a parent of Domain with ID ${parent.id}`)
+		this._parent_ids.push(parent.id)
+		this._parents?.push(parent)
+
+		if (mirror) {
+			parent.assignChild(this, false)
 		}
+	}
 
-		// Delete relations
-		for (const relation of this.graph.domain_relations) {
-			if (relation.parent === this || relation.child === this) {
-				relation.delete()
-			}
+	/**
+	 * Assign a child domain to the domain
+	 * @param child Domain to assign as a child
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `DomainError` if the domain is already assigned as a child
+	 */
+
+	assignChild(child: DomainController, mirror: boolean = true): void {
+		if (this._child_ids.includes(child.id))
+			throw new Error(`DomainError: Domain is already assigned as a child of Domain with ID ${child.id}`)
+		this._child_ids.push(child.id)
+		this._children?.push(child)
+
+		if (mirror) {
+			child.assignParent(this, false)
 		}
+	}
 
-		// Unset subjects with this domain
-		for (const subject of this.graph.subjects) {
-			if (subject.domain === this) {
-				subject.domain = undefined
-			}
+	/**
+	 * Assign a subject to the domain
+	 * @param subject Subject to assign to the domain
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `DomainError` if the subject is already assigned to the domain
+	 */
+
+	assignSubject(subject: SubjectController, mirror: boolean = true): void {
+		if (this._subject_ids.includes(subject.id))
+			throw new Error(`DomainError: Domain is already assigned to Subject with ID ${subject.id}`)
+		this._subject_ids.push(subject.id)
+		this._subjects?.push(subject)
+
+		if (mirror) {
+			subject.assignToDomain(this, false)
 		}
+	}
 
-		// Call the API
-		await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
-			.catch(error => { throw new Error(`Failed to delete domain: ${error}`) })
+	/**
+	 * Unassign a parent domain from the domain
+	 * @param parent Domain to unassign as a parent
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `DomainError` if the domain is not assigned as a parent
+	 */
 
-		// Remove this domain from the graph
-		this.graph.domains = this.graph.domains.filter(domain => domain !== this)
+	unassignParent(parent: DomainController, mirror: boolean = true): void {
+		if (!this._parent_ids.includes(parent.id))
+			throw new Error(`DomainError: Domain is not assigned as a parent of Domain with ID ${parent.id}`)
+		this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
+		this._parents = this._parents?.filter(parent => parent.id !== parent.id)
+
+		if (mirror) {
+			parent.unassignChild(this, false)
+		}
+	}
+
+	/**
+	 * Unassign a child domain from the domain
+	 * @param child Domain to unassign as a child
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `DomainError` if the domain is not assigned as a child
+	 */
+
+	unassignChild(child: DomainController, mirror: boolean = true): void {
+		if (!this._child_ids.includes(child.id))
+			throw new Error(`DomainError: Domain is not assigned as a child of Domain with ID ${child.id}`)
+		this._child_ids = this._child_ids.filter(id => id !== child.id)
+		this._children = this._children?.filter(child => child.id !== child.id)
+
+		if (mirror) {
+			child.unassignParent(this, false)
+		}
+	}
+
+	/**
+	 * Unassign a subject from the domain
+	 * @param subject Subject to unassign from the domain
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `DomainError` if the subject is not assigned to the domain
+	 */
+
+	unassignSubject(subject: SubjectController, mirror: boolean = true): void {
+		if (!this._subject_ids.includes(subject.id))
+			throw new Error(`DomainError: Domain is not assigned to Subject with ID ${subject.id}`)
+		this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
+		this._subjects = this._subjects?.filter(subject => subject.id !== subject.id)
+
+		if (mirror) {
+			subject.unassignFromDomain(this, false)
+		}
 	}
 }
 
 class SubjectController extends FieldController<SubjectController> {
-	domain?: DomainController
+	private _domain?: DomainController | null
+	private _lectures?: LectureController[]
 
 	constructor(
-		graph: GraphController,
-		index: number,
+		environment: ControllerEnvironment,
 		id: number,
-		x: number = 0,
-		y: number = 0,
-		name: string = '',
-		domain?: DomainController,
-		parents: SubjectController[] = [],
-		children: SubjectController[] = []
+		x: number,
+		y: number,
+		name: string,
+		private _domain_id: number | null,
+		_graph_id: number,
+		_parent_ids: number[],
+		_child_ids: number[],
+		private _lecture_ids: number[]
 	) {
-		super(graph, uuid.v4(), index, id, x, y, name, parents, children)
-		this.domain = domain
+		super(environment, id, x, y, name, _graph_id, _parent_ids, _child_ids)
+		this.environment.add(this)
 	}
 
-	get color(): string {
-		/* Return the preview color of this subject */
+	get domain(): Promise<DomainController | null> {
+		return (async () => {
+			if (this._domain !== undefined)
+				return this._domain
+			if (this._domain_id == null)
+				return this._domain = null
 
-		return this.domain?.color || 'transparent'
+			this._domain = await this.environment.getDomain(this._domain_id) as DomainController
+			return this._domain
+		})()
 	}
 
-	get style(): string | undefined {
-		/* Return the style of this subject */
-
-		return this.domain?.style
+	get parents(): Promise<SubjectController[]> {
+		return (async () => {
+			if (this._parents) return this._parents
+			this._parents = await this.environment.getSubjects(this._parent_ids)
+			return this._parents
+		})()
 	}
 
-	get domain_options() {
-		/* Return the domain options of this subject */
-
-		const options = []
-		for (const domain of this.graph.domains) {
-
-			// Check if the domain has a name
-			if (!this.hasName(domain)) continue
-
-			options.push({
-				name: domain.name,
-				value: domain,
-				validation: ValidationData.success()
-			})
-		}
-
-		return options
+	get children(): Promise<SubjectController[]> {
+		return (async () => {
+			if (this._children) return this._children
+			this._children = await this.environment.getSubjects(this._child_ids)
+			return this._children
+		})()
 	}
 
-	private hasDomain(): boolean {
-		/* Check if the domain of a subject is undefined */
-
-		return this.domain !== undefined
+	get lectures(): Promise<LectureController[]> {
+		return (async () => {
+			if (this._lectures) return this._lectures
+			this._lectures = await this.environment.getLectures(this._lecture_ids)
+			return this._lectures
+		})()
 	}
 
-	static async create(graph: GraphController): Promise<SubjectController> {
-		/* Create a new domain */
+	get graph(): Promise<GraphController> {
+		return (async () => {
+			if (this._graph) return this._graph
+			this._graph = await this.environment.getGraph(this._graph_id) as GraphController
+			return this._graph
+		})()
+	}
 
-		// Call the API
-		const response = await fetch(`/api/graph/${graph.id}/subject`, { method: 'POST' })
-			.catch(error => { throw new Error(`Failed to create subject: ${error}`) })
-		
-		// Parse response
+	get index(): Promise<number> {
+		return this.graph.then(graph => graph.subjectIndex(this))
+	}
+
+	get style(): Promise<string | null> {
+		return (async () => {
+			const domain = await this.domain
+			return domain?.style ?? null
+		})()
+	}
+
+	get color(): Promise<string> {
+		return (async () => {
+			const domain = await this.domain
+			return domain?.color ?? 'transparent'
+		})()
+	}
+
+	/**
+	 * Create a new subject
+	 * @param environment Environment to create the subject in
+	 * @param graph Graph to assign the subject to
+	 * @returns `Promise<SubjectController>` The newly created SubjectController
+	 * @throws `APIError` if the API call fails
+	 */
+
+	static async create(environment: ControllerEnvironment, graph: GraphController): Promise<SubjectController> {
+
+		// Call API to create a new subject
+		const response = await fetch(`/api/subject`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ graph: graph.id })
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/subject POST): ${error}`)
+		})
+
+		// Revive the subject
 		const data = await response.json()
-
-		// Create subject object
-		const subject = new SubjectController(graph, graph.subjects.length, data.id)
-		graph.subjects.push(subject)
+		const subject = SubjectController.revive(environment, data)
+		graph.assignSubject(subject)
 
 		return subject
 	}
 
-	validate(): ValidationData {
-		/* Validate this subject */
+	static revive(environment: ControllerEnvironment, data: SerializedSubject): SubjectController {
+		return new SubjectController(environment, data.id, data.x, data.y, data.name, data.domain, data.graph, data.parents, data.children, data.lectures)
+	}
 
-		const result = new ValidationData()
+	/**
+	 * Validate the subject
+	 * @returns `Promise<ValidationData>` Validation data
+	 */
 
-		// Check if the subject has a name
-		if (!this.hasName(this)) {
-			result.add({
+	async validate(): Promise<ValidationData> {
+		const validation = new ValidationData()
+
+		if (!this.hasName()) {
+			validation.add({
 				severity: Severity.error,
 				short: 'Subject has no name',
 				tab: 2,
-				anchor: this.anchor
+				uuid: this.uuid
 			})
 		}
 
 		else {
-
-			// Check if the name is unique
-			const first = this.findOriginal(this.graph.subjects, this, subject => subject.name)
-			if (first !== -1) {
-				result.add({
-					severity: Severity.error,
-					short: 'Subject has duplicate name',
-					long: `Name first used by Subject nr. ${first + 1}`,
+			const original = await this.findOriginalName()
+			if (original !== -1) {
+				validation.add({
+					severity: Severity.warning,
+					short: 'Subject name is already in use',
+					long: `Name first used by Subject nr. ${original + 1}`,
 					tab: 2,
-					anchor: this.anchor
+					uuid: this.uuid
 				})
 			}
 
-			// Check if the name is too long
-			if (this.name.length > settings.FIELD_MAX_CHARS) {
-				result.add({
+			if (this.hasLongName()) {
+				validation.add({
 					severity: Severity.error,
-					short: 'Subject name too long',
+					short: 'Subject name is too long',
 					long: `Name exceeds ${settings.FIELD_MAX_CHARS} characters`,
 					tab: 2,
-					anchor: this.anchor
+					uuid: this.uuid
 				})
 			}
 		}
 
-		// Check if the subject has a domain
 		if (!this.hasDomain()) {
-			result.add({
+			validation.add({
 				severity: Severity.error,
 				short: 'Subject has no domain',
 				tab: 2,
-				anchor: this.anchor
+				uuid: this.uuid
 			})
 		}
 
-		return result
+		return validation
 	}
 
-	reduce(): SerializedSubject {
-		/* Serialize subject to a POJO */
+	/**
+	 * Serialize the subject
+	 * @returns `SerializedSubject` Serialized subject
+	 */
 
+	reduce(): SerializedSubject {
 		return {
 			id: this.id,
 			x: this.x,
 			y: this.y,
-			domain: this.domain?.id,
 			name: this.name,
-			parents: this.parents.map(parent => parent.id),
-			children: this.children.map(child => child.id)
+			domain: this._domain_id,
+			graph: this._graph_id,
+			parents: this._parent_ids,
+			children: this._child_ids,
+			lectures: this._lecture_ids
 		}
 	}
 
+	/**
+	 * Save the subject
+	 * @throws `APIError` if the API call fails
+	 */
+
 	async save(): Promise<void> {
-		/* Save this subject */
 
-		// Serialize
-		const data = this.reduce()
-
-		// Call the API
+		// Call API to save the subject
 		await fetch(`/api/subject`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(data)
+			body: JSON.stringify(this.reduce())
 		})
 
 		// Check the response
-		.catch(error => { 
-			throw new Error(`Failed to save subject: ${error}`) 
+		.catch(error => {
+			throw new Error(`APIError (/api/subject PUT): ${error}`)
 		})
 	}
 
+	/**
+	 * Delete the subject
+	 * @throws `APIError` if the API call fails
+	 */
+
 	async delete(): Promise<void> {
-		/* Delete this subject */
+		
+		// Call API to delete the subject
+		await fetch(`/api/subject`, {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: this.id })
+		})
 
-		// Shift indexes
-		for (const subject of this.graph.subjects) {
-			if (subject.index > this.index) {
-				subject.index--
-			}
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/subject DELETE): ${error}`)
+		})
+
+		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
+		const graph = await this.environment.getGraph(this._graph_id, false)
+		graph?.unassignSubject(this)
+
+		if (this._domain_id !== null) {
+			const domain = await this.environment.getDomain(this._domain_id, false)
+			domain?.unassignSubject(this, false)
 		}
 
-		// Delete relations
-		for (const relation of this.graph.subject_relations) {
-			if (relation.parent === this || relation.child === this) {
-				relation.delete()
-			}
+		const parents = await this.environment.getSubjects(this._parent_ids, false)
+		parents.forEach(parent => parent.unassignChild(this, false))
+
+		const children = await this.environment.getSubjects(this._child_ids, false)
+		children.forEach(child => child.unassignParent(this, false))
+
+		const lectures = await this.environment.getLectures(this._lecture_ids, false)
+		lectures.forEach(lecture => lecture.unassignSubject(this, false))
+
+		// Remove from environment
+		this.environment.remove(this)
+	}
+
+	/**
+	 * Find the first occurrence of the subject's name in the graph
+	 * @returns `Promise<number>` Index of the original name in the graph, or -1 if the name is unique/nonexistant
+	 */
+
+	private async findOriginalName(): Promise<number> {
+		const subjects = await this.graph.then(graph => graph.subjects)
+		const first = subjects.findIndex(item => item.name === this.name)
+		const second = subjects.indexOf(this, first + 1)
+
+		return first < second ? subjects[first].index : -1
+	}
+
+	/**
+	 * Check if the subject has a domain
+	 * @returns `boolean` Whether the subject has a domain
+	 */
+
+	private hasDomain(): boolean {
+		return this._domain_id !== null
+	}
+
+	/**
+	 * Assign a parent subject to the subject
+	 * @param parent Subject to assign as a parent
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `SubjectError` if the subject is already assigned as a parent
+	 */
+
+	assignParent(parent: SubjectController, mirror: boolean = true): void {
+		if (this._parent_ids.includes(parent.id))
+			throw new Error(`SubjectError: Subject is already assigned as a parent of Subject with ID ${parent.id}`)
+		this._parent_ids.push(parent.id)
+		this._parents?.push(parent)
+
+		if (mirror) {
+			parent.assignChild(this, false)
 		}
+	}
 
-		// Remove subject from lectures
-		for (const lecture of this.graph.lectures) {
-			lecture.lecture_subjects = lecture.lecture_subjects.filter(ls => ls.subject !== this)
+	/**
+	 * Assign a child subject to the subject
+	 * @param child Subject to assign as a child
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `SubjectError` if the subject is already assigned as a child
+	 */
+
+	assignChild(child: SubjectController, mirror: boolean = true): void {
+		if (this._child_ids.includes(child.id))
+			throw new Error(`SubjectError: Subject is already assigned as a child of Subject with ID ${child.id}`)
+		this._child_ids.push(child.id)
+		this._children?.push(child)
+
+		if (mirror) {
+			child.assignParent(this, false)
 		}
+	}
 
-		// Call the API
-		await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
-		 	.catch(error => { throw new Error(`Failed to delete subject: ${error}`) })
+	/**
+	 * Assign a domain to the subject
+	 * @param domain Domain to assign to the subject
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `SubjectError` if the subject is already assigned to a domain
+	 */
 
-		// Remove this subject from the graph
-		this.graph.subjects = this.graph.subjects.filter(subject => subject !== this)
+	assignToDomain(domain: DomainController, mirror: boolean = true): void {
+		if (this._domain_id !== null)
+			throw new Error(`SubjectError: Subject is already assigned to Domain with ID ${this._domain_id}`)
+		this._domain_id = domain.id
+		this._domain = domain
+
+		if (mirror) {
+			domain.assignSubject(this, false)
+		}
+	}
+
+	/**
+	 * Assign the subject to a lecture
+	 * @param lecture Lecture to assign the subject to
+	 * @param mirror Whether to mirror the assignment
+	 * @throws `SubjectError` if the subject is already assigned to the lecture
+	 */
+
+	assignToLecture(lecture: LectureController, mirror: boolean = true): void {
+		if (this._lecture_ids.includes(lecture.id))
+			throw new Error(`SubjectError: Subject is already assigned to Lecture with ID ${lecture.id}`)
+		this._lecture_ids.push(lecture.id)
+		this._lectures?.push(lecture)
+
+		if (mirror) {
+			lecture.assignSubject(this, false)
+		}
+	}
+
+	/**
+	 * Unassign a parent subject from the subject
+	 * @param parent Subject to unassign as a parent
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `SubjectError` if the subject is not assigned as a parent
+	 */
+
+	unassignParent(parent: SubjectController, mirror: boolean = true): void {
+		if (!this._parent_ids.includes(parent.id))
+			throw new Error(`SubjectError: Subject is not assigned as a parent of Subject with ID ${parent.id}`)
+		this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
+		this._parents = this._parents?.filter(parent => parent.id !== parent.id)
+
+		if (mirror) {
+			parent.unassignChild(this, false)
+		}
+	}
+
+	/**
+	 * Unassign a child subject from the subject
+	 * @param child Subject to unassign as a child
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `SubjectError` if the subject is not assigned as a child
+	 */
+
+	unassignChild(child: SubjectController, mirror: boolean = true): void {
+		if (!this._child_ids.includes(child.id))
+			throw new Error(`SubjectError: Subject is not assigned as a child of Subject with ID ${child.id}`)
+		this._child_ids = this._child_ids.filter(id => id !== child.id)
+		this._children = this._children?.filter(child => child.id !== child.id)
+
+		if (mirror) {
+			child.unassignParent(this, false)
+		}
+	}
+
+	/**
+	 * Unassign the subject from a domain
+	 * @param domain Domain to unassign the subject from
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `SubjectError` if the subject is not assigned to the domain
+	 */
+
+	unassignFromDomain(domain: DomainController, mirror: boolean = true): void {
+		if (this._domain_id !== domain.id)
+			throw new Error(`SubjectError: Subject is not assigned to Domain with ID ${domain.id}`)
+		this._domain_id = null
+		this._domain = null
+
+		if (mirror) {
+			domain.unassignSubject(this, false)
+		}
+	}
+
+	/**
+	 * Unassign the subject from a lecture
+	 * @param lecture Lecture to unassign the subject from
+	 * @param mirror Whether to mirror the unassignment
+	 * @throws `SubjectError` if the subject is not assigned to the lecture
+	 */
+
+	unassignFromLecture(lecture: LectureController, mirror: boolean = true): void {
+		if (!this._lecture_ids.includes(lecture.id))
+			throw new Error(`SubjectError: Subject is not assigned to Lecture with ID ${lecture.id}`)
+		this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
+		this._lectures = this._lectures?.filter(lecture => lecture.id !== lecture.id)
+
+		if (mirror) {
+			lecture.unassignSubject(this, false)
+		}
 	}
 }

@@ -147,7 +147,7 @@
 	<!-- Subject list -->
 	{#each $graph.subjects as subject}
 		{#if subjectMatchesQuery(subject_query, subject)}
-			<div class="row" id={subject.anchor}>
+			<div class="row" id={subject.uuid}>
 				<Validation short data={subject.validate()} />
 				<span> {subject.index + 1} </span>
 				<IconButton scale
