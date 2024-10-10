@@ -39,6 +39,8 @@
 	"type": "module",
 	"packageManager": "pnpm@9.5.0",
 	"dependencies": {
+		"@auth/prisma-adapter": "^2.4.1",
+		"@auth/sveltekit": "^1.4.1",
 		"@types/d3": "^7.4.3",
 		"@types/uuid": "^10.0.0",
 		"d3": "^7.9.0",
