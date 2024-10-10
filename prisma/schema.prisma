@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
+	provider	= "postgresql"
+	url			= env("DATABASE_URL")
 }
 
 
@@ -32,60 +32,60 @@ enum CourseRole {
 }
 
 model User {
-    id					String		@id @default(cuid())
+	id					String		@id @default(cuid())
 	role				UserRole	@default(USER)
 	firstName			String?
 	lastName			String?
-    email				String		@unique
-    emailVerified		DateTime?
-    image				String?
-    accounts			Account[]
-    sessions			Session[]
+	email				String		@unique
+	emailVerified		DateTime?
+	image				String?
+	accounts			Account[]
+	sessions			Session[]
 
-    createdAt			DateTime	@default(now())
-    updatedAt			DateTime	@updatedAt
+	createdAt			DateTime	@default(now())
+	updatedAt			DateTime	@updatedAt
 
 	programs			ProgramCoordinator[]
 	courses				CourseCoordinator[]
 }
 
 model Account {
-    userId				String
-    type				String
-    provider			String
-    providerAccountId	String
-    refresh_token		String?
-    access_token		String?
-    expires_at			Int?
-    token_type			String?
-    scope				String?
-    id_token			String?
-    session_state		String?
+	userId				String
+	type				String
+	provider			String
+	providerAccountId	String
+	refresh_token		String?
+	access_token		String?
+	expires_at			Int?
+	token_type			String?
+	scope				String?
+	id_token			String?
+	session_state		String?
 
-    createdAt			DateTime	@default(now())
-    updatedAt			DateTime	@updatedAt
+	createdAt			DateTime	@default(now())
+	updatedAt			DateTime	@updatedAt
 
-    user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
+	user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    @@id([provider, providerAccountId])
+	@@id([provider, providerAccountId])
 }
 
 model Session {
-    sessionToken		String		@unique
-    userId				String
-    expires				DateTime
-    user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
+	sessionToken		String		@unique
+	userId				String
+	expires				DateTime
+	user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
 
-    createdAt			DateTime	@default(now())
-    updatedAt			DateTime	@updatedAt
+	createdAt			DateTime	@default(now())
+	updatedAt			DateTime	@updatedAt
 }
 
 model VerificationToken {
-    identifier			String
-    token				String
-    expires				DateTime
+	identifier			String
+	token				String
+	expires				DateTime
 
-    @@id([identifier, token])
+	@@id([identifier, token])
 }
 // END AUTH STUFF
 
@@ -136,8 +136,7 @@ model Course {
 	name			String
 	description		String?
 	type			CourseType	@default(COURSE)
-	program			Program		@relation(fields: [programId], references: [id])
-	programId		Int
+	programs		Program[]
 	graphs			Graph[]
 	links			GraphLink[]
 	coordinators	CourseCoordinator[]
