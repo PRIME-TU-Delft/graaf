@@ -5,13 +5,14 @@ import type { Program as PrismaProgram } from '@prisma/client'
 
 // Internal imports
 import { CourseHelper } from '$scripts/helpers'
-import type { 
+import type {
 	SerializedProgram,
-	SerializedCourse
+	SerializedCourse,
+	SerializedUser
 } from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getAll, getById, getCourses }
+export { create, remove, update, reduce, getAll, getById, getCourses, getAdmins, getEditors }
 
 
 // --------------------> Helper Functions
@@ -86,18 +87,41 @@ async function update(data: SerializedProgram): Promise<void> {
  */
 
 async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
-	const [courses, admins, editors] = await Promise.all([
-		getCourses(program.id).then(courses => courses.map(course => course.id)),
-		getAdminIds(program.id),
-		getEditorIds(program.id)
-	])
+	try {
+		var data = await prisma.program.findUniqueOrThrow({
+			where: { id: program.id },
+			include: {
+				courses: {
+					select: {
+						id: true
+					}
+				},
+				coordinators: {
+					select: {
+						userId: true,
+						role: true
+					}
+				},
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
-	return {
-		id: program.id,
-		name: program.name,
-		courses,
-		admins,
-		editors
+	const courses = data.courses.map(course => course.id)
+
+	const admins = data.coordinators
+		.filter(coordinator => coordinator.role === 'ADMIN')
+		.map(coordinator => Number(coordinator.userId))
+
+	const editors = data.coordinators
+		.filter(coordinator => coordinator.role === 'EDITOR')
+		.map(coordinator => Number(coordinator.userId))
+
+	return { 
+		id: data.id,
+		name: data.name, 
+		courses, admins, editors
 	}
 }
 
@@ -124,7 +148,11 @@ async function getAll(): Promise<SerializedProgram[]> {
 
 async function getById(program_id: number): Promise<SerializedProgram> {
 	try {
-		var program = await prisma.program.findUniqueOrThrow({ where: { id: program_id }})
+		var program = await prisma.program.findUniqueOrThrow({
+			where: {
+				id: program_id
+			}
+		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
@@ -133,22 +161,39 @@ async function getById(program_id: number): Promise<SerializedProgram> {
 }
 
 /**
- * Retrieves Program course IDs.
+ * Retrieves Program courses.
  * @param program_id `number`
- * @returns `number[]`
+ * @returns `SerializedCourse[]`
  */
 
 async function getCourses(program_id: number): Promise<SerializedCourse[]> {
+
+	// TODO Course and program still not many to many :(
+	/* try { */
+	/* 	var data = await prisma.course.findMany({ */
+	/* 		where: { */
+	/* 			programs: { */
+	/* 				some: { */
+	/* 					programId: program_id */
+	/* 				} */
+	/* 			} */
+	/* 		} */
+	/* 	}) */
+	/* } catch (error) { */
+	/* 	return Promise.reject(error) */
+	/* } */
+
+	/* return await Promise.all(data.map(CourseHelper.reduce)) */
+
 	try {
 		var data = await prisma.program.findUniqueOrThrow({
-			where: {
-				id: program_id
+			where: { 
+				id: program_id 
 			},
-			select: {
-				courses: true			
+			select: { 
+				courses: true 
 			}
 		})
-
 	} catch (error) {
 		return Promise.reject(error)
 	}
@@ -157,22 +202,19 @@ async function getCourses(program_id: number): Promise<SerializedCourse[]> {
 }
 
 /**
- * Retrieves Program admin User IDs.
+ * Retrieves Program admin Users.
  * @param program_id `number`
- * @returns `number[]`
+ * @returns `SerializedUser[]`
  */
 
-async function getAdminIds(program_id: number): Promise<number[]> {
+async function getAdmins(program_id: number): Promise<SerializedUser[]> {
 	try {
-		var data = await prisma.program.findUniqueOrThrow({
+		var data = await prisma.user.findMany({
 			where: {
-				id: program_id
-			},
-
-			select: {
-				coordinators: {
-					select: {
-						id: true
+				programs: {
+					some: {
+						programId: program_id,
+						role: 'ADMIN'
 					}
 				}
 			}
@@ -181,17 +223,30 @@ async function getAdminIds(program_id: number): Promise<number[]> {
 		return Promise.reject(error)
 	}
 
-	return data.coordinators.map(admin => admin.id)
+	return await Promise.all(data.map(UserHelper.reduce))
 }
 
 /**
- * Retrieves Program editor User IDs.
+ * Retrieves Program editor Users.
  * @param program_id `number`
- * @returns `number[]`
+ * @returns `SerializedUser[]`
  */
 
-async function getEditorIds(program_id: number): Promise<number[]> {
+async function getEditors(program_id: number): Promise<SerializedUser[]> {
+	try {
+		var data = await prisma.user.findMany({
+			where: {
+				programs: {
+					some: {
+						programId: program_id,
+						role: 'EDITOR'
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
-	// TODO i do not know how to distinguish between admin and editor, so everyone is an admin for now
-	return []
+	return await Promise.all(data.map(UserHelper.reduce))
 }

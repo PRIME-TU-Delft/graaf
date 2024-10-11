@@ -13,21 +13,20 @@ datasource db {
 	url      = env("DATABASE_URL")
 }
 
-
 // START AUTH STUFF
+
 enum UserRole {
 	USER
 	ADMIN
 }
 
 enum ProgramRole {
-	COORDINATOR
+	EDITOR
 	ADMIN
 }
 
 enum CourseRole {
-	READ
-	WRITE
+	EDITOR
 	ADMIN
 }
 
@@ -87,8 +86,8 @@ model VerificationToken {
 
     @@id([identifier, token])
 }
-// END AUTH STUFF
 
+// END AUTH STUFF
 
 model Program {
 	id				Int			@id @default(autoincrement())
@@ -104,7 +103,7 @@ model Program {
 model ProgramCoordinator {
 	userId			String
 	programId		Int
-	role			ProgramRole		@default(COORDINATOR)
+	role			ProgramRole		@default(EDITOR)
 
 	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
 	program			Program			@relation(fields: [programId], references: [id], onDelete: Cascade)
@@ -116,7 +115,7 @@ model ProgramCoordinator {
 model CourseCoordinator {
 	userId			String
 	courseId		Int
-	role			CourseRole		@default(READ)
+	role			CourseRole		@default(EDITOR)
 
 	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
 	course			Course			@relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -136,8 +135,7 @@ model Course {
 	name			String
 	description		String?
 	type			CourseType	@default(COURSE)
-	program			Program		@relation(fields: [programId], references: [id])
-	programId		Int
+	programs		Program[]
 	graphs			Graph[]
 	links			GraphLink[]
 	coordinators	CourseCoordinator[]
@@ -155,7 +153,6 @@ model Graph {
 	subjects		Subject[]
 	lectures		Lecture[]
 	links			GraphLink[]
-	// UI names
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 }

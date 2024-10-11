@@ -1,4 +1,7 @@
 
+// External dependencies
+import { browser } from '$app/environment'
+
 // Internal dependencies
 import  {
 	ControllerEnvironment,
@@ -39,19 +42,24 @@ class CourseController {
 	}
 
 	get graphs(): Promise<GraphController[]> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if graphs are already loaded
 		if (this._graphs) {
 			return Promise.resolve(this._graphs)
 		}
-					
+
 		// Call API to get the courses
 		return fetch(`/api/course/${this.id}/graphs`, { method: 'GET' })
 			.then(
 				response => response.json() as Promise<SerializedGraph[]>,
 				error => { throw new Error(`APIError (/api/course/${this.id}/graphs GET): ${error}`) }
 			)
-		
+
 		// Parse the data
 		.then(data => {
 
@@ -73,19 +81,24 @@ class CourseController {
 	}
 
 	get admins(): Promise<UserController[]> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if admins are already loaded
 		if (this._admins) {
 			return Promise.resolve(this._admins)
 		}
-					
+
 		// Call API to get the courses
 		return fetch(`/api/course/${this.id}/admins`, { method: 'GET' })
 			.then(
 				response => response.json() as Promise<SerializedUser[]>,
 				error => { throw new Error(`APIError (/api/course/${this.id}/admins GET): ${error}`) }
 			)
-		
+
 		// Parse the data
 		.then(data => {
 
@@ -107,19 +120,24 @@ class CourseController {
 	}
 
 	get editors(): Promise<UserController[]> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if editors are already loaded
 		if (this._editors) {
 			return Promise.resolve(this._editors)
 		}
-					
+
 		// Call API to get the courses
 		return fetch(`/api/course/${this.id}/editors`, { method: 'GET' })
 			.then(
 				response => response.json() as Promise<SerializedUser[]>,
 				error => { throw new Error(`APIError (/api/course/${this.id}/editors GET): ${error}`) }
 			)
-		
+
 		// Parse the data
 		.then(data => {
 
@@ -141,19 +159,24 @@ class CourseController {
 	}
 
 	get programs(): Promise<ProgramController[]> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if programs are already loaded
 		if (this._programs) {
 			return Promise.resolve(this._programs)
 		}
-					
+
 		// Call API to get the courses
 		return fetch(`/api/course/${this.id}/programs`, { method: 'GET' })
 			.then(
 				response => response.json() as Promise<SerializedProgram[]>,
 				error => { throw new Error(`APIError (/api/course/${this.id}/programs GET): ${error}`) }
 			)
-		
+
 		// Parse the data
 		.then(data => {
 
@@ -183,7 +206,12 @@ class CourseController {
 	 */
 
 	static async get(environment: ControllerEnvironment, id: number): Promise<CourseController> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if the course is already loaded
 		const existing = environment.courses.find(existing => existing.id === data.id)
 		if (existing) return existing
@@ -209,7 +237,12 @@ class CourseController {
 	 */
 
 	static async getAll(environment: ControllerEnvironment): Promise<CourseController[]> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to get the courses
 		const response = await fetch(`/api/course`, { method: 'GET' })
 
@@ -236,6 +269,11 @@ class CourseController {
 	 */
 
 	static async create(environment: ControllerEnvironment, code: string, name: string): Promise<CourseController> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
 
 		// Call API to create a new course
 		const response = await fetch(`/api/course`, {
@@ -333,6 +371,11 @@ class CourseController {
 
 	async save(): Promise<void> {
 
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to save the course
 		await fetch(`/api/course`, {
 			method: 'PUT',
@@ -352,7 +395,12 @@ class CourseController {
 	 */
 
 	async delete(): Promise<void> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to delete the course
 		await fetch(`/api/course`, {
 			method: 'DELETE',
@@ -373,11 +421,11 @@ class CourseController {
 		this.environment.users
 			.filter(user => this._admin_ids.includes(user.id))
 			.forEach(user => user.resignAsCourseAdmin(this, false))
-		
+
 		this.environment.users
 			.filter(user => this._editor_ids.includes(user.id))
 			.forEach(user => user.resignAsCourseEditor(this, false))
-		
+
 		this.environment.programs
 			.filter(program => this._program_ids.includes(program.id))
 			.forEach(program => program.unassignCourse(this, false))

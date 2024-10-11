@@ -1,15 +1,16 @@
 
+// External dependencies
+import { browser } from '$app/environment'
+
 // Internal dependencies
 import {
 	ControllerEnvironment,
 	UserController,
 	CourseController
 } from '$scripts/controllers'
- 
-import { ValidationData, Severity } from '$scripts/validation'
 
+import { ValidationData, Severity } from '$scripts/validation'
 import type { SerializedCourse, SerializedProgram, SerializedUser } from '$scripts/types'
-import { error } from '@sveltejs/kit'
 
 // Exports
 export { ProgramController }
@@ -36,18 +37,23 @@ class ProgramController {
 
 	get courses(): Promise<CourseController[]> {
 
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if courses are already loaded
 		if (this._courses) {
 			return Promise.resolve(this._courses)
 		}
-					
+
 		// Call API to get the courses
 		return fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
 			.then(
 				response => response.json() as Promise<SerializedCourse[]>,
 				error => { throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`) }
 			)
-		
+
 		// Parse the data
 		.then(course_data => {
 
@@ -66,19 +72,24 @@ class ProgramController {
 	}
 
 	get admins(): Promise<UserController[]> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if admins are already loaded
 		if (this._admins) {
 			return Promise.resolve(this._admins)
 		}
-					
+
 		// Call API to get the admins
 		return fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
 			.then(
 				response => response.json() as Promise<SerializedUser[]>,
 				error => { throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`) }
 			)
-		
+
 		// Parse the data
 		.then(admin_data => {
 
@@ -97,6 +108,11 @@ class ProgramController {
 	}
 
 	get editors(): Promise<UserController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
 
 		// Check if editors are already loaded
 		if (this._editors) {
@@ -136,7 +152,12 @@ class ProgramController {
 	 */
 
 	static async get(environment: ControllerEnvironment, id: number): Promise<ProgramController> {
-		
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Check if the program is already loaded
 		const existing = environment.programs.find(program => program.id === id)
 		if (existing) return existing
@@ -163,6 +184,11 @@ class ProgramController {
 
 	static async getAll(environment: ControllerEnvironment): Promise<ProgramController[]> {
 
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to get all programs
 		const response = await fetch(`/api/program`, { method: 'GET' })
 
@@ -185,6 +211,11 @@ class ProgramController {
 	 */
 
 	static async create(environment: ControllerEnvironment, name: string): Promise<ProgramController> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
 
 		// Call API to create a new program
 		const response = await fetch(`/api/program`, {
@@ -267,6 +298,11 @@ class ProgramController {
 
 	async save(): Promise<void> {
 
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to save the program
 		await fetch(`/api/program`, {
 			method: 'PUT',
@@ -286,6 +322,11 @@ class ProgramController {
 	 */
 
 	async delete(): Promise<void> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.resolve()
+		}
 
 		// Call API to delete the program
 		await fetch(`/api/program`, {
@@ -307,7 +348,7 @@ class ProgramController {
 		this.environment.users
 			.filter(user => this._admin_ids.includes(user.id))
 			.forEach(user => user.resignAsProgramAdmin(this, false))
-		
+
 		this.environment.users
 			.filter(user => this._editor_ids.includes(user.id))
 			.forEach(user => user.resignAsProgramEditor(this, false))
@@ -324,7 +365,7 @@ class ProgramController {
 	hasName(): boolean {
 		return this.name.trim() !== ''
 	}
-	
+
 	/**
 	 * Check if the program has a duplicate name
 	 * @returns `Promise<boolean>` Whether the program has a duplicate name

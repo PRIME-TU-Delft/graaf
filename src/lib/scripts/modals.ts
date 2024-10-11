@@ -38,4 +38,5 @@ abstract class BaseModal {
 	}
 
 	abstract validate(): ValidationData
+	abstract submit(): void
 }
