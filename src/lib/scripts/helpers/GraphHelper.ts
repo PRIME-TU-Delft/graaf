@@ -4,10 +4,23 @@ import prisma from '$lib/server/prisma'
 import type { Graph as PrismaGraph } from '@prisma/client'
 
 // Internal imports
-import type { SerializedGraph } from '$scripts/types'
+import {
+	CourseHelper,
+	DomainHelper,
+	SubjectHelper,
+	LectureHelper
+} from '$scripts/helpers'
+
+import type {
+	SerializedGraph,
+	SerializedCourse,
+	SerializedDomain,
+	SerializedSubject,
+	SerializedLecture
+} from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getAll, getById }
+export { create, remove, update, reduce, getAll, getById, getCourse, getDomains, getSubjects, getLectures }
 
 
 // --------------------> Helper Functions
@@ -41,16 +54,14 @@ async function create(course_id: number, name: string): Promise<SerializedGraph>
 
 /**
  * Removes a Graph from the database.
- * @param graph_ids `number[]`
+ * @param graph_id `number`
  */
 
-async function remove(...graph_ids: number[]): Promise<void> {
+async function remove(graph_id: number): Promise<void> {
 	try {
-		await prisma.graph.deleteMany({
+		await prisma.graph.delete({
 			where: {
-				id: {
-					in: graph_ids
-				}
+				id: graph_id
 			}
 		})
 	} catch (error) {
@@ -65,24 +76,41 @@ async function remove(...graph_ids: number[]): Promise<void> {
 
 async function update(data: SerializedGraph): Promise<void> {
 
-	const course = await getCourseID(data.id)
-	const course_data = course === data.course ? {} : {
+	// Get old and new domains
+	const domains = await getDomains(data.id)
+	const old_domains = domains
+		.filter(domain => !data.domains.includes(domain.id))
+		.map(domain => ({ id: domain.id }))
+	const new_domains = data.domains
+		.filter(id => !domains.some(domain => domain.id === id))
+		.map(id => ({ id }))
+
+	// Get old and new subjects
+	const subjects = await getSubjects(data.id)
+	const old_subjects = subjects
+		.filter(subject => !data.subjects.includes(subject.id))
+		.map(subject => ({ id: subject.id }))
+	const new_subjects = data.subjects
+		.filter(id => !subjects.some(subject => subject.id === id))
+		.map(id => ({ id }))
+
+	// Get old and new lectures
+	const lectures = await getLectures(data.id)
+	const old_lectures = lectures
+		.filter(lecture => !data.lectures.includes(lecture.id))
+		.map(lecture => ({ id: lecture.id }))
+	const new_lectures = data.lectures
+		.filter(id => !lectures.some(lecture => lecture.id === id))
+		.map(id => ({ id }))
+
+	// Get course connection data
+	const course = await getCourse(data.id)
+	const course_data = course.id === data.course ? {} : {
 		connect : { id: data.course },
-		disconnect : { id: course }
+		disconnect : { id: course.id }
 	}
 
-	const domains = await getDomainIDs(data.id)
-	const old_domains = domains.filter(domain => !data.domains.includes(domain))
-	const new_domains = data.domains.filter(domain => !domains.includes(domain))
-
-	const subjects = await getSubjectIDs(data.id)
-	const old_subjects = subjects.filter(subject => !data.subjects.includes(subject))
-	const new_subjects = data.subjects.filter(subject => !subjects.includes(subject))
-
-	const lectures = await getLectureIDs(data.id)
-	const old_lectures = lectures.filter(lecture => !data.lectures.includes(lecture))
-	const new_lectures = data.lectures.filter(lecture => !lectures.includes(lecture))
-
+	// Update
 	try {
 		await prisma.graph.update({
 			where: {
@@ -92,16 +120,16 @@ async function update(data: SerializedGraph): Promise<void> {
 				name: data.name,
 				course: course_data,
 				domains: {
-					connect: new_domains.map(domain => ({ id: domain })),
-					disconnect: old_domains.map(domain => ({ id: domain }))
+					connect: new_domains,
+					disconnect: old_domains
 				},
 				subjects: {
-					connect: new_subjects.map(subject => ({ id: subject })),
-					disconnect: old_subjects.map(subject => ({ id: subject }))
+					connect: new_subjects,
+					disconnect: old_subjects
 				},
 				lectures: {
-					connect: new_lectures.map(lecture => ({ id: lecture })),
-					disconnect: old_lectures.map(lecture => ({ id: lecture }))
+					connect: new_lectures,
+					disconnect: old_lectures
 				}
 			}
 		})
@@ -117,13 +145,47 @@ async function update(data: SerializedGraph): Promise<void> {
  */
 
 async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
+
+	// Get aditional data
+	try {
+		var data = await prisma.graph.findUniqueOrThrow({
+			where: { id: graph.id },
+			include: {
+				domains: {
+					select: {
+						id: true
+					}
+				},
+				subjects: {
+					select: {
+						id: true
+					}
+				},
+				lectures: {
+					select: {
+						id: true
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	// Parse data
+	const domains = data.domains
+		.map(domain => domain.id)
+	const subjects = data.subjects
+		.map(subject => subject.id)
+	const lectures = data.lectures
+		.map(lecture => lecture.id)
+
+	// Return reduced data
 	return {
-		id: graph.id,
-		name: graph.name,
-		course: graph.courseId,
-		domains: await getDomainIDs(graph.id),
-		subjects: await getSubjectIDs(graph.id),
-		lectures: await getLectureIDs(graph.id)
+		id: data.id,
+		name: data.name,
+		course: data.courseId,
+		domains, subjects, lectures
 	}
 }
 
@@ -144,37 +206,11 @@ async function getAll(): Promise<SerializedGraph[]> {
 
 /**
  * Retrieves Groups by ID
- * @param group_ids `number[]`
- * @returns `SerializedGraph[]` or `SerializedGraph` if a single ID is provided
+ * @param group_id `number`
+ * @returns `SerializedGraph`
  */
 
-async function getById(...graph_ids: number[]): Promise<SerializedGraph | SerializedGraph[]> {
-	try {
-		var graphs = await prisma.graph.findMany({
-			where: {
-				id: {
-					in: graph_ids
-				}
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-
-	if (graph_ids.length === 1) {
-		return await reduce(graphs[0])
-	} else {
-		return await Promise.all(graphs.map(reduce))
-	}
-}
-
-/**
- * Retrieves Graph course ID.
- * @param graph_id `number`
- * @returns `number`
- */
-
-async function getCourseID(graph_id: number): Promise<number> {
+async function getById(graph_id: number): Promise<SerializedGraph> {
 	try {
 		var graph = await prisma.graph.findUniqueOrThrow({
 			where: {
@@ -185,18 +221,42 @@ async function getCourseID(graph_id: number): Promise<number> {
 		return Promise.reject(error)
 	}
 
-	return graph.courseId
+	return await reduce(graph)
 }
 
 /**
- * Retrieves Graph domain IDs.
+ * Retrieves Graph course.
  * @param graph_id `number`
- * @returns `number[]`
+ * @returns `SerializedCourse`
  */
 
-async function getDomainIDs(graph_id: number): Promise<number[]> {
+async function getCourse(graph_id: number): Promise<SerializedCourse> {
 	try {
-		var domains = await prisma.domain.findMany({
+		var data = await prisma.course.findFirstOrThrow({
+			where: {
+				graphs: {
+					some: {
+						id: graph_id
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await CourseHelper.reduce(data)
+}
+
+/**
+ * Retrieves Graph domains.
+ * @param graph_id `number`
+ * @returns `SerializedGraph[]`
+ */
+
+async function getDomains(graph_id: number): Promise<SerializedDomain[]> {
+	try {
+		var data = await prisma.domain.findMany({
 			where: {
 				graphId: graph_id
 			}
@@ -205,16 +265,16 @@ async function getDomainIDs(graph_id: number): Promise<number[]> {
 		return Promise.reject(error)
 	}
 
-	return domains.map(domain => domain.id)
+	return await Promise.all(data.map(DomainHelper.reduce))
 }
 
 /**
- * Retrieves Graph subject IDs.
+ * Retrieves Graph subjects.
  * @param graph_id `number`
- * @returns `number[]`
+ * @returns `SerializedSubject[]`
  */
 
-async function getSubjectIDs(graph_id: number): Promise<number[]> {
+async function getSubjects(graph_id: number): Promise<SerializedSubject[]> {
 	try {
 		var subjects = await prisma.subject.findMany({
 			where: {
@@ -225,16 +285,16 @@ async function getSubjectIDs(graph_id: number): Promise<number[]> {
 		return Promise.reject(error)
 	}
 
-	return subjects.map(subject => subject.id)
+	return await Promise.all(subjects.map(SubjectHelper.reduce))
 }
 
 /**
- * Retrieves Graph lecture IDs.
+ * Retrieves Graph lectures.
  * @param graph_id `number`
- * @returns `number[]`
+ * @returns `SerializedLecture[]`
  */
 
-async function getLectureIDs(graph_id: number): Promise<number[]> {
+async function getLectures(graph_id: number): Promise<SerializedLecture[]> {
 	try {
 		var lectures = await prisma.lecture.findMany({
 			where: {
@@ -245,5 +305,5 @@ async function getLectureIDs(graph_id: number): Promise<number[]> {
 		return Promise.reject(error)
 	}
 
-	return lectures.map(lecture => lecture.id)
+	return await Promise.all(lectures.map(LectureHelper.reduce))
 }

@@ -6,6 +6,7 @@ import { instanceOfSerializedCourse } from '$scripts/types'
 // Exports
 export { POST, PUT, GET }
 
+
 // --------------------> API Endpoints
 
 

@@ -1,9 +1,9 @@
 
-// External imports
+// External dependencies
 import prisma from '$lib/server/prisma'
 import type { Course as PrismaCourse } from '@prisma/client'
 
-// Internal imports
+// Internal dependencies
 import {
 	ProgramHelper,
 	GraphHelper
@@ -51,7 +51,11 @@ async function create(code: string, name: string): Promise<SerializedCourse> {
 
 async function remove(course_id: number): Promise<void> {
 	try {
-		await prisma.course.delete({ where: { id: course_id }})
+		await prisma.course.delete({
+			where: {
+				id: course_id
+			}
+		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
@@ -63,15 +67,26 @@ async function remove(course_id: number): Promise<void> {
  */
 
 async function update(data: SerializedCourse): Promise<void> {
-	
+
+	// Get old and new graphs
 	const graphs = await getGraphs(data.id)
-	const old_graphs = graphs.filter(graph => !data.graphs.includes(graph))
-	const new_graphs = data.graphs.filter(graph => !graphs.includes(graph))
+	const old_graphs = graphs
+		.filter(graph => !data.graphs.includes(graph.id))
+		.map(graph => ({ id: graph.id }))
+	const new_graphs = data.graphs
+		.filter(id => !graphs.some(graph => graph.id === id))
+		.map(id => ({ id }))
 
+	// Get old and new programs
 	const programs = await getPrograms(data.id)
-	const old_programs = programs.filter(program => !data.programs.includes(program))
-	const new_programs = data.programs.filter(program => !programs.includes(program))
+	const old_programs = programs
+		.filter(program => !data.programs.includes(program.id))
+		.map(program => ({ id: program.id }))
+	const new_programs = data.programs
+		.filter(id => !programs.some(program => program.id === id))
+		.map(id => ({ id }))
 
+	// Update
 	try {
 		await prisma.course.update({
 			where: {
@@ -81,12 +96,12 @@ async function update(data: SerializedCourse): Promise<void> {
 				name: data.name,
 				code: data.code,
 				graphs: {
-					connect: new_graphs.map(graph => ({ id: graph })),
-					disconnect: old_graphs.map(graph => ({ id: graph }))
+					connect: new_graphs,
+					disconnect: old_graphs
 				},
 				programs: {
-					connect: new_programs.map(program => ({ id: program })),
-					disconnect: old_programs.map(program => ({ id: program }))
+					connect: new_programs,
+					disconnect: old_programs
 				}
 			}
 		})
@@ -103,7 +118,7 @@ async function update(data: SerializedCourse): Promise<void> {
 
 async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 
-	// Retrieve additional data
+	// Get additional data
 	try {
 		var data = await prisma.course.findUniqueOrThrow({
 			where: {
@@ -139,11 +154,11 @@ async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 	const admins = data.coordinators
 		.filter(coordinator => coordinator.role === 'ADMIN')
 		.map(coordinator => Number(coordinator.userId))
-
 	const editors = data.coordinators
 		.filter(coordinator => coordinator.role === 'EDITOR')
-		.map(coordinator => Number(coordinator.userId))	
+		.map(coordinator => Number(coordinator.userId))
 
+	// Return reduced data
 	return {
 		id: data.id,
 		code: data.code,

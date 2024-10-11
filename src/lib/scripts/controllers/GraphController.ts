@@ -1,4 +1,7 @@
 
+// External dependencies
+import { browser } from '$app/environment'
+
 // Internal dependencies
 import {
 	ControllerEnvironment,
@@ -9,8 +12,7 @@ import {
 } from '$scripts/controllers'
 
 import { ValidationData, Severity } from '$scripts/validation'
-
-import type { SerializedGraph, DropdownOption } from '$scripts/types'
+import type { SerializedGraph, DropdownOption, SerializedDomain, SerializedCourse, SerializedSubject } from '$scripts/types'
 
 // Exports
 export { GraphController }
@@ -38,41 +40,160 @@ class GraphController {
 	}
 
 	get course(): Promise<CourseController> {
-		return (async () => {
-			if (this._course) return this._course
-			this._course = await this.environment.getCourse(this._course_id) as CourseController
+		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if course is already loaded
+		if (this._course) {
+			return Promise.resolve(this._course)
+		}
+
+		// Call API to get the course
+		return fetch(`/api/graph/${this.id}/course`, { method: 'GET' })
+			.then(
+				response => response.json() as Promise<SerializedCourse>,
+				error => { throw new Error(`APIError (/api/course/${this._course_id} GET): ${error}`) }
+			)
+
+		// Parse the data
+		.then(data => {
+
+			// Revive course
+			const existing = this.environment.courses.find(existing => existing.id === data.id)
+			this._course = existing ? existing : CourseController.revive(this.environment, data)
+
+			// Check if course is in sync
+			if (this._course.id !== this._course_id) {
+				throw new Error('GraphError: Course is not in sync')
+			}
+
 			return this._course
-		})()
+		})
 	}
 
 	get domains(): Promise<DomainController[]> {
-		return (async () => {
-			if (this._domains) return this._domains
-			this._domains = await this.environment.getDomains(this._domain_ids)
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if domains are already loaded
+		if (this._domains) {
+			return Promise.resolve(this._domains)
+		}
+
+		// Call API to get the domains
+		return fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
+			.then(
+				response => response.json() as Promise<SerializedDomain[]>,
+				error => { throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`) }
+			)
+
+		// Parse the data
+		.then(data => {
+
+			// Revive domains
+			this._domains = data.map(domain => {
+				const existing = this.environment.domains.find(existing => existing.id === domain.id)
+				return existing ? existing : DomainController.revive(this.environment, domain)
+			})
+
+			// Check if domains are in sync
+			const client = JSON.stringify(this._domain_ids.concat().sort())
+			const server = JSON.stringify(this._domains.map(domain => domain.id).sort())
+			if (client !== server) {
+				throw new Error('GraphError: Domains are not in sync')
+			}
+
 			return this._domains
-		})()
+		})
 	}
 
 	get subjects(): Promise<SubjectController[]> {
-		return (async () => {
-			if (this._subjects) return this._subjects
-			this._subjects = await this.environment.getSubjects(this._subject_ids)
+		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if subjects are already loaded
+		if (this._subjects) {
+			return Promise.resolve(this._subjects)
+		}
+
+		// Call API to get the subjects
+		return fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
+			.then(
+				response => response.json() as Promise<SerializedSubject[]>,
+				error => { throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`) }
+			)
+
+		// Parse the data
+		.then(data => {
+
+			// Revive subjects
+			this._subjects = data.map(subject => {
+				const existing = this.environment.subjects.find(existing => existing.id === subject.id)
+				return existing ? existing : SubjectController.revive(this.environment, subject)
+			})
+
+			// Check if subjects are in sync
+			const client = JSON.stringify(this._subject_ids.concat().sort())
+			const server = JSON.stringify(this._subjects.map(subject => subject.id).sort())
+			if (client !== server) {
+				throw new Error('GraphError: Subjects are not in sync')
+			}
+
 			return this._subjects
-		})()
+		})
 	}
 
 	get lectures(): Promise<LectureController[]> {
-		return (async () => {
-			if (this._lectures) return this._lectures
-			this._lectures = await this.environment.getLectures(this._lecture_ids)
+		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if lectures are already loaded
+		if (this._lectures) {
+			return Promise.resolve(this._lectures)
+		}
+
+		// Call API to get the lectures
+		return fetch(`/api/graph/${this.id}/lectures`, { method: 'GET' })
+			.then(
+				response => response.json() as Promise<SerializedDomain[]>,
+				error => { throw new Error(`APIError (/api/graph/${this.id}/lectures GET): ${error}`) }
+			)
+
+		// Parse the data
+		.then(data => {
+
+			// Revive lectures
+			this._lectures = data.map(lecture => {
+				const existing = this.environment.lectures.find(existing => existing.id === lecture.id)
+				return existing ? existing : LectureController.revive(this.environment, lecture)
+			})
+
+			// Check if lectures are in sync
+			const client = JSON.stringify(this._lecture_ids.concat().sort())
+			const server = JSON.stringify(this._lectures.map(lecture => lecture.id).sort())
+			if (client !== server) {
+				throw new Error('GraphError: Lectures are not in sync')
+			}
+
 			return this._lectures
-		})()
+		})
 	}
 
 	get lecture_options(): Promise<DropdownOption<LectureController>[]> {
-		return (async () => {
-			const lectures = await this.lectures
-			return Promise.all(
+		return this.lectures
+			.then(lectures => Promise.all(
 				lectures.map(
 					async lecture => ({
 						value: lecture,
@@ -80,12 +201,73 @@ class GraphController {
 						validation: await lecture.validate()
 					})
 				)
-			)
-		})()
+			))
 	}
 
 	get index(): Promise<number> {
 		return this.course.then(course => course.graphIndex(this))
+	}
+
+	/**
+	 * Get a graph
+	 * @param environment Environment to get the graph from
+	 * @param id ID of the graph to get
+	 * @returns `Promise<GraphController>` The requested GraphController
+	 * @throws `APIError` if the API call fails
+	 */
+
+	static async get(environment: ControllerEnvironment, id: number): Promise<GraphController> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if the course is already loaded
+		const existing = environment.graphs.find(existing => existing.id === id)
+		if (existing) return existing
+
+		// Call API to get the graph
+		const response = await fetch(`/api/graph/${id}`, { method: 'GET' })
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/graph/${id} GET): ${error}`)
+		})
+
+		// Revive the graph
+		const data = await response.json() as SerializedGraph
+		return GraphController.revive(environment, data)
+	}
+
+	/**
+	 * Get all graphs
+	 * @param environment Environment to get the graphs from
+	 * @returns `Promise<GraphController[]>` All GraphControllers
+	 * @throws `APIError` if the API call fails
+	 */
+
+	static async getAll(environment: ControllerEnvironment): Promise<GraphController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Call API to get all graphs
+		const response = await fetch(`/api/graph`, { method: 'GET' })
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/graph GET): ${error}`)
+		})
+
+		// Revive all graphs
+		const data = await response.json() as SerializedGraph[]
+		return data.map(course => {
+			const existing = environment.graphs.find(existing => existing.id === course.id)
+			return existing ? existing : GraphController.revive(environment, course)
+		})
 	}
 
 	/**
@@ -96,13 +278,18 @@ class GraphController {
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, course: CourseController): Promise<GraphController> {
+	static async create(environment: ControllerEnvironment, course: number, name: string): Promise<GraphController> {
+
+		// Guard against SSR
+		if (!browser) {
+			Promise.reject()
+		}
 
 		// Call API to create a new graph
 		const response = await fetch(`/api/graph`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ course: course.id })
+			body: JSON.stringify({ course, name })
 		})
 
 		// Check the response
@@ -113,7 +300,10 @@ class GraphController {
 		// Revive the graph
 		const data = await response.json()
 		const graph = GraphController.revive(environment, data)
-		course.assignGraph(graph)
+
+		// Assign to course
+		await CourseController.get(environment, course)
+			.then(course => course.assignGraph(graph))
 
 		return graph
 	}
@@ -214,6 +404,11 @@ class GraphController {
 
 	async save(): Promise<void> {
 
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to save the graph
 		await fetch(`/api/graph`, {
 			method: 'PUT',
@@ -234,6 +429,11 @@ class GraphController {
 
 	async delete(): Promise<void> {
 		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
 		// Call API to delete the graph
 		await fetch(`/api/graph`, {
 			method: 'DELETE',
@@ -247,8 +447,9 @@ class GraphController {
 		})
 
 		// Unassign from course
-		const course = await this.environment.getCourse(this._course_id, false)
-		course?.unassignGraph(this)
+		this.environment.courses
+			.find(course => course.id === this._course_id)
+			?.unassignGraph(this)
 
 		// Delete all related domains, subjects, and lectures
 		const domains = await this.domains

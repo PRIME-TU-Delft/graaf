@@ -5,7 +5,7 @@
 	import { writable } from 'svelte/store'
 
 	// Internal imports
-	import { CourseController, GraphController } from '$scripts/controllers'
+	import { GraphController } from '$scripts/controllers'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
 
@@ -49,23 +49,18 @@
 
 			return result
 		}
-	}
 
-	// Functions
-	async function load() {
-		course.set(
-			await CourseController.revive(data.course)
-				.then(course => course.expand())
-		)
-	}
-
-	function update() {
-		course.update(() => $course)
+		async submit() {
+			await GraphController.create(environment, $course.id, this.name)
+			graph_modal.hide()
+			$course = $course
+		}
 	}
 
 	// Variables
 	export let data
-	const course = writable<CourseController>()
+	const environment = data.environment
+	const course = writable(data.course)
 
 	const graph_modal = new GraphModal()
 
@@ -75,98 +70,95 @@
 <!-- Markup -->
 
 
-{#await load() then}
+<Layout
+	description="Here you can view the graphs and links associated to this course, and edit their properties."
+	path={[
+		{
+			name: 'Dashboard',
+			href: '/app/dashboard'
+		},
+		{
+			name: `${$course.code} ${$course.name}`,
+			href: `/app/course/${$course.code}/overview`
+		}
+	]}
+>
+	<svelte:fragment slot="toolbar">
+		<Button on:click={() => graph_modal.show()}>
+			<img src={plusIcon} alt="" /> New Graph
+		</Button>
 
-	<Layout
-		description="Here you can view the graphs and links associated to this course, and edit their properties."
-		path={[
-			{
-				name: 'Dashboard',
-				href: '/app/dashboard'
-			},
-			{
-				name: `${$course.code} ${$course.name}`,
-				href: `/app/course/${$course.code}/overview`
-			}
-		]}
-	>
-		<svelte:fragment slot="toolbar">
-			<Button on:click={() => graph_modal.show()}>
-				<img src={plusIcon} alt="" /> New Graph
-			</Button>
+		<Button>
+			<img src={plusIcon} alt="" /> New Link
+		</Button>
 
-			<Button>
-				<img src={plusIcon} alt="" /> New Link
-			</Button>
+		<div class="flex-spacer" />
 
-			<div class="flex-spacer" />
+		<LinkButton href="/app/course/{$course.id}/settings"> Course settings </LinkButton>
 
-			<LinkButton href="/app/course/{$course.id}/settings"> Course settings </LinkButton>
+		<Modal bind:this={graph_modal.modal}>
+			<h3 slot="header"> Create Graph </h3>
+			Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-			<Modal bind:this={graph_modal.modal}>
-				<h3 slot="header"> Create Graph </h3>
-				Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
+			<form>
+				<label for="name"> Graph Name </label>
+				<Textfield label="Name" bind:value={graph_modal.name} />
 
-				<form>
-					<label for="name"> Graph Name </label>
-					<Textfield label="Name" bind:value={graph_modal.name} />
+				<footer>
+					<Button
+						disabled={graph_modal.validate().severity === Severity.error}
+						on:click={() => graph_modal.submit()}
+					> Create </Button>
+					<Validation data={graph_modal.validate()} />
+				</footer>
+			</form>
+		</Modal>
 
-					<footer>
-						<Button
-							disabled={graph_modal.validate().severity === Severity.error}
-							on:click={async () => {
-								await GraphController.create($course, graph_modal.name)
-								graph_modal.hide()
-								update()
-							}}
-						> Create </Button>
-						<Validation data={graph_modal.validate()} />
-					</footer>
-				</form>
-			</Modal>
+		<!--
+		<Modal bind:this={link.modal}>
+			<h3 slot="header"> Create Link </h3>
+			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
-			<!--
-			<Modal bind:this={link.modal}>
-				<h3 slot="header"> Create Link </h3>
-				Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
+			<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
+				<label for="name"> Graph Name </label>
+				<Textfield label="Name" bind:value={link.name} />
 
-				<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
-					<label for="name"> Graph Name </label>
-					<Textfield label="Name" bind:value={link.name} />
+				<label for="graph"> Graph </label>
+				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
 
-					<label for="graph"> Graph </label>
-					<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
+				<footer>
+					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
+					<Validation data={link.validate()} />
+				</footer>
+			</form>
+		</Modal>
+		-->
+	</svelte:fragment>
 
-					<footer>
-						<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
-						<Validation data={link.validate()} />
-					</footer>
-				</form>
-			</Modal>
-			-->
-		</svelte:fragment>
+	<Card>
+		<h3 slot="header">Graphs</h3>
 
-		<Card>
-			<h3 slot="header">Graphs</h3>
+		<svelte:fragment slot="body">
+			{#await $course.graphs then graphs}
 
-			<svelte:fragment slot="body">
-				{#if $course.graphs.length === 0}
+				{#if graphs.length === 0}
 					<p class="grayed"> There's nothing here. </p>
 				{/if}
 
-				{#each $course.graphs as graph}
+				{#each graphs as graph}
 					<span class="graph">
-						{#if graph.hasLinks()}
+						{#if true} <!-- TODO graph.isLink() -->
 							<img src={linkIcon} alt="Link icon" />
 						{/if}
 						{graph.name}
 
 						<div class="flex-spacer" />
 
+						<!-- TODO graph.isVisible() -->
 						<IconButton
-							src={graph.isVisible() ? openEyeIcon : closedEyeIcon}
+							src={true ? openEyeIcon : closedEyeIcon}
 							description="View Graph"
-							disabled={!graph.isVisible()}
+							disabled={false}
 							scale
 						/>
 
@@ -178,30 +170,26 @@
 						/>
 
 						<IconButton src={copyIcon} description="Copy Graph" scale />
-
 						<IconButton src={trashIcon} description="Delete Graph" scale />
 					</span>
 				{/each}
-			</svelte:fragment>
-		</Card>
+			{/await}
+		</svelte:fragment>
+	</Card>
 
-		<Card>
-			<h3 slot="header">Links</h3>
+	<Card>
+		<h3 slot="header">Links</h3>
 
-			<svelte:fragment slot="body">
-				{#if true}
-					<p class="grayed"> There's nothing here. </p>
-				{/if}
-			</svelte:fragment>
-		</Card>
-	</Layout>
-
-{/await}
-
+		<svelte:fragment slot="body">
+			{#if true}
+				<p class="grayed"> There's nothing here. </p>
+			{/if}
+		</svelte:fragment>
+	</Card>
+</Layout>
 
 
 <!-- Styles -->
-
 
 
 <style lang="sass">

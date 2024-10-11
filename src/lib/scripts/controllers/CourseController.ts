@@ -11,7 +11,6 @@ import  {
 } from '$scripts/controllers'
 
 import { ValidationData, Severity } from '$scripts/validation'
-
 import type { SerializedCourse, SerializedGraph, SerializedProgram, SerializedUser } from '$scripts/types'
 
 // Exports
@@ -213,7 +212,7 @@ class CourseController {
 		}
 
 		// Check if the course is already loaded
-		const existing = environment.courses.find(existing => existing.id === data.id)
+		const existing = environment.courses.find(existing => existing.id === id)
 		if (existing) return existing
 
 		// Call API to get the course

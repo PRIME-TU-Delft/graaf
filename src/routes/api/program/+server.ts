@@ -20,7 +20,7 @@ async function POST({ request }) {
 
 	// Retrieve data
 	const { name } = await request.json()
-	if (!name) return new Response('Failed to create program: Missing name', { status: 400 })
+	if (!name) return new Response('Missing name', { status: 400 })
 
 	// Create the program
 	return await ProgramHelper.create(name)
