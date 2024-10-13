@@ -10,7 +10,11 @@ import {
 } from '$scripts/controllers'
 
 import { ValidationData, Severity } from '$scripts/validation'
-import type { SerializedCourse, SerializedProgram, SerializedUser } from '$scripts/types'
+import type {
+	SerializedCourse,
+	SerializedProgram,
+	SerializedUser
+} from '$scripts/types'
 
 // Exports
 export { ProgramController }
@@ -55,10 +59,10 @@ class ProgramController {
 			)
 
 		// Parse the data
-		.then(course_data => {
+		.then(data => {
 
 			// Get the courses from the environment
-			this._courses = course_data.map(course => this.environment.get(course))
+			this._courses = data.map(course => this.environment.get(course))
 
 			// Check if client is in sync with the server
 			const client = JSON.stringify(this._course_ids.concat().sort())
@@ -207,7 +211,7 @@ class ProgramController {
 	 * @param environment Environment to create the program in
 	 * @param name Program name
 	 * @returns `Promise<ProgramController>` The newly created ProgramController
-	 * @throws `APIError` if the API call fails
+	 * @throws `APIError` If the API call fails
 	 */
 
 	static async create(environment: ControllerEnvironment, name: string): Promise<ProgramController> {

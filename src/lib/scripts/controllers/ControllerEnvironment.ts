@@ -7,7 +7,8 @@ import {
 	GraphController,
 	DomainController,
 	SubjectController,
-	LectureController
+	LectureController,
+	LinkController
 } from '$scripts/controllers'
 
 import {
@@ -17,7 +18,8 @@ import {
 	instanceOfSerializedGraph,
 	instanceOfSerializedDomain,
 	instanceOfSerializedSubject,
-	instanceOfSerializedLecture
+	instanceOfSerializedLecture,
+	instanceOfSerializedLink
 } from '$scripts/types'
 
 import type {
@@ -27,7 +29,8 @@ import type {
 	SerializedDomain,
 	SerializedGraph,
 	SerializedLecture,
-	SerializedSubject
+	SerializedSubject,
+	SerializedLink
 } from '$scripts/types'
 
 // Exports
@@ -45,6 +48,7 @@ class ControllerEnvironment {
 	domains: DomainController[] = []
 	subjects: SubjectController[] = []
 	lectures: LectureController[] = []
+	links: LinkController[] = []
 
 	/**
 	 * Overloaded get method to get objects from the environment. If it doesn't exist, it will revive it
@@ -60,6 +64,7 @@ class ControllerEnvironment {
 	get(data: SerializedDomain): DomainController
 	get(data: SerializedSubject): SubjectController
 	get(data: SerializedLecture): LectureController
+	get(data: SerializedLink): LinkController
 	get(data: any): any {
 		if (instanceOfSerializedUser(data)) {
 			let found = this.users.find(user => user.id === data.id)
@@ -82,6 +87,9 @@ class ControllerEnvironment {
 		} else if (instanceOfSerializedLecture(data)) {
 			let found = this.lectures.find(lecture => lecture.id === data.id)
 			return found ? found : LectureController.revive(this, data)
+		} else if (instanceOfSerializedLink(data)) {
+			let found = this.links.find(link => link.id === data.id)
+			return found ? found : LinkController.revive(this, data)
 		} else {
 			throw new Error(`EnvironmentError: Invalid object type: ${data}`)
 		}
@@ -100,6 +108,7 @@ class ControllerEnvironment {
 	add(object: DomainController): void
 	add(object: SubjectController): void
 	add(object: LectureController): void
+	add(object: LinkController): void
 	add(object: any): void {
 		if (object instanceof UserController) {
 			if (this.users.some(user => user.id === object.id))
@@ -129,6 +138,10 @@ class ControllerEnvironment {
 			if (this.lectures.some(lecture => lecture.id === object.id))
 				throw new Error(`EnvironmentError: Lecture with ID ${object.id} already exists`)
 			this.lectures.push(object)
+		} else if (object instanceof LinkController) {
+			if (this.links.some(link => link.id === object.id))
+				throw new Error(`EnvironmentError: Link with ID ${object.id} already exists`)
+			this.links.push(object)
 		} else {
 			throw new Error(`EnvironmentError: Invalid object type: ${object}`)
 		}
@@ -147,6 +160,7 @@ class ControllerEnvironment {
 	remove(object: DomainController): void
 	remove(object: SubjectController): void
 	remove(object: LectureController): void
+	remove(object: LinkController): void
 	remove(object: any): void {
 		if (object instanceof UserController) {
 			if (!this.users.some(user => user.id === object.id))
@@ -176,6 +190,10 @@ class ControllerEnvironment {
 			if (!this.lectures.some(lecture => lecture.id === object.id))
 				throw new Error(`EnvironmentError: Lecture with ID ${object.id} does not exist`)
 			this.lectures = this.lectures.filter(lecture => lecture.id !== object.id)
+		} else if (object instanceof LinkController) {
+			if (!this.links.some(link => link.id === object.id))
+				throw new Error(`EnvironmentError: Link with ID ${object.id} does not exist`)
+			this.links = this.links.filter(link => link.id !== object.id)
 		} else {
 			throw new Error(`EnvironmentError: Invalid object type: ${object}`)
 		}

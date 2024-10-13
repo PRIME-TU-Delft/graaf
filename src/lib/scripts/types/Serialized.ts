@@ -1,7 +1,26 @@
 
 // Exports
-export { instanceOfSerializedUser, instanceOfSerializedProgram, instanceOfSerializedCourse, instanceOfSerializedGraph, instanceOfSerializedDomain, instanceOfSerializedSubject, instanceOfSerializedLecture }
-export type { SerializedUser, SerializedProgram, SerializedCourse, SerializedGraph, SerializedDomain, SerializedSubject, SerializedLecture }
+export {
+	instanceOfSerializedUser,
+	instanceOfSerializedProgram,
+	instanceOfSerializedCourse,
+	instanceOfSerializedGraph,
+	instanceOfSerializedDomain,
+	instanceOfSerializedSubject,
+	instanceOfSerializedLecture,
+	instanceOfSerializedLink
+}
+
+export type {
+	SerializedUser,
+	SerializedProgram,
+	SerializedCourse,
+	SerializedGraph,
+	SerializedDomain,
+	SerializedSubject,
+	SerializedLecture,
+	SerializedLink
+}
 
 
 // --------------------> Types
@@ -79,6 +98,13 @@ type SerializedLecture = {
 	subjects: number[]	// List of subject IDs
 }
 
+type SerializedLink = {
+	id: number,		// Unique identifier
+	name: string,	// Link name
+	course: number,	// Course ID this Link belongs to
+	graph: number	// Graph ID this Link belongs to
+}
+
 
 // --------------------> Instance Methods
 
@@ -109,4 +135,8 @@ function instanceOfSerializedSubject(object: any): object is SerializedSubject {
 
 function instanceOfSerializedLecture(object: any): object is SerializedLecture {
 	return 'id' in object && 'name' in object && 'graph' in object && 'subjects' in object
+}
+
+function instanceOfSerializedLink(object: any): object is SerializedLink {
+	return 'id' in object && 'name' in object && 'course' in object && 'graph' in object
 }
