@@ -10,17 +10,17 @@ export { GET }
 
 
 /**
- * Get all subjects for a graph
+ * API endpoint for getting all Subjects belonging to target graph
  * @returns `SerializedSubject[]`
  */
 
 async function GET({ params }) {
-	const subject_id = Number(params.id)
-	if (!subject_id || isNaN(subject_id)) {
-		return new Response('Invalid subject ID', { status: 400 })
+	const graph_id = Number(params.id)
+	if (!graph_id || isNaN(graph_id)) {
+		return new Response('Invalid graph ID', { status: 400 })
 	}
 
-	return await GraphHelper.getSubjects(subject_id)
+	return await GraphHelper.getSubjects(graph_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })

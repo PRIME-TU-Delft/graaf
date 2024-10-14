@@ -10,8 +10,8 @@ export { GET }
 
 
 /**
- * API endpoint for getting all Domains belonging to target graph
- * @returns `SerializedDomain[]`
+ * API endpoint for getting all Subjects belonging to target graph
+ * @returns `SerializedLink[]`
  */
 
 async function GET({ params }) {
@@ -20,7 +20,7 @@ async function GET({ params }) {
 		return new Response('Invalid graph ID', { status: 400 })
 	}
 
-	return await GraphHelper.getDomains(graph_id)
+	return await GraphHelper.getLinks(graph_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })

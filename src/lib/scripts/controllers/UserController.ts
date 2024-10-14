@@ -34,7 +34,7 @@ class UserController {
 		private _course_admin_ids: number[],
 		private _course_editor_ids: number[]
 	) {
-		this.environment.add(this)
+		this.environment.remember(this)
 	}
 
 	get program_admins(): ProgramController[] {
@@ -210,7 +210,7 @@ class UserController {
 		course_editors.forEach(course => course.unassignEditor(this, false))
 
 		// Remove from environment
-		this.environment.remove(this)
+		this.environment.forget(this)
 	}
 
 	/**

@@ -8,7 +8,8 @@ import {
 	CourseHelper,
 	DomainHelper,
 	SubjectHelper,
-	LectureHelper
+	LectureHelper,
+	LinkHelper
 } from '$scripts/helpers'
 
 import type {
@@ -16,21 +17,34 @@ import type {
 	SerializedCourse,
 	SerializedDomain,
 	SerializedSubject,
-	SerializedLecture
+	SerializedLecture,
+	SerializedLink
 } from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getAll, getById, getCourse, getDomains, getSubjects, getLectures }
+export { 
+	create,		 // api/graph				POST
+	update,		 // api/graph				PUT
+	remove,		 // api/graph/[id]			DELETE
+	reduce,
+	getAll,		 // api/graph				GET
+	getById,	 // api/graph/[id]			GET
+	getCourse,	 // api/graph/[id]/course	GET
+	getDomains,	 // api/graph/[id]/domains	GET
+	getSubjects, // api/graph/[id]/subjects	GET
+	getLectures, // api/graph/[id]/lectures	GET
+	getLinks	 // api/graph/[id]/links	GET
+}
 
 
 // --------------------> Helper Functions
 
 
 /**
- * Creates a Graph object in the database.
- * @param course_id `number`
- * @param name `string`
- * @returns `SerializedGraph`
+ * Creates a Graph in the database.
+ * @param course_id `number` Course ID graph belongs to
+ * @param name `string` Graph name
+ * @returns `SerializedGraph` Serialized new Graph
  */
 
 async function create(course_id: number, name: string): Promise<SerializedGraph> {
@@ -53,25 +67,8 @@ async function create(course_id: number, name: string): Promise<SerializedGraph>
 }
 
 /**
- * Removes a Graph from the database.
- * @param graph_id `number`
- */
-
-async function remove(graph_id: number): Promise<void> {
-	try {
-		await prisma.graph.delete({
-			where: {
-				id: graph_id
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-
-/**
  * Updates a Graph in the database.
- * @param data 'SerializedGraph'
+ * @param data 'SerializedGraph' New Graph data
  */
 
 async function update(data: SerializedGraph): Promise<void> {
@@ -139,9 +136,26 @@ async function update(data: SerializedGraph): Promise<void> {
 }
 
 /**
+ * Removes a Graph from the database.
+ * @param graph_id `number` Target Graph ID
+ */
+
+async function remove(graph_id: number): Promise<void> {
+	try {
+		await prisma.graph.delete({
+			where: {
+				id: graph_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+}
+
+/**
  * Reduces a Graph to a SerializedGraph.
- * @param graph `PrismaGraph`
- * @returns `SerializedGraph`
+ * @param graph `PrismaGraph` Graph object
+ * @returns `SerializedGraph` Serialized Graph
  */
 
 async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
@@ -149,7 +163,9 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
 	// Get aditional data
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
-			where: { id: graph.id },
+			where: { 
+				id: graph.id 
+			},
 			include: {
 				domains: {
 					select: {
@@ -162,6 +178,11 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
 					}
 				},
 				lectures: {
+					select: {
+						id: true
+					}
+				},
+				links: {
 					select: {
 						id: true
 					}
@@ -179,19 +200,21 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
 		.map(subject => subject.id)
 	const lectures = data.lectures
 		.map(lecture => lecture.id)
+	const links = data.links
+		.map(link => link.id)
 
 	// Return reduced data
 	return {
 		id: data.id,
 		name: data.name,
 		course: data.courseId,
-		domains, subjects, lectures
+		domains, subjects, lectures, links
 	}
 }
 
 /**
  * Retrieves all Graphs from the database.
- * @returns `SerializedGraph[]`
+ * @returns `SerializedGraph[]` Array of Serialized Graphs
  */
 
 async function getAll(): Promise<SerializedGraph[]> {
@@ -205,9 +228,9 @@ async function getAll(): Promise<SerializedGraph[]> {
 }
 
 /**
- * Retrieves Groups by ID
- * @param group_id `number`
- * @returns `SerializedGraph`
+ * Retrieves Graphs by ID
+ * @param group_id `number` Target Graph ID
+ * @returns `SerializedGraph` Serialized Graph
  */
 
 async function getById(graph_id: number): Promise<SerializedGraph> {
@@ -225,9 +248,9 @@ async function getById(graph_id: number): Promise<SerializedGraph> {
 }
 
 /**
- * Retrieves Graph course.
- * @param graph_id `number`
- * @returns `SerializedCourse`
+ * Retrieves Course assigned to target Graph.
+ * @param graph_id `number` Target Graph ID
+ * @returns `SerializedCourse` Serialized Course
  */
 
 async function getCourse(graph_id: number): Promise<SerializedCourse> {
@@ -249,9 +272,9 @@ async function getCourse(graph_id: number): Promise<SerializedCourse> {
 }
 
 /**
- * Retrieves Graph domains.
- * @param graph_id `number`
- * @returns `SerializedGraph[]`
+ * Retrieves Domains assigned to target Graph.
+ * @param graph_id `number` Target Graph ID
+ * @returns `SerializedGraph[]` Serialized Graphs
  */
 
 async function getDomains(graph_id: number): Promise<SerializedDomain[]> {
@@ -269,9 +292,9 @@ async function getDomains(graph_id: number): Promise<SerializedDomain[]> {
 }
 
 /**
- * Retrieves Graph subjects.
- * @param graph_id `number`
- * @returns `SerializedSubject[]`
+ * Retrieves Subjects assigned to target Graph.
+ * @param graph_id `number` Target Graph ID
+ * @returns `SerializedSubject[]` Serialized Subjects
  */
 
 async function getSubjects(graph_id: number): Promise<SerializedSubject[]> {
@@ -289,9 +312,9 @@ async function getSubjects(graph_id: number): Promise<SerializedSubject[]> {
 }
 
 /**
- * Retrieves Graph lectures.
- * @param graph_id `number`
- * @returns `SerializedLecture[]`
+ * Retrieves Lectures assigned to target Graph.
+ * @param graph_id `number` Target Graph ID
+ * @returns `SerializedLecture[]` Serialized Lectures
  */
 
 async function getLectures(graph_id: number): Promise<SerializedLecture[]> {
@@ -306,4 +329,24 @@ async function getLectures(graph_id: number): Promise<SerializedLecture[]> {
 	}
 
 	return await Promise.all(lectures.map(LectureHelper.reduce))
+}
+
+/**
+ * Retrieves Links assigned to target Graph.
+ * @param graph_id `number` Target Graph ID
+ * @returns `SerializedLink[]` Serialized Links
+ */
+
+async function getLinks(graph_id: number): Promise<SerializedLink[]> {
+	try {
+		var data = await prisma.graphLink.findMany({
+			where: {
+				graphId: graph_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await Promise.all(data.map(LinkHelper.reduce))
 }

@@ -16,17 +16,17 @@
 
 	// Types
 	type T = $$Generic
-	type Option = {
-		name: string
-		value: T
+	type DropdownOption = {
+		value: T,
+		label: string,
 		validation: ValidationData
 	}
 
 	// Exports
 	export let label: string
-	export let placeholder: string
 	export let value: T | undefined = undefined
-	export let options: Option[]
+	export let options: DropdownOption[]
+	export let placeholder: string
 
 	// Functions
 	function visibility(value: boolean) {
@@ -36,13 +36,13 @@
 		visible = value
 	}
 
-	function set(new_value?: T) {
+	function set(new_value: T | undefined) {
 		value = new_value
 		dispatch('change', new_value)
 	}
 
 	// Variables
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{change: T | undefined}>()
 	let visible: boolean = false
 	let wrapper: HTMLDivElement
 
@@ -73,7 +73,7 @@
 			on:click={() => visibility(!visible)}
 			use:clickoutside={() => visibility(false)}
 		>
-			{choice?.name || placeholder}
+			{choice?.label || placeholder}
 		</button>
 
 		{#if visible}
@@ -86,7 +86,7 @@
 						on:click={() => set(option.value)}
 						use:focusonhover
 					>
-						{option.name}
+						{option.label}
 
 						{#if option.validation.severity === Severity.error}
 							<span class="error">
@@ -108,7 +108,7 @@
 				{/if}
 
 				{#if value !== undefined}
-					<button type="button" class="option grayed" on:click={() => set()} use:focusonhover>
+					<button type="button" class="option grayed" on:click={() => set(undefined)} use:focusonhover>
 						<i> Remove choice </i>
 					</button>
 				{/if}
@@ -155,7 +155,6 @@
 					right: $caret-size + 2 * $input-thick-padding
 					bottom: $input-thin-padding
 					left: $input-thick-padding
-
 
 				overflow: hidden
 				text-overflow: ellipsis

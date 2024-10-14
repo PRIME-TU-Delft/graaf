@@ -10,17 +10,17 @@ export { GET }
 
 
 /**
- * Get all lectures for a graph
+ * API endpoint for getting all Lectures belonging to target graph
  * @returns `SerializedLecture[]`
  */
 
 async function GET({ params }) {
-	const lecture_id = Number(params.id)
-	if (!lecture_id || isNaN(lecture_id)) {
-		return new Response('Invalid lecture ID', { status: 400 })
+	const graph_id = Number(params.id)
+	if (!graph_id || isNaN(graph_id)) {
+		return new Response('Invalid graph ID', { status: 400 })
 	}
 
-	return await GraphHelper.getLectures(lecture_id)
+	return await GraphHelper.getLectures(graph_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })

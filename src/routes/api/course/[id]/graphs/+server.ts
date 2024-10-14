@@ -15,12 +15,12 @@ export { GET }
  */
 
 async function GET({ params }) {
-	const program_id = Number(params.id)
-	if (!program_id || isNaN(program_id)) {
+	const course_id = Number(params.id)
+	if (!course_id || isNaN(course_id)) {
 		return new Response('Invalid program ID', { status: 400 })
 	}
 
-	return await CourseHelper.getGraphs(program_id)
+	return await CourseHelper.getGraphs(course_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })

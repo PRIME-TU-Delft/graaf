@@ -97,7 +97,7 @@ class DomainController extends FieldController<DomainController> {
 		private _subject_ids: number[]
 	) {
 		super(environment, id, x, y, name, _graph_id, _parent_ids, _child_ids)
-		this.environment.add(this)
+		this.environment.remember(this)
 	}
 
 	get parents(): Promise<DomainController[]> {
@@ -330,7 +330,7 @@ class DomainController extends FieldController<DomainController> {
 		subjects.forEach(subject => subject.unassignFromDomain(this, false))
 
 		// Remove from environment
-		this.environment.remove(this)
+		this.environment.forget(this)
 	}
 
 	/**
@@ -503,7 +503,7 @@ class SubjectController extends FieldController<SubjectController> {
 		private _lecture_ids: number[]
 	) {
 		super(environment, id, x, y, name, _graph_id, _parent_ids, _child_ids)
-		this.environment.add(this)
+		this.environment.remember(this)
 	}
 
 	get domain(): Promise<DomainController | null> {
@@ -731,7 +731,7 @@ class SubjectController extends FieldController<SubjectController> {
 		lectures.forEach(lecture => lecture.unassignSubject(this, false))
 
 		// Remove from environment
-		this.environment.remove(this)
+		this.environment.forget(this)
 	}
 
 	/**

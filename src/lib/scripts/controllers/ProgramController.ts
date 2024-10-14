@@ -5,14 +5,14 @@ import { browser } from '$app/environment'
 // Internal dependencies
 import {
 	ControllerEnvironment,
-	UserController,
-	CourseController
+	CourseController,
+	UserController
 } from '$scripts/controllers'
 
 import { ValidationData, Severity } from '$scripts/validation'
 import type {
-	SerializedCourse,
 	SerializedProgram,
+	SerializedCourse,
 	SerializedUser
 } from '$scripts/types'
 
@@ -36,174 +36,19 @@ class ProgramController {
 		private _editor_ids: number[],
 		private _admin_ids: number[]
 	) {
-		this.environment.add(this)
+		this.environment.remember(this)
 	}
 
-	get courses(): Promise<CourseController[]> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if courses are already loaded
-		if (this._courses) {
-			return Promise.resolve(this._courses)
-		}
-
-		// Call API to get the courses
-		return fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
-			.then(
-				response => response.json() as Promise<SerializedCourse[]>,
-				error => { throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`) }
-			)
-
-		// Parse the data
-		.then(data => {
-
-			// Get the courses from the environment
-			this._courses = data.map(course => this.environment.get(course))
-
-			// Check if client is in sync with the server
-			const client = JSON.stringify(this._course_ids.concat().sort())
-			const server = JSON.stringify(this._courses.map(course => course.id).sort())
-			if (client !== server) {
-				throw new Error('ProgramError: Courses are not in sync with the server')
-			}
-
-			return this._courses
-		})
+	get course_ids(): number[] {
+		return this._course_ids.concat()
 	}
 
-	get admins(): Promise<UserController[]> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if admins are already loaded
-		if (this._admins) {
-			return Promise.resolve(this._admins)
-		}
-
-		// Call API to get the admins
-		return fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
-			.then(
-				response => response.json() as Promise<SerializedUser[]>,
-				error => { throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`) }
-			)
-
-		// Parse the data
-		.then(admin_data => {
-
-			// Get the admins from the environment
-			this._admins = admin_data.map(user => this.environment.get(user))
-
-			// Check if client is in sync with the server
-			const client = JSON.stringify(this._admin_ids.concat().sort())
-			const server = JSON.stringify(this._admins.map(admin => admin.id).sort())
-			if (client !== server) {
-				throw new Error('ProgramError: Admins are not in sync with the server')
-			}
-
-			return this._admins
-		})
+	get admin_ids(): number[] {
+		return this._admin_ids.concat()
 	}
 
-	get editors(): Promise<UserController[]> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if editors are already loaded
-		if (this._editors) {
-			return Promise.resolve(this._editors)
-		}
-
-		// Call API to get the editors
-		return fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
-			.then(
-				response => response.json() as Promise<SerializedUser[]>,
-				error => { throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`) }
-			)
-
-		// Parse the data
-		.then(editor_data => {
-
-			// Get the editors from the environment
-			this._editors = editor_data.map(user => this.environment.get(user))
-
-			// Check if client is in sync with the server
-			const client = JSON.stringify(this._editor_ids.concat().sort())
-			const server = JSON.stringify(this._editors.map(editor => editor.id).sort())
-			if (client !== server) {
-				throw new Error('ProgramError: Editors are not in sync with the server')
-			}
-
-			return this._editors
-		})
-	}
-
-	/**
-	 * Get a program
-	 * @param environment Environment to fetch the program in
-	 * @param id ID of the program to fetch
-	 * @returns `Promise<ProgramController>` The fetched ProgramController
-	 * @throws `APIError` if the API call fails
-	 */
-
-	static async get(environment: ControllerEnvironment, id: number): Promise<ProgramController> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if the program is already loaded
-		const existing = environment.programs.find(program => program.id === id)
-		if (existing) return existing
-
-		// Call API to get the program
-		const response = await fetch(`/api/program/${id}`, { method: 'GET' })
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/program/${id} GET): ${error}`)
-		})
-
-		// Parse the response
-		const data = await response.json() as SerializedProgram
-		return ProgramController.revive(environment, data)
-	}
-
-	/**
-	 * Get all programs
-	 * @param environment Environment to fetch the programs in
-	 * @returns `Promise<ProgramController[]>` All fetched ProgramControllers
-	 * @throws `APIError` if the API call fails
-	 */
-
-	static async getAll(environment: ControllerEnvironment): Promise<ProgramController[]> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Call API to get all programs
-		const response = await fetch(`/api/program`, { method: 'GET' })
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/program GET): ${error}`)
-		})
-
-		// Parse the response
-		const data = await response.json() as SerializedProgram[]
-		return data.map(program => environment.get(program))
+	get editor_ids(): number[] {
+		return this._editor_ids.concat()
 	}
 
 	/**
@@ -246,7 +91,14 @@ class ProgramController {
 	 */
 
 	static revive(environment: ControllerEnvironment, data: SerializedProgram): ProgramController {
-		return new ProgramController(environment, data.id, data.name, data.courses, data.editors, data.admins)
+		return new ProgramController(
+			environment,
+			data.id,
+			data.name,
+			data.courses,
+			data.editors,
+			data.admins
+		)
 	}
 
 	/**
@@ -254,23 +106,18 @@ class ProgramController {
 	 * @returns `boolean` Whether the program is valid
 	 */
 
-	async validate(): Promise<ValidationData> {
+	validate(): ValidationData {
 		const validation = new ValidationData()
 
-		if (!this.hasName()) {
+		if (this.name.trim() === '') {
 			validation.add({
 				severity: Severity.error,
 				short: 'Program has no name'
 			})
 
-		} else if (await this.hasDuplicateName()) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Program name is not unique'
-			})
 		}
 
-		if (!this.hasAdmins()) {
+		if (this.admin_ids.length === 0) {
 			validation.add({
 				severity: Severity.warning,
 				short: 'Program has no admins'
@@ -288,7 +135,7 @@ class ProgramController {
 	reduce(): SerializedProgram {
 		return {
 			id: this.id,
-			name: this.name,
+			name: this.name.trim(),
 			courses: this._course_ids,
 			admins: this._admin_ids,
 			editors: this._editor_ids
@@ -333,15 +180,13 @@ class ProgramController {
 		}
 
 		// Call API to delete the program
-		await fetch(`/api/program`, {
-			method: 'DELETE',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ id: this.id })
+		await fetch(`/api/program/${this.id}`, {
+			method: 'DELETE'
 		})
 
 		// Check the response
 		.catch(error => {
-			throw new Error(`APIError (/api/program DELETE): ${error}`)
+			throw new Error(`APIError (/api/program/${this.id} DELETE): ${error}`)
 		})
 
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
@@ -358,47 +203,134 @@ class ProgramController {
 			.forEach(user => user.resignAsProgramEditor(this, false))
 
 		// Remove from environment
-		this.environment.remove(this)
+		this.environment.forget(this)
 	}
 
 	/**
-	 * Check if the program has a name
-	 * @returns `boolean` Whether the program has a name
+	 * Get the courses of the program
+	 * @returns `Promise<CourseController[]>` Courses of the program
+	 * @throws `APIError` if the API call fails
+	 * @throws `ProgramError` if the client is not in sync with the server
 	 */
 
-	hasName(): boolean {
-		return this.name.trim() !== ''
+	async getCourses(): Promise<CourseController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if courses are already loaded
+		if (this._courses) {
+			return this._courses.concat()
+		}
+
+		// Call API to get the courses
+		const response = await fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`)
+			})
+
+		// Parse the data
+		const data = await response.json() as SerializedCourse[]
+		this._courses = data.map(course => this.environment.get(course))
+
+		// Check if client is in sync with the server
+		const client = JSON.stringify(this._course_ids.concat().sort())
+		const server = JSON.stringify(this._courses.map(course => course.id).sort())
+		if (client !== server) {
+			throw new Error('ProgramError: Courses are not in sync with the server')
+		}
+
+		return this._courses.concat()
 	}
 
 	/**
-	 * Check if the program has a duplicate name
-	 * @returns `Promise<boolean>` Whether the program has a duplicate name
+	 * Get the Admins of the program
+	 * @returns `Promise<UserController[]>` Admins of the program
+	 * @throws `APIError` if the API call fails
+	 * @throws `ProgramError` if the client is not in sync with the server
 	 */
 
-	async hasDuplicateName(): Promise<boolean> {
-		const programs = await ProgramController.getAll(this.environment)
-		return programs.some(program => program.id !== this.id && program.name === this.name)
+	async getAdmins(): Promise<UserController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if admins are already loaded
+		if (this._admins) {
+			return this._admins.concat()
+		}
+
+		// Call API to get the admins
+		const response = await fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`)
+			})
+
+		// Parse the data
+		const data = await response.json() as SerializedUser[]
+		this._admins = data.map(user => this.environment.get(user))
+
+		// Check if client is in sync with the server
+		const client = JSON.stringify(this._admin_ids.concat().sort())
+		const server = JSON.stringify(this._admins.map(admin => admin.id).sort())
+		if (client !== server) {
+			throw new Error('ProgramError: Admins are not in sync with the server')
+		}
+
+		return this._admins.concat()
 	}
 
 	/**
-	 * Check if the program has admins
-	 * @returns `boolean` Whether the program has admins
+	 * Get the editors of the program
+	 * @returns `Promise<UserController[]>` Editors of the program
+	 * @throws `APIError` if the API call fails
+	 * @throws `ProgramError` if the client is not in sync with the server
 	 */
 
-	hasAdmins(): boolean {
-		return this._admin_ids.length > 0
+	async getEditors(): Promise<UserController[]> {
+		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if editors are already loaded
+		if (this._editors) {
+			return this._editors.concat()
+		}
+
+		// Call API to get the editors
+		const response = await fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`)
+			})
+
+		// Parse the data
+		const data = await response.json() as SerializedUser[]
+		this._editors = data.map(user => this.environment.get(user))
+
+		// Check if client is in sync with the server
+		const client = JSON.stringify(this._editor_ids.concat().sort())
+		const server = JSON.stringify(this._editors.map(editor => editor.id).sort())
+		if (client !== server) {
+			throw new Error('ProgramError: Editors are not in sync with the server')
+		}
+
+		return this._editors.concat()
 	}
 
 	/**
 	 * Assign a course to the program
 	 * @param course Course to assign to the program
 	 * @param mirror Whether to mirror the assignment
-	 * @throws `ProgramError` if the course is already assigned to the program
 	 */
 
 	assignCourse(course: CourseController, mirror: boolean = true): void {
-		if (this._course_ids.includes(course.id))
-			throw new Error(`ProgramError: Program is already assigned to Course with ID ${course.id}`)
+		if (this._course_ids.includes(course.id)) return
 		this._course_ids.push(course.id)
 		this._courses?.push(course)
 
@@ -411,12 +343,10 @@ class ProgramController {
 	 * Assign a user as an admin of the program. Unassigns the user as an editor if they are one
 	 * @param user User to assign as an admin
 	 * @param mirror Whether to mirror the assignment
-	 * @throws `ProgramError` if the user is already an admin of the program
 	 */
 
 	assignAdmin(user: UserController, mirror: boolean = true): void {
-		if (this._admin_ids.includes(user.id))
-			throw new Error(`ProgramError: User with ID ${user.id} is already an admin of Program with ID ${this.id}`)
+		if (this._admin_ids.includes(user.id)) return
 		this._admin_ids.push(user.id)
 		this._admins?.push(user)
 
@@ -433,12 +363,10 @@ class ProgramController {
 	 * Assign a user as an editor of the program. Unassigns the user as an admin if they are one
 	 * @param user User to assign as an editor
 	 * @param mirror Whether to mirror the assignment
-	 * @throws `ProgramError` if the user is already an editor of the program
 	 */
 
 	assignEditor(user: UserController, mirror: boolean = true): void {
-		if (this._editor_ids.includes(user.id))
-			throw new Error(`ProgramError: User with ID ${user.id} is already an editor of Program with ID ${this.id}`)
+		if (this._editor_ids.includes(user.id)) return
 		this._editor_ids.push(user.id)
 		this._editors?.push(user)
 
@@ -455,12 +383,10 @@ class ProgramController {
 	 * Unassign a course from the program
 	 * @param course Course to unassign from the program
 	 * @param mirror Whether to mirror the unassignment
-	 * @throws `ProgramError` if the course is not assigned to the program
 	 */
 
 	unassignCourse(course: CourseController, mirror: boolean = true): void {
-		if (!this._course_ids.includes(course.id))
-			throw new Error(`ProgramError: Program is not assigned to Course with ID ${course.id}`)
+		if (!this._course_ids.includes(course.id)) return
 		this._course_ids = this._course_ids.filter(id => id !== course.id)
 		this._courses = this._courses?.filter(course => course.id !== course.id)
 
@@ -473,12 +399,10 @@ class ProgramController {
 	 * Unassign an admin from the program
 	 * @param user User to unassign as an admin
 	 * @param mirror Whether to mirror the unassignment
-	 * @throws `ProgramError` if the user is not an admin of the program
 	 */
 
 	unassignAdmin(user: UserController, mirror: boolean = true): void {
-		if (!this._admin_ids.includes(user.id))
-			throw new Error(`ProgramError: User with ID ${user.id} is not an admin of Program with ID ${this.id}`)
+		if (!this._admin_ids.includes(user.id)) return
 		this._admin_ids = this._admin_ids.filter(id => id !== user.id)
 		this._admins = this._admins?.filter(admin => admin.id !== user.id)
 
@@ -491,12 +415,10 @@ class ProgramController {
 	 * Unassign an editor from the program
 	 * @param user User to unassign as an editor
 	 * @param mirror Whether to mirror the unassignment
-	 * @throws `ProgramError` if the user is not an editor of the program
 	 */
 
 	unassignEditor(user: UserController, mirror: boolean = true): void {
-		if (!this._editor_ids.includes(user.id))
-			throw new Error(`ProgramError: User with ID ${user.id} is not an editor of Program with ID ${this.id}`)
+		if (!this._editor_ids.includes(user.id)) return
 		this._editor_ids = this._editor_ids.filter(id => id !== user.id)
 		this._editors = this._editors?.filter(editor => editor.id !== user.id)
 

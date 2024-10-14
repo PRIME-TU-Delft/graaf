@@ -34,7 +34,7 @@ class LectureController {
 		private _subject_ids: number[]
 	) {
 		this.uuid = uuid.v4()
-		this.environment.add(this)
+		this.environment.remember(this)
 	}
 
 	get subjects(): Promise<SubjectController[]> {
@@ -201,7 +201,7 @@ class LectureController {
 		subjects.forEach(subject => subject.unassignFromLecture(this, false))
 
 		// Remove from environment
-		this.environment.remove(this)
+		this.environment.forget(this)
 	}
 
 	/**

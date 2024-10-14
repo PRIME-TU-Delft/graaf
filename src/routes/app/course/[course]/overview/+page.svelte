@@ -5,7 +5,7 @@
 	import { writable } from 'svelte/store'
 
 	// Internal imports
-	import { GraphController } from '$scripts/controllers'
+	import { GraphController, LinkController } from '$scripts/controllers'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
 
@@ -27,6 +27,8 @@
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
+	import Dropdown from '$components/Dropdown.svelte';
+	import { validate } from 'uuid';
 
 	// Helpers
 	class GraphModal extends BaseModal {
@@ -40,7 +42,7 @@
 		validate(): ValidationData {
 			const result = new ValidationData()
 
-			if (this.name.length < 1) {
+			if (this.name.trim() === '') {
 				result.add({
 					severity: Severity.error,
 					short: 'Name is required'
@@ -57,12 +59,42 @@
 		}
 	}
 
+	class LinkModal extends BaseModal {
+		name: string = ''
+		graph?: number
+
+		constructor() {
+			super()
+			this.initialize()
+		}
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.name.trim() === '') {
+				result.add({
+					severity: Severity.error,
+					short: 'Name is required'
+				})
+			}
+
+			return result
+		}
+
+		async submit() {
+			await LinkController.create(environment, $course.id, this.name, this.graph || null)
+			link_modal.hide()
+			$course = $course
+		}
+	}
+
 	// Variables
 	export let data
 	const environment = data.environment
 	const course = writable(data.course)
 
 	const graph_modal = new GraphModal()
+	const link_modal = new LinkModal()
 
 </script>
 
@@ -88,7 +120,7 @@
 			<img src={plusIcon} alt="" /> New Graph
 		</Button>
 
-		<Button>
+		<Button on:click={() => link_modal.show()}>
 			<img src={plusIcon} alt="" /> New Link
 		</Button>
 
@@ -114,66 +146,73 @@
 			</form>
 		</Modal>
 
-		<!--
-		<Modal bind:this={link.modal}>
+		<Modal bind:this={link_modal.modal}>
 			<h3 slot="header"> Create Link </h3>
 			Add a new link to this course. This will link to a graph in this course, and can be provided to students, or embedded into course material.
 
-			<form method="POST" action="?/newLink" use:enhance={() => link.hide()}>
-				<label for="name"> Graph Name </label>
-				<Textfield label="Name" bind:value={link.name} />
+			<form>
+				<label for="name"> Link Name </label>
+				<Textfield label="Name" bind:value={link_modal.name} />
 
 				<label for="graph"> Graph </label>
-				<Dropdown label="Graph" placeholder="Select a graph" options={link.graph_options} bind:value={link.graph} />
+				{#await $course.getGraphOptions() then options}
+					<Dropdown
+						label="Graph"
+						placeholder="Select a graph"
+						options={options}
+						bind:value={link_modal.graph}
+					/>
+
+				{/await}
 
 				<footer>
-					<Button submit disabled={graph.validate().severity === Severity.error}> Create </Button>
-					<Validation data={link.validate()} />
+					<Button
+						disabled={link_modal.validate().severity === Severity.error}
+						on:click={() => link_modal.submit()}
+					> Create </Button>
+					<Validation data={link_modal.validate()} />
 				</footer>
 			</form>
 		</Modal>
-		-->
 	</svelte:fragment>
 
 	<Card>
 		<h3 slot="header">Graphs</h3>
 
 		<svelte:fragment slot="body">
-			{#await $course.graphs then graphs}
+			{#if $course.graph_ids.length === 0}
+				<p class="grayed"> There's nothing here </p>
+			{:else}
+				{#await $course.getGraphs() then graphs}
+					{#each graphs as graph}
+						<span class="graph">
+							{#if graph.link_ids.length > 0}
+								<img src={linkIcon} alt="Link icon" />
+							{/if}
 
-				{#if graphs.length === 0}
-					<p class="grayed"> There's nothing here. </p>
-				{/if}
+							{graph.name}
 
-				{#each graphs as graph}
-					<span class="graph">
-						{#if true} <!-- TODO graph.isLink() -->
-							<img src={linkIcon} alt="Link icon" />
-						{/if}
-						{graph.name}
+							<div class="flex-spacer" />
 
-						<div class="flex-spacer" />
+							<!-- TODO graph.isVisible() -->
+							<IconButton scale
+								src={true ? openEyeIcon : closedEyeIcon}
+								description="View Graph"
+								disabled={false}
+							/>
 
-						<!-- TODO graph.isVisible() -->
-						<IconButton
-							src={true ? openEyeIcon : closedEyeIcon}
-							description="View Graph"
-							disabled={false}
-							scale
-						/>
+							<IconButton scale
+								src={pencilIcon}
+								description="Edit Graph"
+								href="/app/course/{$course.id}/graph/{graph.id}/settings"
+							/>
 
-						<IconButton
-							src={pencilIcon}
-							description="Edit Graph"
-							href="/app/course/{$course.id}/graph/{graph.id}/settings"
-							scale
-						/>
-
-						<IconButton src={copyIcon} description="Copy Graph" scale />
-						<IconButton src={trashIcon} description="Delete Graph" scale />
-					</span>
-				{/each}
-			{/await}
+							<IconButton scale src={copyIcon} description="Copy Graph" />
+							<IconButton scale src={trashIcon} description="Delete Graph" />
+						</span>
+					{/each}
+				{/await}
+			{/if}
 		</svelte:fragment>
 	</Card>
 
@@ -181,8 +220,31 @@
 		<h3 slot="header">Links</h3>
 
 		<svelte:fragment slot="body">
-			{#if true}
-				<p class="grayed"> There's nothing here. </p>
+			{#if $course.link_ids.length === 0}
+				<p class="grayed"> There's nothing here </p>
+			{:else}
+				{#await $course.getLinks() then links}
+					{#each links as link}
+						<span class="link">
+							<IconButton src={trashIcon} description="Delete Link" scale />
+
+							{link.name}
+
+							{#await $course.getGraphOptions() then options}
+								<Dropdown
+									label="Graph"
+									placeholder="Select a graph"
+									options={options}
+									bind:value={link.graph_id}
+									on:change={async () => {
+										await link.save()
+										$course = $course
+									}}
+									/>
+							{/await}
+						</span>
+					{/each}
+				{/await}
 			{/if}
 		</svelte:fragment>
 	</Card>
@@ -208,7 +270,7 @@
 
 		position: relative
 		padding: 1rem
-		padding-left: calc($input-icon-size + 2 * $input-icon-padding)
+		padding-left: $total-icon-size
 
 		color: $dark-gray
 
@@ -224,5 +286,10 @@
 			width: 1rem
 
 			filter: $dark-purple-filter
+	
+	.link
+		display: grid
+		grid-template: "delete name graph url embed" auto / $total-icon-size 1fr 1fr max-content max-content
+		align-items: center
 
 </style>

@@ -51,8 +51,8 @@ type SerializedCourse = {
 	id: number,		   // Unique identifier
 	code: string,	   // Course code
 	name: string,	   // Course name
-	archived: boolean, // Whether the course is archived
 	graphs: number[],  // List of graph IDs
+	links: number[],   // List of link IDs
 	admins: number[],  // List of admin User IDs
 	editors: number[], // List of editor User IDs
 	programs: number[] // List of program IDs this Course belongs to
@@ -64,7 +64,8 @@ type SerializedGraph = {
 	course: number,		// Course ID this Graph belongs to
 	domains: number[],	// List of domain IDs
 	subjects: number[],	// List of subject IDs
-	lectures: number[]	// List of lecture IDs
+	lectures: number[],	// List of lecture IDs
+	links: number[]		// List of link IDs
 }
 
 type SerializedDomain = {
@@ -99,10 +100,10 @@ type SerializedLecture = {
 }
 
 type SerializedLink = {
-	id: number,		// Unique identifier
-	name: string,	// Link name
-	course: number,	// Course ID this Link belongs to
-	graph: number	// Graph ID this Link belongs to
+	id: number,			 // Unique identifier
+	name: string,		 // Link name
+	course: number,		 // Course ID this Link belongs to
+	graph: number | null // Graph ID this Link belongs to
 }
 
 

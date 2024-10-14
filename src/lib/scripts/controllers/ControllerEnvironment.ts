@@ -96,20 +96,20 @@ class ControllerEnvironment {
 	}
 
 	/**
-	 * Overloaded add method to add objects to the environment
+	 * Overloaded remember method to add objects to the environment
 	 * @param object The object to add to the environment
 	 * @throws If the object already exists in the environment or if the object type is invalid
 	 */
 
-	add(object: UserController): void
-	add(object: ProgramController): void
-	add(object: CourseController): void
-	add(object: GraphController): void
-	add(object: DomainController): void
-	add(object: SubjectController): void
-	add(object: LectureController): void
-	add(object: LinkController): void
-	add(object: any): void {
+	remember(object: UserController): void
+	remember(object: ProgramController): void
+	remember(object: CourseController): void
+	remember(object: GraphController): void
+	remember(object: DomainController): void
+	remember(object: SubjectController): void
+	remember(object: LectureController): void
+	remember(object: LinkController): void
+	remember(object: any): void {
 		if (object instanceof UserController) {
 			if (this.users.some(user => user.id === object.id))
 				throw new Error(`EnvironmentError: User with ID ${object.id} already exists`)
@@ -148,20 +148,20 @@ class ControllerEnvironment {
 	}
 
 	/**
-	 * Overloaded remove method to remove objects from the environment
+	 * Overloaded forget method to remove objects from the environment
 	 * @param object The object to remove from the environment
 	 * @throws If the object does not exist in the environment or if the object type is invalid
 	 */
 
-	remove(object: UserController): void
-	remove(object: ProgramController): void
-	remove(object: CourseController): void
-	remove(object: GraphController): void
-	remove(object: DomainController): void
-	remove(object: SubjectController): void
-	remove(object: LectureController): void
-	remove(object: LinkController): void
-	remove(object: any): void {
+	forget(object: UserController): void
+	forget(object: ProgramController): void
+	forget(object: CourseController): void
+	forget(object: GraphController): void
+	forget(object: DomainController): void
+	forget(object: SubjectController): void
+	forget(object: LectureController): void
+	forget(object: LinkController): void
+	forget(object: any): void {
 		if (object instanceof UserController) {
 			if (!this.users.some(user => user.id === object.id))
 				throw new Error(`EnvironmentError: User with ID ${object.id} does not exist`)

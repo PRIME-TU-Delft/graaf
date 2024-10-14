@@ -5,18 +5,34 @@ import type { Course as PrismaCourse } from '@prisma/client'
 
 // Internal dependencies
 import {
-	ProgramHelper,
-	GraphHelper
+	GraphHelper,
+	LinkHelper,
+	UserHelper,
+	ProgramHelper
 } from '$scripts/helpers'
 
 import type {
 	SerializedCourse,
 	SerializedGraph,
+	SerializedLink,
+	SerializedUser,
 	SerializedProgram
 } from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getAll, getById, getGraphs, getPrograms, getAdmins, getEditors }
+export {
+	create,	 	// api/course				POST
+	update,	 	// api/course				PUT
+	remove,	 	// api/course/[id]			DELETE
+	reduce,	 	
+	getAll,	 	// api/course				GET
+	getById,	// api/course/[id]			GET
+	getGraphs,	// api/course/[id]/graphs	GET
+	getLinks,	// api/course/[id]/links	GET
+	getAdmins,	// api/course/[id]/admins	GET
+	getEditors,	// api/course/[id]/editors	GET
+	getPrograms	// api/course/[id]/programs	GET
+}
 
 
 // --------------------> Helper Functions
@@ -24,9 +40,9 @@ export { create, remove, update, reduce, getAll, getById, getGraphs, getPrograms
 
 /**
  * Creates a Course object in the database.
- * @param code `string`
- * @param name `string`
- * @returns `SerializedCourse`
+ * @param code `string` Course code
+ * @param name `string` Course name
+ * @returns `SerializedCourse` Serialized new Course
  */
 
 async function create(code: string, name: string): Promise<SerializedCourse> {
@@ -45,25 +61,8 @@ async function create(code: string, name: string): Promise<SerializedCourse> {
 }
 
 /**
- * Removes a Course from the database.
- * @param course_id `number`
- */
-
-async function remove(course_id: number): Promise<void> {
-	try {
-		await prisma.course.delete({
-			where: {
-				id: course_id
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-}
-
-/**
  * Updates a Course in the database.
- * @param data `SerializedCourse`
+ * @param data `SerializedCourse` New Course data
  */
 
 async function update(data: SerializedCourse): Promise<void> {
@@ -111,9 +110,26 @@ async function update(data: SerializedCourse): Promise<void> {
 }
 
 /**
+ * Removes a Course from the database.
+ * @param course_id `number` Target Course ID
+ */
+
+async function remove(course_id: number): Promise<void> {
+	try {
+		await prisma.course.delete({
+			where: {
+				id: course_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+}
+
+/**
  * Reduces a Graph to a SerializedGraph.
- * @param graph `PrismaGraph`
- * @returns `SerializedGraph`
+ * @param graph `PrismaGraph` Graph object
+ * @returns `SerializedGraph` Serialized Graph
  */
 
 async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
@@ -126,6 +142,11 @@ async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 			},
 			include: {
 				graphs: {
+					select: {
+						id: true
+					}
+				},
+				links: {
 					select: {
 						id: true
 					}
@@ -149,6 +170,7 @@ async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 
 	// Parse data
 	const graphs = data.graphs.map(graph => graph.id)
+	const links = data.links.map(link => link.id)
 	const programs = data.programs.map(program => program.id)
 
 	const admins = data.coordinators
@@ -164,13 +186,13 @@ async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 		code: data.code,
 		name: data.name,
 		archived: true, // TODO Implement archived field
-		graphs, admins, editors, programs
+		graphs, links, admins, editors, programs
 	}
 }
 
 /**
  * Retrieves all Courses from the database.
- * @returns `SerializedCourse[]`
+ * @returns `SerializedCourse[]` All serialized Courses
  */
 
 async function getAll(): Promise<SerializedCourse[]> {
@@ -185,8 +207,8 @@ async function getAll(): Promise<SerializedCourse[]> {
 
 /**
  * Retrieves Courses by ID
- * @param course_id `number`
- * @returns `SerializedCourse`
+ * @param course_id `number` Target Course ID
+ * @returns `SerializedCourse` Serialized Course
  */
 
 async function getById(course_id: number): Promise<SerializedCourse> {
@@ -204,9 +226,9 @@ async function getById(course_id: number): Promise<SerializedCourse> {
 }
 
 /**
- * Retrieves Course graphs.
- * @param course_id `number`
- * @returns `SerializedGraph[]`
+ * Retrieves Graphs assigned to target Course.
+ * @param course_id `number` Target Course ID
+ * @returns `SerializedGraph[]` Serialized Graphs
  */
 
 async function getGraphs(course_id: number): Promise<SerializedGraph[]> {
@@ -228,33 +250,29 @@ async function getGraphs(course_id: number): Promise<SerializedGraph[]> {
 }
 
 /**
- * Retrieves Course programs.
- * @param course_id `number`
- * @returns `SerializedProgram[]`
+ * Retrieves Links assigned to target Course.
+ * @param course_id `number` Target Course ID
+ * @returns `SerializedLink[]` Serialized Links
  */
 
-async function getPrograms(course_id: number): Promise<SerializedProgram[]> {
+async function getLinks(course_id: number): Promise<SerializedLink[]> {
 	try {
-		var data = await prisma.program.findMany({
+		var data = await prisma.graphLink.findMany({
 			where: {
-				courses: {
-					some: {
-						id: course_id
-					}
-				}
+				courseId: course_id
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(ProgramHelper.reduce))
+	return await Promise.all(data.map(LinkHelper.reduce))
 }
 
 /**
- * Retrieves Course admins.
- * @param course_id `number`
- * @returns `SerializedUser[]`
+ * Retrieves Admins assigned to target Course.
+ * @param course_id `number` Target Course ID
+ * @returns `SerializedUser[]` Serialized Admins
  */
 
 async function getAdmins(course_id: number): Promise<SerializedUser[]> {
@@ -277,9 +295,9 @@ async function getAdmins(course_id: number): Promise<SerializedUser[]> {
 }
 
 /**
- * Retrieves Course editors.
- * @param course_id `number`
- * @returns `SerializedUser[]`
+ * Retrieves Editors assigned to target Course.
+ * @param course_id `number` Target Course ID
+ * @returns `SerializedUser[]` Serialized Editors
  */
 
 async function getEditors(course_id: number): Promise<SerializedUser[]> {
@@ -299,4 +317,28 @@ async function getEditors(course_id: number): Promise<SerializedUser[]> {
 	}
 
 	return await Promise.all(data.map(UserHelper.reduce))
+}
+
+/**
+ * Retrieves Programs assigned to target Course.
+ * @param course_id `number` Target Course ID
+ * @returns `SerializedProgram[]` Serialized Programs
+ */
+
+async function getPrograms(course_id: number): Promise<SerializedProgram[]> {
+	try {
+		var data = await prisma.program.findMany({
+			where: {
+				courses: {
+					some: {
+						id: course_id
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await Promise.all(data.map(ProgramHelper.reduce))
 }

@@ -281,20 +281,21 @@
 						These are the coordinators of the {program.name} program. You can contact them via email to request
 						access to a course.
 					</p>
-					<!--<ul>
-						{#each coordinators as coordinator}
-							<li> {coordinator} </li>
-						{/each}
-					</ul>-->
+					<ul>
+						{#await program.getAdmins() then admins}
+							{#each admins as admin}
+								<li> {admin.first_name} {admin.last_name} </li>
+							{/each}
+						{/await}
+					</ul>
 				</Modal>
 			</svelte:fragment>
 
 			<svelte:fragment slot="body">
-				{#await program.courses then courses}
+				{#await program.getCourses() then courses}
 					{#if !courses.some(course => courseMatchesQuery(query, course))}
 						<span class="grayed"> There's nothing here </span>
 					{:else}
-
 						<div class="grid">
 							{#each courses as course}
 								{#if courseMatchesQuery(query, course)}
@@ -302,7 +303,6 @@
 								{/if}
 							{/each}
 						</div>
-
 					{/if}
 				{/await}
 			</svelte:fragment>

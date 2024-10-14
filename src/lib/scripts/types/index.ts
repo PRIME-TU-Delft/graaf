@@ -1,5 +1,4 @@
 
-export type { DropdownOption } from './Dropdown'
 export type {
 	SerializedUser,
 	SerializedProgram,
