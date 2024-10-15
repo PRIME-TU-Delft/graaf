@@ -4,7 +4,7 @@ import { browser } from '$app/environment'
 
 // Internal dependencies
 import {
-	ControllerEnvironment,
+	ControllerCache,
 	CourseController,
 	UserController
 } from '$scripts/controllers'
@@ -29,14 +29,14 @@ class ProgramController {
 	private _editors?: UserController[]
 
 	private constructor(
-		public environment: ControllerEnvironment,
+		public cache: ControllerCache,
 		public id: number,
 		public name: string,
 		private _course_ids: number[],
 		private _editor_ids: number[],
 		private _admin_ids: number[]
 	) {
-		this.environment.remember(this)
+		this.cache.add(this)
 	}
 
 	get course_ids(): number[] {
@@ -53,13 +53,13 @@ class ProgramController {
 
 	/**
 	 * Create a new program
-	 * @param environment Environment to create the program in
+	 * @param cache Cache to create the program in
 	 * @param name Program name
 	 * @returns `Promise<ProgramController>` The newly created ProgramController
 	 * @throws `APIError` If the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, name: string): Promise<ProgramController> {
+	static async create(cache: ControllerCache, name: string): Promise<ProgramController> {
 
 		// Guard against SSR
 		if (!browser) {
@@ -80,19 +80,22 @@ class ProgramController {
 
 		// Revive the course
 		const data = await response.json() as SerializedProgram
-		return ProgramController.revive(environment, data)
+		return ProgramController.revive(cache, data)
 	}
 
 	/**
 	 * Revive a program from serialized data
-	 * @param environment Environment to revive the program in
+	 * @param cache Cache to revive the program with
 	 * @param data Serialized data to revive
 	 * @returns `ProgramController` The revived ProgramController
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedProgram): ProgramController {
+	static revive(cache: ControllerCache, data: SerializedProgram): ProgramController {
+		const program = cache.find(ProgramController, data.id)
+
+		if (program) return program
 		return new ProgramController(
-			environment,
+			cache,
 			data.id,
 			data.name,
 			data.courses,
@@ -117,7 +120,7 @@ class ProgramController {
 
 		}
 
-		if (this.admin_ids.length === 0) {
+		if (this._admin_ids.length === 0) {
 			validation.add({
 				severity: Severity.warning,
 				short: 'Program has no admins'
@@ -180,17 +183,20 @@ class ProgramController {
 		}
 
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
-		this.environment.courses
-			.filter(course => this._course_ids.includes(course.id))
-			.forEach(course => course.unassignFromProgram(this, false))
+		for (const id of this._course_ids) {
+			this.cache.find(CourseController, id)
+				?.unassignFromProgram(this, false)
+		}
 
-		this.environment.users
-			.filter(user => this._admin_ids.includes(user.id))
-			.forEach(user => user.resignAsProgramAdmin(this, false))
+		for (const id of this._admin_ids) {
+			this.cache.find(UserController, id)
+				?.resignAsProgramAdmin(this, false)
+		}
 
-		this.environment.users
-			.filter(user => this._editor_ids.includes(user.id))
-			.forEach(user => user.resignAsProgramEditor(this, false))
+		for (const id of this._editor_ids) {
+			this.cache.find(UserController, id)
+				?.resignAsProgramEditor(this, false)
+		}
 
 		// Call API to delete the program
 		await fetch(`/api/program/${this.id}`, { method: 'DELETE' })
@@ -198,15 +204,14 @@ class ProgramController {
 				throw new Error(`APIError (/api/program/${this.id} DELETE): ${error}`)
 			})
 			
-		// Remove from environment
-		this.environment.forget(this)
+		// Remove from cache
+		this.cache.remove(this)
 	}
 
 	/**
 	 * Get the courses of the program
 	 * @returns `Promise<CourseController[]>` Courses of the program
 	 * @throws `APIError` if the API call fails
-	 * @throws `ProgramError` if the client is not in sync with the server
 	 */
 
 	async getCourses(): Promise<CourseController[]> {
@@ -221,22 +226,15 @@ class ProgramController {
 			return this._courses.concat()
 		}
 
-		// Call API to get the courses
+		// Call API to get the course data
 		const response = await fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
 			.catch(error => {
 				throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the courses
 		const data = await response.json() as SerializedCourse[]
-		this._courses = data.map(course => this.environment.get(course))
-
-		// Check if client is in sync with the server
-		const client = JSON.stringify(this._course_ids.concat().sort())
-		const server = JSON.stringify(this._courses.map(course => course.id).sort())
-		if (client !== server) {
-			throw new Error('ProgramError: Courses are not in sync with the server')
-		}
+		this._courses = data.map(course => CourseController.revive(this.cache, course))
 
 		return this._courses.concat()
 	}
@@ -245,7 +243,6 @@ class ProgramController {
 	 * Get the Admins of the program
 	 * @returns `Promise<UserController[]>` Admins of the program
 	 * @throws `APIError` if the API call fails
-	 * @throws `ProgramError` if the client is not in sync with the server
 	 */
 
 	async getAdmins(): Promise<UserController[]> {
@@ -260,22 +257,15 @@ class ProgramController {
 			return this._admins.concat()
 		}
 
-		// Call API to get the admins
+		// Call API to get the admin data
 		const response = await fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
 			.catch(error => {
 				throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the admins
 		const data = await response.json() as SerializedUser[]
-		this._admins = data.map(user => this.environment.get(user))
-
-		// Check if client is in sync with the server
-		const client = JSON.stringify(this._admin_ids.concat().sort())
-		const server = JSON.stringify(this._admins.map(admin => admin.id).sort())
-		if (client !== server) {
-			throw new Error('ProgramError: Admins are not in sync with the server')
-		}
+		this._admins = data.map(user => UserController.revive(this.cache, user))
 
 		return this._admins.concat()
 	}
@@ -284,7 +274,6 @@ class ProgramController {
 	 * Get the editors of the program
 	 * @returns `Promise<UserController[]>` Editors of the program
 	 * @throws `APIError` if the API call fails
-	 * @throws `ProgramError` if the client is not in sync with the server
 	 */
 
 	async getEditors(): Promise<UserController[]> {
@@ -299,22 +288,15 @@ class ProgramController {
 			return this._editors.concat()
 		}
 
-		// Call API to get the editors
+		// Call API to get the editor data
 		const response = await fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
 			.catch(error => {
 				throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the editors
 		const data = await response.json() as SerializedUser[]
-		this._editors = data.map(user => this.environment.get(user))
-
-		// Check if client is in sync with the server
-		const client = JSON.stringify(this._editor_ids.concat().sort())
-		const server = JSON.stringify(this._editors.map(editor => editor.id).sort())
-		if (client !== server) {
-			throw new Error('ProgramError: Editors are not in sync with the server')
-		}
+		this._editors = data.map(user => UserController.revive(this.cache, user))
 
 		return this._editors.concat()
 	}

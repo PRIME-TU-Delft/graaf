@@ -4,7 +4,7 @@ import { browser } from '$app/environment'
 
 // Internal dependencies
 import {
-	ControllerEnvironment,
+	ControllerCache,
 	CourseController,
 	DomainController,
 	SubjectController,
@@ -37,7 +37,7 @@ class GraphController {
 	private _links?: LinkController[]
 
 	constructor(
-		public environment: ControllerEnvironment,
+		public cache: ControllerCache,
 		public id: number,
 		public name: string,
 		private _course_id: number,
@@ -46,7 +46,7 @@ class GraphController {
 		private _lecture_ids: number[],
 		private _links_ids: number[]
 	) {
-		this.environment.remember(this)
+		this.cache.add(this)
 	}
 
 	get course_id(): number {
@@ -57,14 +57,12 @@ class GraphController {
 		if (this._course_id === value) return
 
 		// Unnasign
-		this.environment.courses
-			.find(course => course.id === this._course_id)
+		this.cache.find(CourseController, this._course_id)
 			?.unassignGraph(this)
 
 		// Assign
 		this._course_id = value
-		this._course = this.environment.courses
-			.find(course => course.id === value)
+		this._course = this.cache.find(CourseController, value)
 		this._course?.assignGraph(this, false)
 	}
 
@@ -86,13 +84,13 @@ class GraphController {
 
 	/**
 	 * Create a new graph
-	 * @param environment Environment to create the graph in
+	 * @param cache Cache to create the graph in
 	 * @param course Course to assign the graph to
 	 * @returns `Promise<GraphController>` The newly created GraphController
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, course: number, name: string): Promise<GraphController> {
+	static async create(cache: ControllerCache, course: number, name: string): Promise<GraphController> {
 
 		// Guard against SSR
 		if (!browser) {
@@ -113,11 +111,10 @@ class GraphController {
 
 		// Revive the graph
 		const data = await response.json()
-		const graph = GraphController.revive(environment, data)
+		const graph = GraphController.revive(cache, data)
 
 		// Assign to course
-		environment.courses
-			.find(course => course.id === graph._course_id)
+		cache.find(CourseController, course)
 			?.assignGraph(graph)
 
 		return graph
@@ -125,14 +122,17 @@ class GraphController {
 
 	/**
 	 * Revive a graph from serialized data
-	 * @param environment Environment to revive the graph in
+	 * @param cache Cache to revive the graph in
 	 * @param data Serialized data to revive
 	 * @returns `GraphController` The revived GraphController
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedGraph): GraphController {
+	static revive(cache: ControllerCache, data: SerializedGraph): GraphController {
+		const graph = cache.find(GraphController, data.id)
+
+		if (graph) return graph
 		return new GraphController(
-			environment,
+			cache,
 			data.id,
 			data.name,
 			data.course,
@@ -259,13 +259,13 @@ class GraphController {
 		}
 
 		// Unassign from course and links
-		this.environment.courses
-			.find(course => course.id === this._course_id)
+		this.cache.find(CourseController, this._course_id)
 			?.unassignGraph(this)
 
-		this.environment.links
-			.filter(link => link.graph_id === this.id)
-			.forEach(link => link.unassignFromGraph(false))
+		for (const id of this._links_ids) {
+			this.cache.find(LinkController, id)
+				?.unassignFromGraph(false)
+		}
 
 		// Delete all related domains, subjects, and lectures
 		const domains = await this.getDomains()
@@ -283,15 +283,14 @@ class GraphController {
 				throw new Error(`APIError (/api/graph/${this.id} DELETE): ${error}`)
 			})
 
-		// Remove from environment
-		this.environment.forget(this)
+		// Remove from cache
+		this.cache.remove(this)
 	}
 
 	/**
 	 * Get the course this graph is assigned to
 	 * @returns `Promise<CourseController>` The course this graph is assigned to
 	 * @throws `APIError` if the API call fails
-	 * @throws `GraphError` if the course is not in sync with the server
 	 */
 
 	async getCourse(): Promise<CourseController> {
@@ -306,20 +305,15 @@ class GraphController {
 			return this._course
 		}
 
-		// Call API to get the course
+		// Call API to get the course data
 		const response = await fetch(`/api/course/${this._course_id}`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/course/${this._course_id} GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the course
 		const data = await response.json() as SerializedCourse
-		this._course = this.environment.get(data)
-
-		// Check if client and server are in sync
-		if (this._course.id !== this._course_id) {
-			throw new Error('GraphError: Course is not in sync with server')
-		}
+		this._course = CourseController.revive(this.cache, data)
 
 		return this._course
 	}
@@ -328,7 +322,6 @@ class GraphController {
 	 * Get the domains assigned to this graph
 	 * @returns `Promise<DomainController[]>` The domains assigned to this graph
 	 * @throws `APIError` if the API call fails
-	 * @throws `GraphError` if the domains are not in sync with the server
 	 */
 
 	async getDomains(): Promise<DomainController[]> {
@@ -343,22 +336,15 @@ class GraphController {
 			return this._domains.concat()
 		}
 
-		// Call API to get the domains
+		// Call API to get the domain data
 		const response = await fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the domains
 		const data = await response.json() as SerializedDomain[]
-		this._domains = data.map(domain => this.environment.get(domain))
-
-		// Check if client and server are in sync
-		const client = JSON.stringify(this._domains.map(domain => domain.id).sort())
-		const server = JSON.stringify(this._domain_ids.concat().sort())
-		if (client !== server) {
-			throw new Error('GraphError: Domains are not in sync with server')
-		}
+		this._domains = data.map(domain => DomainController.revive(this.cache, domain))
 
 		return this._domains.concat()
 	}
@@ -367,7 +353,6 @@ class GraphController {
 	 * Get the subjects assigned to this graph
 	 * @returns `Promise<SubjectController[]>` The subjects assigned to this graph
 	 * @throws `APIError` if the API call fails
-	 * @throws `GraphError` if the subjects are not in sync with the server
 	 */
 
 	async getSubjects(): Promise<SubjectController[]> {
@@ -382,22 +367,15 @@ class GraphController {
 			return this._subjects.concat()
 		}
 
-		// Call API to get the subjects
+		// Call API to get the subject data
 		const response = await fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the subjects
 		const data = await response.json() as SerializedSubject[]
-		this._subjects = data.map(subject => this.environment.get(subject))
-
-		// Check if client and server are in sync
-		const client = JSON.stringify(this._subjects.map(subject => subject.id).sort())
-		const server = JSON.stringify(this._subject_ids.concat().sort())
-		if (client !== server) {
-			throw new Error('GraphError: Subjects are not in sync with server')
-		}
+		this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
 
 		return this._subjects.concat()
 	}
@@ -406,7 +384,6 @@ class GraphController {
 	 * Get the lectures assigned to this graph
 	 * @returns `Promise<LectureController[]>` The lectures assigned to this graph
 	 * @throws `APIError` if the API call fails
-	 * @throws `GraphError` if the lectures are not in sync with the server
 	 */
 
 	async getLectures(): Promise<LectureController[]> {
@@ -429,14 +406,7 @@ class GraphController {
 
 		// Parse the data
 		const data = await response.json() as SerializedLecture[]
-		this._lectures = data.map(lecture => this.environment.get(lecture))
-
-		// Check if client and server are in sync
-		const client = JSON.stringify(this._lectures.map(lecture => lecture.id).sort())
-		const server = JSON.stringify(this._lecture_ids.concat().sort())
-		if (client !== server) {
-			throw new Error('GraphError: Lectures are not in sync with server')
-		}
+		this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
 
 		return this._lectures.concat()
 	}
@@ -445,7 +415,6 @@ class GraphController {
 	 * Get the links assigned to this graph
 	 * @returns `Promise<LinkController[]>` The links assigned to this graph
 	 * @throws `APIError` if the API call fails
-	 * @throws `GraphError` if the links are not in sync with the server
 	 */
 
 	async getLinks(): Promise<LinkController[]> {
@@ -460,22 +429,15 @@ class GraphController {
 			return this._links.concat()
 		}
 
-		// Call API to get the links
+		// Call API to get the link data
 		const response = await fetch(`/api/graph/${this.id}/links`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/graph/${this.id}/links GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the links
 		const data = await response.json() as SerializedLink[]
-		this._links = data.map(link => this.environment.get(link))
-
-		// Check if client and server are in sync
-		const client = JSON.stringify(this._links.map(link => link.id).sort())
-		const server = JSON.stringify(this._links_ids.concat().sort())
-		if (client !== server) {
-			throw new Error('GraphError: Links are not in sync with server')
-		}
+		this._links = data.map(link => LinkController.revive(this.cache, link))
 
 		return this._links.concat()
 	}

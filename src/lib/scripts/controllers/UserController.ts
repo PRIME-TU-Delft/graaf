@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import {
-	ControllerEnvironment,
+	ControllerCache,
 	ProgramController,
 	CourseController
 } from '$scripts/controllers'
@@ -22,7 +22,7 @@ class UserController {
 	private _course_editors?: CourseController[]
 
 	constructor(
-		public environment: ControllerEnvironment,
+		public environment: ControllerCache,
 		public id: number,
 		public role: string,
 		public netid: string,
@@ -34,7 +34,7 @@ class UserController {
 		private _course_admin_ids: number[],
 		private _course_editor_ids: number[]
 	) {
-		this.environment.remember(this)
+		this.environment.add(this)
 	}
 
 	get program_admins(): ProgramController[] {
@@ -68,7 +68,7 @@ class UserController {
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, netid: string, first_name: string, last_name: string, email: string): Promise<UserController> {
+	static async create(environment: ControllerCache, netid: string, first_name: string, last_name: string, email: string): Promise<UserController> {
 
 		// Call API to create a new user
 		const response = await fetch(`/api/user`, {
@@ -94,7 +94,7 @@ class UserController {
 	 * @returns `UserController` The revived UserController
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedUser): UserController {
+	static revive(environment: ControllerCache, data: SerializedUser): UserController {
 		return new UserController(environment, data.id, data.role, data.netid, data.first_name, data.last_name, data.email, data.program_admin, data.program_editor, data.course_admin, data.course_editor)
 	}
 
@@ -210,7 +210,7 @@ class UserController {
 		course_editors.forEach(course => course.unassignEditor(this, false))
 
 		// Remove from environment
-		this.environment.forget(this)
+		this.environment.remove(this)
 	}
 
 	/**

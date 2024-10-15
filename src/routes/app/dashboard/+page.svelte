@@ -79,7 +79,7 @@
 		}
 
 		async submit() {
-			$programs = [...$programs, await ProgramController.create(environment, this.name)]
+			$programs = [...$programs, await ProgramController.create(cache, this.name)]
 			this.hide()
 		}
 	}
@@ -114,7 +114,7 @@
 		}
 
 		async submit() {
-			$courses = [...$courses, await CourseController.create(environment, this.code, this.name)]
+			$courses = [...$courses, await CourseController.create(cache, this.code, this.name)]
 			this.hide()
 		}
 	}
@@ -132,7 +132,7 @@
 
 	// Variables
 	export let data
-	const environment = data.environment
+	const cache = data.cache
 	const programs = writable(data.programs)
 	const courses = writable(data.courses)
 

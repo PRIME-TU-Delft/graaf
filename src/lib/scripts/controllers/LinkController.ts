@@ -4,7 +4,7 @@ import { browser } from "$app/environment"
 
 // Internal dependencies
 import {
-	ControllerEnvironment,
+	ControllerCache,
 	CourseController,
 	GraphController
 } from "$scripts/controllers"
@@ -29,13 +29,13 @@ class LinkController {
 	private _graph?: GraphController | null
 
 	private constructor(
-		public environment: ControllerEnvironment,
+		public cache: ControllerCache,
 		public id: number,
 		public name: string,
 		private _course_id: number,
 		private _graph_id: number | null
 	) {
-		this.environment.remember(this)
+		this.cache.add(this)
 	}
 
 	get course_id(): number {
@@ -46,14 +46,12 @@ class LinkController {
 		if (this._course_id === value) return
 
 		// Unassign
-		this.environment.courses
-			.find(course => course.id === this._course_id)
+		this.cache.find(CourseController, this._course_id)
 			?.unassignLink(this)
 		
 		// Assign
 		this._course_id = value
-		this._course = this.environment.courses
-			.find(course => course.id === value)
+		this._course = this.cache.find(CourseController, value)
 		this._course?.assignLink(this, false)
 	}
 
@@ -65,24 +63,24 @@ class LinkController {
 		if (this._graph_id === value) return
 
 		// Unassign
-		this.environment.graphs
-			.find(graph => graph.id === this._graph_id)
-			?.unassignLink(this)
+		if (this._graph_id) {
+			this.cache.find(GraphController, this._graph_id)
+				?.unassignLink(this, false)
+		}
 		
 		// Assign
-		this._graph_id = value || null
-		if (this.graph_id === null) {
-			this._graph = null
-		} else {
-			this._graph = this.environment.graphs
-				.find(graph => graph.id === value)
+		this._graph_id = value
+		if (this._graph_id) {
+			this._graph = this.cache.find(GraphController, this._graph_id)
 			this._graph?.assignLink(this, false)
+		} else {
+			this._graph = null
 		}
 	}
 
 	/**
 	 * Creates a new link
-	 * @param environment Controller environment
+	 * @param cache Controller cache
 	 * @param name Link name
 	 * @param course Course id
 	 * @param graph Graph id
@@ -90,7 +88,7 @@ class LinkController {
 	 * @throws `APIError` If the API request fails
 	 */
 
-	static async create(environment: ControllerEnvironment, course: number, name: string, graph: number | null): Promise<LinkController> {
+	static async create(cache: ControllerCache, course: number, name: string, graph: number | null): Promise<LinkController> {
 
 		// Guard against SSR
 		if (!browser) {
@@ -111,30 +109,33 @@ class LinkController {
 
 		// Revive the course
 		const data = await response.json() as SerializedLink
-		const link = LinkController.revive(environment, data)
+		const link = LinkController.revive(cache, data)
 
 		// Assign to course and graph
-		environment.courses
-			.find(course => course.id === link._course_id)
+		cache.find(CourseController, course)
 			?.assignLink(link, false)
 
-		environment.graphs
-			.find(graph => graph.id === link._graph_id)
-			?.assignLink(link, false)
+		if (graph) {
+			cache.find(GraphController, graph)
+				?.assignLink(link, false)
+		}
 
 		return link
 	}
 
 	/**
 	 * Revives a link from serialized data
-	 * @param environment Controller environment
+	 * @param cache Controller cache
 	 * @param data Serialized link data
 	 * @returns `LinkController` The revived LinkController
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedLink): LinkController {
+	static revive(cache: ControllerCache, data: SerializedLink): LinkController {
+		const link = cache.find(LinkController, data.id)
+
+		if (link) return link
 		return new LinkController(
-			environment, 
+			cache, 
 			data.id, 
 			data.name, 
 			data.course, 
@@ -219,12 +220,13 @@ class LinkController {
 		}
 
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
-		this.environment.courses
-			.find(course => course.id === this._course_id)
+		this.cache.find(CourseController, this._course_id)
 			?.unassignLink(this)
-		this.environment.graphs
-			.find(graph => graph.id === this._graph_id)
-			?.unassignLink(this, false)
+
+		if (this._graph_id) {
+			this.cache.find(GraphController, this._graph_id)
+				?.unassignLink(this, false)
+		}
 
 		// Call API to delete the link
 		await fetch(`/api/link/${this.id}`, { method: 'DELETE' })
@@ -232,15 +234,14 @@ class LinkController {
 				throw new Error(`APIError (/api/link/${this.id} DELETE): ${error}`)
 			})
 			
-		// Remove from environment
-		this.environment.forget(this)
+		// Remove from cache
+		this.cache.remove(this)
 	}
 
 	/**
 	 * Get the course associated to this link
 	 * @returns `CourseController` The associated course
 	 * @throws `APIError` if the API call fails
-	 * @throws `LinkError` if the course is out of sync with the server
 	 */
 
 	async getCourse(): Promise<CourseController> {
@@ -255,7 +256,7 @@ class LinkController {
 			return this._course
 		}
 
-		// Fetch the course
+		// Call API to fetch the course data
 		const response = await fetch(`/api/course/${this._course_id}`)
 			.catch(error => {
 				throw new Error(`APIError (/api/course/${this._course_id}): ${error}`)
@@ -263,12 +264,7 @@ class LinkController {
 
 		// Revive the course
 		const data = await response.json() as SerializedCourse
-		this._course = this.environment.get(data)
-
-		// Check if the course is in sync
-		if (this._course.id !== data.id) {
-			throw new Error('LinkError: Course is out of sync with the server')
-		}
+		this._course = CourseController.revive(this.cache, data)
 
 		return this._course
 	}
@@ -277,10 +273,9 @@ class LinkController {
 	 * Get the graph associated to this link
 	 * @returns `GraphController | undefined` The associated graph
 	 * @throws `APIError` if the API call fails
-	 * @throws `LinkError` if the graph is out of sync with the server
 	 */
 
-	async getGraph(): Promise<GraphController | undefined> {
+	async getGraph(): Promise<GraphController | null> {
 		
 		// Guard against SSR
 		if (!browser) {
@@ -292,31 +287,16 @@ class LinkController {
 			return this._graph
 		}
 
-		// Fetch the graph
+		// Call API to fetch the graph data
 		const response = await fetch(`/api/link/${this.id}/graph`)
 			.catch(error => {
 				throw new Error(`APIError (/api/link/${this.id}/graph): ${error}`)
 			})
 
-		// Parse the response
-		const data = await response.json() as SerializedGraph
-		if (data === null) {
-			
-			// Check if the graph is in sync
-			if (this._graph_id !== undefined) {
-				throw new Error('LinkError: Graph is out of sync with the server')
-			}
-
-			return undefined
-		} 
-
 		// Revive the graph
-		this._graph = this.environment.get(data)
-
-		// Check if the graph is in sync
-		if (this._graph.id !== data.id) {
-			throw new Error('LinkError: Graph is out of sync with the server')
-		}
+		const data = await response.json() as SerializedGraph
+		if (data === null) return null
+		this._graph = GraphController.revive(this.cache, data)
 
 		return this._graph
 	}
@@ -341,8 +321,7 @@ class LinkController {
 	assignToCourse(course: CourseController, mirror: boolean = true): void {
 		if (this._course_id === course.id) return
 		if (this._course_id && mirror) {
-			this.environment.courses
-				.find(course => course.id === this._course_id)
+			this.cache.find(CourseController, this._course_id)
 				?.unassignLink(this)
 		}
 
@@ -363,8 +342,7 @@ class LinkController {
 	assignToGraph(graph: GraphController, mirror: boolean = true): void {
 		if (this._graph_id === graph?.id) return
 		if (this._graph_id && mirror) {
-			this.environment.graphs
-				.find(graph => graph.id === this._graph_id)
+			this.cache.find(GraphController, this._graph_id)
 				?.unassignLink(this, false)
 		}
 
@@ -384,8 +362,7 @@ class LinkController {
 	unassignFromGraph(mirror: boolean = true): void {
 		if (!this._graph_id) return
 		if (mirror) {
-			this.environment.graphs
-				.find(graph => graph.id === this._graph_id)
+			this.cache.find(GraphController, this._graph_id)
 				?.unassignLink(this, false)
 		}
 

@@ -1,11 +1,11 @@
 
 // Internal dependencies
-import { ControllerEnvironment } from '$scripts/controllers'
+import { ControllerCache, CourseController } from '$scripts/controllers'
 
 // Load
 export async function load({ data }) {
-    const environment = new ControllerEnvironment()
-    const course = environment.get(data.course)
+    const cache = new ControllerCache()
+    const course = CourseController.revive(cache, data.course)
 
-    return { environment, course }
+    return { cache, course }
 }

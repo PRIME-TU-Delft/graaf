@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import {
-	ControllerEnvironment,
+	ControllerCache,
 	GraphController,
 	SubjectController
 } from '$scripts/controllers'
@@ -27,14 +27,14 @@ class LectureController {
 	uuid: string
 
 	constructor(
-		public environment: ControllerEnvironment,
+		public environment: ControllerCache,
 		public id: number,
 		public name: string,
 		private _graph_id: number,
 		private _subject_ids: number[]
 	) {
 		this.uuid = uuid.v4()
-		this.environment.remember(this)
+		this.environment.add(this)
 	}
 
 	get subjects(): Promise<SubjectController[]> {
@@ -65,7 +65,7 @@ class LectureController {
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, graph: GraphController): Promise<LectureController> {
+	static async create(environment: ControllerCache, graph: GraphController): Promise<LectureController> {
 
 		// Call API to create a new lecture
 		const response = await fetch(`/api/lecture`, {
@@ -94,7 +94,7 @@ class LectureController {
 	 * @returns `LectureController` The revived LectureController
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedLecture): LectureController {
+	static revive(environment: ControllerCache, data: SerializedLecture): LectureController {
 		return new LectureController(environment, data.id, data.name, data.graph, data.subjects)
 	}
 
@@ -201,7 +201,7 @@ class LectureController {
 		subjects.forEach(subject => subject.unassignFromLecture(this, false))
 
 		// Remove from environment
-		this.environment.forget(this)
+		this.environment.remove(this)
 	}
 
 	/**

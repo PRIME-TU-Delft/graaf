@@ -1,9 +1,11 @@
 
-// Internal imports
-import { Course } from '$lib/scripts/entities'
-import { course } from '$stores'
+// Internal dependencies
+import { ControllerCache, CourseController } from '$scripts/controllers'
 
 // Load
-export const load = ({ data }) => {
-	course.set(Course.revive(data.course))
+export async function load({ data }) {
+    const cache = new ControllerCache()
+    const course = CourseController.revive(cache, data.course)
+
+    return { cache, course }
 }

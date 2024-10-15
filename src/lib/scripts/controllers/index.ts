@@ -1,5 +1,5 @@
 
-export { ControllerEnvironment } from './ControllerEnvironment'
+export { ControllerCache } from './ControllerCache'
 export { ProgramController } from './ProgramController'
 export { CourseController } from './CourseController'
 export { FieldController, DomainController, SubjectController } from './FieldControllers'

@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import {
-	ControllerEnvironment,
+	ControllerCache,
 	GraphController,
 	LectureController
 } from '$scripts/controllers'
@@ -32,7 +32,7 @@ abstract class FieldController<T extends DomainController | SubjectController> {
 	fy?: number
 
 	constructor(
-		public environment: ControllerEnvironment,
+		public environment: ControllerCache,
 		public id: number,
 		public x: number,
 		public y: number,
@@ -85,7 +85,7 @@ class DomainController extends FieldController<DomainController> {
 	private _subjects?: SubjectController[]
 
 	constructor(
-		environment: ControllerEnvironment,
+		environment: ControllerCache,
 		id: number,
 		x: number,
 		y: number,
@@ -97,7 +97,7 @@ class DomainController extends FieldController<DomainController> {
 		private _subject_ids: number[]
 	) {
 		super(environment, id, x, y, name, _graph_id, _parent_ids, _child_ids)
-		this.environment.remember(this)
+		this.environment.add(this)
 	}
 
 	get parents(): Promise<DomainController[]> {
@@ -149,7 +149,7 @@ class DomainController extends FieldController<DomainController> {
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, graph: GraphController): Promise<DomainController> {
+	static async create(environment: ControllerCache, graph: GraphController): Promise<DomainController> {
 
 		// Call API to create a new domain
 		const response = await fetch(`/api/domain`, {
@@ -178,7 +178,7 @@ class DomainController extends FieldController<DomainController> {
 	 * @returns `DomainController` The revived Domain
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedDomain): DomainController {
+	static revive(environment: ControllerCache, data: SerializedDomain): DomainController {
 		return new DomainController(environment, data.id, data.x, data.y, data.name, data.style, data.graph, data.parents, data.children, data.subjects)
 	}
 
@@ -330,7 +330,7 @@ class DomainController extends FieldController<DomainController> {
 		subjects.forEach(subject => subject.unassignFromDomain(this, false))
 
 		// Remove from environment
-		this.environment.forget(this)
+		this.environment.remove(this)
 	}
 
 	/**
@@ -491,7 +491,7 @@ class SubjectController extends FieldController<SubjectController> {
 	private _lectures?: LectureController[]
 
 	constructor(
-		environment: ControllerEnvironment,
+		environment: ControllerCache,
 		id: number,
 		x: number,
 		y: number,
@@ -503,7 +503,7 @@ class SubjectController extends FieldController<SubjectController> {
 		private _lecture_ids: number[]
 	) {
 		super(environment, id, x, y, name, _graph_id, _parent_ids, _child_ids)
-		this.environment.remember(this)
+		this.environment.add(this)
 	}
 
 	get domain(): Promise<DomainController | null> {
@@ -576,7 +576,7 @@ class SubjectController extends FieldController<SubjectController> {
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, graph: GraphController): Promise<SubjectController> {
+	static async create(environment: ControllerCache, graph: GraphController): Promise<SubjectController> {
 
 		// Call API to create a new subject
 		const response = await fetch(`/api/subject`, {
@@ -598,7 +598,7 @@ class SubjectController extends FieldController<SubjectController> {
 		return subject
 	}
 
-	static revive(environment: ControllerEnvironment, data: SerializedSubject): SubjectController {
+	static revive(environment: ControllerCache, data: SerializedSubject): SubjectController {
 		return new SubjectController(environment, data.id, data.x, data.y, data.name, data.domain, data.graph, data.parents, data.children, data.lectures)
 	}
 
@@ -731,7 +731,7 @@ class SubjectController extends FieldController<SubjectController> {
 		lectures.forEach(lecture => lecture.unassignSubject(this, false))
 
 		// Remove from environment
-		this.environment.forget(this)
+		this.environment.remove(this)
 	}
 
 	/**

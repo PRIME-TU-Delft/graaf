@@ -48,7 +48,7 @@
 		}
 
 		async submit() {
-			await GraphController.create(environment, $course.id, this.name)
+			await GraphController.create(cache, $course.id, this.name)
 			graph_modal.hide()
 			$course = $course
 		}
@@ -77,7 +77,7 @@
 		}
 
 		async submit() {
-			await LinkController.create(environment, $course.id, this.name, this.graph || null)
+			await LinkController.create(cache, $course.id, this.name, this.graph || null)
 			link_modal.hide()
 			$course = $course
 		}
@@ -85,7 +85,7 @@
 
 	// Variables
 	export let data
-	const environment = data.environment
+	const cache = data.cache
 	const course = writable(data.course)
 
 	const graph_modal = new GraphModal()

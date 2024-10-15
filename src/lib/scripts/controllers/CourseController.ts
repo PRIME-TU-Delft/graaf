@@ -4,7 +4,7 @@ import { browser } from '$app/environment'
 
 // Internal dependencies
 import  {
-	ControllerEnvironment,
+	ControllerCache,
 	ProgramController,
 	GraphController,
 	LinkController,
@@ -35,7 +35,7 @@ class CourseController {
 	private _editors?: UserController[]
 
 	private constructor(
-		public environment: ControllerEnvironment,
+		public cache: ControllerCache,
 		public id: number,
 		public code: string,
 		public name: string,
@@ -45,7 +45,7 @@ class CourseController {
 		private _editor_ids: number[],
 		private _admin_ids: number[]
 	) {
-		this.environment.remember(this)
+		this.cache.add(this)
 	}
 
 	get program_ids(): number[] {
@@ -70,14 +70,14 @@ class CourseController {
 
 	/**
 	 * Create a new course
-	 * @param environment Environment to create the course in
+	 * @param cache Cache to create the course in
 	 * @param code Course code
 	 * @param name Course name
 	 * @returns `Promise<CourseController>` The newly created CourseController
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerEnvironment, code: string, name: string): Promise<CourseController> {
+	static async create(cache: ControllerCache, code: string, name: string): Promise<CourseController> {
 
 		// Guard against SSR
 		if (!browser) {
@@ -98,19 +98,22 @@ class CourseController {
 
 		// Revive the course
 		const data = await response.json()
-		return CourseController.revive(environment, data)
+		return CourseController.revive(cache, data)
 	}
 
 	/**
 	 * Revive a course from serialized data
-	 * @param environment Environment to revive the course in
+	 * @param cache Cache to revive the course in
 	 * @param data Serialized data to revive
 	 * @returns `CourseController` The revived Course
 	 */
 
-	static revive(environment: ControllerEnvironment, data: SerializedCourse): CourseController {
+	static revive(cache: ControllerCache, data: SerializedCourse): CourseController {
+		const course = cache.find(CourseController, data.id)
+
+		if (course) return course
 		return new CourseController(
-			environment,
+			cache,
 			data.id,
 			data.code,
 			data.name,
@@ -127,7 +130,7 @@ class CourseController {
 	 * @returns `Promise<ValidationData>` Validation data
 	 */
 
-	async validate(): Promise<ValidationData> {
+	validate(): ValidationData {
 		const validation = new ValidationData()
 
 		if (this.name.trim() === '') {
@@ -217,17 +220,20 @@ class CourseController {
 		await Promise.all(links.map(link => link.delete()))
 
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
-		this.environment.users
-			.filter(user => this._admin_ids.includes(user.id))
-			.forEach(user => user.resignAsCourseAdmin(this, false))
+		for (const id of this._admin_ids) {
+			this.cache.find(UserController, id)
+				?.resignAsCourseAdmin(this, false)
+		}
 
-		this.environment.users
-			.filter(user => this._editor_ids.includes(user.id))
-			.forEach(user => user.resignAsCourseEditor(this, false))
+		for (const id of this._editor_ids) {
+			this.cache.find(UserController, id)
+				?.resignAsCourseEditor(this, false)
+		}
 
-		this.environment.programs
-			.filter(program => this._program_ids.includes(program.id))
-			.forEach(program => program.unassignCourse(this, false))
+		for (const id of this._program_ids) {
+			this.cache.find(ProgramController, id)
+				?.unassignCourse(this, false)
+		}
 
 		// Call API to delete the course
 		await fetch(`/api/course/${this.id}`, { method: 'DELETE' })
@@ -235,15 +241,14 @@ class CourseController {
 				throw new Error(`APIError (/api/course/${this.id} DELETE): ${error}`)
 			})
 			
-		// Remove from environment
-		this.environment.forget(this)
+		// Remove from cache
+		this.cache.remove(this)
 	}
 
 	/**
 	 * Get the programs this course is assigned to
 	 * @returns `Promise<ProgramController[]>` Programs this course is assigned to
 	 * @throws `APIError` if the API call fails
-	 * @throws `CourseError` if the client is not in sync with the server
 	 */
 	
 	async getPrograms(): Promise<ProgramController[]> {
@@ -258,23 +263,15 @@ class CourseController {
 			return this._programs.concat()
 		}
 
-		// Call API to get the courses
+		// Call API to get the course data
 		const response = await fetch(`/api/course/${this.id}/programs`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/course/${this.id}/programs GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the programs
 		const data = await response.json() as SerializedProgram[]
-		this._programs = data.map(program => this.environment.get(program))
-
-
-		// Check if programs are in sync
-		const client = JSON.stringify(this._program_ids.concat().sort())
-		const server = JSON.stringify(this._programs.map(program => program.id).sort())
-		if (client !== server) {
-			throw new Error('CourseError: Programs are not in sync')
-		}
+		this._programs = data.map(program => ProgramController.revive(this.cache, program))
 
 		return this._programs.concat()
 	}
@@ -283,7 +280,6 @@ class CourseController {
 	 * Get the graphs assigned to this course
 	 * @returns `Promise<GraphController[]>` Graphs assigned to this course
 	 * @throws `APIError` if the API call fails
-	 * @throws `CourseError` if the client is not in sync with the server
 	 */
 
 	async getGraphs(): Promise<GraphController[]> {
@@ -298,22 +294,15 @@ class CourseController {
 			return this._graphs.concat()
 		}
 
-		// Call API to get the courses
+		// Call API to get the course data
 		const response = await fetch(`/api/course/${this.id}/graphs`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/course/${this.id}/graphs GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the graphs
 		const data = await response.json() as SerializedGraph[]
-		this._graphs = data.map(graph => this.environment.get(graph))
-
-		// Check if graphs are in sync
-		const client = JSON.stringify(this._graph_ids.concat().sort())
-		const server = JSON.stringify(this._graphs.map(graph => graph.id).sort())
-		if (client !== server) {
-			throw new Error('CourseError: Graphs are not in sync')
-		}
+		this._graphs = data.map(graph => GraphController.revive(this.cache, graph))
 
 		return this._graphs.concat()
 	}
@@ -337,7 +326,6 @@ class CourseController {
 	 * Get the links assigned to this course
 	 * @returns `Promise<LinkController[]>` Links assigned to this course
 	 * @throws `APIError` if the API call fails
-	 * @throws `CourseError` if the client is not in sync with the server
 	 */
 
 	async getLinks(): Promise<LinkController[]> {
@@ -352,22 +340,15 @@ class CourseController {
 			return this._links.concat()
 		}
 
-		// Call API to get the courses
+		// Call API to get the course data
 		const response = await fetch(`/api/course/${this.id}/links`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/course/${this.id}/links GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the links
 		const data = await response.json() as SerializedLink[]
-		this._links = data.map(link => this.environment.get(link))
-
-		// Check if links are in sync
-		const client = JSON.stringify(this._link_ids.concat().sort())
-		const server = JSON.stringify(this._links.map(link => link.id).sort())
-		if (client !== server) {
-			throw new Error('CourseError: Links are not in sync')
-		}
+		this._links = data.map(link => LinkController.revive(this.cache, link))
 
 		return this._links.concat()
 	}
@@ -376,7 +357,6 @@ class CourseController {
 	 * Get the admins assigned to this course
 	 * @returns `Promise<UserController[]>` Admins assigned to this course
 	 * @throws `APIError` if the API call fails
-	 * @throws `CourseError` if the client is not in sync with the server
 	 */
 
 	async getAdmins(): Promise<UserController[]> {
@@ -391,22 +371,15 @@ class CourseController {
 			return this._admins.concat()
 		}
 
-		// Call API to get the courses
+		// Call API to get the admin data
 		const response = await fetch(`/api/course/${this.id}/admins`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/course/${this.id}/admins GET): ${error}`)
 			})
 
-		// Parse the data
+		// Revive the admins
 		const data = await response.json() as SerializedUser[]
-		this._admins = data.map(user => this.environment.get(user))
-
-		// Check if admins are in sync
-		const client = JSON.stringify(this._admin_ids.concat().sort())
-		const server = JSON.stringify(this._admins.map(admin => admin.id).sort())
-		if (client !== server) {
-			throw new Error('CourseError: Admins are not in sync')
-		}
+		this._admins = data.map(user => UserController.revive(this.cache, user))
 
 		return this._admins.concat()
 	}
@@ -415,7 +388,6 @@ class CourseController {
 	 * Get the editors assigned to this course
 	 * @returns `Promise<UserController[]>` Editors assigned to this course
 	 * @throws `APIError` if the API call fails
-	 * @throws `CourseError` if the client is not in sync with the server
 	 */
 
 	async getEditors(): Promise<UserController[]> {
@@ -430,22 +402,15 @@ class CourseController {
 			return this._editors.concat()
 		}
 
-		// Call API to get the courses
+		// Call API to get the editor data
 		const response = await fetch(`/api/course/${this.id}/editors`, { method: 'GET' })
 			.catch(error => { 
 				throw new Error(`APIError (/api/course/${this.id}/editors GET): ${error}`)
 			})
 
-		// Parse the data
+		//Revive the editors
 		const data = await response.json() as SerializedUser[]
-		this._editors = data.map(user => this.environment.get(user))
-
-		// Check if editors are in sync
-		const client = JSON.stringify(this._editor_ids.concat().sort())
-		const server = JSON.stringify(this._editors.map(editor => editor.id).sort())
-		if (client !== server) {
-			throw new Error('CourseError: Editors are not in sync')
-		}
+		this._editors = data.map(user => UserController.revive(this.cache, user))
 
 		return this._editors.concat()
 	}
