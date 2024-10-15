@@ -3,7 +3,6 @@
 	import { page } from '$app/stores';
 
 	const session = $page.data.session;
-	console.log(session);
 </script>
 
 

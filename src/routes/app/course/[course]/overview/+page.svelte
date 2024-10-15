@@ -15,20 +15,15 @@
 	import Modal from '$components/Modal.svelte'
 	import Button from '$components/Button.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
-	import IconButton from '$components/IconButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Validation from '$components/Validation.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
-	import LinkURL from './LinkURL.svelte'
+	import LinkRow from './LinkRow.svelte'
+	import GraphRow from './GraphRow.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
-	import linkIcon from '$assets/link-icon.svg'
-	import openEyeIcon from '$assets/open-eye-icon.svg'
-	import closedEyeIcon from '$assets/closed-eye-icon.svg'
-	import pencilIcon from '$assets/pencil-icon.svg'
-	import copyIcon from '$assets/copy-icon.svg'
-	import trashIcon from '$assets/trash-icon.svg'
+
 
 	// Helpers
 	class GraphModal extends BaseModal {
@@ -134,7 +129,7 @@
 
 			<form>
 				<label for="name"> Graph Name </label>
-				<Textfield label="Name" bind:value={graph_modal.name} />
+				<Textfield id="name" bind:value={graph_modal.name} />
 
 				<footer>
 					<Button
@@ -152,7 +147,7 @@
 
 			<form>
 				<label for="name"> Link Name </label>
-				<Textfield label="Name" bind:value={link_modal.name} />
+				<Textfield id="name" bind:value={link_modal.name} />
 
 				<label for="graph"> Graph </label>
 				{#await $course.getGraphOptions() then options}
@@ -185,44 +180,11 @@
 			{:else}
 				{#await $course.getGraphs() then graphs}
 					{#each graphs as graph}
-						<span class="graph">
-							{#if graph.link_ids.length > 0}
-								<img src={linkIcon} alt="Link icon" class="link-icon" />
-							{:else}
-								<div />
-							{/if}
-
-							<Textfield
-								type="subtle"
-								label="Name"
-								placeholder="Graph Name"
-								bind:value={graph.name}
-								/>
-
-							<!-- TODO graph.isVisible() -->
-							<IconButton scale
-								src={true ? openEyeIcon : closedEyeIcon}
-								description="View Graph"
-								disabled={false}
+						<GraphRow
+							graph={graph}
+							course={$course}
+							update={() => $course = $course}
 							/>
-
-							<IconButton scale
-								src={pencilIcon}
-								description="Edit Graph"
-								href="/app/course/{$course.id}/graph/{graph.id}/settings"
-							/>
-
-							<IconButton scale src={copyIcon} description="Copy Graph" />
-
-							<IconButton scale 
-								src={trashIcon} 
-								description="Delete Graph"
-								on:click={async () => {
-									await graph.delete()
-									$course = $course
-								}}
-								/>
-						</span>
 					{/each}
 				{/await}
 			{/if}
@@ -238,40 +200,11 @@
 			{:else}
 				{#await $course.getLinks() then links}
 					{#each links as link}
-						<span class="link">
-							<IconButton scale
-								src={trashIcon} 
-								description="Delete Link"
-								on:click={async () => {
-									await link.delete()
-									$course = $course
-								}}
-								/>
-
-							<Textfield
-								type="subtle"
-								label="Name"
-								placeholder="Link Name"
-								bind:value={link.name}
-								/>
-
-							{#await $course.getGraphOptions() then options}
-								<Dropdown
-									label="Graph"
-									placeholder="Select a graph"
-									options={options}
-									bind:value={link.graph_id}
-									on:change={async () => {
-										await link.save()
-										$course = $course
-									}}
-									/>
-							{/await}
-
-							<LinkURL link={link} />
-
-							<Button> <b>&lt;/&gt;</b> </Button>
-						</span>
+						<LinkRow 
+							link={link} 
+							course={$course} 
+							update={() => $course = $course} 
+							/>
 					{/each}
 				{/await}
 			{/if}
@@ -291,35 +224,5 @@
 	.grayed
 		margin: auto
 		color: $placeholder-color
-
-	.graph
-		display: grid
-		grid-template: "link name view edit copy delete" auto / $total-icon-size 1fr $input-icon-size $input-icon-size $input-icon-size $input-icon-size
-		grid-gap: $form-small-gap
-		align-items: center
-
-		padding: $input-thin-padding $input-thick-padding
-
-		color: $dark-gray
-
-		&:not(:last-child)
-			border-bottom: 1px solid $gray
-
-		.link-icon
-			width: $input-icon-size
-			filter: $dark-purple-filter
-	
-	.link
-		display: grid
-		grid-template: "delete name graph url embed" auto / $total-icon-size 1fr 1fr max-content max-content
-		grid-gap: $form-small-gap
-		align-items: center
-
-		padding: $input-thin-padding $input-thick-padding
-
-		color: $dark-gray
-
-		&:not(:last-child)
-			border-bottom: 1px solid $gray
 
 </style>

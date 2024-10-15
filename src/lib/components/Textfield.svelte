@@ -9,18 +9,18 @@
 	import closedEyeIcon from "$assets/closed-eye-icon.svg"
 
 	// Exports
-	export let label: string
+	export let id: string
 	export let value: string = ''
 	export let placeholder: string = ''
-	export let type: 'text' | 'subtle' | 'password' = 'text'
+	export let type: 'text' | 'subtle' | 'obfuscated' = 'text'
 
-	// Variables
-	const id: string = label.toLowerCase().replace(/\s/g, '_')
-	let show: boolean = false
+	// Main
+	let input: HTMLInputElement
+	let obfuscated: boolean = true
 
 	function toggle_obfuscation() {
-		show = !show
-		document.querySelector<HTMLInputElement>(`#${id}`)!.type = show ? "text" : "password"
+		obfuscated = !obfuscated
+		input.type = obfuscated ? "text" : "password"
 	}
 
 </script>
@@ -29,21 +29,21 @@
 <!-- Markup -->
 
 
-{#if type === 'password'}
+{#if type === 'obfuscated'}
 
 	<div class="textfield">
 		<input
 			id={id}
-			name={id}
-			placeholder={placeholder}
 			type="password"
-			bind:value
+			placeholder={placeholder}
 			on:change on:input
+			bind:this={input}
+			bind:value
 			/>
 
 		<IconButton 
-			src={ show ? closedEyeIcon : openEyeIcon } 
-			description={ show ? "Hide" : "Show" } 
+			src={ obfuscated ? closedEyeIcon : openEyeIcon } 
+			description={ obfuscated ? "Hide" : "Show" } 
 			on:click={toggle_obfuscation} 
 			/>
 	</div>
@@ -52,13 +52,13 @@
 
 	<input
 		id={id}
-		name={id}
-		placeholder={placeholder}
 		type="text"
-		class="textfield"
+		placeholder={placeholder}
 		class:subtle={type === 'subtle'}
-		bind:value
+		class="textfield"
 		on:change on:input
+		bind:this={input}
+		bind:value
 		/>
 
 {/if}
@@ -71,7 +71,7 @@
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
-
+	
 	input
 		width: 100%
 		padding: $input-thin-padding $input-thick-padding
@@ -93,9 +93,6 @@
 			&:hover
 				border-color: $gray
 
-			&:focus
-				border-color: $tudelft-blue
-	
 	div
 		width: 100%
 		position: relative

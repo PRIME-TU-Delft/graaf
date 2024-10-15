@@ -2,6 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
+	import { tooltip } from "$scripts/tooltip"
 	import { LinkController } from "$scripts/controllers"
 
 	// Assets
@@ -11,10 +12,18 @@
 	export let link: LinkController
 
 	// Variables
+	let disabled: boolean = true
 	let value: string = ''
+
 	$: link.getURL().then(
-		url => value = url,
-		() => value = ''
+		url => {
+			disabled = false
+			value = url
+		},
+		() => {
+			disabled = true
+			value = ''
+		}
 	)
 
 </script>
@@ -25,15 +34,17 @@
 
 <div class="textfield">
 	<input
+		type="url"
 		disabled={true}
 		placeholder="Invalid link"
-		type="url"
 		bind:value
 		/>
 
-	<button
-		disabled={value === ''}
+	<button 
+		disabled
+		class:disabled
 		on:click={() => navigator.clipboard.writeText(value)}
+		use:tooltip={disabled ? 'Invalid link' : 'Copy link'}
 		>
 
 		<img src={copyIcon} alt="Copy link" />
@@ -89,7 +100,7 @@
 			&:hover
 				background-color: $dark-purple
 
-			&::disabled
+			&.disabled
 				background-color: $dark-gray
 				cursor: not-allowed
 
