@@ -2,13 +2,13 @@
 <script lang="ts">
 
 	// Svelte imports
-	import { createEventDispatcher } from "svelte"
+	import { createEventDispatcher, onMount } from "svelte"
 
 	// Internal imports
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { scrollintoview } from '$scripts/scrollintoview'
-	import { focusfirst, focusonhover, losefocus } from '$scripts/hocusfocus'
+	import { loopfocus, focusonhover, losefocus } from '$scripts/hocusfocus'
 
 	// Assets
 	import errorIcon from '$assets/error-icon.svg'
@@ -30,10 +30,10 @@
 
 	// Functions
 	function visibility(value: boolean) {
-
-		// Manually set the height of the wrapper, as options are positioned absolutely
-		setTimeout(() => wrapper.style.height = value ? wrapper.scrollHeight + 'px' : 'auto', 0)
 		visible = value
+		setTimeout(() => {
+			wrapper.style.height = visible ? wrapper.scrollHeight + 'px' : 'auto', 0
+		})
 	}
 
 	function set(new_value: T | undefined) {
@@ -54,6 +54,10 @@
 		return 0
 	})
 
+	onMount(() => {
+		wrapper.style.top = -wrapper.clientHeight / 2 + 'px'
+	})
+
 </script>
 
 
@@ -61,7 +65,6 @@
 
 
 <div class="dropdown">
-	you shouldn't see this
 	<div class="wrapper" use:losefocus={() => visibility(false)} bind:this={wrapper}>
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
@@ -77,7 +80,7 @@
 		</button>
 
 		{#if visible}
-			<div class="options" use:focusfirst use:scrollintoview>
+			<div class="options" use:loopfocus use:scrollintoview>
 				{#each options as option}
 					<button
 						type="button"
@@ -135,14 +138,13 @@
 		position: relative
 		width: 100%
 
-		padding: $input-thin-padding $input-thick-padding
-
 		.wrapper
 			position: absolute
 			top: 0
 			left: 0
 
 			width: 100%
+			height: auto
 			overflow: hidden
 
 			.header

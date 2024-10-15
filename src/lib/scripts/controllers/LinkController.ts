@@ -19,6 +19,7 @@ import type {
 // Exports
 export { LinkController }
 
+const BASE_URL = 'http://localhost:5432'
 
 // --------------------> Controller
 
@@ -112,9 +113,13 @@ class LinkController {
 		const data = await response.json() as SerializedLink
 		const link = LinkController.revive(environment, data)
 
-		// Assign to course
+		// Assign to course and graph
 		environment.courses
 			.find(course => course.id === link._course_id)
+			?.assignLink(link, false)
+
+		environment.graphs
+			.find(graph => graph.id === link._graph_id)
 			?.assignLink(link, false)
 
 		return link
@@ -152,7 +157,7 @@ class LinkController {
 			})
 		}
 
-		if (this._graph_id === undefined) {
+		if (this._graph_id === null) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Link has no associated graph'
@@ -213,25 +218,20 @@ class LinkController {
 			return Promise.reject()
 		}
 
-		// Call API to delete the link
-		await fetch(`/api/link/${this.id}`, {
-			method: 'DELETE'
-		})
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/link/${this.id} DELETE): ${error}`)
-		})
-
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
 		this.environment.courses
 			.find(course => course.id === this._course_id)
 			?.unassignLink(this)
-		
 		this.environment.graphs
 			.find(graph => graph.id === this._graph_id)
 			?.unassignLink(this, false)
 
+		// Call API to delete the link
+		await fetch(`/api/link/${this.id}`, { method: 'DELETE' })
+			.catch(error => {
+				throw new Error(`APIError (/api/link/${this.id} DELETE): ${error}`)
+			})
+			
 		// Remove from environment
 		this.environment.forget(this)
 	}
@@ -319,6 +319,17 @@ class LinkController {
 		}
 
 		return this._graph
+	}
+
+	/**
+	 * Get the URL of the link
+	 * @returns `Promise<string>` The URL of the link
+	 */
+
+	async getURL(): Promise<string> {
+		if (!this.validate().ok()) return Promise.reject()
+		const course = await this.getCourse()
+		return `${BASE_URL}/graph/${course.code}/${this.name}`
 	}
 
 	/**

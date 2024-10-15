@@ -258,22 +258,16 @@ class GraphController {
 			return Promise.reject()
 		}
 
-		// Call API to delete the graph
-		await fetch(`/api/graph/${this.id}`, {
-			method: 'DELETE'
-		})
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/graph/${this.id} DELETE): ${error}`)
-		})
-
-		// Unassign from course
+		// Unassign from course and links
 		this.environment.courses
 			.find(course => course.id === this._course_id)
 			?.unassignGraph(this)
 
-		// Delete all related domains, subjects, lectures, and links
+		this.environment.links
+			.filter(link => link.graph_id === this.id)
+			.forEach(link => link.unassignFromGraph(false))
+
+		// Delete all related domains, subjects, and lectures
 		const domains = await this.getDomains()
 		await Promise.all(domains.map(domain => domain.delete()))
 
@@ -283,8 +277,11 @@ class GraphController {
 		const lectures = await this.getLectures()
 		await Promise.all(lectures.map(lecture => lecture.delete()))
 
-		const links = await this.getLinks()
-		await Promise.all(links.map(link => link.delete()))
+		// Call API to delete the graph
+		await fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
+			.catch(error => {
+				throw new Error(`APIError (/api/graph/${this.id} DELETE): ${error}`)
+			})
 
 		// Remove from environment
 		this.environment.forget(this)
@@ -347,9 +344,9 @@ class GraphController {
 		}
 
 		// Call API to get the domains
-		const response = await fetch(`/api/domain?graph=${this.id}`, { method: 'GET' })
+		const response = await fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
 			.catch(error => { 
-				throw new Error(`APIError (/api/domain?graph=${this.id} GET): ${error}`)
+				throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`)
 			})
 
 		// Parse the data
@@ -386,9 +383,9 @@ class GraphController {
 		}
 
 		// Call API to get the subjects
-		const response = await fetch(`/api/subject?graph=${this.id}`, { method: 'GET' })
+		const response = await fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
 			.catch(error => { 
-				throw new Error(`APIError (/api/subject?graph=${this.id} GET): ${error}`)
+				throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`)
 			})
 
 		// Parse the data
@@ -425,9 +422,9 @@ class GraphController {
 		}
 
 		// Call API to get the lectures
-		const response = await fetch(`/api/lecture?graph=${this.id}`, { method: 'GET' })
+		const response = await fetch(`/api/graph/${this.id}/lectures`, { method: 'GET' })
 			.catch(error => { 
-				throw new Error(`APIError (/api/lecture?graph=${this.id} GET): ${error}`)
+				throw new Error(`APIError (/api/graph/${this.id}/lectures GET): ${error}`)
 			})
 
 		// Parse the data
@@ -464,9 +461,9 @@ class GraphController {
 		}
 
 		// Call API to get the links
-		const response = await fetch(`/api/link?graph=${this.id}`, { method: 'GET' })
+		const response = await fetch(`/api/graph/${this.id}/links`, { method: 'GET' })
 			.catch(error => { 
-				throw new Error(`APIError (/api/link?graph=${this.id} GET): ${error}`)
+				throw new Error(`APIError (/api/graph/${this.id}/links GET): ${error}`)
 			})
 
 		// Parse the data
@@ -571,7 +568,7 @@ class GraphController {
 	unassignDomain(domain: DomainController): void {
 		if (!this._domain_ids.includes(domain.id)) return
 		this._domain_ids = this._domain_ids.filter(id => id !== domain.id)
-		this._domains = this._domains?.filter(domain => domain.id !== domain.id)
+		this._domains = this._domains?.filter(known => known.id !== domain.id)
 	}
 
 	/**
@@ -582,7 +579,7 @@ class GraphController {
 	unassignSubject(subject: SubjectController): void {
 		if (!this._subject_ids.includes(subject.id)) return
 		this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
-		this._subjects = this._subjects?.filter(subject => subject.id !== subject.id)
+		this._subjects = this._subjects?.filter(known => known.id !== subject.id)
 	}
 
 	/**
@@ -593,7 +590,7 @@ class GraphController {
 	unassignLecture(lecture: LectureController): void {
 		if (!this._lecture_ids.includes(lecture.id)) return
 		this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
-		this._lectures = this._lectures?.filter(lecture => lecture.id !== lecture.id)
+		this._lectures = this._lectures?.filter(known => known.id !== lecture.id)
 	}
 
 	/**
@@ -605,7 +602,7 @@ class GraphController {
 	unassignLink(link: LinkController, mirror: boolean = true): void {
 		if (!this._links_ids.includes(link.id)) return
 		this._links_ids = this._links_ids.filter(id => id !== link.id)
-		this._links = this._links?.filter(link => link.id !== link.id)
+		this._links = this._links?.filter(known => known.id !== link.id)
 
 		if (mirror) {
 			link.unassignFromGraph(false)

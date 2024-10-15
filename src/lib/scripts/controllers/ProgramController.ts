@@ -179,16 +179,6 @@ class ProgramController {
 			return Promise.resolve()
 		}
 
-		// Call API to delete the program
-		await fetch(`/api/program/${this.id}`, {
-			method: 'DELETE'
-		})
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/program/${this.id} DELETE): ${error}`)
-		})
-
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
 		this.environment.courses
 			.filter(course => this._course_ids.includes(course.id))
@@ -202,6 +192,12 @@ class ProgramController {
 			.filter(user => this._editor_ids.includes(user.id))
 			.forEach(user => user.resignAsProgramEditor(this, false))
 
+		// Call API to delete the program
+		await fetch(`/api/program/${this.id}`, { method: 'DELETE' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id} DELETE): ${error}`)
+			})
+			
 		// Remove from environment
 		this.environment.forget(this)
 	}
@@ -388,7 +384,7 @@ class ProgramController {
 	unassignCourse(course: CourseController, mirror: boolean = true): void {
 		if (!this._course_ids.includes(course.id)) return
 		this._course_ids = this._course_ids.filter(id => id !== course.id)
-		this._courses = this._courses?.filter(course => course.id !== course.id)
+		this._courses = this._courses?.filter(known => known.id !== course.id)
 
 		if (mirror) {
 			course.unassignFromProgram(this, false)
@@ -404,7 +400,7 @@ class ProgramController {
 	unassignAdmin(user: UserController, mirror: boolean = true): void {
 		if (!this._admin_ids.includes(user.id)) return
 		this._admin_ids = this._admin_ids.filter(id => id !== user.id)
-		this._admins = this._admins?.filter(admin => admin.id !== user.id)
+		this._admins = this._admins?.filter(known => known.id !== user.id)
 
 		if (mirror) {
 			user.resignAsProgramAdmin(this, false)
@@ -420,7 +416,7 @@ class ProgramController {
 	unassignEditor(user: UserController, mirror: boolean = true): void {
 		if (!this._editor_ids.includes(user.id)) return
 		this._editor_ids = this._editor_ids.filter(id => id !== user.id)
-		this._editors = this._editors?.filter(editor => editor.id !== user.id)
+		this._editors = this._editors?.filter(known => known.id !== user.id)
 
 		if (mirror) {
 			user.resignAsProgramEditor(this, false)

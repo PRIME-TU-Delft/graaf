@@ -5,14 +5,14 @@
 	import IconButton from "./IconButton.svelte"
 
 	// Assets
-	import openEye from "$assets/open-eye-icon.svg"
-	import closedEye from "$assets/closed-eye-icon.svg"
+	import openEyeIcon from "$assets/open-eye-icon.svg"
+	import closedEyeIcon from "$assets/closed-eye-icon.svg"
 
 	// Exports
 	export let label: string
 	export let value: string = ''
 	export let placeholder: string = ''
-	export let obfuscate: boolean = false
+	export let type: 'text' | 'subtle' | 'password' = 'text'
 
 	// Variables
 	const id: string = label.toLowerCase().replace(/\s/g, '_')
@@ -29,20 +29,20 @@
 <!-- Markup -->
 
 
-{#if obfuscate}
+{#if type === 'password'}
 
 	<div class="textfield">
 		<input
 			id={id}
 			name={id}
-			type="password"
 			placeholder={placeholder}
-			on:change on:input
+			type="password"
 			bind:value
+			on:change on:input
 			/>
 
 		<IconButton 
-			src={ show ? closedEye : openEye } 
+			src={ show ? closedEyeIcon : openEyeIcon } 
 			description={ show ? "Hide" : "Show" } 
 			on:click={toggle_obfuscation} 
 			/>
@@ -56,6 +56,7 @@
 		placeholder={placeholder}
 		type="text"
 		class="textfield"
+		class:subtle={type === 'subtle'}
 		bind:value
 		on:change on:input
 		/>
@@ -84,6 +85,16 @@
 
 		&:focus
 			border-color: $tudelft-blue
+		
+		&.subtle
+			border-color: transparent
+			transition: border-color $default-transition
+
+			&:hover
+				border-color: $gray
+
+			&:focus
+				border-color: $tudelft-blue
 	
 	div
 		width: 100%

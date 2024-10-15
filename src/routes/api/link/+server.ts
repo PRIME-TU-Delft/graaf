@@ -20,8 +20,8 @@ async function POST({ request }) {
 
 	// Retrieve data
 	const { course, graph, name } = await request.json()
-	if (!course || !graph || !name || isNaN(course) || isNaN(graph)) 
-        return new Response('Missing code or name', { status: 400 })
+	if (!course || !name || isNaN(course)) 
+        return new Response('Missing COURSE or name', { status: 400 })
 
 	// Create Link
 	return await LinkHelper.create(course, graph, name)

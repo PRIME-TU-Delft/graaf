@@ -39,7 +39,11 @@ export {
  * @returns `SerializedLink` Serialized new Link
  */
 
-async function create(course_id: number, graph_id: number, name: string): Promise<SerializedLink> {
+async function create(course_id: number, graph_id: number | null, name: string): Promise<SerializedLink> {
+
+	// Get graph data
+	const graph_data = graph_id ? { id: graph_id } : undefined
+
 	try {
 		var link = await prisma.graphLink.create({
 			data: {
@@ -50,9 +54,7 @@ async function create(course_id: number, graph_id: number, name: string): Promis
 					}
 				},
 				graph: {
-					connect: {
-						id: graph_id
-					}
+					connect: graph_data
 				}
 			}
 		})

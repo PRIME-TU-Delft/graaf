@@ -18,6 +18,8 @@
 	import IconButton from '$components/IconButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Validation from '$components/Validation.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import LinkURL from './LinkURL.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -27,8 +29,6 @@
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import copyIcon from '$assets/copy-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
-	import Dropdown from '$components/Dropdown.svelte';
-	import { validate } from 'uuid';
 
 	// Helpers
 	class GraphModal extends BaseModal {
@@ -138,7 +138,7 @@
 
 				<footer>
 					<Button
-						disabled={graph_modal.validate().severity === Severity.error}
+						disabled={!graph_modal.validate().ok()}
 						on:click={() => graph_modal.submit()}
 					> Create </Button>
 					<Validation data={graph_modal.validate()} />
@@ -167,7 +167,7 @@
 
 				<footer>
 					<Button
-						disabled={link_modal.validate().severity === Severity.error}
+						disabled={!link_modal.validate().ok()}
 						on:click={() => link_modal.submit()}
 					> Create </Button>
 					<Validation data={link_modal.validate()} />
@@ -187,12 +187,17 @@
 					{#each graphs as graph}
 						<span class="graph">
 							{#if graph.link_ids.length > 0}
-								<img src={linkIcon} alt="Link icon" />
+								<img src={linkIcon} alt="Link icon" class="link-icon" />
+							{:else}
+								<div />
 							{/if}
 
-							{graph.name}
-
-							<div class="flex-spacer" />
+							<Textfield
+								type="subtle"
+								label="Name"
+								placeholder="Graph Name"
+								bind:value={graph.name}
+								/>
 
 							<!-- TODO graph.isVisible() -->
 							<IconButton scale
@@ -208,7 +213,15 @@
 							/>
 
 							<IconButton scale src={copyIcon} description="Copy Graph" />
-							<IconButton scale src={trashIcon} description="Delete Graph" />
+
+							<IconButton scale 
+								src={trashIcon} 
+								description="Delete Graph"
+								on:click={async () => {
+									await graph.delete()
+									$course = $course
+								}}
+								/>
 						</span>
 					{/each}
 				{/await}
@@ -226,9 +239,21 @@
 				{#await $course.getLinks() then links}
 					{#each links as link}
 						<span class="link">
-							<IconButton src={trashIcon} description="Delete Link" scale />
+							<IconButton scale
+								src={trashIcon} 
+								description="Delete Link"
+								on:click={async () => {
+									await link.delete()
+									$course = $course
+								}}
+								/>
 
-							{link.name}
+							<Textfield
+								type="subtle"
+								label="Name"
+								placeholder="Link Name"
+								bind:value={link.name}
+								/>
 
 							{#await $course.getGraphOptions() then options}
 								<Dropdown
@@ -242,6 +267,10 @@
 									}}
 									/>
 							{/await}
+
+							<LinkURL link={link} />
+
+							<Button> <b>&lt;/&gt;</b> </Button>
 						</span>
 					{/each}
 				{/await}
@@ -264,32 +293,33 @@
 		color: $placeholder-color
 
 	.graph
-		display: flex
-		flex-flow: row nowrap
+		display: grid
+		grid-template: "link name view edit copy delete" auto / $total-icon-size 1fr $input-icon-size $input-icon-size $input-icon-size $input-icon-size
+		grid-gap: $form-small-gap
 		align-items: center
 
-		position: relative
-		padding: 1rem
-		padding-left: $total-icon-size
+		padding: $input-thin-padding $input-thick-padding
 
 		color: $dark-gray
 
 		&:not(:last-child)
 			border-bottom: 1px solid $gray
 
-		img:first-child
-			position: absolute
-			translate: 0 -50%
-			left: $input-icon-padding
-			top: 50%
-
-			width: 1rem
-
+		.link-icon
+			width: $input-icon-size
 			filter: $dark-purple-filter
 	
 	.link
 		display: grid
 		grid-template: "delete name graph url embed" auto / $total-icon-size 1fr 1fr max-content max-content
+		grid-gap: $form-small-gap
 		align-items: center
+
+		padding: $input-thin-padding $input-thick-padding
+
+		color: $dark-gray
+
+		&:not(:last-child)
+			border-bottom: 1px solid $gray
 
 </style>

@@ -209,16 +209,6 @@ class CourseController {
 			return Promise.reject()
 		}
 
-		// Call API to delete the course
-		await fetch(`/api/course/${this.id}`, {
-			method: 'DELETE'
-		})
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/course/${this.id} DELETE): ${error}`)
-		})
-
 		// Delete all related graphs and links
 		const graphs = await this.getGraphs()
 		await Promise.all(graphs.map(graph => graph.delete()))
@@ -239,6 +229,12 @@ class CourseController {
 			.filter(program => this._program_ids.includes(program.id))
 			.forEach(program => program.unassignCourse(this, false))
 
+		// Call API to delete the course
+		await fetch(`/api/course/${this.id}`, { method: 'DELETE' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course/${this.id} DELETE): ${error}`)
+			})
+			
 		// Remove from environment
 		this.environment.forget(this)
 	}
@@ -345,7 +341,7 @@ class CourseController {
 	 */
 
 	async getLinks(): Promise<LinkController[]> {
-			
+					
 		// Guard against SSR
 		if (!browser) {
 			return Promise.reject()
@@ -551,7 +547,7 @@ class CourseController {
 	unassignFromProgram(program: ProgramController, mirror: boolean = true): void {
 		if (!this._program_ids.includes(program.id)) return
 		this._program_ids = this._program_ids.filter(id => id !== program.id)
-		this._programs = this._programs?.filter(program => program.id !== program.id)
+		this._programs = this._programs?.filter(known => known.id !== program.id)
 
 		if (mirror) {
 			program.unassignCourse(this, false)
@@ -566,7 +562,7 @@ class CourseController {
 	unassignGraph(graph: GraphController): void {
 		if (!this._graph_ids.includes(graph.id)) return
 		this._graph_ids = this._graph_ids.filter(id => id !== graph.id)
-		this._graphs = this._graphs?.filter(graph => graph.id !== graph.id)
+		this._graphs = this._graphs?.filter(known => known.id !== graph.id)
 	}
 
 	/**
@@ -577,7 +573,7 @@ class CourseController {
 	unassignLink(link: LinkController): void {
 		if (!this._link_ids.includes(link.id)) return
 		this._link_ids = this._link_ids.filter(id => id !== link.id)
-		this._links = this._links?.filter(link => link.id !== link.id)
+		this._links = this._links?.filter(known => known.id !== link.id)
 	}
 
 	/**
@@ -589,7 +585,7 @@ class CourseController {
 	unassignAdmin(user: UserController, mirror: boolean = true): void {
 		if (!this._admin_ids.includes(user.id)) return
 		this._admin_ids = this._admin_ids.filter(id => id !== user.id)
-		this._admins = this._admins?.filter(admin => admin.id !== user.id)
+		this._admins = this._admins?.filter(known => known.id !== user.id)
 
 		if (mirror) {
 			user.resignAsCourseAdmin(this, false)
@@ -605,7 +601,7 @@ class CourseController {
 	unassignEditor(user: UserController, mirror: boolean = true): void {
 		if (!this._editor_ids.includes(user.id)) return
 		this._editor_ids = this._editor_ids.filter(id => id !== user.id)
-		this._editors = this._editors?.filter(editor => editor.id !== user.id)
+		this._editors = this._editors?.filter(known => known.id !== user.id)
 
 		if (mirror) {
 			user.resignAsCourseEditor(this, false)

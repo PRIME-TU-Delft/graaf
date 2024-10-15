@@ -4,7 +4,7 @@
 	// Internal imports
 	import { tooltip } from '$scripts/tooltip'
 
-	// Exports1
+	// Exports
 	export let src: string
 	export let description: string = ''
 	export let href: string | undefined = undefined
@@ -35,7 +35,7 @@
 		use:tooltip={description}
 		on:click
 	>
-		<img {src} alt="" class="icon" />
+		<img {src} alt={description} class="icon" />
 	</button>
 
 {:else}
