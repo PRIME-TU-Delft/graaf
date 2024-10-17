@@ -10,14 +10,14 @@
 	import { BaseModal } from '$scripts/modals'
 
 	// Components
-	import Layout from '$layouts/DefaultLayout.svelte'
-	import Card from '$components/Card.svelte'
-	import Modal from '$components/Modal.svelte'
-	import Button from '$components/Button.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Textfield from '$components/Textfield.svelte'
+	import Layout from '$components/layouts/DefaultLayout.svelte'
+	import Card from '$components/layouts/Card.svelte'
+	import Modal from '$components/layouts/Modal.svelte'
+	import Button from '$components/buttons/Button.svelte'
+	import LinkButton from '$components/buttons/LinkButton.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
 	import Validation from '$components/Validation.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
+	import Dropdown from '$components/forms/Dropdown.svelte'
 	import LinkRow from './LinkRow.svelte'
 	import GraphRow from './GraphRow.svelte'
 
@@ -98,7 +98,6 @@
 
 
 <Layout
-	description="Here you can view the graphs and links associated to this course, and edit their properties."
 	path={[
 		{
 			name: 'Dashboard',
@@ -110,6 +109,10 @@
 		}
 	]}
 >
+	<svelte:fragment slot="header">
+		Here you can view the graphs and links associated to this course, and edit their properties.
+	</svelte:fragment>
+
 	<svelte:fragment slot="toolbar">
 		<Button on:click={() => graph_modal.show()}>
 			<img src={plusIcon} alt="" /> New Graph
@@ -149,15 +152,14 @@
 				<label for="name"> Link Name </label>
 				<Textfield id="name" bind:value={link_modal.name} />
 
-				<label for="graph"> Graph </label>
 				{#await $course.getGraphOptions() then options}
+					<label for="graph"> Graph </label>
 					<Dropdown
 						label="Graph"
 						placeholder="Select a graph"
 						options={options}
 						bind:value={link_modal.graph}
 					/>
-
 				{/await}
 
 				<footer>

@@ -72,21 +72,31 @@ async function create(course_id: number, graph_id: number | null, name: string):
 
 async function update(data: SerializedLink): Promise<void> {
 
-	// Get graph connection data
+	// Get course data
+	const course = await getCourse(data.id)
+	const course_data: { connect?: any, disconnect?: any } = {}
+	if (data.course !== null && data.course !== course.id)
+		course_data.connect = { id: data.course }
+	if (course !== null && data.course !== course.id)
+		course_data.disconnect = { id: course.id }
+
+	// Get graph data
 	const graph = await getGraph(data.id)
-	const graph_data = {
-		connect: data.graph ? { id: data.graph } : undefined,
-		disconnect: graph ? { id: graph.id } : undefined
-	}
+	const graph_data: { connect?: any, disconnect?: any } = {}
+	if (data.graph !== null && data.graph !== graph?.id)
+		graph_data.connect = { id: data.graph }
+	if (graph !== null && data.graph !== graph.id)
+		graph_data.disconnect = { id: graph.id }
 
 	// Update
 	try {
 		await prisma.graphLink.update({
-			where: { 
-				id: data.id 
+			where: {
+				id: data.id
 			},
 			data: {
 				name: data.name,
+				course: course_data,
 				graph: graph_data
 			}
 		})
@@ -206,7 +216,7 @@ async function getGraph(link_id: number): Promise<SerializedGraph | null> {
 		return Promise.reject(error)
 	}
 
-	if (data.graph) 
+	if (data.graph)
 		return await GraphHelper.reduce(data.graph)
 	return null
 }

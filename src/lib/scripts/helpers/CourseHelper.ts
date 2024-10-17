@@ -24,7 +24,7 @@ export {
 	create,	 	// api/course				POST
 	update,	 	// api/course				PUT
 	remove,	 	// api/course/[id]			DELETE
-	reduce,	 	
+	reduce,
 	getAll,	 	// api/course				GET
 	getById,	// api/course/[id]			GET
 	getGraphs,	// api/course/[id]/graphs	GET
@@ -67,7 +67,7 @@ async function create(code: string, name: string): Promise<SerializedCourse> {
 
 async function update(data: SerializedCourse): Promise<void> {
 
-	// Get old and new graphs
+	// Get graph data
 	const graphs = await getGraphs(data.id)
 	const old_graphs = graphs
 		.filter(graph => !data.graphs.includes(graph.id))
@@ -76,7 +76,11 @@ async function update(data: SerializedCourse): Promise<void> {
 		.filter(id => !graphs.some(graph => graph.id === id))
 		.map(id => ({ id }))
 
-	// Get old and new programs
+	const graph_data: { connect?: any, disconnect?: any } = {}
+	if (new_graphs.length) graph_data.connect = new_graphs
+	if (old_graphs.length) graph_data.disconnect = old_graphs
+
+	// Get program data
 	const programs = await getPrograms(data.id)
 	const old_programs = programs
 		.filter(program => !data.programs.includes(program.id))
@@ -84,6 +88,23 @@ async function update(data: SerializedCourse): Promise<void> {
 	const new_programs = data.programs
 		.filter(id => !programs.some(program => program.id === id))
 		.map(id => ({ id }))
+
+	const program_data: { connect?: any, disconnect?: any } = {}
+	if (new_programs.length) program_data.connect = new_programs
+	if (old_programs.length) program_data.disconnect = old_programs
+
+	// Get link data
+	const links = await getLinks(data.id)
+	const old_links = links
+		.filter(link => !data.links.includes(link.id))
+		.map(link => ({ id: link.id }))
+	const new_links = data.links
+		.filter(id => !links.some(link => link.id === id))
+		.map(id => ({ id }))
+
+	const link_data: { connect?: any, disconnect?: any } = {}
+	if (new_links.length) link_data.connect = new_links
+	if (old_links.length) link_data.disconnect = old_links
 
 	// Update
 	try {
@@ -94,14 +115,9 @@ async function update(data: SerializedCourse): Promise<void> {
 			data: {
 				name: data.name,
 				code: data.code,
-				graphs: {
-					connect: new_graphs,
-					disconnect: old_graphs
-				},
-				programs: {
-					connect: new_programs,
-					disconnect: old_programs
-				}
+				graphs: graph_data,
+				programs: program_data,
+				links: link_data
 			}
 		})
 	} catch (error) {

@@ -7,7 +7,7 @@
 	import { graph } from '$stores'
 	
 	// Components
-	import Dropdown from './Dropdown.svelte'
+	import Dropdown from './forms/Dropdown.svelte'
 
 	// Assets
 	import zoomInIcon from '$assets/zoom-in-icon.svg'

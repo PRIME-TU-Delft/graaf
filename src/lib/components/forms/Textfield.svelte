@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Components
-	import IconButton from "./IconButton.svelte"
+	import IconButton from "../buttons/IconButton.svelte"
 
 	// Assets
 	import openEyeIcon from "$assets/open-eye-icon.svg"
@@ -52,6 +52,7 @@
 
 	<input
 		id={id}
+		
 		type="text"
 		placeholder={placeholder}
 		class:subtle={type === 'subtle'}

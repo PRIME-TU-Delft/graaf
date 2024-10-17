@@ -10,6 +10,7 @@ import type {
 	SerializedCourse,
 	SerializedUser
 } from '$scripts/types'
+import { course } from '$stores'
 
 // Exports
 export { create, remove, update, reduce, getAll, getById, getCourses, getAdmins, getEditors }
@@ -62,7 +63,7 @@ async function remove(program_id: number): Promise<void> {
 
 async function update(data: SerializedProgram): Promise<void> {
 
-	// Get old and new courses
+	// Get course data
 	const courses = await getCourses(data.id)
 	const old_courses = courses
 		.filter(course => !data.courses.includes(course.id))
@@ -70,6 +71,10 @@ async function update(data: SerializedProgram): Promise<void> {
 	const new_courses = data.courses
 		.filter(id => !courses.some(course => course.id === id))
 		.map(id => ({ id }))
+
+	const course_data: { connect?: any, disconnect?: any } = {}
+	if (new_courses.length) course_data.connect = new_courses
+	if (old_courses.length) course_data.disconnect = old_courses
 
 	// Update
 	try {
@@ -79,10 +84,7 @@ async function update(data: SerializedProgram): Promise<void> {
 			},
 			data: {
 				name: data.name,
-				courses: {
-					disconnect: old_courses,
-					connect: new_courses
-				}
+				courses: course_data
 			}
 		})
 	} catch (error) {

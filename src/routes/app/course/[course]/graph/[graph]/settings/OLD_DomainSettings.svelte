@@ -1,9 +1,9 @@
 
-
 <script lang="ts">
 
 	// Internal imports
-	import { SubjectController, SubjectRelationController, SortOption } from '$scripts/controllers'
+	import { DomainController, DomainRelationController, SortOption } from '$scripts/controllers'
+	import { styles } from '$scripts/settings'
 	import { graph } from '$stores'
 
 	// Components
@@ -16,27 +16,26 @@
 	import Validation from '$components/Validation.svelte'
 
 	// Assets
-	import plusIcon from '$assets/plus-icon.svg'
-	import trashIcon from '$assets/trash-icon.svg'
-	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
 	import descedingSortIcon from '$assets/descending-sort-icon.svg'
-	import { descending } from 'd3';
+	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
+	import plusIcon from '$assets/plus-icon.svg'
+	import trashIcon from '$assets/trash-icon.svg'
 
 	// Functions
-	function subjectMatchesQuery(query: string, subject: SubjectController): boolean {
-		/* Checks if query appears in subject */
+	function domainMatchesQuery(query: string, domain: DomainController): boolean {
+		/* Checks if query appears in domain */
 
 		if (!query) return true
 		query = query.toLowerCase()
 
-		let name = subject.name?.toLowerCase()
-		let domain = subject.domain?.name?.toLowerCase()
+		let name = domain.name?.toLowerCase()
+		let style = domain.style ? styles[domain.style].display_name.toLowerCase() : undefined
 
-		return name?.includes(query) || domain?.includes(query) || false
+		return name?.includes(query) || style?.includes(query) || false
 	}
 
-	function relationMatchesQuery(query: string, relation: SubjectRelationController): boolean {
+	function relationMatchesQuery(query: string, relation: DomainRelationController): boolean {
 		/* Checks if query appears in relation */
 
 		if (!query) return true
@@ -49,7 +48,7 @@
 	}
 
 	function sortIcon(state?: boolean): string {
-		/* Returns the sort icon based on its state */
+		/* Returns the sort icon based on the state */
 
 		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
 	}
@@ -68,9 +67,9 @@
 	}
 
 	// Variables
-	let subject_query: string = ''
-	let subject_name_sort: boolean | undefined
-	let subject_domain_sort: boolean | undefined
+	let domain_query: string = ''
+	let domain_name_sort: boolean | undefined
+	let domain_style_sort: boolean | undefined
 
 	let relation_query: string = ''
 	let relation_parent_sort: boolean | undefined
@@ -82,55 +81,56 @@
 <!-- Markup -->
 
 
-<!-- Subjects -->
-<div id="subjects" class="subjects editor">
+<!-- Domains -->
+<div id="domains" class="domains editor">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
-		<h2> Subjects </h2>
+		<h2> Domains </h2>
 		<LinkButton href="#relations"> go to relations </LinkButton>
 
 		<div class="flex-spacer" />
 
-		<Searchbar bind:value={subject_query} />
-		<Button on:click={async () => { await SubjectController.create($graph); update() }}>
-			<img src={plusIcon} alt=""> New Subject
+		<Searchbar bind:value={domain_query} />
+		<Button on:click={async () => { await D
+			DomainController.create($graph); update() }}>
+			<img src={plusIcon} alt=""> New Domain
 		</Button>
 	</div>
 
-	<!-- If any subjects were found that match the search -->
-	{#if $graph.subjects.some(subject => subjectMatchesQuery(subject_query, subject))}
+	<!-- Header -->
+	{#if $graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
 
-		<!-- Header -->
+		<!-- If any domains were found that match the search -->
 		<div class=row>
 
 			<!-- Name label and sort button -->
 			<div class="header" style="grid-area: left;">
 				<span> Name </span>
 				<IconButton
-					src={sortIcon(subject_name_sort)}
+					src={sortIcon(domain_name_sort)}
 					on:click={() => {
-						subject_domain_sort = undefined
-						subject_name_sort = !subject_name_sort
+						domain_style_sort = undefined
+						domain_name_sort = !domain_name_sort
 
-						const options = subject_name_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.subjects | SortOption.name)
+						const options = domain_name_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.domains | SortOption.name)
 						update()
 					}}
 				/>
 			</div>
 
-			<!-- Domain label and sort button -->
+			<!-- Style label and sort button -->
 			<div class="header" style="grid-area: right;">
-				<span> Domain </span>
+				<span> Style </span>
 				<IconButton
-					src={sortIcon(subject_domain_sort)}
+					src={sortIcon(domain_style_sort)}
 					on:click={() => {
-						subject_name_sort = undefined
-						subject_domain_sort = !subject_domain_sort
+						domain_name_sort = undefined
+						domain_style_sort = !domain_style_sort
 						
-						const options = subject_domain_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.subjects | SortOption.domain)
+						const options = domain_style_sort ? SortOption.descending : SortOption.ascending
+						$graph.sort(options | SortOption.domains | SortOption.style)
 						update()
 					}}
 				/>
@@ -139,64 +139,64 @@
 
 	{:else}
 
-		<!-- If no subjects were found that match the search -->
-		<h6 class="grayed"> No subjects found </h6>
+		<!-- If no domains were found that match the search -->
+		<h6 class="grayed"> No domains found </h6>
 
 	{/if}
 
-	<!-- Subject list -->
-	{#each $graph.subjects as subject}
-		{#if subjectMatchesQuery(subject_query, subject)}
-			<div class="row" id={subject.uuid}>
-				<Validation short data={subject.validate()} />
-				<span> {subject.index + 1} </span>
+	<!-- Domain list -->
+	{#each $graph.domains as domain}
+		{#if domainMatchesQuery(domain_query, domain)}
+			<div class="row" id={domain.uuid}>
+				<Validation short data={domain.validate()} />
+				<span> {domain.index + 1} </span>
 				<IconButton scale
 					src={trashIcon}
 					on:click={async () => {
-						await subject.delete()
+						await domain.delete()
 						update()
 					}}
 					/>
 
 				<Textfield
 					label="Name"
-					placeholder="Subject Name"
-					bind:value={subject.name}
-					on:change={async () => await subject.save()}
+					placeholder="Domain Name"
+					bind:value={domain.name}
+					on:change={async () => await domain.save()}
 					/>
 
 				<Dropdown
-					label="Domain"
-					placeholder="Assigned Domain"
-					options={subject.domain_options}
-					bind:value={subject.domain}
-					on:change={async () => await subject.save()}
+					label="Style"
+					placeholder="Domain Style"
+					options={domain.style_options}
+					bind:value={domain.style}
+					on:change={async () => await domain.save()}
 					/>
 
-				<span class="preview" style:background-color={subject.color} />
+				<span class="preview" style:background-color={domain.color} />
 			</div>
 		{/if}
 	{/each}
 </div>
 
-<!-- Subject relations -->
-<div id="subjects" class="relations editor">
+<!-- Domain relations -->
+<div id="relations" class="relations editor">
 
 	<!-- Toolbar -->
 	<div class="toolbar">
 		<h2> Relations </h2>
-		<LinkButton href="#subjects"> go to subjects </LinkButton>
+		<LinkButton href="#domains"> go to domains </LinkButton>
 
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={relation_query} />
-		<Button on:click={() => { SubjectRelationController.create($graph); update() }}>
+		<Button on:click={() => { DomainRelationController.create($graph); update() }}>
 			<img src={plusIcon} alt=""> New Relation
 		</Button>
 	</div>
 
 	<!-- If any relations were found that match the search -->
-	{#if $graph.subject_relations.some(relation => relationMatchesQuery(relation_query, relation))}
+	{#if $graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
 
 		<!-- Header -->
 		<div class=row>
@@ -209,9 +209,9 @@
 					on:click={() => {
 						relation_child_sort = undefined
 						relation_parent_sort = !relation_parent_sort
-						
+
 						const options = relation_parent_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.relations | SortOption.subjects | SortOption.parent)
+						$graph.sort(options | SortOption.relations | SortOption.domains | SortOption.parent)
 						update()
 					}}
 				/>
@@ -225,9 +225,9 @@
 					on:click={() => {
 						relation_parent_sort = undefined
 						relation_child_sort = !relation_child_sort
-						
+
 						const options = relation_child_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.relations | SortOption.subjects | SortOption.child)
+						$graph.sort(options | SortOption.relations | SortOption.domains | SortOption.child)
 						update()
 					}}
 				/>
@@ -237,12 +237,12 @@
 	{:else}
 
 		<!-- If no relations were found that match the search -->
-		<h6 class="grayed"> No subjects found </h6>
+		<h6 class="grayed"> No relations found </h6>
 
 	{/if}
 
 	<!-- List of relations -->
-	{#each $graph.subject_relations as relation}
+	{#each $graph.domain_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
 			<div class="row" id={relation.anchor}>
 				<Validation short data={relation.validate()} />
@@ -259,7 +259,7 @@
 
 				<Dropdown
 					label="Parent"
-					placeholder="From Subject"
+					placeholder="From Domain"
 					options={relation.parent_options}
 					bind:value={relation.parent}
 					on:change={async () => {
@@ -271,7 +271,7 @@
 				<span class="preview" style:background-color={relation.parent_color} />
 				<Dropdown
 					label="Child"
-					placeholder="To Subject"
+					placeholder="To Domain"
 					options={relation.child_options}
 					bind:value={relation.child}
 					on:change={async () => {
@@ -309,7 +309,6 @@
 
 		.toolbar
 			display: flex
-			flex-flow: row nowrap
 			margin-bottom: $form-big-gap
 			gap: $form-small-gap
 
@@ -334,7 +333,7 @@
 				span
 					flex: 1
 
-	.subjects .row
+	.domains .row
 		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
 
 	.relations .row

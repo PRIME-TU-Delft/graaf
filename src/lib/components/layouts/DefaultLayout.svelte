@@ -2,7 +2,6 @@
 <script lang="ts">
 
 	// Exports
-	export let description: string = 'Lorum ipsum dolor sid amed.'
 	export let path: { [key: string]: string }[] = []
 	
 </script>
@@ -24,7 +23,7 @@
 			{/each}
 		</nav>
 
-		{description}
+		<slot name="header" />
 	</header>
 
 	{#if $$slots.toolbar}

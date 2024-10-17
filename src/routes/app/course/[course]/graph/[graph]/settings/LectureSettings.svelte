@@ -1,4 +1,5 @@
 
+
 <script lang="ts">
 
 	// Internal imports
@@ -6,11 +7,11 @@
 	import { graph } from '$stores'
 
 	// Components
-	import Button from '$components/Button.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import IconButton from '$components/IconButton.svelte';
-	import Searchbar from '$components/Search.svelte'
-	import Textfield from '$components/Textfield.svelte'
+	import Button from '$components/buttons/Button.svelte'
+	import Dropdown from '$components/forms/Dropdown.svelte'
+	import IconButton from '$components/buttons/IconButton.svelte';
+	import Searchbar from '$components/forms/Search.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
 	import Validation from '$components/Validation.svelte';
 
 	// Assets

@@ -1,10 +1,19 @@
 
-// Internal imports
-import { CourseController, GraphController } from '$scripts/controllers'
-import { course, graph } from '$stores'
+// External dependencies
+import type { PageLoad } from './$types'
+
+// Internal dependencies
+import {
+	ControllerCache,
+	CourseController,
+	GraphController
+} from '$scripts/controllers'
 
 // Load
-export const load = async ({ data }) => {
-	course.set(await CourseController.revive(data.course))
-	graph.set(await GraphController.revive(data.graph))
+export const load: PageLoad = async ({ data }) => {
+	const cache = new ControllerCache()
+	const course = CourseController.revive(cache, data.course)
+	const graph = GraphController.revive(cache, data.graph)
+
+	return { cache, course, graph }
 }

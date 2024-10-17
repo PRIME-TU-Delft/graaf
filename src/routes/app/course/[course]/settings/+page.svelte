@@ -1,4 +1,5 @@
 
+
 <script lang="ts">
 
 	// Internal imports
@@ -7,9 +8,9 @@
 	import { course } from '$stores'
 
 	// Components
-	import Button from '$components/Button.svelte'
+	import Button from '$components/buttons/Button.svelte'
 	import GeneralSettings from './GeneralSettings.svelte'
-	import Layout from '$layouts/DefaultLayout.svelte'
+	import Layout from '$components/layouts/DefaultLayout.svelte'
 	import Validation from '$components/Validation.svelte'
 	import UserSettings from './UserSettings.svelte'
 
@@ -64,7 +65,7 @@
 	]}
 >
 	<svelte:fragment slot="toolbar">
-		<Validation data={course_validation} goto_anchor={goto_anchor} success="Ready to save" />
+		<Validation data={course_validation} goto={goto_anchor} success="Ready to save" />
 		<div class="flex-spacer" />
 		<Button disabled={course_validation.severity === Severity.error} on:click={() => $course.save()}>
 			<img src={saveIcon} alt=""> Save Changes

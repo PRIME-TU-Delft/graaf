@@ -1,79 +1,43 @@
 
 <script lang="ts">
 
-	// Internal imports
-	import { DomainController, DomainRelationController, SortOption } from '$scripts/controllers'
-	import { styles } from '$scripts/settings'
-	import { graph } from '$stores'
+	// Internal dependencies
+	import { ControllerCache, DomainController, GraphController } from '$scripts/controllers'
 
 	// Components
-	import Button from '$components/Button.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import IconButton from '$components/IconButton.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Searchbar from '$components/Search.svelte'
-	import Textfield from '$components/Textfield.svelte'
-	import Validation from '$components/Validation.svelte'
+	import Searchbar from '$components/forms/Search.svelte'
+	import Button from '$components/buttons/Button.svelte'
+	import LinkButton from '$components/buttons/LinkButton.svelte'
 
 	// Assets
-	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
-	import descedingSortIcon from '$assets/descending-sort-icon.svg'
-	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 	import plusIcon from '$assets/plus-icon.svg'
-	import trashIcon from '$assets/trash-icon.svg'
+	import ascendingSortIcon from '$assets/ascending-sort-icon.svg'
+	import descendingSortIcon from '$assets/descending-sort-icon.svg'
+	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
+
+	// Exports
+	export let cache: ControllerCache
+	export let graph: GraphController
+	export let update: () => void
 
 	// Functions
-	function domainMatchesQuery(query: string, domain: DomainController): boolean {
-		/* Checks if query appears in domain */
+	function sort(options: SortOption) {
+		if (options & SortOption.domains) {
+			domain_index_sort = options & SortOption.index ? !domain_index_sort : undefined
+			domain_name_sort = options & SortOption.name ? !domain_name_sort : undefined
+			domain_style_sort = options & SortOption.style ? !domain_style_sort : undefined
+			const direction = domain_index_sort || domain_name_sort || domain_style_sort ? SortOption.ascending : SortOption.descending
+		}
 
-		if (!query) return true
-		query = query.toLowerCase()
-
-		let name = domain.name?.toLowerCase()
-		let style = domain.style ? styles[domain.style].display_name.toLowerCase() : undefined
-
-		return name?.includes(query) || style?.includes(query) || false
-	}
-
-	function relationMatchesQuery(query: string, relation: DomainRelationController): boolean {
-		/* Checks if query appears in relation */
-
-		if (!query) return true
-		query = query.toLowerCase()
-
-		let parent = relation.parent?.name?.toLowerCase()
-		let child = relation.child?.name?.toLowerCase()
-
-		return parent?.includes(query) || child?.includes(query) || false
-	}
-
-	function sortIcon(state?: boolean): string {
-		/* Returns the sort icon based on the state */
-
-		return state === undefined ? neutralSortIcon : state ? ascendingSortIcon : descedingSortIcon
-	}
-
-	function update() {
-		/* Force store update
-		 * Svelte is a lil dum dum, so subscribers are only notified if the store is reassigned.
-		 * This happens either explicitly (like here), or in bind:value={store} bindings.
-		 * So, if you want graph changes to reflect in the ui, you need to do either.
-		 * It is rumored this will be better in Svelte 5, so im leaving this todo here.
-		 */
-
-		// TODO remove this function when Svelte 5 is released
-
-		$graph = $graph
+		graph.sort(options | direction)
+		update()
 	}
 
 	// Variables
+	let domain_index_sort: boolean | undefined = undefined
+	let domain_name_sort: boolean | undefined = undefined
+	let domain_style_sort: boolean | undefined = undefined
 	let domain_query: string = ''
-	let domain_name_sort: boolean | undefined
-	let domain_style_sort: boolean | undefined
-
-	let relation_query: string = ''
-	let relation_parent_sort: boolean | undefined
-	let relation_child_sort: boolean | undefined
 
 </script>
 
@@ -81,7 +45,6 @@
 <!-- Markup -->
 
 
-<!-- Domains -->
 <div id="domains" class="domains editor">
 
 	<!-- Toolbar -->
@@ -92,12 +55,84 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domain_query} />
-		<Button on:click={async () => { await DomainController.create($graph); update() }}>
-			<img src={plusIcon} alt=""> New Domain
+		<Button 
+			on:click={async () => {
+				await DomainController.create(cache, graph)
+				update() 
+			}}
+		>
+			<img src={plusIcon} alt="New domain"> New Domain
 		</Button>
 	</div>
 
 	<!-- Header -->
+	{#await graph.getDomains() then domains}
+		{#if domains.some(domain => domain.matchesQuery(domain_query))}
+
+			<div class=row>
+
+				<!-- Name label and sort button -->
+				<div class="header" style="grid-area: left;">
+					<span> Name </span>
+					<IconButton
+						description={domain_name_sort ? 'Sort domains descending by name' : 'Sort domains ascending by name'}
+						src={domain_name_sort === undefined ? neutralSortIcon : domain_name_sort ? ascendingSortIcon : descendingSortIcon}
+						on:click={() => sort(SortOption.domains | SortOption.name)}
+					/>
+				</div>
+
+				<!-- Style label and sort button -->
+				<div class="header" style="grid-area: right;">
+					<span> Style </span>
+					<IconButton
+						description={domain_style_sort ? 'Sort domains descending by style' : 'Sort domains ascending by style'}
+						src={sortIcon(domain_style_sort)}
+						on:click={() => sort(SortOption.domains | SortOption.style)}
+					/>
+				</div>
+			</div>
+
+			{#each domains as domain}
+				{#if domain.matchesQuery(domain_query)}
+					<div class="row" id={domain.uuid}>
+						<Validation short data={domain.validate()} />
+
+						<span> {domain.index + 1} </span>
+
+						<IconButton scale
+							src={trashIcon}
+							on:click={async () => {
+								await domain.delete()
+								update()
+							}}
+							/>
+
+						<Textfield
+							label="Name"
+							placeholder="Domain Name"
+							bind:value={domain.name}
+							on:change={async () => await domain.save()}
+							/>
+
+						<Dropdown
+							label="Style"
+							placeholder="Domain Style"
+							options={domain.style_options}
+							bind:value={domain.style}
+							on:change={async () => await domain.save()}
+							/>
+
+						<span class="preview" style:background-color={domain.color} />
+					</div>
+				{/if}
+			{/each}
+
+		{:else}
+
+			<h6 class="grayed"> No domains found </h6>
+
+		{/if}
+	{/await}
 	{#if $graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
 
 		<!-- If any domains were found that match the search -->
@@ -177,165 +212,3 @@
 		{/if}
 	{/each}
 </div>
-
-<!-- Domain relations -->
-<div id="relations" class="relations editor">
-
-	<!-- Toolbar -->
-	<div class="toolbar">
-		<h2> Relations </h2>
-		<LinkButton href="#domains"> go to domains </LinkButton>
-
-		<div class="flex-spacer" />
-
-		<Searchbar bind:value={relation_query} />
-		<Button on:click={() => { DomainRelationController.create($graph); update() }}>
-			<img src={plusIcon} alt=""> New Relation
-		</Button>
-	</div>
-
-	<!-- If any relations were found that match the search -->
-	{#if $graph.domain_relations.some(relation => relationMatchesQuery(relation_query, relation))}
-
-		<!-- Header -->
-		<div class=row>
-
-			<!-- From label and sort button -->
-			<div class="header" style="grid-area: left;">
-				<span> From </span>
-				<IconButton
-					src={sortIcon(relation_parent_sort)}
-					on:click={() => {
-						relation_child_sort = undefined
-						relation_parent_sort = !relation_parent_sort
-
-						const options = relation_parent_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.relations | SortOption.domains | SortOption.parent)
-						update()
-					}}
-				/>
-			</div>
-
-			<!-- To label and sort button -->
-			<div class="header" style="grid-area: right;">
-				<span> To </span>
-				<IconButton
-					src={sortIcon(relation_child_sort)}
-					on:click={() => {
-						relation_parent_sort = undefined
-						relation_child_sort = !relation_child_sort
-
-						const options = relation_child_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.relations | SortOption.domains | SortOption.child)
-						update()
-					}}
-				/>
-			</div>
-		</div>
-
-	{:else}
-
-		<!-- If no relations were found that match the search -->
-		<h6 class="grayed"> No relations found </h6>
-
-	{/if}
-
-	<!-- List of relations -->
-	{#each $graph.domain_relations as relation}
-		{#if relationMatchesQuery(relation_query, relation)}
-			<div class="row" id={relation.anchor}>
-				<Validation short data={relation.validate()} />
-				<span> {relation.index + 1} </span>
-				<IconButton scale
-					src={trashIcon}
-					on:click={async () => {
-						relation.delete()
-						await relation.parent?.save()
-						await relation.child?.save()
-						update()
-					}}
-					/>
-
-				<Dropdown
-					label="Parent"
-					placeholder="From Domain"
-					options={relation.parent_options}
-					bind:value={relation.parent}
-					on:change={async () => {
-						await relation.parent?.save()
-						await relation.child?.save()
-					}}
-					/>
-
-				<span class="preview" style:background-color={relation.parent_color} />
-				<Dropdown
-					label="Child"
-					placeholder="To Domain"
-					options={relation.child_options}
-					bind:value={relation.child}
-					on:change={async () => {
-						await relation.parent?.save()
-						await relation.child?.save()
-					}}
-					/>
-
-				<span class="preview" style:background-color={relation.child_color} />
-			</div>
-		{/if}
-	{/each}
-</div>
-
-
-<!-- Styles -->
-
-
-<style lang="sass">
-
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
-
-	.editor
-		display: flex
-		flex-flow: column nowrap
-		padding: $card-thick-padding
-		gap: $form-small-gap
-
-		.grayed
-			margin: auto
-			color: $gray
-
-		.toolbar
-			display: flex
-			margin-bottom: $form-big-gap
-			gap: $form-small-gap
-
-		.row
-			display: grid
-			place-items: center center
-			gap: $form-small-gap
-
-			padding-right: calc( $form-small-gap + $icon-width )
-
-			.preview
-				width: $input-icon-size
-				height: $input-icon-size
-
-			.header
-				display: flex
-				flex-flow: row nowrap
-				align-content: center
-				justify-content: right
-				width: 100%
-
-				span
-					flex: 1
-
-	.domains .row
-		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
-
-	.relations .row
-		grid-template: "validation id delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
-
-</style>

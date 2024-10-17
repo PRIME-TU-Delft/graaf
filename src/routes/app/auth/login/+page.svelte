@@ -1,11 +1,12 @@
+
 <!-- Script -->
 
 <script lang="ts">
-	import Button from '$components/Button.svelte';
-	import Card from '$components/Card.svelte';
-	import Checkbox from '$components/Checkbox.svelte';
-	import LinkButton from '$components/LinkButton.svelte';
-	import Textfield from '$components/Textfield.svelte';
+	import Button from '$components/buttons/Button.svelte';
+	import Card from '$components/layouts/Card.svelte';
+	import Checkbox from '$components/forms/Checkbox.svelte';
+	import LinkButton from '$components/buttons/LinkButton.svelte';
+	import Textfield from '$components/forms/Textfield.svelte';
 
 	function SSOlogin() {
 		// TODO add SSO login event

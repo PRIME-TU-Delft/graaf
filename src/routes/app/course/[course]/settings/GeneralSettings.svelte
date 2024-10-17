@@ -1,14 +1,15 @@
 
+
 <script lang="ts">
 
 	// Internal imports
 	import { course } from '$stores'
 
 	// Components
-	import Button from '$components/Button.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Modal from '$components/Modal.svelte'
-	import Textfield from '$components/Textfield.svelte'
+	import Button from '$components/buttons/Button.svelte'
+	import LinkButton from '$components/buttons/LinkButton.svelte'
+	import Modal from '$components/layouts/Modal.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'

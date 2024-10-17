@@ -15,7 +15,7 @@
 	export let data: ValidationData
 	export let short: boolean = false
 	export let success: string = ''
-	export let goto_anchor: (tab: number, id: string) => void = () => {}
+	export let goto: (tab: number, id: string) => void = () => {}
 
 	// Variables
 	let all_visible: boolean = false
@@ -141,7 +141,7 @@
 									(<button on:click={() => {
 										hide_errors()
 										if (error.tab !== undefined && error.uuid !== undefined)
-											goto_anchor(error.tab, error.uuid)
+											goto(error.tab, error.uuid)
 									}}> show </button>)
 								</span>
 							{/if}
@@ -181,7 +181,7 @@
 									(<button on:click={() => {
 										hide_warnings()
 										if (warning.tab !== undefined && warning.uuid !== undefined)
-											goto_anchor(warning.tab, warning.uuid)
+											goto(warning.tab, warning.uuid)
 									}}> show </button>)
 								</span>
 							{/if}

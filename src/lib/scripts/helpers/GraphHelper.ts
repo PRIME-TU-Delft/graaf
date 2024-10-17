@@ -22,7 +22,7 @@ import type {
 } from '$scripts/types'
 
 // Exports
-export { 
+export {
 	create,		 // api/graph				POST
 	update,		 // api/graph				PUT
 	remove,		 // api/graph/[id]			DELETE
@@ -73,7 +73,15 @@ async function create(course_id: number, name: string): Promise<SerializedGraph>
 
 async function update(data: SerializedGraph): Promise<void> {
 
-	// Get old and new domains
+	// Get course data
+	const course = await getCourse(data.id)
+	const course_data: { connect?: any, disconnect?: any } = {}
+	if (data.course !== course.id)
+		course_data.connect = { id: data.course }
+	if (data.course !== course.id)
+		course_data.disconnect = { id: data.course }
+
+	// Get domain data
 	const domains = await getDomains(data.id)
 	const old_domains = domains
 		.filter(domain => !data.domains.includes(domain.id))
@@ -82,7 +90,11 @@ async function update(data: SerializedGraph): Promise<void> {
 		.filter(id => !domains.some(domain => domain.id === id))
 		.map(id => ({ id }))
 
-	// Get old and new subjects
+	const domain_data: { connect?: any, disconnect?: any } = {}
+	if (new_domains.length) domain_data.connect = new_domains
+	if (old_domains.length) domain_data.disconnect = old_domains
+
+	// Get subject data
 	const subjects = await getSubjects(data.id)
 	const old_subjects = subjects
 		.filter(subject => !data.subjects.includes(subject.id))
@@ -91,7 +103,11 @@ async function update(data: SerializedGraph): Promise<void> {
 		.filter(id => !subjects.some(subject => subject.id === id))
 		.map(id => ({ id }))
 
-	// Get old and new lectures
+	const subject_data: { connect?: any, disconnect?: any } = {}
+	if (new_subjects.length) subject_data.connect = new_subjects
+	if (old_subjects.length) subject_data.disconnect = old_subjects
+
+	// Get lecture data
 	const lectures = await getLectures(data.id)
 	const old_lectures = lectures
 		.filter(lecture => !data.lectures.includes(lecture.id))
@@ -100,12 +116,22 @@ async function update(data: SerializedGraph): Promise<void> {
 		.filter(id => !lectures.some(lecture => lecture.id === id))
 		.map(id => ({ id }))
 
-	// Get course connection data
-	const course = await getCourse(data.id)
-	const course_data = course.id === data.course ? {} : {
-		connect : { id: data.course },
-		disconnect : { id: course.id }
-	}
+	const lecture_data: { connect?: any, disconnect?: any } = {}
+	if (new_lectures.length) lecture_data.connect = new_lectures
+	if (old_lectures.length) lecture_data.disconnect = old_lectures
+
+	// Get link data
+	const links = await getLinks(data.id)
+	const old_links = links
+		.filter(link => !data.links.includes(link.id))
+		.map(link => ({ id: link.id }))
+	const new_links = data.links
+		.filter(id => !links.some(link => link.id === id))
+		.map(id => ({ id }))
+
+	const link_data: { connect?: any, disconnect?: any } = {}
+	if (new_links.length) link_data.connect = new_links
+	if (old_links.length) link_data.disconnect = old_links
 
 	// Update
 	try {
@@ -116,18 +142,10 @@ async function update(data: SerializedGraph): Promise<void> {
 			data: {
 				name: data.name,
 				course: course_data,
-				domains: {
-					connect: new_domains,
-					disconnect: old_domains
-				},
-				subjects: {
-					connect: new_subjects,
-					disconnect: old_subjects
-				},
-				lectures: {
-					connect: new_lectures,
-					disconnect: old_lectures
-				}
+				domains: domain_data,
+				subjects: subject_data,
+				lectures: lecture_data,
+				links: link_data
 			}
 		})
 	} catch (error) {
@@ -164,8 +182,8 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
 	// Get aditional data
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
-			where: { 
-				id: graph.id 
+			where: {
+				id: graph.id
 			},
 			include: {
 				domains: {

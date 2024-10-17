@@ -10,14 +10,14 @@
 	import { BaseModal } from '$scripts/modals'
 
 	// Components
-	import Layout from '$layouts/DefaultLayout.svelte'
-	import Card from '$components/Card.svelte'
-	import Modal from '$components/Modal.svelte'
-	import Button from '$components/Button.svelte'
-	import IconButton from '$components/IconButton.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Searchbar from '$components/Search.svelte'
-	import Textfield from '$components/Textfield.svelte'
+	import Layout from '$components/layouts/DefaultLayout.svelte'
+	import Card from '$components/layouts/Card.svelte'
+	import Modal from '$components/layouts/Modal.svelte'
+	import Button from '$components/buttons/Button.svelte'
+	import IconButton from '$components/buttons/IconButton.svelte'
+	import LinkButton from '$components/buttons/LinkButton.svelte'
+	import Searchbar from '$components/forms/Search.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
 	import Validation from '$components/Validation.svelte'
 
 	// Assets
@@ -150,7 +150,6 @@
 
 
 <Layout
-	description="Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to experiment with the Graph Editor."
 	path={[
 		{
 			name: 'Dashboard',
@@ -158,6 +157,10 @@
 		}
 	]}
 >
+	<svelte:fragment slot="header">
+		Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to experiment with the Graph Editor.
+	</svelte:fragment>
+
 	<svelte:fragment slot="toolbar">
 		<Button on:click={() => sandbox_modal.show()}>
 			<img src={plusIcon} alt="" /> New Sandbox
@@ -182,14 +185,14 @@
 
 			<form>
 				<label for="code"> Sandbox Code </label>
-				<Textfield label="Code" bind:value={sandbox_modal.code} />
+				<Textfield id="code" bind:value={sandbox_modal.code} />
 
 				<label for="name"> Sandbox Name </label>
-				<Textfield label="Name" bind:value={sandbox_modal.name} />
+				<Textfield id="name" bind:value={sandbox_modal.name} />
 
 				<footer>
 					<Button
-						disabled={sandbox_modal.validate().severity === Severity.error}
+						disabled={!sandbox_modal.validate().ok()}
 						on:click={() => sandbox_modal.submit()}
 					> Create </Button>
 					<Validation data={sandbox_modal.validate()} />
@@ -204,11 +207,11 @@
 
 			<form>
 				<label for="name"> Program Name </label>
-				<Textfield label="Name" bind:value={program_modal.name} />
+				<Textfield id="name" bind:value={program_modal.name} />
 
 				<footer>
 					<Button
-						disabled={program_modal.validate().severity === Severity.error}
+						disabled={!program_modal.validate().ok()}
 						on:click={() => program_modal.submit()}
 					> Create </Button>
 					<Validation data={program_modal.validate()} />
@@ -223,14 +226,14 @@
 
 			<form>
 				<label for="code"> Course Code </label>
-				<Textfield label="Code" bind:value={course_modal.code} />
+				<Textfield id="code" bind:value={course_modal.code} />
 
 				<label for="name"> Course Name </label>
-				<Textfield label="Name" bind:value={course_modal.name} />
+				<Textfield id="name" bind:value={course_modal.name} />
 
 				<footer>
 					<Button 
-						disabled={course_modal.validate().severity === Severity.error}
+						disabled={!course_modal.validate().ok()}
 						on:click={() => course_modal.submit()}
 					> Create </Button>
 					<Validation data={course_modal.validate()} />

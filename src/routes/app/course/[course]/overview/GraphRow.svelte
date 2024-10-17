@@ -5,8 +5,8 @@
 	import { CourseController, GraphController } from '$scripts/controllers'
 
 	// Components
-	import IconButton from '$components/IconButton.svelte'
-	import Textfield from '$components/Textfield.svelte'
+	import IconButton from '$components/buttons/IconButton.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
@@ -39,6 +39,10 @@
 		type="subtle"
 		placeholder="Graph Name"
 		bind:value={graph.name}
+		on:change={async () => {
+			await graph.save()
+			update()
+		}}
 		/>
 
 	<!-- TODO graph.isVisible() -->

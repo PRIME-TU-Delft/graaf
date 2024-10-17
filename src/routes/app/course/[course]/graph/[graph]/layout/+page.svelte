@@ -1,4 +1,5 @@
 
+
 <script lang="ts">
 
 	// Internal imports
@@ -6,10 +7,10 @@
 
 	// Components
 	import GraphSVG from '$components/GraphSVG.svelte'
-	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
-	import Infobox from '$components/Infobox.svelte'
-	import Layout from '$layouts/DefaultLayout.svelte'
+	import Button from '$components/buttons/Button.svelte'
+	import Modal from '$components/layouts/Modal.svelte'
+	import Infobox from '$components/layouts/Infobox.svelte'
+	import Layout from '$components/layouts/DefaultLayout.svelte'
 
 	// Functions
 	function toggle_autolayout() {

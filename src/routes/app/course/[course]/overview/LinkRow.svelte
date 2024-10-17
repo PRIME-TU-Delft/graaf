@@ -5,10 +5,10 @@
 	import { CourseController, LinkController } from '$scripts/controllers'
 
 	// Components
-	import IconButton from '$components/IconButton.svelte'
-	import Textfield from '$components/Textfield.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
+	import IconButton from '$components/buttons/IconButton.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
+	import Dropdown from '$components/forms/Dropdown.svelte'
+	import Button from '$components/buttons/Button.svelte'
 	import LinkURL from './LinkURL.svelte'
 
 	// Assets
@@ -40,6 +40,10 @@
 		type="subtle"
 		placeholder="Link Name"
 		bind:value={link.name}
+		on:change={async () => {
+			await link.save()
+			update()
+		}}
 		/>
 
 	{#await course.getGraphOptions() then options}

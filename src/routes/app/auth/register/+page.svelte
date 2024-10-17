@@ -1,9 +1,9 @@
 <!-- Script -->
 
 <script lang="ts">
-	import Card from '$components/Card.svelte';
-	import Button from '$components/Button.svelte';
-	import Textfield from '$components/Textfield.svelte';
+	import Card from '$components/layouts/Card.svelte';
+	import Button from '$components/buttons/Button.svelte';
+	import Textfield from '$components/forms/Textfield.svelte';
 </script>
 
 <!-- Markup -->

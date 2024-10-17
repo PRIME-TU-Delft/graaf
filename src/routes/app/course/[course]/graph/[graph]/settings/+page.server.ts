@@ -1,7 +1,8 @@
 
+// External dependencies
 import type { PageServerLoad } from './$types'
 
-// Internal imports
+// Internal dependencies
 import { CourseHelper, GraphHelper } from '$scripts/helpers'
 
 // Load
