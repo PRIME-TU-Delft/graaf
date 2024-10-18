@@ -76,10 +76,10 @@ async function update(data: SerializedGraph): Promise<void> {
 	// Get course data
 	const course = await getCourse(data.id)
 	const course_data: { connect?: any, disconnect?: any } = {}
-	if (data.course !== course.id)
+	if (data.course !== course.id) {
 		course_data.connect = { id: data.course }
-	if (data.course !== course.id)
 		course_data.disconnect = { id: data.course }
+	}
 
 	// Get domain data
 	const domains = await getDomains(data.id)

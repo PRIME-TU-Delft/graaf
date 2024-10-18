@@ -307,7 +307,7 @@ class LinkController {
 	 */
 
 	async getURL(): Promise<string> {
-		if (!this.validate().ok()) return Promise.reject()
+		if (!this.validate().okay()) return Promise.reject()
 		const course = await this.getCourse()
 		return `${BASE_URL}/graph/${course.code}/${this.name}`
 	}

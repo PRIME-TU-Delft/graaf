@@ -23,7 +23,24 @@ import type {
 } from '$scripts/types'
 
 // Exports
-export { GraphController }
+export { GraphController, SortOption }
+
+
+// --------------------> Enums
+
+
+enum SortOption {
+	ascending  = 0b1000000000,
+	descending = 0b0100000000,
+	relations  = 0b0010000000,
+	subjects   = 0b0001000000,
+	domains    = 0b0000100000,
+	index      = 0b0000010000,
+	name       = 0b0000001000,
+	style      = 0b0000000100,
+	parents    = 0b0000000010,
+	children   = 0b0000000001
+}
 
 
 // --------------------> Controller
@@ -287,6 +304,129 @@ class GraphController {
 		this.cache.remove(this)
 	}
 
+	async sort(option: number): Promise<void> {
+		let descending: boolean
+		if (option & SortOption.descending) {
+			descending = true
+		} else if (option & SortOption.ascending) {
+			descending = false
+		} else {
+			throw new Error('GraphError: Invalid sort option')
+		}
+
+		if (option & SortOption.relations) {
+			if (option & SortOption.domains) {
+				if (option & SortOption.index) {
+					// Sort domain relations by index
+				} else if (option & SortOption.parents) {
+					// Sort domain relations by parents
+				} else if (option & SortOption.children) {
+					// Sort domain relations by children
+				} else {
+					throw new Error('GraphError: Invalid sort option')
+				}
+			} else if (option & SortOption.subjects) {
+				if (option & SortOption.index) {
+					// Sort subject relations by index
+				} else if (option & SortOption.parents) {
+					// Sort subject relations by parents
+				} else if (option & SortOption.children) {
+					// Sort subject relations by children
+				} else {
+					throw new Error('GraphError: Invalid sort option')
+				}
+			} else {
+				throw new Error('GraphError: Invalid sort option')
+			}
+		} else {
+			if (option & SortOption.subjects) {
+				const subjects = await this.getSubjects()
+				let comparable: { value: string, subject: SubjectController }[]
+
+				// Sort subjects by index
+				if (option & SortOption.index) {
+					comparable = await Promise.all(
+						subjects.map(async subject => ({
+							value: String(await subject.getIndex()),
+							subject
+						}))
+					)
+				}
+
+				// Sort subjects by name
+				else if (option & SortOption.name) {
+					comparable = subjects.map(subject => ({
+						value: subject.name,
+						subject
+					}))
+				}
+
+				// Sort subjects by domain
+				else if (option & SortOption.domains) {
+					comparable = await Promise.all(
+						subjects.map(async subject => ({
+							value: await subject.getDomain().then(domain => domain?.name || ''),
+							subject
+						}))
+					)
+				}
+
+				else {
+					throw new Error('GraphError: Invalid sort option')
+				}
+
+				// Sort the subjects
+				comparable.sort((a, b) => a.value.localeCompare(b.value))
+				if (descending) comparable.reverse()
+				this._subjects = comparable.map(pair => pair.subject)
+
+			} else if (option & SortOption.domains) {
+				const domains = await this.getDomains()
+				let comparable: { value: string, domain: DomainController }[]
+
+				// Sort domains by index
+				if (option & SortOption.index) {
+					comparable = await Promise.all(
+						domains.map(async domain => ({
+							value: String(await domain.getIndex()),
+							domain
+						}))
+					)
+				} 
+				
+				// Sort domains by name
+				else if (option & SortOption.name) {
+					comparable = domains.map(domain => ({
+						value: domain.name,
+						domain
+					}))
+				} 
+				
+				// Sort domains by style
+				else if (option & SortOption.style) {
+					comparable = await Promise.all(
+						domains.map(async domain => ({
+							value: await domain.getStyle() || '',
+							domain
+						}))
+					)
+				} 
+				
+				else {
+					throw new Error('GraphError: Invalid sort option')
+				}
+
+				// Sort the domains
+				comparable.sort((a, b) => a.value.localeCompare(b.value))
+				if (descending) comparable.reverse()
+				this._domains = comparable.map(pair => pair.domain)
+
+			} else {
+				throw new Error('GraphError: Invalid sort option')
+			}
+		}
+	}
+
 	/**
 	 * Get the course this graph is assigned to
 	 * @returns `Promise<CourseController>` The course this graph is assigned to
@@ -306,9 +446,9 @@ class GraphController {
 		}
 
 		// Call API to get the course data
-		const response = await fetch(`/api/course/${this._course_id}`, { method: 'GET' })
+		const response = await fetch(`/api/graph/${this.id}/course`, { method: 'GET' })
 			.catch(error => { 
-				throw new Error(`APIError (/api/course/${this._course_id} GET): ${error}`)
+				throw new Error(`APIError (/api/graph/${this.id}/course GET): ${error}`)
 			})
 
 		// Revive the course
@@ -440,6 +580,32 @@ class GraphController {
 		this._links = data.map(link => LinkController.revive(this.cache, link))
 
 		return this._links.concat()
+	}
+
+	/**
+	 * Get the index of a domain in the graph
+	 * @param domain Target domain
+	 * @returns `number` The index of the domain in the graph
+	 * @throws `Error` if the domain is not found in the graph
+	 */
+
+	domainIndex(domain: DomainController): number {
+		const index = this._domain_ids.indexOf(domain.id)
+		if (index === -1) throw new Error('GraphError: Domain not found in graph')
+		return index
+	}
+
+	/**
+	 * Get the index of a subject in the graph
+	 * @param subject Target subject
+	 * @returns `number` The index of the subject in the graph
+	 * @throws `Error` if the subject is not found in the graph
+	 */
+
+	subjectIndex(subject: SubjectController): number {
+		const index = this._subject_ids.indexOf(subject.id)
+		if (index === -1) throw new Error('GraphError: Subject not found in graph')
+		return index
 	}
 
 	/**

@@ -2,12 +2,19 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { ControllerCache, DomainController, GraphController } from '$scripts/controllers'
+	import {
+		ControllerCache,
+		GraphController,
+		DomainController,
+		SortOption
+	} from '$scripts/controllers'
 
 	// Components
 	import Searchbar from '$components/forms/Search.svelte'
 	import Button from '$components/buttons/Button.svelte'
 	import LinkButton from '$components/buttons/LinkButton.svelte'
+	import IconButton from '$components/buttons/IconButton.svelte'
+	import DomainRow from './DomainRow.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -21,12 +28,19 @@
 	export let update: () => void
 
 	// Functions
-	function sort(options: SortOption) {
-		if (options & SortOption.domains) {
+	function sort(options: number) {
+		let direction: number
+
+		if (options & SortOption.relations) {
+			relation_index_sort = options & SortOption.index ? !relation_index_sort : undefined
+			relation_parent_sort = options & SortOption.parents ? !relation_parent_sort : undefined
+			relation_child_sort = options & SortOption.children ? !relation_child_sort : undefined
+			direction = relation_index_sort || relation_parent_sort || relation_child_sort ? SortOption.ascending : SortOption.descending
+		} else {
 			domain_index_sort = options & SortOption.index ? !domain_index_sort : undefined
 			domain_name_sort = options & SortOption.name ? !domain_name_sort : undefined
 			domain_style_sort = options & SortOption.style ? !domain_style_sort : undefined
-			const direction = domain_index_sort || domain_name_sort || domain_style_sort ? SortOption.ascending : SortOption.descending
+			direction = domain_index_sort || domain_name_sort || domain_style_sort ? SortOption.ascending : SortOption.descending
 		}
 
 		graph.sort(options | direction)
@@ -38,6 +52,11 @@
 	let domain_name_sort: boolean | undefined = undefined
 	let domain_style_sort: boolean | undefined = undefined
 	let domain_query: string = ''
+
+	let relation_index_sort: boolean | undefined = undefined
+	let relation_parent_sort: boolean | undefined = undefined
+	let relation_child_sort: boolean | undefined = undefined
+	let relation_query: string = ''
 
 </script>
 
@@ -55,20 +74,20 @@
 		<div class="flex-spacer" />
 
 		<Searchbar bind:value={domain_query} />
-		<Button 
+		<Button
 			on:click={async () => {
 				await DomainController.create(cache, graph)
-				update() 
+				update()
 			}}
 		>
 			<img src={plusIcon} alt="New domain"> New Domain
 		</Button>
 	</div>
 
-	<!-- Header -->
-	{#await graph.getDomains() then domains}
-		{#if domains.some(domain => domain.matchesQuery(domain_query))}
+	{#await graph.getDomains().then(domains => domains.filter(async domain => await domain.matchesQuery(domain_query))) then domains}
+		{#if domains.length > 0}
 
+			<!-- Header -->
 			<div class=row>
 
 				<!-- Name label and sort button -->
@@ -86,129 +105,76 @@
 					<span> Style </span>
 					<IconButton
 						description={domain_style_sort ? 'Sort domains descending by style' : 'Sort domains ascending by style'}
-						src={sortIcon(domain_style_sort)}
+						src={domain_style_sort === undefined ? neutralSortIcon : domain_style_sort ? ascendingSortIcon : descendingSortIcon}
 						on:click={() => sort(SortOption.domains | SortOption.style)}
 					/>
 				</div>
 			</div>
 
+			<!-- Domains -->
 			{#each domains as domain}
-				{#if domain.matchesQuery(domain_query)}
-					<div class="row" id={domain.uuid}>
-						<Validation short data={domain.validate()} />
-
-						<span> {domain.index + 1} </span>
-
-						<IconButton scale
-							src={trashIcon}
-							on:click={async () => {
-								await domain.delete()
-								update()
-							}}
-							/>
-
-						<Textfield
-							label="Name"
-							placeholder="Domain Name"
-							bind:value={domain.name}
-							on:change={async () => await domain.save()}
-							/>
-
-						<Dropdown
-							label="Style"
-							placeholder="Domain Style"
-							options={domain.style_options}
-							bind:value={domain.style}
-							on:change={async () => await domain.save()}
-							/>
-
-						<span class="preview" style:background-color={domain.color} />
-					</div>
-				{/if}
+				<DomainRow domain={domain} update={update} />
 			{/each}
-
+			
 		{:else}
 
 			<h6 class="grayed"> No domains found </h6>
 
 		{/if}
 	{/await}
-	{#if $graph.domains.some(domain => domainMatchesQuery(domain_query, domain))}
-
-		<!-- If any domains were found that match the search -->
-		<div class=row>
-
-			<!-- Name label and sort button -->
-			<div class="header" style="grid-area: left;">
-				<span> Name </span>
-				<IconButton
-					src={sortIcon(domain_name_sort)}
-					on:click={() => {
-						domain_style_sort = undefined
-						domain_name_sort = !domain_name_sort
-
-						const options = domain_name_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.domains | SortOption.name)
-						update()
-					}}
-				/>
-			</div>
-
-			<!-- Style label and sort button -->
-			<div class="header" style="grid-area: right;">
-				<span> Style </span>
-				<IconButton
-					src={sortIcon(domain_style_sort)}
-					on:click={() => {
-						domain_name_sort = undefined
-						domain_style_sort = !domain_style_sort
-						
-						const options = domain_style_sort ? SortOption.descending : SortOption.ascending
-						$graph.sort(options | SortOption.domains | SortOption.style)
-						update()
-					}}
-				/>
-			</div>
-		</div>
-
-	{:else}
-
-		<!-- If no domains were found that match the search -->
-		<h6 class="grayed"> No domains found </h6>
-
-	{/if}
-
-	<!-- Domain list -->
-	{#each $graph.domains as domain}
-		{#if domainMatchesQuery(domain_query, domain)}
-			<div class="row" id={domain.uuid}>
-				<Validation short data={domain.validate()} />
-				<span> {domain.index + 1} </span>
-				<IconButton scale
-					src={trashIcon}
-					on:click={async () => {
-						await domain.delete()
-						update()
-					}}
-					/>
-
-				<Textfield
-					label="Name"
-					placeholder="Domain Name"
-					bind:value={domain.name}
-					on:change={async () => await domain.save()}
-					/>
-
-				<Dropdown
-					label="Style"
-					placeholder="Domain Style"
-					options={domain.style_options}
-					bind:value={domain.style}
-					on:change={async () => await domain.save()}
-					/>
-
-				<span class="preview" style:background-color={domain.color} />
-			</div>
-		{/if}
-	{/each}
 </div>
+
+
+<!-- Styles -->
+
+
+<style lang="sass">
+
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
+
+	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
+
+	.editor
+		display: flex
+		flex-flow: column nowrap
+		padding: $card-thick-padding
+		gap: $form-small-gap
+
+		.grayed
+			margin: auto
+			color: $gray
+
+		.toolbar
+			display: flex
+			margin-bottom: $form-big-gap
+			gap: $form-small-gap
+
+		.row
+			display: grid
+			place-items: center center
+			gap: $form-small-gap
+
+			padding-right: calc( $form-small-gap + $icon-width )
+
+			.preview
+				width: $input-icon-size
+				height: $input-icon-size
+
+			.header
+				display: flex
+				flex-flow: row nowrap
+				align-content: center
+				justify-content: right
+				width: 100%
+
+				span
+					flex: 1
+
+	.domains .row
+		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
+
+	.relations .row
+		grid-template: "validation id delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+
+</style>

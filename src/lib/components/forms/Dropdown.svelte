@@ -23,8 +23,8 @@
 	}
 
 	// Exports
-	export let label: string
-	export let value: T | undefined = undefined
+	export let id: string
+	export let value: T | null
 	export let options: DropdownOption[]
 	export let placeholder: string
 
@@ -36,17 +36,16 @@
 		})
 	}
 
-	function set(new_value: T | undefined) {
+	function set(new_value: T | null) {
 		value = new_value
 		dispatch('change', new_value)
 	}
 
 	// Variables
-	const dispatch = createEventDispatcher<{change: T | undefined}>()
+	const dispatch = createEventDispatcher<{change: T | null}>()
 	let visible: boolean = false
 	let wrapper: HTMLDivElement
 
-	$: id = label.toLowerCase().replace(/\s/g, '_')
 	$: choice = options.find(option => option.value === value)
 	$: options = options.sort((a, b) => {
 		if (a.validation.severity === Severity.error) return 1
@@ -67,7 +66,7 @@
 <div class="dropdown">
 	<div class="wrapper" use:losefocus={() => visibility(false)} bind:this={wrapper}>
 		<!-- Hidden input to bind the selected value to a submittable element -->
-		<input id={id} name={id} type="hidden" tabindex="-1" bind:value />
+		<input id={id} type="hidden" tabindex="-1" bind:value />
 		<button
 			type="button"
 			class="header"
@@ -85,7 +84,7 @@
 					<button
 						type="button"
 						class="option"
-						disabled={option.validation.severity === Severity.error}
+						disabled={!option.validation.okay()}
 						on:click={() => set(option.value)}
 						use:focusonhover
 					>
@@ -110,8 +109,8 @@
 					</button>
 				{/if}
 
-				{#if value !== undefined}
-					<button type="button" class="option grayed" on:click={() => set(undefined)} use:focusonhover>
+				{#if value !== null}
+					<button type="button" class="option grayed" on:click={() => set(null)} use:focusonhover>
 						<i> Remove choice </i>
 					</button>
 				{/if}

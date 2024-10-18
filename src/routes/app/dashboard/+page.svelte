@@ -192,7 +192,7 @@
 
 				<footer>
 					<Button
-						disabled={!sandbox_modal.validate().ok()}
+						disabled={!sandbox_modal.validate().okay()}
 						on:click={() => sandbox_modal.submit()}
 					> Create </Button>
 					<Validation data={sandbox_modal.validate()} />
@@ -211,7 +211,7 @@
 
 				<footer>
 					<Button
-						disabled={!program_modal.validate().ok()}
+						disabled={!program_modal.validate().okay()}
 						on:click={() => program_modal.submit()}
 					> Create </Button>
 					<Validation data={program_modal.validate()} />
@@ -233,7 +233,7 @@
 
 				<footer>
 					<Button 
-						disabled={!course_modal.validate().ok()}
+						disabled={!course_modal.validate().okay()}
 						on:click={() => course_modal.submit()}
 					> Create </Button>
 					<Validation data={course_modal.validate()} />

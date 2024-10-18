@@ -136,7 +136,7 @@
 
 				<footer>
 					<Button
-						disabled={!graph_modal.validate().ok()}
+						disabled={!graph_modal.validate().okay()}
 						on:click={() => graph_modal.submit()}
 					> Create </Button>
 					<Validation data={graph_modal.validate()} />
@@ -164,7 +164,7 @@
 
 				<footer>
 					<Button
-						disabled={!link_modal.validate().ok()}
+						disabled={!link_modal.validate().okay()}
 						on:click={() => link_modal.submit()}
 					> Create </Button>
 					<Validation data={link_modal.validate()} />

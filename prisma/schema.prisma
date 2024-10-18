@@ -160,7 +160,7 @@ model Graph {
 
 model Domain {
 	id				Int			@id @default(autoincrement())
-	name			String?
+	name			String		@default("")
 	x				Int			@default(0)
 	y				Int			@default(0)
 	style			String?

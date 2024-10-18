@@ -22,6 +22,7 @@ type Violation = {
 }
 
 class ValidationData {
+	severity: Severity = Severity.success
 	errors: Violation[] = []
 	warnings: Violation[] = []
 	total_violations: number = 0
@@ -40,10 +41,14 @@ class ValidationData {
 				this.warnings.push(item)
 			this.total_violations++
 		}
+
+		if (item.severity > this.severity) {
+			this.severity = item.severity
+		}
 	}
 
-	ok(): boolean {
-		return this.errors.length === 0
+	okay(): boolean {
+		return this.severity !== Severity.error
 	}
 
 	static success() {
