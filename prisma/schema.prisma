@@ -21,7 +21,7 @@ enum UserRole {
 }
 
 enum ProgramRole {
-	COORDINATOR
+	WRITE
 	ADMIN
 }
 
@@ -46,8 +46,8 @@ model User {
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
 
-	programs			ProgramCoordinator[]
-	courses				CourseCoordinator[]
+	programs			ProgramUser[]
+	courses				CourseUser[]
 }
 
 model Account {
@@ -98,14 +98,14 @@ model Program {
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 	courses			Course[]
-	coordinators	ProgramCoordinator[]
+	users			ProgramUser[]
 }
 
 
-model ProgramCoordinator {
+model ProgramUser {
 	userId			String
 	programId		Int
-	role			ProgramRole		@default(COORDINATOR)
+	role			ProgramRole		@default(WRITE)
 
 	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
 	program			Program			@relation(fields: [programId], references: [id], onDelete: Cascade)
@@ -114,7 +114,7 @@ model ProgramCoordinator {
 }
 
 
-model CourseCoordinator {
+model CourseUser {
 	userId			String
 	courseId		Int
 	role			CourseRole		@default(READ)
@@ -140,7 +140,7 @@ model Course {
 	programs		Program[]
 	graphs			Graph[]
 	links			GraphLink[]
-	coordinators	CourseCoordinator[]
+	users			CourseUser[]
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 }
