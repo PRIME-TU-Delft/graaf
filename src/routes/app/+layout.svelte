@@ -4,6 +4,11 @@
 	import Button from '$components/Button.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 
+	// Auth
+	import { SignIn, SignOut } from '@auth/sveltekit/components';
+	import { signIn, signOut } from '@auth/sveltekit/client';
+	import { page } from '$app/stores';
+
 	import PRIME_logo from '$assets/PRIME-logo.svg';
 	import TUDelft_logo from '$assets/TUD-logo.svg';
 
@@ -27,7 +32,7 @@
 		<Button href="app/dashboard"> Dashboard </Button>
 	{:else}
 		<LinkButton href="app/auth/register"> Register </LinkButton>
-		<Button href="app/auth/login"> Login </Button>
+		<Button on:click={() => signIn("surfconext")}> Login </Button>
 	{/if}
 </header>
 
