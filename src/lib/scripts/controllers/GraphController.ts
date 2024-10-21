@@ -382,16 +382,18 @@ class GraphController {
 
 			} else if (option & SortOption.domains) {
 				const domains = await this.getDomains()
-				let comparable: { value: string, domain: DomainController }[]
+				let comparable: { value: any, domain: DomainController }[]
 
 				// Sort domains by index
 				if (option & SortOption.index) {
 					comparable = await Promise.all(
 						domains.map(async domain => ({
-							value: String(await domain.getIndex()),
+							value: await domain.getIndex(),
 							domain
 						}))
 					)
+
+					comparable.sort((a, b) => a.value - b.value)
 				} 
 				
 				// Sort domains by name
@@ -400,6 +402,8 @@ class GraphController {
 						value: domain.name,
 						domain
 					}))
+
+					comparable.sort((a, b) => a.value.localeCompare(b.value))
 				} 
 				
 				// Sort domains by style
@@ -410,16 +414,17 @@ class GraphController {
 							domain
 						}))
 					)
+
+					comparable.sort((a, b) => a.value.localeCompare(b.value))
 				} 
 				
 				else {
 					throw new Error('GraphError: Invalid sort option')
 				}
 
-				// Sort the domains
-				comparable.sort((a, b) => a.value.localeCompare(b.value))
 				if (descending) comparable.reverse()
 				this._domains = comparable.map(pair => pair.domain)
+				console.log(this._domains)
 
 			} else {
 				throw new Error('GraphError: Invalid sort option')

@@ -28,7 +28,7 @@
 	export let update: () => void
 
 	// Functions
-	function sort(options: number) {
+	async function sort(options: number) {
 		let direction: number
 
 		if (options & SortOption.relations) {
@@ -43,7 +43,7 @@
 			direction = domain_index_sort || domain_name_sort || domain_style_sort ? SortOption.ascending : SortOption.descending
 		}
 
-		graph.sort(options | direction)
+		await graph.sort(options | direction)
 		update()
 	}
 
@@ -90,14 +90,23 @@
 			<!-- Header -->
 			<div class=row>
 
+				<div class="header" style="grid-area: index;">
+					<IconButton
+						description={domain_index_sort ? 'Sort domains descending by index' : 'Sort domains ascending by index'}
+						src={domain_index_sort === undefined ? neutralSortIcon : domain_index_sort ? descendingSortIcon : ascendingSortIcon}
+						on:click={() => sort(SortOption.domains | SortOption.index)}
+						/>
+
+				</div>
+
 				<!-- Name label and sort button -->
 				<div class="header" style="grid-area: left;">
 					<span> Name </span>
 					<IconButton
 						description={domain_name_sort ? 'Sort domains descending by name' : 'Sort domains ascending by name'}
-						src={domain_name_sort === undefined ? neutralSortIcon : domain_name_sort ? ascendingSortIcon : descendingSortIcon}
+						src={domain_name_sort === undefined ? neutralSortIcon : domain_name_sort ? descendingSortIcon : ascendingSortIcon}
 						on:click={() => sort(SortOption.domains | SortOption.name)}
-					/>
+						/>
 				</div>
 
 				<!-- Style label and sort button -->
@@ -105,9 +114,9 @@
 					<span> Style </span>
 					<IconButton
 						description={domain_style_sort ? 'Sort domains descending by style' : 'Sort domains ascending by style'}
-						src={domain_style_sort === undefined ? neutralSortIcon : domain_style_sort ? ascendingSortIcon : descendingSortIcon}
+						src={domain_style_sort === undefined ? neutralSortIcon : domain_style_sort ? descendingSortIcon : ascendingSortIcon}
 						on:click={() => sort(SortOption.domains | SortOption.style)}
-					/>
+						/>
 				</div>
 			</div>
 
@@ -172,9 +181,9 @@
 					flex: 1
 
 	.domains .row
-		grid-template: "validation id delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
+		grid-template: "validation index delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
 
 	.relations .row
-		grid-template: "validation id delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+		grid-template: "validation index delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
 
 </style>
