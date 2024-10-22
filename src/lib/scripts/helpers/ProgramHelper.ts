@@ -4,25 +4,40 @@ import prisma from '$lib/server/prisma'
 import type { Program as PrismaProgram } from '@prisma/client'
 
 // Internal dependencies
-import { CourseHelper } from '$scripts/helpers'
+import { array_delta } from './delta'
+
+import {
+	CourseHelper,
+	UserHelper
+} from '$scripts/helpers'
+
 import type {
 	SerializedProgram,
 	SerializedCourse,
 	SerializedUser
 } from '$scripts/types'
-import { course } from '$stores'
 
 // Exports
-export { create, remove, update, reduce, getAll, getById, getCourses, getAdmins, getEditors }
+export {
+	create,		// api/program
+	remove,		// api/program/[id]
+	update,		// api/program
+	reduce,
+	getAll,		// api/program
+	getById,	// api/program/[id]
+	getCourses,	// api/program/[id]/courses
+	getAdmins,	// api/program/[id]/admins
+	getEditors	// api/program/[id]/editors
+}
 
 
 // --------------------> Helper Functions
 
 
 /**
- * Creates a new Program in the database.
- * @param name `string`
- * @returns `SerializedProgram`
+ * Creates a new Program in the database
+ * @param name Program name
+ * @returns Newly created Serialized Program
  */
 
 async function create(name: string): Promise<SerializedProgram> {
@@ -40,8 +55,8 @@ async function create(name: string): Promise<SerializedProgram> {
 }
 
 /**
- * Removes Programs from the database.
- * @param program_id `number`
+ * Removes Program from the database
+ * @param program_id Target Program ID
  */
 
 async function remove(program_id: number): Promise<void> {
@@ -57,24 +72,17 @@ async function remove(program_id: number): Promise<void> {
 }
 
 /**
- * Updates a Program in the database.
- * @param data `SerializedProgram`
+ * Updates a Program in the database
+ * @param data Serialized Program data
  */
 
 async function update(data: SerializedProgram): Promise<void> {
 
-	// Get course data
+	// Get current data
 	const courses = await getCourses(data.id)
-	const old_courses = courses
-		.filter(course => !data.courses.includes(course.id))
-		.map(course => ({ id: course.id }))
-	const new_courses = data.courses
-		.filter(id => !courses.some(course => course.id === id))
-		.map(id => ({ id }))
 
-	const course_data: { connect?: any, disconnect?: any } = {}
-	if (new_courses.length) course_data.connect = new_courses
-	if (old_courses.length) course_data.disconnect = old_courses
+	// Get data delta
+	const course_delta = array_delta(data.courses, courses)
 
 	// Update
 	try {
@@ -84,7 +92,7 @@ async function update(data: SerializedProgram): Promise<void> {
 			},
 			data: {
 				name: data.name,
-				courses: course_data
+				courses: course_delta
 			}
 		})
 	} catch (error) {
@@ -93,9 +101,9 @@ async function update(data: SerializedProgram): Promise<void> {
 }
 
 /**
- * Reduces a Program to a SerializedProgram.
- * @param program `PrismaProgram`
- * @returns `SerializedProgram`
+ * Reduces a Program to a SerializedProgram
+ * @param program Program object
+ * @returns Serialized Program
  */
 
 async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
@@ -126,9 +134,11 @@ async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
 
 	// Parse data
 	const courses = data.courses.map(course => course.id)
+
 	const admins = data.coordinators
 		.filter(coordinator => coordinator.role === 'ADMIN')
 		.map(coordinator => Number(coordinator.userId))
+
 	const editors = data.coordinators
 		.filter(coordinator => coordinator.role === 'EDITOR')
 		.map(coordinator => Number(coordinator.userId))
@@ -142,8 +152,8 @@ async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
 }
 
 /**
- * Retrieves all Programs from the database.
- * @returns `SerializedPrograms[]`
+ * Retrieves all Programs from the database
+ * @returns Array of Serialized Programs
  */
 
 async function getAll(): Promise<SerializedProgram[]> {
@@ -157,9 +167,9 @@ async function getAll(): Promise<SerializedProgram[]> {
 }
 
 /**
- * Retrieves Programs by ID
- * @param program_id `number`
- * @returns `SerializedProgram`
+ * Retrieves program by ID
+ * @param program_id Target Program ID
+ * @returns Serialized Program
  */
 
 async function getById(program_id: number): Promise<SerializedProgram> {
@@ -177,9 +187,9 @@ async function getById(program_id: number): Promise<SerializedProgram> {
 }
 
 /**
- * Retrieves Program courses.
- * @param program_id `number`
- * @returns `SerializedCourse[]`
+ * Retrieves Program courses
+ * @param program_id Target Program ID
+ * @returns Array of Serialized Courses
  */
 
 async function getCourses(program_id: number): Promise<SerializedCourse[]> {
@@ -201,9 +211,9 @@ async function getCourses(program_id: number): Promise<SerializedCourse[]> {
 }
 
 /**
- * Retrieves Program admin Users.
- * @param program_id `number`
- * @returns `SerializedUser[]`
+ * Retrieves Program admin Users
+ * @param program_id Target Program ID
+ * @returns Array of Serialized Users
  */
 
 async function getAdmins(program_id: number): Promise<SerializedUser[]> {
@@ -226,9 +236,9 @@ async function getAdmins(program_id: number): Promise<SerializedUser[]> {
 }
 
 /**
- * Retrieves Program editor Users.
- * @param program_id `number`
- * @returns `SerializedUser[]`
+ * Retrieves Program editor Users
+ * @param program_id Target Program ID
+ * @returns Array of Serialized Users
  */
 
 async function getEditors(program_id: number): Promise<SerializedUser[]> {

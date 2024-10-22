@@ -4,6 +4,8 @@ import prisma from '$lib/server/prisma'
 import type { GraphLink as PrismaLink } from '@prisma/client'
 
 // Internal dependencies
+import { required_field_delta, optional_field_delta } from './delta'
+
 import {
 	CourseHelper,
 	GraphHelper
@@ -32,11 +34,11 @@ export {
 
 
 /**
- * Creates a Link in the database.
- * @param course_id `number` Course ID link belongs to
- * @param graph_id `number` Graph ID belonging to link
- * @param name `string` Link name
- * @returns `SerializedLink` Serialized new Link
+ * Creates a Link in the database
+ * @param course_id Course ID link belongs to
+ * @param graph_id Graph ID belonging to link
+ * @param name Link name
+ * @returns Serialized new Link
  */
 
 async function create(course_id: number, graph_id: number | null, name: string): Promise<SerializedLink> {
@@ -66,27 +68,21 @@ async function create(course_id: number, graph_id: number | null, name: string):
 }
 
 /**
- * Updates a Link in the database.
- * @param data `SerializedLink` New Link data
+ * Updates a Link in the database
+ * @param data New Link data
  */
 
 async function update(data: SerializedLink): Promise<void> {
 
-	// Get course data
-	const course = await getCourse(data.id)
-	const course_data: { connect?: any, disconnect?: any } = {}
-	if (data.course !== null && data.course !== course.id)
-		course_data.connect = { id: data.course }
-	if (course !== null && data.course !== course.id)
-		course_data.disconnect = { id: course.id }
+	// Get current data
+	const [course, graph] = await Promise.all([
+		getCourse(data.id),
+		getGraph(data.id)
+	])
 
-	// Get graph data
-	const graph = await getGraph(data.id)
-	const graph_data: { connect?: any, disconnect?: any } = {}
-	if (data.graph !== null && data.graph !== graph?.id)
-		graph_data.connect = { id: data.graph }
-	if (graph !== null && data.graph !== graph.id)
-		graph_data.disconnect = { id: graph.id }
+	// Get data deltas
+	const course_delta = required_field_delta(data.course, course)
+	const graph_delta = optional_field_delta(data.graph, graph)
 
 	// Update
 	try {
@@ -96,8 +92,8 @@ async function update(data: SerializedLink): Promise<void> {
 			},
 			data: {
 				name: data.name,
-				course: course_data,
-				graph: graph_data
+				course: course_delta,
+				graph: graph_delta
 			}
 		})
 	} catch (error) {
@@ -106,8 +102,8 @@ async function update(data: SerializedLink): Promise<void> {
 }
 
 /**
- * Removes a Link from the database.
- * @param link_id `number` Target Link ID
+ * Removes a Link from the database
+ * @param link_id Target Link ID
  */
 
 async function remove(link_id: number): Promise<void> {
@@ -123,9 +119,9 @@ async function remove(link_id: number): Promise<void> {
 }
 
 /**
- * Reduces a Link to a SerializedLink.
- * @param link `PrismaLink` Link object
- * @returns `SerializedLink` Serialized Link
+ * Reduces a Link to a SerializedLink
+ * @param link Link object
+ * @returns Serialized Link
  */
 
 async function reduce(link: PrismaLink): Promise<SerializedLink> {
@@ -138,8 +134,8 @@ async function reduce(link: PrismaLink): Promise<SerializedLink> {
 }
 
 /**
- * Gets all Links from the database.
- * @returns `SerializedLink[]` Array of Serialized Links
+ * Gets all Links from the database
+ * @returns Array of Serialized Links
  */
 
 async function getAll(): Promise<SerializedLink[]> {
@@ -153,9 +149,9 @@ async function getAll(): Promise<SerializedLink[]> {
 }
 
 /**
- * Gets a Link by ID from the database.
- * @param link_id `number` Target Link ID
- * @returns `SerializedLink` Serialized Link
+ * Gets a Link by ID from the database
+ * @param link_id Target Link ID
+ * @returns Serialized Link
  */
 
 async function getById(link_id: number): Promise<SerializedLink> {
@@ -174,8 +170,8 @@ async function getById(link_id: number): Promise<SerializedLink> {
 
 /**
  * Gets the Course assigned to a Link.
- * @param link_id `number` Target Link ID
- * @returns `SerializedCourse` Serialized Course
+ * @param link_id Target Link ID
+ * @returns Serialized Course
  */
 
 async function getCourse(link_id: number): Promise<SerializedCourse> {
@@ -197,9 +193,9 @@ async function getCourse(link_id: number): Promise<SerializedCourse> {
 }
 
 /**
- * Gets the Graph assigned to a Link.
- * @param link_id `number` Target Link ID
- * @returns `SerializedGraph` Serialized Graph
+ * Gets the Graph assigned to a Link
+ * @param link_id Target Link ID
+ * @returns Serialized Graph
  */
 
 async function getGraph(link_id: number): Promise<SerializedGraph | null> {

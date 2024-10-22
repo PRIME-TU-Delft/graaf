@@ -1,9 +1,11 @@
 
-// External imports
+// External dependencies
 import prisma from '$lib/server/prisma'
 import type { Domain as PrismaDomain } from '@prisma/client'
 
-// Internal imports
+// Internal dependencies
+import { array_delta, required_field_delta } from './delta'
+
 import {
 	GraphHelper,
 	SubjectHelper
@@ -17,16 +19,16 @@ import type {
 
 // Exports
 export {
-	create,
-	remove,
-	update,
+	create,		 // api/domain				 POST
+	remove,		 // api/domain/[id]			 DELETE
+	update,		 // api/domain				 PUT
 	reduce,
-	getAll,
-	getById,
-	getGraph,
-	getParents,
-	getChildren,
-	getSubjects
+	getAll,		 // api/domain				 GET
+	getById,	 // api/domain/[id]			 GET
+	getGraph,	 // api/domain/[id]/graph	 GET
+	getParents,	 // api/domain/[id]/parents	 GET
+	getChildren, // api/domain/[id]/children GET
+	getSubjects	 // api/domain/[id]/subjects GET
 }
 
 
@@ -64,39 +66,17 @@ async function create(graph_id: number): Promise<SerializedDomain> {
 
 async function update(data: SerializedDomain): Promise<void> {
 
-	// Get graph data
-	const graph = await getGraph(data.id)
-	const graph_data: { connect?: any, disconnect?: any } = {}
-	if (data.graph !== graph.id) {
-		graph_data.connect = { id: data.graph }
-		graph_data.disconnect = { id: graph.id }
-	}
+	// Get current data
+	const [graph, parents, children] = await Promise.all([
+		getGraph(data.id),
+		getParents(data.id),
+		getChildren(data.id)
+	])
 
-	// Get parent data
-	const parents = await getParents(data.id)
-	const old_parents = parents
-		.filter(parent => !data.parents.includes(parent.id))
-		.map(parent => ({ id: parent.id }))
-	const new_parents = data.parents
-		.filter(id => !parents.some(parent => parent.id === id))
-		.map(id => ({ id }))
-
-	const parent_data: { connect?: any, disconnect?: any } = {}
-	if (new_parents.length) parent_data.connect = new_parents
-	if (old_parents.length) parent_data.disconnect = old_parents
-
-	// Get child data
-	const children = await getChildren(data.id)
-	const old_children = children
-		.filter(child => !data.children.includes(child.id))
-		.map(child => ({ id: child.id }))
-	const new_children = data.children
-		.filter(id => !children.some(child => child.id === id))
-		.map(id => ({ id }))
-
-	const child_data: { connect?: any, disconnect?: any } = {}
-	if (new_children.length) child_data.connect = new_children
-	if (old_children.length) child_data.disconnect = old_children
+	// Get data delta
+	const graph_delta = required_field_delta(data.graph, graph)
+	const parent_delta = array_delta(data.parents, parents)
+	const child_delta = array_delta(data.children, children)
 
 	// Update domain
 	try {
@@ -109,9 +89,9 @@ async function update(data: SerializedDomain): Promise<void> {
 				y: data.y,
 				name: data.name,
 				style: data.style,
-				graph: graph_data,
-				parentDomains: parent_data,
-				childDomains: child_data
+				graph: graph_delta,
+				parentDomains: parent_delta,
+				childDomains: child_delta
 			}
 		})
 	} catch (error) {
@@ -172,7 +152,7 @@ async function reduce(domain: PrismaDomain): Promise<SerializedDomain> {
 				id: true
 			}
 		})
-			
+
 	} catch (error) {
 		return Promise.reject(error)
 	}

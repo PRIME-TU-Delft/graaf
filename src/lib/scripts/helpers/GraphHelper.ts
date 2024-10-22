@@ -1,9 +1,11 @@
 
-// External imports
+// External dependencies
 import prisma from '$lib/server/prisma'
 import type { Graph as PrismaGraph } from '@prisma/client'
 
-// Internal imports
+// Internal dependencies
+import { array_delta, required_field_delta } from './delta'
+
 import {
 	CourseHelper,
 	DomainHelper,
@@ -41,10 +43,10 @@ export {
 
 
 /**
- * Creates a Graph in the database.
- * @param course_id `number` Course ID graph belongs to
- * @param name `string` Graph name
- * @returns `SerializedGraph` Serialized new Graph
+ * Creates a Graph in the database
+ * @param course_id Course ID graph belongs to
+ * @param name Graph name
+ * @returns Serialized new Graph
  */
 
 async function create(course_id: number, name: string): Promise<SerializedGraph> {
@@ -67,71 +69,27 @@ async function create(course_id: number, name: string): Promise<SerializedGraph>
 }
 
 /**
- * Updates a Graph in the database.
- * @param data 'SerializedGraph' New Graph data
+ * Updates a Graph in the database
+ * @param data New Graph data
  */
 
 async function update(data: SerializedGraph): Promise<void> {
 
-	// Get course data
-	const course = await getCourse(data.id)
-	const course_data: { connect?: any, disconnect?: any } = {}
-	if (data.course !== course.id) {
-		course_data.connect = { id: data.course }
-		course_data.disconnect = { id: data.course }
-	}
+	// Get current data
+	const [course, domains, subjects, lectures, links] = await Promise.all([
+		getCourse(data.id),
+		getDomains(data.id),
+		getSubjects(data.id),
+		getLectures(data.id),
+		getLinks(data.id)
+	])
 
-	// Get domain data
-	const domains = await getDomains(data.id)
-	const old_domains = domains
-		.filter(domain => !data.domains.includes(domain.id))
-		.map(domain => ({ id: domain.id }))
-	const new_domains = data.domains
-		.filter(id => !domains.some(domain => domain.id === id))
-		.map(id => ({ id }))
-
-	const domain_data: { connect?: any, disconnect?: any } = {}
-	if (new_domains.length) domain_data.connect = new_domains
-	if (old_domains.length) domain_data.disconnect = old_domains
-
-	// Get subject data
-	const subjects = await getSubjects(data.id)
-	const old_subjects = subjects
-		.filter(subject => !data.subjects.includes(subject.id))
-		.map(subject => ({ id: subject.id }))
-	const new_subjects = data.subjects
-		.filter(id => !subjects.some(subject => subject.id === id))
-		.map(id => ({ id }))
-
-	const subject_data: { connect?: any, disconnect?: any } = {}
-	if (new_subjects.length) subject_data.connect = new_subjects
-	if (old_subjects.length) subject_data.disconnect = old_subjects
-
-	// Get lecture data
-	const lectures = await getLectures(data.id)
-	const old_lectures = lectures
-		.filter(lecture => !data.lectures.includes(lecture.id))
-		.map(lecture => ({ id: lecture.id }))
-	const new_lectures = data.lectures
-		.filter(id => !lectures.some(lecture => lecture.id === id))
-		.map(id => ({ id }))
-
-	const lecture_data: { connect?: any, disconnect?: any } = {}
-	if (new_lectures.length) lecture_data.connect = new_lectures
-	if (old_lectures.length) lecture_data.disconnect = old_lectures
-
-	// Get link data
-	const links = await getLinks(data.id)
-	const old_links = links
-		.filter(link => !data.links.includes(link.id))
-		.map(link => ({ id: link.id }))
-	const new_links = data.links
-		.filter(id => !links.some(link => link.id === id))
-		.map(id => ({ id }))
-
-	const link_data: { connect?: any, disconnect?: any } = {}
-	if (new_links.length) link_data.connect = new_links
-	if (old_links.length) link_data.disconnect = old_links
+	// Get data delta
+	const course_delta = required_field_delta(data.course, course)
+	const domain_delta = array_delta(data.domains, domains)
+	const subject_delta = array_delta(data.subjects, subjects)
+	const lecture_delta = array_delta(data.lectures, lectures)
+	const link_delta = array_delta(data.links, links)
 
 	// Update
 	try {
@@ -141,11 +99,11 @@ async function update(data: SerializedGraph): Promise<void> {
 			},
 			data: {
 				name: data.name,
-				course: course_data,
-				domains: domain_data,
-				subjects: subject_data,
-				lectures: lecture_data,
-				links: link_data
+				course: course_delta,
+				domains: domain_delta,
+				subjects: subject_delta,
+				lectures: lecture_delta,
+				links: link_delta
 			}
 		})
 	} catch (error) {
@@ -154,8 +112,8 @@ async function update(data: SerializedGraph): Promise<void> {
 }
 
 /**
- * Removes a Graph from the database.
- * @param graph_id `number` Target Graph ID
+ * Removes a Graph from the database
+ * @param graph_id Target Graph ID
  */
 
 async function remove(graph_id: number): Promise<void> {
@@ -172,9 +130,9 @@ async function remove(graph_id: number): Promise<void> {
 }
 
 /**
- * Reduces a Graph to a SerializedGraph.
- * @param graph `PrismaGraph` Graph object
- * @returns `SerializedGraph` Serialized Graph
+ * Reduces a Graph to a SerializedGraph
+ * @param graph Graph object
+ * @returns Serialized Graph
  */
 
 async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
@@ -232,8 +190,8 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
 }
 
 /**
- * Retrieves all Graphs from the database.
- * @returns `SerializedGraph[]` Array of Serialized Graphs
+ * Retrieves all Graphs from the database
+ * @returns Array of Serialized Graphs
  */
 
 async function getAll(): Promise<SerializedGraph[]> {
@@ -248,8 +206,8 @@ async function getAll(): Promise<SerializedGraph[]> {
 
 /**
  * Retrieves Graphs by ID
- * @param group_id `number` Target Graph ID
- * @returns `SerializedGraph` Serialized Graph
+ * @param group_id Target Graph ID
+ * @returns Serialized Graph
  */
 
 async function getById(graph_id: number): Promise<SerializedGraph> {
@@ -267,9 +225,9 @@ async function getById(graph_id: number): Promise<SerializedGraph> {
 }
 
 /**
- * Retrieves Course assigned to target Graph.
- * @param graph_id `number` Target Graph ID
- * @returns `SerializedCourse` Serialized Course
+ * Retrieves Course assigned to target Graph
+ * @param graph_id Target Graph ID
+ * @returns Serialized Course
  */
 
 async function getCourse(graph_id: number): Promise<SerializedCourse> {
@@ -291,9 +249,9 @@ async function getCourse(graph_id: number): Promise<SerializedCourse> {
 }
 
 /**
- * Retrieves Domains assigned to target Graph.
- * @param graph_id `number` Target Graph ID
- * @returns `SerializedGraph[]` Serialized Graphs
+ * Retrieves Domains assigned to target Graph
+ * @param graph_id Target Graph ID
+ * @returns Serialized Graphs
  */
 
 async function getDomains(graph_id: number): Promise<SerializedDomain[]> {
@@ -312,8 +270,8 @@ async function getDomains(graph_id: number): Promise<SerializedDomain[]> {
 
 /**
  * Retrieves Subjects assigned to target Graph.
- * @param graph_id `number` Target Graph ID
- * @returns `SerializedSubject[]` Serialized Subjects
+ * @param graph_id Target Graph ID
+ * @returns Serialized Subjects
  */
 
 async function getSubjects(graph_id: number): Promise<SerializedSubject[]> {
@@ -331,9 +289,9 @@ async function getSubjects(graph_id: number): Promise<SerializedSubject[]> {
 }
 
 /**
- * Retrieves Lectures assigned to target Graph.
- * @param graph_id `number` Target Graph ID
- * @returns `SerializedLecture[]` Serialized Lectures
+ * Retrieves Lectures assigned to target Graph
+ * @param graph_id Target Graph ID
+ * @returns Serialized Lectures
  */
 
 async function getLectures(graph_id: number): Promise<SerializedLecture[]> {
@@ -351,9 +309,9 @@ async function getLectures(graph_id: number): Promise<SerializedLecture[]> {
 }
 
 /**
- * Retrieves Links assigned to target Graph.
- * @param graph_id `number` Target Graph ID
- * @returns `SerializedLink[]` Serialized Links
+ * Retrieves Links assigned to target Graph
+ * @param graph_id Target Graph ID
+ * @returns Serialized Links
  */
 
 async function getLinks(graph_id: number): Promise<SerializedLink[]> {

@@ -1,42 +1,44 @@
 
-// External imports
+// External dependencies
 import prisma from '$lib/server/prisma'
 import type { Subject as PrismaSubject } from '@prisma/client'
 
-// Internal imports
-import type { SerializedSubject } from '$scripts/types'
+// Internal dependencies
+import { array_delta, required_field_delta, optional_field_delta } from './delta'
+
+import {
+	GraphHelper,
+	DomainHelper,
+	LectureHelper
+} from '$scripts/helpers'
+
+import type {
+	SerializedGraph,
+	SerializedDomain,
+	SerializedSubject,
+	SerializedLecture
+} from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getByGraphId }
+export {
+	create,		 // api/subject				  POST
+	remove,		 // api/subject/[id]		  DELETE
+	update,		 // api/subject				  PUT
+	reduce,
+	getAll,		 // api/subject				  GET
+	getById,	 // api/subject/[id]		  GET
+	getGraph,	 // api/subject/[id]/graph	  GET
+	getDomain,	 // api/subject/[id]/domain	  GET
+	getParents,	 // api/subject/[id]/parents  GET
+	getChildren, // api/subject/[id]/children GET
+	getLectures, // api/subject/[id]/lectures GET
+}
 
 
 // --------------------> Helper Functions
 
-
 /**
- * Retrieves all Subject objects associated with a Graph.
- * @param graph_id ID of the Graph
- * @returns Array of Serialized Subject objects
- */
-
-async function getByGraphId(graph_id: number): Promise<SerializedSubject[]> {
-	try {
-		var subjects = await prisma.subject.findMany({
-			where: {
-				graph: {
-					id: graph_id
-				}
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-
-	return await Promise.all(subjects.map(reduce))
-}
-
-/**
- * Creates a Subject object in the database.
+ * Creates a Subject object in the database
  * @param graph_id ID of the Graph to which the Subject belongs
  * @returns SerializedSubject object
  */
@@ -60,7 +62,7 @@ async function create(graph_id: number): Promise<SerializedSubject> {
 }
 
 /**
- * Removes a Subject from the database.
+ * Removes a Subject from the database
  * @param subject_id ID of the Subject to remove
  */
 
@@ -77,21 +79,27 @@ async function remove(subject_id: number): Promise<void> {
 }
 
 /**
- * Updates a Subject in the database.
+ * Updates a Subject in the database
  * @param data SerializedSubject object
  */
 
 async function update(data: SerializedSubject): Promise<void> {
 
-	// Get current relations
-	const { children, parents } = await getRelations(data.id)
-		.catch(error => Promise.reject(error))
+	// Get current data
+	const [graph, domain, parents, children, lectures] = await Promise.all([
+		getGraph(data.id),
+		getDomain(data.id),
+		getParents(data.id),
+		getChildren(data.id),
+		getLectures(data.id)
+	])
 
-	// Find changes in relations
-	const new_parents = data.parents.filter((parent) => !parents.some((subject) => subject.id === parent))
-	const old_parents = parents.filter((parent) => !data.parents.includes(parent.id))
-	const new_children = data.children.filter((child) => !children.some((subject) => subject.id === child))
-	const old_children = children.filter((child) => !data.children.includes(child.id))
+	// Get data deltas
+	const graph_delta = required_field_delta(data.graph, graph)
+	const domain_delta = optional_field_delta(data.domain, domain)
+	const parent_delta = array_delta(data.parents, parents)
+	const child_delta = array_delta(data.children, children)
+	const lecture_delta = array_delta(data.lectures, lectures)
 
 	// Update subject
 	try {
@@ -103,17 +111,11 @@ async function update(data: SerializedSubject): Promise<void> {
 				x: data.x,
 				y: data.y,
 				name: data.name,
-				domainId: data.domain,
-
-				parentSubjects: {
-					connect: new_parents.map((parent) => ({ id: parent })),
-					disconnect: old_parents.map((parent) => ({ id: parent.id }))
-				},
-
-				childSubjects: {
-					connect: new_children.map((child) => ({ id: child })),
-					disconnect: old_children.map((child) => ({ id: child.id }))
-				},
+				graph: graph_delta,
+				domain: domain_delta,
+				parentSubjects: parent_delta,
+				childSubjects: child_delta,
+				lectures: lecture_delta
 			}
 		})
 	} catch (error) {
@@ -122,40 +124,123 @@ async function update(data: SerializedSubject): Promise<void> {
 }
 
 /**
- * Reduces a PrismaSubject to a SerializedSubject.
+ * Reduces a PrismaSubject to a SerializedSubject
  * @param subject PrismaSubject object
  * @returns SerializedSubject object
  */
 
 async function reduce(subject: PrismaSubject): Promise<SerializedSubject> {
-	const { children, parents } = await getRelations(subject.id)
-		.catch(error => Promise.reject(error))
+	const [children, parents] = await Promise.all([
+		getChildren(subject.id),
+		getParents(subject.id)
+	])
 
 	return {
 		id: subject.id,
 		x: subject.x,
 		y: subject.y,
-		name: subject.name || undefined,
-		domain: subject.domainId || undefined,
+		name: subject.name,
+		domain: subject.domainId,
 		children: children.map(subject => subject.id),
 		parents: parents.map(subject => subject.id)
 	}
 }
 
 /**
- * Retrieves the children and parents of a Subject.
- * @param subject_id ID of the Subject
- * @returns Object containing the children and parents
+ * Retrieves all Subjects from the database
+ * @returns Array of SerializedSubject objects
  */
 
-async function getRelations(subject_id: number): Promise<{ children: PrismaSubject[], parents: PrismaSubject[]}> {
+async function getAll(): Promise<SerializedSubject[]> {
+	try {
+		var subjects = await prisma.subject.findMany()
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await Promise.all(subjects.map(reduce))
+}
+
+/**
+ * Retrieves a Subject by ID from the database
+ * @param subject_id ID of the Subject to retrieve
+ * @returns SerializedSubject object
+ */
+
+async function getById(subject_id: number): Promise<SerializedSubject> {
 	try {
 		var subject = await prisma.subject.findUniqueOrThrow({
 			where: {
 				id: subject_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await reduce(subject)
+}
+
+/**
+ * Retrieves the Graph to which a Subject belongs
+ * @param subject_id ID of the Subject
+ * @returns SerializedGraph object
+ */
+
+async function getGraph(subject_id: number): Promise<SerializedGraph> {
+	try {
+		var graph = await prisma.subject.findUniqueOrThrow({
+			where: {
+				id: subject_id
 			},
-			include: {
-				childSubjects: true,
+			select: {
+				graph: true
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await GraphHelper.reduce(graph.graph)
+}
+
+/**
+ * Retrieves the Domain to which a Subject belongs
+ * @param subject_id ID of the Subject
+ * @returns SerializedDomain object
+ */
+
+async function getDomain(subject_id: number): Promise<SerializedDomain | null> {
+	try {
+		var domain = await prisma.subject.findUniqueOrThrow({
+			where: {
+				id: subject_id
+			},
+			select: {
+				domain: true
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	if (!domain.domain) return null
+	return await DomainHelper.reduce(domain.domain)
+}
+
+/**
+ * Retrieves all parent Subjects of a Subject
+ * @param subject_id ID of the Subject
+ * @returns Array of SerializedSubject objects
+ */
+
+async function getParents(subject_id: number): Promise<SerializedSubject[]> {
+	try {
+		var parents = await prisma.subject.findUniqueOrThrow({
+			where: {
+				id: subject_id
+			},
+			select: {
 				parentSubjects: true
 			}
 		})
@@ -163,8 +248,52 @@ async function getRelations(subject_id: number): Promise<{ children: PrismaSubje
 		return Promise.reject(error)
 	}
 
-	return {
-		children: subject.childSubjects,
-		parents: subject.parentSubjects
+	return await Promise.all(parents.parentSubjects.map(reduce))
+}
+
+/**
+ * Retrieves all child Subjects of a Subject
+ * @param subject_id ID of the Subject
+ * @returns Array of SerializedSubject objects
+ */
+
+async function getChildren(subject_id: number): Promise<SerializedSubject[]> {
+	try {
+		var children = await prisma.subject.findUniqueOrThrow({
+			where: {
+				id: subject_id
+			},
+			select: {
+				childSubjects: true
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
 	}
+
+	return await Promise.all(children.childSubjects.map(reduce))
+}
+
+/**
+ * Retrieves all Lectures associated with a Subject
+ * @param subject_id ID of the Subject
+ * @returns Array of SerializedLecture objects
+ */
+
+async function getLectures(subject_id: number): Promise<SerializedLecture[]> {
+	try {
+		var lectures = await prisma.lecture.findMany({
+			where: {
+				subjects: {
+					some: {
+						id: subject_id
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await Promise.all(lectures.map(LectureHelper.reduce))
 }

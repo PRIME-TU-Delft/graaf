@@ -1,45 +1,40 @@
 
-// External imports
+// External dependencies
 import prisma from '$lib/server/prisma'
-import type {
-	Lecture as PrismaLecture,
-	Subject as PrismaSubject
-} from '@prisma/client'
+import type { Lecture as PrismaLecture } from '@prisma/client'
 
-// Internal imports
-import type { SerializedLecture } from '$scripts/types'
+// Internal dependencies
+import { array_delta, required_field_delta } from './delta'
+
+import {
+	GraphHelper,
+	SubjectHelper
+} from '$scripts/helpers'
+
+import type {
+	SerializedLecture,
+	SerializedGraph,
+	SerializedSubject
+} from '$scripts/types'
 
 // Exports
-export { create, remove, update, reduce, getByGraphId }
+export {
+	create,		 // api/lecture				  POST
+	remove,		 // api/lecture/[id]		  DELETE
+	update,		 // api/lecture				  PUT
+	reduce,
+	getAll,		 // api/lecture				  GET
+	getById,	 // api/lecture/[id]		  GET
+	getGraph,	 // api/lecture/[id]/graph	  GET
+	getSubjects	 // api/lecture/[id]/subjects GET
+}
 
 
 // --------------------> Helper Functions
 
 
 /**
- * Retrieves all Lecture objects associated with a Graph.
- * @param graph_id ID of the Graph
- * @returns Array of Serialized Lecture objects
- */
-
-async function getByGraphId(graph_id: number): Promise<SerializedLecture[]> {
-	try {
-		var lectures = await prisma.lecture.findMany({
-			where: {
-				graph: {
-					id: graph_id
-				}
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-
-	return await Promise.all(lectures.map(reduce))
-}
-
-/**
- * Creates a Lecture object in the database.
+ * Creates a Lecture object in the database
  * @param graph_id ID of the Graph to which the Lecture belongs
  * @returns SerializedLecture object
  */
@@ -86,13 +81,15 @@ async function remove(lecture_id: number): Promise<void> {
 
 async function update(data: SerializedLecture): Promise<void> {
 
-	// Get current subjects
-	const subjects = await getSubjects(data.id)
-		.catch(error => Promise.reject(error))
+	// Get current data
+	const [graph, subjects] = await Promise.all([
+		getGraph(data.id),
+		getSubjects(data.id)
+	])
 
-	// Find changes in subjects
-	const new_subjects = data.subjects.filter(id => !subjects.some(subject => subject.id === id))
-	const old_subjects = subjects.filter(subject => !data.subjects.includes(subject.id))
+	// Get data delta
+	const graph_delta = required_field_delta(data.graph, graph)
+	const subject_delta = array_delta(data.subjects, subjects)
 
 	// Update lecture
 	try {
@@ -102,10 +99,8 @@ async function update(data: SerializedLecture): Promise<void> {
 			},
 			data: {
 				name: data.name,
-				subjects: {
-					connect: new_subjects.map(subject => ({ id: subject })),
-					disconnect: old_subjects.map(subject => ({ id: subject.id }))
-				}
+				graph: graph_delta,
+				subjects: subject_delta
 			}
 		})
 	} catch (error) {
@@ -114,7 +109,7 @@ async function update(data: SerializedLecture): Promise<void> {
 }
 
 /**
- * Reduces a PrismaLecture to a SerializedLecture.
+ * Reduces a PrismaLecture to a SerializedLecture
  * @param lecture PrismaLecture object
  * @returns SerializedLecture object
  */
@@ -125,18 +120,76 @@ async function reduce(lecture: PrismaLecture): Promise<SerializedLecture> {
 
 	return {
 		id: lecture.id,
-		name: lecture.name || undefined,
+		name: lecture.name,
 		subjects: subjects.map(subject => subject.id)
 	}
 }
 
 /**
- * Gets the subjects of a Lecture.
- * @param lecture_id ID of the Lecture
- * @returns Array of PrismaSubjects
+ * Gets all Lectures in the database
+ * @returns Array of SerializedLecture objects
  */
 
-async function getSubjects(lecture_id: number): Promise<PrismaSubject[]> {
+async function getAll(): Promise<SerializedLecture[]> {
+	try {
+		var lectures = await prisma.lecture.findMany()
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return Promise.all(lectures.map(reduce))
+}
+
+/**
+ * Gets a Lecture by ID
+ * @param lecture_id ID of the Lecture
+ * @returns SerializedLecture object
+ */
+
+async function getById(lecture_id: number): Promise<SerializedLecture> {
+	try {
+		var lecture = await prisma.lecture.findUniqueOrThrow({
+			where: {
+				id: lecture_id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await reduce(lecture)
+}
+
+/**
+ * Gets the Graph of a Lecture
+ * @param lecture_id ID of the Lecture
+ * @returns SerializedGraph object
+ */
+
+async function getGraph(lecture_id: number): Promise<SerializedGraph> {
+	try {
+		var lecture = await prisma.lecture.findUniqueOrThrow({
+			where: {
+				id: lecture_id
+			},
+			select: {
+				graph: true
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await GraphHelper.reduce(lecture.graph)
+}
+
+/**
+ * Gets the Subjects of a Lecture
+ * @param lecture_id ID of the Lecture
+ * @returns Array of SerializedSubject objects
+ */
+
+async function getSubjects(lecture_id: number): Promise<SerializedSubject[]> {
 	try {
 		var lecture = await prisma.lecture.findUniqueOrThrow({
 			where: {
@@ -150,5 +203,5 @@ async function getSubjects(lecture_id: number): Promise<PrismaSubject[]> {
 		return Promise.reject(error)
 	}
 
-	return lecture.subjects
+	return await Promise.all(lecture.subjects.map(SubjectHelper.reduce))
 }
