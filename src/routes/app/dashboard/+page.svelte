@@ -60,6 +60,10 @@
 	class ProgramModal extends BaseModal {
 		name: string = ''
 
+		get trimmed_name() {
+			return this.name.trim()
+		}
+
 		constructor() {
 			super()
 			this.initialize()
@@ -68,10 +72,15 @@
 		validate(): ValidationData {
 			const result = new ValidationData()
 
-			if (this.name.trim() === '') {
+			if (this.trimmed_name === '') {
 				result.add({
 					severity: Severity.error,
 					short: 'Name is required'
+				})
+			} else if ($programs.some(program => program.name === this.trimmed_name)) {
+				result.add({
+					severity: Severity.error,
+					short: 'Program with this name already exists'
 				})
 			}
 
@@ -79,7 +88,7 @@
 		}
 
 		async submit() {
-			$programs = [...$programs, await ProgramController.create(cache, this.name)]
+			$programs = [...$programs, await ProgramController.create(cache, this.trimmed_name)]
 			this.hide()
 		}
 	}
@@ -88,6 +97,14 @@
 		code: string = ''
 		name: string = ''
 
+		get trimmed_code() {
+			return this.code.trim()
+		}
+
+		get trimmed_name() {
+			return this.name.trim()
+		}
+
 		constructor() {
 			super()
 			this.initialize()
@@ -96,14 +113,19 @@
 		validate(): ValidationData {
 			const result = new ValidationData()
 
-			if (this.code.trim() === '') {
+			if (this.trimmed_code === '') {
 				result.add({
 					severity: Severity.error,
 					short: 'Code is required'
 				})
+			} else if ($courses.some(course => course.code === this.trimmed_code)) {
+				result.add({
+					severity: Severity.error,
+					short: 'Course with this code already exists'
+				})
 			}
 
-			if (this.name.trim() === '') {
+			if (this.trimmed_name === '') {
 				result.add({
 					severity: Severity.error,
 					short: 'Name is required'
@@ -114,20 +136,9 @@
 		}
 
 		async submit() {
-			$courses = [...$courses, await CourseController.create(cache, this.code, this.name)]
+			$courses = [...$courses, await CourseController.create(cache, this.trimmed_code, this.trimmed_name)]
 			this.hide()
 		}
-	}
-
-	// Functions
-	function courseMatchesQuery(query: string, course: { code: string, name: string }) {
-		if (!query) return true
-
-		query = query.toLowerCase()
-		let code = course.code.toLowerCase()
-		let name = course.name.toLowerCase()
-
-		return code.includes(query) || name.includes(query)
 	}
 
 	// Variables
@@ -246,16 +257,16 @@
 		<h3 slot="header"> My Courses </h3>
 
 		<svelte:fragment slot="body">
-			{#if !$courses.some(course => courseMatchesQuery(query, course))}
+			{#if !$courses.some(course => course.matchesQuery(query))}
 				<span class="grayed"> There's nothing here </span>
 			{:else}
 
 				<div class="grid">
 					{#each $courses as course} <!-- TODO check if course belongs to user -->
-						{#if courseMatchesQuery(query, course)}
+						{#if course.matchesQuery(query)}
 							<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
 						{/if}
-				{/each}
+					{/each}
 				</div>
 
 			{/if}
@@ -296,12 +307,12 @@
 
 			<svelte:fragment slot="body">
 				{#await program.getCourses() then courses}
-					{#if !courses.some(course => courseMatchesQuery(query, course))}
+					{#if !courses.some(course => course.matchesQuery(query))}
 						<span class="grayed"> There's nothing here </span>
 					{:else}
 						<div class="grid">
 							{#each courses as course}
-								{#if courseMatchesQuery(query, course)}
+								{#if course.matchesQuery(query)}
 									<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
 								{/if}
 							{/each}

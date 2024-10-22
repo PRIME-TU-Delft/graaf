@@ -127,6 +127,20 @@ class DomainController extends FieldController {
 
 	// --------------------> Getters & Setters
 
+	set graph_id(id: number) {
+
+		// Unassign previous graph
+		this.cache.find(GraphController, this._graph_id)
+			?.unassignDomain(this)
+
+		// Assign new graph
+		this._graph = undefined
+		this._graph_id = id
+
+		this.cache.find(GraphController, this._graph_id)
+			?.assignDomain(this, false)
+	}
+
 	get subject_ids(): number[] {
 		return Array.from(this._subject_ids)
 	}
@@ -840,8 +854,40 @@ class SubjectController extends FieldController {
 
 	// --------------------> Getters & Setters
 
+	set graph_id(id: number) {
+
+		// Unassign previous graph
+		this.cache.find(GraphController, this._graph_id)
+			?.unassignSubject(this)
+
+		// Assign new graph
+		this._graph = undefined
+		this._graph_id = id
+
+		this.cache.find(GraphController, this._graph_id)
+			?.assignSubject(this, false)
+	}
+
 	get domain_id(): number | null {
 		return this._domain_id
+	}
+
+	set domain_id(id: number | null) {
+
+		// Unassign previous domain
+		if (this._domain_id) {
+			this.cache.find(DomainController, this._domain_id)
+				?.unassignSubject(this)
+		}
+
+		// Assign new domain
+		this._domain = undefined
+		this._domain_id = id
+
+		if (this._domain_id) {
+			this.cache.find(DomainController, this._domain_id)
+				?.assignSubject(this, false)
+		}
 	}
 
 	get lecture_ids(): number[] {

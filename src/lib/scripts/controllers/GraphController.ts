@@ -81,6 +81,20 @@ class GraphController {
 		return this._course_id
 	}
 
+	set course_id(id: number) {
+		
+		// Unassign previous course
+		this.cache.find(CourseController, this._course_id)
+			?.unassignGraph(this)
+
+		// Assign new course
+		this._course = undefined
+		this._course_id = id
+
+		this.cache.find(CourseController, this._course_id)
+			?.assignGraph(this, false)
+	}
+
 	get domain_ids(): number[] {
 		return this._domain_ids.concat()
 	}
@@ -93,7 +107,7 @@ class GraphController {
 		return this._lecture_ids.concat()
 	}
 
-	get links_ids(): number[] {
+	get link_ids(): number[] {
 		return this._links_ids.concat()
 	}
 
@@ -418,9 +432,9 @@ class GraphController {
 
 		// Check links
 		if (
-			this.links_ids.length !== data.links.length ||
-			this.links_ids.some(id => !data.links.includes(id)) ||
-			data.links.some(id => !this.links_ids.includes(id))
+			this.link_ids.length !== data.links.length ||
+			this.link_ids.some(id => !data.links.includes(id)) ||
+			data.links.some(id => !this.link_ids.includes(id))
 		) {
 			return false
 		}
@@ -441,7 +455,7 @@ class GraphController {
 			domains: this.domain_ids,
 			subjects: this.subject_ids,
 			lectures: this.lecture_ids,
-			links: this.links_ids
+			links: this.link_ids
 		}
 	}
 
@@ -486,7 +500,7 @@ class GraphController {
 		this.cache.find(CourseController, this.course_id)
 			?.unassignGraph(this)
 
-		for (const id of this.links_ids) {
+		for (const id of this.link_ids) {
 			this.cache.find(LinkController, id)
 				?.unassignGraph(false)
 		}

@@ -29,6 +29,10 @@
 	class GraphModal extends BaseModal {
 		name: string = ''
 
+		get trimmed_name() {
+			return this.name.trim()
+		}
+
 		constructor() {
 			super()
 			this.initialize()
@@ -37,7 +41,7 @@
 		validate(): ValidationData {
 			const result = new ValidationData()
 
-			if (this.name.trim() === '') {
+			if (this.trimmed_name === '') {
 				result.add({
 					severity: Severity.error,
 					short: 'Name is required'
@@ -48,7 +52,7 @@
 		}
 
 		async submit() {
-			await GraphController.create(cache, $course.id, this.name)
+			await GraphController.create(cache, $course.id, this.trimmed_name)
 			graph_modal.hide()
 			$course = $course
 		}
@@ -58,6 +62,10 @@
 		name: string = ''
 		graph?: number
 
+		get trimmed_name() {
+			return this.name.trim()
+		}
+
 		constructor() {
 			super()
 			this.initialize()
@@ -66,7 +74,7 @@
 		validate(): ValidationData {
 			const result = new ValidationData()
 
-			if (this.name.trim() === '') {
+			if (this.trimmed_name === '') {
 				result.add({
 					severity: Severity.error,
 					short: 'Name is required'
@@ -77,7 +85,7 @@
 		}
 
 		async submit() {
-			await LinkController.create(cache, $course.id, this.name, this.graph || null)
+			await LinkController.create(cache, $course.id, this.trimmed_name, this.graph || null)
 			link_modal.hide()
 			$course = $course
 		}
@@ -105,7 +113,7 @@
 		},
 		{
 			name: `${$course.code} ${$course.name}`,
-			href: `/app/course/${$course.code}/overview`
+			href: `/app/course/${$course.id}/overview`
 		}
 	]}
 >
@@ -155,7 +163,7 @@
 				{#await $course.getGraphOptions() then options}
 					<label for="graph"> Graph </label>
 					<Dropdown
-						label="Graph"
+						id="graph"
 						placeholder="Select a graph"
 						options={options}
 						bind:value={link_modal.graph}

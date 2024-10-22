@@ -37,7 +37,6 @@
 
 	<Textfield
 		id="link-name"
-		type="subtle"
 		placeholder="Link Name"
 		bind:value={link.name}
 		on:change={async () => {
@@ -48,7 +47,7 @@
 
 	{#await course.getGraphOptions() then options}
 		<Dropdown
-			label="Graph"
+			id="graph"
 			placeholder="Select a graph"
 			options={options}
 			bind:value={link.graph_id}

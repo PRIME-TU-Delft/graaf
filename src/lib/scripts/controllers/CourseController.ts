@@ -710,4 +710,22 @@ class CourseController {
 			user.resignAsCourseEditor(this, false)
 		}
 	}
+
+	// --------------------> Utility
+
+	/**
+	 * Checks if this course matches a query
+	 * @param query Query to match against
+	 * @returns Whether this course matches the query
+	 */
+
+	matchesQuery(query: string): boolean {
+		query = query.trim().toLowerCase()
+		if (query === '') return true
+
+		let code = this.code.toLowerCase()
+		let name = this.name.toLowerCase()
+
+		return code.includes(query) || name.includes(query)
+	}
 }

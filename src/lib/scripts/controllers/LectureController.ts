@@ -52,6 +52,20 @@ class LectureController {
 		return this._graph_id
 	}
 
+	set graph_id(id: number) {
+
+		// Unassign previous graph
+		this.cache.find(GraphController, this._graph_id)
+			?.unassignLecture(this)
+
+		// Assign new graph
+		this._graph_id = id
+		this._graph = undefined
+
+		this.cache.find(GraphController, this._graph_id)
+			?.assignLecture(this, false)
+	}
+
 	get subject_ids(): number[] {
 		return Array.from(this._subject_ids)
 	}

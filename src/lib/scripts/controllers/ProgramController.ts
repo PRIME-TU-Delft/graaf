@@ -60,6 +60,24 @@ class ProgramController {
 
 	// --------------------> API Getters
 
+	static async getAll(cache: ControllerCache): Promise<ProgramController[]> {
+		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Call API to get all programs
+		const response = await fetch(`/api/program`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program GET): ${error}`)
+			})
+
+		// Revive the programs
+		const data = await response.json() as SerializedProgram[]
+		return data.map(program => ProgramController.revive(cache, program))
+	}
+
 	/**
 	 * Get the courses of this program, from the cache or the API
 	 * @returns Courses of the program
@@ -501,5 +519,17 @@ class ProgramController {
 		if (mirror) {
 			user.resignAsProgramEditor(this, false)
 		}
+	}
+
+	// --------------------> Utility
+
+	/**
+	 * Checks if this program matches a query
+	 * @param query Query to match against
+	 * @returns Whether the program matches the query
+	 */
+
+	matchesQuery(query: string): boolean {
+		return this.trimmed_name.toLowerCase().includes(query.toLowerCase())
 	}
 }

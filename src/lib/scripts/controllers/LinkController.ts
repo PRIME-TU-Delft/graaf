@@ -50,8 +50,40 @@ class LinkController {
 		return this._course_id
 	}
 
+	set course_id(id: number) {
+
+		// Unassign previous course
+		this.cache.find(CourseController, this._course_id)
+			?.unassignLink(this)
+
+		// Assign new course
+		this._course = undefined
+		this._course_id = id
+
+		this.cache.find(CourseController, this._course_id)
+			?.assignLink(this, false)
+	}
+
 	get graph_id(): number | null {
 		return this._graph_id
+	}
+
+	set graph_id(id: number | null) {
+
+		// Unassign previous graph
+		if (this._graph_id) {
+			this.cache.find(GraphController, this._graph_id)
+				?.unassignLink(this, false)
+		}
+
+		// Assign new graph
+		this._graph = undefined
+		this._graph_id = id
+
+		if (this._graph_id) {
+			this.cache.find(GraphController, this._graph_id)
+				?.assignLink(this)
+		}
 	}
 
 	// --------------------> API Getters
