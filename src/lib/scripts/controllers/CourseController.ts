@@ -3,6 +3,8 @@
 import { browser } from '$app/environment'
 
 // Internal dependencies
+import { ValidationData, Severity } from '$scripts/validation'
+
 import  {
 	ControllerCache,
 	ProgramController,
@@ -11,7 +13,6 @@ import  {
 	UserController
 } from '$scripts/controllers'
 
-import { ValidationData, Severity } from '$scripts/validation'
 import type {
 	SerializedProgram,
 	SerializedCourse,
@@ -25,7 +26,7 @@ export { CourseController }
 
 
 // --------------------> Controller
- 
+
 
 class CourseController {
 	private _programs?: ProgramController[]
@@ -48,32 +49,216 @@ class CourseController {
 		this.cache.add(this)
 	}
 
+	// --------------------> Getters & Setters
+
+	get trimmed_code(): string {
+		return this.code.trim()
+	}
+
+	get trimmed_name(): string {
+		return this.name.trim()
+	}
+
 	get program_ids(): number[] {
-		return this._program_ids.concat()
+		return Array.from(this._program_ids)
 	}
 
 	get graph_ids(): number[] {
-		return this._graph_ids.concat()
+		return Array.from(this._graph_ids)
 	}
 
 	get link_ids(): number[] {
-		return this._link_ids.concat()
+		return Array.from(this._link_ids)
 	}
 
 	get admin_ids(): number[] {
-		return this._admin_ids.concat()
+		return Array.from(this._admin_ids)
 	}
 
 	get editor_ids(): number[] {
-		return this._editor_ids.concat()
+		return Array.from(this._editor_ids)
+	}
+
+	// --------------------> API Getters
+
+	/**
+	 * Get the programs this course is assigned to, from the cache or the API
+	 * @returns Programs this course is assigned to
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getPrograms(): Promise<ProgramController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if programs are already loaded
+		if (this._programs) {
+			return Array.from(this._programs)
+		}
+
+		// Call API to get the course data
+		const response = await fetch(`/api/course/${this.id}/programs`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course/${this.id}/programs GET): ${error}`)
+			})
+
+		// Revive the programs
+		const data = await response.json() as SerializedProgram[]
+		this._programs = data.map(program => ProgramController.revive(this.cache, program))
+
+		return Array.from(this._programs)
 	}
 
 	/**
+	 * Get the graphs assigned to this course, from the cache or the API
+	 * @returns Graphs assigned to this course
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getGraphs(): Promise<GraphController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if graphs are already loaded
+		if (this._graphs) {
+			return Array.from(this._graphs)
+		}
+
+		// Call API to get the course data
+		const response = await fetch(`/api/course/${this.id}/graphs`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course/${this.id}/graphs GET): ${error}`)
+			})
+
+		// Revive the graphs
+		const data = await response.json() as SerializedGraph[]
+		this._graphs = data.map(graph => GraphController.revive(this.cache, graph))
+
+		return Array.from(this._graphs)
+	}
+
+	/**
+	 * Get the graphs assigned to this course as a list of Dropdown options, from the cache or the API
+	 * @returns Graphs assigned to this course as a list of Dropdown options
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getGraphOptions(): Promise<{ value: number, label: string, validation: ValidationData }[]> {
+		const graphs = await this.getGraphs()
+		return graphs.map(graph => ({
+			value: graph.id,
+			label: graph.name,
+			validation: ValidationData.success()
+		}))
+	}
+
+	/**
+	 * Get the links assigned to this course, from the cache or the API
+	 * @returns Links assigned to this course
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getLinks(): Promise<LinkController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if links are already loaded
+		if (this._links) {
+			return Array.from(this._links)
+		}
+
+		// Call API to get the course data
+		const response = await fetch(`/api/course/${this.id}/links`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course/${this.id}/links GET): ${error}`)
+			})
+
+		// Revive the links
+		const data = await response.json() as SerializedLink[]
+		this._links = data.map(link => LinkController.revive(this.cache, link))
+
+		return Array.from(this._links)
+	}
+
+	/**
+	 * Get the admins assigned to this course, from the cache or the API
+	 * @returns Admins assigned to this course
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getAdmins(): Promise<UserController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if admins are already loaded
+		if (this._admins) {
+			return Array.from(this._admins)
+		}
+
+		// Call API to get the admin data
+		const response = await fetch(`/api/course/${this.id}/admins`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course/${this.id}/admins GET): ${error}`)
+			})
+
+		// Revive the admins
+		const data = await response.json() as SerializedUser[]
+		this._admins = data.map(user => UserController.revive(this.cache, user))
+
+		return Array.from(this._admins)
+	}
+
+	/**
+	 * Get the editors assigned to this course, from the cache or the API
+	 * @returns Editors assigned to this course
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getEditors(): Promise<UserController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if editors are already loaded
+		if (this._editors) {
+			return Array.from(this._editors)
+		}
+
+		// Call API to get the editor data
+		const response = await fetch(`/api/course/${this.id}/editors`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course/${this.id}/editors GET): ${error}`)
+			})
+
+		//Revive the editors
+		const data = await response.json() as SerializedUser[]
+		this._editors = data.map(user => UserController.revive(this.cache, user))
+
+		return Array.from(this._editors)
+	}
+
+	// --------------------> API actions
+
+	/**
 	 * Create a new course
-	 * @param cache Cache to create the course in
+	 * @param cache Cache to create the course with
 	 * @param code Course code
 	 * @param name Course name
-	 * @returns `Promise<CourseController>` The newly created CourseController
+	 * @returns The newly created CourseController
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -102,16 +287,21 @@ class CourseController {
 	}
 
 	/**
-	 * Revive a course from serialized data
-	 * @param cache Cache to revive the course in
+	 * Revive a course from serialized data, or retrieves an existing course from the cache
+	 * @param cache Cache to revive the course with
 	 * @param data Serialized data to revive
-	 * @returns `CourseController` The revived Course
+	 * @returns The revived CourseController
+	 * @throws `CourseError` if the server data is out of sync with the cache
 	 */
 
 	static revive(cache: ControllerCache, data: SerializedCourse): CourseController {
 		const course = cache.find(CourseController, data.id)
+		if (course) {
+			if (!course.represents(data))
+				throw new Error(`CourseError: Attempted to revive Course with ID ${data.id}, but server data is out of sync with cache`)
+			return course
+		}
 
-		if (course) return course
 		return new CourseController(
 			cache,
 			data.id,
@@ -126,47 +316,80 @@ class CourseController {
 	}
 
 	/**
-	 * Validate this course
-	 * @returns `Promise<ValidationData>` Validation data
+	 * Check if this course is equal to a serialized course
+	 * @param data Serialized course to compare against
+	 * @returns Whether this course is equal to the serialized course
 	 */
 
-	validate(): ValidationData {
-		const validation = new ValidationData()
+	represents(data: SerializedCourse): boolean {
 
-		if (this.name.trim() === '') {
-			validation.add({
-				severity: Severity.error,
-				short: 'Course has no name'
-			})
+		// Check the easy stuff
+		if (
+			this.id !== data.id ||
+			this.trimmed_code !== data.code ||
+			this.trimmed_name !== data.name
+		) {
+			return false
 		}
 
-		if (this.code.trim() === '') {
-			validation.add({
-				severity: Severity.error,
-				short: 'Course has no code'
-			})
+		// Check programs
+		if (
+			this._program_ids.length !== data.programs.length ||
+			this._program_ids.some(id => !data.programs.includes(id)) ||
+			data.programs.some(id => !this._program_ids.includes(id))
+		) {
+			return false
 		}
 
-		if (this._admin_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Course has no admins'
-			})
+		// Check graphs
+		if (
+			this._graph_ids.length !== data.graphs.length ||
+			this._graph_ids.some(id => !data.graphs.includes(id)) ||
+			data.graphs.some(id => !this._graph_ids.includes(id))
+		) {
+			return false
 		}
 
-		return validation
+		// Check links
+		if (
+			this._link_ids.length !== data.links.length ||
+			this._link_ids.some(id => !data.links.includes(id)) ||
+			data.links.some(id => !this._link_ids.includes(id))
+		) {
+			return false
+		}
+
+		// Check editors
+		if (
+			this._editor_ids.length !== data.editors.length ||
+			this._editor_ids.some(id => !data.editors.includes(id)) ||
+			data.editors.some(id => !this._editor_ids.includes(id))
+		) {
+			return false
+		}
+
+		// Check admins
+		if (
+			this._admin_ids.length !== data.admins.length ||
+			this._admin_ids.some(id => !data.admins.includes(id)) ||
+			data.admins.some(id => !this._admin_ids.includes(id))
+		) {
+			return false
+		}
+
+		return true
 	}
 
 	/**
 	 * Serialize this course
-	 * @returns `SerializedCourse` Serialized course
+	 * @returns Serialized course
 	 */
 
 	reduce(): SerializedCourse {
 		return {
 			id: this.id,
-			code: this.code.trim(),
-			name: this.name.trim(),
+			code: this.trimmed_code,
+			name: this.trimmed_name,
 			graphs: this._graph_ids,
 			links: this._link_ids,
 			admins: this._admin_ids,
@@ -240,189 +463,84 @@ class CourseController {
 			.catch(error => {
 				throw new Error(`APIError (/api/course/${this.id} DELETE): ${error}`)
 			})
-			
+
 		// Remove from cache
 		this.cache.remove(this)
 	}
 
+	// --------------------> Validation
+
 	/**
-	 * Get the programs this course is assigned to
-	 * @returns `Promise<ProgramController[]>` Programs this course is assigned to
-	 * @throws `APIError` if the API call fails
+	 * Check if this course has a name
+	 * @returns Whether this course has a name
 	 */
-	
-	async getPrograms(): Promise<ProgramController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
+	private hasName(): boolean {
+		return this.trimmed_name !== ''
+	}
 
-		// Check if programs are already loaded
-		if (this._programs) {
-			return this._programs.concat()
-		}
+	/**
+	 * Check if this course has a code
+	 * @returns Whether this course has a code
+	 */
 
-		// Call API to get the course data
-		const response = await fetch(`/api/course/${this.id}/programs`, { method: 'GET' })
-			.catch(error => { 
-				throw new Error(`APIError (/api/course/${this.id}/programs GET): ${error}`)
+	private hasCode(): boolean {
+		return this.trimmed_code !== ''
+	}
+
+	/**
+	 * Check if this course has admins
+	 * @returns Whether this course has admins
+	 */
+
+	private hasAdmins(): boolean {
+		return this._admin_ids.length > 0
+	}
+
+	/**
+	 * Validate this course
+	 * @returns Validation result
+	 */
+
+	validate(): ValidationData {
+		const validation = new ValidationData()
+
+		if (!this.hasName()) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Course has no name'
 			})
-
-		// Revive the programs
-		const data = await response.json() as SerializedProgram[]
-		this._programs = data.map(program => ProgramController.revive(this.cache, program))
-
-		return this._programs.concat()
-	}
-
-	/**
-	 * Get the graphs assigned to this course
-	 * @returns `Promise<GraphController[]>` Graphs assigned to this course
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getGraphs(): Promise<GraphController[]> {
-	
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
 		}
 
-		// Check if graphs are already loaded
-		if (this._graphs) {
-			return this._graphs.concat()
-		}
-
-		// Call API to get the course data
-		const response = await fetch(`/api/course/${this.id}/graphs`, { method: 'GET' })
-			.catch(error => { 
-				throw new Error(`APIError (/api/course/${this.id}/graphs GET): ${error}`)
+		if (!this.hasCode()) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Course has no code'
 			})
-
-		// Revive the graphs
-		const data = await response.json() as SerializedGraph[]
-		this._graphs = data.map(graph => GraphController.revive(this.cache, graph))
-
-		return this._graphs.concat()
-	}
-
-	/**
-	 * Get the graphs assigned to this course as a list of Dropdown options
-	 * @returns `Promise<{ value: number, label: string, validation: ValidationData }[]>` Graphs assigned to this course as a list of Dropdown options
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getGraphOptions(): Promise<{ value: number, label: string, validation: ValidationData }[]> {
-		const graphs = await this.getGraphs()
-		return graphs.map(graph => ({
-			value: graph.id,
-			label: graph.name,
-			validation: ValidationData.success()
-		}))
-	}
-
-	/**
-	 * Get the links assigned to this course
-	 * @returns `Promise<LinkController[]>` Links assigned to this course
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getLinks(): Promise<LinkController[]> {
-					
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
 		}
 
-		// Check if links are already loaded
-		if (this._links) {
-			return this._links.concat()
-		}
-
-		// Call API to get the course data
-		const response = await fetch(`/api/course/${this.id}/links`, { method: 'GET' })
-			.catch(error => { 
-				throw new Error(`APIError (/api/course/${this.id}/links GET): ${error}`)
+		if (!this.hasAdmins()) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Course has no admins'
 			})
+		}
 
-		// Revive the links
-		const data = await response.json() as SerializedLink[]
-		this._links = data.map(link => LinkController.revive(this.cache, link))
-
-		return this._links.concat()
+		return validation
 	}
 
-	/**
-	 * Get the admins assigned to this course
-	 * @returns `Promise<UserController[]>` Admins assigned to this course
-	 * @throws `APIError` if the API call fails
-	 */
+	// --------------------> Assignments
 
-	async getAdmins(): Promise<UserController[]> {
-		
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if admins are already loaded
-		if (this._admins) {
-			return this._admins.concat()
-		}
-
-		// Call API to get the admin data
-		const response = await fetch(`/api/course/${this.id}/admins`, { method: 'GET' })
-			.catch(error => { 
-				throw new Error(`APIError (/api/course/${this.id}/admins GET): ${error}`)
-			})
-
-		// Revive the admins
-		const data = await response.json() as SerializedUser[]
-		this._admins = data.map(user => UserController.revive(this.cache, user))
-
-		return this._admins.concat()
-	}
-
-	/**
-	 * Get the editors assigned to this course
-	 * @returns `Promise<UserController[]>` Editors assigned to this course
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getEditors(): Promise<UserController[]> {
-		
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if editors are already loaded
-		if (this._editors) {
-			return this._editors.concat()
-		}
-
-		// Call API to get the editor data
-		const response = await fetch(`/api/course/${this.id}/editors`, { method: 'GET' })
-			.catch(error => { 
-				throw new Error(`APIError (/api/course/${this.id}/editors GET): ${error}`)
-			})
-
-		//Revive the editors
-		const data = await response.json() as SerializedUser[]
-		this._editors = data.map(user => UserController.revive(this.cache, user))
-
-		return this._editors.concat()
-	}
-	
 	/**
 	 * Assign this course to a program
 	 * @param program Target program
 	 * @param mirror Whether to mirror the assignment
 	 */
 
-	assignToProgram(program: ProgramController, mirror: boolean = true): void {
+	assignProgram(program: ProgramController, mirror: boolean = true): void {
 		if (this._program_ids.includes(program.id)) return
+
+		// Assign program
 		this._program_ids.push(program.id)
 		this._programs?.push(program)
 
@@ -439,11 +557,13 @@ class CourseController {
 
 	assignGraph(graph: GraphController, mirror: boolean = true): void {
 		if (this._graph_ids.includes(graph.id)) return
+
+		// Assign graph
 		this._graph_ids.push(graph.id)
 		this._graphs?.push(graph)
 
 		if (mirror) {
-			graph.assignToCourse(this, false)
+			graph.assignCourse(this, false)
 		}
 	}
 
@@ -455,11 +575,13 @@ class CourseController {
 
 	assignLink(link: LinkController, mirror: boolean = true): void {
 		if (this._link_ids.includes(link.id)) return
+
+		// Assign link
 		this._link_ids.push(link.id)
 		this._links?.push(link)
 
 		if (mirror) {
-			link.assignToCourse(this, false)
+			link.assignCourse(this, false)
 		}
 	}
 
@@ -471,10 +593,13 @@ class CourseController {
 
 	assignAdmin(user: UserController, mirror: boolean = true): void {
 		if (this._admin_ids.includes(user.id)) return
+
+		// Unassign as editor
 		if (this._editor_ids.includes(user.id)) {
 			this.unassignEditor(user, mirror)
 		}
 
+		// Assign as admin
 		this._admin_ids.push(user.id)
 		this._admins?.push(user)
 
@@ -491,10 +616,13 @@ class CourseController {
 
 	assignEditor(user: UserController, mirror: boolean = true): void {
 		if (this._editor_ids.includes(user.id)) return
+
+		// Unassign as admin
 		if (this._admin_ids.includes(user.id)) {
 			this.unassignAdmin(user, mirror)
 		}
 
+		// Assign as editor
 		this._editor_ids.push(user.id)
 		this._editors?.push(user)
 
@@ -509,8 +637,10 @@ class CourseController {
 	 * @param mirror Whether to mirror the unassignment
 	 */
 
-	unassignFromProgram(program: ProgramController, mirror: boolean = true): void {
+	unassignProgram(program: ProgramController, mirror: boolean = true): void {
 		if (!this._program_ids.includes(program.id)) return
+
+		// Unassign program
 		this._program_ids = this._program_ids.filter(id => id !== program.id)
 		this._programs = this._programs?.filter(known => known.id !== program.id)
 
@@ -526,6 +656,8 @@ class CourseController {
 
 	unassignGraph(graph: GraphController): void {
 		if (!this._graph_ids.includes(graph.id)) return
+
+		// Unassign graph
 		this._graph_ids = this._graph_ids.filter(id => id !== graph.id)
 		this._graphs = this._graphs?.filter(known => known.id !== graph.id)
 	}
@@ -537,6 +669,8 @@ class CourseController {
 
 	unassignLink(link: LinkController): void {
 		if (!this._link_ids.includes(link.id)) return
+
+		// Unassign link
 		this._link_ids = this._link_ids.filter(id => id !== link.id)
 		this._links = this._links?.filter(known => known.id !== link.id)
 	}
@@ -549,6 +683,8 @@ class CourseController {
 
 	unassignAdmin(user: UserController, mirror: boolean = true): void {
 		if (!this._admin_ids.includes(user.id)) return
+
+		// Unassign admin
 		this._admin_ids = this._admin_ids.filter(id => id !== user.id)
 		this._admins = this._admins?.filter(known => known.id !== user.id)
 
@@ -565,6 +701,8 @@ class CourseController {
 
 	unassignEditor(user: UserController, mirror: boolean = true): void {
 		if (!this._editor_ids.includes(user.id)) return
+
+		// Unassign editor
 		this._editor_ids = this._editor_ids.filter(id => id !== user.id)
 		this._editors = this._editors?.filter(known => known.id !== user.id)
 

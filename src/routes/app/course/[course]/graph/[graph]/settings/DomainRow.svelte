@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { DomainController } from '$scripts/controllers'
+	import { DomainController, SortOption } from '$scripts/controllers'
 
 	// Components
 	import IconButton from '$components/buttons/IconButton.svelte'
@@ -15,6 +15,7 @@
 
 	// Exports
 	export let domain: DomainController
+	export let sortmode: (options: number) => void
 	export let update: () => void
 
 </script>
@@ -36,6 +37,7 @@
 		src={trashIcon}
 		on:click={async () => {
 			await domain.delete()
+			sortmode(SortOption.domains)
 			update()
 		}}
 		/>
@@ -46,6 +48,7 @@
 		bind:value={domain.name}
 		on:change={async () => {
 			await domain.save()
+			sortmode(SortOption.domains)
 			update()
 		}}
 		/>
@@ -58,6 +61,7 @@
 			bind:value={domain.style}
 			on:change={async () => {
 				await domain.save()
+				sortmode(SortOption.domains)
 				update()
 			}}
 			/>

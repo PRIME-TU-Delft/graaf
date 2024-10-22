@@ -1,17 +1,22 @@
 
+// External dependencies
+import * as uuid from 'uuid'
+import { browser } from '$app/environment'
+
 // Internal dependencies
+import { ValidationData, Severity } from '$scripts/validation'
+
 import {
 	ControllerCache,
 	GraphController,
 	SubjectController
 } from '$scripts/controllers'
 
-import { ValidationData, Severity } from '$scripts/validation'
-
-import type { SerializedLecture } from '$scripts/types'
-
-// External dependencies
-import * as uuid from 'uuid'
+import type {
+	SerializedLecture,
+	SerializedSubject,
+	SerializedGraph
+} from '$scripts/types'
 
 // Exports
 export { LectureController }
@@ -27,45 +32,105 @@ class LectureController {
 	uuid: string
 
 	constructor(
-		public environment: ControllerCache,
+		public cache: ControllerCache,
 		public id: number,
 		public name: string,
 		private _graph_id: number,
 		private _subject_ids: number[]
 	) {
 		this.uuid = uuid.v4()
-		this.environment.add(this)
+		this.cache.add(this)
 	}
 
-	get subjects(): Promise<SubjectController[]> {
-		return (async () => {
-			if (this._subjects) return this._subjects
-			this._subjects = await this.environment.getSubjects(this._subject_ids)
-			return this._subjects
-		})()
+	// --------------------> Getters & Setters
+
+	get trimmed_name(): string {
+		return this.name.trim()
 	}
 
-	get graph(): Promise<GraphController> {
-		return (async () => {
-			if (this._graph) return this._graph
-			this._graph = await this.environment.getGraph(this._graph_id) as GraphController
-			return this._graph
-		})()
+	get graph_id(): number {
+		return this._graph_id
 	}
 
-	get index(): Promise<number> {
-		return this.graph.then(graph => graph.lectureIndex(this))
+	get subject_ids(): number[] {
+		return Array.from(this._subject_ids)
 	}
+
+	// --------------------> API Getters
 
 	/**
-	 * Create a new lecture
-	 * @param environment Environment to create the lecture in
-	 * @param graph Graph to assign the lecture to
-	 * @returns `Promise<LectureController>` The newly created LectureController
+	 * Get the graph associated to this lecture
+	 * @returns The associated graph
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(environment: ControllerCache, graph: GraphController): Promise<LectureController> {
+	async getGraph(): Promise<GraphController> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if the graph is already loaded
+		if (this._graph) {
+			return this._graph
+		}
+
+		// Call API to fetch the course data
+		const response = await fetch(`/api/lecture/${this.id}/graph`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/lecture/${this.id}/graph GET): ${error}`)
+			})
+
+		// Revive the course
+		const data = await response.json() as SerializedGraph
+		this._graph = GraphController.revive(this.cache, data)
+
+		return this._graph
+	}
+
+	/**
+	 * Get the subjects associated to this lecture
+	 * @returns The associated subjects
+	 * @throws `APIError` if the API
+	 */
+
+	async getSubjects(): Promise<SubjectController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if the subjects are already loaded
+		if (this._subjects) {
+			return Array.from(this._subjects)
+		}
+
+		// Call API to fetch the subjects data
+		const response = await fetch(`/api/lecture/${this.id}/subjects`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/lecture/${this.id}/subjects GET): ${error}`)
+			})
+
+		// Revive the subjects
+		const data = await response.json() as SerializedSubject[]
+		this._subjects = data.map(item => SubjectController.revive(this.cache, item))
+
+		return Array.from(this._subjects)
+	}
+
+	// --------------------> API Actions
+
+	/**
+	 * Create a new lecture
+	 * @param cache Cache to create the lecture with
+	 * @param graph Graph to assign the lecture to
+	 * @returns The newly created LectureController
+	 * @throws `APIError` if the API call fails
+	 */
+
+	static async create(cache: ControllerCache, graph: GraphController): Promise<LectureController> {
 
 		// Call API to create a new lecture
 		const response = await fetch(`/api/lecture`, {
@@ -81,26 +146,185 @@ class LectureController {
 
 		// Revive the lecture
 		const data = await response.json()
-		const lecture = LectureController.revive(environment, data)
+		const lecture = LectureController.revive(cache, data)
+
+		// Assign the lecture to the graph
 		graph.assignLecture(lecture)
 
 		return lecture
 	}
 
 	/**
-	 * Revive a lecture from serialized data
-	 * @param environment Environment to revive the lecture in
+	 * Revive a lecture from serialized data, or retrieves an existing lecture from the cache
+	 * @param cache Cache to revive the lecture with
 	 * @param data Serialized data to revive
-	 * @returns `LectureController` The revived LectureController
+	 * @returns The revived LectureController
+	 * @throws `LectureError` if the server data is out of sync with the cache
 	 */
 
-	static revive(environment: ControllerCache, data: SerializedLecture): LectureController {
-		return new LectureController(environment, data.id, data.name, data.graph, data.subjects)
+	static revive(cache: ControllerCache, data: SerializedLecture): LectureController {
+		const existing = cache.find(LectureController, data.id)
+		if (existing) {
+			if (!existing.represents(data))
+				throw new Error(`LectureError: Attempted to revive Lecture with ID ${data.id}, but server data is out of sync with cache`)
+			return existing
+		}
+
+		return new LectureController(
+			cache,
+			data.id,
+			data.name,
+			data.graph,
+			data.subjects
+		)
 	}
 
 	/**
-	 * Validate the lecture
-	 * @returns `Promise<ValidationData>` Validation data
+	 * Check if this lecture represents the serialized data
+	 * @param data Serialized data to compare against
+	 * @returns Whether the lecture represents the serialized data
+	 */
+
+	represents(data: SerializedLecture): boolean {
+
+		// Check the easy stuff
+		if (
+			this.id !== data.id ||
+			this.trimmed_name !== data.name ||
+			this._graph_id !== data.graph
+		) {
+			return false
+		}
+
+		// Check the subjects
+		if (
+			this._subject_ids.length !== data.subjects.length ||
+			this._subject_ids.some(id => !data.subjects.includes(id)) ||
+			data.subjects.some(id => !this._subject_ids.includes(id))
+		) {
+			return false
+		}
+
+		return true
+	}
+
+	/**
+	 * Serialize the lecture
+	 * @returns Serialized lecture
+	 */
+
+	reduce(): SerializedLecture {
+		return {
+			id: this.id,
+			name: this.trimmed_name,
+			graph: this._graph_id,
+			subjects: this._subject_ids
+		}
+	}
+
+	/**
+	 * Save this lecture
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async save(): Promise<void> {
+
+		// Call API to save the lecture
+		await fetch(`/api/lecture`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(this.reduce())
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/lecture PUT): ${error}`)
+		})
+	}
+
+	/**
+	 * Delete this lecture
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async delete(): Promise<void> {
+
+		// Call API to delete the lecture
+		await fetch(`/api/lecture/${this.id}`, {
+			method: 'DELETE',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ id: this.id })
+		})
+
+		// Check the response
+		.catch(error => {
+			throw new Error(`APIError (/api/lecture/${this.id} DELETE): ${error}`)
+		})
+
+		// Unassign from graph
+		this.cache.find(GraphController, this._graph_id)
+			?.unassignLecture(this)
+
+		// Unassign from subjects
+		for (const id of this._subject_ids) {
+			this.cache.find(SubjectController, id)
+				?.unassignLecture(this, false)
+		}
+
+		// Remove from environment
+		this.cache.remove(this)
+	}
+
+	// --------------------> Validation
+
+	/**
+	 * Check if this lecture has a name
+	 * @returns Whether the lecture has a name
+	 */
+
+	private hasName(): boolean {
+		return this.trimmed_name !== ''
+	}
+
+	/**
+	 * Find the first occurrence of this lectures's name in the graph, ordered by index
+	 * @returns Index of the original name in the graph, or -1 if the name is original/nonexistant
+	 * @throws `LectureError` if the lecture is not found in the graph
+	 */
+
+	private async findOriginalName(): Promise<number> {
+		if (this.trimmed_name === '') {
+			return -1
+		}
+
+		const graph = await this.getGraph()
+		const lectures = await graph.getLectures()
+
+		for (let index = 0; index < graph.lecture_ids.length; index++) {
+			if (graph.lecture_ids[index] === this.id) {
+				return -1
+			}
+
+			const lecture = lectures.find(lecture => lecture.id === graph.lecture_ids[index])
+			if (lecture === undefined) throw new Error('LectureError: Lecture not found in graph')
+			if (lecture.name === this.trimmed_name) return index
+		}
+
+		throw new Error('LectureError: Lecture not found in graph')
+	}
+
+	/**
+	 * Check if this lecture has subjects
+	 * @returns Whether the lecture has subjects
+	 */
+
+	private hasSubjects(): boolean {
+		return this._subject_ids.length > 0
+	}
+
+	/**
+	 * Validate this lecture
+	 * @returns Validation result
 	 */
 
 	async validate(): Promise<ValidationData> {
@@ -140,116 +364,47 @@ class LectureController {
 		return validation
 	}
 
+	// --------------------> Assignments
+
 	/**
-	 * Serialize the lecture
-	 * @returns `SerializedLecture` Serialized lecture
+	 * Assign the lecture to a graph
+	 * @param graph Graph to assign the lecture to
+	 * @param mirror Whether to mirror the assignment
 	 */
 
-	reduce(): SerializedLecture {
-		return {
-			id: this.id,
-			name: this.name,
-			graph: this._graph_id,
-			subjects: this._subject_ids
+	assignGraph(graph: GraphController, mirror: boolean = true): void {
+		if (this._graph_id === graph.id) return
+
+		// Unassign previous graph
+		if (mirror) {
+			this.cache.find(GraphController, this._graph_id)
+				?.unassignLecture(this)
 		}
-	}
 
-	/**
-	 * Save the lecture
-	 * @throws `APIError` if the API call fails
-	 */
+		// Assign new graph
+		this._graph_id = graph.id
+		this._graph = graph
 
-	async save(): Promise<void> {
-
-		// Call API to save the lecture
-		await fetch(`/api/lecture`, {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(this.reduce())
-		})
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/lecture PUT): ${error}`)
-		})
-	}
-
-	/**
-	 * Delete the lecture
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async delete(): Promise<void> {
-
-		// Call API to delete the lecture
-		await fetch(`/api/lecture`, {
-			method: 'DELETE',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ id: this.id })
-		})
-
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/lecture DELETE): ${error}`)
-		})
-
-		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
-		const graph = await this.environment.getGraph(this._graph_id, false)
-		graph?.unassignLecture(this)
-
-		const subjects = await this.environment.getSubjects(this._subject_ids, false)
-		subjects.forEach(subject => subject.unassignFromLecture(this, false))
-
-		// Remove from environment
-		this.environment.remove(this)
-	}
-
-	/**
-	 * Check if the lecture has a name
-	 * @returns `boolean` Whether the lecture has a name
-	 */
-
-	private hasName(): boolean {
-		return this.name.trim() !== ''
-	}
-
-	/**
-	 * Find the first occurrence of the lecture's name in the graph
-	 * @returns `Promise<number>` Index of the original name in the graph, or -1 if the name is unique/nonexistant
-	 */
-
-	private async findOriginalName(): Promise<number> {
-		const lectures = await this.graph.then(graph => graph.lectures)
-		const first = lectures.findIndex(item => item.name === this.name)
-		const second = lectures.indexOf(this, first + 1)
-
-		return first < second ? lectures[first].index : -1
-	}
-
-	/**
-	 * Check if the lecture has subjects
-	 * @returns `boolean` Whether the lecture has subjects
-	 */
-
-	private hasSubjects(): boolean {
-		return this._subject_ids.length > 0
+		if (mirror) {
+			graph.assignLecture(this, false)
+		}
 	}
 
 	/**
 	 * Assign a subject to the lecture
 	 * @param subject Subject to assign to the lecture
 	 * @param mirror Whether to mirror the assignment
-	 * @throws `LectureError` if the subject is already assigned to the lecture
 	 */
 
 	assignSubject(subject: SubjectController, mirror: boolean = true): void {
-		if (this._subject_ids.includes(subject.id))
-			throw new Error(`LectureError: Lecture is already assigned to Subject with ID ${subject.id}`)
+		if (this._subject_ids.includes(subject.id)) return
+
+		// Assign subject
 		this._subject_ids.push(subject.id)
 		this._subjects?.push(subject)
 
 		if (mirror) {
-			subject.assignToLecture(this, false)
+			subject.assignLecture(this, false)
 		}
 	}
 
@@ -257,17 +412,17 @@ class LectureController {
 	 * Unassign a subject from the lecture
 	 * @param subject Subject to unassign from the lecture
 	 * @param mirror Whether to mirror the unassignment
-	 * @throws `LectureError` if the subject is not assigned to the lecture
 	 */
 
 	unassignSubject(subject: SubjectController, mirror: boolean = true): void {
-		if (!this._subject_ids.includes(subject.id))
-			throw new Error(`LectureError: Lecture is not assigned to Subject with ID ${subject.id}`)
+		if (!this._subject_ids.includes(subject.id)) return
+
+		// Unassign subject
 		this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
 		this._subjects = this._subjects?.filter(subject => subject.id !== subject.id)
 
 		if (mirror) {
-			subject.unassignFromLecture(this, false)
+			subject.unassignLecture(this, false)
 		}
 	}
 }

@@ -28,20 +28,27 @@
 	export let update: () => void
 
 	// Functions
-	async function sort(options: number) {
-		let direction: number
-
+	function sortmode(options: number) {
 		if (options & SortOption.relations) {
 			relation_index_sort = options & SortOption.index ? !relation_index_sort : undefined
 			relation_parent_sort = options & SortOption.parents ? !relation_parent_sort : undefined
 			relation_child_sort = options & SortOption.children ? !relation_child_sort : undefined
-			direction = relation_index_sort || relation_parent_sort || relation_child_sort ? SortOption.ascending : SortOption.descending
 		} else {
 			domain_index_sort = options & SortOption.index ? !domain_index_sort : undefined
 			domain_name_sort = options & SortOption.name ? !domain_name_sort : undefined
 			domain_style_sort = options & SortOption.style ? !domain_style_sort : undefined
-			direction = domain_index_sort || domain_name_sort || domain_style_sort ? SortOption.ascending : SortOption.descending
 		}
+	}
+
+	async function sort(options: number) {
+
+		sortmode(options)
+		let direction = relation_index_sort  ||
+						relation_parent_sort ||
+						relation_child_sort  ||
+						domain_index_sort    ||
+						domain_name_sort     ||
+						domain_style_sort ? SortOption.ascending : SortOption.descending
 
 		await graph.sort(options | direction)
 		update()
@@ -122,7 +129,7 @@
 
 			<!-- Domains -->
 			{#each domains as domain}
-				<DomainRow domain={domain} update={update} />
+				<DomainRow {domain} {update} {sortmode} />
 			{/each}
 			
 		{:else}

@@ -1,409 +1,475 @@
 
-// Extrnal imports
+// External dependencies
 import * as uuid from 'uuid'
 
-// Internal imports
-import { GraphController, DomainController, SubjectController } from '$scripts/controllers'
+// Internal dependencies
 import { ValidationData, Severity } from '$scripts/validation'
 
+import {
+	GraphController,
+	DomainController,
+	SubjectController,
+	FieldController
+} from '$scripts/controllers'
+
 // Exports
-export { RelationController, DomainRelationController, SubjectRelationController }
+export {
+	RelationController,
+	DomainRelationController,
+	SubjectRelationController
+}
 
 
-// --------------------> Classes
+// --------------------> Controllers
 
 
-abstract class RelationController<T extends DomainController | SubjectController> {
-	constructor (
-		public graph: GraphController,	// The graph the relation belongs to
-		public anchor: string,	// The anchor of the relation, unique for every DOM element, used for finding errors and d3 selection
-		public index: number,	// The index of the relation in the list of its type, based on creation order, consistent after sorting, deleting etc
-		private _parent?: T,	// The parent of the relation, exposed setter automatically updates field parents/children
-		private _child?: T		// The child of the relation, exposed setter automatically updates field parents/children
-	) { 
-		if (this.parent && this.child) {
-			this.parent.children = [...this.parent.children, this.child] as DomainController[] | SubjectController[]
-			this.child.parents = [...this.child.parents, this.parent] as DomainController[] | SubjectController[]
-		}
+abstract class RelationController {
+	uuid: string
+
+	constructor(
+		public graph: GraphController,
+		protected _parent?: FieldController,
+		protected _child?: FieldController
+	) {
+		this.uuid = uuid.v4()
 	}
 
-	get parent(): T | undefined {
+	// --------------------> Getters & Setters
+
+	get parent(): FieldController | undefined {
 		return this._parent
 	}
 
-	set parent(parent: T | undefined) {
+	set parent(parent: FieldController | undefined) {
 		if (this.parent === parent) return
 
 		// Update parent and child references
 		if (this.child) {
-			if (this.parent) {
-				this.child.parents = this.child.parents.filter(field => field !== this.parent) as DomainController[] | SubjectController[]
-				this.parent.children = this.parent.children.filter(field => field !== this.child) as DomainController[] | SubjectController[]
-			}
-
+			if (this.parent)
+				this.child.unassignParent(this.parent)
 			if (parent) {
-				this.child.parents = [...this.child.parents, parent] as DomainController[] | SubjectController[]
-				parent.children = [...parent.children, this.child] as DomainController[] | SubjectController[]
+				this.child.assignParent(parent)
 			}
 		}
 
 		this._parent = parent
 	}
 
-	get parent_color(): string {
-		return this.parent?.color || 'transparent'
-	}
-
-	get child(): T | undefined {
+	get child(): FieldController | undefined {
 		return this._child
 	}
 
-	set child(child: T | undefined) {
+	set child(child: FieldController | undefined) {
 		if (this.child === child) return
 
 		// Update parent and child references
 		if (this.parent) {
-			if (this.child) {
-				this.parent.children = this.parent.children.filter(field => field !== this.child) as DomainController[] | SubjectController[]
-				this.child.parents = this.child.parents.filter(field => field !== this.parent) as DomainController[] | SubjectController[]
-			}
-
+			if (this.child)
+				this.parent.unassignChild(this.child)
 			if (child) {
-				this.parent.children = [...this.parent.children, child] as DomainController[] | SubjectController[]
-				child.parents = [...child.parents, this.parent] as DomainController[] | SubjectController[]
+				this.parent.assignChild(child)
 			}
 		}
 
 		this._child = child
 	}
 
-	get child_color(): string {
-		return this.child?.color || 'transparent'
+	// --------------------> API Getters
+
+	/**
+	 * Get the color of the parent field
+	 * @returns A css color
+	 */
+
+	async getParentColor(): Promise<string> {
+		return await this.parent?.getColor() || 'transparent'
 	}
 
-	protected hasName(field: DomainController | SubjectController) {
-		/* Check if the field has a name */
+	/**
+	 * Get the color of the child field
+	 * @returns A css color
+	 */
 
-		return field.name !== ''
+	async getChildColor(): Promise<string> {
+		return await this.child?.getColor() || 'transparent'
 	}
+
+	// --------------------> Validation
+
+	/**
+	 * Check if a field has a name
+	 * @param field The field to check
+	 * @returns Whether the field has a name
+	 */
+
+	protected hasName(field: FieldController): boolean {
+		return field.trimmed_name !== ''
+	}
+
+	/**
+	 * Check if the given values are all defined
+	 * @param values The values to check
+	 * @returns Whether all values are defined
+	 */
 
 	protected isDefined(...values: (any | undefined)[]): boolean {
-		/* Check if the relation is defined */
-
 		return values.every(value => value !== undefined)
 	}
 
-	protected isCyclic(parent?: T, child?: T): boolean {
-		/* Depth first check if the relation is cyclic */
+	/**
+	 * Uses a depth first search to check if a relation is cyclic
+	 * @param parent The parent field
+	 * @param child The child field
+	 * @returns Whether the relation is cyclic
+	 */
 
-		let stack: (DomainController | SubjectController)[] = [child!]
+	protected async isCyclic(parent?: FieldController, child?: FieldController): Promise<boolean> {
+		let stack: FieldController[] = [child!]
 		while (stack.length > 0) {
+
+			// Pop the current node
 			const current = stack.pop()!
-			if (current === parent) return true
-			stack.push(...current.children)
+			if (current === parent) {
+				return true
+			}
+
+			// Add children to the stack
+			const children = await current.getChildren()
+			stack.push(...children)
 		}
 
 		return false
 	}
 
-	protected isSelfReferential(parent?: T, child?: T): boolean {
-		/* Check if the relation is self-referential */
+	/**
+	 * Check if a relation is self referential
+	 * @param parent The parent field
+	 * @param child The child field
+	 * @returns Whether the relation is self referential
+	 */
 
-		if (!this.isDefined(parent, child)) return false
+	protected isSelfReferential(parent?: FieldController, child?: FieldController): boolean {
 		return parent === child
 	}
 
-	abstract get parent_options(): any[]
-	abstract get child_options(): any[]
-	abstract validate(): ValidationData
-	abstract delete(): void
+	// --------------------> Abstract
+
+	abstract getParentOptions(): Promise<{ value: FieldController, label: string, validation: ValidationData }[]>
+	abstract getChildOptions(): Promise<{ value: FieldController, label: string, validation: ValidationData }[]>
+
+	abstract validate(): Promise<ValidationData>
 }
 
-class DomainRelationController extends RelationController<DomainController> {
-	get parent_options() {
-		/* Return the parent options for this domain relation */
+class DomainRelationController extends RelationController {
 
-		const options = []
-		for (const domain of this.graph.domains) {
+	// --------------------> API Getters
 
-			// Check if the domain has a name
-			if (!this.hasName(domain)) continue
+	/**
+	 * Get the parent options for this domain relation
+	 * @returns The parent options
+	 */
 
-			// Add the domain to options
-			options.push({
-				name: domain.name,
-				value: domain,
-				validation: this.validateOption(domain, this.child)
-			})
-		}
+	async getParentOptions(): Promise<{ value: DomainController, label: string, validation: ValidationData }[]> {
+		const options: { value: DomainController, label: string, validation: ValidationData }[] = []
+		const domains = await this.graph.getDomains()
 
-		return options
-	}
-
-	get child_options() {
-		/* Return the child options for this domain relation */
-
-		const options = []
-		for (const domain of this.graph.domains) {
+		for (const domain of domains) {
 
 			// Check if the domain has a name
 			if (!this.hasName(domain)) continue
 
 			// Add the domain to options
 			options.push({
-				name: domain.name,
 				value: domain,
-				validation: this.validateOption(this.parent, domain)
+				label: domain.trimmed_name,
+				validation: await this.validateOption(domain, this.child as DomainController)
 			})
 		}
 
 		return options
 	}
 
-	static create(graph: GraphController, parent?: DomainController, child?: DomainController): DomainRelationController {
-		/* Create a new domain relation */
+	/**
+	 * Get the child options for this domain relation
+	 * @returns The child options
+	 */
 
-		const relation = new DomainRelationController(graph, uuid.v4(), graph.domain_relations.length, parent, child)
-		graph.domain_relations.push(relation)
-		return relation
+	async getChildOptions(): Promise<{ value: DomainController, label: string, validation: ValidationData }[]> {
+		const options: { value: DomainController, label: string, validation: ValidationData }[] = []
+		const domains = await this.graph.getDomains()
+
+		for (const domain of domains) {
+
+			// Check if the domain has a name
+			if (!this.hasName(domain)) continue
+
+			// Add the domain to options
+			options.push({
+				value: domain,
+				label: domain.trimmed_name,
+				validation: await this.validateOption(this.parent as DomainController, domain)
+			})
+		}
+
+		return options
 	}
 
-	private isDuplicate(parent?: DomainController, child?: DomainController): boolean {
-		/* Check if the relation is a duplicate */
+	// --------------------> Validation
 
-		return -1 !== this.graph.domain_relations.findIndex(
-			relation => relation !== this && 
-			relation.parent === parent && 
+	/**
+	 * Check if the relation already exists
+	 * @param parent The parent domain
+	 * @param child The child domain
+	 * @returns Whether the relation already exists
+	 */
+
+	private async isDuplicate(parent?: DomainController, child?: DomainController): Promise<boolean> {
+		const domain_relations = await this.graph.getDomainRelations()
+		return domain_relations.find(relation =>
+			relation.parent === parent &&
 			relation.child === child
-		)
+		) !== undefined
 	}
 
-	private isInconsistent(parent?: DomainController, child?: DomainController): boolean {
-		/* Check if the relation is consistent */
+	/**
+	 * Check if there exists a subject relation that is consistent with this domain relation
+	 * @param parent The parent domain
+	 * @param child The child domain
+	 * @returns Whether the relation is inconsistent
+	 */
 
-		return this.graph.subject_relations.every(relation => 
-			relation.parent?.domain !== parent || 
-			relation.child?.domain !== child
-		)
+	private async isInconsistent(parent?: DomainController, child?: DomainController): Promise<boolean> {
+		const subject_relations = await this.graph.getSubjectRelations()
+		return subject_relations.find(relation =>
+			relation.parent === parent &&
+			relation.child === child
+		) !== undefined
 	}
 
-	private validateOption(parent?: DomainController, child?: DomainController): ValidationData {
+	/**
+	 * Validate an option for this domain relation
+	 * @param parent The parent domain
+	 * @param child The child domain
+	 * @returns The validation data
+	 */
+
+	private async validateOption(parent?: DomainController, child?: DomainController): Promise<ValidationData> {
 		const validation = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.isDefined(parent, child))
+		if (!this.isDefined(parent, child)) {
 			return validation
+		}
 
 		// Check if the relation is self-referential
-		if (this.isSelfReferential(parent, child))
-			validation.add({ severity: Severity.error, short: 'Self-referential'})
+		if (this.isSelfReferential(parent, child)) {
+			validation.add({ severity: Severity.error, short: 'Self-referential' })
+		}
 
 		// Check if the relation is a duplicate
-		else if (this.isDuplicate(parent, child))
-			validation.add({ severity: Severity.error, short: 'Duplicate relation'})
+		else if (await this.isDuplicate(parent, child)) {
+			validation.add({ severity: Severity.error, short: 'Duplicate relation' })
+		}
 
 		// Check if the relation is cyclic
-		else if (this.isCyclic(parent, child))
-			validation.add({ severity: Severity.error, short: 'Cyclic relation'})
+		else if (await this.isCyclic(parent, child)) {
+			validation.add({ severity: Severity.error, short: 'Cyclic relation' })
+		}
 
 		// Check if the relation is consistent
-		else if (this.isInconsistent(parent, child))
-			validation.add({ severity: Severity.warning, short: 'Inconsistent'})
+		else if (await this.isInconsistent(parent, child)) {
+			validation.add({ severity: Severity.warning, short: 'Inconsistent' })
+		}
 
 		return validation
 	}
 
-	validate(): ValidationData {
-		/* Validate this domain relation */
+	/**
+	 * Validate the domain relation
+	 * @returns Validation result
+	 */
 
-		const result = new ValidationData()
+	async validate(): Promise<ValidationData> {
+		const validation = new ValidationData()
 
-		// Check if the relation is defined
+		// Check if the parent and child are defined
 		if (!this.isDefined(this.parent, this.child)) {
-			result.add({
+			validation.add({
 				severity: Severity.error,
 				short: 'Domain relation is not fully defined',
 				long: 'Both the parent and child domains must be selected',
 				tab: 1,
-				uuid: this.anchor
+				uuid: this.uuid
 			})
 		}
 
-		// Check if the relation is consistent
-		if (this.isInconsistent(this.parent, this.child)) {
-			result.add({
-				severity: Severity.warning,
-				short: 'Domain relation is inconsistent',
-				long: 'The subjects of these domains are not related',
+		// Check if the relation is cyclic
+		else if (await this.isCyclic(this.parent, this.child)) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Domain relation is cyclic',
+				long: 'The parent and child domains are cyclically related',
 				tab: 1,
-				uuid: this.anchor
+				uuid: this.uuid
 			})
 		}
 
-		return result
-	}
-
-	delete(): void {
-		/* Delete this domain relation */
-
-		// Shift indexes
-		for (const relation of this.graph.domain_relations) {
-			if (relation.index > this.index) {
-				relation.index--
-			}
-		}
-
-		// Remove references in the parent and child
-		if (this.isDefined(this.parent, this.child)) {
-			this.parent!.children = this.parent!.children.filter(child => child !== this.child)
-			this.child!.parents = this.child!.parents.filter(parent => parent !== this.parent)
-		}
-
-		// Remove this relation from the graph
-		this.graph.domain_relations = this.graph.domain_relations.filter(relation => relation !== this)
+		return validation
 	}
 }
 
-class SubjectRelationController extends RelationController<SubjectController> {
-	get parent_options() {
-		/* Return the parent options for this subject relation */
+class SubjectRelationController extends RelationController {
 
-		const options = []
-		for (const subject of this.graph.subjects) {
+	// --------------------> API Getters
 
-			// Check if the subject has a name
-			if (!this.hasName(subject)) continue
+	/**
+	 * Get the parent options for this subject relation
+	 * @returns The parent options
+	 */
 
-			// Add the subject to options
-			options.push({
-				name: subject.name,
-				value: subject,
-				validation: this.validateOption(subject, this.child)
-			})
-		}
-
-		return options
-	}
-
-	get child_options() {
-		/* Return the child options for this subject relation */
-
-		const options = []
-		for (const subject of this.graph.subjects) {
+	async getParentOptions(): Promise<{ value: SubjectController, label: string, validation: ValidationData }[]> {
+		const options: { value: SubjectController, label: string, validation: ValidationData }[] = []
+		const subjects = await this.graph.getSubjects()
+		for (const subject of subjects) {
 
 			// Check if the subject has a name
 			if (!this.hasName(subject)) continue
 
 			// Add the subject to options
 			options.push({
-				name: subject.name,
 				value: subject,
-				validation: this.validateOption(this.parent, subject)
+				label: subject.trimmed_name,
+				validation: await this.validateOption(subject, this.child as SubjectController)
 			})
 		}
 
 		return options
 	}
 
-	static create(graph: GraphController, parent?: SubjectController, child?: SubjectController): SubjectRelationController {
-		/* Create a new subject relation */
+	/**
+	 * Get the child options for this subject relation
+	 * @returns The child options
+	 */
 
-		const relation = new SubjectRelationController(graph, uuid.v4(), graph.subject_relations.length, parent, child)
-		graph.subject_relations.push(relation)
-		return relation
+	async getChildOptions(): Promise<{ value: SubjectController, label: string, validation: ValidationData }[]> {
+		const options: { value: SubjectController, label: string, validation: ValidationData }[] = []
+		const subjects = await this.graph.getSubjects()
+		for (const subject of subjects) {
+
+			// Check if the subject has a name
+			if (!this.hasName(subject)) continue
+
+			// Add the subject to options
+			options.push({
+				value: subject,
+				label: subject.trimmed_name,
+				validation: await this.validateOption(this.parent as SubjectController, subject)
+			})
+		}
+
+		return options
 	}
 
-	private isInconsistent(parent?: SubjectController, child?: SubjectController): boolean {
-		/* Check if the relation is consistent */
+	// --------------------> Validation
 
-		if (!this.isDefined(parent?.domain, child?.domain) || parent!.domain === child!.domain)
-			return false
-		return parent!.domain!.children.every(domain_child => domain_child !== child!.domain)
-	}
+	/**
+	 * Check if the relation already exists
+	 * @param parent The parent subject
+	 * @param child The child subject
+	 * @returns Whether the relation already exists
+	 */
 
-	private isDuplicate(parent?: SubjectController, child?: SubjectController): boolean {
-		/* Check if the relation is a duplicate */
-
-		return -1 !== this.graph.subject_relations.findIndex(relation =>
-			relation !== this && 
-			relation.parent === parent && 
+	private async isDuplicate(parent?: SubjectController, child?: SubjectController): Promise<boolean> {
+		const subject_relations = await this.graph.getSubjectRelations()
+		return subject_relations.find(relation =>
+			relation.parent === parent &&
 			relation.child === child
-		)
+		) !== undefined
 	}
 
-	private validateOption(parent?: SubjectController, child?: SubjectController): ValidationData {
+	/**
+	 * Check if there exists a domain relation that is consistent with this subject relation
+	 * @param parent The parent subject
+	 * @param child The child subject
+	 * @returns Whether the relation is inconsistent
+	 */
+
+	private async isInconsistent(parent?: SubjectController, child?: SubjectController): Promise<boolean> {
+		const domain_relations = await this.graph.getDomainRelations()
+		return domain_relations.find(relation =>
+			relation.parent?.id === parent?.domain_id &&
+			relation.child?.id === child?.domain_id
+		) !== undefined
+	}
+
+	/**
+	 * Validate an option for this subject relation
+	 * @param parent The parent subject
+	 * @param child The child subject
+	 * @returns The validation data
+	 */
+
+	private async validateOption(parent?: SubjectController, child?: SubjectController): Promise<ValidationData> {
 		const validation = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.isDefined(parent, child))
+		if (!this.isDefined(parent, child)) {
 			return validation
+		}
 
 		// Check if the relation is self-referential
-		if (this.isSelfReferential(parent, child))
+		if (this.isSelfReferential(parent, child)) {
 			validation.add({ severity: Severity.error, short: 'Self-referential' })
+		}
 
 		// Check if the relation is a duplicate
-		else if (this.isDuplicate(parent, child))
+		else if (await this.isDuplicate(parent, child)) {
 			validation.add({ severity: Severity.error, short: 'Duplicate relation' })
-		
+		}
+
 		// Check if the relation is cyclic
-		else if (this.isCyclic(parent, child))
+		else if (await this.isCyclic(parent, child)) {
 			validation.add({ severity: Severity.error, short: 'Cyclic relation' })
+		}
 
 		// Check if the relation is consistent
-		else if (this.isInconsistent(parent, child))
+		else if (await this.isInconsistent(parent, child)) {
 			validation.add({ severity: Severity.warning, short: 'Inconsistent' })
+		}
 
 		return validation
 	}
 
-	validate(): ValidationData {
-		/* Validate this subject relation */
+	/**
+	 * Validate the subject relation
+	 * @returns The validation data
+	 */
 
-		const result = new ValidationData()
+	async validate(): Promise<ValidationData> {
+		const validation = new ValidationData()
 
-		// Check if the relation is defined
+		// Check if the parent and child are defined
 		if (!this.isDefined(this.parent, this.child)) {
-			result.add({
+			validation.add({
 				severity: Severity.error,
 				short: 'Subject relation is not fully defined',
 				long: 'Both the parent and child subjects must be selected',
 				tab: 2,
-				uuid: this.anchor
+				uuid: this.uuid
 			})
 		}
 
-		// Check if the relation is consistent
-		if (this.isInconsistent(this.parent, this.child)) {
-			result.add({
-				severity: Severity.warning,
-				short: 'Subject relation is inconsistent',
-				long: 'The domains of these subjects are not related',
-				tab: 2, 
-				uuid: this.anchor
+		// Check if the relation is cyclic
+		else if (await this.isCyclic(this.parent, this.child)) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Subject relation is cyclic',
+				long: 'The parent and child subjects are cyclically related',
+				tab: 2,
+				uuid: this.uuid
 			})
 		}
 
-		return result
-	}
-
-	delete(): void {
-		/* Delete this subject relation */
-
-		// Shift indexes
-		for (const relation of this.graph.subject_relations) {
-			if (relation.index > this.index) {
-				relation.index--
-			}
-		}
-
-		// Remove references in the parent and child
-		if (this.isDefined(this.parent, this.child)) {
-			this.parent!.children = this.parent!.children.filter(child => child !== this.child)
-			this.child!.parents = this.child!.parents.filter(parent => parent !== this.parent)
-		}
-
-		// Remove this relation from the graph
-		this.graph.subject_relations = this.graph.subject_relations.filter(relation => relation !== this)
+		return validation
 	}
 }

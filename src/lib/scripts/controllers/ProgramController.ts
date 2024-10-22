@@ -3,13 +3,14 @@
 import { browser } from '$app/environment'
 
 // Internal dependencies
+import { ValidationData, Severity } from '$scripts/validation'
+
 import {
 	ControllerCache,
 	CourseController,
 	UserController
 } from '$scripts/controllers'
 
-import { ValidationData, Severity } from '$scripts/validation'
 import type {
 	SerializedProgram,
 	SerializedCourse,
@@ -39,23 +40,126 @@ class ProgramController {
 		this.cache.add(this)
 	}
 
+	// --------------------> Getters & Setters
+
+	get trimmed_name(): string {
+		return this.name.trim()
+	}
+
 	get course_ids(): number[] {
-		return this._course_ids.concat()
+		return Array.from(this._course_ids)
 	}
 
 	get admin_ids(): number[] {
-		return this._admin_ids.concat()
+		return Array.from(this._admin_ids)
 	}
 
 	get editor_ids(): number[] {
-		return this._editor_ids.concat()
+		return Array.from(this._editor_ids)
+	}
+
+	// --------------------> API Getters
+
+	/**
+	 * Get the courses of this program, from the cache or the API
+	 * @returns Courses of the program
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getCourses(): Promise<CourseController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if courses are already loaded
+		if (this._courses) {
+			return Array.from(this._courses)
+		}
+
+		// Call API to get the course data
+		const response = await fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`)
+			})
+
+		// Revive the courses
+		const data = await response.json() as SerializedCourse[]
+		this._courses = data.map(course => CourseController.revive(this.cache, course))
+
+		return Array.from(this._courses)
 	}
 
 	/**
+	 * Get the admins of this program, from the cache or the API
+	 * @returns Admins of the program
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getAdmins(): Promise<UserController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if admins are already loaded
+		if (this._admins) {
+			return Array.from(this._admins)
+		}
+
+		// Call API to get the admin data
+		const response = await fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`)
+			})
+
+		// Revive the admins
+		const data = await response.json() as SerializedUser[]
+		this._admins = data.map(user => UserController.revive(this.cache, user))
+
+		return Array.from(this._admins)
+	}
+
+	/**
+	 * Get the editors of this program, from the cache or the API
+	 * @returns Editors of the program
+	 * @throws `APIError` if the API call fails
+	 */
+
+	async getEditors(): Promise<UserController[]> {
+
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Check if editors are already loaded
+		if (this._editors) {
+			return Array.from(this._editors)
+		}
+
+		// Call API to get the editor data
+		const response = await fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`)
+			})
+
+		// Revive the editors
+		const data = await response.json() as SerializedUser[]
+		this._editors = data.map(user => UserController.revive(this.cache, user))
+
+		return Array.from(this._editors)
+	}
+
+	// --------------------> API actions
+
+	/**
 	 * Create a new program
-	 * @param cache Cache to create the program in
+	 * @param cache Cache to create the program with
 	 * @param name Program name
-	 * @returns `Promise<ProgramController>` The newly created ProgramController
+	 * @returns The newly created ProgramController
 	 * @throws `APIError` If the API call fails
 	 */
 
@@ -84,16 +188,21 @@ class ProgramController {
 	}
 
 	/**
-	 * Revive a program from serialized data
+	 * Revive a program from serialized data or the cache
 	 * @param cache Cache to revive the program with
 	 * @param data Serialized data to revive
-	 * @returns `ProgramController` The revived ProgramController
+	 * @returns The revived ProgramController
+	 * @throws `ProgramError` if the server data is out of sync with the cache
 	 */
 
 	static revive(cache: ControllerCache, data: SerializedProgram): ProgramController {
 		const program = cache.find(ProgramController, data.id)
+		if (program) {
+			if (!program.represents(data))
+				throw new Error(`ProgramError: Attempted to revive Program with ID ${data.id}, but server data is out of sync with cache`)
+			return program
+		}
 
-		if (program) return program
 		return new ProgramController(
 			cache,
 			data.id,
@@ -105,40 +214,60 @@ class ProgramController {
 	}
 
 	/**
-	 * Validate the program
-	 * @returns `boolean` Whether the program is valid
+	 * Check if this program is equal to a serialized program
+	 * @param data Serialized program to compare against
+	 * @returns Whether the program is equal to the serialized program
 	 */
 
-	validate(): ValidationData {
-		const validation = new ValidationData()
+	represents(data: SerializedProgram): boolean {
 
-		if (this.name.trim() === '') {
-			validation.add({
-				severity: Severity.error,
-				short: 'Program has no name'
-			})
-
+		// Check the easy stuff
+		if (
+			this.id !== data.id ||
+			this.trimmed_name !== data.name
+		) {
+			return false
 		}
 
-		if (this._admin_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Program has no admins'
-			})
+		// Check courses
+		if (
+			this._course_ids.length !== data.courses.length ||
+			this._course_ids.some(id => !data.courses.includes(id)) ||
+			data.courses.some(id => !this._course_ids.includes(id))
+		) {
+			return false
 		}
 
-		return validation
+		// Check admins
+		if (
+			this._admin_ids.length !== data.admins.length ||
+			this._admin_ids.some(id => !data.admins.includes(id)) ||
+			data.admins.some(id => !this._admin_ids.includes(id))
+		) {
+			return false
+		}
+
+		// Check editors
+		if (
+			this._editor_ids.length !== data.editors.length ||
+			this._editor_ids.some(id => !data.editors.includes(id)) ||
+			data.editors.some(id => !this._editor_ids.includes(id))
+		) {
+			return false
+		}
+
+		return true
 	}
 
 	/**
-	 * Serialize the program
+	 * Serialize this program
 	 * @returns `SerializedProgram` Serialized program
 	 */
 
 	reduce(): SerializedProgram {
 		return {
 			id: this.id,
-			name: this.name.trim(),
+			name: this.trimmed_name,
 			courses: this._course_ids,
 			admins: this._admin_ids,
 			editors: this._editor_ids
@@ -146,7 +275,7 @@ class ProgramController {
 	}
 
 	/**
-	 * Save the program
+	 * Save this program
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -171,7 +300,7 @@ class ProgramController {
 	}
 
 	/**
-	 * Delete the program
+	 * Delete this program
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -185,7 +314,7 @@ class ProgramController {
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
 		for (const id of this._course_ids) {
 			this.cache.find(CourseController, id)
-				?.unassignFromProgram(this, false)
+				?.unassignProgram(this, false)
 		}
 
 		for (const id of this._admin_ids) {
@@ -203,134 +332,94 @@ class ProgramController {
 			.catch(error => {
 				throw new Error(`APIError (/api/program/${this.id} DELETE): ${error}`)
 			})
-			
+
 		// Remove from cache
 		this.cache.remove(this)
 	}
 
+	// --------------------> Validation
+
 	/**
-	 * Get the courses of the program
-	 * @returns `Promise<CourseController[]>` Courses of the program
-	 * @throws `APIError` if the API call fails
+	 * Check if this program has a name
+	 * @returns Whether the program has a name
 	 */
 
-	async getCourses(): Promise<CourseController[]> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if courses are already loaded
-		if (this._courses) {
-			return this._courses.concat()
-		}
-
-		// Call API to get the course data
-		const response = await fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`)
-			})
-
-		// Revive the courses
-		const data = await response.json() as SerializedCourse[]
-		this._courses = data.map(course => CourseController.revive(this.cache, course))
-
-		return this._courses.concat()
+	private hasName(): boolean {
+		return this.trimmed_name !== ''
 	}
 
 	/**
-	 * Get the Admins of the program
-	 * @returns `Promise<UserController[]>` Admins of the program
-	 * @throws `APIError` if the API call fails
+	 * Check if this program has admins
+	 * @returns Whether the program has admins
 	 */
 
-	async getAdmins(): Promise<UserController[]> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
-		// Check if admins are already loaded
-		if (this._admins) {
-			return this._admins.concat()
-		}
-
-		// Call API to get the admin data
-		const response = await fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`)
-			})
-
-		// Revive the admins
-		const data = await response.json() as SerializedUser[]
-		this._admins = data.map(user => UserController.revive(this.cache, user))
-
-		return this._admins.concat()
+	private hasAdmins(): boolean {
+		return this._admin_ids.length > 0
 	}
 
 	/**
-	 * Get the editors of the program
-	 * @returns `Promise<UserController[]>` Editors of the program
-	 * @throws `APIError` if the API call fails
+	 * Validate this program
+	 * @returns Validation result
 	 */
 
-	async getEditors(): Promise<UserController[]> {
-		
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
+	validate(): ValidationData {
+		const validation = new ValidationData()
 
-		// Check if editors are already loaded
-		if (this._editors) {
-			return this._editors.concat()
-		}
-
-		// Call API to get the editor data
-		const response = await fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`)
+		if (!this.hasName()) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Program has no name'
 			})
 
-		// Revive the editors
-		const data = await response.json() as SerializedUser[]
-		this._editors = data.map(user => UserController.revive(this.cache, user))
+		}
 
-		return this._editors.concat()
+		if (!this.hasAdmins()) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Program has no admins'
+			})
+		}
+
+		return validation
 	}
 
+	// --------------------> Assignments
+
 	/**
-	 * Assign a course to the program
+	 * Assign a course to this program
 	 * @param course Course to assign to the program
 	 * @param mirror Whether to mirror the assignment
 	 */
 
 	assignCourse(course: CourseController, mirror: boolean = true): void {
 		if (this._course_ids.includes(course.id)) return
+
+		// Assign course
 		this._course_ids.push(course.id)
 		this._courses?.push(course)
 
 		if (mirror) {
-			course.assignToProgram(this, false)
+			course.assignProgram(this, false)
 		}
 	}
 
 	/**
-	 * Assign a user as an admin of the program. Unassigns the user as an editor if they are one
+	 * Assign a user as an admin of this program. Unassigns the user as an editor if they are one
 	 * @param user User to assign as an admin
 	 * @param mirror Whether to mirror the assignment
 	 */
 
 	assignAdmin(user: UserController, mirror: boolean = true): void {
 		if (this._admin_ids.includes(user.id)) return
+
+		// Unassign as editor
+		if (this._editor_ids.includes(user.id)) {
+			this.unassignEditor(user, mirror)
+		}
+
+		// Assign as admin
 		this._admin_ids.push(user.id)
 		this._admins?.push(user)
-
-		if (this._editor_ids.includes(user.id)) {
-			this.unassignEditor(user)
-		}
 
 		if (mirror) {
 			user.becomeProgramAdmin(this, false)
@@ -338,19 +427,22 @@ class ProgramController {
 	}
 
 	/**
-	 * Assign a user as an editor of the program. Unassigns the user as an admin if they are one
+	 * Assign a user as an editor of this program. Unassigns the user as an admin if they are one
 	 * @param user User to assign as an editor
 	 * @param mirror Whether to mirror the assignment
 	 */
 
 	assignEditor(user: UserController, mirror: boolean = true): void {
 		if (this._editor_ids.includes(user.id)) return
+
+		// Unassign as admin
+		if (this._admin_ids.includes(user.id)) {
+			this.unassignAdmin(user, mirror)
+		}
+
+		// Assign as editor
 		this._editor_ids.push(user.id)
 		this._editors?.push(user)
-
-		if (this._admin_ids.includes(user.id)) {
-			this.unassignAdmin(user)
-		}
 
 		if (mirror) {
 			user.becomeProgramEditor(this, false)
@@ -358,29 +450,33 @@ class ProgramController {
 	}
 
 	/**
-	 * Unassign a course from the program
+	 * Unassign a course from this program
 	 * @param course Course to unassign from the program
 	 * @param mirror Whether to mirror the unassignment
 	 */
 
 	unassignCourse(course: CourseController, mirror: boolean = true): void {
 		if (!this._course_ids.includes(course.id)) return
+
+		// Unassign course
 		this._course_ids = this._course_ids.filter(id => id !== course.id)
 		this._courses = this._courses?.filter(known => known.id !== course.id)
 
 		if (mirror) {
-			course.unassignFromProgram(this, false)
+			course.unassignProgram(this, false)
 		}
 	}
 
 	/**
-	 * Unassign an admin from the program
+	 * Unassign an admin from this program
 	 * @param user User to unassign as an admin
 	 * @param mirror Whether to mirror the unassignment
 	 */
 
 	unassignAdmin(user: UserController, mirror: boolean = true): void {
 		if (!this._admin_ids.includes(user.id)) return
+
+		// Unassign admin
 		this._admin_ids = this._admin_ids.filter(id => id !== user.id)
 		this._admins = this._admins?.filter(known => known.id !== user.id)
 
@@ -390,13 +486,15 @@ class ProgramController {
 	}
 
 	/**
-	 * Unassign an editor from the program
+	 * Unassign an editor from this program
 	 * @param user User to unassign as an editor
 	 * @param mirror Whether to mirror the unassignment
 	 */
 
 	unassignEditor(user: UserController, mirror: boolean = true): void {
 		if (!this._editor_ids.includes(user.id)) return
+
+		// Unassign editor
 		this._editor_ids = this._editor_ids.filter(id => id !== user.id)
 		this._editors = this._editors?.filter(known => known.id !== user.id)
 
