@@ -1,21 +1,30 @@
 
+// Internal dependencies
 import { SubjectHelper } from '$scripts/helpers'
+import { instanceOfSerializedSubject } from '$scripts/types'
+
+// Exports
+export { POST, PUT, GET }
+
+
+// --------------------> API Endpoints
+
 
 /**
  * API endpoint for creating a new Subject in the database.
- * @body `{ graph_id: number }`
+ * @body `{ graph: number }`
  * @returns `SerializedSubject`
  */
 
-export async function POST({ request }) {
+async function POST({ request }) {
 	
 	// Retrieve data
-	const { graph_id } = await request.json()
-	if (!graph_id || isNaN(graph_id)) 
+	const { graph } = await request.json()
+	if (!graph || isNaN(graph)) 
 		return new Response('Failed to create Subject: missing Graph ID', { status: 400 })
 
 	// Create graph
-	return await SubjectHelper.create(graph_id)
+	return await SubjectHelper.create(graph)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })
@@ -23,18 +32,20 @@ export async function POST({ request }) {
 }
 
 /**
- * API endpoint for deleting Subjects from the database.
- * @body `{ ids: number[] }`
+ * API endpoint for updating a Subject in the database.
+ * @body `SerializedSubject`
  */
 
-export async function DELETE({ request }) {
-	
-	// Retrieve data
-	const { ids } = await request.json()
-	if (!ids) return new Response('Failed to remove Subjects: Missing IDs', { status: 400 })
+async function PUT({ request }) {
 
-	// Remove graphs
-	return await SubjectHelper.remove(ids)
+	// Retrieve data
+	const data = await request.json()
+	if (!instanceOfSerializedSubject(data)) {
+		return new Response('Invalid SerializedSubject', { status: 400 })
+	}
+
+	// Update subject
+	return await SubjectHelper.update(data)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })
@@ -42,19 +53,14 @@ export async function DELETE({ request }) {
 }
 
 /**
- * An API endpoint for updating a Subject in the database.
- * @body `SerializedSubject`
+ * API endpoint for requesting Subjects in the database.
+ * @returns `SerializedSubject[]` or `SerializedSubject` if a single ID is provided
  */
 
-export async function PUT({ request }) {
-
-	// Retrieve data
-	const data = await request.json()
-
-	// Update subject
-	return await SubjectHelper.update(data)
+async function GET() {
+	return await SubjectHelper.getAll()
 		.then(
-			() => new Response(null, { status: 200 }),
+			subjects => new Response(JSON.stringify(subjects), { status: 200 }),
 			error => new Response(error, { status: 400 })
 		)
 }

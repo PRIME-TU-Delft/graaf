@@ -29,10 +29,10 @@ class ControllerCache {
 	private links: LinkController[] = []
 
 	/**
-	 * Overloaded method to find objects in the cache
+	 * Finds an object in the cache
 	 * @param type The type of the object
 	 * @param id The ID of the object
-	 * @returns The found object
+	 * @returns The found object, or `undefined` if not found
 	 * @throws `CacheError` If the object type is invalid
 	 */
 
@@ -67,7 +67,7 @@ class ControllerCache {
 	}
 
 	/**
-	 * Overloaded method to add objects to the cache
+	 * Adds objects to the cache
 	 * @param object The object to be added
 	 * @throws `CacheError` If the object already exists in the cache or if the object type is invalid
 	 */
@@ -119,7 +119,7 @@ class ControllerCache {
 	}
 
 	/**
-	 * Overloaded method to remove objects from the cache
+	 * Removes objects from the cache
 	 * @param object The object to be removed
 	 * @throws `CacheError` If the object does not exist in the cache or if the object type is invalid
 	 */

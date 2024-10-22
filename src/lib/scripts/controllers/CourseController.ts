@@ -82,8 +82,8 @@ class CourseController {
 	// --------------------> API Getters
 
 	/**
-	 * Get the programs this course is assigned to, from the cache or the API
-	 * @returns Programs this course is assigned to
+	 * Gets the programs this course is assigned to, from the cache or the API
+	 * @returns Array of programs this course is assigned to
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -113,8 +113,8 @@ class CourseController {
 	}
 
 	/**
-	 * Get the graphs assigned to this course, from the cache or the API
-	 * @returns Graphs assigned to this course
+	 * Gets the graphs assigned to this course, from the cache or the API
+	 * @returns Array of graphs assigned to this course
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -144,8 +144,8 @@ class CourseController {
 	}
 
 	/**
-	 * Get the graphs assigned to this course as a list of Dropdown options, from the cache or the API
-	 * @returns Graphs assigned to this course as a list of Dropdown options
+	 * Gets the graphs assigned to this course as a list of Dropdown options, from the cache or the API
+	 * @returns Array of Dropdown options for the graphs assigned to this course
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -159,8 +159,8 @@ class CourseController {
 	}
 
 	/**
-	 * Get the links assigned to this course, from the cache or the API
-	 * @returns Links assigned to this course
+	 * Gets the links assigned to this course, from the cache or the API
+	 * @returns Array of links assigned to this course
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -190,8 +190,8 @@ class CourseController {
 	}
 
 	/**
-	 * Get the admins assigned to this course, from the cache or the API
-	 * @returns Admins assigned to this course
+	 * Gets the admins assigned to this course, from the cache or the API
+	 * @returns Array of admins assigned to this course
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -221,8 +221,8 @@ class CourseController {
 	}
 
 	/**
-	 * Get the editors assigned to this course, from the cache or the API
-	 * @returns Editors assigned to this course
+	 * Gets the editors assigned to this course, from the cache or the API
+	 * @returns Array of editors assigned to this course
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -254,11 +254,11 @@ class CourseController {
 	// --------------------> API actions
 
 	/**
-	 * Create a new course
+	 * Creates a new course
 	 * @param cache Cache to create the course with
 	 * @param code Course code
 	 * @param name Course name
-	 * @returns The newly created CourseController
+	 * @returns The newly created course controller
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -287,10 +287,10 @@ class CourseController {
 	}
 
 	/**
-	 * Revive a course from serialized data, or retrieves an existing course from the cache
+	 * Revives a course from serialized data, or retrieves an existing course from the cache
 	 * @param cache Cache to revive the course with
 	 * @param data Serialized data to revive
-	 * @returns The revived CourseController
+	 * @returns The revived course controller
 	 * @throws `CourseError` if the server data is out of sync with the cache
 	 */
 
@@ -316,9 +316,9 @@ class CourseController {
 	}
 
 	/**
-	 * Check if this course is equal to a serialized course
+	 * Checks if this course contains the same data as a serialized course
 	 * @param data Serialized course to compare against
-	 * @returns Whether this course is equal to the serialized course
+	 * @returns Whether this course represents the serialized course
 	 */
 
 	represents(data: SerializedCourse): boolean {
@@ -381,7 +381,7 @@ class CourseController {
 	}
 
 	/**
-	 * Serialize this course
+	 * Serializes this course
 	 * @returns Serialized course
 	 */
 
@@ -399,7 +399,7 @@ class CourseController {
 	}
 
 	/**
-	 * Save this course
+	 * Saves this course
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -424,7 +424,7 @@ class CourseController {
 	}
 
 	/**
-	 * Delete this course, and all related graphs
+	 * Deletes this course, and all related graphs
 	 * @throws `APIError` if the API call fails
 	 */
 
@@ -471,7 +471,7 @@ class CourseController {
 	// --------------------> Validation
 
 	/**
-	 * Check if this course has a name
+	 * Checks if this course has a name
 	 * @returns Whether this course has a name
 	 */
 
@@ -480,7 +480,7 @@ class CourseController {
 	}
 
 	/**
-	 * Check if this course has a code
+	 * Checks if this course has a code
 	 * @returns Whether this course has a code
 	 */
 
@@ -489,7 +489,7 @@ class CourseController {
 	}
 
 	/**
-	 * Check if this course has admins
+	 * Checks if this course has admins
 	 * @returns Whether this course has admins
 	 */
 
@@ -498,8 +498,8 @@ class CourseController {
 	}
 
 	/**
-	 * Validate this course
-	 * @returns Validation result
+	 * Validates this course
+	 * @returns Validation data
 	 */
 
 	validate(): ValidationData {
@@ -532,7 +532,7 @@ class CourseController {
 	// --------------------> Assignments
 
 	/**
-	 * Assign this course to a program
+	 * Assigns this course to a program
 	 * @param program Target program
 	 * @param mirror Whether to mirror the assignment
 	 */
@@ -550,7 +550,7 @@ class CourseController {
 	}
 
 	/**
-	 * Assign a graph to this course
+	 * Assigns a graph to this course
 	 * @param graph Target graph
 	 * @param mirror Whether to mirror the assignment
 	 */
@@ -568,7 +568,7 @@ class CourseController {
 	}
 
 	/**
-	 * Assign a link to this course
+	 * Assigns a link to this course
 	 * @param link Target link
 	 * @param mirror Whether to mirror the assignment
 	 */
@@ -586,7 +586,7 @@ class CourseController {
 	}
 
 	/**
-	 * Assign a user as an admin of this course. Unassigns the user as an editor if they are one
+	 * Assigns a user as an admin of this course. Unassigns the user as an editor if they are one
 	 * @param user Target user
 	 * @param mirror Whether to mirror the assignment
 	 */
@@ -609,7 +609,7 @@ class CourseController {
 	}
 
 	/**
-	 * Assign a user as an editor of this course. Unassigns the user as an admin if they are one
+	 * Assigns a user as an editor of this course. Unassigns the user as an admin if they are one
 	 * @param user Target user
 	 * @param mirror Whether to mirror the assignment
 	 */
@@ -632,7 +632,7 @@ class CourseController {
 	}
 
 	/**
-	 * Unassign this course from a program
+	 * Unassigns this course from a program
 	 * @param program Target program
 	 * @param mirror Whether to mirror the unassignment
 	 */
@@ -650,7 +650,7 @@ class CourseController {
 	}
 
 	/**
-	 * Unassign a graph from this course
+	 * Unassigns a graph from this course
 	 * @param graph Target graph
 	 */
 
@@ -676,7 +676,7 @@ class CourseController {
 	}
 
 	/**
-	 * Unassign an admin from this course
+	 * Unassigns an admin from this course
 	 * @param user Target user
 	 * @param mirror Whether to mirror the unassignment
 	 */
@@ -694,7 +694,7 @@ class CourseController {
 	}
 
 	/**
-	 * Unassign an editor from this course
+	 * Unassigns an editor from this course
 	 * @param user Target user
 	 * @param mirror Whether to mirror the unassignment
 	 */

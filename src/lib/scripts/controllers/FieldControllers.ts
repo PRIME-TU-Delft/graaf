@@ -74,8 +74,8 @@ abstract class FieldController {
 	// --------------------> API Getters
 
 	/**
-	 * Get the color of this field
-	 * @returns The color of the field
+	 * Gets the color of this field
+	 * @returns CSS color string
 	 */
 
 	async getColor(): Promise<string> {
@@ -134,7 +134,7 @@ class DomainController extends FieldController {
 	// --------------------> API Getters
 
 	/**
-	 * Get the graph this domain is assigned to, from the cache or the API
+	 * Gets the graph this domain is assigned to, from the cache or the API
 	 * @returns The graph this domain is assigned to
 	 * @throws `APIError` if the API call fails
 	 */

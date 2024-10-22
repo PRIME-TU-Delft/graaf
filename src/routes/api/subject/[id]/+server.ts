@@ -1,6 +1,6 @@
 
 // Internal dependencies
-import { LectureHelper } from '$scripts/helpers'
+import { SubjectHelper } from '$scripts/helpers'
 
 // Exports
 export { GET, DELETE }
@@ -10,8 +10,8 @@ export { GET, DELETE }
 
 
 /**
- * API endpoint for fetching a Lecture from the database.
- * @returns `SerializedLecture`
+ * API endpoint for fetching a Subject from the database.
+ * @returns `SerializedSubject`
  */
 
 async function GET({ params }) {
@@ -22,8 +22,8 @@ async function GET({ params }) {
 		return new Response('Missing ID', { status: 400 })
 	}
 
-	// Delete the lecture
-	return await LectureHelper.getById(id)
+	// Delete the subject
+	return await SubjectHelper.getById(id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })
@@ -31,7 +31,7 @@ async function GET({ params }) {
 }
 
 /**
- * API endpoint for deleting a Lecture from the database.
+ * API endpoint for deleting a Subject from the database.
  */
 
 async function DELETE({ params }) {
@@ -42,8 +42,8 @@ async function DELETE({ params }) {
 		return new Response('Missing ID', { status: 400 })
 	}
 
-	// Delete the lecture
-	return await LectureHelper.remove(id)
+	// Delete the subject
+	return await SubjectHelper.remove(id)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })
