@@ -9,8 +9,8 @@ generator client {
 }
 
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
+	provider	= "postgresql"
+	url			= env("DATABASE_URL")
 }
 
 // START AUTH STUFF
@@ -33,6 +33,7 @@ enum CourseRole {
 model User {
 	id					String		@id @default(cuid())
 	role				UserRole	@default(USER)
+	nickname			String?
 	firstName			String?
 	lastName			String?
 	email				String		@unique
@@ -44,8 +45,8 @@ model User {
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
 
-	programs			ProgramCoordinator[]
-	courses				CourseCoordinator[]
+	programs			ProgramUser[]
+	courses				CourseUser[]
 }
 
 model Account {
@@ -96,11 +97,11 @@ model Program {
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 	courses			Course[]
-	coordinators	ProgramCoordinator[]
+	users			ProgramUser[]
 }
 
 
-model ProgramCoordinator {
+model ProgramUser {
 	userId			String
 	programId		Int
 	role			ProgramRole		@default(EDITOR)
@@ -112,7 +113,7 @@ model ProgramCoordinator {
 }
 
 
-model CourseCoordinator {
+model CourseUser {
 	userId			String
 	courseId		Int
 	role			CourseRole		@default(EDITOR)
@@ -138,7 +139,7 @@ model Course {
 	programs		Program[]
 	graphs			Graph[]
 	links			GraphLink[]
-	coordinators	CourseCoordinator[]
+	users			CourseUser[]
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 }
@@ -184,7 +185,20 @@ model Subject {
 	domainId		Int?
 	parentSubjects	Subject[]	@relation("SubjectRelation")
 	childSubjects	Subject[]	@relation("SubjectRelation")
-	lectures		Lecture[]
+	lectures		SubjectLecture[]
+}
+
+
+model SubjectLecture {
+	subjectId		Int
+	lectureId		Int
+	x				Int			@default(0)
+	y				Int			@default(0)
+
+	subject			Subject		@relation(fields: [subjectId], references: [id], onDelete: Cascade)
+	lecture			Lecture		@relation(fields: [lectureId], references: [id], onDelete: Cascade)
+
+	@@id([subjectId, lectureId])
 }
 
 
@@ -193,7 +207,7 @@ model Lecture {
 	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	name			String		@default("")
-	subjects		Subject[]
+	subjects		SubjectLecture[]
 }
 
 
