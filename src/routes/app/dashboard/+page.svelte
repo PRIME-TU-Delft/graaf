@@ -13,16 +13,14 @@
 	import Layout from '$components/layouts/DefaultLayout.svelte'
 	import Card from '$components/layouts/Card.svelte'
 	import Modal from '$components/layouts/Modal.svelte'
-	import Button from '$components/buttons/Button.svelte'
-	import IconButton from '$components/buttons/IconButton.svelte'
-	import LinkButton from '$components/buttons/LinkButton.svelte'
 	import Searchbar from '$components/forms/Search.svelte'
 	import Textfield from '$components/forms/Textfield.svelte'
+	import Button from '$components/buttons/Button.svelte'
 	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
-	import peopleIcon from '$assets/people-icon.svg'
+	import ProgramCard from './ProgramCard.svelte'
 
 	// Helpers
 	class SandboxModal extends BaseModal {
@@ -88,7 +86,8 @@
 		}
 
 		async submit() {
-			$programs = [...$programs, await ProgramController.create(cache, this.trimmed_name)]
+			const program = await ProgramController.create(cache, this.trimmed_name)
+			programs.update(programs => [...programs, program])
 			this.hide()
 		}
 	}
@@ -136,7 +135,8 @@
 		}
 
 		async submit() {
-			$courses = [...$courses, await CourseController.create(cache, this.trimmed_code, this.trimmed_name)]
+			const course = await CourseController.create(cache, this.trimmed_code, this.trimmed_name)
+			courses.update(courses => [...courses, course])
 			this.hide()
 		}
 	}
@@ -147,7 +147,6 @@
 	const programs = writable(data.programs)
 	const courses = writable(data.courses)
 
-	const modals: { [key: string]: Modal } = {}
 	const sandbox_modal = new SandboxModal()
 	const program_modal = new ProgramModal()
 	const course_modal = new CourseModal()
@@ -243,7 +242,7 @@
 				<Textfield id="name" bind:value={course_modal.name} />
 
 				<footer>
-					<Button 
+					<Button
 						disabled={!course_modal.validate().okay()}
 						on:click={() => course_modal.submit()}
 					> Create </Button>
@@ -253,6 +252,8 @@
 		</Modal>
 	</svelte:fragment>
 
+	<!-- My courses card -->
+
 	<Card>
 		<h3 slot="header"> My Courses </h3>
 
@@ -260,67 +261,21 @@
 			{#if !$courses.some(course => course.matchesQuery(query))}
 				<span class="grayed"> There's nothing here </span>
 			{:else}
-
 				<div class="grid">
-					{#each $courses as course} <!-- TODO check if course belongs to user -->
+					{#each $courses as course}
 						{#if course.matchesQuery(query)}
 							<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
 						{/if}
 					{/each}
 				</div>
-
 			{/if}
 		</svelte:fragment>
 	</Card>
 
+	<!-- Program cards -->
+
 	{#each $programs as program}
-		<Card>
-			<svelte:fragment slot="header">
-				<h3> {program.name} </h3>
-
-				<div class="flex-spacer" />
-
-				<IconButton
-					src={peopleIcon}
-					description="Program Coordinators"
-					on:click={modals[program.name]?.show}
-					scale
-				/>
-
-				<LinkButton href="./program/{program.id}/settings"> Program settings </LinkButton>
-
-				<Modal bind:this={modals[program.name]}>
-					<h3 slot="header"> Program Coordinators </h3>
-					<p>
-						These are the coordinators of the {program.name} program. You can contact them via email to request
-						access to a course.
-					</p>
-					<ul>
-						{#await program.getAdmins() then admins}
-							{#each admins as admin}
-								<li> {admin.first_name} {admin.last_name} </li>
-							{/each}
-						{/await}
-					</ul>
-				</Modal>
-			</svelte:fragment>
-
-			<svelte:fragment slot="body">
-				{#await program.getCourses() then courses}
-					{#if !courses.some(course => course.matchesQuery(query))}
-						<span class="grayed"> There's nothing here </span>
-					{:else}
-						<div class="grid">
-							{#each courses as course}
-								{#if course.matchesQuery(query)}
-									<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
-								{/if}
-							{/each}
-						</div>
-					{/if}
-				{/await}
-			</svelte:fragment>
-		</Card>
+		<ProgramCard {program} {query} />
 	{/each}
 </Layout>
 
@@ -330,41 +285,6 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	.grayed
-		margin: auto
-		color: $placeholder-color
-
-	.grid
-		display: flex
-		flex-flow: row wrap
-
-		.cell
-			flex: 0 1 100%
-			padding: 0.5rem
-
-			cursor: pointer
-			color: $dark-gray
-			transition: color $default-transition
-
-			&:hover
-				color: $black
-				text-decoration: underline
-
-			&:last-child
-				flex-grow: 1
-
-			&:not(:last-child)
-				border-bottom: 1px solid $gray
-
-			@media screen and (min-width: 800px)
-				border-bottom: 1px solid $gray
-				flex-basis: 50%
-
-			@media screen and (min-width: 1200px)
-				border-bottom: 1px solid $gray
-				flex-basis: 33.3333%
+	@import './style.sass'
 
 </style>
