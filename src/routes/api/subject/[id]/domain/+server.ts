@@ -1,6 +1,7 @@
 
 // Internal dependencies
-import { SubjectHelper } from "$scripts/helpers"
+import { env } from '$env/dynamic/private'
+import { SubjectHelper } from '$scripts/helpers'
 
 // Exports
 export { GET }
@@ -15,6 +16,8 @@ export { GET }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/subject/[id]/domain')
+
 	const subject_id = Number(params.id)
 	if (!subject_id || isNaN(subject_id)) {
 		return new Response('Invalid subject ID', { status: 400 })

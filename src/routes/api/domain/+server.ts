@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { env } from '$env/dynamic/private'
 import { DomainHelper } from '$scripts/helpers'
 import { instanceOfSerializedDomain } from '$scripts/types'
 
@@ -17,10 +18,11 @@ export { POST, PUT, GET }
  */
 
 async function POST({ request }) {
-	
-	// Retrieve data
+	if (env.DEBUG) console.log('\nPOST /api/domain')
+
+	// Retrieve graph ID
 	const { graph } = await request.json()
-	if (!graph || isNaN(graph)) 
+	if (!graph || isNaN(graph))
 		return new Response('Failed to create Domain: missing Graph ID', { status: 400 })
 
 	// Create graph
@@ -37,6 +39,7 @@ async function POST({ request }) {
  */
 
 async function PUT({ request }) {
+	if (env.DEBUG) console.log('\nPUT /api/domain')
 
 	// Retrieve data
 	const data = await request.json()
@@ -58,6 +61,9 @@ async function PUT({ request }) {
  */
 
 async function GET() {
+	if (env.DEBUG) console.log('\nGET /api/domain')
+
+	// Get all domains
 	return await DomainHelper.getAll()
 		.then(
 			domains => new Response(JSON.stringify(domains), { status: 200 }),

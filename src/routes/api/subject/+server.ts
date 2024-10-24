@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { env } from '$env/dynamic/private'
 import { SubjectHelper } from '$scripts/helpers'
 import { instanceOfSerializedSubject } from '$scripts/types'
 
@@ -17,6 +18,7 @@ export { POST, PUT, GET }
  */
 
 async function POST({ request }) {
+	if (env.DEBUG) console.log('\nPOST /api/subject')
 	
 	// Retrieve data
 	const { graph } = await request.json()
@@ -37,6 +39,7 @@ async function POST({ request }) {
  */
 
 async function PUT({ request }) {
+	if (env.DEBUG) console.log('\nPUT /api/subject')
 
 	// Retrieve data
 	const data = await request.json()
@@ -58,6 +61,8 @@ async function PUT({ request }) {
  */
 
 async function GET() {
+	if (env.DEBUG) console.log('\nGET /api/subject')
+
 	return await SubjectHelper.getAll()
 		.then(
 			subjects => new Response(JSON.stringify(subjects), { status: 200 }),

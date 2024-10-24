@@ -1,6 +1,7 @@
 
 // Internal dependencies
-import { GraphHelper } from "$scripts/helpers"
+import { env } from '$env/dynamic/private'
+import { GraphHelper } from '$scripts/helpers'
 
 // Exports
 export { GET }
@@ -15,6 +16,8 @@ export { GET }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/graph/[id]/lectures')
+
 	const graph_id = Number(params.id)
 	if (!graph_id || isNaN(graph_id)) {
 		return new Response('Invalid graph ID', { status: 400 })

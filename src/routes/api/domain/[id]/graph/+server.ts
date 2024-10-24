@@ -1,6 +1,7 @@
 
 // Internal dependencies
-import { DomainHelper } from "$scripts/helpers"
+import { env } from '$env/dynamic/private'
+import { DomainHelper } from '$scripts/helpers'
 
 // Exports
 export { GET }
@@ -15,11 +16,15 @@ export { GET }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/domain/[id]/graph')
+
+	// Get the domain ID
 	const domain_id = Number(params.id)
 	if (!domain_id || isNaN(domain_id)) {
 		return new Response('Invalid domain ID', { status: 400 })
 	}
 
+	// Get the graph this domain belongs to
 	return await DomainHelper.getGraph(domain_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),

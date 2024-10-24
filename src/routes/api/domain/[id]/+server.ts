@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { env } from '$env/dynamic/private'
 import { DomainHelper } from '$scripts/helpers'
 
 // Exports
@@ -15,8 +16,9 @@ export { GET, DELETE }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/domain/[id]')
 
-	// Retrieve data
+	// Retrieve domain ID
 	const id = Number(params.id)
 	if (!id || isNaN(id)) {
 		return new Response('Missing ID', { status: 400 })
@@ -35,8 +37,9 @@ async function GET({ params }) {
  */
 
 async function DELETE({ params }) {
+	if (env.DEBUG) console.log('\nDELETE /api/domain/[id]')
 
-	// Retrieve data
+	// Retrieve domain ID
 	const id = Number(params.id)
 	if (!id || isNaN(id)) {
 		return new Response('Missing ID', { status: 400 })

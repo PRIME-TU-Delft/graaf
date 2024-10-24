@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { env } from '$env/dynamic/private'
 import { LectureHelper } from '$scripts/helpers'
 
 // Exports
@@ -15,6 +16,7 @@ export { GET, DELETE }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/lecture/[id]')
 
 	// Retrieve data
 	const id = Number(params.id)
@@ -35,6 +37,7 @@ async function GET({ params }) {
  */
 
 async function DELETE({ params }) {
+	if (env.DEBUG) console.log('\nDELETE /api/lecture/[id]')
 
 	// Retrieve data
 	const id = Number(params.id)

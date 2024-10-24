@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { env } from '$env/dynamic/private'
 import { CourseHelper } from '$scripts/helpers'
 
 // Exports
@@ -15,14 +16,15 @@ export { GET, DELETE }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/course/[id]')
 
-	// Retrieve data
+	// Retrieve course ID
 	const id = Number(params.id)
 	if (!id || isNaN(id)) {
 		return new Response('Missing ID', { status: 400 })
 	}
 
-	// Delete the course
+	// Get the course
 	return await CourseHelper.getById(id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
@@ -35,8 +37,9 @@ async function GET({ params }) {
  */
 
 async function DELETE({ params }) {
+	if (env.DEBUG) console.log('\nDELETE /api/course/[id]')
 
-	// Retrieve data
+	// Retrieve course ID
 	const id = Number(params.id)
 	if (!id || isNaN(id)) {
 		return new Response('Missing ID', { status: 400 })

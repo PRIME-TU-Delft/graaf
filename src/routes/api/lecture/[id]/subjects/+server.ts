@@ -1,6 +1,7 @@
 
 // Internal dependencies
-import { LectureHelper } from "$scripts/helpers"
+import { env } from '$env/dynamic/private'
+import { LectureHelper } from '$scripts/helpers'
 
 // Exports
 export { GET }
@@ -15,6 +16,8 @@ export { GET }
  */
 
 async function GET({ params }) {
+	if (env.DEBUG) console.log('\nGET /api/lecture/[id]/subjects')
+
 	const lecture_id = Number(params.id)
 	if (!lecture_id || isNaN(lecture_id)) {
 		return new Response('Invalid lecture ID', { status: 400 })

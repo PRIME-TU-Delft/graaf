@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { env } from '$env/dynamic/private'
 import { GraphHelper } from '$scripts/helpers'
 import { instanceOfSerializedGraph } from '$scripts/types'
 
@@ -17,6 +18,7 @@ export { POST, PUT, GET }
  */
 
 async function POST({ request }) {
+	if (env.DEBUG) console.log('\nPOST /api/graph')
 	
 	// Retrieve data
 	const { course, name } = await request.json()
@@ -37,6 +39,7 @@ async function POST({ request }) {
  */
 
 async function PUT({ request }) {
+	if (env.DEBUG) console.log('\nPUT /api/graph')
 
 	// Retrieve data
 	const data = await request.json()
@@ -58,6 +61,8 @@ async function PUT({ request }) {
  */
 
 async function GET() {
+	if (env.DEBUG) console.log('\nGET /api/graph')
+
 	return await GraphHelper.getAll()
 		.then(
 			graphs => new Response(JSON.stringify(graphs), { status: 200 }),
