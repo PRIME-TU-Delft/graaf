@@ -74,9 +74,9 @@ async function update(data: SerializedDomain): Promise<void> {
 	])
 
 	// Get data delta
-	const graph_delta = required_field_delta(data.graph, graph)
-	const parent_delta = array_delta(data.parents, parents)
-	const child_delta = array_delta(data.children, children)
+	const graph_delta = required_field_delta(graph, data.graph)
+	const parent_delta = array_delta(parents, data.parents)
+	const child_delta = array_delta(children, data.children)
 
 	// Update domain
 	try {

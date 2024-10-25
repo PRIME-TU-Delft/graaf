@@ -20,3 +20,7 @@ export {
 	instanceOfSerializedLecture,
 	instanceOfSerializedLink
 } from './Serialized'
+
+export type {
+	DropdownOption,
+} from './DropdownOption'

@@ -85,11 +85,11 @@ async function update(data: SerializedGraph): Promise<void> {
 	])
 
 	// Get data delta
-	const course_delta = required_field_delta(data.course, course)
-	const domain_delta = array_delta(data.domains, domains)
-	const subject_delta = array_delta(data.subjects, subjects)
-	const lecture_delta = array_delta(data.lectures, lectures)
-	const link_delta = array_delta(data.links, links)
+	const course_delta = required_field_delta(course, data.course)
+	const domain_delta = array_delta(domains, data.domains)
+	const subject_delta = array_delta(subjects, data.subjects)
+	const lecture_delta = array_delta(lectures, data.lectures)
+	const link_delta = array_delta(links, data.links)
 
 	// Update
 	try {

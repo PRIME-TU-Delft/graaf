@@ -95,11 +95,11 @@ async function update(data: SerializedSubject): Promise<void> {
 	])
 
 	// Get data deltas
-	const graph_delta = required_field_delta(data.graph, graph)
-	const domain_delta = optional_field_delta(data.domain, domain)
-	const parent_delta = array_delta(data.parents, parents)
-	const child_delta = array_delta(data.children, children)
-	const lecture_delta = array_delta(data.lectures, lectures)
+	const graph_delta = required_field_delta(graph, data.graph)
+	const domain_delta = optional_field_delta(domain, data.domain)
+	const parent_delta = array_delta(parents, data.parents)
+	const child_delta = array_delta(children, data.children)
+	const lecture_delta = array_delta(lectures, data.lectures)
 
 	// Update subject
 	try {

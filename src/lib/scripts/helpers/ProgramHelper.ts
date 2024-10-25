@@ -82,7 +82,7 @@ async function update(data: SerializedProgram): Promise<void> {
 	const courses = await getCourses(data.id)
 
 	// Get data delta
-	const course_delta = array_delta(data.courses, courses)
+	const course_delta = array_delta(courses, data.courses)
 
 	// Update
 	try {

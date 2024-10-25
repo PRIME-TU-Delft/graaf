@@ -18,8 +18,10 @@ import type {
 	SerializedCourse,
 	SerializedGraph,
 	SerializedLink,
-	SerializedUser
+	SerializedUser,
+	DropdownOption
 } from '$scripts/types'
+import type { Graph } from '@prisma/client'
 
 // Exports
 export { CourseController }
@@ -82,6 +84,30 @@ class CourseController {
 	// --------------------> API Getters
 
 	/**
+	 * Gets all courses from the cache or the API
+	 * @returns Array of all courses
+	 * @throws `APIError` if the API call fails
+	 */
+
+	static async getAll(cache: ControllerCache): Promise<CourseController[]> {
+		
+		// Guard against SSR
+		if (!browser) {
+			return Promise.reject()
+		}
+
+		// Call API to get all courses
+		const response = await fetch(`/api/course`, { method: 'GET' })
+			.catch(error => {
+				throw new Error(`APIError (/api/course GET): ${error}`)
+			})
+
+		// Revive the courses
+		const data = await response.json() as SerializedCourse[]
+		return data.map(course => CourseController.revive(cache, course))
+	}
+
+	/**
 	 * Gets the programs this course is assigned to, from the cache or the API
 	 * @returns Array of programs this course is assigned to
 	 * @throws `APIError` if the API call fails
@@ -141,21 +167,6 @@ class CourseController {
 		this._graphs = data.map(graph => GraphController.revive(this.cache, graph))
 
 		return Array.from(this._graphs)
-	}
-
-	/**
-	 * Gets the graphs assigned to this course as a list of Dropdown options, from the cache or the API
-	 * @returns Array of Dropdown options for the graphs assigned to this course
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getGraphOptions(): Promise<{ value: number, label: string, validation: ValidationData }[]> {
-		const graphs = await this.getGraphs()
-		return graphs.map(graph => ({
-			value: graph.id,
-			label: graph.name,
-			validation: ValidationData.success()
-		}))
 	}
 
 	/**
@@ -249,6 +260,34 @@ class CourseController {
 		this._editors = data.map(user => UserController.revive(this.cache, user))
 
 		return Array.from(this._editors)
+	}
+
+	/**
+	 * Gets the graphs assigned to this course as a list of Dropdown options, from the cache or the API
+	 * @returns Array of Dropdown options for the graphs assigned to this course
+	 */
+
+	async getGraphOptions(): Promise<DropdownOption<GraphController>[]> {
+		const graphs = await this.getGraphs()
+		return graphs.map(graph => ({
+			value: graph,
+			label: graph.name,
+			validation: ValidationData.success()
+		}))
+	}
+
+	/**
+	 * Get options for courses a graph can be assigned to
+	 * @returns Array of Dropdown options for courses a graph can be assigned to
+	 */
+
+	async getCourseOptions(): Promise<DropdownOption<CourseController>[]> {
+		const courses = await CourseController.getAll(this.cache)
+		return courses.map(course => ({
+			value: course,
+			label: course.trimmed_name,
+			validation: ValidationData.success()
+		}))
 	}
 
 	// --------------------> API actions

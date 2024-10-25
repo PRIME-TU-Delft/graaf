@@ -2,8 +2,8 @@
 <script lang="ts">
 
 	// Internal imports
-	import { tooltip } from "$scripts/tooltip"
 	import { LinkController } from "$scripts/controllers"
+	import { tooltip } from "$scripts/tooltip"
 
 	// Assets
 	import copyIcon from "$assets/copy-icon.svg"
@@ -13,18 +13,16 @@
 
 	// Variables
 	let disabled: boolean = true
-	let value: string = ''
+	let copied: boolean = false
+	let value: string
 
-	$: link.getURL().then(
-		url => {
-			disabled = false
-			value = url
-		},
-		() => {
-			disabled = true
-			value = ''
-		}
-	)
+	$: if (link.validate().okay()) {
+		disabled = false
+		link.getURL().then(url => value = url)
+	} else {
+		disabled = true
+		value = ''
+	}
 
 </script>
 
@@ -41,15 +39,18 @@
 		/>
 
 	<button 
-		disabled
+		disabled={disabled}
 		class:disabled
-		on:click={() => navigator.clipboard.writeText(value)}
 		use:tooltip={disabled ? 'Invalid link' : 'Copy link'}
-		>
-
+		on:click={async () => {
+			copied = true
+			await navigator.clipboard.writeText(value)
+			setTimeout(() => copied = false, 2000)
+		}}
+	>
 		<img src={copyIcon} alt="Copy link" />
+		<span class="popup" class:copied> Link copied! </span>
 	</button>
-
 </div>
 
 
@@ -113,5 +114,39 @@
 				filter: $white-filter
 
 				pointer-events: none
+			
+			.popup
+				position: absolute
+				bottom: calc(100% + 10px)
+				z-index: 9999
+
+				display: none
+		
+				width: max-content
+				padding: 0 $input-thick-padding
+				border-radius: $border-radius
+		
+				color: $white
+				background: $dark-gray
+				text-align: center
+		
+				pointer-events: none
+
+				&.copied
+					display: block
+		
+				&::after
+					position: absolute
+					translate: -50% 50%
+					rotate: 45deg
+					bottom: 0
+					left: 50%
+		
+					content: ""
+		
+					width: 0.5rem
+					height: 0.5rem
+		
+					background: $dark-gray
 
 </style>

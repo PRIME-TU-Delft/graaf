@@ -22,7 +22,8 @@ import type {
 	SerializedCourse,
 	SerializedSubject,
 	SerializedLecture,
-	SerializedLink
+	SerializedLink,
+	DropdownOption
 } from '$scripts/types'
 
 // Exports
@@ -323,12 +324,12 @@ class GraphController {
 	/**
 	 * Create a new graph
 	 * @param cache Cache to create the graph with
-	 * @param course Course to assign the graph to
+	 * @param course_id Course to assign the graph to
 	 * @returns The newly created GraphController
 	 * @throws `APIError` if the API call fails
 	 */
 
-	static async create(cache: ControllerCache, course: number, name: string): Promise<GraphController> {
+	static async create(cache: ControllerCache, course_id: number, name: string): Promise<GraphController> {
 
 		// Guard against SSR
 		if (!browser) {
@@ -339,7 +340,7 @@ class GraphController {
 		const response = await fetch(`/api/graph`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ course, name })
+			body: JSON.stringify({ course: course_id, name })
 		})
 
 		// Check the response
@@ -352,7 +353,7 @@ class GraphController {
 		const graph = GraphController.revive(cache, data)
 
 		// Assign to course
-		cache.find(CourseController, course)
+		cache.find(CourseController, course_id)
 			?.assignGraph(graph)
 
 		return graph
@@ -523,6 +524,86 @@ class GraphController {
 
 		// Remove from cache
 		this.cache.remove(this)
+	}
+
+	/**
+	 * Copy this graph and all its members to another course
+	 */
+
+	async copy(target_course: CourseController): Promise<GraphController> {
+		const course = await this.getCourse()
+
+		// Copy the graph
+		const graph_copy = await GraphController.create(this.cache, target_course.id, this.name)
+		graph_copy.name = `${this.name} (Copied from ${course.code})`
+
+		// Copy domains
+		const domain_map = new Map<number, DomainController>()
+		const domains = await this.getDomains()
+		for (const domain of domains) {
+			const domain_copy = await domain.copy(graph_copy)
+			domain_map.set(domain.id, domain_copy)
+		}
+
+		// Copy domain relations
+		const domain_relations = await this.getDomainRelations()
+		for (const relation of domain_relations) {
+
+			// Find the parent and child in the map
+			if (!relation.parent || !relation.child) continue
+			const parent_copy = domain_map.get(relation.parent.id)
+			const child_copy = domain_map.get(relation.child.id)
+
+			// Create the relation
+			if (!parent_copy || !child_copy) throw new Error('GraphError: Domain not found in map')
+			await graph_copy.createDomainRelation(parent_copy, child_copy)
+		}
+
+		// Copy subjects
+		const subject_map = new Map<number, SubjectController>()
+		const subjects = await this.getSubjects()
+		for (const subject of subjects) {
+			const subject_copy = await subject.copy(graph_copy)
+			subject_map.set(subject.id, subject_copy)
+			
+			// Assign the copied domain to the copied subject
+			if (!subject.domain_id) continue
+			const domain_copy = domain_map.get(subject.domain_id)
+			if (!domain_copy) throw new Error('GraphError: Domain not found in map')
+			subject_copy.assignDomain(domain_copy)
+			
+		}
+
+		// Copy subject relations
+		const subject_relations = await this.getSubjectRelations()
+		for (const relation of subject_relations) {
+
+			// Find the parent and child in the map
+			if (!relation.parent || !relation.child) continue
+			const parent_copy = subject_map.get(relation.parent.id)
+			const child_copy = subject_map.get(relation.child.id)
+
+			// Create the relation
+			if (!parent_copy || !child_copy) throw new Error('GraphError: Subject not found in map')
+			await graph_copy.createSubjectRelation(parent_copy, child_copy)
+		}
+
+		// Copy lectures
+		const lectures = await this.getLectures()
+		for (const lecture of lectures) {
+			const lecture_copy = await lecture.copy(graph_copy)
+
+			// Assign the copied subjects to the copied lecture
+			const subjects = await lecture.getSubjects()
+			for (const subject of subjects) {
+				const subject_copy = subject_map.get(subject.id)
+				if (!subject_copy) throw new Error('GraphError: Subject not found in map')
+				lecture_copy.assignSubject(subject_copy)
+			}
+		}
+
+		await graph_copy.save()
+		return graph_copy
 	}
 
 	// --------------------> Validation

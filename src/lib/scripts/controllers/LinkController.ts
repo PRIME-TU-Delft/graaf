@@ -172,13 +172,13 @@ class LinkController {
 	 * Create a new link
 	 * @param cache Controller cache to create link with
 	 * @param name Link name
-	 * @param course Course id to assign the link to
-	 * @param graph Graph id to assign the link to
+	 * @param course_id Course id to assign the link to
+	 * @param graph_id Graph id to assign the link to
 	 * @returns The newly created LinkController
 	 * @throws `APIError` If the API request fails
 	 */
 
-	static async create(cache: ControllerCache, course: number, name: string, graph: number | null): Promise<LinkController> {
+	static async create(cache: ControllerCache, course_id: number, graph_id: number | null, name: string): Promise<LinkController> {
 
 		// Guard against SSR
 		if (!browser) {
@@ -189,7 +189,7 @@ class LinkController {
 		const response = await fetch('/api/link', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ name, course, graph })
+			body: JSON.stringify({ name, course: course_id, graph: graph_id })
 		})
 
 		// Check the response
@@ -202,11 +202,11 @@ class LinkController {
 		const link = LinkController.revive(cache, data)
 
 		// Assign to course and graph
-		cache.find(CourseController, course)
+		cache.find(CourseController, course_id)
 			?.assignLink(link, false)
 
-		if (graph) {
-			cache.find(GraphController, graph)
+		if (graph_id) {
+			cache.find(GraphController, graph_id)
 				?.assignLink(link, false)
 		}
 
@@ -246,10 +246,10 @@ class LinkController {
 
 	represents(data: SerializedLink): boolean {
 		return (
-			this.id !== data.id ||
-			this.trimmed_name !== data.name ||
-			this._course_id !== data.course ||
-			this._graph_id !== data.graph
+			this.id === data.id &&
+			this.trimmed_name === data.name &&
+			this._course_id === data.course &&
+			this._graph_id === data.graph
 		)
 	}
 

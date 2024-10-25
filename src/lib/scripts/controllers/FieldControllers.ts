@@ -500,6 +500,26 @@ class DomainController extends FieldController {
 		this.cache.remove(this)
 	}
 
+	/**
+	 * Copy this domain to a new graph
+	 * @param target_graph Target graph
+	 * @returns The newly created DomainController
+	 */
+
+	async copy(target_graph: GraphController): Promise<DomainController> {
+		const domain_copy = await DomainController.create(this.cache, target_graph)
+
+		domain_copy.name = this.name
+		domain_copy.style = this.style
+		domain_copy.x = this.x
+		domain_copy.y = this.y
+		domain_copy.fx = this.fx
+		domain_copy.fy = this.fy
+
+		await domain_copy.save()
+		return domain_copy
+	}
+
 	// --------------------> Validation
 
 	/**
@@ -1252,6 +1272,25 @@ class SubjectController extends FieldController {
 
 		// Remove from cache
 		this.cache.remove(this)
+	}
+
+	/**
+	 * Copy this subject to a new graph
+	 * @param target_graph Target graph
+	 * @returns The newly created SubjectController
+	 */
+
+	async copy(target_graph: GraphController): Promise<SubjectController> {
+		const subject_copy = await SubjectController.create(this.cache, target_graph)
+
+		subject_copy.name = this.name
+		subject_copy.x = this.x
+		subject_copy.y = this.y
+		subject_copy.fx = this.fx
+		subject_copy.fy = this.fy
+
+		await subject_copy.save()
+		return subject_copy
 	}
 
 	// --------------------> Validation

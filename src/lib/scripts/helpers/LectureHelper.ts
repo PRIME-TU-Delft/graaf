@@ -88,8 +88,8 @@ async function update(data: SerializedLecture): Promise<void> {
 	])
 
 	// Get data delta
-	const graph_delta = required_field_delta(data.graph, graph)
-	const subject_delta = array_delta(data.subjects, subjects)
+	const graph_delta = required_field_delta(graph, data.graph)
+	const subject_delta = array_delta(subjects, data.subjects)
 
 	// Update lecture
 	try {

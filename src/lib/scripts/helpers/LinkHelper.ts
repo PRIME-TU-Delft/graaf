@@ -81,8 +81,8 @@ async function update(data: SerializedLink): Promise<void> {
 	])
 
 	// Get data deltas
-	const course_delta = required_field_delta(data.course, course)
-	const graph_delta = optional_field_delta(data.graph, graph)
+	const course_delta = required_field_delta(course, data.course)
+	const graph_delta = optional_field_delta(graph, data.graph)
 
 	// Update
 	try {

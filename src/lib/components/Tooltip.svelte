@@ -33,7 +33,7 @@
 	.tooltip
 		position: absolute
 		translate: -50% calc(-100% - 10px)
-		z-index: 9999
+		z-index: 9998
 
 		width: max-content
 		padding: 0 $input-thick-padding

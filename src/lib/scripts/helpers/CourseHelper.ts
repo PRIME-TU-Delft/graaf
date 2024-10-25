@@ -77,9 +77,9 @@ async function update(data: SerializedCourse): Promise<void> {
 	])
 
 	// Get data delta
-	const graph_delta = array_delta(data.graphs, graphs)
-	const program_delta = array_delta(data.programs, programs)
-	const link_delta = array_delta(data.links, links)
+	const graph_delta = array_delta(graphs, data.graphs)
+	const program_delta = array_delta(programs, data.programs)
+	const link_delta = array_delta(links, data.links)
 
 	// Update
 	try {

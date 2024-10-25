@@ -2,11 +2,20 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { CourseController, GraphController } from '$scripts/controllers'
+	import { BaseModal } from '$scripts/modals'
+	import type { DropdownOption } from '$scripts/types'
+	import { ValidationData, Severity } from '$scripts/validation'
+
+	import {
+		CourseController,
+		GraphController
+	} from '$scripts/controllers'
 
 	// Components
+	import Button from '$components/buttons/Button.svelte'
 	import IconButton from '$components/buttons/IconButton.svelte'
 	import Textfield from '$components/forms/Textfield.svelte'
+	import Validation from '$components/Validation.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
@@ -15,11 +24,46 @@
 	import closedEyeIcon from '$assets/closed-eye-icon.svg'
 	import pencilIcon from '$assets/pencil-icon.svg'
 	import linkIcon from '$assets/link-icon.svg'
+	import Modal from '$components/layouts/Modal.svelte';
+	import Dropdown from '$components/forms/Dropdown.svelte';
+
+	// Helpers
+	class CopyModal extends BaseModal {
+		course: CourseController | null = null
+
+		constructor() {
+			super()
+			this.initialize()
+		}
+
+		validate(): ValidationData {
+			const result = new ValidationData()
+
+			if (this.course === null) {
+				result.add({
+					severity: Severity.error,
+					short: 'Course is required'
+				})
+			}
+
+			return result
+		}
+
+		async submit() {
+			await graph.copy(this.course!)
+			this.hide()
+			update()
+		}
+	}
 
 	// Exports
-	export let graph: GraphController
 	export let course: CourseController
+	export let graph: GraphController
+	export let course_options: DropdownOption<CourseController>[]
 	export let update: () => void
+
+	// Modals
+	let copy_modal = new CopyModal()
 
 </script>
 
@@ -39,13 +83,11 @@
 		type="subtle"
 		placeholder="Graph Name"
 		bind:value={graph.name}
-		on:change={async () => {
-			await graph.save()
-			update()
-		}}
-		/>
+		on:input={() => update()}
+		on:change={async () => await graph.save() }
+	/>
 
-	<!-- TODO graph.isVisible() -->
+	<!-- TODO graph preview -->
 	<IconButton scale
 		disabled={false}
 		src={true ? openEyeIcon : closedEyeIcon}
@@ -58,7 +100,11 @@
 		href="/app/course/{course.id}/graph/{graph.id}/settings"
 	/>
 
-	<IconButton scale src={copyIcon} description="Copy Graph" />
+	<IconButton scale 
+		src={copyIcon} 
+		description="Copy Graph" 
+		on:click={() => copy_modal.show()}
+	/>
 
 	<IconButton scale
 		src={trashIcon}
@@ -67,8 +113,31 @@
 			await graph.delete()
 			update()
 		}}
-		/>
+	/>
 </div>
+
+<Modal bind:this={copy_modal.modal}>
+	<h3 slot="header"> Copy Graph </h3>
+	Copy this graph to another course. This will create a new graph with the same content in the selected course.
+
+	<form>
+		<label for="course"> Target Course </label>
+		<Dropdown
+			id="course"
+			placeholder="Target Course"
+			bind:value={copy_modal.course}
+			options={course_options}
+		/>
+
+		<footer>
+			<Button
+				disabled={!copy_modal.validate().okay()}
+				on:click={() => copy_modal.submit()}
+			> Copy </Button>
+			<Validation data={copy_modal.validate()} />
+		</footer>
+	</form>
+</Modal>
 
 
 <!-- Styles -->

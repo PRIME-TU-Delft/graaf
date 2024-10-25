@@ -14,5 +14,13 @@ export const load: PageServerLoad = async ({ params }) => {
 	const course = await CourseHelper.getById(course_id)
 		.catch(error => Promise.reject(error))
 
-	return { course }
+	// Get graphs
+	const graphs = await CourseHelper.getGraphs(course_id)
+		.catch(error => Promise.reject(error))
+
+	// Get links
+	const links = await CourseHelper.getLinks(course_id)
+		.catch(error => Promise.reject(error))
+
+	return { course, graphs, links }
 }

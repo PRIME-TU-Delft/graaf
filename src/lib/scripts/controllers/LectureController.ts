@@ -17,6 +17,7 @@ import type {
 	SerializedSubject,
 	SerializedGraph
 } from '$scripts/types'
+import type { Graph } from '@prisma/client'
 
 // Exports
 export { LectureController }
@@ -287,6 +288,21 @@ class LectureController {
 
 		// Remove from environment
 		this.cache.remove(this)
+	}
+
+	/**
+	 * Copy this lecture
+	 * @param target_graph Graph to copy the lecture to
+	 * @returns The copied lecture
+	 */
+
+	async copy(target_graph: GraphController): Promise<LectureController> {
+		const lecture_copy = await LectureController.create(this.cache, target_graph)
+		
+		lecture_copy.name = this.name
+		
+		await lecture_copy.save()
+		return lecture_copy
 	}
 
 	// --------------------> Validation
