@@ -21,11 +21,12 @@
 	import Layout from '$components/layouts/DefaultLayout.svelte'
 	import Card from '$components/layouts/Card.svelte'
 	import Modal from '$components/layouts/Modal.svelte'
+	import Validation from '$components/Validation.svelte'
+	import Textfield from '$components/forms/Textfield.svelte'
+	import Dropdown from '$components/forms/Dropdown.svelte'
 	import Button from '$components/buttons/Button.svelte'
 	import LinkButton from '$components/buttons/LinkButton.svelte'
-	import Textfield from '$components/forms/Textfield.svelte'
-	import Validation from '$components/Validation.svelte'
-	import Dropdown from '$components/forms/Dropdown.svelte'
+
 	import LinkRow from './LinkRow.svelte'
 	import GraphRow from './GraphRow.svelte'
 
@@ -105,26 +106,21 @@
 	const cache = data.cache
 	
 	const course = writable(data.course)
+	const course_options = writable<DropdownOption<CourseController>[] | undefined>(undefined)
 	const graphs = writable(data.graphs)
+	const graph_options = writable<DropdownOption<GraphController>[] | undefined>(undefined)
 	const links = writable(data.links)
 
-	const course_options = writable<DropdownOption<CourseController>[] | undefined>(undefined)
-	const graph_options = writable<DropdownOption<GraphController>[] | undefined>(undefined)
-
-	// Modals
-	const graph_modal = new GraphModal()
-	const link_modal = new LinkModal()
-
-	// Load data
-	onMount(async () => {
+	onMount(() => {
 		course.subscribe(async () => $graphs = await $course.getGraphs())
 		course.subscribe(async () => $links = await $course.getLinks())
 		course.subscribe(async () => $course_options = await $course.getCourseOptions())
 		course.subscribe(async () => $graph_options = await $course.getGraphOptions())
-
-		$course_options = await $course.getCourseOptions()
-		$graph_options = await $course.getGraphOptions()
 	})
+
+	// Modals
+	const graph_modal = new GraphModal()
+	const link_modal = new LinkModal()
 
 	// Update
 	const update = () => $course = $course

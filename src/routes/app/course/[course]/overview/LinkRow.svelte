@@ -87,7 +87,4 @@
 
 		color: $dark-gray
 
-		&:not(:last-child)
-			border-bottom: 1px solid $gray
-
 </style>

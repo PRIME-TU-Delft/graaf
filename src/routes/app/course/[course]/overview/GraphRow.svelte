@@ -14,7 +14,6 @@
 	// Components
 	import Button from '$components/buttons/Button.svelte'
 	import IconButton from '$components/buttons/IconButton.svelte'
-	import Textfield from '$components/forms/Textfield.svelte'
 	import Validation from '$components/Validation.svelte'
 
 	// Assets
@@ -72,20 +71,14 @@
 
 
 <div class="graph-row">
-	{#if graph.link_ids.length > 0}
-		<img src={linkIcon} alt="Link icon" class="link-icon" />
-	{:else}
-		<div />
-	{/if}
-
-	<Textfield
-		id="graph-name"
-		type="subtle"
-		placeholder="Graph Name"
-		bind:value={graph.name}
-		on:input={() => update()}
-		on:change={async () => await graph.save() }
+	<img 
+		src={linkIcon} 
+		alt="Link icon" 
+		class="link-icon"
+		style:visibility={graph.link_ids.length > 0 ? 'visible' : 'hidden'}
 	/>
+
+	<span> {graph.name} </span>
 
 	<!-- TODO graph preview -->
 	<IconButton scale
@@ -152,9 +145,11 @@
 		display: grid
 		grid-template: "link name view edit copy delete" auto / $total-icon-size 1fr $input-icon-size $input-icon-size $input-icon-size $input-icon-size
 		grid-gap: $form-small-gap
-		align-items: center
+		place-items: center start
 
+		height: $total-icon-size
 		padding: $input-thin-padding $input-thick-padding
+		box-sizing: content-box
 
 		color: $dark-gray
 

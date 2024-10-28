@@ -14,5 +14,9 @@ export const load: PageServerLoad = async ({ params }) => {
 	const course = await CourseHelper.getById(course_id)
 		.catch(error => Promise.reject(error))
 
-	return { course }
+	// Get course programs
+	const programs = await CourseHelper.getPrograms(course_id)
+		.catch(error => Promise.reject(error))
+
+	return { course, programs }
 }

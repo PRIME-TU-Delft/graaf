@@ -290,6 +290,21 @@ class CourseController {
 		}))
 	}
 
+	/**
+	 * Get options for programs a course can be assigned to
+	 * @returns Array of Dropdown options for programs a course can be assigned to
+	 */
+
+	async getProgramOptions(): Promise<DropdownOption<ProgramController>[]> {
+		const programs = await ProgramController.getAll(this.cache)
+
+		return programs.map(program => ({
+			value: program,
+			label: program.trimmed_name,
+			validation: ValidationData.success()
+		}))
+	}
+
 	// --------------------> API actions
 
 	/**

@@ -119,7 +119,7 @@ function instanceOfSerializedProgram(object: any): object is SerializedProgram {
 }
 
 function instanceOfSerializedCourse(object: any): object is SerializedCourse {
-	return 'id' in object && 'code' in object && 'name' in object && 'archived' in object && 'graphs' in object && 'admins' in object && 'editors' in object && 'programs' in object
+	return 'id' in object && 'code' in object && 'name' in object && 'graphs' in object && 'admins' in object && 'editors' in object && 'programs' in object
 }
 
 function instanceOfSerializedGraph(object: any): object is SerializedGraph {

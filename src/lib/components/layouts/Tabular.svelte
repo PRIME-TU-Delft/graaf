@@ -1,6 +1,11 @@
 
 <script lang="ts">
 
+	// External dependencies
+	import { onMount } from 'svelte'
+	import { page } from '$app/stores'
+	import { goto } from '$app/navigation'
+
 	// Exports
 	export let tabs: { 
 		title: string,
@@ -8,8 +13,33 @@
 		props?: { [key: string]: any }
 	}[] = []
 
-	export let active: number = 0
-	
+	// Functions
+	function setActiveTab(n: number) {
+		active = n
+		query.set('tab', n.toString())
+		goto(`?${query.toString()}`, { replaceState: true })
+	}
+
+	// Variables
+	const query = $page.url.searchParams
+	let active: number | undefined
+
+	// Initialization
+	onMount(() => {
+		if (query.has('tab')) {
+			const tab = Number(query.get('tab'))
+			if (!isNaN(tab) && tab >= 0 && tab < tabs.length) {
+				active = tab
+			}
+		}
+
+		if (active === undefined) {
+			active = 0
+			query.set('tab', '0')
+			goto(`?${query.toString()}`, { replaceState: true })
+		}
+	})
+
 </script>
 
 
@@ -22,7 +52,7 @@
 			<button
 				class="tab"
 				class:active={active === n}
-				on:click={() => active = n}
+				on:click={() => setActiveTab(n)}
 			> {title} </button>
 		{/each}
 

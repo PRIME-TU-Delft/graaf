@@ -38,6 +38,9 @@
 		<section use:focusfirst>
 			<slot />
 		</section>
+		<footer>
+			<slot name="footer" />
+		</footer>
 	</dialog>
 {/if}
 
@@ -79,6 +82,13 @@
 
 		background-color: $white
 		border-radius: $border-radius
+
+		footer
+			display: flex
+			flex-flow: row nowrap
+			justify-content: flex-end
+			align-items: center
+			gap: $form-small-gap
 
 		.exit
 			display: flex

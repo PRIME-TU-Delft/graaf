@@ -13,6 +13,7 @@
 	// Assets
 	import errorIcon from '$assets/error-icon.svg'
 	import warningIcon from '$assets/warning-icon.svg'
+	import searchIcon from '$assets/search-icon.svg'
 
 	// Types
 	type T = $$Generic
@@ -31,6 +32,8 @@
 	// Functions
 	function visibility(value: boolean) {
 		visible = value
+		query = ''
+
 		setTimeout(() => {
 			wrapper.style.height = visible ? wrapper.scrollHeight + 'px' : 'auto', 0
 		})
@@ -45,6 +48,7 @@
 	const dispatch = createEventDispatcher<{change: T | null}>()
 	let visible: boolean = false
 	let wrapper: HTMLDivElement
+	let query: string = ''
 
 	$: choice = options.find(option => option.value === value)
 	$: options = options.sort((a, b) => {
@@ -80,27 +84,35 @@
 
 		{#if visible}
 			<div class="options" use:loopfocus use:scrollintoview>
+				{#if options.length >= 5}
+					<div class="option searchbar">
+						<input type="search" placeholder="Search..." bind:value={query}>
+						<img src={searchIcon} alt="Searchbar" />
+					</div>
+				{/if}
+
 				{#each options as option}
-					<button
-						type="button"
-						class="option"
-						disabled={!option.validation.okay()}
-						on:click={() => set(option.value)}
-						use:focusonhover
-					>
-						{option.label}
+					{#if options.length < 5 || option.label.toLowerCase().includes(query.toLowerCase())}
+						<button
+							type="button"
+							class="option"
+							disabled={!option.validation.okay()}
+							on:click={() => set(option.value)}
+							use:focusonhover
+						>
+							{option.label}
 
-						{#if option.validation.severity === Severity.error}
-							<span class="error">
-								<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
-							</span>
-						{:else if option.validation.severity === Severity.warning}
-							<span class="warning">
-								<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
-							</span>
-						{/if}
-
-					</button>
+							{#if option.validation.severity === Severity.error}
+								<span class="error">
+									<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
+								</span>
+							{:else if option.validation.severity === Severity.warning}
+								<span class="warning">
+									<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
+								</span>
+							{/if}
+						</button>
+					{/if}
 				{/each}
 
 				{#if options.length === 0}
@@ -129,9 +141,6 @@
 	@use '$styles/palette.sass' as *
 
 	$caret-size: calc($input-icon-size / sqrt(2))
-
-	.grayed
-		color: $placeholder-color
 
 	.dropdown
 		position: relative
@@ -249,6 +258,18 @@
 
 						img
 							filter: $yellow-filter
+				
+				.searchbar
+					position: relative
+					padding-right: calc($input-icon-size + 2 * $input-thin-padding)
+
+					img
+						position: absolute
+						right: $input-thin-padding
+						width: $input-icon-size
+						height: $input-icon-size
+
+						filter: $gray-filter
 
 			&.visible .header
 				border-color: $tudelft-blue
