@@ -42,7 +42,7 @@ export const OVERLAY_FADE_OUT: Milliseconds = 500
 export const OVERLAY_LINGER: Milliseconds = 1500
 
 // Animation settings
-export const FADE_DURATION: Milliseconds = 500
+export const FADE_DURATION: Milliseconds = 0
 export const ANIMATION_DURATION: Milliseconds = 1000
 export const SHAKE = {
 	delay: 150,

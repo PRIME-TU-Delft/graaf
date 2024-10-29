@@ -82,11 +82,17 @@ ul
 	flex-grow: 1
 	pointer-events: none
 
+.grayed
+	text-align: center
+	color: $placeholder-color
+
 .modal form
 	display: grid
 	grid-template: "label content" auto / 1fr 2fr
 	place-items: center start
 	row-gap: $form-small-gap
+
+	margin-top: $form-big-gap
 
 	& > label
 		grid-column: label
@@ -104,4 +110,4 @@ ul
 		flex-flow: row nowrap
 		grid-column: content
 
-		margin-top: $form-big-gap
+		margin-top: $form-medium-gap

@@ -1,49 +1,56 @@
 
+
 <script lang="ts">
 
-	// Internal imports
-	import * as settings from '$scripts/settings'
-	import { course } from '$stores'
+	// External dependencies
+	import { onMount } from 'svelte'
+	import { writable } from 'svelte/store'
+
+	// Internal dependencies
+	import type { ProgramController } from '$scripts/controllers'
+	import type { ValidationData } from '$scripts/validation'
+	import type { DropdownOption } from '$scripts/types'
 
 	// Components
-	import Button from '$components/Button.svelte'
-	import GeneralSettings from './GeneralSettings.svelte'
-	import Layout from '$layouts/DefaultLayout.svelte'
+	import Layout from '$components/layouts/DefaultLayout.svelte'
+	import Tabular from '$components/layouts/Tabular.svelte'
+	import Modal from '$components/layouts/Modal.svelte'
 	import Validation from '$components/Validation.svelte'
-	import UserSettings from './UserSettings.svelte'
+	import Button from '$components/buttons/Button.svelte'
+
+	import GeneralSettings from './GeneralSettings.svelte'
 
 	// Assets
-	import saveIcon from '$assets/save-icon.svg'
-	import { Severity } from '$scripts/entities';
+	import trashIcon from '$assets/trash-icon.svg'
+	import LinkButton from '$components/buttons/LinkButton.svelte'
+	
+	// Exports
+	export let data
 
-	// Functions
-	function goto_anchor(tab: number, id: string) {
-		if (active_tab === tab) {
-			const element = document.getElementById(id)
-			element?.scrollIntoView({ behavior: 'smooth' })
-			element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)
-			return
-		}
+	// Stores
+	const course = writable(data.course)
+	const course_validation = writable<ValidationData | undefined>(undefined)
+	const programs = writable(data.programs)
+	const program_options = writable<DropdownOption<ProgramController>[] | undefined>(undefined)
 
-		active_tab = tab
-		setTimeout(() => {
-			const element = document.getElementById(id)
-			element?.scrollIntoView({ behavior: 'smooth' })
-			setTimeout(() => {element?.animate(settings.SHAKE.keyframes, settings.SHAKE.options)}, settings.SHAKE.delay)
-		}, 0)
-	}
+	onMount(() => {
+		course.subscribe(async () => $programs = await $course.getPrograms())
+		course.subscribe(async () => $course_validation = await $course.validate())
+		course.subscribe(async () => $program_options = await $course.getProgramOptions())
+	})
 
-	// Variables
-	let active_tab = 0
+	// Modals
+	let archive_modal: Modal
+
+	// Update
+	const update = () => $course = $course
 
 </script>
 
 
 <!-- Markup -->
 
-
 <Layout
-	description="Here you can edit the layout of your graph. Drag and drop the nodes to change their position, and click on the nodes to edit their properties."
 	path={[
 		{
 			name: 'Dashboard',
@@ -51,87 +58,53 @@
 		},
 		{
 			name: `${$course.code} ${$course.name}`,
-			href: `/app/course/${$course.code}/overview`
+			href: `/app/course/${$course.id}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/app/course/${$course.code}/settings`
+			href: `/app/course/${$course.id}/settings`
 		}
 	]}
 >
+	<svelte:fragment slot="header">
+		Here you can change your course settings, like its coordinators, graps, links, etc.
+	</svelte:fragment>
+
 	<svelte:fragment slot="toolbar">
-		<Validation data={$course.validate()} goto_anchor={goto_anchor} success="Ready to save" />
+		{#if $course_validation !== undefined}
+			<Validation data={$course_validation} />
+		{/if}
+
 		<div class="flex-spacer" />
-		<Button disabled={$course.validate().severity === Severity.error} on:click={() => $course.save()}>
-			<img src={saveIcon} alt=""> Save Changes
+
+		<Button dangerous on:click={() => archive_modal.show()}>
+			<img src={trashIcon} alt="" /> Archive Course
 		</Button>
 	</svelte:fragment>
 
-	<div class="tabular">
-		<div class="tabs">
-			<button
-				class="tab"
-				class:active={active_tab === 0}
-				on:click={() => active_tab = 0}
-			> General </button>
-			<button
-				class="tab"
-				class:active={active_tab === 1}
-				on:click={() => active_tab = 1}
-			> Assigned Users </button>
-
-			<div class="dynamic-border" />
-		</div>
-
-		{#if active_tab === 0}
-			<GeneralSettings />
-		{:else if active_tab === 1}
-			<UserSettings />
-		{/if}
-	</div>
+	<Tabular
+		tabs={[
+			{
+				title: 'General',
+				content: GeneralSettings,
+				props: { 
+					course: $course, 
+					programs: $programs,
+					program_options: $program_options,
+					update
+				}
+			}
+		]} 
+	/>
+	
 </Layout>
 
+<Modal bind:this={archive_modal}>
+	<h3 slot="header"> Archive Course </h3>
+	When you archive a course, it, and all associated graphs and links will no longer be visible to anyone except program administrators. Only they can restore them.
 
-<!-- Styles -->
-
-
-<style lang="sass">
-
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	.tabular
-		border-radius: $border-radius
-		border: 1px solid $gray
-
-		.tabs
-			display: flex
-			overflow-x: scroll
-
-			background: $light-gray
-			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
-
-			.tab
-				padding: $card-thin-padding $card-thick-padding
-
-				border-color: $gray
-				border-style: solid
-				border-width: 0 0 1px 1px
-				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
-
-				&.active
-					background: $white
-					border-width: 0 1px 0 1px
-
-					& ~ .tab
-						border-width: 0 1px 1px 0
-
-
-				&:first-child
-					border-left: none !important
-
-			.dynamic-border
-				border-bottom: 1px solid $gray
-				flex: 1
-
-</style>
+	<svelte:fragment slot="footer">
+		<LinkButton on:click={() => archive_modal.hide()}> Cancel </LinkButton>
+		<Button on:click={() => archive_modal.hide()}> Archive </Button>
+	</svelte:fragment>
+</Modal>

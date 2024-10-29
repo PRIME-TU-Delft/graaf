@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { Severity, ValidationData } from '$scripts/entities'
+	import { Severity, ValidationData } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { tooltip } from '$scripts/tooltip'
 
@@ -15,7 +15,7 @@
 	export let data: ValidationData
 	export let short: boolean = false
 	export let success: string = ''
-	export let goto_anchor: (tab: number, id: string) => void = () => {}
+	export let goto: (tab: number, id: string) => void = () => {}
 
 	// Variables
 	let all_visible: boolean = false
@@ -136,12 +136,12 @@
 							<img src={errorIcon} alt="" />
 							<span class="short"> {error.short} </span>
 
-							{#if error.tab !== undefined && error.anchor !== undefined}
+							{#if error.tab !== undefined && error.uuid !== undefined}
 								<span class="show">
 									(<button on:click={() => {
 										hide_errors()
-										if (error.tab !== undefined && error.anchor !== undefined)
-											goto_anchor(error.tab, error.anchor)
+										if (error.tab !== undefined && error.uuid !== undefined)
+											goto(error.tab, error.uuid)
 									}}> show </button>)
 								</span>
 							{/if}
@@ -176,12 +176,12 @@
 							<img src={warningIcon} alt="" />
 							<span class="short"> {warning.short} </span>
 
-							{#if warning.tab !== undefined && warning.anchor !== undefined}
+							{#if warning.tab !== undefined && warning.uuid !== undefined}
 								<span class="show">
 									(<button on:click={() => {
 										hide_warnings()
-										if (warning.tab !== undefined && warning.anchor !== undefined)
-											goto_anchor(warning.tab, warning.anchor)
+										if (warning.tab !== undefined && warning.uuid !== undefined)
+											goto(warning.tab, warning.uuid)
 									}}> show </button>)
 								</span>
 							{/if}

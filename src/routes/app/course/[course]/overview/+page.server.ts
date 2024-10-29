@@ -1,28 +1,26 @@
-import { fail } from '@sveltejs/kit';
 
-import { GraphHelper } from '$lib/server/helpers';
-import { CourseController, GraphController } from '$lib/server/controllers';
+// External dependencies
+import type { PageServerLoad } from './$types'
 
+// Internal dependencies
+import { CourseHelper } from '$scripts/helpers'
 
-export const actions = {
-	newGraph: async ({ params, request }) => {
-		const data = await request.formData();
-		const code = params.course;
-		const name = String(data.get('name'));
+// Load
+export const load: PageServerLoad = async ({ params }) => {
 
-		if (!name) return fail(400, { name, missing: true });
+	// Get course
+	const course_id = Number(params.course)
+	if (isNaN(course_id)) return Promise.reject('Invalid course ID')
+	const course = await CourseHelper.getById(course_id)
+		.catch(error => Promise.reject(error))
 
-		await GraphHelper.createWithCourseCode(code, name);
-	}
-};
+	// Get graphs
+	const graphs = await CourseHelper.getGraphs(course_id)
+		.catch(error => Promise.reject(error))
 
+	// Get links
+	const links = await CourseHelper.getLinks(course_id)
+		.catch(error => Promise.reject(error))
 
-export async function load({ params }) {
-	const course = await CourseController.getCourseByCode(params.course);
-	const graphs = await GraphController.getGraphsByCourseCode(params.course);
-
-	return {
-		course,
-		graphs
-	};
+	return { course, graphs, links }
 }

@@ -13,21 +13,20 @@ datasource db {
 	url			= env("DATABASE_URL")
 }
 
-
 // START AUTH STUFF
+
 enum UserRole {
 	USER
 	ADMIN
 }
 
 enum ProgramRole {
-	WRITE
+	EDITOR
 	ADMIN
 }
 
 enum CourseRole {
-	READ
-	WRITE
+	EDITOR
 	ADMIN
 }
 
@@ -88,8 +87,8 @@ model VerificationToken {
 
 	@@id([identifier, token])
 }
-// END AUTH STUFF
 
+// END AUTH STUFF
 
 model Program {
 	id				Int			@id @default(autoincrement())
@@ -105,7 +104,7 @@ model Program {
 model ProgramUser {
 	userId			String
 	programId		Int
-	role			ProgramRole		@default(WRITE)
+	role			ProgramRole		@default(EDITOR)
 
 	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
 	program			Program			@relation(fields: [programId], references: [id], onDelete: Cascade)
@@ -117,7 +116,7 @@ model ProgramUser {
 model CourseUser {
 	userId			String
 	courseId		Int
-	role			CourseRole		@default(READ)
+	role			CourseRole		@default(EDITOR)
 
 	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
 	course			Course			@relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -155,7 +154,6 @@ model Graph {
 	subjects		Subject[]
 	lectures		Lecture[]
 	links			GraphLink[]
-	// UI names
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 }
@@ -163,11 +161,11 @@ model Graph {
 
 model Domain {
 	id				Int			@id @default(autoincrement())
-	name			String?
+	name			String		@default("")
 	x				Int			@default(0)
 	y				Int			@default(0)
 	style			String?
-	graph			Graph		@relation(fields: [graphId], references: [id])
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	subjects		Subject[]
 	parentDomains	Domain[]	@relation("DomainRelation")
@@ -177,11 +175,11 @@ model Domain {
 
 model Subject {
 	id				Int			@id @default(autoincrement())
-	name			String?
+	name			String		@default("")
 	x				Int			@default(0)
 	y				Int			@default(0)
 	style			String?
-	graph			Graph		@relation(fields: [graphId], references: [id])
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	domain			Domain?		@relation(fields: [domainId], references: [id])
 	domainId		Int?
@@ -206,9 +204,9 @@ model SubjectLecture {
 
 model Lecture {
 	id				Int			@id @default(autoincrement())
-	graph			Graph		@relation(fields: [graphId], references: [id])
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
-	name			String?
+	name			String		@default("")
 	subjects		SubjectLecture[]
 }
 
@@ -218,7 +216,6 @@ model GraphLink {
 	name			String
 	courseId		Int
 	graphId			Int?
-
 	course			Course		@relation(fields: [courseId], references: [id], onDelete: Cascade)
 	graph			Graph?		@relation(fields: [graphId], references: [id])
 }

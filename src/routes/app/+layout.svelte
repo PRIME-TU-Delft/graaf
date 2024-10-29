@@ -1,8 +1,9 @@
 
+
 <script lang="ts">
 
-	import Button from '$components/Button.svelte';
-	import LinkButton from '$components/LinkButton.svelte';
+	import Button from '$components/buttons/Button.svelte';
+	import LinkButton from '$components/buttons/LinkButton.svelte';
 
 	// Auth
 	import { SignIn, SignOut } from '@auth/sveltekit/components';
