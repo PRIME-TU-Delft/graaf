@@ -37,11 +37,11 @@
 		},
 		{
 			name: $graph.name,
-			href: `/app/course/${$course.id}/graph/${$graph.id}/overview`
+			href: `/app/graph/${$graph.id}/overview`
 		},
 		{
 			name: 'Settings',
-			href: `/app/course/${$course.id}/graph/${$graph.id}/settings`
+			href: `/app/graph/${$graph.id}/settings`
 		}
 	]}
 >
@@ -60,7 +60,7 @@
 
 		<div class="flex-spacer" />
 
-		<Button href="/app/course/{$course.id}/graph/{$graph.id}/layout"> Edit layout </Button>
+		<Button href="/app/graph/{$graph.id}/layout"> Edit layout </Button>
 	</svelte:fragment>
 
 	<Tabular tabs={[

@@ -44,11 +44,11 @@
 		},
 		{
 			name: $graph.name,
-			href: `/app/course/${$course.code}/graph/${$graph.id}/overview`
+			href: `/app/graph/${$graph.id}/overview`
 		},
 		{
 			name: "Edit",
-			href: `/app/course/${$course.code}/graph/${$graph.id}/edit`
+			href: `/app/graph/${$graph.id}/edit`
 		}
 	]}
 >
@@ -72,7 +72,7 @@
 
 		<div class="flex-spacer" />
 
-		<Button href="/app/course/{$course.code}/graph/{$graph.id}/settings"> Edit fields & relations </Button>
+		<Button href="/app/graph/{$graph.id}/settings"> Edit fields & relations </Button>
 	</svelte:fragment>
 
 	<div class="editor">

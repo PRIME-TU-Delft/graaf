@@ -90,7 +90,7 @@
 	<IconButton scale
 		src={pencilIcon}
 		description="Edit Graph"
-		href="/app/course/{course.id}/graph/{graph.id}/settings"
+		href="/app/graph/{graph.id}/settings"
 	/>
 
 	<IconButton scale 
