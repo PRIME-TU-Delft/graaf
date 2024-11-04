@@ -8,13 +8,9 @@ import { ProgramHelper, CourseHelper } from '$scripts/helpers'
 // Load
 export const load: PageServerLoad = async () => {
 
-	// Get programs
+	// Get data
 	const programs = await ProgramHelper.getAll()
-		.catch(error => Promise.reject(error))
-
-	// Get courses
 	const courses = await CourseHelper.getAll()
-		.catch(error => Promise.reject(error))
 
 	return { programs, courses }
 }

@@ -91,19 +91,16 @@ ul
 	grid-template: "label content" auto / 1fr 2fr
 	place-items: center start
 	row-gap: $form-small-gap
+	column-gap: $form-medium-gap
 
 	margin-top: $form-big-gap
 
-	& > label
+	label
 		grid-column: label
 		justify-self: end
 
-		margin-top: $form-small-gap
-		padding-right: $form-medium-gap
-
-	.textfield, .dropdown, .checkbox
+	.textfield, .textarea, .dropdown
 		grid-column: content
-		margin-top: $form-small-gap
 
 	footer
 		display: flex

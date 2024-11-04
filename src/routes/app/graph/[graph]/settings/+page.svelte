@@ -2,18 +2,19 @@
 <script lang="ts">
 
 	// External dependencies
+	import { onMount } from 'svelte'
 	import { writable } from 'svelte/store'
 
 	// Components
-	import Layout from '$components/layouts/DefaultLayout.svelte'
-	import Tabular from '$components/layouts/Tabular.svelte'
-	import Button from '$components/buttons/Button.svelte'
+	import Layout from '$components/DefaultLayout.svelte'
+	import Tabular from '$components/Tabular.svelte'
 	import Validation from '$components/Validation.svelte'
+	import Button from '$components/buttons/Button.svelte'
 
 	import GeneralSettings from './GeneralSettings.svelte'
 	import DomainSettings from './DomainSettings.svelte'
 
-	// Variables
+	// Exports
 	export let data
 	const cache = data.cache
 	const course = writable(data.course)

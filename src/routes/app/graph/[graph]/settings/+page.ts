@@ -3,9 +3,9 @@
 import type { PageLoad } from './$types'
 
 // Internal dependencies
-import {
-	ControllerCache,
-	CourseController,
+import { 
+	ControllerCache, 
+	CourseController, 
 	GraphController
 } from '$scripts/controllers'
 

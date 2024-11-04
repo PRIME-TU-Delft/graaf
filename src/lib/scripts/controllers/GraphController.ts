@@ -289,6 +289,23 @@ class GraphController {
 	}
 
 	/**
+	 * Get the lectures assigned to this graph as dropdown options
+	 * @returns The lectures assigned to this graph as dropdown options
+	 */
+
+	async getLectureOptions(): Promise<DropdownOption<LectureController>[]> {
+		const lectures = await this.getLectures()
+		return await Promise.all(
+			lectures.map(async lecture => ({
+				value: lecture,
+				label: lecture.trimmed_name,
+				validation: await lecture.validate()
+			}))
+		)
+	}
+
+
+	/**
 	 * Get the links assigned to this graph, from the cache or the API
 	 * @returns The links assigned to this graph
 	 * @throws `APIError` if the API call fails

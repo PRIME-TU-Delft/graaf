@@ -3,6 +3,8 @@
 import type { PageLoad } from './$types'
 
 // Internal dependencies
+import { cache, programs, courses } from './stores'
+
 import {
 	ControllerCache,
 	ProgramController,
@@ -11,9 +13,8 @@ import {
 
 // Load
 export const load: PageLoad = async ({ data }) => {
-	const cache = new ControllerCache()
-	const programs = data.programs.map(program => ProgramController.revive(cache, program))
-	const courses = data.courses.map(course => CourseController.revive(cache, course))
-
-	return { cache, programs, courses }
+	const new_cache = new ControllerCache()
+	programs.set(data.programs.map(program => ProgramController.revive(new_cache, program)))
+	courses.set(data.courses.map(course => CourseController.revive(new_cache, course)))
+	cache.set(new_cache)
 }

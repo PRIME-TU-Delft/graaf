@@ -8,9 +8,9 @@
 	} from '$scripts/controllers';
 
 	// Components
-	import Modal from '$components/layouts/Modal.svelte'
-	import Button from '$components/buttons/Button.svelte'
-	import Textfield from '$components/forms/Textfield.svelte'
+	import Modal from '$components/Modal.svelte'
+	import Button from '$components/Button.svelte'
+	import Textfield from '$components/Textfield.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'

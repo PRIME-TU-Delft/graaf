@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Components
-	import IconButton from "../buttons/IconButton.svelte"
+	import IconButton from "$components/IconButton.svelte"
 
 	// Assets
 	import openEyeIcon from "$assets/open-eye-icon.svg"
@@ -10,9 +10,9 @@
 
 	// Exports
 	export let id: string
-	export let value: string = ''
 	export let placeholder: string = ''
-	export let type: 'text' | 'subtle' | 'obfuscated' = 'text'
+	export let type: 'text' | 'number' | 'obfuscated' = 'text'
+	export let value: string | number = type === 'number' ? 0 : ''
 
 	// Main
 	let input: HTMLInputElement
@@ -21,6 +21,10 @@
 	function toggle_obfuscation() {
 		obfuscated = !obfuscated
 		input.type = obfuscated ? "text" : "password"
+	}
+
+	$: if (type === 'number') {
+		value = Number(value)
 	}
 
 </script>
@@ -39,28 +43,36 @@
 			on:change on:input
 			bind:this={input}
 			bind:value
-			/>
+		/>
 
 		<IconButton 
 			src={ obfuscated ? closedEyeIcon : openEyeIcon } 
 			description={ obfuscated ? "Hide" : "Show" } 
 			on:click={toggle_obfuscation} 
-			/>
+		/>
 	</div>
+
+{:else if type === 'number'}
+
+	<input
+		id={id}
+		type="number"
+		placeholder={placeholder}
+		class="textfield"
+		on:change on:input
+		bind:value
+	/>
 
 {:else}
 
 	<input
 		id={id}
-		
 		type="text"
 		placeholder={placeholder}
-		class:subtle={type === 'subtle'}
 		class="textfield"
 		on:change on:input
-		bind:this={input}
 		bind:value
-		/>
+	/>
 
 {/if}
 
@@ -86,17 +98,10 @@
 
 		&:focus
 			border-color: $tudelft-blue
-		
-		&.subtle
-			border-color: transparent
-			transition: border-color $default-transition
-
-			&:hover
-				border-color: $gray
 
 	div
-		width: 100%
 		position: relative
+		width: 100%
 
 		:global(.icon-button)
 			position: absolute

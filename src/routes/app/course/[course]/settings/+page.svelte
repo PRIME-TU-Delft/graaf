@@ -12,11 +12,11 @@
 	import type { DropdownOption } from '$scripts/types'
 
 	// Components
-	import Layout from '$components/layouts/DefaultLayout.svelte'
-	import Tabular from '$components/layouts/Tabular.svelte'
-	import Modal from '$components/layouts/Modal.svelte'
+	import Layout from '$components/DefaultLayout.svelte'
+	import Tabular from '$components/Tabular.svelte'
+	import Modal from '$components/Modal.svelte'
 	import Validation from '$components/Validation.svelte'
-	import Button from '$components/buttons/Button.svelte'
+	import Button from '$components/Button.svelte'
 
 	import GeneralSettings from './GeneralSettings.svelte'
 

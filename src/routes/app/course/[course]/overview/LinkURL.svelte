@@ -1,12 +1,12 @@
 
 <script lang="ts">
 
-	// Internal imports
-	import { LinkController } from "$scripts/controllers"
+	// Internal dependencies
+	import type { LinkController } from "$scripts/controllers"
 	import { tooltip } from "$scripts/tooltip"
 
 	// Assets
-	import copyIcon from "$assets/copy-icon.svg"
+	import copy_icon from "$assets/copy-icon.svg"
 
 	// Exports
 	export let link: LinkController
@@ -38,7 +38,7 @@
 		bind:value
 		/>
 
-	<button 
+	<button
 		disabled={disabled}
 		class:disabled
 		use:tooltip={disabled ? 'Invalid link' : 'Copy link'}
@@ -48,7 +48,7 @@
 			setTimeout(() => copied = false, 2000)
 		}}
 	>
-		<img src={copyIcon} alt="Copy link" />
+		<img src={copy_icon} alt="Copy link" />
 		<span class="popup" class:copied> Link copied! </span>
 	</button>
 </div>
@@ -69,8 +69,8 @@
 		input
 			width: 100%
 			box-sizing: border-box
-			padding: 
-				top: $input-thin-padding 
+			padding:
+				top: $input-thin-padding
 				right: calc(2 * $input-thin-padding + $input-thick-padding + $input-icon-size)
 				bottom: $input-thin-padding
 				left: $input-thick-padding
@@ -109,44 +109,44 @@
 				width: $input-icon-size
 				height: $input-icon-size
 				margin: $input-thin-padding
-				
+
 
 				filter: $white-filter
 
 				pointer-events: none
-			
+
 			.popup
 				position: absolute
 				bottom: calc(100% + 10px)
 				z-index: 9999
 
 				display: none
-		
+
 				width: max-content
 				padding: 0 $input-thick-padding
 				border-radius: $border-radius
-		
+
 				color: $white
 				background: $dark-gray
 				text-align: center
-		
+
 				pointer-events: none
 
 				&.copied
 					display: block
-		
+
 				&::after
 					position: absolute
 					translate: -50% 50%
 					rotate: 45deg
 					bottom: 0
 					left: 50%
-		
+
 					content: ""
-		
+
 					width: 0.5rem
 					height: 0.5rem
-		
+
 					background: $dark-gray
 
 </style>

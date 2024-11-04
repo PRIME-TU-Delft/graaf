@@ -12,13 +12,13 @@
 	} from '$scripts/controllers'
 
 	// Components
-	import Modal from '$components/layouts/Modal.svelte'
+	import Modal from '$components/Modal.svelte'
 	import Validation from '$components/Validation.svelte'
-	import Textfield from '$components/forms/Textfield.svelte'
-	import Searchbar from '$components/forms/Search.svelte'
-	import Dropdown from '$components/forms/Dropdown.svelte'
-	import Button from '$components/buttons/Button.svelte'
-	import LinkButton from '$components/buttons/LinkButton.svelte'
+	import Textfield from '$components/Textfield.svelte'
+	import Searchbar from '$components/Search.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'

@@ -5,10 +5,12 @@
 	import { createEventDispatcher, onMount } from "svelte"
 
 	// Internal imports
-	import { ValidationData, Severity } from '$scripts/validation'
+	import { Severity } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { scrollintoview } from '$scripts/scrollintoview'
 	import { loopfocus, focusonhover, losefocus } from '$scripts/hocusfocus'
+
+	import type { DropdownOption } from '$scripts/types'
 
 	// Assets
 	import errorIcon from '$assets/error-icon.svg'
@@ -17,16 +19,11 @@
 
 	// Types
 	type T = $$Generic
-	type DropdownOption = {
-		value: T,
-		label: string,
-		validation: ValidationData
-	}
 
 	// Exports
 	export let id: string
-	export let value: T | null
-	export let options: DropdownOption[]
+	export let value: T | null = null
+	export let options: DropdownOption<T>[]
 	export let placeholder: string
 
 	// Functions
@@ -47,6 +44,7 @@
 	// Variables
 	const dispatch = createEventDispatcher<{change: T | null}>()
 	let visible: boolean = false
+	let dropdown: HTMLDivElement
 	let wrapper: HTMLDivElement
 	let query: string = ''
 
@@ -58,7 +56,7 @@
 	})
 
 	onMount(() => {
-		wrapper.style.top = -wrapper.clientHeight / 2 + 'px'
+		dropdown.style.height = wrapper.clientHeight + 'px'
 	})
 
 </script>
@@ -67,8 +65,9 @@
 <!-- Markup -->
 
 
-<div class="dropdown">
-	<div class="wrapper" use:losefocus={() => visibility(false)} bind:this={wrapper}>
+<div class="dropdown" bind:this={dropdown}>
+ 	<div class="wrapper" use:losefocus={() => visibility(false)} bind:this={wrapper}>
+
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} type="hidden" tabindex="-1" bind:value />
 		<button
@@ -148,7 +147,6 @@
 
 		.wrapper
 			position: absolute
-			top: 0
 			left: 0
 
 			width: 100%
@@ -258,7 +256,7 @@
 
 						img
 							filter: $yellow-filter
-				
+
 				.searchbar
 					position: relative
 					padding-right: calc($input-icon-size + 2 * $input-thin-padding)
