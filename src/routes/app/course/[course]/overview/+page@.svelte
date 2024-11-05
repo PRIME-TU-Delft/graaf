@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { cache, course, course_options, graphs, graph_options, graphID_options, links } from './stores'
+	import { cache, course, course_options, graphs, graph_options, links } from './stores'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
 

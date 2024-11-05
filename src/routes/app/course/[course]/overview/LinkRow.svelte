@@ -138,11 +138,13 @@
 	</div>
 {/if}
 
-{#if $lecture_options !== undefined}
-	<Modal bind:this={embed_modal.modal}>
-		<h3 slot="header"> Create Embed </h3>
-		Create an embed to display this graph in your own website. You can customize the initial state and the height of the IFrame.
+<Modal bind:this={embed_modal.modal}>
+	<h3 slot="header"> Create Embed </h3>
+	Create an embed to display this graph in your own website. You can customize the initial state and the height of the IFrame.
 
+	{#if $lecture_options === undefined}
+		<p class="grayed"> Loading... </p>
+	{:else}
 		<form>
 			<label for="height"> IFrame Height </label>
 			<Textfield 
@@ -173,8 +175,8 @@
 
 			<Textarea readonly id="embed" value={embed_modal.embed} />
 		</form>
-	</Modal>
-{/if}
+	{/if}
+</Modal>
 
 
 <!-- Styles -->

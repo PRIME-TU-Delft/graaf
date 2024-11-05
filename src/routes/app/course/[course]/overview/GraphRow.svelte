@@ -111,11 +111,14 @@
 	/>
 </div>
 
-{#if $course_options !== undefined}
-	<Modal bind:this={copy_modal.modal}>
-		<h3 slot="header"> Copy Graph </h3>
-		Copy this graph to another course. This will create a new graph with the same content in the selected course.
 
+<Modal bind:this={copy_modal.modal}>
+	<h3 slot="header"> Copy Graph </h3>
+	Copy this graph to another course. This will create a new graph with the same content in the selected course.
+
+	{#if $course_options === undefined}
+		<p class="grayed"> Loading... </p>
+	{:else}
 		<form>
 			<label for="course"> Target Course </label>
 			<Dropdown
@@ -133,8 +136,8 @@
 				<Validation data={copy_modal.validate()} />
 			</footer>
 		</form>
-	</Modal>
-{/if}
+	{/if}
+</Modal>
 
 
 <!-- Styles -->
