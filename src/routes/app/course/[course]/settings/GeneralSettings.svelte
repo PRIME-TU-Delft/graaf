@@ -1,6 +1,9 @@
 
 <script lang="ts">
 
+	// External dependencies
+	import { goto } from '$app/navigation'
+
 	// Internal dependencies
 	import { course, programs, program_options } from './stores'
 	import { ValidationData, Severity } from '$scripts/validation'
@@ -104,7 +107,7 @@
 			
 				<div class="flex-spacer" />
 			
-				<Searchbar bind:value={query} />
+				<Searchbar placeholder="Search programs" bind:value={query} />
 				<Button on:click={() => program_modal.show()}>
 					<img src={plus_icon} alt="Assign to Program"> Assign to Program
 				</Button>
@@ -134,7 +137,10 @@
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => archive_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={() => archive_modal.hide()}> Archive </Button>
+		<Button on:click={async () => {
+			await $course?.delete() // TODO this should archive, not delete. Implement this
+			goto('/app/dashboard')
+		}}> Archive </Button>
 	</svelte:fragment>
 </Modal>
 
@@ -200,9 +206,5 @@
 				display: flex
 				margin-bottom: $form-big-gap
 				gap: $form-small-gap
-			
-			.grayed
-				margin: auto
-				color: $gray
 
 </style>

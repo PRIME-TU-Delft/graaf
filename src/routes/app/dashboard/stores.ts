@@ -13,4 +13,3 @@ import type {
 export const cache = writable<ControllerCache>()
 export const programs = writable<ProgramController[]>()
 export const courses = writable<CourseController[]>()
-export const search_query = writable<string>('')

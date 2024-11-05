@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { cache, programs, courses, search_query } from './stores'
+	import { cache, programs, courses } from './stores'
 	
 	import { ProgramController, CourseController } from '$scripts/controllers'
 	import { ValidationData, Severity } from '$scripts/validation'
@@ -148,6 +148,9 @@
 	const program_modal = new ProgramModal()
 	const course_modal = new CourseModal()
 
+	// Variables
+	let query: string = ''
+
 </script>
 
 
@@ -175,13 +178,13 @@
 
 		<div class="flex-spacer" />
 
-		<Searchbar placeholder="Search courses" bind:value={$search_query} />
+		<Searchbar placeholder="Search courses" bind:value={query} />
 	</svelte:fragment>
 
-	<CoursesCard />
+	<CoursesCard {query} />
 
 	{#each $programs as program}
-		<ProgramCard {program} />
+		<ProgramCard {program} {query} />
 	{/each}
 </Layout>
 
@@ -247,13 +250,3 @@
 		</footer>
 	</form>
 </Modal>
-
-
-<!-- Styles -->
-
-
-<style lang="sass">
-
-	@import './style.sass'
-
-</style>

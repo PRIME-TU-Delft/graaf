@@ -6,8 +6,6 @@
 	import { writable } from 'svelte/store'
 
 	// Internal dependencies
-	import { search_query } from './stores'
-
 	import type {
 		ProgramController,
 		CourseController,
@@ -25,13 +23,14 @@
 
 	// Exports
 	export let program: ProgramController
+	export let query: string
 
 	// Modals
 	let coordinator_modal: Modal
 
 	// Stores
-	let courses = writable<CourseController[] | undefined>(undefined)
-	let admins = writable<UserController[] | undefined>(undefined)
+	let courses = writable<CourseController[] | undefined>()
+	let admins = writable<UserController[] | undefined>()
 
 	onMount(async () => {
 		courses.set(await program.getCourses())
@@ -63,12 +62,12 @@
 	<svelte:fragment slot="body">
 		{#if $courses === undefined}
 			<span class="grayed"> Loading... </span>
-		{:else if !$courses.some(course => course.matchesQuery($search_query))}
+		{:else if !$courses.some(course => course.matchesQuery(query))}
 			<span class="grayed"> There's nothing here </span>
 		{:else}
 			<div class="grid">
 				{#each $courses as course}
-					{#if course.matchesQuery($search_query)}
+					{#if course.matchesQuery(query)}
 						<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
 					{/if}
 				{/each}

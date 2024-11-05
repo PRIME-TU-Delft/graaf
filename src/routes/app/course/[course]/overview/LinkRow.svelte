@@ -5,7 +5,7 @@
 
 	// External dependencies
 	import { onMount } from 'svelte'
-	import { writable, type Writable } from 'svelte/store'
+	import { writable } from 'svelte/store'
 
 	// Internal dependencies
 	import { course, links, graphID_options} from './stores'
@@ -79,8 +79,8 @@
 	let embed_modal = new EmbedModal()
 
 	// Variables
-	const lecture_options: Writable<DropdownOption<LectureController>[] | undefined> = writable()
-	const url: Writable<string | undefined> = writable()
+	const lecture_options = writable<DropdownOption<LectureController>[] | undefined>()
+	const url = writable<string | undefined>()
 
 	onMount(() => {
 		links.subscribe(
