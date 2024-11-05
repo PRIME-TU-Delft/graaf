@@ -3,16 +3,19 @@
 
 	const ROOT_URL = 'localhost:5173/app'
 
+	// External dependencies
+	import { onMount } from 'svelte'
+	import { writable, type Writable } from 'svelte/store'
+
 	// Internal dependencies
-	import { course, graph_options, lecture_options } from './stores'
+	import { course, links, graphID_options} from './stores'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
 
 	import type { LectureController, LinkController } from '$scripts/controllers'
-	import type { EditorView } from '$scripts/types'
+	import type { EditorView, DropdownOption } from '$scripts/types'
 
 	// Components
-	import Validation from '$components/Validation.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Textarea from '$components/Textarea.svelte'
@@ -37,7 +40,7 @@
 		}
 
 		get embed() {
-			if (!this.validate().okay()) return ''
+			if ($course === undefined || !this.validate().okay()) return ''
 
 			let embed = `<iframe src="${ROOT_URL}/graph/${$course.code}/${link.name}?view=${this.view}`
 			if (this.lecture) 
@@ -70,69 +73,76 @@
 
 	// Exports
 	export let link: LinkController
-	export let update: () => void
-
-	$: link.getGraph()
-		.then(graph => graph?.getLectureOptions() || [])
-		.then(options => lecture_options.set(options))
-	$: graphID_options = $graph_options.map(option => {
-		return {
-			value: option.value.id,
-			label: option.label,
-			validation: option.validation
-		}
-	})
+	export let update: () => void 
 
 	// Modal
 	let embed_modal = new EmbedModal()
+
+	// Variables
+	const lecture_options: Writable<DropdownOption<LectureController>[] | undefined> = writable()
+	const url: Writable<string | undefined> = writable()
+
+	onMount(() => {
+		links.subscribe(
+			() => link.getURL()
+				.then(url.set)
+		)
+
+		links.subscribe(
+			() => link.getGraph()
+				.then(graph => graph?.getLectureOptions() || [])
+				.then(lecture_options.set)
+		) 
+	})
 
 </script>
 
 
 <!-- Markup -->
 
+{#if $url !== undefined && $graphID_options !== undefined}
+	<div class="link-row">
+		<IconButton scale
+			src={trash_icon}
+			description="Delete Link"
+			on:click={async () => {
+				await link.delete()
+				update()
+			}}
+		/>
+		<Textfield
+			id="link-name"
+			placeholder="Link Name"
+			bind:value={link.name}
+			on:change={async () => {
+				await link.save()
+				update()
+			}}
+		/>
+		<Dropdown
+			id="graph"
+			placeholder="Select a graph"
+			options={$graphID_options}
+			bind:value={link.graph_id}
+			on:change={async () => {
+				await link.save()
+				update()
+			}}
+		/>
 
-<div class="link-row">
-	<IconButton scale
-		src={trash_icon}
-		description="Delete Link"
-		on:click={async () => {
-			await link.delete()
-			update()
-		}}
-	/>
+		<LinkURL url={$url} />
+		<Button
+			disabled={!link.validate().okay()}
+			on:click={() => embed_modal.show()}
+		> <b>&lt;/&gt;</b> </Button>
+	</div>
+{/if}
 
-	<Textfield
-		id="link-name"
-		placeholder="Link Name"
-		bind:value={link.name}
-		on:input={() => update()}
-		on:change={async () => await link.save()}
-	/>
+{#if $lecture_options !== undefined}
+	<Modal bind:this={embed_modal.modal}>
+		<h3 slot="header"> Create Embed </h3>
+		Create an embed to display this graph in your own website. You can customize the initial state and the height of the IFrame.
 
-	<Dropdown
-		id="graph"
-		placeholder="Select a graph"
-		options={graphID_options}
-		bind:value={link.graph_id}
-		on:change={async () => {
-			await link.save()
-			update()
-		}}
-	/>
-
-	<LinkURL link={link} />
-
-	<Button on:click={() => embed_modal.show()}> <b>&lt;/&gt;</b> </Button>
-</div>
-
-<Modal bind:this={embed_modal.modal}>
-	<h3 slot="header"> Create Embed </h3>
-	Create an embed to display this graph in your own website. You can customize the initial state and the height of the IFrame.
-
-	{#if $lecture_options === undefined}
-		<p class="grayed"> Loading... </p>
-	{:else}
 		<form>
 			<label for="height"> IFrame Height </label>
 			<Textfield 
@@ -163,8 +173,8 @@
 
 			<Textarea readonly id="embed" value={embed_modal.embed} />
 		</form>
-	{/if}
-</Modal>
+	</Modal>
+{/if}
 
 
 <!-- Styles -->

@@ -1,7 +1,6 @@
 
 // External dependencies
 import * as uuid from 'uuid'
-import { browser } from '$app/environment'
 
 // Internal dependencies
 import { styles } from '$scripts/settings'
@@ -17,7 +16,8 @@ import {
 import type {
 	SerializedGraph,
 	SerializedDomain,
-	SerializedSubject
+	SerializedSubject,
+	SerializedLecture
 } from '$scripts/types'
 
 // Exports
@@ -33,8 +33,11 @@ export {
 
 abstract class FieldController {
 	protected _graph?: GraphController
+	protected _pending_graph?: Promise<GraphController>
 	protected _parents?: FieldController[]
+	protected _pending_parents?: Promise<FieldController[]>
 	protected _children?: FieldController[]
+	protected _pending_children?: Promise<FieldController[]>
 
 	uuid: string
 	fx?: number
@@ -64,11 +67,11 @@ abstract class FieldController {
 	}
 
 	get parent_ids(): number[] {
-		return Array.from(this._parent_ids)
+		return this._parent_ids
 	}
 
 	get child_ids(): number[] {
-		return Array.from(this._child_ids)
+		return this._child_ids
 	}
 
 	// --------------------> API Getters
@@ -108,6 +111,7 @@ abstract class FieldController {
 
 class DomainController extends FieldController {
 	private _subjects?: SubjectController[]
+	private _pending_subjects?: Promise<SubjectController[]>
 
 	private constructor(
 		cache: ControllerCache,
@@ -142,7 +146,7 @@ class DomainController extends FieldController {
 	}
 
 	get subject_ids(): number[] {
-		return Array.from(this._subject_ids)
+		return this._subject_ids
 	}
 
 	// --------------------> API Getters
@@ -155,27 +159,39 @@ class DomainController extends FieldController {
 
 	async getGraph(): Promise<GraphController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if graph is pending
+		if (this._pending_graph !== undefined) {
+			return await this._pending_graph
 		}
 
-		// Check if course is already loaded
-		if (this._graph) {
+		// Check if graph is known
+		if (this._graph !== undefined) {
+			return this._graph
+		}
+
+		// Check if graph is cached
+		this._graph = this.cache.find(GraphController, this._graph_id)
+		if (this._graph !== undefined) {
 			return this._graph
 		}
 
 		// Call API to get the graph data
-		const response = await fetch(`/api/domain/${this.id}/graph`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/domain/${this.id}/graph GET): ${error}`)
-			})
+		this._pending_graph = this.cache
+			.fetch(`/api/domain/${this.id}/course`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedGraph
+					this._graph = GraphController.revive(this.cache, data)
+					this._pending_graph = undefined
+					return this._graph
+				},
+				error => {
+					this._pending_graph = undefined
+					throw new Error(`APIError (/api/domain/${this.id}/graph GET): ${error}`)
+				}
+			)
 
-		// Revive the course
-		const data = await response.json() as SerializedGraph
-		this._graph = GraphController.revive(this.cache, data)
-
-		return this._graph
+		return await this._pending_graph
 	}
 
 	/**
@@ -186,27 +202,40 @@ class DomainController extends FieldController {
 
 	async getParents(): Promise<DomainController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if parents are pending
+		if (this._pending_parents !== undefined) {
+			return await this._pending_parents as DomainController[]
 		}
 
-		// Check if parents are already loaded
-		if (this._parents) {
-			return Array.from(this._parents) as DomainController[]
+		// Check if parents are known
+		if (this._parents !== undefined) {
+			return this._parents as DomainController[]
+		}
+
+		// Check if parents are cached
+		const cached = this._parent_ids.map(id => this.cache.find(DomainController, id))
+		if (!cached.includes(undefined)) {
+			this._parents = cached as DomainController[]
+			return this._parents as DomainController[]
 		}
 
 		// Call API to get the parent data
-		const response = await fetch(`/api/domain/${this.id}/parents`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/domain/${this.id}/parents GET): ${error}`)
-			})
+		this._pending_parents = this.cache
+			.fetch(`/api/domain/${this.id}/parents`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedDomain[]
+					this._parents = data.map(parent => DomainController.revive(this.cache, parent))
+					this._pending_parents = undefined
+					return this._parents
+				},
+				error => {
+					this._pending_parents = undefined
+					throw new Error(`APIError (/api/domain/${this.id}/parents GET): ${error}`)
+				}
+			)
 
-		// Revive the parents
-		const data = await response.json() as SerializedDomain[]
-		this._parents = data.map(parent => DomainController.revive(this.cache, parent))
-
-		return Array.from(this._parents) as DomainController[]
+		return await this._pending_parents as DomainController[]
 	}
 
 	/**
@@ -217,27 +246,40 @@ class DomainController extends FieldController {
 
 	async getChildren(): Promise<DomainController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if children are pending
+		if (this._pending_children !== undefined) {
+			return await this._pending_children as DomainController[]
 		}
 
-		// Check if children are already loaded
-		if (this._children) {
-			return Array.from(this._children) as DomainController[]
+		// Check if children are known
+		if (this._children !== undefined) {
+			return this._children as DomainController[]
+		}
+
+		// Check if children are cached
+		const cached = this._child_ids.map(id => this.cache.find(DomainController, id))
+		if (!cached.includes(undefined)) {
+			this._children = cached as DomainController[]
+			return this._children as DomainController[]
 		}
 
 		// Call API to get the child data
-		const response = await fetch(`/api/domain/${this.id}/children`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/domain/${this.id}/children GET): ${error}`)
-			})
+		this._pending_children = this.cache
+			.fetch(`/api/domain/${this.id}/children`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedDomain[]
+					this._children = data.map(child => DomainController.revive(this.cache, child))
+					this._pending_children = undefined
+					return this._children
+				},
+				error => {
+					this._pending_children = undefined
+					throw new Error(`APIError (/api/domain/${this.id}/children GET): ${error}`)
+				}
+			)
 
-		// Revive the children
-		const data = await response.json() as SerializedDomain[]
-		this._children = data.map(child => DomainController.revive(this.cache, child))
-
-		return Array.from(this._children) as DomainController[]
+		return await this._pending_children as DomainController[]
 	}
 
 	/**
@@ -248,27 +290,40 @@ class DomainController extends FieldController {
 
 	async getSubjects(): Promise<SubjectController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if subjects are pending
+		if (this._pending_subjects !== undefined) {
+			return await this._pending_subjects
 		}
 
-		// Check if subjects are already loaded
-		if (this._subjects) {
-			return Array.from(this._subjects)
+		// Check if subjects are known
+		if (this._subjects !== undefined) {
+			return this._subjects
+		}
+
+		// Check if subjects are cached
+		const cached = this._subject_ids.map(id => this.cache.find(SubjectController, id))
+		if (!cached.includes(undefined)) {
+			this._subjects = cached as SubjectController[]
+			return this._subjects
 		}
 
 		// Call API to get the subject data
-		const response = await fetch(`/api/domain/${this.id}/subjects`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/domain/${this.id}/subjects GET): ${error}`)
-			})
+		this._pending_subjects = this.cache
+			.fetch(`/api/domain/${this.id}/subjects`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedSubject[]
+					this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
+					this._pending_subjects = undefined
+					return this._subjects
+				},
+				error => {
+					this._pending_subjects = undefined
+					throw new Error(`APIError (/api/domain/${this.id}/subjects GET): ${error}`)
+				}
+			)
 
-		// Revive the subjects
-		const data = await response.json() as SerializedSubject[]
-		this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
-
-		return Array.from(this._subjects)
+		return await this._pending_subjects
 	}
 
 	/**
@@ -334,7 +389,7 @@ class DomainController extends FieldController {
 	static async create(cache: ControllerCache, graph: GraphController): Promise<DomainController> {
 
 		// Call API to create a new domain
-		const response = await fetch(`/api/domain`, {
+		const response = await cache.fetch(`/api/domain`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ graph: graph.id })
@@ -449,7 +504,7 @@ class DomainController extends FieldController {
 	async save(): Promise<void> {
 
 		// Call API to save the domain
-		await fetch(`/api/domain`, {
+		await this.cache.fetch(`/api/domain`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(await this.reduce())
@@ -469,7 +524,7 @@ class DomainController extends FieldController {
 	async delete(): Promise<void> {
 
 		// Call API to delete the domain
-		await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/domain DELETE): ${error}`)
 			})
@@ -854,7 +909,9 @@ class DomainController extends FieldController {
 
 class SubjectController extends FieldController {
 	private _domain?: DomainController | null
+	private _pending_domain?: Promise<DomainController | null>
 	private _lectures?: LectureController[]
+	private _pending_lectures?: Promise<LectureController[]>
 
 	private constructor(
 		cache: ControllerCache,
@@ -911,7 +968,7 @@ class SubjectController extends FieldController {
 	}
 
 	get lecture_ids(): number[] {
-		return Array.from(this._lecture_ids)
+		return this._lecture_ids
 	}
 
 	// --------------------> API Getters
@@ -923,27 +980,39 @@ class SubjectController extends FieldController {
 
 	async getGraph(): Promise<GraphController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if graph is pending
+		if (this._pending_graph !== undefined) {
+			return await this._pending_graph
 		}
 
-		// Check if course is already loaded
-		if (this._graph) {
+		// Check if course is known
+		if (this._graph !== undefined) {
+			return this._graph
+		}
+
+		// Check if course is cached
+		this._graph = this.cache.find(GraphController, this._graph_id)
+		if (this._graph !== undefined) {
 			return this._graph
 		}
 
 		// Call API to get the graph data
-		const response = await fetch(`/api/subject/${this.id}/course`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/subject/${this.id}/course GET): ${error}`)
-			})
-
-		// Revive the course
-		const data = await response.json() as SerializedGraph
-		this._graph = GraphController.revive(this.cache, data)
-
-		return this._graph
+		this._pending_graph = this.cache
+			.fetch(`/api/subject/${this.id}/course`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedGraph
+					this._graph = GraphController.revive(this.cache, data)
+					this._pending_graph = undefined
+					return this._graph
+				},
+				error => {
+					this._pending_graph = undefined
+					throw new Error(`APIError (/api/subject/${this.id}/course GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_graph
 	}
 
 	/**
@@ -953,27 +1022,39 @@ class SubjectController extends FieldController {
 
 	async getDomain(): Promise<DomainController | null> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if domain is pending
+		if (this._pending_domain !== undefined) {
+			return await this._pending_domain
 		}
 
-		// Check if domain is already loaded
-		if (this._domain) {
+		// Check if domain is known
+		if (this._domain !== undefined) {
+			return this._domain
+		}
+
+		// Check if domain is cached
+		this._domain = this._domain_id ? this.cache.find(DomainController, this._domain_id) : null
+		if (this._domain !== undefined) {
 			return this._domain
 		}
 
 		// Call API to get the domain data
-		const response = await fetch(`/api/subject/${this.id}/domain`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/subject/${this.id}/domain GET): ${error}`)
-			})
+		this._pending_domain = this.cache
+			.fetch(`/api/subject/${this.id}/domain`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedDomain
+					this._domain = DomainController.revive(this.cache, data)
+					this._pending_domain = undefined
+					return this._domain
+				},
+				error => {
+					this._pending_domain = undefined
+					throw new Error(`APIError (/api/subject/${this.id}/domain GET): ${error}`)
+				}
+			)
 
-		// Revive the domain
-		const data = await response.json() as SerializedDomain
-		this._domain = data ? DomainController.revive(this.cache, data) : null
-
-		return this._domain
+		return await this._pending_domain
 	}
 
 	/**
@@ -984,27 +1065,40 @@ class SubjectController extends FieldController {
 
 	async getLectures(): Promise<LectureController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if lectures are pending
+		if (this._pending_lectures !== undefined) {
+			return await this._pending_lectures
 		}
 
-		// Check if lectures are already loaded
-		if (this._lectures) {
-			return Array.from(this._lectures)
+		// Check if lectures are known
+		if (this._lectures !== undefined) {
+			return this._lectures
+		}
+
+		// Check if lectures are cached
+		const cached = this._lecture_ids.map(id => this.cache.find(LectureController, id))
+		if (!cached.includes(undefined)) {
+			this._lectures = cached as LectureController[]
+			return this._lectures
 		}
 
 		// Call API to get the lecture data
-		const response = await fetch(`/api/subject/${this.id}/lectures`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/subject/${this.id}/lectures GET): ${error}`)
-			})
+		this._pending_lectures = this.cache
+			.fetch(`/api/subject/${this.id}/lectures`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedLecture[]
+					this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
+					this._pending_lectures = undefined
+					return this._lectures
+				},
+				error => {
+					this._pending_lectures = undefined
+					throw new Error(`APIError (/api/subject/${this.id}/lectures GET): ${error}`)
+				}
+			)
 
-		// Revive the lectures
-		const data = await response.json() as SerializedDomain[]
-		this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
-
-		return Array.from(this._lectures)
+		return await this._pending_lectures
 	}
 
 	/**
@@ -1015,27 +1109,40 @@ class SubjectController extends FieldController {
 
 	async getParents(): Promise<SubjectController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if parents are pending
+		if (this._pending_parents !== undefined) {
+			return await this._pending_parents as SubjectController[]
 		}
 
-		// Check if parents are already loaded
-		if (this._parents) {
-			return Array.from(this._parents) as SubjectController[]
+		// Check if parents are known
+		if (this._parents !== undefined) {
+			return this._parents as SubjectController[]
+		}
+
+		// Check if parents are cached
+		const cached = this._parent_ids.map(id => this.cache.find(SubjectController, id))
+		if (!cached.includes(undefined)) {
+			this._parents = cached as SubjectController[]
+			return this._parents as SubjectController[]
 		}
 
 		// Call API to get the parent data
-		const response = await fetch(`/api/subject/${this.id}/parents`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/subject/${this.id}/parents GET): ${error}`)
-			})
-
-		// Revive the parents
-		const data = await response.json() as SerializedSubject[]
-		this._parents = data.map(parent => SubjectController.revive(this.cache, parent))
-
-		return Array.from(this._parents) as SubjectController[]
+		this._pending_parents = this.cache
+			.fetch(`/api/subject/${this.id}/parents`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedSubject[]
+					this._parents = data.map(parent => SubjectController.revive(this.cache, parent))
+					this._pending_parents = undefined
+					return this._parents
+				},
+				error => {
+					this._pending_parents = undefined
+					throw new Error(`APIError (/api/subject/${this.id}/parents GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_parents as SubjectController[]
 	}
 
 	/**
@@ -1046,27 +1153,40 @@ class SubjectController extends FieldController {
 
 	async getChildren(): Promise<SubjectController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if children are pending
+		if (this._pending_children !== undefined) {
+			return await this._pending_children as SubjectController[]
 		}
 
-		// Check if children are already loaded
-		if (this._children) {
-			return Array.from(this._children) as SubjectController[]
+		// Check if children are known
+		if (this._children !== undefined) {
+			return this._children as SubjectController[]
+		}
+
+		// Check if children are cached
+		const cached = this._child_ids.map(id => this.cache.find(SubjectController, id))
+		if (!cached.includes(undefined)) {
+			this._children = cached as SubjectController[]
+			return this._children as SubjectController[]
 		}
 
 		// Call API to get the child data
-		const response = await fetch(`/api/subject/${this.id}/children`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/subject/${this.id}/children GET): ${error}`)
-			})
-
-		// Revive the children
-		const data = await response.json() as SerializedSubject[]
-		this._children = data.map(child => SubjectController.revive(this.cache, child))
-
-		return Array.from(this._children) as SubjectController[]
+		this._pending_children = this.cache
+			.fetch(`/api/subject/${this.id}/children`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedSubject[]
+					this._children = data.map(child => SubjectController.revive(this.cache, child))
+					this._pending_children = undefined
+					return this._children
+				},
+				error => {
+					this._pending_children = undefined
+					throw new Error(`APIError (/api/subject/${this.id}/children GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_children as SubjectController[]
 	}
 
 	/**
@@ -1102,7 +1222,7 @@ class SubjectController extends FieldController {
 	static async create(cache: ControllerCache, graph: GraphController): Promise<SubjectController> {
 
 		// Call API to create a new subject
-		const response = await fetch(`/api/subject`, {
+		const response = await cache.fetch(`/api/subject`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ graph: graph.id })
@@ -1217,7 +1337,7 @@ class SubjectController extends FieldController {
 	async save(): Promise<void> {
 
 		// Call API to save the subject
-		await fetch(`/api/subject`, {
+		await this.cache.fetch(`/api/subject`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
@@ -1237,7 +1357,7 @@ class SubjectController extends FieldController {
 	async delete(): Promise<void> {
 
 		// Call API to delete the subject
-		await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/subject/${this.id} DELETE): ${error}`)
 			})

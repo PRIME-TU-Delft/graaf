@@ -78,7 +78,15 @@
 			on:click={() => visibility(!visible)}
 			use:clickoutside={() => visibility(false)}
 		>
-			{choice?.label || placeholder}
+			{#if choice}
+				{#if choice.label.trim() === ''}
+					<i> Unnamed option </i>
+				{:else}
+					{choice.label}
+				{/if}
+			{:else}
+				{placeholder}
+			{/if}
 		</button>
 
 		{#if visible}
@@ -99,7 +107,11 @@
 							on:click={() => set(option.value)}
 							use:focusonhover
 						>
-							{option.label}
+							{#if option.label.trim() === ''}
+								<i> Unnamed option </i>
+							{:else}
+								{option.label}
+							{/if}
 
 							{#if option.validation.severity === Severity.error}
 								<span class="error">

@@ -1,11 +1,11 @@
 
 <script lang="ts">
 
+	// External dependencies
+	import { goto } from '$app/navigation'
+
 	// Internal dependencies
-	import { 
-		CourseController,
-		GraphController
-	} from '$scripts/controllers';
+	import { course, graph } from './stores'
 
 	// Components
 	import Modal from '$components/Modal.svelte'
@@ -16,8 +16,6 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Variables
-	export let course: CourseController
-	export let graph: GraphController
 	export let update: () => void
 	let delete_modal: Modal
 
@@ -34,9 +32,8 @@
 		<label for="name"> Name </label>
 		<Textfield 
 			id="name" 
-			bind:value={graph.name} 
-			on:change={async () => await graph.save()}
-			on:input={update}
+			bind:value={$graph.name} 
+			on:change={async () => await $graph.save()}
 			/>
 	</div>
 
@@ -50,14 +47,15 @@
 
 		<Modal bind:this={delete_modal}>
 			<h3 slot="header"> Delete Graph </h3>
-			<p> Are you sure you want to delete {graph.name}? This action <b>cannot</b> be undone. </p>
+			<p> Are you sure you want to delete {$graph.name}? This action <b>cannot</b> be undone. </p>
 
 			<div class="button-row">
 				<Button dangerous
-					href="/app/course/{course.id}/overview"
-					on:click={async () => await graph.delete()}
-					> Delete
-				</Button>
+					on:click={async () => {
+						await $graph.delete()
+						goto(`/app/course/${$course.id}/overview`) // Use got instead of href to avoid race conditions
+					}}
+				> Delete </Button>
 			</div>
 		</Modal>
 	</div>

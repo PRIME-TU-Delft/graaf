@@ -8,15 +8,18 @@ import { GraphHelper } from '$scripts/helpers'
 // Load
 export const load: PageServerLoad = async ({ params }) => {
 
-	// Get graphs
+	// Validate graph ID
 	const graph_id = Number(params.graph)
-	if (isNaN(graph_id)) return Promise.reject('Invalid graph ID')
-	const graph = await GraphHelper.getById(graph_id)
-		.catch(error => Promise.reject(error))
+	if (isNaN(graph_id)) {
+		return Promise.reject('Invalid graph ID')
+	}
 
-	// Get course
+	// Get data
 	const course = await GraphHelper.getCourse(graph_id)
-		.catch(error => Promise.reject(error))
+	const graph = await GraphHelper.getById(graph_id)
+	const domains = await GraphHelper.getDomains(graph_id)
+	const subjects = await GraphHelper.getSubjects(graph_id)
+	const lectures = await GraphHelper.getLectures(graph_id)
 
-	return { course, graph }
+	return { course, graph, domains, subjects, lectures }
 }

@@ -47,8 +47,8 @@
 			href: `/app/graph/${$graph.id}/overview`
 		},
 		{
-			name: "Edit",
-			href: `/app/graph/${$graph.id}/edit`
+			name: "Layout",
+			href: `/app/graph/${$graph.id}/layout`
 		}
 	]}
 >

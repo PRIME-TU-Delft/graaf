@@ -1,6 +1,5 @@
 
 // Internal dependencies
-import { env } from '$env/dynamic/private'
 import { CourseHelper } from '$scripts/helpers'
 
 // Exports
@@ -16,7 +15,6 @@ export { GET }
  */
 
 async function GET({ params }) {
-	if (env.DEBUG) console.log('\nGET /api/course/[id]/admins')
 
 	// Retrieve course ID
 	const course_id = Number(params.id)

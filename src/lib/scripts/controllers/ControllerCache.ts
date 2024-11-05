@@ -1,4 +1,7 @@
 
+// External dependencies
+import { browser } from '$app/environment'
+
 // Internal dependencies
 import {
 	UserController,
@@ -27,6 +30,10 @@ class ControllerCache {
 	private subjects: SubjectController[] = []
 	private lectures: LectureController[] = []
 	private links: LinkController[] = []
+
+	constructor(
+		public fetch: (url: string, init?: RequestInit) => Promise<Response>
+	) { }
 
 	/**
 	 * Finds an object in the cache

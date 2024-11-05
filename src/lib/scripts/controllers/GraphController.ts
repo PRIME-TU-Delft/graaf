@@ -1,7 +1,4 @@
 
-// External dependencies
-import { browser } from '$app/environment'
-
 // Internal dependencies
 import { ValidationData, Severity } from '$scripts/validation'
 
@@ -52,12 +49,17 @@ enum SortOption {
 
 class GraphController {
 	private _course?: CourseController
+	private _pending_course?: Promise<CourseController>
 	private _domains?: DomainController[]
+	private _pending_domains?: Promise<DomainController[]>
 	private _domain_relations?: DomainRelationController[]
 	private _subjects?: SubjectController[]
+	private _pending_subjects?: Promise<SubjectController[]>
 	private _subject_relations?: SubjectRelationController[]
 	private _lectures?: LectureController[]
+	private _pending_lectures?: Promise<LectureController[]>
 	private _links?: LinkController[]
+	private _pending_links?: Promise<LinkController[]>
 
 	private constructor(
 		public cache: ControllerCache,
@@ -122,27 +124,39 @@ class GraphController {
 
 	async getCourse(): Promise<CourseController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if course is pending
+		if (this._pending_course !== undefined) {
+			return await this._pending_course
 		}
 
-		// Check if course is already loaded
-		if (this._course) {
+		// Check if course is known
+		if (this._course !== undefined) {
+			return this._course
+		}
+
+		// Get the course from the cache
+		this._course = this.cache.find(CourseController, this.course_id)
+		if (this._course !== undefined) {
 			return this._course
 		}
 
 		// Call API to get the course data
-		const response = await fetch(`/api/graph/${this.id}/course`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/course GET): ${error}`)
-			})
-
-		// Revive the course
-		const data = await response.json() as SerializedCourse
-		this._course = CourseController.revive(this.cache, data)
-
-		return this._course
+		this._pending_course = this.cache
+			.fetch(`/api/graph/${this.id}/course`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedCourse
+					this._course = CourseController.revive(this.cache, data)
+					this._pending_course = undefined
+					return this._course
+				},
+				error => {
+					this._pending_course = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/course GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_course
 	}
 
 	/**
@@ -153,27 +167,40 @@ class GraphController {
 
 	async getDomains(): Promise<DomainController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if domains are pending
+		if (this._pending_domains !== undefined) {
+			return await this._pending_domains
 		}
 
-		// Check if domains are already loaded
-		if (this._domains) {
-			return Array.from(this._domains)
+		// Check if domains are known
+		if (this._domains !== undefined) {
+			return this._domains
+		}
+
+		// Check if domains are cached
+		const cached = this._domain_ids.map(id => this.cache.find(DomainController, id))
+		if (!cached.includes(undefined)) {
+			this._domains = cached as DomainController[]
+			return this._domains
 		}
 
 		// Call API to get the domain data
-		const response = await fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`)
-			})
-
-		// Revive the domains
-		const data = await response.json() as SerializedDomain[]
-		this._domains = data.map(domain => DomainController.revive(this.cache, domain))
-
-		return Array.from(this._domains)
+		this._pending_domains = this.cache
+			.fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedDomain[]
+					this._domains = data.map(domain => DomainController.revive(this.cache, domain))
+					this._pending_domains = undefined
+					return this._domains
+				},
+				error => {
+					this._pending_domains = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_domains
 	}
 
 	/**
@@ -183,9 +210,9 @@ class GraphController {
 
 	async getDomainRelations(): Promise<DomainRelationController[]> {
 
-		// Check if domain relations are already loaded
+		// Check if domain relations are known
 		if (this._domain_relations) {
-			return Array.from(this._domain_relations)
+			return this._domain_relations
 		}
 
 		// Infer relations
@@ -198,7 +225,7 @@ class GraphController {
 			}
 		}
 
-		return Array.from(this._domain_relations)
+		return this._domain_relations
 	}
 
 	/**
@@ -209,27 +236,40 @@ class GraphController {
 
 	async getSubjects(): Promise<SubjectController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if subjects are pending
+		if (this._pending_subjects !== undefined) {
+			return await this._pending_subjects
 		}
 
-		// Check if subjects are already loaded
-		if (this._subjects) {
-			return Array.from(this._subjects)
+		// Check if subjects are known
+		if (this._subjects !== undefined) {
+			return this._subjects
+		}
+
+		// Check if subjects are cached
+		const cached = this._subject_ids.map(id => this.cache.find(SubjectController, id))
+		if (!cached.includes(undefined)) {
+			this._subjects = cached as SubjectController[]
+			return this._subjects
 		}
 
 		// Call API to get the subject data
-		const response = await fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`)
-			})
+		this._pending_subjects = this.cache
+			.fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedSubject[]
+					this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
+					this._pending_subjects = undefined
+					return this._subjects
+				},
+				error => {
+					this._pending_subjects = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`)
+				}
+			)
 
-		// Revive the subjects
-		const data = await response.json() as SerializedSubject[]
-		this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
-
-		return Array.from(this._subjects)
+		return await this._pending_subjects
 	}
 
 	/**
@@ -239,9 +279,9 @@ class GraphController {
 
 	async getSubjectRelations(): Promise<SubjectRelationController[]> {
 
-		// Check if subject relations are already loaded
-		if (this._subject_relations) {
-			return Array.from(this._subject_relations)
+		// Check if subject relations are known
+		if (this._subject_relations !== undefined) {
+			return this._subject_relations
 		}
 
 		// Infer relations
@@ -254,7 +294,7 @@ class GraphController {
 			}
 		}
 
-		return Array.from(this._subject_relations)
+		return this._subject_relations
 	}
 
 	/**
@@ -265,27 +305,40 @@ class GraphController {
 
 	async getLectures(): Promise<LectureController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if lectures are pending
+		if (this._pending_lectures !== undefined) {
+			return await this._pending_lectures
 		}
 
-		// Check if lectures are already loaded
-		if (this._lectures) {
-			return Array.from(this._lectures)
+		// Check if lectures are known
+		if (this._lectures !== undefined) {
+			return this._lectures
+		}
+
+		// Check if lectures are cached
+		const cached = this._lecture_ids.map(id => this.cache.find(LectureController, id))
+		if (!cached.includes(undefined)) {
+			this._lectures = cached as LectureController[]
+			return this._lectures
 		}
 
 		// Call API to get the lectures
-		const response = await fetch(`/api/graph/${this.id}/lectures`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/lectures GET): ${error}`)
-			})
+		this._pending_lectures = this.cache
+			.fetch(`/api/graph/${this.id}/lectures`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedLecture[]
+					this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
+					this._pending_lectures = undefined
+					return this._lectures
+				},
+				error => {
+					this._pending_lectures = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/lectures GET): ${error}`)
+				}
+			)
 
-		// Parse the data
-		const data = await response.json() as SerializedLecture[]
-		this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
-
-		return Array.from(this._lectures)
+		return await this._pending_lectures
 	}
 
 	/**
@@ -313,27 +366,40 @@ class GraphController {
 
 	async getLinks(): Promise<LinkController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if links are pending
+		if (this._pending_links !== undefined) {
+			return await this._pending_links
 		}
 
-		// Check if links are already loaded
-		if (this._links) {
-			return Array.from(this._links)
+		// Check if links are known
+		if (this._links !== undefined) {
+			return this._links
+		}
+
+		// Check if links are cached
+		const cached = this._links_ids.map(id => this.cache.find(LinkController, id))
+		if (!cached.includes(undefined)) {
+			this._links = cached as LinkController[]
+			return this._links
 		}
 
 		// Call API to get the link data
-		const response = await fetch(`/api/graph/${this.id}/links`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/links GET): ${error}`)
-			})
-
-		// Revive the links
-		const data = await response.json() as SerializedLink[]
-		this._links = data.map(link => LinkController.revive(this.cache, link))
-
-		return Array.from(this._links)
+		this._pending_links = this.cache
+			.fetch(`/api/graph/${this.id}/links`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedLink[]
+					this._links = data.map(link => LinkController.revive(this.cache, link))
+					this._pending_links = undefined
+					return this._links
+				},
+				error => {
+					this._pending_links = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/links GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_links
 	}
 
 	// --------------------> API actions
@@ -348,13 +414,8 @@ class GraphController {
 
 	static async create(cache: ControllerCache, course_id: number, name: string): Promise<GraphController> {
 
-		// Guard against SSR
-		if (!browser) {
-			Promise.reject()
-		}
-
 		// Call API to create a new graph
-		const response = await fetch(`/api/graph`, {
+		const response = await cache.fetch(`/api/graph`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ course: course_id, name })
@@ -484,13 +545,8 @@ class GraphController {
 
 	async save(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to save the graph
-		await fetch(`/api/graph`, {
+		await this.cache.fetch(`/api/graph`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
@@ -508,11 +564,6 @@ class GraphController {
 	 */
 
 	async delete(): Promise<void> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
 
 		// Unassign from course and links
 		this.cache.find(CourseController, this.course_id)
@@ -534,7 +585,7 @@ class GraphController {
 		await Promise.all(lectures.map(lecture => lecture.delete()))
 
 		// Call API to delete the graph
-		await fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/graph/${this.id} DELETE): ${error}`)
 			})

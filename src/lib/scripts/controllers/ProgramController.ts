@@ -1,7 +1,4 @@
 
-// External dependencies
-import { browser } from '$app/environment'
-
 // Internal dependencies
 import { ValidationData, Severity } from '$scripts/validation'
 
@@ -26,8 +23,11 @@ export { ProgramController }
 
 class ProgramController {
 	private _courses?: CourseController[]
+	private _pending_courses?: Promise<CourseController[]>
 	private _admins?: UserController[]
+	private _pending_admins?: Promise<UserController[]>
 	private _editors?: UserController[]
+	private _pending_editors?: Promise<UserController[]>
 
 	private constructor(
 		public cache: ControllerCache,
@@ -47,28 +47,30 @@ class ProgramController {
 	}
 
 	get course_ids(): number[] {
-		return Array.from(this._course_ids)
+		return this._course_ids
 	}
 
 	get admin_ids(): number[] {
-		return Array.from(this._admin_ids)
+		return this._admin_ids
 	}
 
 	get editor_ids(): number[] {
-		return Array.from(this._editor_ids)
+		return this._editor_ids
 	}
 
 	// --------------------> API Getters
 
+	/**
+	 * Get all programs from the cache or the API
+	 * @param cache Cache to get the programs from
+	 * @returns Array of all programs
+	 * @throws `APIError` if the API call fails
+	 */
+
 	static async getAll(cache: ControllerCache): Promise<ProgramController[]> {
-		
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
 
 		// Call API to get all programs
-		const response = await fetch(`/api/program`, { method: 'GET' })
+		const response = await cache.fetch(`/api/program`, { method: 'GET' })
 			.catch(error => {
 				throw new Error(`APIError (/api/program GET): ${error}`)
 			})
@@ -86,27 +88,40 @@ class ProgramController {
 
 	async getCourses(): Promise<CourseController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if courses are pending
+		if (this._pending_courses !== undefined) {
+			return await this._pending_courses
 		}
 
-		// Check if courses are already loaded
-		if (this._courses) {
-			return Array.from(this._courses)
+		// Check if courses are known
+		if (this._courses !== undefined) {
+			return this._courses
+		}
+
+		// Check if courses are cached
+		const cached = this._course_ids.map(id => this.cache.find(CourseController, id))
+		if (!cached.includes(undefined)) {
+			this._courses = cached as CourseController[]
+			return this._courses
 		}
 
 		// Call API to get the course data
-		const response = await fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`)
-			})
+		this._pending_courses = this.cache
+			.fetch(`/api/program/${this.id}/courses`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedCourse[]
+					this._courses = data.map(course => CourseController.revive(this.cache, course))
+					this._pending_courses = undefined
+					return this._courses
+				},
+				error => {
+					this._pending_courses = undefined
+					throw new Error(`APIError (/api/program/${this.id}/courses GET): ${error}`)
+				}
+			)
 
-		// Revive the courses
-		const data = await response.json() as SerializedCourse[]
-		this._courses = data.map(course => CourseController.revive(this.cache, course))
-
-		return Array.from(this._courses)
+		return await this._pending_courses
 	}
 
 	/**
@@ -117,27 +132,40 @@ class ProgramController {
 
 	async getAdmins(): Promise<UserController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if admins are pending
+		if (this._pending_admins !== undefined) {
+			return await this._pending_admins
 		}
 
-		// Check if admins are already loaded
-		if (this._admins) {
-			return Array.from(this._admins)
+		// Check if admins are known
+		if (this._admins !== undefined) {
+			return this._admins
+		}
+
+		// Check if admins are cached
+		const cached = this._admin_ids.map(id => this.cache.find(UserController, id))
+		if (!cached.includes(undefined)) {
+			this._admins = cached as UserController[]
+			return this._admins
 		}
 
 		// Call API to get the admin data
-		const response = await fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`)
-			})
+		this._pending_admins = this.cache
+			.fetch(`/api/program/${this.id}/admins`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedUser[]
+					this._admins = data.map(user => UserController.revive(this.cache, user))
+					this._pending_admins = undefined
+					return this._admins
+				},
+				error => {
+					this._pending_admins = undefined
+					throw new Error(`APIError (/api/program/${this.id}/admins GET): ${error}`)
+				}
+			)
 
-		// Revive the admins
-		const data = await response.json() as SerializedUser[]
-		this._admins = data.map(user => UserController.revive(this.cache, user))
-
-		return Array.from(this._admins)
+		return await this._pending_admins
 	}
 
 	/**
@@ -148,27 +176,40 @@ class ProgramController {
 
 	async getEditors(): Promise<UserController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if editors are pending
+		if (this._pending_editors !== undefined) {
+			return await this._pending_editors
 		}
 
-		// Check if editors are already loaded
-		if (this._editors) {
-			return Array.from(this._editors)
+		// Check if editors are known
+		if (this._editors !== undefined) {
+			return this._editors
+		}
+
+		// Check if editors are cached
+		const cached = this._editor_ids.map(id => this.cache.find(UserController, id))
+		if (!cached.includes(undefined)) {
+			this._editors = cached as UserController[]
+			return this._editors
 		}
 
 		// Call API to get the editor data
-		const response = await fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`)
-			})
+		this._pending_editors = this.cache
+			.fetch(`/api/program/${this.id}/editors`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedUser[]
+					this._editors = data.map(user => UserController.revive(this.cache, user))
+					this._pending_editors = undefined
+					return this._editors
+				},
+				error => {
+					this._pending_editors = undefined
+					throw new Error(`APIError (/api/program/${this.id}/editors GET): ${error}`)
+				}
+			)
 
-		// Revive the editors
-		const data = await response.json() as SerializedUser[]
-		this._editors = data.map(user => UserController.revive(this.cache, user))
-
-		return Array.from(this._editors)
+		return await this._pending_editors
 	}
 
 	// --------------------> API actions
@@ -183,13 +224,8 @@ class ProgramController {
 
 	static async create(cache: ControllerCache, name: string): Promise<ProgramController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to create a new program
-		const response = await fetch(`/api/program`, {
+		const response = await cache.fetch(`/api/program`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ name })
@@ -299,13 +335,8 @@ class ProgramController {
 
 	async save(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to save the program
-		await fetch(`/api/program`, {
+		await this.cache.fetch(`/api/program`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
@@ -324,11 +355,6 @@ class ProgramController {
 
 	async delete(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.resolve()
-		}
-
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
 		for (const id of this._course_ids) {
 			this.cache.find(CourseController, id)
@@ -346,7 +372,7 @@ class ProgramController {
 		}
 
 		// Call API to delete the program
-		await fetch(`/api/program/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/program/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/program/${this.id} DELETE): ${error}`)
 			})

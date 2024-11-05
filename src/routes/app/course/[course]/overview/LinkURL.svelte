@@ -2,27 +2,17 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import type { LinkController } from "$scripts/controllers"
 	import { tooltip } from "$scripts/tooltip"
 
 	// Assets
 	import copy_icon from "$assets/copy-icon.svg"
 
 	// Exports
-	export let link: LinkController
+	export let url: string
 
 	// Variables
-	let disabled: boolean = true
 	let copied: boolean = false
-	let value: string
-
-	$: if (link.validate().okay()) {
-		disabled = false
-		link.getURL().then(url => value = url)
-	} else {
-		disabled = true
-		value = ''
-	}
+	$: disabled = url === ''
 
 </script>
 
@@ -30,12 +20,13 @@
 <!-- Markup -->
 
 
+
 <div class="textfield">
 	<input
 		type="url"
 		disabled={true}
 		placeholder="Invalid link"
-		bind:value
+		bind:value={url}
 		/>
 
 	<button
@@ -44,7 +35,7 @@
 		use:tooltip={disabled ? 'Invalid link' : 'Copy link'}
 		on:click={async () => {
 			copied = true
-			await navigator.clipboard.writeText(value)
+			await navigator.clipboard.writeText(url)
 			setTimeout(() => copied = false, 2000)
 		}}
 	>

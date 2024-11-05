@@ -1,11 +1,8 @@
 
 <script lang="ts">
 
-	// External dependencies
-	import { onMount } from 'svelte'
-
 	// Internal dependencies
-	import { cache, course, course_options, graphs, graph_options, links } from './stores'
+	import { cache, course, course_options, graphs, graph_options, graphID_options, links } from './stores'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
 
@@ -16,6 +13,8 @@
 
 	// Components
 	import Layout from '$routes/app/+layout.svelte'
+	import GraphRow from './GraphRow.svelte'
+	import LinkRow from './LinkRow.svelte'
 
 	import LinkButton from '$components/LinkButton.svelte'
 	import Validation from '$components/Validation.svelte'
@@ -25,9 +24,6 @@
 	import Navbar from '$components/Navbar.svelte'
 	import Modal from '$components/Modal.svelte'
 	import Card from '$components/Card.svelte'
-
-	import GraphRow from './GraphRow.svelte'
-	import LinkRow from './LinkRow.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
@@ -59,6 +55,7 @@
 		}
 
 		async submit() {
+			if ($cache === undefined || $course === undefined) return
 			await GraphController.create($cache, $course.id, this.trimmed_name)
 			graph_modal.hide()
 			update()
@@ -92,6 +89,7 @@
 		}
 
 		async submit() {
+			if ($cache === undefined || $course === undefined) return
 			await LinkController.create($cache, $course.id, this.graph?.id || null, this.trimmed_name)
 			link_modal.hide()
 			update()
@@ -105,21 +103,14 @@
 	const graph_modal = new GraphModal()
 	const link_modal = new LinkModal()
 
-	// Stores
-	onMount(() => {
-		course.subscribe(async course => graphs.set(await course.getGraphs()))
-		course.subscribe(async course => links.set(await course.getLinks()))
-		course.subscribe(async course => course_options.set(await course.getCourseOptions()))
-		course.subscribe(async course => graph_options.set(await course.getGraphOptions()))
-	})
-
 </script>
 
 
 <!-- Markup -->
 
 
-<Layout>
+{#if $course !== undefined}
+	<Layout>
 	<svelte:fragment slot="title">
 		<Navbar path={[
 			{	name: 'Dashboard',
@@ -181,7 +172,8 @@
 			{/if}
 		</svelte:fragment>
 	</Card>
-</Layout>
+	</Layout>
+{/if}
 
 <Modal bind:this={graph_modal.modal}>
 	<h3 slot="header"> Create Graph </h3>

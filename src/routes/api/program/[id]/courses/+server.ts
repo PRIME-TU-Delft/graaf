@@ -1,6 +1,5 @@
 
 // Internal dependencies
-import { env } from '$env/dynamic/private'
 import { ProgramHelper } from '$scripts/helpers'
 
 // Exports
@@ -16,7 +15,6 @@ export { GET }
  */
 
 async function GET({ params }) {
-	if (env.DEBUG) console.log('\nGET /api/program/[id]/courses')
 
 	const program_id = Number(params.id)
 	if (!program_id || isNaN(program_id)) {

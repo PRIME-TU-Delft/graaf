@@ -1,7 +1,4 @@
 
-// External dependencies
-import { browser } from '$app/environment'
-
 // Internal dependencies
 import { ValidationData, Severity } from '$scripts/validation'
 
@@ -21,7 +18,6 @@ import type {
 	SerializedUser,
 	DropdownOption
 } from '$scripts/types'
-import type { Graph } from '@prisma/client'
 
 // Exports
 export { CourseController }
@@ -32,10 +28,15 @@ export { CourseController }
 
 class CourseController {
 	private _programs?: ProgramController[]
+	private _pending_programs?: Promise<ProgramController[]>
 	private _graphs?: GraphController[]
+	private _pending_graphs?: Promise<GraphController[]>
 	private _links?: LinkController[]
+	private _pending_links?: Promise<LinkController[]>
 	private _admins?: UserController[]
+	private _pending_admins?: Promise<UserController[]>
 	private _editors?: UserController[]
+	private _pending_editors?: Promise<UserController[]>
 
 	private constructor(
 		public cache: ControllerCache,
@@ -62,42 +63,38 @@ class CourseController {
 	}
 
 	get program_ids(): number[] {
-		return Array.from(this._program_ids)
+		return this._program_ids
 	}
 
 	get graph_ids(): number[] {
-		return Array.from(this._graph_ids)
+		return this._graph_ids
 	}
 
 	get link_ids(): number[] {
-		return Array.from(this._link_ids)
+		return this._link_ids
 	}
 
 	get admin_ids(): number[] {
-		return Array.from(this._admin_ids)
+		return this._admin_ids
 	}
 
 	get editor_ids(): number[] {
-		return Array.from(this._editor_ids)
+		return this._editor_ids
 	}
 
 	// --------------------> API Getters
 
 	/**
-	 * Gets all courses from the cache or the API
+	 * Gets all courses from the API
+	 * @param cache Cache to get the courses from
 	 * @returns Array of all courses
 	 * @throws `APIError` if the API call fails
 	 */
 
 	static async getAll(cache: ControllerCache): Promise<CourseController[]> {
-		
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
 
 		// Call API to get all courses
-		const response = await fetch(`/api/course`, { method: 'GET' })
+		const response = await cache.fetch(`/api/course`, { method: 'GET' })
 			.catch(error => {
 				throw new Error(`APIError (/api/course GET): ${error}`)
 			})
@@ -115,27 +112,40 @@ class CourseController {
 
 	async getPrograms(): Promise<ProgramController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if programs are pending
+		if (this._pending_programs !== undefined) {
+			return await this._pending_programs
 		}
 
-		// Check if programs are already loaded
-		if (this._programs) {
-			return Array.from(this._programs)
+		// Check if programs are known
+		if (this._programs !== undefined) {
+			return this._programs
 		}
 
-		// Call API to get the course data
-		const response = await fetch(`/api/course/${this.id}/programs`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/course/${this.id}/programs GET): ${error}`)
-			})
+		// Check if programs are cached
+		const cached = this._program_ids.map(id => this.cache.find(ProgramController, id))
+		if (!cached.includes(undefined)) {
+			this._programs = cached as ProgramController[]
+			return this._programs
+		}
 
-		// Revive the programs
-		const data = await response.json() as SerializedProgram[]
-		this._programs = data.map(program => ProgramController.revive(this.cache, program))
+		// Call API to get the program data
+		this._pending_programs = this.cache
+			.fetch(`/api/course/${this.id}/programs`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedProgram[]
+					this._programs = data.map(program => ProgramController.revive(this.cache, program))
+					this._pending_programs = undefined
+					return this._programs
+				},
+				error => {
+					this._pending_programs = undefined
+					throw new Error(`APIError (/api/course/${this.id}/programs GET): ${error}`)
+				}
+			)
 
-		return Array.from(this._programs)
+		return await this._pending_programs
 	}
 
 	/**
@@ -146,27 +156,40 @@ class CourseController {
 
 	async getGraphs(): Promise<GraphController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if graphs are pending
+		if (this._pending_graphs !== undefined) {
+			return await this._pending_graphs
 		}
 
-		// Check if graphs are already loaded
-		if (this._graphs) {
-			return Array.from(this._graphs)
+		// Check if graphs are known
+		if (this._graphs !== undefined) {
+			return this._graphs
 		}
 
-		// Call API to get the course data
-		const response = await fetch(`/api/course/${this.id}/graphs`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/course/${this.id}/graphs GET): ${error}`)
-			})
+		// Check if graphs are cached
+		const cached = this._graph_ids.map(id => this.cache.find(GraphController, id))
+		if (!cached.includes(undefined)) {
+			this._graphs = cached as GraphController[]
+			return this._graphs
+		}
 
-		// Revive the graphs
-		const data = await response.json() as SerializedGraph[]
-		this._graphs = data.map(graph => GraphController.revive(this.cache, graph))
+		// Call API to get the graph data
+		this._pending_graphs = this.cache
+			.fetch(`/api/course/${this.id}/graphs`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedGraph[]
+					this._graphs = data.map(graph => GraphController.revive(this.cache, graph))
+					this._pending_graphs = undefined
+					return this._graphs
+				},
+				error => {
+					this._pending_graphs = undefined
+					throw new Error(`APIError (/api/course/${this.id}/graphs GET): ${error}`)
+				}
+			)
 
-		return Array.from(this._graphs)
+		return await this._pending_graphs
 	}
 
 	/**
@@ -177,27 +200,40 @@ class CourseController {
 
 	async getLinks(): Promise<LinkController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if links are pending
+		if (this._pending_links !== undefined) {
+			return await this._pending_links
 		}
 
-		// Check if links are already loaded
-		if (this._links) {
-			return Array.from(this._links)
+		// Check if links are known
+		if (this._links !== undefined) {
+			return this._links
 		}
 
-		// Call API to get the course data
-		const response = await fetch(`/api/course/${this.id}/links`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/course/${this.id}/links GET): ${error}`)
-			})
+		// Check if links are cached
+		const cached = this._link_ids.map(id => this.cache.find(LinkController, id))
+		if (!cached.includes(undefined)) {
+			this._links = cached as LinkController[]
+			return this._links
+		}
 
-		// Revive the links
-		const data = await response.json() as SerializedLink[]
-		this._links = data.map(link => LinkController.revive(this.cache, link))
+		// Call API to get the link data
+		this._pending_links = this.cache
+			.fetch(`/api/course/${this.id}/links`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedLink[]
+					this._links = data.map(link => LinkController.revive(this.cache, link))
+					this._pending_links = undefined
+					return this._links
+				},
+				error => {
+					this._pending_links = undefined
+					throw new Error(`APIError (/api/course/${this.id}/links GET): ${error}`)
+				}
+			)
 
-		return Array.from(this._links)
+		return await this._pending_links
 	}
 
 	/**
@@ -208,27 +244,40 @@ class CourseController {
 
 	async getAdmins(): Promise<UserController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if admins are pending
+		if (this._pending_admins !== undefined) {
+			return await this._pending_admins
 		}
 
-		// Check if admins are already loaded
-		if (this._admins) {
-			return Array.from(this._admins)
+		// Check if admins are known
+		if (this._admins !== undefined) {
+			return this._admins
+		}
+
+		// Check if admins are cached
+		const cached = this._admin_ids.map(id => this.cache.find(UserController, id))
+		if (!cached.includes(undefined)) {
+			this._admins = cached as UserController[]
+			return this._admins
 		}
 
 		// Call API to get the admin data
-		const response = await fetch(`/api/course/${this.id}/admins`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/course/${this.id}/admins GET): ${error}`)
-			})
+		this._pending_admins = this.cache
+			.fetch(`/api/course/${this.id}/admins`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedUser[]
+					this._admins = data.map(user => UserController.revive(this.cache, user))
+					this._pending_admins = undefined
+					return this._admins
+				},
+				error => {
+					this._pending_admins = undefined
+					throw new Error(`APIError (/api/course/${this.id}/admins GET): ${error}`)
+				}
+			)
 
-		// Revive the admins
-		const data = await response.json() as SerializedUser[]
-		this._admins = data.map(user => UserController.revive(this.cache, user))
-
-		return Array.from(this._admins)
+		return await this._pending_admins
 	}
 
 	/**
@@ -239,32 +288,46 @@ class CourseController {
 
 	async getEditors(): Promise<UserController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if editors are pending
+		if (this._pending_editors !== undefined) {
+			return await this._pending_editors
 		}
 
-		// Check if editors are already loaded
-		if (this._editors) {
-			return Array.from(this._editors)
+		// Check if editors are known
+		if (this._editors !== undefined) {
+			return this._editors
+		}
+
+		// Check if editors are cached
+		const cached = this._editor_ids.map(id => this.cache.find(UserController, id))
+		if (!cached.includes(undefined)) {
+			this._editors = cached as UserController[]
+			return this._editors
 		}
 
 		// Call API to get the editor data
-		const response = await fetch(`/api/course/${this.id}/editors`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/course/${this.id}/editors GET): ${error}`)
-			})
+		this._pending_editors = this.cache
+			.fetch(`/api/course/${this.id}/editors`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedUser[]
+					this._editors = data.map(user => UserController.revive(this.cache, user))
+					this._pending_editors = undefined
+					return this._editors
+				},
+				error => {
+					this._pending_editors = undefined
+					throw new Error(`APIError (/api/course/${this.id}/editors GET): ${error}`)
+				}
+			)
 
-		//Revive the editors
-		const data = await response.json() as SerializedUser[]
-		this._editors = data.map(user => UserController.revive(this.cache, user))
-
-		return Array.from(this._editors)
+		return await this._pending_editors
 	}
 
 	/**
 	 * Gets the graphs assigned to this course as a list of Dropdown options, from the cache or the API
 	 * @returns Array of Dropdown options for the graphs assigned to this course
+	 * @throws `APIError` if the API call fails
 	 */
 
 	async getGraphOptions(): Promise<DropdownOption<GraphController>[]> {
@@ -279,6 +342,7 @@ class CourseController {
 	/**
 	 * Get options for courses a graph can be assigned to
 	 * @returns Array of Dropdown options for courses a graph can be assigned to
+	 * @throws `APIError` if the API call fails
 	 */
 
 	async getCourseOptions(): Promise<DropdownOption<CourseController>[]> {
@@ -293,11 +357,11 @@ class CourseController {
 	/**
 	 * Get options for programs a course can be assigned to
 	 * @returns Array of Dropdown options for programs a course can be assigned to
+	 * @throws `APIError` if the API call fails
 	 */
 
 	async getProgramOptions(): Promise<DropdownOption<ProgramController>[]> {
 		const programs = await ProgramController.getAll(this.cache)
-
 		return programs.map(program => ({
 			value: program,
 			label: program.trimmed_name,
@@ -318,13 +382,8 @@ class CourseController {
 
 	static async create(cache: ControllerCache, code: string, name: string): Promise<CourseController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to create a new course
-		const response = await fetch(`/api/course`, {
+		const response = await cache.fetch(`/api/course`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ code, name })
@@ -459,13 +518,8 @@ class CourseController {
 
 	async save(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to save the course
-		await fetch(`/api/course`, {
+		await this.cache.fetch(`/api/course`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
@@ -483,11 +537,6 @@ class CourseController {
 	 */
 
 	async delete(): Promise<void> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
 
 		// Delete all related graphs and links
 		const graphs = await this.getGraphs()
@@ -513,7 +562,7 @@ class CourseController {
 		}
 
 		// Call API to delete the course
-		await fetch(`/api/course/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/course/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/course/${this.id} DELETE): ${error}`)
 			})

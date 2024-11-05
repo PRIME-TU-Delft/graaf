@@ -19,7 +19,6 @@
 	import Modal from '$components/Modal.svelte'
 
 	// Assets
-	import closedEyeIcon from '$assets/closed-eye-icon.svg'
 	import openEyeIcon from '$assets/open-eye-icon.svg'
 	import pencil_icon from '$assets/pencil-icon.svg'
 	import trash_icon from '$assets/trash-icon.svg'
@@ -76,13 +75,18 @@
 		style:visibility={graph.link_ids.length > 0 ? 'visible' : 'hidden'}
 	/>
 
-	<span> {graph.name} </span>
+	<span> 
+		{#if graph.name}
+			{graph.name}
+		{:else}
+			<i> Unnamed graph </i>
+		{/if}
+	</span>
 
-	<!-- TODO graph preview -->
 	<IconButton scale
-		disabled={false}
-		src={true ? openEyeIcon : closedEyeIcon}
+		src={openEyeIcon}
 		description="View Graph"
+		href="/app/graph/{graph.id}/view"
 	/>
 
 	<IconButton scale
@@ -107,28 +111,30 @@
 	/>
 </div>
 
-<Modal bind:this={copy_modal.modal}>
-	<h3 slot="header"> Copy Graph </h3>
-	Copy this graph to another course. This will create a new graph with the same content in the selected course.
+{#if $course_options !== undefined}
+	<Modal bind:this={copy_modal.modal}>
+		<h3 slot="header"> Copy Graph </h3>
+		Copy this graph to another course. This will create a new graph with the same content in the selected course.
 
-	<form>
-		<label for="course"> Target Course </label>
-		<Dropdown
-			id="course"
-			placeholder="Target Course"
-			bind:value={copy_modal.course}
-			options={$course_options}
-		/>
+		<form>
+			<label for="course"> Target Course </label>
+			<Dropdown
+				id="course"
+				placeholder="Target Course"
+				bind:value={copy_modal.course}
+				options={$course_options}
+			/>
 
-		<footer>
-			<Button
-				disabled={!copy_modal.validate().okay()}
-				on:click={() => copy_modal.submit()}
-			> Copy </Button>
-			<Validation data={copy_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
+			<footer>
+				<Button
+					disabled={!copy_modal.validate().okay()}
+					on:click={() => copy_modal.submit()}
+				> Copy </Button>
+				<Validation data={copy_modal.validate()} />
+			</footer>
+		</form>
+	</Modal>
+{/if}
 
 
 <!-- Styles -->
