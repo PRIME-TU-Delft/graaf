@@ -112,7 +112,7 @@ class LectureController {
 					throw new Error(`APIError (/api/lecture/${this.id}/graph GET): ${error}`)
 				}
 			)
-		
+
 		return await this._pending_graph
 	}
 
@@ -203,11 +203,11 @@ class LectureController {
 	 */
 
 	static revive(cache: ControllerCache, data: SerializedLecture): LectureController {
-		const existing = cache.find(LectureController, data.id)
-		if (existing) {
-			if (!existing.represents(data))
+		const lecture = cache.find(LectureController, data.id)
+		if (lecture) {
+			if (!lecture.represents(data))
 				throw new Error(`LectureError: Attempted to revive Lecture with ID ${data.id}, but server data is out of sync with cache`)
-			return existing
+			return lecture
 		}
 
 		return new LectureController(
@@ -323,9 +323,9 @@ class LectureController {
 
 	async copy(target_graph: GraphController): Promise<LectureController> {
 		const lecture_copy = await LectureController.create(this.cache, target_graph)
-		
+
 		lecture_copy.name = this.name
-		
+
 		await lecture_copy.save()
 		return lecture_copy
 	}

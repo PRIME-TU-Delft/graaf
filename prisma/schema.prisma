@@ -179,19 +179,7 @@ model Subject {
 	domainId		Int?
 	parentSubjects	Subject[]	@relation("SubjectRelation")
 	childSubjects	Subject[]	@relation("SubjectRelation")
-	lectures		SubjectLecture[]
-}
-
-model SubjectLecture {
-	subjectId		Int
-	lectureId		Int
-	x				Int			@default(0)
-	y				Int			@default(0)
-
-	subject			Subject		@relation(fields: [subjectId], references: [id], onDelete: Cascade)
-	lecture			Lecture		@relation(fields: [lectureId], references: [id], onDelete: Cascade)
-
-	@@id([subjectId, lectureId])
+	lectures		Lecture[]
 }
 
 model Lecture {
@@ -199,7 +187,7 @@ model Lecture {
 	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
 	name			String		@default("")
-	subjects		SubjectLecture[]
+	subjects		Subject[]
 }
 
 model GraphLink {

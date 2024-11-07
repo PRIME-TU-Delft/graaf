@@ -130,19 +130,56 @@ async function update(data: SerializedSubject): Promise<void> {
  */
 
 async function reduce(subject: PrismaSubject): Promise<SerializedSubject> {
-	const [children, parents] = await Promise.all([
-		getChildren(subject.id),
-		getParents(subject.id)
-	])
 
+	// Get additional data
+	try {
+		var data = await prisma.subject.findUniqueOrThrow({
+			where: {
+				id: subject.id
+			},
+			include: {
+				childSubjects: {
+					select: {
+						id: true
+					}
+				},
+				parentSubjects: {
+					select: {
+						id: true
+					}
+				},
+				lectures: {
+					select: {
+						id: true
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	// Parse data
+	const children = data.childSubjects
+		.map(subject => subject.id)
+
+	const parents = data.parentSubjects
+		.map(subject => subject.id)
+
+	const lectures = data.lectures
+		.map(lecture => lecture.id)
+
+	// Return reduced data
 	return {
 		id: subject.id,
 		x: subject.x,
 		y: subject.y,
 		name: subject.name,
 		domain: subject.domainId,
-		children: children.map(subject => subject.id),
-		parents: parents.map(subject => subject.id)
+		graph: subject.graphId,
+		children,
+		parents,
+		lectures
 	}
 }
 
@@ -189,7 +226,7 @@ async function getById(subject_id: number): Promise<SerializedSubject> {
 
 async function getGraph(subject_id: number): Promise<SerializedGraph> {
 	try {
-		var graph = await prisma.subject.findUniqueOrThrow({
+		var data = await prisma.subject.findUniqueOrThrow({
 			where: {
 				id: subject_id
 			},
@@ -201,7 +238,7 @@ async function getGraph(subject_id: number): Promise<SerializedGraph> {
 		return Promise.reject(error)
 	}
 
-	return await GraphHelper.reduce(graph.graph)
+	return await GraphHelper.reduce(data.graph)
 }
 
 /**
@@ -212,7 +249,7 @@ async function getGraph(subject_id: number): Promise<SerializedGraph> {
 
 async function getDomain(subject_id: number): Promise<SerializedDomain | null> {
 	try {
-		var domain = await prisma.subject.findUniqueOrThrow({
+		var data = await prisma.subject.findUniqueOrThrow({
 			where: {
 				id: subject_id
 			},
@@ -224,8 +261,8 @@ async function getDomain(subject_id: number): Promise<SerializedDomain | null> {
 		return Promise.reject(error)
 	}
 
-	if (!domain.domain) return null
-	return await DomainHelper.reduce(domain.domain)
+	if (!data.domain) return null
+	return await DomainHelper.reduce(data.domain)
 }
 
 /**
@@ -236,7 +273,7 @@ async function getDomain(subject_id: number): Promise<SerializedDomain | null> {
 
 async function getParents(subject_id: number): Promise<SerializedSubject[]> {
 	try {
-		var parents = await prisma.subject.findUniqueOrThrow({
+		var data = await prisma.subject.findUniqueOrThrow({
 			where: {
 				id: subject_id
 			},
@@ -248,7 +285,7 @@ async function getParents(subject_id: number): Promise<SerializedSubject[]> {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(parents.parentSubjects.map(reduce))
+	return await Promise.all(data.parentSubjects.map(reduce))
 }
 
 /**
@@ -259,7 +296,7 @@ async function getParents(subject_id: number): Promise<SerializedSubject[]> {
 
 async function getChildren(subject_id: number): Promise<SerializedSubject[]> {
 	try {
-		var children = await prisma.subject.findUniqueOrThrow({
+		var data = await prisma.subject.findUniqueOrThrow({
 			where: {
 				id: subject_id
 			},
@@ -271,7 +308,7 @@ async function getChildren(subject_id: number): Promise<SerializedSubject[]> {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(children.childSubjects.map(reduce))
+	return await Promise.all(data.childSubjects.map(reduce))
 }
 
 /**
@@ -282,18 +319,17 @@ async function getChildren(subject_id: number): Promise<SerializedSubject[]> {
 
 async function getLectures(subject_id: number): Promise<SerializedLecture[]> {
 	try {
-		var lectures = await prisma.lecture.findMany({
+		var data = await prisma.subject.findUniqueOrThrow({
 			where: {
-				subjects: {
-					some: {
-						id: subject_id
-					}
-				}
+				id: subject_id
+			},
+			select: {
+				lectures: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(lectures.map(LectureHelper.reduce))
+	return await Promise.all(data.lectures.map(LectureHelper.reduce))
 }

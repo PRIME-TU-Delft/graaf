@@ -33,14 +33,14 @@ export { GraphController, SortOption }
 enum SortOption {
 	ascending  = 0b1000000000,
 	descending = 0b0100000000,
-	relations  = 0b0010000000,
-	subjects   = 0b0001000000,
-	domains    = 0b0000100000,
+	relation  = 0b0010000000,
+	subject   = 0b0001000000,
+	domain    = 0b0000100000,
 	index      = 0b0000010000,
 	name       = 0b0000001000,
 	style      = 0b0000000100,
-	parents    = 0b0000000010,
-	children   = 0b0000000001
+	parent    = 0b0000000010,
+	child   = 0b0000000001
 }
 
 
@@ -328,7 +328,7 @@ class GraphController {
 			lectures.map(async lecture => ({
 				value: lecture,
 				label: lecture.trimmed_name,
-				validation: await lecture.validate()
+				validation: ValidationData.success()
 			}))
 		)
 	}
@@ -750,13 +750,13 @@ class GraphController {
 		const [
 			domains,
 			domain_relations,
-			subjects, 
+			subjects,
 			subject_relations,
 			lectures
 		] = await Promise.all([
-			this.getDomains(), 
+			this.getDomains(),
 			this.getDomainRelations(),
-			this.getSubjects(), 
+			this.getSubjects(),
 			this.getSubjectRelations(),
 			this.getLectures()
 		])
@@ -1043,23 +1043,23 @@ class GraphController {
 			throw new Error('GraphError: Invalid sort option')
 		}
 
-		if (option & SortOption.relations) {
-			if (option & SortOption.domains) {
+		if (option & SortOption.relation) {
+			if (option & SortOption.domain) {
 				if (option & SortOption.index) {
 					// Sort domain relations by index
-				} else if (option & SortOption.parents) {
+				} else if (option & SortOption.parent) {
 					// Sort domain relations by parents
-				} else if (option & SortOption.children) {
+				} else if (option & SortOption.child) {
 					// Sort domain relations by children
 				} else {
 					throw new Error('GraphError: Invalid sort option')
 				}
-			} else if (option & SortOption.subjects) {
+			} else if (option & SortOption.subject) {
 				if (option & SortOption.index) {
 					// Sort subject relations by index
-				} else if (option & SortOption.parents) {
+				} else if (option & SortOption.parent) {
 					// Sort subject relations by parents
-				} else if (option & SortOption.children) {
+				} else if (option & SortOption.child) {
 					// Sort subject relations by children
 				} else {
 					throw new Error('GraphError: Invalid sort option')
@@ -1068,7 +1068,7 @@ class GraphController {
 				throw new Error('GraphError: Invalid sort option')
 			}
 		} else {
-			if (option & SortOption.subjects) {
+			if (option & SortOption.subject) {
 				const subjects = await this.getSubjects()
 				let comparable: { value: string | number, subject: SubjectController }[]
 
@@ -1091,7 +1091,7 @@ class GraphController {
 				}
 
 				// Sort subjects by domain
-				else if (option & SortOption.domains) {
+				else if (option & SortOption.domain) {
 					comparable = await Promise.all(
 						subjects.map(async subject => ({
 							value: await subject.getDomain().then(domain => domain?.trimmed_name || ''),
@@ -1114,7 +1114,7 @@ class GraphController {
 				if (descending) comparable.reverse()
 				this._subjects = comparable.map(pair => pair.subject)
 
-			} else if (option & SortOption.domains) {
+			} else if (option & SortOption.domain) {
 				const domains = await this.getDomains()
 				let comparable: { value: string | number, domain: DomainController }[]
 

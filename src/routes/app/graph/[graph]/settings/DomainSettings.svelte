@@ -28,17 +28,29 @@
 	export let update: () => void
 
 	// Functions
+
+	/**
+	 * Figures what parameter we are currently sorting on, based on the given sort options.
+	 * Can be called with just SortOption.domains or SortOption.relations to unset all sorting of that type.
+	 * @param options - Sort options
+	 */
+
 	function updateSortmode(options: number) {
-		if (options & SortOption.relations) {
+		if (options & SortOption.relation) {
 			relation_index_sort = options & SortOption.index ? !relation_index_sort : undefined
-			relation_parent_sort = options & SortOption.parents ? !relation_parent_sort : undefined
-			relation_child_sort = options & SortOption.children ? !relation_child_sort : undefined
+			relation_parent_sort = options & SortOption.parent ? !relation_parent_sort : undefined
+			relation_child_sort = options & SortOption.child ? !relation_child_sort : undefined
 		} else {
 			domain_index_sort = options & SortOption.index ? !domain_index_sort : undefined
 			domain_name_sort = options & SortOption.name ? !domain_name_sort : undefined
 			domain_style_sort = options & SortOption.style ? !domain_style_sort : undefined
 		}
 	}
+
+	/**
+	 * Sorts the graph based on the given options.
+	 * @param options - Sort options
+	 */
 
 	async function sort(options: number) {
 		if ($graph === undefined) return
@@ -63,10 +75,14 @@
 	let domain_style_sort: boolean | undefined = undefined
 	let domain_query: string = ''
 
+	$: filtered_domains = $domains?.filter(domain => domain.matchesQuery(domain_query))
+
 	let relation_index_sort: boolean | undefined = undefined
 	let relation_parent_sort: boolean | undefined = undefined
 	let relation_child_sort: boolean | undefined = undefined
 	let relation_query: string = ''
+
+	$: filtered_relations = $domain_relations?.filter(relation => relation.matchesQuery(relation_query))
 
 </script>
 
@@ -78,7 +94,7 @@
 {#if $graph === undefined || $cache === undefined}
 	<p class="grayed"> Loading... </p>
 {:else}
-	<div id="domains" class="domains editor">
+	<div id="domains" class="editor">
 
 		<!-- Toolbar -->
 		<div class="toolbar">
@@ -98,44 +114,44 @@
 			</Button>
 		</div>
 
-		{#if $domains === undefined}
+		{#if filtered_domains === undefined}
 			<p class="grayed"> Loading... </p>
-		{:else if !$domains.some(domain => domain.matchesQuery(domain_query))}
+		{:else if filtered_domains.length === 0}
 			<p class="grayed"> There's nothing here </p>
 		{:else}
-			<div class="domain row">
+			<div class="row">
 
 				<!-- Index label and sort button -->
 				<div class="header" style="grid-area: index;">
 					<IconButton
 						description={domain_index_sort ? 'Sort domains descending by index' : 'Sort domains ascending by index'}
 						src={domain_index_sort === undefined ? neutralSortIcon : domain_index_sort ? descendingSortIcon : ascendingSortIcon}
-						on:click={() => sort(SortOption.domains | SortOption.index)}
+						on:click={() => sort(SortOption.domain | SortOption.index)}
 					/>
 				</div>
-				
+
 				<!-- Name label and sort button -->
 				<div class="header" style="grid-area: left;">
 					<span> Name </span>
 					<IconButton
 						description={domain_name_sort ? 'Sort domains descending by name' : 'Sort domains ascending by name'}
 						src={domain_name_sort === undefined ? neutralSortIcon : domain_name_sort ? descendingSortIcon : ascendingSortIcon}
-						on:click={() => sort(SortOption.domains | SortOption.name)}
+						on:click={() => sort(SortOption.domain | SortOption.name)}
 					/>
 				</div>
-				
+
 				<!-- Style label and sort button -->
 				<div class="header" style="grid-area: right;">
 					<span> Style </span>
 					<IconButton
 						description={domain_style_sort ? 'Sort domains descending by style' : 'Sort domains ascending by style'}
 						src={domain_style_sort === undefined ? neutralSortIcon : domain_style_sort ? descendingSortIcon : ascendingSortIcon}
-						on:click={() => sort(SortOption.domains | SortOption.style)}
+						on:click={() => sort(SortOption.domain | SortOption.style)}
 					/>
 				</div>
 			</div>
 
-			{#each $domains as domain}
+			{#each filtered_domains as domain}
 				<DomainRow {domain} {update} {updateSortmode} />
 			{/each}
 		{/if}
@@ -146,7 +162,7 @@
 {#if $graph === undefined || $cache === undefined}
 	<p class="grayed"> Loading... </p>
 {:else}
-	<div id="relations" class="domains editor">
+	<div id="relations" class="editor">
 
 		<!-- Toolbar -->
 		<div class="toolbar">
@@ -166,9 +182,9 @@
 			</Button>
 		</div>
 
-		{#if $domain_relations === undefined}
+		{#if filtered_relations === undefined}
 			<p class="grayed"> Loading... </p>
-		{:else if !$domain_relations.some(relation => relation.matchesQuery(relation_query))}
+		{:else if filtered_relations.length === 0}
 			<p class="grayed"> There's nothing here </p>
 		{:else}
 			<div class="relation row">
@@ -178,32 +194,32 @@
 					<IconButton
 						description={relation_index_sort ? 'Sort relations descending by index' : 'Sort relations ascending by index'}
 						src={relation_index_sort === undefined ? neutralSortIcon : relation_index_sort ? descendingSortIcon : ascendingSortIcon}
-						on:click={() => sort(SortOption.relations | SortOption.domains | SortOption.index)}
+						on:click={() => sort(SortOption.relation | SortOption.domain | SortOption.index)}
 					/>
 				</div>
-			
+
 				<!-- Parent label and sort button -->
 				<div class="header" style="grid-area: left;">
 					<span> Parent </span>
 					<IconButton
 						description={relation_parent_sort ? 'Sort relations descending by parent' : 'Sort relations ascending by parent'}
 						src={relation_parent_sort === undefined ? neutralSortIcon : relation_parent_sort ? descendingSortIcon : ascendingSortIcon}
-						on:click={() => sort(SortOption.relations | SortOption.domains | SortOption.parents)}
+						on:click={() => sort(SortOption.relation | SortOption.domain | SortOption.parent)}
 					/>
 				</div>
-			
+
 				<!-- Child label and sort button -->
 				<div class="header" style="grid-area: right;">
 					<span> Child </span>
 					<IconButton
 						description={relation_child_sort ? 'Sort relations descending by child' : 'Sort relations ascending by child'}
 						src={relation_child_sort === undefined ? neutralSortIcon : relation_child_sort ? descendingSortIcon : ascendingSortIcon}
-						on:click={() => sort(SortOption.relations | SortOption.domains | SortOption.children)}
+						on:click={() => sort(SortOption.relation | SortOption.domain | SortOption.child)}
 					/>
 				</div>
 			</div>
 
-			{#each $domain_relations as relation}
+			{#each filtered_relations as relation}
 				<DomainRelationRow {relation} {update} {updateSortmode} />
 			{/each}
 		{/if}
@@ -216,6 +232,6 @@
 
 <style lang="sass">
 
-	@import './domain_styles.sass'
+	@import './style.sass'
 
 </style>

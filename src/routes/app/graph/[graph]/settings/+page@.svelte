@@ -8,6 +8,7 @@
 	import Layout from '$routes/app/+layout.svelte'
 	import GeneralSettings from './GeneralSettings.svelte'
 	import DomainSettings from './DomainSettings.svelte'
+	import SubjectSettings from './SubjectSettings.svelte'
 
 	import Validation from '$components/Validation.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
@@ -70,6 +71,12 @@
 					id: 'domains',
 					title: 'Domains',
 					content: DomainSettings,
+					props: { update }
+				},
+				{
+					id: 'subjects',
+					title: 'Subjects',
+					content: SubjectSettings,
 					props: { update }
 				}
 			]}

@@ -29,7 +29,7 @@
 
 	$: show_error_icon = has_errors
 	$: error_disabled = !compact && one_error && !has_warnings
-	$: error_msg = compact ? '' : warning_disabled ? data.errors[0].short : data.errors.length
+	$: error_msg = compact ? '' : error_disabled ? data.errors[0].short : data.errors.length
 
 	$: one_warning = data.warnings.length === 1
 	$: has_warnings = data.warnings.length > 0
@@ -43,7 +43,7 @@
 					 : compact ? compact_tooltip
 					 : errors_visible ? 'Hide errors'
 					 : 'Show errors'
-	
+
 	$: warning_tooltip = warning_disabled ? ''
 					   : compact ? compact_tooltip
 					   : warnings_visible ? 'Hide warnings'
@@ -224,7 +224,7 @@
 
 			&:not(:disabled)
 				cursor: pointer
-				
+
 			img
 				width: $input-icon-size
 				height: $input-icon-size
@@ -243,7 +243,7 @@
 			border-radius: $border-radius
 
 			box-shadow: $shadow
-			
+
 			.item
 				display: grid
 				grid-template: "icon short show" auto "icon long long" auto / $input-icon-size auto 1fr

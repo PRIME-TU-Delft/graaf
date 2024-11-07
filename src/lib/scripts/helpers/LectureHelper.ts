@@ -115,13 +115,34 @@ async function update(data: SerializedLecture): Promise<void> {
  */
 
 async function reduce(lecture: PrismaLecture): Promise<SerializedLecture> {
-	const subjects = await getSubjects(lecture.id)
-		.catch(error => Promise.reject(error))
+
+	// Get additional data
+	try {
+		var data = await prisma.lecture.findUniqueOrThrow({
+			where: {
+				id: lecture.id
+			},
+			include: {
+				subjects: {
+					select: {
+						id: true
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	// Parse data
+	const subjects = data.subjects
+		.map(subject => subject.id)
 
 	return {
 		id: lecture.id,
 		name: lecture.name,
-		subjects: subjects.map(subject => subject.id)
+		graph: lecture.graphId,
+		subjects
 	}
 }
 

@@ -330,10 +330,10 @@ class CourseController {
 	 * @throws `APIError` if the API call fails
 	 */
 
-	async getGraphOptions(): Promise<DropdownOption<GraphController>[]> {
+	async getGraphOptions(): Promise<DropdownOption<number>[]> {
 		const graphs = await this.getGraphs()
 		return graphs.map(graph => ({
-			value: graph,
+			value: graph.id,
 			label: graph.name,
 			validation: ValidationData.success()
 		}))

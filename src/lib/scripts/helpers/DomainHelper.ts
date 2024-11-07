@@ -140,19 +140,14 @@ async function reduce(domain: PrismaDomain): Promise<SerializedDomain> {
 					select: {
 						id: true
 					}
+				},
+				subjects: {
+					select: {
+						id: true
+					}
 				}
 			}
 		})
-
-		var subject_data = await prisma.subject.findMany({
-			where: {
-				domainId: domain.id
-			},
-			select: {
-				id: true
-			}
-		})
-
 	} catch (error) {
 		return Promise.reject(error)
 	}
@@ -160,9 +155,11 @@ async function reduce(domain: PrismaDomain): Promise<SerializedDomain> {
 	// Parse data
 	const parents = data.parentDomains
 		.map(domain => domain.id)
+
 	const children = data.childDomains
 		.map(domain => domain.id)
-	const subjects = subject_data
+
+	const subjects = data.subjects
 		.map(subject => subject.id)
 
 	// Return reduced data

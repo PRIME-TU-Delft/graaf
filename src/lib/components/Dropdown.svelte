@@ -54,7 +54,6 @@
 	let header: HTMLButtonElement
 	let query: string = ''
 
-	$: console.log(options)
 	$: choice = options.find(option => option.value === value)
 	$: options = options.sort((a, b) => {
 		if (a.validation.severity === Severity.error) return 1
@@ -73,11 +72,11 @@
 
 
 <div class="dropdown" bind:this={dropdown}>
-	<div 
-		class="wrapper" 
+	<div
+		class="wrapper"
 		class:visible
-		use:losefocus={() => visibility(false)} 
-		use:clickoutside={() => visibility(false)}  
+		use:losefocus={() => visibility(false)}
+		use:clickoutside={() => visibility(false)}
 		bind:this={wrapper}
 	>
 
@@ -176,7 +175,7 @@
 			width: 100%
 			height: auto
 			overflow: hidden
-		
+
 			&.visible .header
 				border-color: $tudelft-blue
 				border-bottom-color: $gray
@@ -186,7 +185,7 @@
 				&::after
 					translate: 0 80%
 					rotate: -135deg
-			
+
 			.header
 				position: relative
 				display: block

@@ -17,7 +17,8 @@ import type {
 	SerializedGraph,
 	SerializedDomain,
 	SerializedSubject,
-	SerializedLecture
+	SerializedLecture,
+	DropdownOption
 } from '$scripts/types'
 
 // Exports
@@ -106,7 +107,7 @@ abstract class FieldController {
 	abstract unassignParent(parent: FieldController, mirror?: boolean): void
 	abstract unassignChild(child: FieldController, mirror?: boolean): void
 
-	abstract matchesQuery(query: string): Promise<boolean>
+	abstract matchesQuery(query: string): boolean
 }
 
 class DomainController extends FieldController {
@@ -407,11 +408,11 @@ class DomainController extends FieldController {
 	 */
 
 	static revive(cache: ControllerCache, data: SerializedDomain): DomainController {
-		const existing = cache.find(DomainController, data.id)
-		if (existing) {
-			if (!existing.represents(data)) {
+		const domain = cache.find(DomainController, data.id)
+		if (domain) {
+			if (!domain.represents(data))
 				throw new Error(`DomainError: Attempted to revive Domain with ID ${data.id}, but server data is out of sync with cache`)
-			}
+			return domain
 		}
 
 		return new DomainController(cache, data.id, data.x, data.y, data.name, data.style, data.graph, data.parents, data.children, data.subjects)
@@ -866,7 +867,7 @@ class DomainController extends FieldController {
 	 * @returns Whether the domain matches the query
 	 */
 
-	async matchesQuery(query: string): Promise<boolean> {
+	matchesQuery(query: string): boolean {
 		const query_lower = query.toLowerCase()
 		const name = this.trimmed_name.toLowerCase()
 		const style = this.style ? styles[this.style].display_name.toLowerCase() : ''
@@ -966,7 +967,7 @@ class SubjectController extends FieldController {
 
 		// Call API to get the graph data
 		this._pending_graph = this.cache
-			.fetch(`/api/subject/${this.id}/course`, { method: 'GET' })
+			.fetch(`/api/subject/${this.id}/graph`, { method: 'GET' })
 			.then(
 				async response => {
 					const data = await response.json() as SerializedGraph
@@ -976,10 +977,10 @@ class SubjectController extends FieldController {
 				},
 				error => {
 					this._pending_graph = undefined
-					throw new Error(`APIError (/api/subject/${this.id}/course GET): ${error}`)
+					throw new Error(`APIError (/api/subject/${this.id}/graph GET): ${error}`)
 				}
 			)
-		
+
 		return await this._pending_graph
 	}
 
@@ -1023,6 +1024,17 @@ class SubjectController extends FieldController {
 			)
 
 		return await this._pending_domain
+	}
+
+	async getDomainOptions(): Promise<DropdownOption<number>[]> {
+		const domains = await this.getGraph()
+			.then(graph => graph.getDomains())
+
+		return domains.map(domain => ({
+			value: domain.id,
+			label: domain.name,
+			validation: ValidationData.success()
+		}))
 	}
 
 	/**
@@ -1109,7 +1121,7 @@ class SubjectController extends FieldController {
 					throw new Error(`APIError (/api/subject/${this.id}/parents GET): ${error}`)
 				}
 			)
-		
+
 		return await this._pending_parents as SubjectController[]
 	}
 
@@ -1153,7 +1165,7 @@ class SubjectController extends FieldController {
 					throw new Error(`APIError (/api/subject/${this.id}/children GET): ${error}`)
 				}
 			)
-		
+
 		return await this._pending_children as SubjectController[]
 	}
 
@@ -1208,11 +1220,11 @@ class SubjectController extends FieldController {
 	 */
 
 	static revive(cache: ControllerCache, data: SerializedSubject): SubjectController {
-		const existing = cache.find(SubjectController, data.id)
-		if (existing) {
-			if (!existing.represents(data))
+		const subject = cache.find(SubjectController, data.id)
+		if (subject) {
+			if (!subject.represents(data))
 				throw new Error(`SubjectError: Attempted to revive Subject with ID ${data.id}, but server data is out of sync with cache`)
-			return existing
+			return subject
 		}
 
 		return new SubjectController(cache, data.id, data.x, data.y, data.name, data.domain, data.graph, data.parents, data.children, data.lectures)
@@ -1659,11 +1671,16 @@ class SubjectController extends FieldController {
 	 * @returns Whether the subject matches the query
 	 */
 
-	async matchesQuery(query: string): Promise<boolean> {
+	matchesQuery(query: string): boolean {
 		const query_lower = query.toLowerCase()
-		const name = this.trimmed_name.toLowerCase()
-		const domain = await this.getDomain().then(domain => domain?.name.toLowerCase() || '')
+		const name_lower = this.trimmed_name.toLowerCase()
+		if (this._domain_id === null)  {
+			return name.includes(query_lower)
+		}
 
-		return name.includes(query_lower) || domain.includes(query_lower)
+		const domain = this.cache.find(DomainController, this._domain_id)
+		const domain_lower = domain ? domain.trimmed_name.toLowerCase() : ''
+
+		return name_lower.includes(query_lower) || domain_lower.includes(query_lower)
 	}
 }

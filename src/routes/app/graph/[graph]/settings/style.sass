@@ -17,6 +17,7 @@ $icon-width: calc($input-icon-size + 2 * $input-icon-padding)
 
 .row
 	display: grid
+	grid-template: "validation delete index left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
 	place-items: center center
 	gap: $form-small-gap
 
@@ -36,8 +37,5 @@ $icon-width: calc($input-icon-size + 2 * $input-icon-padding)
 		span
 			flex: 1
 
-.domain.row
-	grid-template: "validation delete index left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
-
-.relation.row
+.row.relation
 	grid-template: "validation delete index left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width

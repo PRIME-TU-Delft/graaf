@@ -7,7 +7,7 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-	import { DomainController, SortOption } from '$scripts/controllers'
+	import { SubjectController, SortOption } from '$scripts/controllers'
 	import { ValidationData } from '$scripts/validation'
 
 	import type { DropdownOption } from '$scripts/types'
@@ -22,19 +22,19 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Exports
-	export let domain: DomainController
+	export let subject: SubjectController
 	export let updateSortmode: (options: number) => void
 	export let update: () => void
 
 	// Stores
-	const style_options = writable<DropdownOption<string>[] | undefined>()
+	const domain_options = writable<DropdownOption<number>[] | undefined>()
 	const validation = writable<ValidationData | undefined>()
 	const color = writable<string | undefined>()
 
 	onMount(async () => {
-		graph.subscribe(async () => style_options.set(await domain.getStyleOptions()))
-		graph.subscribe(async () => validation.set(await domain.validate()))
-		graph.subscribe(async () => color.set(await domain.getColor()))
+		graph.subscribe(async () => domain_options.set(await subject.getDomainOptions()))
+		graph.subscribe(async () => validation.set(await subject.validate()))
+		graph.subscribe(async () => color.set(await subject.getColor()))
 	})
 
 </script>
@@ -43,40 +43,40 @@
 <!-- Markdown -->
 
 
-{#if $style_options !== undefined && $validation !== undefined && $color !== undefined}
-	<div class="row" id={domain.uuid}>
+{#if $domain_options !== undefined && $validation !== undefined && $color !== undefined}
+	<div class="row" id={subject.uuid}>
 		<Validation compact data={$validation} />
 
 		<IconButton scale
 			src={trashIcon}
 			on:click={async () => {
-				await domain.delete()
-				updateSortmode(SortOption.domain)
+				await subject.delete()
+				updateSortmode(SortOption.subject)
 				update()
 			}}
 		/>
 
-		<span> {domain.index} </span>
+		<span> {subject.index} </span>
 
 		<Textfield
 			id="name"
-			placeholder="Domain name"
-			bind:value={domain.name}
-			on:change={async () => await domain.save()}
+			placeholder="Subject name"
+			bind:value={subject.name}
+			on:change={async () => await subject.save()}
 			on:input={() => {
-				updateSortmode(SortOption.domain)
+				updateSortmode(SortOption.subject)
 				update()
 			}}
 		/>
 
 		<Dropdown
 			id="style"
-			placeholder="Domain style"
-			options={$style_options}
-			bind:value={domain.style}
+			placeholder="Subject domain"
+			options={$domain_options}
+			bind:value={subject.domain_id}
 			on:change={async () => {
-				await domain.save()
-				updateSortmode(SortOption.domain)
+				await subject.save()
+				updateSortmode(SortOption.subject)
 				update()
 			}}
 		/>

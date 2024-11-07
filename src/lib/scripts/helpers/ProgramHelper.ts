@@ -133,7 +133,8 @@ async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
 	}
 
 	// Parse data
-	const courses = data.courses.map(course => course.id)
+	const courses = data.courses
+		.map(course => course.id)
 
 	const admins = data.users
 		.filter(user => user.role === 'ADMIN')
@@ -147,7 +148,9 @@ async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
 	return {
 		id: data.id,
 		name: data.name,
-		courses, admins, editors
+		courses,
+		admins,
+		editors
 	}
 }
 

@@ -8,7 +8,7 @@
 	import { writable } from 'svelte/store'
 
 	// Internal dependencies
-	import { course, links, graphID_options} from './stores'
+	import { course, links, graph_options} from './stores'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
 
@@ -100,7 +100,7 @@
 
 <!-- Markup -->
 
-{#if $url !== undefined && $graphID_options !== undefined}
+{#if $url !== undefined && $graph_options !== undefined}
 	<div class="link-row">
 		<IconButton scale
 			src={trash_icon}
@@ -122,7 +122,7 @@
 		<Dropdown
 			id="graph"
 			placeholder="Select a graph"
-			options={$graphID_options}
+			options={$graph_options}
 			bind:value={link.graph_id}
 			on:change={async () => {
 				await link.save()

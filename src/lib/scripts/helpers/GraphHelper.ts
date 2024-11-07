@@ -172,10 +172,13 @@ async function reduce(graph: PrismaGraph): Promise<SerializedGraph> {
 	// Parse data
 	const domains = data.domains
 		.map(domain => domain.id)
+
 	const subjects = data.subjects
 		.map(subject => subject.id)
+
 	const lectures = data.lectures
 		.map(lecture => lecture.id)
+
 	const links = data.links
 		.map(link => link.id)
 

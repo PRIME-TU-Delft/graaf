@@ -7,10 +7,10 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-	import { DomainRelationController, SortOption } from '$scripts/controllers'
+	import { SubjectRelationController, SortOption } from '$scripts/controllers'
 	import { ValidationData } from '$scripts/validation'
 
-	import type { DomainController } from '$scripts/controllers'
+	import type { SubjectController } from '$scripts/controllers'
 	import type { DropdownOption } from '$scripts/types'
 
 	// Components
@@ -22,15 +22,15 @@
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Exports
-	export let relation: DomainRelationController
+	export let relation: SubjectRelationController
 	export let updateSortmode: (options: number) => void
 	export let update: () => void
 
 	// Store
 	const validation = writable<ValidationData | undefined>()
-	const parent_options = writable<DropdownOption<DomainController>[] | undefined>()
+	const parent_options = writable<DropdownOption<SubjectController>[] | undefined>()
 	const parent_color = writable<string | undefined>()
-	const child_options = writable<DropdownOption<DomainController>[] | undefined>()
+	const child_options = writable<DropdownOption<SubjectController>[] | undefined>()
 	const child_color = writable<string | undefined>()
 
 	onMount(async () => {

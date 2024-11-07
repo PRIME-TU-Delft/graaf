@@ -160,9 +160,14 @@ async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 	}
 
 	// Parse data
-	const graphs = data.graphs.map(graph => graph.id)
-	const links = data.links.map(link => link.id)
-	const programs = data.programs.map(program => program.id)
+	const graphs = data.graphs
+		.map(graph => graph.id)
+
+	const links = data.links
+		.map(link => link.id)
+
+	const programs = data.programs
+		.map(program => program.id)
 
 	const admins = data.users
 		.filter(user => user.role === 'ADMIN')
@@ -177,7 +182,11 @@ async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
 		id: data.id,
 		code: data.code,
 		name: data.name,
-		graphs, links, admins, editors, programs
+		graphs,
+		links,
+		admins,
+		editors,
+		programs
 	}
 }
 
