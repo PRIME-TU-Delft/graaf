@@ -15,9 +15,6 @@
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Exports
-	export let update: () => void
-
 	// Modals
 	let delete_modal: Modal
 

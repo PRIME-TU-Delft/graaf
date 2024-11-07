@@ -51,7 +51,7 @@
 			{#await $graph.validate() then validation}
 				<Validation
 					data={validation}
-					success="Valid graph"
+					success_msg="Valid graph"
 					/>
 			{/await}
 
@@ -64,8 +64,7 @@
 				{
 					id: 'general',
 					title: 'General',
-					content: GeneralSettings,
-					props: { update }
+					content: GeneralSettings
 				},
 				{
 					id: 'domains',

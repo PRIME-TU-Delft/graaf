@@ -15,7 +15,6 @@
 	export let data: ValidationData
 	export let compact: boolean = false
 	export let success_msg: string = ''
-	export let goto: (tab: number, id: string) => void = () => {}
 
 	// Variables
 	let all_visible: boolean = false
@@ -244,6 +243,7 @@
 			border-radius: $border-radius
 
 			box-shadow: $shadow
+			
 			.item
 				display: grid
 				grid-template: "icon short show" auto "icon long long" auto / $input-icon-size auto 1fr
@@ -258,14 +258,6 @@
 
 				.short
 					grid-area: short
-
-				.show
-					grid-area: show
-					place-self: center start
-					font-size: 0.8rem
-
-					button
-						text-decoration: underline
 
 				.long
 					grid-area: long

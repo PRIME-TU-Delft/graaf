@@ -100,7 +100,6 @@ model Program {
 	users			ProgramUser[]
 }
 
-
 model ProgramUser {
 	userId			String
 	programId		Int
@@ -112,7 +111,6 @@ model ProgramUser {
 	@@id([userId, programId])
 }
 
-
 model CourseUser {
 	userId			String
 	courseId		Int
@@ -123,7 +121,6 @@ model CourseUser {
 
 	@@id([userId, courseId])
 }
-
 
 enum CourseType {
 	COURSE
@@ -144,7 +141,6 @@ model Course {
 	updatedAt		DateTime	@updatedAt
 }
 
-
 model Graph {
 	id				Int			@id @default(autoincrement())
 	name			String
@@ -158,7 +154,6 @@ model Graph {
 	updatedAt		DateTime	@updatedAt
 }
 
-
 model Domain {
 	id				Int			@id @default(autoincrement())
 	name			String		@default("")
@@ -171,7 +166,6 @@ model Domain {
 	parentDomains	Domain[]	@relation("DomainRelation")
 	childDomains	Domain[]	@relation("DomainRelation")
 }
-
 
 model Subject {
 	id				Int			@id @default(autoincrement())
@@ -188,7 +182,6 @@ model Subject {
 	lectures		SubjectLecture[]
 }
 
-
 model SubjectLecture {
 	subjectId		Int
 	lectureId		Int
@@ -201,7 +194,6 @@ model SubjectLecture {
 	@@id([subjectId, lectureId])
 }
 
-
 model Lecture {
 	id				Int			@id @default(autoincrement())
 	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
@@ -209,7 +201,6 @@ model Lecture {
 	name			String		@default("")
 	subjects		SubjectLecture[]
 }
-
 
 model GraphLink {
 	id				Int			@id @default(autoincrement())
