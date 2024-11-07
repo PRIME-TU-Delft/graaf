@@ -1,0 +1,43 @@
+
+@use "$styles/variables.sass" as *
+@use "$styles/palette.sass" as *
+
+$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
+
+.editor
+	display: flex
+	flex-flow: column nowrap
+	padding: $card-thick-padding
+	gap: $form-small-gap
+
+	.toolbar
+		display: flex
+		margin-bottom: $form-big-gap
+		gap: $form-small-gap
+
+.row
+	display: grid
+	place-items: center center
+	gap: $form-small-gap
+
+	padding-right: calc( $form-small-gap + $icon-width )
+
+	.preview
+		width: $input-icon-size
+		height: $input-icon-size
+
+	.header
+		display: flex
+		flex-flow: row nowrap
+		align-content: center
+		justify-content: right
+		width: 100%
+
+		span
+			flex: 1
+
+.domain.row
+	grid-template: "validation delete index left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
+
+.relation.row
+	grid-template: "validation delete index left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width

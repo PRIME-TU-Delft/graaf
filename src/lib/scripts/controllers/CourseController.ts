@@ -349,7 +349,7 @@ class CourseController {
 		const courses = await CourseController.getAll(this.cache)
 		return courses.map(course => ({
 			value: course,
-			label: course.trimmed_name,
+			label: `${course.code} ${course.name}`,
 			validation: ValidationData.success()
 		}))
 	}

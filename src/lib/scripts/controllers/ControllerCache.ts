@@ -1,7 +1,4 @@
 
-// External dependencies
-import { browser } from '$app/environment'
-
 // Internal dependencies
 import {
 	UserController,

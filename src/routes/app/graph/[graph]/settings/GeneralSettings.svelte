@@ -15,8 +15,10 @@
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Variables
+	// Exports
 	export let update: () => void
+
+	// Modals
 	let delete_modal: Modal
 
 </script>
@@ -27,38 +29,43 @@
 
 <div class="editor">
 
-	<!-- Settings -->
-	<div class="setting">
-		<label for="name"> Name </label>
-		<Textfield 
-			id="name" 
-			bind:value={$graph.name} 
-			on:change={async () => await $graph.save()}
-			/>
-	</div>
+	{#if $graph === undefined || $course === undefined}
+		<p class="grayed"> Loading... </p>
+	{:else}
 
-	<!-- Button row -->
-	<div class="button-row">
+		<!-- Settings -->
+		<div class="setting">
+			<label for="name"> Name </label>
+			<Textfield 
+				id="name" 
+				bind:value={$graph.name} 
+				on:change={async () => await $graph.save()}
+				/>
+		</div>
 
-		<!-- Delete graph button -->
-		<Button dangerous on:click={() => delete_modal.show()}> 
-			<img src={trashIcon} alt="Delete graph"> Delete Graph 
-		</Button>
+		<!-- Button row -->
+		<div class="button-row">
 
-		<Modal bind:this={delete_modal}>
-			<h3 slot="header"> Delete Graph </h3>
-			<p> Are you sure you want to delete {$graph.name}? This action <b>cannot</b> be undone. </p>
+			<!-- Delete graph button -->
+			<Button dangerous on:click={() => delete_modal.show()}> 
+				<img src={trashIcon} alt="Delete graph"> Delete Graph 
+			</Button>
 
-			<div class="button-row">
-				<Button dangerous
-					on:click={async () => {
-						await $graph.delete()
-						goto(`/app/course/${$course.id}/overview`) // Use got instead of href to avoid race conditions
-					}}
-				> Delete </Button>
-			</div>
-		</Modal>
-	</div>
+			<Modal bind:this={delete_modal}>
+				<h3 slot="header"> Delete Graph </h3>
+				<p> Are you sure you want to delete {$graph.name}? This action <b>cannot</b> be undone. </p>
+
+				<div class="button-row">
+					<Button dangerous
+						on:click={async () => {
+							await $graph.delete()
+							goto(`/app/course/${$course.id}/overview`) // Use got instead of href to avoid race conditions
+						}}
+					> Delete </Button>
+				</div>
+			</Modal>
+		</div>
+	{/if}
 </div>
 
 
@@ -76,6 +83,6 @@
 		.button-row
 			display: flex
 			justify-content: flex-end
-			margin-top: $form-big-gap
+			margin-top: $form-medium-gap
 
 </style>

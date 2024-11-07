@@ -194,7 +194,11 @@
 
 		.button-row
 			grid-area: button-row
-			justify-self: end
+			display: flex
+			justify-content: flex-end
+
+			width: 100%
+			margin-top: calc( $form-medium-gap - $form-small-gap )
 
 		.programs
 			grid-area: programs

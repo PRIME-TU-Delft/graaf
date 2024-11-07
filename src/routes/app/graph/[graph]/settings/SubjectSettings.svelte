@@ -148,7 +148,7 @@
 	{#each $graph.subjects as subject}
 		{#if subjectMatchesQuery(subject_query, subject)}
 			<div class="row" id={subject.uuid}>
-				<Validation short data={subject.validate()} />
+				<Validation compact data={subject.validate()} />
 				<span> {subject.index + 1} </span>
 				<IconButton scale
 					src={trashIcon}
@@ -245,7 +245,7 @@
 	{#each $graph.subject_relations as relation}
 		{#if relationMatchesQuery(relation_query, relation)}
 			<div class="row" id={relation.anchor}>
-				<Validation short data={relation.validate()} />
+				<Validation compact data={relation.validate()} />
 				<span> {relation.index + 1} </span>
 				<IconButton scale
 					src={trashIcon}

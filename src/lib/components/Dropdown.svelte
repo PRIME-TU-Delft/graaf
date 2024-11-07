@@ -8,7 +8,7 @@
 	import { Severity } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { scrollintoview } from '$scripts/scrollintoview'
-	import { loopfocus, focusonhover, losefocus } from '$scripts/hocusfocus'
+	import { focusthis, loopfocus, focusonhover, losefocus, focusfirst } from '$scripts/hocusfocus'
 
 	import type { DropdownOption } from '$scripts/types'
 
@@ -37,8 +37,13 @@
 	}
 
 	function set(new_value: T | null) {
-		value = new_value
-		dispatch('change', new_value)
+		focusthis(header)
+		visibility(false)
+
+		if (value !== new_value) {
+			value = new_value
+			dispatch('change', new_value)
+		}
 	}
 
 	// Variables
@@ -46,8 +51,10 @@
 	let visible: boolean = false
 	let dropdown: HTMLDivElement
 	let wrapper: HTMLDivElement
+	let header: HTMLButtonElement
 	let query: string = ''
 
+	$: console.log(options)
 	$: choice = options.find(option => option.value === value)
 	$: options = options.sort((a, b) => {
 		if (a.validation.severity === Severity.error) return 1
@@ -66,17 +73,22 @@
 
 
 <div class="dropdown" bind:this={dropdown}>
- 	<div class="wrapper" use:losefocus={() => visibility(false)} bind:this={wrapper}>
+	<div 
+		class="wrapper" 
+		class:visible
+		use:losefocus={() => visibility(false)} 
+		use:clickoutside={() => visibility(false)}  
+		bind:this={wrapper}
+	>
 
 		<!-- Hidden input to bind the selected value to a submittable element -->
 		<input id={id} type="hidden" tabindex="-1" bind:value />
 		<button
 			type="button"
 			class="header"
-			class:visible
 			class:grayed={!choice}
 			on:click={() => visibility(!visible)}
-			use:clickoutside={() => visibility(false)}
+			bind:this={header}
 		>
 			{#if choice}
 				{#if choice.label.trim() === ''}
@@ -90,7 +102,7 @@
 		</button>
 
 		{#if visible}
-			<div class="options" use:loopfocus use:scrollintoview>
+			<div class="options" use:focusfirst use:loopfocus use:scrollintoview>
 				{#if options.length >= 5}
 					<div class="option searchbar">
 						<input type="search" placeholder="Search..." bind:value={query}>
@@ -164,7 +176,17 @@
 			width: 100%
 			height: auto
 			overflow: hidden
+		
+			&.visible .header
+				border-color: $tudelft-blue
+				border-bottom-color: $gray
+				border-bottom-style: dashed
+				border-radius: $border-radius $border-radius 0 0
 
+				&::after
+					translate: 0 80%
+					rotate: -135deg
+			
 			.header
 				position: relative
 				display: block
@@ -204,16 +226,6 @@
 
 					border: 1px solid $black
 					border-width: 0 1px 1px 0
-
-				&.visible
-					border-color: $tudelft-blue
-					border-bottom-color: $gray
-					border-bottom-style: dashed
-					border-radius: $border-radius $border-radius 0 0
-
-					&::after
-						translate: 0 80%
-						rotate: -135deg
 
 			.options
 				position: absolute
@@ -280,15 +292,5 @@
 						height: $input-icon-size
 
 						filter: $gray-filter
-
-			&.visible .header
-				border-color: $tudelft-blue
-				border-bottom-color: $gray
-				border-bottom-style: dashed
-				border-radius: $border-radius $border-radius 0 0
-
-				&::after
-					translate: 0 80%
-					rotate: -135deg
 
 </style>

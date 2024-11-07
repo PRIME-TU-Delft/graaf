@@ -40,6 +40,7 @@ abstract class FieldController {
 	protected _pending_children?: Promise<FieldController[]>
 
 	uuid: string
+	index: number = 0
 	fx?: number
 	fy?: number
 
@@ -92,7 +93,6 @@ abstract class FieldController {
 	abstract getParents(): Promise<FieldController[]>
 	abstract getChildren(): Promise<FieldController[]>
 	abstract getStyle(): Promise<string | null>
-	abstract getIndex(): Promise<number>
 
 	abstract represents(data: SerializedDomain | SerializedSubject): boolean
 	abstract reduce(): SerializedDomain | SerializedSubject
@@ -366,16 +366,6 @@ class DomainController extends FieldController {
 		)
 	}
 
-	/**
-	 * Get the index of this domain in the graph
-	 * @returns Index of the domain in the graph
-	 */
-
-	async getIndex(): Promise<number> {
-		const graph = await this.getGraph()
-		return graph.domain_ids.indexOf(this.id)
-	}
-
 	// --------------------> API Actions
 
 	/**
@@ -530,24 +520,24 @@ class DomainController extends FieldController {
 			})
 
 		// Unassign from graph
-		const graph = this.cache.find(GraphController, this._graph_id)
+		this.cache.find(GraphController, this._graph_id)
 			?.unassignDomain(this)
 
 		// Unassign from subjects
 		for (const id of this._subject_ids) {
-			const subject = this.cache.find(SubjectController, id)
+			this.cache.find(SubjectController, id)
 				?.unassignDomain(false)
 		}
 
 		// Unassign from prarents
 		for (const id of this._parent_ids) {
-			const parent = this.cache.find(DomainController, id)
+			this.cache.find(DomainController, id)
 				?.unassignChild(this, false)
 		}
 
 		// Unassign from children
 		for (const id of this._child_ids) {
-			const child = this.cache.find(DomainController, id)
+			this.cache.find(DomainController, id)
 				?.unassignParent(this, false)
 		}
 
@@ -609,17 +599,13 @@ class DomainController extends FieldController {
 		const graph = await this.getGraph()
 		const domains = await graph.getDomains()
 
-		for (let index = 0; index < graph.domain_ids.length; index++) {
-			if (graph.domain_ids[index] === this.id) {
-				return -1
+		for (let domain of domains) {
+			if (domain.index < this.index && domain.trimmed_name === this.trimmed_name) {
+				return domain.index
 			}
-
-			const domain = domains.find(domain => domain.id === graph.domain_ids[index])
-			if (domain === undefined) throw new Error('DomainError: Domain not found in graph')
-			if (domain.name === this.trimmed_name) return index
 		}
 
-		throw new Error('DomainError: Domain not found in graph')
+		return -1
 	}
 
 	/**
@@ -638,22 +624,20 @@ class DomainController extends FieldController {
 	 */
 
 	private async findOriginalStyle(style: string): Promise<number> {
+		if (style === null) {
+			return -1
+		}
+
 		const graph = await this.getGraph()
 		const domains = await graph.getDomains()
 
-		for (let index = 0; index < graph.domain_ids.length; index++) {
-			if (graph.domain_ids[index] === this.id) {
-				return -1
+		for (let domain of domains) {
+			if (domain.index < this.index && domain.style === style) {
+				return domain.index
 			}
-
-			const domain = domains.find(domain => domain.id === graph.domain_ids[index])
-			if (domain === undefined) throw new Error('DomainError: Domain not found in graph')
-
-			const domain_style = await domain.getStyle()
-			if (domain_style === style) return index
 		}
 
-		throw new Error('DomainError: Domain not found in graph')
+		return -1
 	}
 
 	/**
@@ -781,10 +765,6 @@ class DomainController extends FieldController {
 
 		if (mirror) {
 			parent.assignChild(this, false)
-
-			// Create relation
-			this.cache.find(GraphController, this._graph_id)
-				?.createDomainRelation(parent, this, false)
 		}
 	}
 
@@ -803,10 +783,6 @@ class DomainController extends FieldController {
 
 		if (mirror) {
 			child.assignParent(this, false)
-
-			// Create relation
-			this.cache.find(GraphController, this._graph_id)
-				?.createDomainRelation(this, child, false)
 		}
 	}
 
@@ -843,10 +819,6 @@ class DomainController extends FieldController {
 
 		if (mirror) {
 			parent.unassignChild(this, false)
-
-			// Delete relation
-			this.cache.find(GraphController, this._graph_id)
-				?.deleteDomainRelation(parent, this, false)
 		}
 	}
 
@@ -865,10 +837,6 @@ class DomainController extends FieldController {
 
 		if (mirror) {
 			child.unassignParent(this, false)
-
-			// Delete relation
-			this.cache.find(GraphController, this._graph_id)
-				?.deleteDomainRelation(this, child, false)
 		}
 	}
 
@@ -1199,16 +1167,6 @@ class SubjectController extends FieldController {
 		return domain ? domain.getStyle() : null
 	}
 
-	/**
-	 * Get the index of this subject in the graph
-	 * @returns Index of this subject in the graph
-	 */
-
-	async getIndex(): Promise<number> {
-		const graph = await this.getGraph()
-		return graph.subject_ids.indexOf(this.id)
-	}
-
 	// --------------------> API Actions
 
 	/**
@@ -1447,17 +1405,13 @@ class SubjectController extends FieldController {
 		const graph = await this.getGraph()
 		const subjects = await graph.getSubjects()
 
-		for (let index = 0; index < graph.subject_ids.length; index++) {
-			if (graph.subject_ids[index] === this.id) {
-				return -1
+		for (let subject of subjects) {
+			if (subject.index < this.index && subject.trimmed_name === this.trimmed_name) {
+				return subject.index
 			}
-
-			const subject = subjects.find(subject => subject.id === graph.subject_ids[index])
-			if (subject === undefined) throw new Error('SubjectError: Subject not found in graph')
-			if (subject.name === this.trimmed_name) return index
 		}
 
-		throw new Error('SubjectError: Subject not found in graph')
+		return -1
 	}
 
 	/**
@@ -1586,10 +1540,6 @@ class SubjectController extends FieldController {
 
 		if (mirror) {
 			parent.assignChild(this, false)
-
-			// Create relation
-			this.cache.find(GraphController, this._graph_id)
-				?.createSubjectRelation(parent, this, false)
 		}
 	}
 
@@ -1608,10 +1558,6 @@ class SubjectController extends FieldController {
 
 		if (mirror) {
 			child.assignParent(this, false)
-
-			// Create relation
-			this.cache.find(GraphController, this._graph_id)
-				?.createSubjectRelation(this, child, false)
 		}
 	}
 
@@ -1666,10 +1612,6 @@ class SubjectController extends FieldController {
 
 		if (mirror) {
 			parent.unassignChild(this, false)
-
-			// Delete relation
-			this.cache.find(GraphController, this._graph_id)
-				?.deleteSubjectRelation(parent, this, false)
 		}
 	}
 
@@ -1688,10 +1630,6 @@ class SubjectController extends FieldController {
 
 		if (mirror) {
 			child.unassignParent(this, false)
-
-			// Delete relation
-			this.cache.find(GraphController, this._graph_id)
-				?.deleteSubjectRelation(this, child, false)
 		}
 	}
 
