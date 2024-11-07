@@ -8,7 +8,7 @@
 	import { Severity } from '$scripts/validation'
 	import { clickoutside } from '$scripts/clickoutside'
 	import { scrollintoview } from '$scripts/scrollintoview'
-	import { focusthis, loopfocus, focusonhover, losefocus, focusfirst } from '$scripts/hocusfocus'
+	import { focusOnLoad, loopFocus, focusOnHover, focusFirstChild, focusOnKeydown } from '$scripts/hocusfocus'
 
 	import type { DropdownOption } from '$scripts/types'
 
@@ -37,7 +37,7 @@
 	}
 
 	function set(new_value: T | null) {
-		focusthis(header)
+		focusOnLoad(header)
 		visibility(false)
 
 		if (value !== new_value) {
@@ -75,7 +75,6 @@
 	<div
 		class="wrapper"
 		class:visible
-		use:losefocus={() => visibility(false)}
 		use:clickoutside={() => visibility(false)}
 		bind:this={wrapper}
 	>
@@ -101,10 +100,10 @@
 		</button>
 
 		{#if visible}
-			<div class="options" use:focusfirst use:loopfocus use:scrollintoview>
+			<div class="options" use:focusFirstChild use:loopFocus use:scrollintoview>
 				{#if options.length >= 5}
 					<div class="option searchbar">
-						<input type="search" placeholder="Search..." bind:value={query}>
+						<input type="search" placeholder="Search..." bind:value={query} use:focusOnKeydown>
 						<img src={searchIcon} alt="Searchbar" />
 					</div>
 				{/if}
@@ -114,9 +113,10 @@
 						<button
 							type="button"
 							class="option"
+							tabindex={option.validation.okay() ? 0 : -1}
 							disabled={!option.validation.okay()}
 							on:click={() => set(option.value)}
-							use:focusonhover
+							use:focusOnHover
 						>
 							{#if option.label.trim() === ''}
 								<i> Unnamed option </i>
@@ -144,7 +144,7 @@
 				{/if}
 
 				{#if value !== null}
-					<button type="button" class="option grayed" on:click={() => set(null)} use:focusonhover>
+					<button type="button" class="option grayed" on:click={() => set(null)} use:focusOnHover>
 						<i> Remove choice </i>
 					</button>
 				{/if}

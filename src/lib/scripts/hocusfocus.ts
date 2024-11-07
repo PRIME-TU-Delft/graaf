@@ -1,19 +1,26 @@
 
+function getFocusableChildren(element: HTMLElement) {
+	return Array.from(element.querySelectorAll<HTMLElement>('button:not([tabindex="-1"]), [href]:not([tabindex="-1"]), input:not([tabindex="-1"]), select:not([tabindex="-1"]), textarea:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])'))
+}
+
 // Exports
-export function focusfirst(element: HTMLElement) {
-	const focusable = element.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
-	if (focusable.length) focusable[0].focus()
-	return {}
+export function focusFirstChild(element: HTMLElement) {
+	const focusable = getFocusableChildren(element)
+	if (focusable.length) {
+		focusable[0].focus()
+		console.log('FocusFirstChild focused')
+	}
 }
 
-export function focusthis(element: HTMLElement) {
+export function focusOnLoad(element: HTMLElement) {
 	element.focus()
-	return {}
+	console.log('FocusOnLoad focused')
 }
 
-export function focusonhover(element: HTMLElement) {
+export function focusOnHover(element: HTMLElement) {
 	function onHover() {
 		element.focus()
+		console.log('FocusOnHover focused')
 	}
 
 	element.addEventListener('mouseenter', onHover)
@@ -25,30 +32,24 @@ export function focusonhover(element: HTMLElement) {
 	}
 }
 
-export function losefocus(element: HTMLElement, callback: () => void) {
-	function checkFocus() {
-		let had_focus = has_focus
-		has_focus = element.contains(document.activeElement) || 
-					element === document.activeElement ||
-					document.activeElement === document.body
-		if (had_focus && !has_focus) callback()
+export function focusOnKeydown(element: HTMLElement, key?: string) {
+	function onKeyDown(event: KeyboardEvent) {
+		if (event.key === 'Tab' || event.key === 'Enter' || key && event.key !== key) return
+		element.focus()
+		console.log('FocusOnKeydown focused')
 	}
 
-	let has_focus = element.contains(document.activeElement)
-	document.addEventListener('focusin', checkFocus)
-	document.addEventListener('focusout', checkFocus)
+	document.addEventListener('keydown', onKeyDown)
 
 	return {
 		destroy() {
-			document.removeEventListener('focusin', checkFocus)
-			document.removeEventListener('focusout', checkFocus)
+			document.removeEventListener('keydown', onKeyDown)
 		}
 	}
 }
 
-export function loopfocus(element: HTMLElement) {
-	const focusable = Array.from(element.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'))
-	if (!focusable.length) return {}
+export function loopFocus(element: HTMLElement) {
+	let focusable = getFocusableChildren(element)
 	let index = focusable.findIndex(e => e === document.activeElement)
 
 	function onFocusIn(event: FocusEvent) {
@@ -61,15 +62,12 @@ export function loopfocus(element: HTMLElement) {
 
 			event.preventDefault()
 			
-			// Go to the next focusable element that still exists in the dom
-			let next = (index + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
-			while (!element.contains(focusable[next])) {
-				next = (next + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
-			}
-
-			// Focus
-			index = next
+			// Go to the next focusable element
+			index = (index + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
+			while (!element.contains(focusable[index])) 
+				index = (index + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
 			focusable[index].focus()
+			console.log('LoopFocus focused')
 		}
 	}
 
@@ -80,6 +78,26 @@ export function loopfocus(element: HTMLElement) {
 		destroy() {
 			element.removeEventListener('keydown', onKeyDown)
 			element.removeEventListener('focusin', onFocusIn)
+		}
+	}
+}
+
+export function preventFocus(element: HTMLElement) {
+	let last_focus = document.activeElement as HTMLElement | null
+
+	function onFocus(event: FocusEvent) {
+		if (element === event.target || element.contains(event.target as HTMLElement)) {
+			last_focus?.focus()
+		} else {
+			last_focus = document.activeElement as HTMLElement | null
+		}
+	}
+
+	document.addEventListener('focus', onFocus)
+
+	return {
+		destroy() {
+			document.removeEventListener('focus', onFocus)
 		}
 	}
 }

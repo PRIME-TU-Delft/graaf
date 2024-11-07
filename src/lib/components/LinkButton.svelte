@@ -24,6 +24,7 @@
 		type={submit ? 'submit' : 'button'}
 		class="link-button"
 		class:disabled
+		tabindex="-1"
 		on:click
 	>
 		<slot />
@@ -34,7 +35,8 @@
 	<a 
 		href={href}
 		class="link-button" 
-		class:disabled  
+		class:disabled
+		tabindex="-1"
 		on:click
 	>
 		<slot />

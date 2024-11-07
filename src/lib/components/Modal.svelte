@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { focusfirst } from '$scripts/hocusfocus'
+	import { focusFirstChild } from '$scripts/hocusfocus'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -35,7 +35,7 @@
 				<img src={plusIcon} alt="Exit icon" class="icon" />
 			</button>
 		</header>
-		<section use:focusfirst>
+		<section use:focusFirstChild>
 			<slot />
 		</section>
 		<footer>

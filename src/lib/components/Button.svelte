@@ -1,8 +1,8 @@
 
 <script lang="ts">
 
-	// Svelte imports
-	import { createEventDispatcher } from "svelte"
+	// Internal dependencies
+	import { preventFocus } from "$scripts/hocusfocus"
 
 	// Exports
 	export let href: string | undefined = undefined
@@ -10,13 +10,7 @@
 	export let disabled: boolean = false
 	export let dangerous: boolean = false
 
-	function click() {
-		button.blur()
-		dispatch('click')
-	}
-
 	// Variables
-	const dispatch = createEventDispatcher()
 	let button: HTMLButtonElement | HTMLAnchorElement
 
 	// Property validation
@@ -37,10 +31,11 @@
 		class="button"
 		class:disabled
 		class:dangerous
-		tabindex={disabled ? -1 : 0}
+		tabindex="-1"
 		type={submit ? 'submit' : 'button'}
-		on:click={click}
+		use:preventFocus
 		bind:this={button}
+		on:click
 	>
 		<slot />
 	</button>
@@ -52,9 +47,10 @@
 		class="button"
 		class:disabled
 		class:dangerous
-		tabindex={disabled ? -1 : 0}
-		on:click={click}
+		tabindex="-1"
+		use:preventFocus
 		bind:this={button}
+		on:click
 	>
 		<slot />
 	</a>
@@ -71,18 +67,16 @@
 	@use "$styles/palette.sass" as *
 
 	.button
+		position: relative
 		display: inline-flex
 		flex-flow: row nowrap
 		align-items: center
 
 		padding: $input-thin-padding $input-thick-padding
-
-		border: 1px solid transparent
 		border-radius: $border-radius
 
 		color: $white
 		background: $purple
-		overflow: hidden
 		white-space: nowrap
 
 		cursor: pointer
@@ -104,11 +98,9 @@
 			margin-right: $input-thin-padding
 
 			filter: $white-filter
-			transform-origin: center
 			transition: all $default-transition
-
-		&:hover, &:focus
 			
+		&:hover
 			background: $dark-purple
 			
 			&.dangerous
