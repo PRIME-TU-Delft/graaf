@@ -1,6 +1,5 @@
 
 // Internal dependencies
-import { env } from '$env/dynamic/private'
 import { ProgramHelper } from '$scripts/helpers'
 import { instanceOfSerializedProgram } from '$scripts/types'
 
@@ -18,7 +17,6 @@ export { POST, PUT, GET }
  */
 
 async function POST({ request }) {
-	if (env.DEBUG) console.log('\nPOST /api/program')
 
 	// Retrieve data
 	const { name } = await request.json()
@@ -38,7 +36,6 @@ async function POST({ request }) {
  */
 
 async function PUT({ request }) {
-	if (env.DEBUG) console.log('\nPUT /api/program')
 
 	// Retrieve data
 	const data = await request.json()
@@ -60,7 +57,6 @@ async function PUT({ request }) {
  */
 
 async function GET() {
-	if (env.DEBUG) console.log('\nGET /api/program')
 
 	return await ProgramHelper.getAll()
 		.then(

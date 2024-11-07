@@ -1,6 +1,5 @@
 
 // Internal dependencies
-import { env } from '$env/dynamic/private'
 import { CourseHelper } from '$scripts/helpers'
 import { instanceOfSerializedCourse } from '$scripts/types'
 
@@ -18,7 +17,6 @@ export { POST, PUT, GET }
  */
 
 async function POST({ request }) {
-	if (env.DEBUG) console.log('\nPOST /api/course')
 
 	// Retrieve course code and name
 	const { code, name } = await request.json()
@@ -38,7 +36,6 @@ async function POST({ request }) {
  */
 
 async function PUT({ request }) {
-	if (env.DEBUG) console.log('\nPUT /api/course')
 
 	// Retrieve data
 	const data = await request.json()
@@ -60,7 +57,6 @@ async function PUT({ request }) {
  */
 
 async function GET() {
-	if (env.DEBUG) console.log('\nGET /api/course')
 
 	// Get all courses
 	return await CourseHelper.getAll()

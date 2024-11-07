@@ -24,3 +24,7 @@ export {
 export type {
 	DropdownOption,
 } from './DropdownOption'
+
+export type {
+	EditorView,
+} from './GraphEditor'

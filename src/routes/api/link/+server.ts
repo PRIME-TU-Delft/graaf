@@ -1,6 +1,5 @@
 
 // Internal dependencies
-import { env } from '$env/dynamic/private'
 import { LinkHelper } from '$scripts/helpers'
 import { instanceOfSerializedLink } from '$scripts/types'
 
@@ -18,7 +17,6 @@ export { POST, PUT, GET }
  */
 
 async function POST({ request }) {
-	if (env.DEBUG) console.log('\nPOST /api/link')
 
 	// Retrieve data
 	const { course, graph, name } = await request.json()
@@ -39,7 +37,6 @@ async function POST({ request }) {
  */
 
 async function PUT({ request }) {
-	if (env.DEBUG) console.log('\nPUT /api/link')
 
 	// Retrieve data
 	const data = await request.json()
@@ -61,7 +58,6 @@ async function PUT({ request }) {
  */
 
 async function GET() {
-	if (env.DEBUG) console.log('\nGET /api/link')
 
 	return await LinkHelper.getAll()
 		.then(

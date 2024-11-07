@@ -2,19 +2,21 @@
 <script lang="ts">
 
 	// Internal dependencies
+	import { cache, graph, domains, domain_relations } from './stores'
 	import {
-		ControllerCache,
-		GraphController,
 		DomainController,
+		DomainRelationController,
 		SortOption
 	} from '$scripts/controllers'
 
 	// Components
-	import Searchbar from '$components/forms/Search.svelte'
-	import Button from '$components/buttons/Button.svelte'
-	import LinkButton from '$components/buttons/LinkButton.svelte'
-	import IconButton from '$components/buttons/IconButton.svelte'
 	import DomainRow from './DomainRow.svelte'
+	import DomainRelationRow from './DomainRelationRow.svelte'
+
+	import Searchbar from '$components/Search.svelte'
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import IconButton from '$components/IconButton.svelte'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
@@ -23,12 +25,10 @@
 	import neutralSortIcon from '$assets/neutral-sort-icon.svg'
 
 	// Exports
-	export let cache: ControllerCache
-	export let graph: GraphController
 	export let update: () => void
 
 	// Functions
-	function sortmode(options: number) {
+	function updateSortmode(options: number) {
 		if (options & SortOption.relations) {
 			relation_index_sort = options & SortOption.index ? !relation_index_sort : undefined
 			relation_parent_sort = options & SortOption.parents ? !relation_parent_sort : undefined
@@ -41,8 +41,10 @@
 	}
 
 	async function sort(options: number) {
+		if ($graph === undefined) return
 
-		sortmode(options)
+		// Update sortmode and find direction
+		updateSortmode(options)
 		let direction = relation_index_sort  ||
 						relation_parent_sort ||
 						relation_child_sort  ||
@@ -50,7 +52,8 @@
 						domain_name_sort     ||
 						domain_style_sort ? SortOption.ascending : SortOption.descending
 
-		await graph.sort(options | direction)
+		// Sort
+		await $graph.sort(options | direction)
 		update()
 	}
 
@@ -71,41 +74,46 @@
 <!-- Markup -->
 
 
-<div id="domains" class="domains editor">
+<!-- Domains -->
+{#if $graph === undefined || $cache === undefined}
+	<p class="grayed"> Loading... </p>
+{:else}
+	<div id="domains" class="domains editor">
 
-	<!-- Toolbar -->
-	<div class="toolbar">
-		<h2> Domains </h2>
-		<LinkButton href="#relations"> go to relations </LinkButton>
+		<!-- Toolbar -->
+		<div class="toolbar">
+			<h2> Domains </h2>
+			<LinkButton href="#relations"> go to relations </LinkButton>
 
-		<div class="flex-spacer" />
+			<div class="flex-spacer" />
 
-		<Searchbar bind:value={domain_query} />
-		<Button
-			on:click={async () => {
-				await DomainController.create(cache, graph)
-				update()
-			}}
-		>
-			<img src={plusIcon} alt="New domain"> New Domain
-		</Button>
-	</div>
+			<Searchbar bind:value={domain_query} />
+			<Button
+				on:click={async () => {
+					await DomainController.create($cache, $graph)
+					update()
+				}}
+			>
+				<img src={plusIcon} alt="New domain"> New Domain
+			</Button>
+		</div>
 
-	{#await graph.getDomains().then(domains => domains.filter(async domain => await domain.matchesQuery(domain_query))) then domains}
-		{#if domains.length > 0}
+		{#if $domains === undefined}
+			<p class="grayed"> Loading... </p>
+		{:else if !$domains.some(domain => domain.matchesQuery(domain_query))}
+			<p class="grayed"> There's nothing here </p>
+		{:else}
+			<div class="domain row">
 
-			<!-- Header -->
-			<div class=row>
-
+				<!-- Index label and sort button -->
 				<div class="header" style="grid-area: index;">
 					<IconButton
 						description={domain_index_sort ? 'Sort domains descending by index' : 'Sort domains ascending by index'}
 						src={domain_index_sort === undefined ? neutralSortIcon : domain_index_sort ? descendingSortIcon : ascendingSortIcon}
 						on:click={() => sort(SortOption.domains | SortOption.index)}
-						/>
-
+					/>
 				</div>
-
+				
 				<!-- Name label and sort button -->
 				<div class="header" style="grid-area: left;">
 					<span> Name </span>
@@ -113,9 +121,9 @@
 						description={domain_name_sort ? 'Sort domains descending by name' : 'Sort domains ascending by name'}
 						src={domain_name_sort === undefined ? neutralSortIcon : domain_name_sort ? descendingSortIcon : ascendingSortIcon}
 						on:click={() => sort(SortOption.domains | SortOption.name)}
-						/>
+					/>
 				</div>
-
+				
 				<!-- Style label and sort button -->
 				<div class="header" style="grid-area: right;">
 					<span> Style </span>
@@ -123,22 +131,84 @@
 						description={domain_style_sort ? 'Sort domains descending by style' : 'Sort domains ascending by style'}
 						src={domain_style_sort === undefined ? neutralSortIcon : domain_style_sort ? descendingSortIcon : ascendingSortIcon}
 						on:click={() => sort(SortOption.domains | SortOption.style)}
-						/>
+					/>
 				</div>
 			</div>
 
-			<!-- Domains -->
-			{#each domains as domain}
-				<DomainRow {domain} {update} {sortmode} />
+			{#each $domains as domain}
+				<DomainRow {domain} {update} {updateSortmode} />
 			{/each}
-			
-		{:else}
-
-			<h6 class="grayed"> No domains found </h6>
-
 		{/if}
-	{/await}
-</div>
+	</div>
+{/if}
+
+<!-- Relations -->
+{#if $graph === undefined || $cache === undefined}
+	<p class="grayed"> Loading... </p>
+{:else}
+	<div id="relations" class="domains editor">
+
+		<!-- Toolbar -->
+		<div class="toolbar">
+			<h2> Relations </h2>
+			<LinkButton href="#domains"> go to domains </LinkButton>
+
+			<div class="flex-spacer" />
+
+			<Searchbar bind:value={relation_query} />
+			<Button
+				on:click={async () => {
+					await DomainRelationController.create($graph)
+					update()
+				}}
+			>
+				<img src={plusIcon} alt="New domain"> New Relation
+			</Button>
+		</div>
+
+		{#if $domain_relations === undefined}
+			<p class="grayed"> Loading... </p>
+		{:else if !$domain_relations.some(relation => relation.matchesQuery(relation_query))}
+			<p class="grayed"> There's nothing here </p>
+		{:else}
+			<div class="relation row">
+
+				<!-- Index label and sort button -->
+				<div class="header" style="grid-area: index;">
+					<IconButton
+						description={relation_index_sort ? 'Sort relations descending by index' : 'Sort relations ascending by index'}
+						src={relation_index_sort === undefined ? neutralSortIcon : relation_index_sort ? descendingSortIcon : ascendingSortIcon}
+						on:click={() => sort(SortOption.relations | SortOption.domains | SortOption.index)}
+					/>
+				</div>
+			
+				<!-- Parent label and sort button -->
+				<div class="header" style="grid-area: left;">
+					<span> Parent </span>
+					<IconButton
+						description={relation_parent_sort ? 'Sort relations descending by parent' : 'Sort relations ascending by parent'}
+						src={relation_parent_sort === undefined ? neutralSortIcon : relation_parent_sort ? descendingSortIcon : ascendingSortIcon}
+						on:click={() => sort(SortOption.relations | SortOption.domains | SortOption.parents)}
+					/>
+				</div>
+			
+				<!-- Child label and sort button -->
+				<div class="header" style="grid-area: right;">
+					<span> Child </span>
+					<IconButton
+						description={relation_child_sort ? 'Sort relations descending by child' : 'Sort relations ascending by child'}
+						src={relation_child_sort === undefined ? neutralSortIcon : relation_child_sort ? descendingSortIcon : ascendingSortIcon}
+						on:click={() => sort(SortOption.relations | SortOption.domains | SortOption.children)}
+					/>
+				</div>
+			</div>
+
+			{#each $domain_relations as relation}
+				<DomainRelationRow {relation} {update} {updateSortmode} />
+			{/each}
+		{/if}
+	</div>
+{/if}
 
 
 <!-- Styles -->
@@ -146,51 +216,6 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	$icon-width: calc($input-icon-size + 2 * $input-icon-padding)
-
-	.editor
-		display: flex
-		flex-flow: column nowrap
-		padding: $card-thick-padding
-		gap: $form-small-gap
-
-		.grayed
-			margin: auto
-			color: $gray
-
-		.toolbar
-			display: flex
-			margin-bottom: $form-big-gap
-			gap: $form-small-gap
-
-		.row
-			display: grid
-			place-items: center center
-			gap: $form-small-gap
-
-			padding-right: calc( $form-small-gap + $icon-width )
-
-			.preview
-				width: $input-icon-size
-				height: $input-icon-size
-
-			.header
-				display: flex
-				flex-flow: row nowrap
-				align-content: center
-				justify-content: right
-				width: 100%
-
-				span
-					flex: 1
-
-	.domains .row
-		grid-template: "validation index delete left right right-preview" auto / $icon-width $icon-width $icon-width 1fr 1fr $icon-width
-
-	.relations .row
-		grid-template: "validation index delete left left-preview right right-preview" auto / $icon-width $icon-width $icon-width 1fr $icon-width 1fr $icon-width
+	@import './domain_styles.sass'
 
 </style>

@@ -28,6 +28,10 @@ class ControllerCache {
 	private lectures: LectureController[] = []
 	private links: LinkController[] = []
 
+	constructor(
+		public fetch: (url: string, init?: RequestInit) => Promise<Response>
+	) { }
+
 	/**
 	 * Finds an object in the cache
 	 * @param type The type of the object

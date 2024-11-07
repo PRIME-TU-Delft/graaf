@@ -1,6 +1,5 @@
 
 // Internal dependencies
-import { env } from '$env/dynamic/private'
 import { DomainHelper } from '$scripts/helpers'
 
 // Exports
@@ -16,7 +15,6 @@ export { GET }
  */
 
 async function GET({ params }) {
-	if (env.DEBUG) console.log('\nGET /api/domain/[id]/graph')
 
 	// Get the domain ID
 	const domain_id = Number(params.id)

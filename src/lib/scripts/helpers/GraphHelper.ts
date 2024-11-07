@@ -118,7 +118,6 @@ async function update(data: SerializedGraph): Promise<void> {
 
 async function remove(graph_id: number): Promise<void> {
 	try {
-		console.log('graph_id', graph_id)
 		await prisma.graph.delete({
 			where: {
 				id: graph_id

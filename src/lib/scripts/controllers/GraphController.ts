@@ -1,7 +1,4 @@
 
-// External dependencies
-import { browser } from '$app/environment'
-
 // Internal dependencies
 import { ValidationData, Severity } from '$scripts/validation'
 
@@ -52,12 +49,17 @@ enum SortOption {
 
 class GraphController {
 	private _course?: CourseController
+	private _pending_course?: Promise<CourseController>
 	private _domains?: DomainController[]
-	private _domain_relations?: DomainRelationController[]
+	private _pending_domains?: Promise<DomainController[]>
+	private _domain_relations: DomainRelationController[] = []
 	private _subjects?: SubjectController[]
-	private _subject_relations?: SubjectRelationController[]
+	private _pending_subjects?: Promise<SubjectController[]>
+	private _subject_relations: SubjectRelationController[] = []
 	private _lectures?: LectureController[]
+	private _pending_lectures?: Promise<LectureController[]>
 	private _links?: LinkController[]
+	private _pending_links?: Promise<LinkController[]>
 
 	private constructor(
 		public cache: ControllerCache,
@@ -80,20 +82,6 @@ class GraphController {
 
 	get course_id(): number {
 		return this._course_id
-	}
-
-	set course_id(id: number) {
-		
-		// Unassign previous course
-		this.cache.find(CourseController, this._course_id)
-			?.unassignGraph(this)
-
-		// Assign new course
-		this._course = undefined
-		this._course_id = id
-
-		this.cache.find(CourseController, this._course_id)
-			?.assignGraph(this, false)
 	}
 
 	get domain_ids(): number[] {
@@ -122,27 +110,39 @@ class GraphController {
 
 	async getCourse(): Promise<CourseController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if course is pending
+		if (this._pending_course !== undefined) {
+			return await this._pending_course
 		}
 
-		// Check if course is already loaded
-		if (this._course) {
+		// Check if course is known
+		if (this._course !== undefined) {
+			return this._course
+		}
+
+		// Get the course from the cache
+		this._course = this.cache.find(CourseController, this.course_id)
+		if (this._course !== undefined) {
 			return this._course
 		}
 
 		// Call API to get the course data
-		const response = await fetch(`/api/graph/${this.id}/course`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/course GET): ${error}`)
-			})
+		this._pending_course = this.cache
+			.fetch(`/api/graph/${this.id}/course`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedCourse
+					this._course = CourseController.revive(this.cache, data)
+					this._pending_course = undefined
+					return this._course
+				},
+				error => {
+					this._pending_course = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/course GET): ${error}`)
+				}
+			)
 
-		// Revive the course
-		const data = await response.json() as SerializedCourse
-		this._course = CourseController.revive(this.cache, data)
-
-		return this._course
+		return await this._pending_course
 	}
 
 	/**
@@ -153,52 +153,60 @@ class GraphController {
 
 	async getDomains(): Promise<DomainController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if domains are pending
+		if (this._pending_domains !== undefined) {
+			return await this._pending_domains
 		}
 
-		// Check if domains are already loaded
-		if (this._domains) {
-			return Array.from(this._domains)
+		// Check if domains are known
+		if (this._domains !== undefined) {
+			return this._domains
+		}
+
+		// Check if domains are cached
+		const cached = this._domain_ids.map(id => this.cache.find(DomainController, id))
+		if (!cached.includes(undefined)) {
+			this._domains = cached as DomainController[]
+			return this._domains
 		}
 
 		// Call API to get the domain data
-		const response = await fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`)
-			})
+		this._pending_domains = this.cache
+			.fetch(`/api/graph/${this.id}/domains`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedDomain[]
+					this._domains = data.map(domain => DomainController.revive(this.cache, domain))
+					this._domains.forEach((domain, index) => domain.index = index + 1)
+					this._pending_domains = undefined
+					return this._domains
+				},
+				error => {
+					this._pending_domains = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/domains GET): ${error}`)
+				}
+			)
 
-		// Revive the domains
-		const data = await response.json() as SerializedDomain[]
-		this._domains = data.map(domain => DomainController.revive(this.cache, domain))
-
-		return Array.from(this._domains)
+		return await this._pending_domains
 	}
 
 	/**
-	 * Infer the domain relations from the domains assigned to this graph
-	 * @returns The domain relations
+	 * Get the domain relations assigned to this graph
+	 * @returns The domain relations assigned to this graph
 	 */
 
 	async getDomainRelations(): Promise<DomainRelationController[]> {
-
-		// Check if domain relations are already loaded
-		if (this._domain_relations) {
-			return Array.from(this._domain_relations)
-		}
-
-		// Infer relations
-		this._domain_relations = []
 		const domains = await this.getDomains()
 		for (const domain of domains) {
 			const children = await domain.getChildren()
 			for (const child of children) {
-				this.createDomainRelation(domain, child, false)
+				if (!this._domain_relations.some(relation => relation.parent === domain && relation.child === child)) {
+					DomainRelationController.create(this, domain, child)
+				}
 			}
 		}
 
-		return Array.from(this._domain_relations)
+		return this._domain_relations
 	}
 
 	/**
@@ -209,52 +217,60 @@ class GraphController {
 
 	async getSubjects(): Promise<SubjectController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if subjects are pending
+		if (this._pending_subjects !== undefined) {
+			return await this._pending_subjects
 		}
 
-		// Check if subjects are already loaded
-		if (this._subjects) {
-			return Array.from(this._subjects)
+		// Check if subjects are known
+		if (this._subjects !== undefined) {
+			return this._subjects
+		}
+
+		// Check if subjects are cached
+		const cached = this._subject_ids.map(id => this.cache.find(SubjectController, id))
+		if (!cached.includes(undefined)) {
+			this._subjects = cached as SubjectController[]
+			return this._subjects
 		}
 
 		// Call API to get the subject data
-		const response = await fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`)
-			})
+		this._pending_subjects = this.cache
+			.fetch(`/api/graph/${this.id}/subjects`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedSubject[]
+					this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
+					this._subjects.forEach((subject, index) => subject.index = index + 1)
+					this._pending_subjects = undefined
+					return this._subjects
+				},
+				error => {
+					this._pending_subjects = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/subjects GET): ${error}`)
+				}
+			)
 
-		// Revive the subjects
-		const data = await response.json() as SerializedSubject[]
-		this._subjects = data.map(subject => SubjectController.revive(this.cache, subject))
-
-		return Array.from(this._subjects)
+		return await this._pending_subjects
 	}
 
 	/**
-	 * Infer the subject relations from the subjects assigned to this graph
-	 * @returns The subject relations
+	 * Get the subject relations assigned to this graph
+	 * @returns The subject relations assigned to this graph
 	 */
 
 	async getSubjectRelations(): Promise<SubjectRelationController[]> {
-
-		// Check if subject relations are already loaded
-		if (this._subject_relations) {
-			return Array.from(this._subject_relations)
-		}
-
-		// Infer relations
-		this._subject_relations = []
 		const subjects = await this.getSubjects()
-		for (const parent of subjects) {
-			const children = await parent.getChildren()
+		for (const subject of subjects) {
+			const children = await subject.getChildren()
 			for (const child of children) {
-				this.createSubjectRelation(parent, child, false)
+				if (!this._subject_relations.some(relation => relation.parent === subject && relation.child === child)) {
+					SubjectRelationController.create(this, subject, child)
+				}
 			}
 		}
 
-		return Array.from(this._subject_relations)
+		return this._subject_relations
 	}
 
 	/**
@@ -265,28 +281,58 @@ class GraphController {
 
 	async getLectures(): Promise<LectureController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if lectures are pending
+		if (this._pending_lectures !== undefined) {
+			return await this._pending_lectures
 		}
 
-		// Check if lectures are already loaded
-		if (this._lectures) {
-			return Array.from(this._lectures)
+		// Check if lectures are known
+		if (this._lectures !== undefined) {
+			return this._lectures
+		}
+
+		// Check if lectures are cached
+		const cached = this._lecture_ids.map(id => this.cache.find(LectureController, id))
+		if (!cached.includes(undefined)) {
+			this._lectures = cached as LectureController[]
+			return this._lectures
 		}
 
 		// Call API to get the lectures
-		const response = await fetch(`/api/graph/${this.id}/lectures`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/lectures GET): ${error}`)
-			})
+		this._pending_lectures = this.cache
+			.fetch(`/api/graph/${this.id}/lectures`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedLecture[]
+					this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
+					this._pending_lectures = undefined
+					return this._lectures
+				},
+				error => {
+					this._pending_lectures = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/lectures GET): ${error}`)
+				}
+			)
 
-		// Parse the data
-		const data = await response.json() as SerializedLecture[]
-		this._lectures = data.map(lecture => LectureController.revive(this.cache, lecture))
-
-		return Array.from(this._lectures)
+		return await this._pending_lectures
 	}
+
+	/**
+	 * Get the lectures assigned to this graph as dropdown options
+	 * @returns The lectures assigned to this graph as dropdown options
+	 */
+
+	async getLectureOptions(): Promise<DropdownOption<LectureController>[]> {
+		const lectures = await this.getLectures()
+		return await Promise.all(
+			lectures.map(async lecture => ({
+				value: lecture,
+				label: lecture.trimmed_name,
+				validation: await lecture.validate()
+			}))
+		)
+	}
+
 
 	/**
 	 * Get the links assigned to this graph, from the cache or the API
@@ -296,27 +342,40 @@ class GraphController {
 
 	async getLinks(): Promise<LinkController[]> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if links are pending
+		if (this._pending_links !== undefined) {
+			return await this._pending_links
 		}
 
-		// Check if links are already loaded
-		if (this._links) {
-			return Array.from(this._links)
+		// Check if links are known
+		if (this._links !== undefined) {
+			return this._links
+		}
+
+		// Check if links are cached
+		const cached = this._links_ids.map(id => this.cache.find(LinkController, id))
+		if (!cached.includes(undefined)) {
+			this._links = cached as LinkController[]
+			return this._links
 		}
 
 		// Call API to get the link data
-		const response = await fetch(`/api/graph/${this.id}/links`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/graph/${this.id}/links GET): ${error}`)
-			})
+		this._pending_links = this.cache
+			.fetch(`/api/graph/${this.id}/links`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedLink[]
+					this._links = data.map(link => LinkController.revive(this.cache, link))
+					this._pending_links = undefined
+					return this._links
+				},
+				error => {
+					this._pending_links = undefined
+					throw new Error(`APIError (/api/graph/${this.id}/links GET): ${error}`)
+				}
+			)
 
-		// Revive the links
-		const data = await response.json() as SerializedLink[]
-		this._links = data.map(link => LinkController.revive(this.cache, link))
-
-		return Array.from(this._links)
+		return await this._pending_links
 	}
 
 	// --------------------> API actions
@@ -331,13 +390,8 @@ class GraphController {
 
 	static async create(cache: ControllerCache, course_id: number, name: string): Promise<GraphController> {
 
-		// Guard against SSR
-		if (!browser) {
-			Promise.reject()
-		}
-
 		// Call API to create a new graph
-		const response = await fetch(`/api/graph`, {
+		const response = await cache.fetch(`/api/graph`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ course: course_id, name })
@@ -467,13 +521,8 @@ class GraphController {
 
 	async save(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to save the graph
-		await fetch(`/api/graph`, {
+		await this.cache.fetch(`/api/graph`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
@@ -491,11 +540,6 @@ class GraphController {
 	 */
 
 	async delete(): Promise<void> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
 
 		// Unassign from course and links
 		this.cache.find(CourseController, this.course_id)
@@ -517,7 +561,7 @@ class GraphController {
 		await Promise.all(lectures.map(lecture => lecture.delete()))
 
 		// Call API to delete the graph
-		await fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/graph/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/graph/${this.id} DELETE): ${error}`)
 			})
@@ -556,7 +600,7 @@ class GraphController {
 
 			// Create the relation
 			if (!parent_copy || !child_copy) throw new Error('GraphError: Domain not found in map')
-			await graph_copy.createDomainRelation(parent_copy, child_copy)
+			DomainRelationController.create(graph_copy, parent_copy, child_copy)
 		}
 
 		// Copy subjects
@@ -565,13 +609,13 @@ class GraphController {
 		for (const subject of subjects) {
 			const subject_copy = await subject.copy(graph_copy)
 			subject_map.set(subject.id, subject_copy)
-			
+
 			// Assign the copied domain to the copied subject
 			if (!subject.domain_id) continue
 			const domain_copy = domain_map.get(subject.domain_id)
 			if (!domain_copy) throw new Error('GraphError: Domain not found in map')
 			subject_copy.assignDomain(domain_copy)
-			
+
 		}
 
 		// Copy subject relations
@@ -585,7 +629,7 @@ class GraphController {
 
 			// Create the relation
 			if (!parent_copy || !child_copy) throw new Error('GraphError: Subject not found in map')
-			await graph_copy.createSubjectRelation(parent_copy, child_copy)
+			SubjectRelationController.create(graph_copy, parent_copy, child_copy)
 		}
 
 		// Copy lectures
@@ -703,11 +747,28 @@ class GraphController {
 			})
 		}
 
-		const [domains, subjects, lectures] = await Promise.all([this.getDomains(), this.getSubjects(), this.getLectures()])
+		const [
+			domains,
+			domain_relations,
+			subjects, 
+			subject_relations,
+			lectures
+		] = await Promise.all([
+			this.getDomains(), 
+			this.getDomainRelations(),
+			this.getSubjects(), 
+			this.getSubjectRelations(),
+			this.getLectures()
+		])
+
 		for (const domain of domains)
 			validation.add(await domain.validate())
+		for (const relation of domain_relations)
+			validation.add(await relation.validate())
 		for (const subject of subjects)
 			validation.add(await subject.validate())
+		for (const relation of subject_relations)
+			validation.add(await relation.validate())
 		for (const lecture of lectures) {
 			validation.add(await lecture.validate())
 		}
@@ -752,7 +813,10 @@ class GraphController {
 
 		// Assign domain
 		this._domain_ids.push(domain.id)
-		this._domains?.push(domain)
+		if (this._domains) {
+			this._domains.push(domain)
+			domain.index = this._domains.length
+		}
 
 		if (mirror) {
 			domain.assignGraph(this, false)
@@ -760,23 +824,20 @@ class GraphController {
 	}
 
 	/**
-	 *  Create and assign a domain relation to this graph
-	 * @param parent Parent domain
-	 * @param child Child domain
+	 * Assign a domain relation to this graph
+	 * @param relation Domain relation to assign to the graph
 	 * @param mirror Whether to mirror the assignment
 	 */
 
-	createDomainRelation(parent: DomainController, child: DomainController, mirror: boolean = true): void {
-		if (this._domain_relations?.some(relation => relation.parent?.id === parent.id && relation.child?.id === child.id)) return
+	assignDomainRelation(relation: DomainRelationController, mirror: boolean = true): void {
+		if (this._domain_relations.includes(relation)) return
 
-		// Create relation
-		const relation = new DomainRelationController(this, parent, child)
-		this._domain_relations?.push(relation)
+		// Assign domain relation
+		this._domain_relations.push(relation)
+		relation.index = this._domain_relations.length
 
-		// Mirror to parent and child
 		if (mirror) {
-			parent.assignChild(child, false)
-			child.assignParent(parent, false)
+			relation.assignGraph(this, false)
 		}
 	}
 
@@ -791,7 +852,10 @@ class GraphController {
 
 		// Assign subject
 		this._subject_ids.push(subject.id)
-		this._subjects?.push(subject)
+		if (this._subjects) {
+			this._subjects.push(subject)
+			subject.index = this._subjects.length
+		}
 
 		if (mirror) {
 			subject.assignGraph(this, false)
@@ -799,23 +863,20 @@ class GraphController {
 	}
 
 	/**
-	 * Create and assign a subject relation to this graph
-	 * @param parent Parent subject
-	 * @param child Child subject
+	 * Assign a subject relation to this graph
+	 * @param relation Subject relation to assign to the graph
 	 * @param mirror Whether to mirror the assignment
 	 */
 
-	createSubjectRelation(parent: SubjectController, child: SubjectController, mirror: boolean = true): void {
-		if (this._subject_relations?.some(relation => relation.parent?.id === parent.id && relation.child?.id === child.id)) return
+	assignSubjectRelation(relation: SubjectRelationController, mirror: boolean = true): void {
+		if (this._subject_relations.includes(relation)) return
 
-		// Create relation
-		const relation = new SubjectRelationController(this, parent, child)
-		this._subject_relations?.push(relation)
+		// Assign subject relation
+		this._subject_relations.push(relation)
+		relation.index = this._subject_relations.length
 
-		// Mirror to parent and child
 		if (mirror) {
-			parent.assignChild(child, false)
-			child.assignParent(parent, false)
+			relation.assignGraph(this, false)
 		}
 	}
 
@@ -863,30 +924,35 @@ class GraphController {
 	unassignDomain(domain: DomainController): void {
 		if (!this._domain_ids.includes(domain.id)) return
 
+		// Shift domain indices
+		this._domains?.forEach(other => {
+			if (other.index > domain.index) {
+				other.index--
+			}
+		})
+
 		// Unassign domain
 		this._domain_ids = this._domain_ids.filter(id => id !== domain.id)
 		this._domains = this._domains?.filter(known => known !== domain)
 	}
 
 	/**
-	 * Unassign and delete a domain relation from this graph
-	 * @param parent Parent domain of the relation
-	 * @param child Child domain of the relation
-	 * @param mirror Whether to mirror the unassignment
+	 * Unassign a domain relation from this graph
+	 * @param relation Domain relation to unassign from the graph
 	 */
 
-	deleteDomainRelation(parent: DomainController, child: DomainController, mirror: boolean = true): void {
-		const relation = this._domain_relations?.find(relation => relation.parent?.id === parent.id && relation.child?.id === child.id)
-		if (!relation) return
+	unassignDomainRelation(relation: DomainRelationController): void {
+		if (!this._domain_relations.includes(relation)) return
 
-		// Unassign relation
-		this._domain_relations = this._domain_relations?.filter(known => known !== relation)
+		// Shift relation indices
+		this._domain_relations.forEach(other => {
+			if (other.index > relation.index) {
+				other.index--
+			}
+		})
 
-		// Mirror to parent and child
-		if (mirror) {
-			parent.unassignChild(child, false)
-			child.unassignParent(parent, false)
-		}
+		// Unassign domain relation
+		this._domain_relations = this._domain_relations.filter(known => known !== relation)
 	}
 
 	/**
@@ -897,30 +963,35 @@ class GraphController {
 	unassignSubject(subject: SubjectController): void {
 		if (!this._subject_ids.includes(subject.id)) return
 
+		// Shift subject indices
+		this._subjects?.forEach(other => {
+			if (other.index > subject.index) {
+				other.index--
+			}
+		})
+
 		// Unassign subject
 		this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
 		this._subjects = this._subjects?.filter(known => known !== subject)
 	}
 
 	/**
-	 * Unassign and delete a subject relation from this graph
-	 * @param parent Parent subject of the relation
-	 * @param child Child subject of the relation
-	 * @param mirror Whether to mirror the unassignment
+	 * Unassign a subject relation from this graph
+	 * @param relation Subject relation to unassign from the graph
 	 */
 
-	deleteSubjectRelation(parent: SubjectController, child: SubjectController, mirror: boolean = true): void {
-		const relation = this._subject_relations?.find(relation => relation.parent?.id === parent.id && relation.child?.id === child.id)
-		if (!relation) return
+	unassignSubjectRelation(relation: SubjectRelationController): void {
+		if (!this._subject_relations.includes(relation)) return
 
-		// Unassign relation
-		this._subject_relations = this._subject_relations?.filter(known => known !== relation)
+		// Shift relation indices
+		this._subject_relations.forEach(other => {
+			if (other.index > relation.index) {
+				other.index--
+			}
+		})
 
-		// Mirror to parent and child
-		if (mirror) {
-			parent.unassignChild(child, false)
-			child.unassignParent(parent, false)
-		}
+		// Unassign subject relation
+		this._subject_relations = this._subject_relations.filter(known => known !== relation)
 	}
 
 	/**
@@ -999,13 +1070,13 @@ class GraphController {
 		} else {
 			if (option & SortOption.subjects) {
 				const subjects = await this.getSubjects()
-				let comparable: { value: string, subject: SubjectController }[]
+				let comparable: { value: string | number, subject: SubjectController }[]
 
 				// Sort subjects by index
 				if (option & SortOption.index) {
 					comparable = await Promise.all(
 						subjects.map(async subject => ({
-							value: String(await subject.getIndex()),
+							value: subject.index,
 							subject
 						}))
 					)
@@ -1034,19 +1105,24 @@ class GraphController {
 				}
 
 				// Sort the subjects
-				comparable.sort((a, b) => a.value.localeCompare(b.value))
+				if (comparable.some(pair => typeof pair.value === 'number')) {
+					comparable.sort((a, b) => (a.value as number) - (b.value as number))
+				} else {
+					comparable.sort((a, b) => (a.value as string).localeCompare(b.value as string))
+				}
+
 				if (descending) comparable.reverse()
 				this._subjects = comparable.map(pair => pair.subject)
 
 			} else if (option & SortOption.domains) {
 				const domains = await this.getDomains()
-				let comparable: { value: string, domain: DomainController }[]
+				let comparable: { value: string | number, domain: DomainController }[]
 
 				// Sort domains by index
 				if (option & SortOption.index) {
 					comparable = await Promise.all(
 						domains.map(async domain => ({
-							value: String(await domain.getIndex()),
+							value: domain.index,
 							domain
 						}))
 					)
@@ -1075,7 +1151,12 @@ class GraphController {
 				}
 
 				// Sort the domains
-				comparable.sort((a, b) => a.value.localeCompare(b.value))
+				if (comparable.some(pair => typeof pair.value === 'number')) {
+					comparable.sort((a, b) => (a.value as number) - (b.value as number))
+				} else {
+					comparable.sort((a, b) => (a.value as string).localeCompare(b.value as string))
+				}
+
 				if (descending) comparable.reverse()
 				this._domains = comparable.map(pair => pair.domain)
 

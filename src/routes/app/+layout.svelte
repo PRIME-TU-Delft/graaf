@@ -1,23 +1,27 @@
 
-
 <script lang="ts">
 
-	import Button from '$components/buttons/Button.svelte';
-	import LinkButton from '$components/buttons/LinkButton.svelte';
+	// External dependencies
+	import { SignIn, SignOut } from '@auth/sveltekit/components'
+	import { signIn, signOut } from '@auth/sveltekit/client'
+	import { page } from '$app/stores'
 
-	// Auth
-	import { SignIn, SignOut } from '@auth/sveltekit/components';
-	import { signIn, signOut } from '@auth/sveltekit/client';
-	import { page } from '$app/stores';
+	// Components
+	import Button from '$components/Button.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
 
-	import PRIME_logo from '$assets/PRIME-logo.svg';
-	import TUDelft_logo from '$assets/TUD-logo.svg';
+	// Assets
+	import PRIME_logo from '$assets/PRIME-logo.svg'
+	import TUDelft_logo from '$assets/TUD-logo.svg'
 
-	let loggedIn = false; // TODO temporary
+	// Variables
+	let logged_in = false // TODO temporary
 
 </script>
 
+
 <!-- Markup -->
+
 
 <header>
 	<a id="PRIME-logo" href="/app">
@@ -28,7 +32,7 @@
 
 	<div class="flex-spacer" />
 
-	{#if loggedIn}
+	{#if logged_in}
 		<LinkButton href="app/auth/logout"> Logout </LinkButton>
 		<Button href="app/dashboard"> Dashboard </Button>
 	{:else}
@@ -38,14 +42,28 @@
 </header>
 
 <main>
-	<slot />
+	<section class="title">
+		<slot name="title" />
+	</section>
+
+	{#if $$slots.toolbar}
+		<section class="toolbar">
+			<slot name="toolbar" />
+		</section>
+	{/if}
+
+	<section class="content">
+		<slot />
+	</section>
 </main>
 
 <footer>
 	<img id="TUDelft-logo" src={TUDelft_logo} alt="TUDelft logo" />
 </footer>
 
+
 <!-- Styles -->
+
 
 <style lang="sass">
 
@@ -72,6 +90,10 @@
 			color: $purple
 
 	main
+		display: flex
+		flex-flow: column nowrap
+		place-items: stretch start
+
 		box-sizing: content-box
 		min-width: $small-column
 		max-width: $big-column
@@ -83,7 +105,25 @@
 			width: $small-column
 			padding: $main-padding
 			padding-bottom: $footer-height
-			
+
+		.title
+			margin-bottom: 2rem
+			color: $dark-gray
+
+		.toolbar
+			display: flex
+			flex-flow: row nowrap
+			place-items: center start
+			gap: $form-small-gap
+
+			margin-bottom: 1rem
+
+		.content
+			display: flex
+			flex-flow: column nowrap
+			place-items: stretch start
+			gap: 1rem
+
 	footer
 		position: fixed
 		bottom: 0

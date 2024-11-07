@@ -2,22 +2,18 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import {
-		CourseController,
-		GraphController,
-		ProgramController
-	} from '$scripts/controllers'
+	import { course } from './stores'
+	import { ProgramController } from '$scripts/controllers'
 
 	// Components
-	import LinkButton from '$components/buttons/LinkButton.svelte'
-	import IconButton from '$components/buttons/IconButton.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import IconButton from '$components/IconButton.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Exports
 	export let index: number
-	export let course: CourseController
 	export let program: ProgramController
 	export let update: () => void
 
@@ -26,24 +22,26 @@
 
 <!-- Markup -->
 
+{#if $course !== undefined}
+	<div class="program-row">
+		<IconButton 
+			src={trashIcon}
+			description="Unassign from program"
+			on:click={async () => {
+				$course.unassignProgram(program)
+				await $course.save()
+				update()
+			}}
+		/>
 
-<div class="program-row">
-	<IconButton 
-		src={trashIcon}
-		on:click={async () => {
-			course.unassignProgram(program)
-			await course.save()
-			update()
-		}}
-	/>
+		<span> {index} </span>
+		<span> {program.name} </span>
 
-	<span> {index} </span>
-	<span> {program.name} </span>
-
-	<LinkButton href="/app/program/{program.id}/settings">
-		Program Settings
-	</LinkButton>
-</div>
+		<LinkButton href="/app/program/{program.id}/settings">
+			Program Settings
+		</LinkButton>
+	</div>
+{/if}
 
 
 <!-- Styles -->

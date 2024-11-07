@@ -24,23 +24,29 @@ export {
 
 
 abstract class RelationController {
-	uuid: string
+	protected _parent: FieldController | null = null
+	protected _child: FieldController | null = null
 
-	constructor(
+	uuid: string
+	index: number = 0
+
+	protected constructor(
 		public graph: GraphController,
-		protected _parent?: FieldController,
-		protected _child?: FieldController
+		parent: FieldController | null = null,
+		child: FieldController | null = null
 	) {
 		this.uuid = uuid.v4()
+		this.parent = parent
+		this.child = child
 	}
 
 	// --------------------> Getters & Setters
 
-	get parent(): FieldController | undefined {
+	get parent(): FieldController | null {
 		return this._parent
 	}
 
-	set parent(parent: FieldController | undefined) {
+	set parent(parent: FieldController | null) {
 		if (this.parent === parent) return
 
 		// Update parent and child references
@@ -55,11 +61,11 @@ abstract class RelationController {
 		this._parent = parent
 	}
 
-	get child(): FieldController | undefined {
+	get child(): FieldController | null {
 		return this._child
 	}
 
-	set child(child: FieldController | undefined) {
+	set child(child: FieldController | null) {
 		if (this.child === child) return
 
 		// Update parent and child references
@@ -107,24 +113,14 @@ abstract class RelationController {
 	}
 
 	/**
-	 * Check if the given values are all defined
-	 * @param values The values to check
-	 * @returns Whether all values are defined
-	 */
-
-	protected isDefined(...values: (any | undefined)[]): boolean {
-		return values.every(value => value !== undefined)
-	}
-
-	/**
 	 * Uses a depth first search to check if a relation is cyclic
 	 * @param parent The parent field
 	 * @param child The child field
 	 * @returns Whether the relation is cyclic
 	 */
 
-	protected async isCyclic(parent?: FieldController, child?: FieldController): Promise<boolean> {
-		let stack: FieldController[] = [child!]
+	protected async isCyclic(parent: FieldController, child: FieldController): Promise<boolean> {
+		let stack: FieldController[] = [child]
 		while (stack.length > 0) {
 
 			// Pop the current node
@@ -148,8 +144,24 @@ abstract class RelationController {
 	 * @returns Whether the relation is self referential
 	 */
 
-	protected isSelfReferential(parent?: FieldController, child?: FieldController): boolean {
+	protected isSelfReferential(parent: FieldController, child: FieldController): boolean {
 		return parent === child
+	}
+
+	// --------------------> Utility
+
+	/**
+	 * Check if this relation matches a query
+	 * @param query Query to match
+	 * @returns Whether the domain matches the query
+	 */
+
+	async matchesQuery(query: string): Promise<boolean> {
+		const query_lower = query.toLowerCase()
+		const parent = this.parent ? this.parent.trimmed_name.toLowerCase() : ''
+		const child = this.child ? this.child.trimmed_name.toLowerCase() : ''
+
+		return parent.includes(query_lower) || child.includes(query_lower)
 	}
 
 	// --------------------> Abstract
@@ -157,7 +169,12 @@ abstract class RelationController {
 	abstract getParentOptions(): Promise<{ value: FieldController, label: string, validation: ValidationData }[]>
 	abstract getChildOptions(): Promise<{ value: FieldController, label: string, validation: ValidationData }[]>
 
+	abstract assignGraph(graph: GraphController, mirror: boolean): void
+	abstract unassignGraph(): void
+
 	abstract validate(): Promise<ValidationData>
+	abstract save(): void
+	abstract delete(): void
 }
 
 class DomainRelationController extends RelationController {
@@ -214,6 +231,37 @@ class DomainRelationController extends RelationController {
 		return options
 	}
 
+	// --------------------> Actions
+
+	/**
+	 * Create the domain relation
+	 * @param graph The graph to create the relation in
+	 */
+
+	static create(graph: GraphController, parent?: DomainController, child?: DomainController) {
+		const relation = new DomainRelationController(graph, parent, child)
+		graph.assignDomainRelation(relation, false)
+		return relation
+	}
+
+	/**
+	 * Save the domain relation
+	 */
+
+	async save() {
+		await this.parent?.save()
+		await this.child?.save()
+	}
+
+	/**
+	 * Delete the domain relation
+	 */
+
+	delete() {
+		this.parent = null // Unassigning the parent will invalidate the entire relation
+		this.unassignGraph()
+	}
+
 	// --------------------> Validation
 
 	/**
@@ -223,7 +271,7 @@ class DomainRelationController extends RelationController {
 	 * @returns Whether the relation already exists
 	 */
 
-	private async isDuplicate(parent?: DomainController, child?: DomainController): Promise<boolean> {
+	private async isDuplicate(parent: DomainController, child: DomainController): Promise<boolean> {
 		const domain_relations = await this.graph.getDomainRelations()
 		return domain_relations.find(relation =>
 			relation.parent === parent &&
@@ -238,7 +286,7 @@ class DomainRelationController extends RelationController {
 	 * @returns Whether the relation is inconsistent
 	 */
 
-	private async isInconsistent(parent?: DomainController, child?: DomainController): Promise<boolean> {
+	private async isInconsistent(parent: DomainController, child: DomainController): Promise<boolean> {
 		const subject_relations = await this.graph.getSubjectRelations()
 		return subject_relations.find(relation =>
 			relation.parent === parent &&
@@ -253,11 +301,11 @@ class DomainRelationController extends RelationController {
 	 * @returns The validation data
 	 */
 
-	private async validateOption(parent?: DomainController, child?: DomainController): Promise<ValidationData> {
+	private async validateOption(parent: DomainController | null, child: DomainController | null): Promise<ValidationData> {
 		const validation = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.isDefined(parent, child)) {
+		if (parent === null || child === null) {
 			return validation
 		}
 
@@ -293,7 +341,7 @@ class DomainRelationController extends RelationController {
 		const validation = new ValidationData()
 
 		// Check if the parent and child are defined
-		if (!this.isDefined(this.parent, this.child)) {
+		if (this.parent === null || this.child === null) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Domain relation is not fully defined',
@@ -315,6 +363,35 @@ class DomainRelationController extends RelationController {
 		}
 
 		return validation
+	}
+
+	// --------------------> Assignments
+
+	/**
+	 * Assign a graph to this relation
+	 * @param graph The graph to assign
+	 * @param mirror Whether to mirror the relation
+	 */
+
+	assignGraph(graph: GraphController, mirror: boolean = true) {
+		if (this.graph === graph) return
+
+		// Unassign the relation from the current graph
+		this.graph.unassignDomainRelation(this)
+		
+		// Assign the relation to the new graph
+		this.graph = graph
+		if (mirror) {
+			graph.assignDomainRelation(this, false)
+		}
+	}
+
+	/**
+	 * Unassign the graph from this relation
+	 */
+
+	unassignGraph() {
+		this.graph.unassignDomainRelation(this)
 	}
 }
 
@@ -370,6 +447,37 @@ class SubjectRelationController extends RelationController {
 		return options
 	}
 
+	// --------------------> Actions
+
+	/**
+	 * Create the subject relation
+	 * @param graph The graph to create the relation in
+	 */
+
+	static create(graph: GraphController, parent?: SubjectController, child?: SubjectController) {
+		const relation = new SubjectRelationController(graph, parent, child)
+		graph.assignSubjectRelation(relation, false)
+		return relation
+	}
+
+	/**
+	 * Save the subject relation
+	 */
+
+	async save() {
+		await this.parent?.save()
+		await this.child?.save()
+	}
+
+	/**
+	 * Delete the subject relation
+	 */
+
+	delete() {
+		this.parent = null // Unassigning the parent will invalidate the entire relation
+		this.unassignGraph()
+	}
+
 	// --------------------> Validation
 
 	/**
@@ -409,11 +517,11 @@ class SubjectRelationController extends RelationController {
 	 * @returns The validation data
 	 */
 
-	private async validateOption(parent?: SubjectController, child?: SubjectController): Promise<ValidationData> {
+	private async validateOption(parent: SubjectController | null, child: SubjectController | null): Promise<ValidationData> {
 		const validation = new ValidationData()
 
 		// Check if the relation is defined
-		if (!this.isDefined(parent, child)) {
+		if (parent === null || child === null) {
 			return validation
 		}
 
@@ -449,7 +557,7 @@ class SubjectRelationController extends RelationController {
 		const validation = new ValidationData()
 
 		// Check if the parent and child are defined
-		if (!this.isDefined(this.parent, this.child)) {
+		if (this.parent === null || this.child === null) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject relation is not fully defined',
@@ -471,5 +579,34 @@ class SubjectRelationController extends RelationController {
 		}
 
 		return validation
+	}
+
+	// --------------------> Assignments
+
+	/**
+	 * Assign a graph to this relation
+	 * @param graph The graph to assign
+	 * @param mirror Whether to mirror the relation
+	 */
+
+	assignGraph(graph: GraphController, mirror: boolean = true) {
+		if (this.graph === graph) return
+
+		// Unassign the relation from the current graph
+		this.graph.unassignSubjectRelation(this)
+
+		// Assign the relation to the new graph
+		this.graph = graph
+		if (mirror) {
+			graph.assignSubjectRelation(this, false)
+		}
+	}
+
+	/**
+	 * Unassign the graph from this relation
+	 */
+
+	unassignGraph() {
+		this.graph.unassignSubjectRelation(this)
 	}
 }

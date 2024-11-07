@@ -6,41 +6,37 @@
 	import { page } from '$app/stores'
 	import { goto } from '$app/navigation'
 
-	// Exports
-	export let tabs: { 
+	// Types
+	type Tab = {
+		id: string, 
 		title: string,
 		content: ConstructorOfATypedSvelteComponent, 
 		props?: { [key: string]: any }
-	}[] = []
+	}
+
+	// Exports
+	export let tabs: Tab[] = []
 
 	// Functions
-	function setActiveTab(n: number) {
-		active = n
-		query.set('tab', n.toString())
+	function setActiveTab(id: string) {
+		active_id = id
+		active_tab = tabs.find(tab => tab.id === id)
+		query.set('tab', id)
 		goto(`?${query.toString()}`, { replaceState: true })
 	}
 
 	// Variables
 	const query = $page.url.searchParams
-	let active: number | undefined
+	let active_id = query.get('tab')
+	let active_tab = tabs.find(tab => tab.id === active_id)
 
-	// Initialization
 	onMount(() => {
-		if (query.has('tab')) {
-			const tab = Number(query.get('tab'))
-			if (!isNaN(tab) && tab >= 0 && tab < tabs.length) {
-				active = tab
-			}
-		}
-
-		if (active === undefined) {
-			active = 0
-			query.set('tab', '0')
-			goto(`?${query.toString()}`, { replaceState: true })
+		if (!active_tab && tabs.length > 0) {
+			setActiveTab(tabs[0].id)
 		}
 	})
 
-</script>
+</script> 
 
 
 <!-- Markup -->
@@ -48,22 +44,21 @@
 
 <div class="tabular">
 	<div class="tabs">
-		{#each tabs as { title }, n}
+		{#each tabs as { id, title }}
 			<button
 				class="tab"
-				class:active={active === n}
-				on:click={() => setActiveTab(n)}
+				class:active={active_id === id}
+				on:click={() => setActiveTab(id)}
 			> {title} </button>
 		{/each}
 
 		<div class="dynamic-border" />
 	</div>
 
-	{#each tabs as { content, props }, n}
-		{#if active === n}
-			<svelte:component this={content} {...props} />
-		{/if}
-	{/each}
+	{#if active_tab}
+		<svelte:component this={active_tab.content} {...active_tab.props} />
+	{/if}
+	
 </div>
 
 

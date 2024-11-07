@@ -1,6 +1,5 @@
 
-// External dependencies
-import { browser } from "$app/environment"
+const BASE_URL = 'http://localhost:5432'
 
 // Internal dependencies
 import { ValidationData, Severity } from "$scripts/validation"
@@ -20,15 +19,15 @@ import type {
 // Exports
 export { LinkController }
 
-const BASE_URL = 'http://localhost:5432'
-
 
 // --------------------> Controller
 
 
 class LinkController {
 	private _course?: CourseController
+	private _pending_course?: Promise<CourseController>
 	private _graph?: GraphController | null
+	private _pending_graph?: Promise<GraphController | null>
 
 	private constructor(
 		public cache: ControllerCache,
@@ -96,27 +95,39 @@ class LinkController {
 
 	async getCourse(): Promise<CourseController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		// Check if the course is pending
+		if (this._pending_course !== undefined) {
+			return await this._pending_course
 		}
 
-		// Check if the course is already loaded
-		if (this._course) {
+		// Check if the course is known
+		if (this._course !== undefined) {
+			return this._course
+		}
+
+		// Check if the course is cached
+		this._course = this.cache.find(CourseController, this._course_id)
+		if (this._course !== undefined) {
 			return this._course
 		}
 
 		// Call API to fetch the course data
-		const response = await fetch(`/api/link/${this.id}/course`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/course/${this.id}/course GET): ${error}`)
-			})
-
-		// Revive the course
-		const data = await response.json() as SerializedCourse
-		this._course = CourseController.revive(this.cache, data)
-
-		return this._course
+		this._pending_course = this.cache
+			.fetch(`/api/link/${this.id}/course`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedCourse
+					this._course = CourseController.revive(this.cache, data)
+					this._pending_course = undefined
+					return this._course
+				},
+				error => {
+					this._pending_course = undefined
+					throw new Error(`APIError (/api/link/${this.id}/course GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_course
 	}
 
 	/**
@@ -126,29 +137,40 @@ class LinkController {
 	 */
 
 	async getGraph(): Promise<GraphController | null> {
-
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
+		
+		// Check if the graph is pending
+		if (this._pending_graph !== undefined) {
+			return await this._pending_graph
 		}
 
-		// Check if the graph is already loaded
-		if (this._graph) {
+		// Check if the graph is known
+		if (this._graph !== undefined) {
+			return this._graph
+		}
+
+		// Check if the graph is cached
+		this._graph = this._graph_id === null ? null : this.cache.find(GraphController, this._graph_id)
+		if (this._graph !== undefined) {
 			return this._graph
 		}
 
 		// Call API to fetch the graph data
-		const response = await fetch(`/api/link/${this.id}/graph`, { method: 'GET' })
-			.catch(error => {
-				throw new Error(`APIError (/api/link/${this.id}/graph GET): ${error}`)
-			})
-
-		// Revive the graph
-		const data = await response.json() as SerializedGraph
-		if (data === null) return null
-		this._graph = GraphController.revive(this.cache, data)
-
-		return this._graph
+		this._pending_graph = this.cache
+			.fetch(`/api/link/${this.id}/graph`, { method: 'GET' })
+			.then(
+				async response => {
+					const data = await response.json() as SerializedGraph
+					this._graph = data ? GraphController.revive(this.cache, data) : null
+					this._pending_graph = undefined
+					return this._graph
+				},
+				error => {
+					this._pending_graph = undefined
+					throw new Error(`APIError (/api/link/${this.id}/graph GET): ${error}`)
+				}
+			)
+		
+		return await this._pending_graph
 	}
 
 	/**
@@ -158,7 +180,7 @@ class LinkController {
 
 	async getURL(): Promise<string> {
 		if (!this.validate().okay()) {
-			return Promise.reject()
+			return ''
 		}
 
 		// Build the URL
@@ -180,13 +202,8 @@ class LinkController {
 
 	static async create(cache: ControllerCache, course_id: number, graph_id: number | null, name: string): Promise<LinkController> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to create a new link
-		const response = await fetch('/api/link', {
+		const response = await cache.fetch('/api/link', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ name, course: course_id, graph: graph_id })
@@ -274,13 +291,8 @@ class LinkController {
 
 	async save(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Call API to save the link
-		await fetch(`/api/link`, {
+		await this.cache.fetch(`/api/link`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
@@ -299,11 +311,6 @@ class LinkController {
 
 	async delete(): Promise<void> {
 
-		// Guard against SSR
-		if (!browser) {
-			return Promise.reject()
-		}
-
 		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
 		this.cache.find(CourseController, this._course_id)
 			?.unassignLink(this)
@@ -314,7 +321,7 @@ class LinkController {
 		}
 
 		// Call API to delete the link
-		await fetch(`/api/link/${this.id}`, { method: 'DELETE' })
+		await this.cache.fetch(`/api/link/${this.id}`, { method: 'DELETE' })
 			.catch(error => {
 				throw new Error(`APIError (/api/link/${this.id} DELETE): ${error}`)
 			})

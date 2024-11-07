@@ -82,6 +82,7 @@
 
 		background-color: $white
 		border-radius: $border-radius
+		box-shadow: $shadow
 
 		footer
 			display: flex

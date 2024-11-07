@@ -3,7 +3,7 @@
 import { ValidationData } from '$scripts/validation'
 
 // External imports
-import Modal from '$components/layouts/Modal.svelte'
+import Modal from '$components/Modal.svelte'
 
 // Exports
 export { BaseModal }
@@ -36,7 +36,4 @@ abstract class BaseModal {
 			}
 		}
 	}
-
-	abstract validate(): ValidationData
-	abstract submit(): void
 }

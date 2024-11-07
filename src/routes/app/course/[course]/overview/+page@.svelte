@@ -1,37 +1,32 @@
 
 <script lang="ts">
 
-	// External imports
-	import { onMount } from 'svelte'
-	import { writable } from 'svelte/store'
-
-	// Internal imports
+	// Internal dependencies
+	import { cache, course, course_options, graphs, graph_options, links } from './stores'
 	import { ValidationData, Severity } from '$scripts/validation'
 	import { BaseModal } from '$scripts/modals'
-	
+
 	import {
-		CourseController,
 		GraphController,
-		LinkController 
+		LinkController
 	} from '$scripts/controllers'
-	
-	import type { DropdownOption } from '$scripts/types'
 
 	// Components
-	import Layout from '$components/layouts/DefaultLayout.svelte'
-	import Card from '$components/layouts/Card.svelte'
-	import Modal from '$components/layouts/Modal.svelte'
-	import Validation from '$components/Validation.svelte'
-	import Textfield from '$components/forms/Textfield.svelte'
-	import Dropdown from '$components/forms/Dropdown.svelte'
-	import Button from '$components/buttons/Button.svelte'
-	import LinkButton from '$components/buttons/LinkButton.svelte'
-
-	import LinkRow from './LinkRow.svelte'
+	import Layout from '$routes/app/+layout.svelte'
 	import GraphRow from './GraphRow.svelte'
+	import LinkRow from './LinkRow.svelte'
+
+	import LinkButton from '$components/LinkButton.svelte'
+	import Validation from '$components/Validation.svelte'
+	import Textfield from '$components/Textfield.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import Button from '$components/Button.svelte'
+	import Navbar from '$components/Navbar.svelte'
+	import Modal from '$components/Modal.svelte'
+	import Card from '$components/Card.svelte'
 
 	// Assets
-	import plusIcon from '$assets/plus-icon.svg'
+	import plus_icon from '$assets/plus-icon.svg'
 
 	// Helpers
 	class GraphModal extends BaseModal {
@@ -60,7 +55,8 @@
 		}
 
 		async submit() {
-			await GraphController.create(cache, $course.id, this.trimmed_name)
+			if ($cache === undefined || $course === undefined) return
+			await GraphController.create($cache, $course.id, this.trimmed_name)
 			graph_modal.hide()
 			update()
 		}
@@ -93,37 +89,19 @@
 		}
 
 		async submit() {
-			await LinkController.create(cache, $course.id, this.graph?.id || null, this.trimmed_name)
+			if ($cache === undefined || $course === undefined) return
+			await LinkController.create($cache, $course.id, this.graph?.id || null, this.trimmed_name)
 			link_modal.hide()
 			update()
 		}
 	}
 
-	// Exports
-	export let data
-
-	// Stores
-	const cache = data.cache
-	
-	const course = writable(data.course)
-	const course_options = writable<DropdownOption<CourseController>[] | undefined>(undefined)
-	const graphs = writable(data.graphs)
-	const graph_options = writable<DropdownOption<GraphController>[] | undefined>(undefined)
-	const links = writable(data.links)
-
-	onMount(() => {
-		course.subscribe(async () => $graphs = await $course.getGraphs())
-		course.subscribe(async () => $links = await $course.getLinks())
-		course.subscribe(async () => $course_options = await $course.getCourseOptions())
-		course.subscribe(async () => $graph_options = await $course.getGraphOptions())
-	})
+	// Update
+	const update = () => $course = $course
 
 	// Modals
 	const graph_modal = new GraphModal()
 	const link_modal = new LinkModal()
-
-	// Update
-	const update = () => $course = $course
 
 </script>
 
@@ -131,33 +109,31 @@
 <!-- Markup -->
 
 
-<Layout
-	path={[
-		{
-			name: 'Dashboard',
-			href: '/app/dashboard'
-		},
-		{
-			name: `${$course.code} ${$course.name}`,
-			href: `/app/course/${$course.id}/overview`
-		},
-		{
-			name: 'Overview',
-			href: `/app/course/${$course.id}/overview`
-		}
-	]}
->
-	<svelte:fragment slot="header">
+{#if $course !== undefined}
+	<Layout>
+	<svelte:fragment slot="title">
+		<Navbar path={[
+			{	name: 'Dashboard',
+				href: '/app/dashboard'
+			},
+			{	name: `${$course.code} ${$course.name}`,
+				href: `/app/course/${$course.id}/overview`
+			},
+			{	name: 'Overview',
+				href: `/app/course/${$course.id}/overview`
+			}
+		]} />
+
 		Here you can view the graphs and links associated to this course, and edit their properties.
 	</svelte:fragment>
 
 	<svelte:fragment slot="toolbar">
 		<Button on:click={() => graph_modal.show()}>
-			<img src={plusIcon} alt="" /> New Graph
+			<img src={plus_icon} alt="" /> New Graph
 		</Button>
 
 		<Button on:click={() => link_modal.show()}>
-			<img src={plusIcon} alt="" /> New Link
+			<img src={plus_icon} alt="" /> New Link
 		</Button>
 
 		<div class="flex-spacer" />
@@ -175,10 +151,7 @@
 				<p class="grayed"> There's nothing here </p>
 			{:else}
 				{#each $graphs as graph}
-					<GraphRow {graph} {update}
-						course={$course}
-						course_options={$course_options}
-					/>
+					<GraphRow {graph} {update} />
 				{/each}
 			{/if}
 		</svelte:fragment>
@@ -194,14 +167,13 @@
 				<p class="grayed"> There's nothing here </p>
 			{:else}
 				{#each $links as link}
-					<LinkRow {link} {update} 
-						graph_options={$graph_options}
-					/>
+					<LinkRow {link} {update} />
 				{/each}
 			{/if}
 		</svelte:fragment>
 	</Card>
-</Layout>
+	</Layout>
+{/if}
 
 <Modal bind:this={graph_modal.modal}>
 	<h3 slot="header"> Create Graph </h3>
