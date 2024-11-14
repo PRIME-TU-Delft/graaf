@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { course, course_options } from './stores'
+	import { course } from './stores'
 	import { FormModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
@@ -83,7 +83,7 @@
 		<Dropdown
 			id="course"
 			placeholder="Target Course"
-			options={$course_options}
+			options={$course.copy_options}
 			bind:value={copy_modal.course}
 		/>
 

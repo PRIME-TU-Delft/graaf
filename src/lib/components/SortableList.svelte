@@ -1,15 +1,13 @@
 
 <script lang="ts">
 
+	const ANIMATION_DURATION = 250
+
+	// External dependencies
+	import { createEventDispatcher } from 'svelte'
 	import { flip } from 'svelte/animate'
 
-	export let list: any[]
-
-	let origin: number | null = null
-	let animating: boolean = false
-
-	const ANIMATION_DURATION = 100
-
+	// Functions
 	function getDataset(node: any) {
 		if (!node.dataset.index) {
 			return getDataset(node.parentElement)
@@ -28,8 +26,8 @@
 
 	function onDragOver(event: DragEvent) {
 		const data = getDataset(event.target)
-		if (!animating && data.index !== origin && origin !== null) {
-			rearrange(origin, data.index)
+		if (!animating.includes(data.id) && data.index !== origin && origin !== null) {
+			rearrange(data.id, origin, data.index)
 			origin = data.index
 		} 
 	}
@@ -38,17 +36,27 @@
 		origin = null
 	}
 
-	function rearrange(source: number, target: number) {
+	function rearrange(dropzone: number, from: number, to: number) {
 		const new_list = [...list]
-		const moved = new_list.splice(source, 1)
-		new_list.splice(target, 0, moved[0])
-		animating = true
+		const moved = new_list.splice(from, 1)
+		new_list.splice(to, 0, moved[0])
 		list = new_list
 
+		animating.push(dropzone)
+		dispatch('rearrange', { from, to })
+
 		setTimeout(() => {
-			animating = false
+			animating = animating.filter(id => id !== dropzone)
 		}, ANIMATION_DURATION)
 	}
+
+	// Variables
+	export let list: any[]
+
+	const dispatch = createEventDispatcher()
+	
+	let origin: number | null = null // Index of the element being dragged
+	let animating: number[] = []	 // List of elements currently being animated
 
 </script>
 
@@ -109,7 +117,7 @@
 				width: $total-icon-size
 				height: $total-icon-size
 
-				cursor: grab
+				cursor: ns-resize
 				user-select: none
 
 </style>

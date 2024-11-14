@@ -9,22 +9,28 @@
 	import * as settings from '$scripts/settings'
 	import { programs, courses } from './stores'
 
-	import { ProgramController, CourseController } from '$scripts/controllers'
 	import { Validation, Severity } from '$scripts/validation'
 	import { FormModal } from '$scripts/modals'
 
+	import {
+		ControllerCache,
+		ProgramController,
+		CourseController,
+		UserController
+	} from '$scripts/controllers'
+
 	// Components
-	import Layout from '$routes/app/+layout.svelte'
+	import CoursesCard from './CoursesCard.svelte'
+	import ProgramCard from './ProgramCard.svelte'
 
 	import Textfield from '$components/Textfield.svelte'
-	import Feedback from '$components/Feedback.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
+	import Feedback from '$components/Feedback.svelte'
+	import Loading from '$components/Loading.svelte'
+	import Layout from '$components/Layout.svelte'
 	import Navbar from '$components/Navbar.svelte'
 	import Button from '$components/Button.svelte'
 	import Modal from '$components/Modal.svelte'
-
-	import CoursesCard from './CoursesCard.svelte'
-	import ProgramCard from './ProgramCard.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
@@ -164,9 +170,31 @@
 		}
 	}
 
-	// Exports
+	// Functions
+	async function revive() {
+		
+		// Await all promises
+		const [
+			awaited_courses,
+			awaited_programs,
+			awaited_admins
+		] = await Promise.all([
+			data.courses,
+			data.programs,
+			data.admins
+		])
+
+		// Revive controllers into stores
+		programs.set(awaited_programs.map(program => ProgramController.revive(cache, program)))
+		courses.set(awaited_courses.map(course => CourseController.revive(cache, course)))
+		
+		// Revive controllers into cache
+		awaited_admins.forEach(admin => UserController.revive(cache, admin))
+	}
+
+	// Initialization
 	export let data: PageData
-	const cache = data.cache
+	const cache = new ControllerCache()
 
 	// Modals
 	let program_modal = new ProgramModal()
@@ -222,31 +250,35 @@
 	</form>
 </Modal>
 
-<Layout>
-	<svelte:fragment slot="title">
-		<Navbar path={[{ name: 'Dashboard', href: '/app/dashboard' }]} />
-		Welcome to your Dashboard! Here you can find all Programs and associated Courses. Click on any of them to edit or view
-		more information. You can also create a sandbox environment to experiment with the Graph Editor. Can't find a specific
-		Program or Course? Maybe you don't have access to it. Contact one of its Admins to get access.
-	</svelte:fragment>
+{#await revive()}
+	<Loading />
+{:then} 
+	<Layout>
+		<svelte:fragment slot="title">
+			<Navbar path={[{ name: 'Dashboard', href: '/app/dashboard' }]} />
+			Welcome to your Dashboard! Here you can find all Programs and associated Courses. Click on any of them to edit or view
+			more information. You can also create a sandbox environment to experiment with the Graph Editor. Can't find a specific
+			Program or Course? Maybe you don't have access to it. Contact one of its Admins to get access.
+		</svelte:fragment>
 
-	<svelte:fragment slot="toolbar">
-		<Button on:click={() => program_modal.show()}>
-			<img src={plus_icon} alt="" /> New Program
-		</Button>
+		<svelte:fragment slot="toolbar">
+			<Button on:click={() => program_modal.show()}>
+				<img src={plus_icon} alt="" /> New Program
+			</Button>
 
-		<Button on:click={() => course_modal.show()}>
-			<img src={plus_icon} alt="" /> New Course
-		</Button>
+			<Button on:click={() => course_modal.show()}>
+				<img src={plus_icon} alt="" /> New Course
+			</Button>
 
-		<div class="flex-spacer" />
+			<div class="flex-spacer" />
 
-		<Searchbar placeholder="Search courses" bind:value={query} />
-	</svelte:fragment>
+			<Searchbar placeholder="Search courses" bind:value={query} />
+		</svelte:fragment>
 
-	<CoursesCard {query} />
+		<CoursesCard {query} />
 
-	{#each $programs as program}
-		<ProgramCard {program} {query} />
-	{/each}
-</Layout>
+		{#each $programs as program}
+			<ProgramCard {program} {query} />
+		{/each}
+	</Layout>
+{/await}

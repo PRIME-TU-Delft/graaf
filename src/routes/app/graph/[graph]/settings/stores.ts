@@ -1,0 +1,11 @@
+
+// External dependencies
+import { writable } from 'svelte/store'
+
+// Internal dependencies
+import type { 
+	GraphController
+} from '$scripts/controllers'
+
+// Exports
+export const graph = writable<GraphController>()

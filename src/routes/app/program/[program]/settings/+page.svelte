@@ -1,0 +1,89 @@
+
+
+<script lang="ts">
+
+	// External dependencies
+	import type { PageData } from './$types'
+
+	// Internal dependencies
+	import { program } from './stores'
+
+	import {
+		ControllerCache,
+		ProgramController,
+		CourseController,
+		UserController
+	} from '$scripts/controllers'
+
+	// Components
+	import GeneralCard from './GeneralCard.svelte'
+	import CoursesCard from './CoursesCard.svelte'
+	import CoordinatorCard from './CoordinatorCard.svelte'
+
+	import Layout from '$components/Layout.svelte'
+	import Navbar from '$components/Navbar.svelte'
+	import Loading from '$components/Loading.svelte'
+
+	// Functions
+	async function revive() {
+
+		// Await all promises
+		const [
+			awaited_program, 
+			awaited_course, 
+			awaited_user
+		] = await Promise.all([
+			data.program, 
+			data.courses, 
+			data.users
+		])
+
+		// Revive controllers into stores
+		program.set(ProgramController.revive(cache, awaited_program))
+
+		// Revive controllers into cache
+		awaited_course.forEach(course => CourseController.revive(cache, course))
+		awaited_user.forEach(user => UserController.revive(cache, user))
+	}
+
+	// Initialization
+	export let data: PageData
+	const cache = new ControllerCache()
+
+</script>
+
+
+<!-- Markup -->
+
+
+<svelte:window on:beforeunload|preventDefault={async () => await $program.save()} />
+
+{#await revive()}
+	<Loading />
+{:then}
+	<Layout>
+		<svelte:fragment slot="title">
+			<Navbar path={[
+				{
+					name: 'Dashboard',
+					href: '/app/dashboard'
+				},
+				{
+					name: $program.name,
+					href: `/app/program/${$program.id}/settings`
+				},
+				{
+					name: 'Program settings',
+					href: `/app/course/${$program.id}/settings`
+				}
+			]} />
+
+			Here you can change your program settings, like its courses and coordinators.
+		</svelte:fragment>
+
+		<GeneralCard />
+		<CoursesCard />
+		<CoordinatorCard />
+
+	</Layout>
+{/await}

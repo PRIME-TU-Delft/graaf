@@ -2,10 +2,10 @@
 // External dependencies
 import type { PageServerLoad } from './$types'
 
-import { 
+import {
 	CourseHelper,
-	ProgramHelper, 
-	UserHelper 
+	ProgramHelper,
+	UserHelper
 } from '$scripts/helpers'
 
 // Load
@@ -13,11 +13,14 @@ export const load: PageServerLoad = async ({ params }) => {
 	const program_id = Number(params.program)
 	if (isNaN(program_id))
 		return Promise.reject('Invalid program ID')
-	
-	// Get data from the database
-	const program = await ProgramHelper.getById(program_id, 'courses', 'editors', 'admins')
-	const courses = await CourseHelper.getAll() // For adding courses
-	const users = await UserHelper.getAll() // For adding users
+
+	// Start data streams
+	const program = ProgramHelper.getById(program_id, 'courses', 'editors', 'admins')
+		.catch(error => { throw new Error(error) })
+	const courses = CourseHelper.getAll()
+		.catch(error => { throw new Error(error) })
+	const users = UserHelper.getAll()
+		.catch(error => { throw new Error(error) })
 
 	return { program, courses, users }
 }

@@ -1,7 +1,7 @@
 
-<div class="list-row">
+<span class="list-row">
 	<slot />
-</div>
+</span>
 
 <style lang="sass">
 
@@ -9,13 +9,12 @@
 	@use "$styles/palette.sass" as *
 
 	.list-row
-		dsplay: flex
 		align-content: center
 		justify-content: center
 
+		box-sizing: content-box
 		height: $list-row-height
 		padding: $input-thin-padding $input-thick-padding
-		box-sizing: content-box
 
 		color: $dark-gray
 		border-bottom: 1px solid $gray
@@ -23,12 +22,12 @@
 		&:hover
 			background: $light-gray
 
-		&:first-child
+		&:first-of-type
 			margin-top: -$input-thin-padding
 			border-top-left-radius: $border-radius
 			border-top-right-radius: $border-radius
 
-		&:last-child
+		&:last-of-type
 			border-bottom: none
 			margin-bottom: -$input-thin-padding
 			border-bottom-left-radius: $border-radius

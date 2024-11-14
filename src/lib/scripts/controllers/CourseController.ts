@@ -119,6 +119,16 @@ class CourseController {
 		return result
 	}
 
+	// Copy properties
+	get copy_options(): DropdownOption<CourseController>[] {
+		const courses = this.cache.all(CourseController)
+		return courses.map(course => ({
+			value: course,
+			label: course.name,
+			validation: Validation.success()
+		}))
+	}
+
 	// Graph properties
 	get graph_ids(): number[] {
 		if (this._graph_ids === undefined)

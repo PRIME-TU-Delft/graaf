@@ -11,15 +11,19 @@ export const load: PageServerLoad = async ({ params }) => {
 	const course_id = Number(params.course)
 	if (isNaN(course_id))
 		return Promise.reject('Invalid course ID')
-	
-	// Get data from the database
-	const course = await CourseHelper.getById(course_id, 'graphs', 'links')
-	const courses = await asyncConcat(course, CourseHelper.getAll())
-	
-	const graphs = await CourseHelper.getGraphs(course_id, 'links', 'lectures')
-	const links = await CourseHelper.getLinks(course_id, 'course', 'graph')
-	const lectures = await asyncFlatmap(graphs, graph => GraphHelper.getLectures(graph.id))
 
+	// Get data from the database
+	const graphs = await CourseHelper.getGraphs(course_id, 'links', 'lectures')
+
+	// Start data streams
+	const course = CourseHelper.getById(course_id, 'graphs', 'links')
+		.catch(error => { throw new Error(error) })
+	const courses = asyncConcat(course, CourseHelper.getAll())
+		.catch(error => { throw new Error(error) })
+	const links = CourseHelper.getLinks(course_id, 'course', 'graph')
+		.catch(error => { throw new Error(error) })
+	const lectures = asyncFlatmap(graphs, graph => GraphHelper.getLectures(graph.id))
+		.catch(error => { throw new Error(error) })
 
 	return { course, courses, graphs, links, lectures }
 }

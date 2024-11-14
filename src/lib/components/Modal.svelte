@@ -38,7 +38,6 @@
 
 <!-- Markup -->
 
-
 {#if visible}
 	<div class="background" />
 	<dialog class="modal" bind:this={modal} >
@@ -79,15 +78,15 @@
 		background-color: black
 
 	.modal
-		display: flex
-		flex-flow: column nowrap
-		gap: 1rem
-
 		position: fixed
 		translate: -50% -50%
 		z-index: 1000
 		top: 50%
 		left: 50%
+
+		display: flex
+		flex-flow: column nowrap
+		gap: 1rem
 
 		width: 100%
 		max-width: $small-column
