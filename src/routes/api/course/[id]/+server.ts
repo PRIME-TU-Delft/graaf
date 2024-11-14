@@ -3,47 +3,22 @@
 import { CourseHelper } from '$scripts/helpers'
 
 // Exports
-export { GET, DELETE }
+export { DELETE }
 
 
 // --------------------> API Endpoints
 
 
-/**
- * API endpoint for fetching a Course from the database.
- * @returns `SerializedCourse`
- */
-
-async function GET({ params }) {
-
-	// Retrieve course ID
-	const id = Number(params.id)
-	if (!id || isNaN(id)) {
-		return new Response('Missing ID', { status: 400 })
-	}
-
-	// Get the course
-	return await CourseHelper.getById(id)
-		.then(
-			data => new Response(JSON.stringify(data), { status: 200 }),
-			error => new Response(error, { status: 400 })
-		)
-}
-
-/**
- * API endpoint for deleting a Course from the database.
- */
-
 async function DELETE({ params }) {
 
 	// Retrieve course ID
-	const id = Number(params.id)
-	if (!id || isNaN(id)) {
-		return new Response('Missing ID', { status: 400 })
+	const course_id = Number(params.id)
+	if (!course_id || isNaN(course_id)) {
+		return new Response('Missing course ID', { status: 400 })
 	}
 
 	// Delete the course
-	return await CourseHelper.remove(id)
+	return await CourseHelper.remove(course_id)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })

@@ -1,30 +1,49 @@
 
+export {
+	validSerializedProgram,
+	validSerializedCourse,
+	validSerializedGraph,
+	validSerializedDomain,
+	validSerializedSubject,
+	validSerializedLecture,
+	validSerializedLink,
+	validSerializedUser
+} from './serialized'
+
+export { 
+	validUserRole,
+	validPermission
+} from './permissions'
+
+export { validDomainStyle } from './styles'
+
 export type {
-	SerializedUser,
 	SerializedProgram,
 	SerializedCourse,
 	SerializedGraph,
 	SerializedDomain,
 	SerializedSubject,
 	SerializedLecture,
-	SerializedLink
-} from './Serialized'
-
-export {
-	instanceOfSerializedUser,
-	instanceOfSerializedProgram,
-	instanceOfSerializedCourse,
-	instanceOfSerializedGraph,
-	instanceOfSerializedDomain,
-	instanceOfSerializedSubject,
-	instanceOfSerializedLecture,
-	instanceOfSerializedLink
-} from './Serialized'
+	SerializedLink,
+	SerializedUser
+} from './serialized'
 
 export type {
-	DropdownOption,
-} from './DropdownOption'
+	ProgramRelation,
+	CourseRelation,
+	GraphRelation,
+	DomainRelation,
+	SubjectRelation,
+	LectureRelation,
+	LinkRelation,
+	UserRelation
+} from './relations'
 
-export type {
-	EditorView,
-} from './GraphEditor'
+export type { 
+	UserRole,
+	Permission
+} from './permissions'
+
+export type { DropdownOption } from './dropdown'
+export type { DomainStyle } from './styles'
+export type { EditorView } from './editor'

@@ -4,7 +4,7 @@ import prisma from '$lib/server/prisma'
 import type { Program as PrismaProgram } from '@prisma/client'
 
 // Internal dependencies
-import { array_delta } from './delta'
+import { prismaUpdateArray } from '$scripts/utility'
 
 import {
 	CourseHelper,
@@ -12,79 +12,97 @@ import {
 } from '$scripts/helpers'
 
 import type {
+	ProgramRelation,
+	CourseRelation,
+	UserRelation
+} from '$scripts/types'
+
+import type {
 	SerializedProgram,
 	SerializedCourse,
 	SerializedUser
 } from '$scripts/types'
 
-// Exports
-export {
-	create,		// api/program
-	remove,		// api/program/[id]
-	update,		// api/program
-	reduce,
-	getAll,		// api/program
-	getById,	// api/program/[id]
-	getCourses,	// api/program/[id]/courses
-	getAdmins,	// api/program/[id]/admins
-	getEditors	// api/program/[id]/editors
-}
-
 
 // --------------------> Helper Functions
 
 
-/**
- * Creates a new Program in the database
- * @param name Program name
- * @returns Newly created Serialized Program
- */
-
-async function create(name: string): Promise<SerializedProgram> {
-	try {
-		var program = await prisma.program.create({
-			data: {
-				name
-			}}
-		)
-	} catch (error) {
-		return Promise.reject(error)
+export async function reduce(program: PrismaProgram, ...relations: ProgramRelation[]): Promise<SerializedProgram> {
+	const serialized: SerializedProgram = {
+		id: program.id,
+		name: program.name
 	}
 
-	return await reduce(program)
-}
-
-/**
- * Removes Program from the database
- * @param program_id Target Program ID
- */
-
-async function remove(program_id: number): Promise<void> {
+	// Fetch relations from database
 	try {
-		await prisma.program.delete({
+		var data = await prisma.program.findUniqueOrThrow({
 			where: {
-				id: program_id
+				id: program.id
+			},
+			select: {
+				courses: {
+					select: {
+						id: true
+					}
+				},
+				editors: {
+					select: {
+						id: true
+					}
+				},
+				admins: {
+					select: {
+						id: true
+					}
+				}
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
+
+	// Add relations if requested
+	if (relations.includes('courses'))
+		serialized.course_ids = data.courses
+			.map(course => course.id)
+	if (relations.includes('editors'))
+		serialized.editor_ids = data.editors
+			.map(editor => editor.id)
+	if (relations.includes('admins'))
+		serialized.admin_ids = data.admins
+			.map(admin => admin.id)
+
+	return serialized
 }
 
-/**
- * Updates a Program in the database
- * @param data Serialized Program data
- */
+export async function create(name: string): Promise<SerializedProgram> {
+	try {
+		var program = await prisma.program.create({
+			data: {
+				name
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
-async function update(data: SerializedProgram): Promise<void> {
+	return await reduce(program, 'courses', 'editors', 'admins')
+}
 
-	// Get current data
-	const courses = await getCourses(data.id)
+export async function update(data: SerializedProgram) {
 
-	// Get data delta
-	const course_delta = array_delta(courses, data.courses)
+	// Get deltas
+	const [courses, editors, admins] = await Promise.all([
+		getCourses(data.id),
+		getEditors(data.id),
+		getAdmins(data.id)
+	])
 
-	// Update
+	const course_delta = prismaUpdateArray<number, SerializedCourse>(courses, data.course_ids)
+	const editor_delta = prismaUpdateArray<string, SerializedUser>(editors, data.editor_ids)
+	const admin_delta = prismaUpdateArray<string, SerializedUser>(admins, data.admin_ids)
+
+	// Update database
 	try {
 		await prisma.program.update({
 			where: {
@@ -92,7 +110,9 @@ async function update(data: SerializedProgram): Promise<void> {
 			},
 			data: {
 				name: data.name,
-				courses: course_delta
+				courses: course_delta,
+				editors: editor_delta,
+				admins: admin_delta
 			}
 		})
 	} catch (error) {
@@ -100,165 +120,97 @@ async function update(data: SerializedProgram): Promise<void> {
 	}
 }
 
-/**
- * Reduces a Program to a SerializedProgram
- * @param program Program object
- * @returns Serialized Program
- */
-
-async function reduce(program: PrismaProgram): Promise<SerializedProgram> {
-
-	// Get additional data
+export async function remove(id: number) {
 	try {
-		var data = await prisma.program.findUniqueOrThrow({
+		await prisma.program.delete({
 			where: {
-				id: program.id
-			},
-			include: {
-				courses: {
-					select: {
-						id: true
-					}
-				},
-				users: {
-					select: {
-						userId: true,
-						role: true
-					}
-				},
+				id
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
-
-	// Parse data
-	const courses = data.courses
-		.map(course => course.id)
-
-	const admins = data.users
-		.filter(user => user.role === 'ADMIN')
-		.map(user => Number(user.userId))
-
-	const editors = data.users
-		.filter(user => user.role === 'EDITOR')
-		.map(user => Number(user.userId))
-
-	// Return reduced data
-	return {
-		id: data.id,
-		name: data.name,
-		courses,
-		admins,
-		editors
-	}
 }
 
-/**
- * Retrieves all Programs from the database
- * @returns Array of Serialized Programs
- */
-
-async function getAll(): Promise<SerializedProgram[]> {
+export async function getAll(...relations: ProgramRelation[]): Promise<SerializedProgram[]> {
 	try {
-		var courses = await prisma.program.findMany()
+		var programs = await prisma.program.findMany()
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(courses.map(reduce))
+	return await Promise.all(
+		programs.map(async program => await reduce(program, ...relations))
+	)
 }
 
-/**
- * Retrieves program by ID
- * @param program_id Target Program ID
- * @returns Serialized Program
- */
-
-async function getById(program_id: number): Promise<SerializedProgram> {
+export async function getById(id: number, ...relations: ProgramRelation[]): Promise<SerializedProgram> {
 	try {
 		var program = await prisma.program.findUniqueOrThrow({
 			where: {
-				id: program_id
+				id
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await reduce(program)
+	return await reduce(program, ...relations)
 }
 
-/**
- * Retrieves Program courses
- * @param program_id Target Program ID
- * @returns Array of Serialized Courses
- */
-
-async function getCourses(program_id: number): Promise<SerializedCourse[]> {
+export async function getCourses(id: number, ...relations: CourseRelation[]): Promise<SerializedCourse[]> {
 	try {
-		var data = await prisma.course.findMany({
+		var data = await prisma.program.findUniqueOrThrow({
 			where: {
-				programs: {
-					some: {
-						id: program_id
-					}
-				}
+				id
+			},
+			select: {
+				courses: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(CourseHelper.reduce))
+	return await Promise.all(
+		data.courses.map(async course => await CourseHelper.reduce(course, ...relations))
+	)
 }
 
-/**
- * Retrieves Program admin Users
- * @param program_id Target Program ID
- * @returns Array of Serialized Users
- */
-
-async function getAdmins(program_id: number): Promise<SerializedUser[]> {
+export async function getEditors(id: number, ...relations: UserRelation[]): Promise<SerializedUser[]> {
 	try {
-		var data = await prisma.user.findMany({
+		var data = await prisma.program.findUniqueOrThrow({
 			where: {
-				programs: {
-					some: {
-						programId: program_id,
-						role: 'ADMIN'
-					}
-				}
+				id
+			},
+			select: {
+				editors: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(UserHelper.reduce))
+	return await Promise.all(
+		data.editors.map(async editor => await UserHelper.reduce(editor, ...relations))
+	)
 }
 
-/**
- * Retrieves Program editor Users
- * @param program_id Target Program ID
- * @returns Array of Serialized Users
- */
-
-async function getEditors(program_id: number): Promise<SerializedUser[]> {
+export async function getAdmins(id: number, ...relations: UserRelation[]): Promise<SerializedUser[]> {
 	try {
-		var data = await prisma.user.findMany({
+		var data = await prisma.program.findUniqueOrThrow({
 			where: {
-				programs: {
-					some: {
-						programId: program_id,
-						role: 'EDITOR'
-					}
-				}
+				id
+			},
+			select: {
+				admins: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(UserHelper.reduce))
+	return await Promise.all(
+		data.admins.map(async admin => await UserHelper.reduce(admin, ...relations))
+	)
 }

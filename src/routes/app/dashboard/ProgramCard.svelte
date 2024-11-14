@@ -1,18 +1,11 @@
 
 <script lang="ts">
 
-	// External dependencies
-	import { onMount } from 'svelte'
-	import { writable } from 'svelte/store'
-
 	// Internal dependencies
-	import type {
-		ProgramController,
-		CourseController,
-		UserController
-	} from '$scripts/controllers'
+	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
+	import Grid from './Grid.svelte'
 	import Card from '$components/Card.svelte'
 	import Modal from '$components/Modal.svelte'
 	import IconButton from '$components/IconButton.svelte'
@@ -25,23 +18,31 @@
 	export let program: ProgramController
 	export let query: string
 
+	$: filtered_courses = program.courses.filter(course => course.matchesQuery(query))
+
 	// Modals
 	let coordinator_modal: Modal
-
-	// Stores
-	let courses = writable<CourseController[] | undefined>()
-	let admins = writable<UserController[] | undefined>()
-
-	onMount(async () => {
-		courses.set(await program.getCourses())
-		// admins.set(await program.getAdmins()) // TODO: Implement this
-	})
 
 </script>
 
 
 <!-- Markup -->
 
+
+<Modal bind:this={coordinator_modal}>
+	<h3 slot="header"> Program Admins </h3>
+	<p> These are the admins of the {program.name} program. You can contact them via email to request access to a course. </p>
+
+	{#if program.admins.length === 0}
+		<p class="grayed"> There's nothing here </p>
+	{:else}
+		<ul>
+			{#each program.admins as admin}
+				<li> {admin.first_name} {admin.last_name} <span class="email"> {admin.email} </span></li>
+			{/each}
+		</ul>
+	{/if}
+</Modal>
 
 <Card>
 	<svelte:fragment slot="header">
@@ -51,7 +52,7 @@
 
 		<IconButton
 			src={people_icon}
-			description="Program Coordinators"
+			description="Program Admins"
 			on:click={coordinator_modal?.show}
 			scale
 		/>
@@ -59,46 +60,13 @@
 		<LinkButton href="./program/{program.id}/settings"> Program settings </LinkButton>
 	</svelte:fragment>
 
-	<svelte:fragment slot="body">
-		{#if $courses === undefined}
-			<span class="grayed"> Loading... </span>
-		{:else if !$courses.some(course => course.matchesQuery(query))}
-			<span class="grayed"> There's nothing here </span>
-		{:else}
-			<div class="grid">
-				{#each $courses as course}
-					{#if course.matchesQuery(query)}
-						<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
-					{/if}
-				{/each}
-			</div>
-		{/if}
-	</svelte:fragment>
-</Card>
-
-<Modal bind:this={coordinator_modal}>
-	<h3 slot="header"> Program Coordinators </h3>
-	<p> These are the coordinators of the {program.name} program. You can contact them via email to request access to a course. </p>
-
-	{#if $admins === undefined}
-		<p class="grayed"> Loading... </p>
-	{:else if $admins.length === 0}
+	{#if filtered_courses.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
-		<ul>
-			{#each $admins as admin}
-				<li> {admin.first_name} {admin.last_name} </li>
+		<Grid>
+			{#each filtered_courses as course}
+				<a href="./course/{course.id}/overview"> {course.code} {course.name} </a>
 			{/each}
-		</ul>
+		</Grid>	
 	{/if}
-</Modal>
-
-
-<!-- Styles -->
-
-
-<style lang="sass">
-
-	@import './style.sass'
-
-</style>
+</Card>

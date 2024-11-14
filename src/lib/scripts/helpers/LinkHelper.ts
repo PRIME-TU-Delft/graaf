@@ -1,10 +1,10 @@
 
 // External dependencies
 import prisma from '$lib/server/prisma'
-import type { GraphLink as PrismaLink } from '@prisma/client'
+import type { Link as PrismaLink } from '@prisma/client'
 
 // Internal dependencies
-import { required_field_delta, optional_field_delta } from './delta'
+import { prismaUpdateOptionalField, prismaUpdateRequiredField } from '$scripts/utility'
 
 import {
 	CourseHelper,
@@ -12,81 +12,64 @@ import {
 } from '$scripts/helpers'
 
 import type {
-	SerializedLink,
-	SerializedCourse,
-	SerializedGraph
+	CourseRelation,
+	GraphRelation,
+	LinkRelation
 } from '$scripts/types'
 
-// Exports
-export {
-	create,	   // api/link			   POST
-	update,	   // api/link			   PUT
-	remove,	   // api/link/[id]		   DELETE
-	reduce,
-	getAll,	   // api/link			   GET
-	getById,   // api/link/[id]		   GET
-	getCourse, // api/link/[id]/course GET
-	getGraph   // api/link/[id]/graph  GET
-}
+import type {
+	SerializedCourse,
+	SerializedGraph,
+	SerializedLink
+} from '$scripts/types'
 
 
 // --------------------> Helper Functions
 
 
-/**
- * Creates a Link in the database
- * @param course_id Course ID link belongs to
- * @param graph_id Graph ID belonging to link
- * @param name Link name
- * @returns Serialized new Link
- */
+export async function reduce(link: PrismaLink, ...relations: LinkRelation[]): Promise<SerializedLink> {
+	const serialized: SerializedLink = {
+		id: link.id,
+		name: link.name
+	}
 
-async function create(course_id: number, graph_id: number | null, name: string): Promise<SerializedLink> {
+	// Add relations if requested
+	if (relations.includes('course'))
+		serialized.course_id = link.courseId
+	if (relations.includes('graph'))
+		serialized.graph_id = link.graphId
 
-	// Get graph data
-	const graph_data = graph_id ? { id: graph_id } : undefined
+	return serialized
+}
 
+export async function create(course_id: number): Promise<SerializedLink> {
 	try {
-		var link = await prisma.graphLink.create({
+		var link = await prisma.link.create({
 			data: {
-				name,
-				course: {
-					connect: {
-						id: course_id
-					}
-				},
-				graph: {
-					connect: graph_data
-				}
+				courseId: course_id
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await reduce(link)
+	return await reduce(link, 'course', 'graph')
 }
 
-/**
- * Updates a Link in the database
- * @param data New Link data
- */
+export async function update(data: SerializedLink) {
 
-async function update(data: SerializedLink): Promise<void> {
-
-	// Get current data
+	// Get deltas
 	const [course, graph] = await Promise.all([
 		getCourse(data.id),
 		getGraph(data.id)
 	])
 
-	// Get data deltas
-	const course_delta = required_field_delta(course, data.course)
-	const graph_delta = optional_field_delta(graph, data.graph)
-
-	// Update
+	const course_delta = prismaUpdateRequiredField<number, SerializedCourse>(course, data.course_id)
+	const graph_delta = prismaUpdateOptionalField<number, SerializedGraph>(graph, data.graph_id)
+	
+	// Update database
 	try {
-		await prisma.graphLink.update({
+		await prisma.link.update({
 			where: {
 				id: data.id
 			},
@@ -101,16 +84,11 @@ async function update(data: SerializedLink): Promise<void> {
 	}
 }
 
-/**
- * Removes a Link from the database
- * @param link_id Target Link ID
- */
-
-async function remove(link_id: number): Promise<void> {
+export async function remove(id: number) {
 	try {
-		await prisma.graphLink.delete({
+		await prisma.link.delete({
 			where: {
-				id: link_id
+				id
 			}
 		})
 	} catch (error) {
@@ -118,91 +96,54 @@ async function remove(link_id: number): Promise<void> {
 	}
 }
 
-/**
- * Reduces a Link to a SerializedLink
- * @param link Link object
- * @returns Serialized Link
- */
-
-async function reduce(link: PrismaLink): Promise<SerializedLink> {
-	return {
-		id: link.id,
-		name: link.name,
-		graph: link.graphId,
-		course: link.courseId
-	}
-}
-
-/**
- * Gets all Links from the database
- * @returns Array of Serialized Links
- */
-
-async function getAll(): Promise<SerializedLink[]> {
+export async function getAll(...relations: LinkRelation[]): Promise<SerializedLink[]> {
 	try {
-		var links = await prisma.graphLink.findMany()
+		var links = await prisma.link.findMany()
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(links.map(reduce))
+	return await Promise.all(
+		links.map(async link => await reduce(link, ...relations))
+	)
 }
 
-/**
- * Gets a Link by ID from the database
- * @param link_id Target Link ID
- * @returns Serialized Link
- */
-
-async function getById(link_id: number): Promise<SerializedLink> {
+export async function getById(id: number, ...relations: LinkRelation[]): Promise<SerializedLink> {
 	try {
-		var link = await prisma.graphLink.findUniqueOrThrow({
+		var link = await prisma.link.findUniqueOrThrow({
 			where: {
-				id: link_id
+				id
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await reduce(link)
+	return await reduce(link, ...relations)
 }
 
-/**
- * Gets the Course assigned to a Link.
- * @param link_id Target Link ID
- * @returns Serialized Course
- */
-
-async function getCourse(link_id: number): Promise<SerializedCourse> {
+export async function getCourse(id: number, ...relations: CourseRelation[]): Promise<SerializedCourse> {
 	try {
-		var data = await prisma.course.findFirstOrThrow({
+		var data = await prisma.link.findUniqueOrThrow({
 			where: {
-				links: {
-					some: {
-						id: link_id
-					}
-				}
+				id
+			},
+			select: {
+				course: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await CourseHelper.reduce(data)
+	return await CourseHelper.reduce(data.course, ...relations)
 }
 
-/**
- * Gets the Graph assigned to a Link
- * @param link_id Target Link ID
- * @returns Serialized Graph
- */
-
-async function getGraph(link_id: number): Promise<SerializedGraph | null> {
+export async function getGraph(id: number, ...relations: GraphRelation[]): Promise<SerializedGraph | null> {
 	try {
-		var data = await prisma.graphLink.findUniqueOrThrow({
+		var data = await prisma.link.findUniqueOrThrow({
 			where: {
-				id: link_id
+				id
 			},
 			select: {
 				graph: true
@@ -212,7 +153,7 @@ async function getGraph(link_id: number): Promise<SerializedGraph | null> {
 		return Promise.reject(error)
 	}
 
-	if (data.graph)
-		return await GraphHelper.reduce(data.graph)
+	if (data.graph !== null)
+		return await GraphHelper.reduce(data.graph, ...relations)
 	return null
 }

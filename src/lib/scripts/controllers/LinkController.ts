@@ -1,248 +1,231 @@
 
-const BASE_URL = 'http://localhost:5432'
+// External dependencies
+import * as uuid from 'uuid'
 
 // Internal dependencies
-import { ValidationData, Severity } from "$scripts/validation"
+import * as settings from '$scripts/settings'
+import { Validation, Severity } from '$scripts/validation'
 
 import {
 	ControllerCache,
 	CourseController,
 	GraphController
-} from "$scripts/controllers"
+} from '$scripts/controllers'
 
-import type {
-	SerializedLink,
-	SerializedCourse,
-	SerializedGraph
-} from "$scripts/types"
+import { validSerializedLink } from '$scripts/types'
+import type { SerializedLink } from '$scripts/types'
 
 // Exports
 export { LinkController }
 
 
-// --------------------> Controller
+// --------------------> Link Controller
 
 
 class LinkController {
+	public uuid: string = uuid.v4()
+
+	private _untouched: boolean = false
 	private _course?: CourseController
-	private _pending_course?: Promise<CourseController>
 	private _graph?: GraphController | null
-	private _pending_graph?: Promise<GraphController | null>
 
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
-		public name: string,
-		private _course_id: number,
-		private _graph_id: number | null
+		private _name: string,
+		private _course_id?: number,
+		private _graph_id?: number | null,
 	) {
 		this.cache.add(this)
 	}
 
 	// --------------------> Getters & Setters
 
-	get trimmed_name(): string {
-		return this.name.trim()
+	// Name properties
+	get name(): string {
+		return this._name
 	}
 
+	set name(name: string) {
+		this._name = name
+		this._untouched = false
+	}
+
+	get trimmed_name(): string {
+		return this._name.trim()
+	}
+
+	// URL properties
+	get url(): string {
+		if (this.validate().severity === Severity.error)
+			return ''
+		return `/app/course/${this.course.code}/${this.name}`
+	}
+
+	// Course properties
 	get course_id(): number {
+		if (this._course_id === undefined)
+			throw new Error('LinkError: Course data unknown')
 		return this._course_id
 	}
 
-	set course_id(id: number) {
+	get course(): CourseController {
+		if (this._course_id === undefined)
+			throw new Error('LinkError: Course data unknown')
+		if (this._course !== undefined)
+			return this._course
 
-		// Unassign previous course
-		this.cache.find(CourseController, this._course_id)
-			?.unassignLink(this)
-
-		// Assign new course
-		this._course = undefined
-		this._course_id = id
-
-		this.cache.find(CourseController, this._course_id)
-			?.assignLink(this, false)
+		// Fetch course from cache
+		this._course = this.cache.findOrThrow(CourseController, this._course_id)
+		return this._course
 	}
 
+	// Graph properties
 	get graph_id(): number | null {
+		if (this._graph_id === undefined)
+			throw new Error('LinkError: Graph data unknown')
 		return this._graph_id
 	}
 
-	set graph_id(id: number | null) {
-
-		// Unassign previous graph
-		if (this._graph_id) {
-			this.cache.find(GraphController, this._graph_id)
-				?.unassignLink(this, false)
-		}
-
-		// Assign new graph
-		this._graph = undefined
-		this._graph_id = id
-
-		if (this._graph_id) {
-			this.cache.find(GraphController, this._graph_id)
-				?.assignLink(this)
-		}
-	}
-
-	// --------------------> API Getters
-
-	/**
-	 * Get the course associated to this link
-	 * @returns The associated course
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getCourse(): Promise<CourseController> {
-
-		// Check if the course is pending
-		if (this._pending_course !== undefined) {
-			return await this._pending_course
-		}
-
-		// Check if the course is known
-		if (this._course !== undefined) {
-			return this._course
-		}
-
-		// Check if the course is cached
-		this._course = this.cache.find(CourseController, this._course_id)
-		if (this._course !== undefined) {
-			return this._course
-		}
-
-		// Call API to fetch the course data
-		this._pending_course = this.cache
-			.fetch(`/api/link/${this.id}/course`, { method: 'GET' })
-			.then(
-				async response => {
-					const data = await response.json() as SerializedCourse
-					this._course = CourseController.revive(this.cache, data)
-					this._pending_course = undefined
-					return this._course
-				},
-				error => {
-					this._pending_course = undefined
-					throw new Error(`APIError (/api/link/${this.id}/course GET): ${error}`)
-				}
-			)
-		
-		return await this._pending_course
-	}
-
-	/**
-	 * Get the graph associated to this link
-	 * @returns The associated graph
-	 * @throws `APIError` if the API call fails
-	 */
-
-	async getGraph(): Promise<GraphController | null> {
-		
-		// Check if the graph is pending
-		if (this._pending_graph !== undefined) {
-			return await this._pending_graph
-		}
-
-		// Check if the graph is known
-		if (this._graph !== undefined) {
+	get graph(): GraphController | null {
+		if (this._graph_id === undefined)
+			throw new Error('LinkError: Graph data unknown')
+		if (this._graph !== undefined)
 			return this._graph
-		}
 
-		// Check if the graph is cached
-		this._graph = this._graph_id === null ? null : this.cache.find(GraphController, this._graph_id)
-		if (this._graph !== undefined) {
-			return this._graph
-		}
-
-		// Call API to fetch the graph data
-		this._pending_graph = this.cache
-			.fetch(`/api/link/${this.id}/graph`, { method: 'GET' })
-			.then(
-				async response => {
-					const data = await response.json() as SerializedGraph
-					this._graph = data ? GraphController.revive(this.cache, data) : null
-					this._pending_graph = undefined
-					return this._graph
-				},
-				error => {
-					this._pending_graph = undefined
-					throw new Error(`APIError (/api/link/${this.id}/graph GET): ${error}`)
-				}
-			)
-		
-		return await this._pending_graph
+		// Fetch graph from cache
+		this._graph = this._graph_id ? this.cache.findOrThrow(GraphController, this._graph_id) : null
+		return this._graph
 	}
 
-	/**
-	 * Get the URL of this link
-	 * @returns The URL of the link
-	 */
-
-	async getURL(): Promise<string> {
-		if (!this.validate().okay()) {
-			return ''
-		}
-
-		// Build the URL
-		const course = await this.getCourse()
-		return `${BASE_URL}/graph/${course.code}/${this.trimmed_name}`
+	set graph(graph: GraphController | null) {
+		this.graph?.removeLink(this)
+		this._graph_id = graph ? graph.id : null
+		this._graph = graph
+		this.graph?.addLink(this)
+		this._untouched = false
 	}
 
-	// --------------------> API Actions
+	// Untouched state
+	get untouched(): boolean {
+		return this._untouched
+	}
 
-	/**
-	 * Create a new link
-	 * @param cache Controller cache to create link with
-	 * @param name Link name
-	 * @param course_id Course id to assign the link to
-	 * @param graph_id Graph id to assign the link to
-	 * @returns The newly created LinkController
-	 * @throws `APIError` If the API request fails
-	 */
+	// --------------------> Validation
 
-	static async create(cache: ControllerCache, course_id: number, graph_id: number | null, name: string): Promise<LinkController> {
+	validateName(strict: boolean = true): Validation {
+		const validation = new Validation()
+		if (!strict && this._untouched) {
+			return validation
+		}
 
-		// Call API to create a new link
-		const response = await cache.fetch('/api/link', {
+		if (this.trimmed_name === '') {
+			validation.add({
+				severity: Severity.error,
+				short: 'Link has no name',
+				url: `/app/course/${this.course_id}/overview`,
+				uuid: this.uuid
+			})
+		} else if (this.trimmed_name.length > settings.MAX_LINK_NAME_LENGTH) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Link name is too long',
+				long: `Link name cannot exceed ${settings.MAX_LINK_NAME_LENGTH} characters`,
+				url: `/app/course/${this.course_id}/overview`,
+				uuid: this.uuid
+			})
+		} else if (!settings.LINK_NAME_REGEX.test(this.trimmed_name)) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Link name is invalid',
+				long: 'Link names can only contain letters, numbers, and these special characters: -_.~',
+				url: `/app/course/${this.course_id}/overview`,
+				uuid: this.uuid
+			})
+		} else if (this.course.links
+			.find(link => link !== this && link.trimmed_name === this.trimmed_name)
+		) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Link name is not unique',
+				url: `/app/course/${this.course_id}/overview`,
+				uuid: this.uuid
+			})
+		}
+
+		return validation
+	}
+
+	validateGraph(strict: boolean = true): Validation {
+		const validation = new Validation()
+		if (!strict && this._untouched) {
+			return validation
+		}
+
+		if (this.graph_id === null) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Link has no graph',
+				url: `/app/course/${this.course_id}/overview`,
+				uuid: this.uuid
+			})
+		}
+
+		return validation
+	}
+
+	validate(strict: boolean = true): Validation {
+		const validation = new Validation()
+
+		validation.add(this.validateName(strict))
+		validation.add(this.validateGraph(strict))
+
+		return validation
+	}
+
+	// --------------------> Actions
+
+	static async create(cache: ControllerCache, course: CourseController): Promise<LinkController> {
+
+		// Call the API to create a new link
+		const response = await fetch('/api/link', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ name, course: course_id, graph: graph_id })
+			body: JSON.stringify({ course_id: course.id })
 		})
 
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/link POST): ${error}`)
-		})
-
-		// Revive the course
-		const data = await response.json() as SerializedLink
-		const link = LinkController.revive(cache, data)
-
-		// Assign to course and graph
-		cache.find(CourseController, course_id)
-			?.assignLink(link, false)
-
-		if (graph_id) {
-			cache.find(GraphController, graph_id)
-				?.assignLink(link, false)
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw new Error(`APIError (/api/link POST): ${response.status} ${response.statusText}`)
 		}
 
-		return link
-	}
+		// Revive the link
+		const data = await response.json()
+		if (validSerializedLink(data)) {
+			const link = LinkController.revive(cache, data)
+			link._untouched = true
+			course.addLink(link)
+			return link
+		}
 
-	/**
-	 * Revive a link from serialized data, or retrieves an existing link from the cache
-	 * @param cache Controller cache to revive link with
-	 * @param data Serialized link data
-	 * @returns The revived LinkController
-	 * @throws `LinkError` if the server data is out of sync with the cache
-	 */
+		throw new Error(`LinkError: Invalid link data received from API`)
+	}
 
 	static revive(cache: ControllerCache, data: SerializedLink): LinkController {
 		const link = cache.find(LinkController, data.id)
-		if (link) {
-			if (!link.represents(data))
-				throw new Error(`LinkError: Attempted to revive Link with ID ${data.id}, but server data is out of sync with cache`)
+		if (link !== undefined) {
+
+			// Throw error if link data is inconsistent
+			if (!link.represents(data)) {
+				throw new Error(`LinkError: Link with ID ${data.id} already exists, and is inconsistent with new data`)
+			}
+
+			// Update link where necessary
+			if (link._course_id === undefined)
+				link._course_id = data.course_id
+			if (link._graph_id === undefined)
+				link._graph_id = data.graph_id
+
 			return link
 		}
 
@@ -250,196 +233,68 @@ class LinkController {
 			cache,
 			data.id,
 			data.name,
-			data.course,
-			data.graph
+			data.course_id,
+			data.graph_id
 		)
 	}
-
-	/**
-	 * Check if this link is equal to a serialized link
-	 * @param data Serialized link to compare against
-	 * @returns Whether the link is equal to the serialized link
-	 */
 
 	represents(data: SerializedLink): boolean {
-		return (
-			this.id === data.id &&
-			this.trimmed_name === data.name &&
-			this._course_id === data.course &&
-			this._graph_id === data.graph
-		)
+		return this.id === data.id
+			&& this.trimmed_name === data.name
+			&& (this._graph_id === undefined  || data.graph_id === undefined  || this._graph_id === data.graph_id)
+			&& (this._course_id === undefined || data.course_id === undefined || this._course_id === data.course_id)
 	}
-
-	/**
-	 * Serialize this link
-	 * @returns Serialized link data
-	 */
 
 	reduce(): SerializedLink {
 		return {
 			id: this.id,
 			name: this.trimmed_name,
-			course: this._course_id,
-			graph: this._graph_id
+			course_id: this._course_id,
+			graph_id: this._graph_id
 		}
 	}
 
-	/**
-	 * Save this link
-	 * @throws `APIError` if the API call fails
-	 */
+	async save() {
 
-	async save(): Promise<void> {
-
-		// Call API to save the link
-		await this.cache.fetch(`/api/link`, {
+		// Call the API to save the link
+		const response = await fetch('/api/link', {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(this.reduce())
 		})
 
-		// Check the response
-		.catch(error => {
-			throw new Error(`APIError (/api/link PUT): ${error}`)
-		})
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw new Error(`APIError (/api/link PUT): ${response.status} ${response.statusText}`)
+		}
 	}
 
-	/**
-	 * Delete this link
-	 * @throws `APIError` if the API call fails
-	 */
+	async delete() {
 
-	async delete(): Promise<void> {
+		// Unassign course and graph
+		if (this._course_id !== undefined)
+			this.course.removeLink(this)
+		if (this._graph_id !== undefined)
+			this.graph?.removeLink(this)
 
-		// Unassign everywhere (mirroring is not necessary, as this object will be deleted)
-		this.cache.find(CourseController, this._course_id)
-			?.unassignLink(this)
+		// Call the API to delete the link
+		const response = await fetch(`/api/link/${this.id}`, { method: 'DELETE' })
 
-		if (this._graph_id) {
-			this.cache.find(GraphController, this._graph_id)
-				?.unassignLink(this, false)
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw new Error(`APIError (/api/link/${this.id} DELETE): ${response.status} ${response.statusText}`)
 		}
 
-		// Call API to delete the link
-		await this.cache.fetch(`/api/link/${this.id}`, { method: 'DELETE' })
-			.catch(error => {
-				throw new Error(`APIError (/api/link/${this.id} DELETE): ${error}`)
-			})
-
-		// Remove from cache
+		// Remove the link from the cache
 		this.cache.remove(this)
 	}
+	
+	// --------------------> Utility
 
-	// --------------------> Validation
-
-	/**
-	 * Check if the link has a name
-	 * @returns Whether the link has a name
-	 */
-
-	private hasName(): boolean {
-		return this.trimmed_name !== ''
-	}
-
-	/**
-	 * Check if the link has a graph
-	 * @returns Whether the link has a graph
-	 */
-
-	private hasGraph(): boolean {
-		return this._graph_id !== null
-	}
-
-	/**
-	 * Validate the link
-	 * @returns `ValidationData` Validation data
-	 */
-
-	validate(): ValidationData {
-		const validation = new ValidationData()
-
-		if (!this.hasName()) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Link has no name'
-			})
-		}
-
-		if (!this.hasGraph()) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Link has no associated graph'
-			})
-		}
-
-		return validation
-	}
-
-	// --------------------> Assignments
-
-	/**
-	 * Assign a course to this link
-	 * @param course Target course
-	 * @param Whether to mirror the assignment
-	 */
-
-	assignCourse(course: CourseController, mirror: boolean = true): void {
-		if (this._course_id === course.id) return
-
-		// Unassign previous course
-		if (this._course_id && mirror) {
-			this.cache.find(CourseController, this._course_id)
-				?.unassignLink(this)
-		}
-
-		// Assign new course
-		this._course_id = course.id
-		this._course = course
-
-		if (mirror) {
-			course.assignLink(this, false)
-		}
-	}
-
-	/**
-	 * Assign a graph to this link
-	 * @param graph Target graph
-	 * @param Whether to mirror the assignment
-	 */
-
-	assignGraph(graph: GraphController, mirror: boolean = true): void {
-		if (this._graph_id === graph?.id) return
-
-		// Unassign previous graph
-		if (this._graph_id && mirror) {
-			this.cache.find(GraphController, this._graph_id)
-				?.unassignLink(this, false)
-		}
-
-		// Assign new graph
-		this._graph_id = graph?.id
-		this._graph = graph
-
-		if (mirror) {
-			graph.assignLink(this, false)
-		}
-	}
-
-	/**
-	 * Unassign a graph from this link
-	 * @param Whether to mirror the unassignment
-	 */
-
-	unassignGraph(mirror: boolean = true): void {
-		if (!this._graph_id) return
-
-		// Unassign graph
-		if (mirror) {
-			this.cache.find(GraphController, this._graph_id)
-				?.unassignLink(this, false)
-		}
-
-		this._graph_id = null
-		this._graph = null
+	matchesQuery(query: string): boolean {
+		const lower_query = query.toLowerCase()
+		const lower_name = this.trimmed_name.toLowerCase()
+		const lower_graph = this.graph?.name.toLowerCase() || ''
+		return lower_name.includes(lower_query) || lower_graph.includes(lower_query)
 	}
 }

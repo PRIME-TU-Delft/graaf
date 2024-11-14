@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal imports
-	import { tooltip } from '$scripts/tooltip'
+	import { tooltip } from '$scripts/actions/tooltip'
 
 	// Exports
 	export let src: string

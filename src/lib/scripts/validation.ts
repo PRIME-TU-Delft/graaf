@@ -1,39 +1,34 @@
 
-// Exports
-export { ValidationData, Severity }
-export type { Violation }
-
-
-// --------------------> Classes
- 
-
-enum Severity {
+export enum Severity {
 	success,
 	warning,
 	error
 }
 
-type Violation = {
+export type Violation = {
 	severity: Severity,
 	short: string,
 	long?: string,
-	tab?: number,
-	uuid?: string
+	url?: string,
+	uuid?: string,
+	suppressor?: () => void
 }
 
-class ValidationData {
+export class Validation {
 	severity: Severity = Severity.success
 	errors: Violation[] = []
 	warnings: Violation[] = []
 	total_violations: number = 0
 
-	add(item: Violation | ValidationData) {
-		if (item instanceof ValidationData) {
+	add(item: Violation): void
+	add(item: Validation): void
+	add(item: Violation | Validation) {
+		if (item instanceof Validation) {
 			this.errors.push(...item.errors)
 			this.warnings.push(...item.warnings)
 			this.total_violations += item.total_violations
-		} 
-		
+		}
+
 		else {
 			if (item.severity === Severity.error)
 				this.errors.push(item)
@@ -47,37 +42,35 @@ class ValidationData {
 		}
 	}
 
-	okay(): boolean {
-		return this.severity !== Severity.error
-	}
-
 	static success() {
-		return new ValidationData()
+		return new Validation()
 	}
 
-	static warning(short: string, long?: string, tab?: number, uuid?: string) {
-		const data = new ValidationData()
-		data.add({
+	static warning(short: string, long?: string, url?: string, uuid?: string, suppressor?: () => void) {
+		const validation = new Validation()
+		validation.add({
 			severity: Severity.warning,
 			short,
 			long,
-			tab,
-			uuid
+			url,
+			uuid,
+			suppressor
 		})
 
-		return data
+		return validation
 	}
 
-	static error(short: string, long?: string, tab?: number, uuid?: string) {
-		const data = new ValidationData()
-		data.add({
+	static error(short: string, long?: string, url?: string, uuid?: string, suppressor?: () => void) {
+		const validation = new Validation()
+		validation.add({
 			severity: Severity.error,
 			short,
 			long,
-			tab,
-			uuid
+			url,
+			uuid,
+			suppressor
 		})
 
-		return data
+		return validation
 	}
 }

@@ -2,13 +2,12 @@
 <script lang="ts">
 
 	// Svelte imports
-	import { createEventDispatcher, onMount } from "svelte"
+	import { createEventDispatcher } from "svelte"
 
 	// Internal imports
+	import { focusOnLoad, loopFocus, focusOnHover, focusFirstChild, focusOnKeydown } from '$scripts/actions/hocusfocus'
+	import { clickoutside } from '$scripts/actions/clickoutside'
 	import { Severity } from '$scripts/validation'
-	import { clickoutside } from '$scripts/clickoutside'
-	import { scrollintoview } from '$scripts/scrollintoview'
-	import { focusOnLoad, loopFocus, focusOnHover, focusFirstChild, focusOnKeydown } from '$scripts/hocusfocus'
 
 	import type { DropdownOption } from '$scripts/types'
 
@@ -61,10 +60,6 @@
 		return 0
 	})
 
-	onMount(() => {
-		dropdown.style.height = wrapper.clientHeight + 'px'
-	})
-
 </script>
 
 
@@ -100,7 +95,7 @@
 		</button>
 
 		{#if visible}
-			<div class="options" use:focusFirstChild use:loopFocus use:scrollintoview>
+			<div class="options" use:focusFirstChild use:loopFocus>
 				{#if options.length >= 5}
 					<div class="option searchbar">
 						<input type="search" placeholder="Search..." bind:value={query} use:focusOnKeydown>
@@ -113,8 +108,8 @@
 						<button
 							type="button"
 							class="option"
-							tabindex={option.validation.okay() ? 0 : -1}
-							disabled={!option.validation.okay()}
+							tabindex={option.validation.severity === Severity.error ? 0 : -1}
+							disabled={option.validation.severity === Severity.error}
 							on:click={() => set(option.value)}
 							use:focusOnHover
 						>
@@ -167,6 +162,7 @@
 	.dropdown
 		position: relative
 		width: 100%
+		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
 
 		.wrapper
 			position: absolute
@@ -208,7 +204,12 @@
 				cursor: pointer
 
 				&:focus
-					border-color: $tudelft-blue
+					border-color:
+						top: $tudelft-blue
+						right: $tudelft-blue
+						bottom: $gray
+						left: $tudelft-blue
+
 
 				&::after
 					content: ""

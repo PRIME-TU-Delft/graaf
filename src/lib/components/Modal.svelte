@@ -1,24 +1,37 @@
 
+
 <script lang="ts">
 
 	// Internal imports
-	import { focusFirstChild } from '$scripts/hocusfocus'
+	import { focusFirstChild } from '$scripts/actions/hocusfocus'
 
 	// Assets
 	import plusIcon from '$assets/plus-icon.svg'
 
 	// Exports
+	export function setHideCallback(callback: () => void) {
+		hideCallback = callback
+	}
+
+	export function setShowCallback(callback: () => void) {
+		showCallback = callback
+	}
+
 	export function show() {
+		showCallback()
 		visible = true
 	}
 
 	export function hide() {
+		hideCallback()
 		visible = false
 	}
 
 	// Variables
 	let visible: boolean = false
 	let modal: HTMLDialogElement
+	let showCallback: () => void = () => {}
+	let hideCallback: () => void = () => {}
 
 </script>
 
@@ -31,7 +44,7 @@
 	<dialog class="modal" bind:this={modal} >
 		<header>
 			<slot name="header" />
-			<button class="exit" on:click={() => visible = false}>
+			<button class="exit" on:click={hide}>
 				<img src={plusIcon} alt="Exit icon" class="icon" />
 			</button>
 		</header>
@@ -89,7 +102,7 @@
 			flex-flow: row nowrap
 			justify-content: flex-end
 			align-items: center
-			gap: $form-small-gap
+			gap: $form-medium-gap
 
 		.exit
 			display: flex
@@ -113,5 +126,30 @@
 			&:focus, .icon:hover
 				scale: $scale-on-hover
 				filter: $dark-purple-filter
+		
+	:global(.modal form)
+		display: grid
+		grid-template: "label content" auto / 1fr 2fr
+		place-items: center start
+		row-gap: $form-small-gap
+		column-gap: $form-medium-gap
+
+		margin-top: $form-big-gap
+
+		:global(label)
+			grid-column: label
+			justify-self: end
+
+		:global(.textfield), :global(.textarea), :global(.dropdown)
+			grid-column: content
+
+		:global(footer)
+			display: flex
+			flex-flow: row nowrap
+			grid-column: content
+			gap: $form-medium-gap
+
+			margin-top: $form-medium-gap
+
 
 </style>

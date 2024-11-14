@@ -5,10 +5,13 @@
 	import { courses } from './stores'
 
 	// Components
+	import Grid from './Grid.svelte'
 	import Card from '$components/Card.svelte'
 
 	// Exports
 	export let query: string
+
+	$: filtered_courses = $courses.filter(course => course.matchesQuery(query))
 
 </script>
 
@@ -19,27 +22,13 @@
 <Card>
 	<h3 slot="header"> My Courses </h3>
 
-	<svelte:fragment slot="body">
-		{#if !$courses.some(course => course.matchesQuery(query))}
-			<span class="grayed"> There's nothing here </span>
-		{:else}
-			<div class="grid">
-				{#each $courses as course}
-					{#if course.matchesQuery(query)}
-						<a class="cell" href="./course/{course.id}/overview"> {course.code} {course.name} </a>
-					{/if}
-				{/each}
-			</div>
-		{/if}
-	</svelte:fragment>
+	{#if filtered_courses.length === 0}
+		<p class="grayed"> There's nothing here </p>
+	{:else}
+		<Grid>
+			{#each filtered_courses as course}
+				<a href="./course/{course.id}/overview"> {course.code} {course.name} </a>
+			{/each}
+		</Grid>
+	{/if}
 </Card>
-
-
-<!-- Styles -->
-
-
-<style lang="sass">
-
-	@import './style.sass'
-
-</style>

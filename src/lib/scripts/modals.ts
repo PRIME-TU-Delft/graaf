@@ -1,27 +1,60 @@
 
-// Internal imports
-import { ValidationData } from '$scripts/validation'
-
 // External imports
-import Modal from '$components/Modal.svelte'
-
-// Exports
-export { BaseModal }
+import type Modal from '$components/Modal.svelte'
 
 
 // --------------------> Classes
 
 
-abstract class BaseModal {
+export abstract class FormModal {
 	private defaults: { [key: string]: any } = {}
-	modal?: Modal
+	private changed: { [key: string]: boolean } = {}
+	private _modal?: Modal
+
+	get modal() {
+		return this._modal
+	}
+
+	set modal(modal: Modal | undefined) {
+		this._modal = modal
+		this.modal?.setHideCallback(() => this.reset())
+	}
 
 	protected initialize() {
 		for (const property in this) {
-			if (property !== 'modal' && property !== 'defaults') {
+			if (this.isField(property)) {
 				this.defaults[property] = this[property]
+				this.changed[property] = false
 			}
 		}
+	}
+
+	protected reset() {
+		for (const property in this) {
+			if (this.isField(property)) {
+				this[property] = this.defaults[property]
+				this.changed[property] = false
+			}
+		}
+	}
+
+	protected hasChanged(property: string): boolean {
+		const cast = property as Extract<keyof this, string>
+		if (this[cast] !== this.defaults[property])
+			this.changed[property] = true
+		return this.changed[property]
+	}
+
+	protected touchAll() {
+		for (const property in this) {
+			if (this.isField(property)) {
+				this.changed[property] = true
+			}
+		}
+	}
+
+	private isField(property: string): boolean {
+		return property !== '_modal' && property !== 'modal' && property !== 'defaults' && property !== 'changed'
 	}
 
 	show() {
@@ -30,10 +63,5 @@ abstract class BaseModal {
 
 	hide() {
 		this.modal?.hide()
-		for (const property in this) {
-			if (property !== 'modal' && property !== 'defaults') {
-				this[property] = this.defaults[property]
-			}
-		}
 	}
 }

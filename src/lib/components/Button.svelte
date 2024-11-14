@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { preventFocus } from "$scripts/hocusfocus"
+	import { preventFocus } from '$scripts/actions/hocusfocus'
 
 	// Exports
 	export let href: string | undefined = undefined
@@ -15,7 +15,6 @@
 
 	// Property validation
 	$: if (submit && href !== undefined) {
-		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.")
 		href = undefined
 	}
 
@@ -28,13 +27,14 @@
 {#if href === undefined}
 
 	<button
+		tabindex="-1"
 		class="button"
 		class:disabled
 		class:dangerous
-		tabindex="-1"
+		disabled={disabled}
 		type={submit ? 'submit' : 'button'}
-		use:preventFocus
 		bind:this={button}
+		use:preventFocus
 		on:click
 	>
 		<slot />
@@ -44,12 +44,12 @@
 
 	<a
 		href={href}
+		tabindex="-1"
 		class="button"
 		class:disabled
 		class:dangerous
-		tabindex="-1"
-		use:preventFocus
 		bind:this={button}
+		use:preventFocus
 		on:click
 	>
 		<slot />
@@ -84,7 +84,7 @@
 
 		&.dangerous
 			background: $red
-
+		
 		&.disabled
 			background: $gray
 			pointer-events: none

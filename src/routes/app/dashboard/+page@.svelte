@@ -1,19 +1,24 @@
 
+
 <script lang="ts">
 
+	// External dependencies
+	import type { PageData } from './$types'
+
 	// Internal dependencies
-	import { cache, programs, courses } from './stores'
-	
+	import * as settings from '$scripts/settings'
+	import { programs, courses } from './stores'
+
 	import { ProgramController, CourseController } from '$scripts/controllers'
-	import { ValidationData, Severity } from '$scripts/validation'
-	import { BaseModal } from '$scripts/modals'
+	import { Validation, Severity } from '$scripts/validation'
+	import { FormModal } from '$scripts/modals'
 
 	// Components
 	import Layout from '$routes/app/+layout.svelte'
 
-	import Validation from '$components/Validation.svelte'
 	import Textfield from '$components/Textfield.svelte'
-	import Searchbar from '$components/Search.svelte'
+	import Feedback from '$components/Feedback.svelte'
+	import Searchbar from '$components/Searchbar.svelte'
 	import Navbar from '$components/Navbar.svelte'
 	import Button from '$components/Button.svelte'
 	import Modal from '$components/Modal.svelte'
@@ -25,39 +30,7 @@
 	import plus_icon from '$assets/plus-icon.svg'
 
 	// Helpers
-	class SandboxModal extends BaseModal {
-		code: string = ''
-		name: string = ''
-
-		constructor() {
-			super()
-			this.initialize()
-		}
-
-		validate(): ValidationData {
-			const result = new ValidationData()
-
-			if (this.code.trim() === '') {
-				result.add({
-					severity: Severity.error,
-					short: 'Code is required'
-				})
-			}
-
-			if (this.name.trim() === '') {
-				result.add({
-					severity: Severity.error,
-					short: 'Name is required'
-				})
-			}
-
-			return result
-		}
-
-		async submit() { }
-	}
-
-	class ProgramModal extends BaseModal {
+	class ProgramModal extends FormModal {
 		name: string = ''
 
 		get trimmed_name() {
@@ -69,32 +42,47 @@
 			this.initialize()
 		}
 
-		validate(): ValidationData {
-			const result = new ValidationData()
+		validate(): Validation {
+			const validation = new Validation()
 
-			if (this.trimmed_name === '') {
-				result.add({
-					severity: Severity.error,
-					short: 'Name is required'
-				})
-			} else if ($programs.some(program => program.name === this.trimmed_name)) {
-				result.add({
-					severity: Severity.error,
-					short: 'Program with this name already exists'
-				})
+			// Validate name
+			if (this.hasChanged('name')) {
+				if (this.trimmed_name === '') {
+					validation.add({
+						severity: Severity.error,
+						short: 'Program name is required'
+					})
+				} else if (this.trimmed_name.length > settings.MAX_PROGRAM_NAME_LENGTH) {
+					validation.add({
+						severity: Severity.error,
+						short: 'Program name is too long'
+					})
+				} else if ($programs.some(program => program.name === this.trimmed_name)) {
+					validation.add({
+						severity: Severity.error,
+						short: 'Program name isn\'t unique'
+					})
+				}
 			}
 
-			return result
+			return validation
 		}
 
 		async submit() {
-			const program = await ProgramController.create($cache, this.trimmed_name)
-			programs.update(programs => [...programs, program])
+			this.touchAll()
+			if (this.validate().severity === Severity.error) {
+				program_modal = program_modal // Trigger reactivity
+				return
+			}
+
+			// Create program
+			const program = await ProgramController.create(cache, this.trimmed_name)
+			$programs = [...$programs, program] // Trigger reactivity
 			this.hide()
 		}
 	}
 
-	class CourseModal extends BaseModal {
+	class CourseModal extends FormModal {
 		code: string = ''
 		name: string = ''
 
@@ -111,42 +99,78 @@
 			this.initialize()
 		}
 
-		validate(): ValidationData {
-			const result = new ValidationData()
+		validate(): Validation {
+			const validation = new Validation()
 
-			if (this.trimmed_code === '') {
-				result.add({
-					severity: Severity.error,
-					short: 'Code is required'
-				})
-			} else if ($courses.some(course => course.code === this.trimmed_code)) {
-				result.add({
-					severity: Severity.error,
-					short: 'Course with this code already exists'
-				})
+			// Validate code
+			if (this.hasChanged('code')) {
+				if (this.trimmed_code === '') {
+					validation.add({
+						severity: Severity.error,
+						short: 'Course code is required'
+					})
+				} else if (!settings.COURSE_CODE_REGEX.test(this.trimmed_code)) {
+					validation.add({
+						severity: Severity.error,
+						short: 'Course code is invalid'
+					})
+				} else if (this.trimmed_code.length > settings.MAX_COURSE_CODE_LENGTH) {
+					validation.add({
+						severity: Severity.error,
+						short: 'Course code is too long'
+					})
+				} else if ($courses.some(course => course.code === this.trimmed_code)) {
+					validation.add({
+						severity: Severity.error,
+						short: 'Course code isn\'t unique'
+					})
+				}
 			}
 
-			if (this.trimmed_name === '') {
-				result.add({
-					severity: Severity.error,
-					short: 'Name is required'
-				})
+			// Validate name
+			if (this.hasChanged('name')) {
+				if (this.trimmed_name === '') {
+					validation.add({
+						severity: Severity.error,
+						short: 'Course name is required'
+					})
+				} else if (this.trimmed_name.length > settings.MAX_COURSE_NAME_LENGTH) {
+					validation.add({
+						severity: Severity.error,
+						short: 'Course name is too long'
+					})
+				} else if ($courses.some(course => course.name === this.trimmed_name)) {
+					validation.add({
+						severity: Severity.warning,
+						short: 'Course name isn\'t unique'
+					})
+				}
 			}
 
-			return result
+			return validation
 		}
 
 		async submit() {
-			const course = await CourseController.create($cache, this.trimmed_code, this.trimmed_name)
-			courses.update(courses => [...courses, course])
+			this.touchAll()
+			if (this.validate().severity === Severity.error) {
+				course_modal = course_modal // Trigger reactivity
+				return
+			}
+
+			// Create course
+			const course = await CourseController.create(cache, this.trimmed_code, this.trimmed_name)
+			$courses = [...$courses, course] // Trigger reactivity
 			this.hide()
 		}
 	}
 
+	// Exports
+	export let data: PageData
+	const cache = data.cache
+
 	// Modals
-	const sandbox_modal = new SandboxModal()
-	const program_modal = new ProgramModal()
-	const course_modal = new CourseModal()
+	let program_modal = new ProgramModal()
+	let course_modal = new CourseModal()
 
 	// Variables
 	let query: string = ''
@@ -157,17 +181,56 @@
 <!-- Markup -->
 
 
+<Modal bind:this={program_modal.modal}>
+	<h3 slot="header"> Create Program </h3>
+
+	Programs are collections of Courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
+
+	<form>
+		<label for="name"> Program Name </label>
+		<Textfield id="name" bind:value={program_modal.name} />
+
+		<footer>
+			<Button
+				disabled={program_modal.validate().severity === Severity.error}
+				on:click={async () => await program_modal.submit()}
+			> Create </Button>
+			<Feedback data={program_modal.validate()} />
+	</footer>
+	</form>
+</Modal>
+
+<Modal bind:this={course_modal.modal}>
+	<h3 slot="header"> Create Course </h3>
+
+	Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
+
+	<form>
+		<label for="code"> Course Code </label>
+		<Textfield id="code" bind:value={course_modal.code} />
+
+		<label for="name"> Course Name </label>
+		<Textfield id="name" bind:value={course_modal.name} />
+
+		<footer>
+			<Button
+				disabled={course_modal.validate().severity === Severity.error}
+				on:click={async () => await course_modal.submit()}
+			> Create </Button>
+			<Feedback data={course_modal.validate()} />
+		</footer>
+	</form>
+</Modal>
+
 <Layout>
 	<svelte:fragment slot="title">
 		<Navbar path={[{ name: 'Dashboard', href: '/app/dashboard' }]} />
-		Welcome to your Dashboard! Here you can find all programs and associated courses. Click on any of them to edit or view more information. You can also create a sandbox environment to experiment with the Graph Editor.
+		Welcome to your Dashboard! Here you can find all Programs and associated Courses. Click on any of them to edit or view
+		more information. You can also create a sandbox environment to experiment with the Graph Editor. Can't find a specific
+		Program or Course? Maybe you don't have access to it. Contact one of its Admins to get access.
 	</svelte:fragment>
 
 	<svelte:fragment slot="toolbar">
-		<Button on:click={() => sandbox_modal.show()}>
-			<img src={plus_icon} alt="" /> New Sandbox
-		</Button>
-
 		<Button on:click={() => program_modal.show()}>
 			<img src={plus_icon} alt="" /> New Program
 		</Button>
@@ -187,66 +250,3 @@
 		<ProgramCard {program} {query} />
 	{/each}
 </Layout>
-
-<Modal bind:this={sandbox_modal.modal}>
-	<h3 slot="header"> Create Sandbox </h3>
-
-	Sandboxes are environments where you can experiment with the Graph editor. They are not associated with any program or course.
-
-	<form>
-		<label for="code"> Sandbox Code </label>
-		<Textfield id="code" bind:value={sandbox_modal.code} />
-
-		<label for="name"> Sandbox Name </label>
-		<Textfield id="name" bind:value={sandbox_modal.name} />
-
-		<footer>
-			<Button
-				disabled={!sandbox_modal.validate().okay()}
-				on:click={() => sandbox_modal.submit()}
-			> Create </Button>
-			<Validation data={sandbox_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
-
-<Modal bind:this={program_modal.modal}>
-	<h3 slot="header"> Create Program </h3>
-
-	Programs are collections of courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
-
-	<form>
-		<label for="name"> Program Name </label>
-		<Textfield id="name" bind:value={program_modal.name} />
-
-		<footer>
-			<Button
-				disabled={!program_modal.validate().okay()}
-				on:click={() => program_modal.submit()}
-			> Create </Button>
-			<Validation data={program_modal.validate()} />
-	</footer>
-	</form>
-</Modal>
-
-<Modal bind:this={course_modal.modal}>
-	<h3 slot="header"> Create Course </h3>
-
-	Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
-
-	<form>
-		<label for="code"> Course Code </label>
-		<Textfield id="code" bind:value={course_modal.code} />
-
-		<label for="name"> Course Name </label>
-		<Textfield id="name" bind:value={course_modal.name} />
-
-		<footer>
-			<Button
-				disabled={!course_modal.validate().okay()}
-				on:click={() => course_modal.submit()}
-			> Create </Button>
-			<Validation data={course_modal.validate()} />
-		</footer>
-	</form>
-</Modal>

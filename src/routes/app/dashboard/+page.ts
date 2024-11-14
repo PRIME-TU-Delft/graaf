@@ -3,19 +3,25 @@
 import type { PageLoad } from './$types'
 
 // Internal dependencies
-import { cache, programs, courses } from './stores'
+import { programs, courses } from './stores'
 
 import {
 	ControllerCache,
 	ProgramController,
-	CourseController
+	CourseController,
+	UserController
 } from '$scripts/controllers'
 
 // Load
-export const load: PageLoad = async ({ data, fetch }) => {
-	const new_cache = new ControllerCache(fetch)
-	cache.set(new_cache)
+export const load: PageLoad = async ({ data }) => {
+	const cache = new ControllerCache()
 
-	programs.set(data.programs.map(program => ProgramController.revive(new_cache, program)))
-	courses.set(data.courses.map(course => CourseController.revive(new_cache, course)))
+	// Revive controllers into stores
+	programs.set(data.programs.map(program => ProgramController.revive(cache, program)))
+	courses.set(data.courses.map(course => CourseController.revive(cache, course)))
+
+	// Revive controllers into cache
+	data.admins.forEach(admin => UserController.revive(cache, admin))
+
+	return { cache }
 }

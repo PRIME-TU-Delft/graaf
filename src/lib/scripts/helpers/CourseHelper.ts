@@ -4,50 +4,101 @@ import prisma from '$lib/server/prisma'
 import type { Course as PrismaCourse } from '@prisma/client'
 
 // Internal dependencies
-import { array_delta } from './delta'
+import { prismaUpdateArray} from '$scripts/utility'
 
 import {
+	ProgramHelper,
 	GraphHelper,
 	LinkHelper,
-	UserHelper,
-	ProgramHelper
+	UserHelper
 } from '$scripts/helpers'
 
 import type {
+	ProgramRelation,
+	CourseRelation,
+	GraphRelation,
+	LinkRelation,
+	UserRelation
+} from '$scripts/types'
+
+import type {
+	SerializedProgram,
 	SerializedCourse,
 	SerializedGraph,
 	SerializedLink,
-	SerializedUser,
-	SerializedProgram
+	SerializedUser
 } from '$scripts/types'
-
-// Exports
-export {
-	create,	 	// api/course				POST
-	update,	 	// api/course				PUT
-	remove,	 	// api/course/[id]			DELETE
-	reduce,
-	getAll,	 	// api/course				GET
-	getById,	// api/course/[id]			GET
-	getGraphs,	// api/course/[id]/graphs	GET
-	getLinks,	// api/course/[id]/links	GET
-	getAdmins,	// api/course/[id]/admins	GET
-	getEditors,	// api/course/[id]/editors	GET
-	getPrograms	// api/course/[id]/programs	GET
-}
 
 
 // --------------------> Helper Functions
 
 
-/**
- * Creates a Course object in the database
- * @param code Course code
- * @param name Course name
- * @returns Newly created serialized Course
- */
+export async function reduce(course: PrismaCourse, ...relations: CourseRelation[]): Promise<SerializedCourse> {
+	const serialized: SerializedCourse = {
+		id: course.id,
+		code: course.code,
+		name: course.name
+	}
 
-async function create(code: string, name: string): Promise<SerializedCourse> {
+	// Fetch relations from database
+	try {
+		var data = await prisma.course.findUniqueOrThrow({
+			where: {
+				id: course.id
+			},
+			select: {
+				programs: {
+					select: {
+						id: true
+					}
+				},
+				graphs: {
+					select: {
+						id: true
+					}
+				},
+				links: {
+					select: {
+						id: true
+					}
+				},
+				editors: {
+					select: {
+						id: true
+					}
+				},
+				admins: {
+					select: {
+						id: true
+					}
+				}
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	// Add relations if requested
+	if (relations.includes('programs'))
+		serialized.program_ids = data.programs
+			.map(program => program.id)
+	if (relations.includes('graphs'))
+		serialized.graph_ids = data.graphs
+			.map(graph => graph.id)
+	if (relations.includes('links'))
+		serialized.link_ids = data.links
+			.map(link => link.id)
+	if (relations.includes('editors'))
+		serialized.editor_ids = data.editors
+			.map(editor => editor.id)
+	if (relations.includes('admins'))
+		serialized.admin_ids = data.admins
+			.map(admin => admin.id)
+
+	return serialized
+}
+
+export async function create(code: string, name: string): Promise<SerializedCourse> {
 	try {
 		var course = await prisma.course.create({
 			data: {
@@ -59,29 +110,27 @@ async function create(code: string, name: string): Promise<SerializedCourse> {
 		return Promise.reject(error)
 	}
 
-	return await reduce(course)
+	return await reduce(course, 'programs', 'graphs', 'links', 'editors', 'admins')
 }
 
-/**
- * Updates a Course in the database
- * @param data Course data
- */
+export async function update(data: SerializedCourse) {
 
-async function update(data: SerializedCourse): Promise<void> {
-
-	// Get current data
-	const [graphs, programs, links] = await Promise.all([
-		getGraphs(data.id),
+	// Get deltas
+	const [programs, graphs, links, editors, admins] = await Promise.all([
 		getPrograms(data.id),
-		getLinks(data.id)
+		getGraphs(data.id),
+		getLinks(data.id),
+		getEditors(data.id),
+		getAdmins(data.id)
 	])
 
-	// Get data delta
-	const graph_delta = array_delta(graphs, data.graphs)
-	const program_delta = array_delta(programs, data.programs)
-	const link_delta = array_delta(links, data.links)
+	const program_delta = prismaUpdateArray<number, SerializedProgram>(programs, data.program_ids)
+	const graph_delta = prismaUpdateArray<number, SerializedGraph>(graphs, data.graph_ids)
+	const link_delta = prismaUpdateArray<number, SerializedLink>(links, data.link_ids)
+	const editor_delta = prismaUpdateArray<string, SerializedUser>(editors, data.editor_ids)
+	const admin_delta = prismaUpdateArray<string, SerializedUser>(admins, data.admin_ids)
 
-	// Update
+	// Update database
 	try {
 		await prisma.course.update({
 			where: {
@@ -90,9 +139,11 @@ async function update(data: SerializedCourse): Promise<void> {
 			data: {
 				name: data.name,
 				code: data.code,
-				graphs: graph_delta,
 				programs: program_delta,
-				links: link_delta
+				graphs: graph_delta,
+				links: link_delta,
+				editors: editor_delta,
+				admins: admin_delta
 			}
 		})
 	} catch (error) {
@@ -100,16 +151,11 @@ async function update(data: SerializedCourse): Promise<void> {
 	}
 }
 
-/**
- * Removes a Course from the database
- * @param course_id Target Course ID
- */
-
-async function remove(course_id: number): Promise<void> {
+export async function remove(id: number) {
 	try {
 		await prisma.course.delete({
 			where: {
-				id: course_id
+				id
 			}
 		})
 	} catch (error) {
@@ -117,127 +163,40 @@ async function remove(course_id: number): Promise<void> {
 	}
 }
 
-/**
- * Reduces a Graph to a SerializedGraph
- * @param graph Graph object
- * @returns Serialized Graph
- */
+export async function getAll(...relations: CourseRelation[]): Promise<SerializedCourse[]> {
+	try {
+		var courses = await prisma.course.findMany()
+	} catch (error) {
+		return Promise.reject(error)
+	}
 
-async function reduce(course: PrismaCourse): Promise<SerializedCourse> {
+	return await Promise.all(
+		courses.map(async course => await reduce(course, ...relations))
+	)
+}
 
-	// Get additional data
+export async function getById(id: number, ...relations: CourseRelation[]): Promise<SerializedCourse> {
+	try {
+		var course = await prisma.course.findUniqueOrThrow({
+			where: {
+				id
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	return await reduce(course, ...relations)
+}
+
+export async function getPrograms(id: number, ...relations: ProgramRelation[]): Promise<SerializedProgram[]> {
 	try {
 		var data = await prisma.course.findUniqueOrThrow({
 			where: {
-				id: course.id
+				id
 			},
-			include: {
-				graphs: {
-					select: {
-						id: true
-					}
-				},
-				links: {
-					select: {
-						id: true
-					}
-				},
-				programs: {
-					select: {
-						id: true
-					}
-				},
-				users: {
-					select: {
-						userId: true,
-						role: true
-					}
-				}
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-
-	// Parse data
-	const graphs = data.graphs
-		.map(graph => graph.id)
-
-	const links = data.links
-		.map(link => link.id)
-
-	const programs = data.programs
-		.map(program => program.id)
-
-	const admins = data.users
-		.filter(user => user.role === 'ADMIN')
-		.map(user => Number(user.userId))
-
-	const editors = data.users
-		.filter(user => user.role === 'EDITOR')
-		.map(user => Number(user.userId))
-
-	// Return reduced data
-	return {
-		id: data.id,
-		code: data.code,
-		name: data.name,
-		graphs,
-		links,
-		admins,
-		editors,
-		programs
-	}
-}
-
-/**
- * Retrieves all Courses from the database
- * @returns All serialized Courses
- */
-
-async function getAll(): Promise<SerializedCourse[]> {
-	try {
-		var data = await prisma.course.findMany()
-	} catch (error) {
-		return Promise.reject(error)
-	}
-
-	return await Promise.all(data.map(reduce))
-}
-
-/**
- * Retrieves Courses by ID
- * @param course_id Target Course ID
- * @returns Serialized Course
- */
-
-async function getById(course_id: number): Promise<SerializedCourse> {
-	try {
-		var data = await prisma.course.findUniqueOrThrow({
-			where: {
-				id: course_id
-			}
-		})
-	} catch (error) {
-		return Promise.reject(error)
-	}
-
-	return await reduce(data)
-}
-
-/**
- * Retrieves Graphs assigned to target Course
- * @param course_id Target Course ID
- * @returns Serialized Graphs
- */
-
-async function getGraphs(course_id: number): Promise<SerializedGraph[]> {
-	try {
-		var data = await prisma.graph.findMany({
-			where: {
-				course: {
-					id: course_id
-				}
+			select: {
+				programs: true
 			}
 		})
 	} catch (error) {
@@ -245,100 +204,82 @@ async function getGraphs(course_id: number): Promise<SerializedGraph[]> {
 	}
 
 	return await Promise.all(
-		data.map(GraphHelper.reduce)
+		data.programs.map(async program => await ProgramHelper.reduce(program, ...relations))
 	)
 }
 
-/**
- * Retrieves Links assigned to target Course
- * @param course_id Target Course ID
- * @returns Serialized Links
- */
-
-async function getLinks(course_id: number): Promise<SerializedLink[]> {
+export async function getGraphs(id: number, ...relations: GraphRelation[]): Promise<SerializedGraph[]> {
 	try {
-		var data = await prisma.graphLink.findMany({
+		var data = await prisma.course.findUniqueOrThrow({
 			where: {
-				courseId: course_id
+				id
+			},
+			select: {
+				graphs: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(LinkHelper.reduce))
+	return await Promise.all(
+		data.graphs.map(async graph => await GraphHelper.reduce(graph, ...relations))
+	)
 }
 
-/**
- * Retrieves Admins assigned to target Course
- * @param course_id Target Course ID
- * @returns Serialized Admins
- */
-
-async function getAdmins(course_id: number): Promise<SerializedUser[]> {
+export async function getLinks(id: number, ...relations: LinkRelation[]): Promise<SerializedLink[]> {
 	try {
-		var data = await prisma.user.findMany({
+		var data = await prisma.course.findUniqueOrThrow({
 			where: {
-				courses: {
-					some: {
-						courseId: course_id,
-						role: 'ADMIN'
-					}
-				}
+				id
+			},
+			select: {
+				links: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(UserHelper.reduce))
+	return await Promise.all(
+		data.links.map(async link => await LinkHelper.reduce(link, ...relations))
+	)
 }
 
-/**
- * Retrieves Editors assigned to target Course
- * @param course_id Target Course ID
- * @returns Serialized Editors
- */
-
-async function getEditors(course_id: number): Promise<SerializedUser[]> {
+export async function getEditors(id: number, ...relations: UserRelation[]): Promise<SerializedUser[]> {
 	try {
-		var data = await prisma.user.findMany({
+		var data = await prisma.course.findUniqueOrThrow({
 			where: {
-				courses: {
-					some: {
-						courseId: course_id,
-						role: 'EDITOR'
-					}
-				}
+				id
+			},
+			select: {
+				editors: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(UserHelper.reduce))
+	return await Promise.all(
+		data.editors.map(async editor => await UserHelper.reduce(editor, ...relations))
+	)
 }
 
-/**
- * Retrieves Programs assigned to target Course
- * @param course_id Target Course ID
- * @returns Serialized Programs
- */
-
-async function getPrograms(course_id: number): Promise<SerializedProgram[]> {
+export async function getAdmins(id: number, ...relations: UserRelation[]): Promise<SerializedUser[]> {
 	try {
-		var data = await prisma.program.findMany({
+		var data = await prisma.course.findUniqueOrThrow({
 			where: {
-				courses: {
-					some: {
-						id: course_id
-					}
-				}
+				id
+			},
+			select: {
+				admins: true
 			}
 		})
 	} catch (error) {
 		return Promise.reject(error)
 	}
 
-	return await Promise.all(data.map(ProgramHelper.reduce))
+	return await Promise.all(
+		data.admins.map(async admin => await UserHelper.reduce(admin, ...relations))
+	)
 }

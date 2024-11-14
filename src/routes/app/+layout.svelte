@@ -122,7 +122,7 @@
 			display: flex
 			flex-flow: column nowrap
 			place-items: stretch start
-			gap: 1rem
+			gap: 2rem
 
 	footer
 		position: fixed

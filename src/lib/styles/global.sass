@@ -85,27 +85,3 @@ ul
 .grayed
 	text-align: center
 	color: $placeholder-color
-
-.modal form
-	display: grid
-	grid-template: "label content" auto / 1fr 2fr
-	place-items: center start
-	row-gap: $form-small-gap
-	column-gap: $form-medium-gap
-
-	margin-top: $form-big-gap
-
-	label
-		grid-column: label
-		justify-self: end
-
-	.textfield, .textarea, .dropdown
-		grid-column: content
-
-	footer
-		display: flex
-		flex-flow: row nowrap
-		grid-column: content
-		gap: $form-medium-gap
-
-		margin-top: $form-medium-gap

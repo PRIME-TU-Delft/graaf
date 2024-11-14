@@ -3,8 +3,6 @@
 
 	// Exports
 	export let text: string
-	export let x: number
-	export let y: number
 
 </script>
 
@@ -13,11 +11,7 @@
 
 <svelte:options accessors/>
 
-<span
-	class="tooltip"
-	style:top="{y}px"
-	style:left="{x}px"
->
+<span class="tooltip">
 	{text}
 </span>
 
@@ -32,8 +26,10 @@
 
 	.tooltip
 		position: absolute
-		translate: -50% calc(-100% - 10px)
+		translate: -50% -150%
 		z-index: 9998
+		left: 50%
+		top: 0
 
 		width: max-content
 		padding: 0 $input-thick-padding

@@ -1,9 +1,6 @@
 
 <script lang="ts">
 
-	// Internal dependencies
-	import { tooltip } from "$scripts/tooltip"
-
 	// Assets
 	import copy_icon from "$assets/copy-icon.svg"
 
@@ -12,7 +9,6 @@
 
 	// Variables
 	let copied: boolean = false
-	$: disabled = url === ''
 
 </script>
 
@@ -21,7 +17,7 @@
 
 
 
-<div class="textfield">
+<div class="textfield" class:disabled={url === ''}>
 	<input
 		type="url"
 		disabled={true}
@@ -30,9 +26,6 @@
 		/>
 
 	<button
-		disabled={disabled}
-		class:disabled
-		use:tooltip={disabled ? 'Invalid link' : 'Copy link'}
 		on:click={async () => {
 			copied = true
 			await navigator.clipboard.writeText(url)
@@ -40,7 +33,12 @@
 		}}
 	>
 		<img src={copy_icon} alt="Copy link" />
-		<span class="popup" class:copied> Link copied! </span>
+
+		{#if copied}
+			<span class="popup"> 
+				Link copied! 
+			</span>
+		{/if}
 	</button>
 </div>
 
@@ -53,9 +51,15 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	div
+	.textfield
 		width: 100%
 		position: relative
+
+		&.disabled
+			pointer-events: none
+
+			button
+				background-color: $gray
 
 		input
 			width: 100%
@@ -83,18 +87,15 @@
 			align-items: center
 
 			height: 100%
-			background-color: $purple
-			border-radius: 0 $border-radius $border-radius 0
 
 			border: none
+			border-radius: 0 $border-radius $border-radius 0
+			background-color: $purple
+			transition: all $default-transition
 			cursor: pointer
 
 			&:hover
 				background-color: $dark-purple
-
-			&.disabled
-				background-color: $dark-gray
-				cursor: not-allowed
 
 			img
 				width: $input-icon-size
@@ -111,8 +112,6 @@
 				bottom: calc(100% + 10px)
 				z-index: 9999
 
-				display: none
-
 				width: max-content
 				padding: 0 $input-thick-padding
 				border-radius: $border-radius
@@ -122,9 +121,6 @@
 				text-align: center
 
 				pointer-events: none
-
-				&.copied
-					display: block
 
 				&::after
 					position: absolute

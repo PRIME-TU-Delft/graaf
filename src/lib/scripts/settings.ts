@@ -4,6 +4,20 @@ type Pixels = number
 type GridUnits = number
 type Milliseconds = number
 
+// -------------------> General settings
+
+export const MAX_PROGRAM_NAME_LENGTH = 50
+export const COURSE_CODE_REGEX = /^[A-Za-z0-9]*$/
+export const MAX_COURSE_CODE_LENGTH = 10
+export const MAX_COURSE_NAME_LENGTH = 50
+export const MAX_GRAPH_NAME_LENGTH = 50
+export const MAX_NODE_NAME_LENGTH = 35
+export const MAX_LECTURE_NAME_LENGTH = 50
+export const LINK_NAME_REGEX = /^[A-Za-z0-9_.\-~]*$/
+export const MAX_LINK_NAME_LENGTH = 35
+
+// -------------------> Editor settings
+
 // Grid settings
 export const GRID_COLOR = '#a4a4a4'
 export const GRID_UNIT: Scalar = 10
@@ -14,15 +28,15 @@ export const MAX_ZOOM: Scalar = 1.5
 export const ZOOM_STEP: Scalar = 1.5
 
 // Field settings
-export const FIELD_WIDTH: GridUnits  = 16
-export const FIELD_HEIGHT: GridUnits = 8
-export const FIELD_MARGIN: GridUnits = 1.5
-export const FIELD_PADDING: GridUnits = 1
-export const FIELD_FONT_SIZE: Pixels = 15
-export const FIELD_MAX_CHARS: Scalar = 35
-export const FIELD_HIGHLIGHT_DEVIATION: Pixels = 5
-export const FIELD_HIGHLIGHT_OPACITY: Scalar = 0.75
-export const FIELD_HIGHLIGHT_COLOR: string = 'green'
+export const NODE_WIDTH: GridUnits  = 16
+export const NODE_HEIGHT: GridUnits = 8
+export const NODE_MARGIN: GridUnits = 1.5
+export const NODE_PADDING: GridUnits = 1
+export const NODE_FONT_SIZE: Pixels = 15
+export const NODE_MAX_CHARS: Scalar = 35
+export const NODE_HIGHLIGHT_DEVIATION: Pixels = 5
+export const NODE_HIGHLIGHT_OPACITY: Scalar = 0.75
+export const NODE_HIGHLIGHT_COLOR: string = 'green'
 
 // Stroke settings
 export const STROKE_WIDTH: Pixels = 2
@@ -31,7 +45,7 @@ export const STROKE_DASHARRAY: string  = '10,5'
 // Lecture settings
 export const LECTURE_PADDING: GridUnits = 5
 export const LECTURE_HEADER_HEIGHT: GridUnits = 3
-export const LECTURE_COLUMN_WIDTH: GridUnits = 2 * LECTURE_PADDING + FIELD_WIDTH
+export const LECTURE_COLUMN_WIDTH: GridUnits = 2 * LECTURE_PADDING + NODE_WIDTH
 export const LECTURE_FONT_SIZE: Pixels = 22
 
 // Overlay settings
@@ -61,21 +75,18 @@ export const SHAKE = {
 	}
 }
 
-// Simulation settings
-export const CENTER_FORCE: Scalar = 0.05
-export const CHARGE_FORCE: Scalar = -15
-
+// Node style constants
 const top = STROKE_WIDTH / 2
-const right = FIELD_WIDTH * GRID_UNIT - STROKE_WIDTH / 2
-const bottom = FIELD_HEIGHT * GRID_UNIT - STROKE_WIDTH / 2
+const right = NODE_WIDTH * GRID_UNIT - STROKE_WIDTH / 2
+const bottom = NODE_HEIGHT * GRID_UNIT - STROKE_WIDTH / 2
 const left = STROKE_WIDTH / 2
-const hmid = (FIELD_WIDTH * GRID_UNIT) / 2
-const vmid = (FIELD_HEIGHT * GRID_UNIT) / 2
+const hmid = (NODE_WIDTH * GRID_UNIT) / 2
+const vmid = (NODE_HEIGHT * GRID_UNIT) / 2
 
-export const styles: {
+export const NODE_STYLES: {
 	[key: string]: { display_name: string, stroke: string, fill: string, path: string }
 } = {
-	'prosperous-red': {
+	'PROSPEROUS_RED': {
 		display_name: 'Prosperous Red',
 		stroke: '#e6362a',
 		fill: '#fad7d4',
@@ -88,7 +99,7 @@ export const styles: {
 				 Z`
 	},
 
-	'energizing-orange': {
+	'ENERGIZING_ORANGE': {
 		display_name: 'Energizing Orange',
 		stroke: '#ff6c2f',
 		fill: '#ffe2d5',
@@ -107,7 +118,7 @@ export const styles: {
 				 Z`
 	},
 
-	'sunny-yellow': {
+	'SUNNY_YELLOW': {
 		display_name: 'Sunny Yellow',
 		stroke: '#f1c21b',
 		fill: '#fff2cc',
@@ -122,7 +133,7 @@ export const styles: {
 				 Z`
 	},
 
-	'electric-green': {
+	'ELECTRIC_GREEN': {
 		display_name: 'Electric Green',
 		stroke: '#50d691',
 		fill: '#dcf7e9',
@@ -133,7 +144,7 @@ export const styles: {
 				 Z`
 	},
 
-	'confident-turquoise': {
+	'CONFIDENT_TURQUOISE': {
 		display_name: 'Confident Turquoise',
 		stroke: '#009da5',
 		fill: '#ccebed',
@@ -144,7 +155,7 @@ export const styles: {
 				 Z`
 	},
 
-	'mysterious-blue': {
+	'MYSTERIOUS_BLUE': {
 		display_name: 'Mysterious Blue',
 		stroke: '#3255a4',
 		fill: '#d6dded',
@@ -155,7 +166,7 @@ export const styles: {
 				 Z`
 	},
 
-	'majestic-purple': {
+	'MAJESTIC_PURPLE': {
 		display_name: 'Majestic Purple',
 		stroke: '#ae5171',
 		fill: '#efdce3',
@@ -168,7 +179,7 @@ export const styles: {
 				 Z`
 	},
 
-	'powerful-pink': {
+	'POWERFUL_PINK': {
 		display_name: 'Powerful Pink',
 		stroke: '#f87089',
 		fill: '#fee2e7',
@@ -183,7 +194,7 @@ export const styles: {
 				 Z`
 	},
 
-	'neutral-gray': {
+	'NEUTRAL_GRAY': {
 		display_name: 'Neutral Gray',
 		stroke: '#91999f',
 		fill: '#d6d6d6',
@@ -196,7 +207,7 @@ export const styles: {
 				 Z`
 	},
 
-	'serious-brown': {
+	'SERIOUS_BROWN': {
 		display_name: 'Serious Brown',
 		stroke: '#563d29',
 		fill: '#d7cec7',

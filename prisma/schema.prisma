@@ -20,16 +20,6 @@ enum UserRole {
 	ADMIN
 }
 
-enum ProgramRole {
-	EDITOR
-	ADMIN
-}
-
-enum CourseRole {
-	EDITOR
-	ADMIN
-}
-
 model User {
 	id					String		@id @default(cuid())
 	role				UserRole	@default(USER)
@@ -39,14 +29,17 @@ model User {
 	email				String		@unique
 	emailVerified		DateTime?
 	image				String?
+
 	accounts			Account[]
 	sessions			Session[]
 
+	program_editors		Program[]	@relation("EditorRelation")
+	program_admins		Program[]	@relation("AdminRelation")
+	course_editors		Course[]	@relation("EditorRelation")
+	course_admins		Course[]	@relation("AdminRelation")
+
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
-
-	programs			ProgramUser[]
-	courses				CourseUser[]
 }
 
 model Account {
@@ -93,33 +86,13 @@ model VerificationToken {
 model Program {
 	id				Int			@id @default(autoincrement())
 	name			String
-	description		String?
+
+	courses			Course[]
+	editors			User[]		@relation("EditorRelation")
+	admins			User[]		@relation("AdminRelation")
+
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
-	courses			Course[]
-	users			ProgramUser[]
-}
-
-model ProgramUser {
-	userId			String
-	programId		Int
-	role			ProgramRole		@default(EDITOR)
-
-	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
-	program			Program			@relation(fields: [programId], references: [id], onDelete: Cascade)
-
-	@@id([userId, programId])
-}
-
-model CourseUser {
-	userId			String
-	courseId		Int
-	role			CourseRole		@default(EDITOR)
-
-	user			User			@relation(fields: [userId], references: [id], onDelete: Cascade)
-	course			Course			@relation(fields: [courseId], references: [id], onDelete: Cascade)
-
-	@@id([userId, courseId])
 }
 
 enum CourseType {
@@ -130,13 +103,15 @@ enum CourseType {
 model Course {
 	id				Int			@id @default(autoincrement())
 	code			String		@unique
-	name			String
-	description		String?
 	type			CourseType	@default(COURSE)
+	name			String
+
 	programs		Program[]
 	graphs			Graph[]
-	links			GraphLink[]
-	users			CourseUser[]
+	links			Link[]
+	editors			User[]		@relation("EditorRelation")
+	admins			User[]		@relation("AdminRelation")
+
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
 }
@@ -144,24 +119,41 @@ model Course {
 model Graph {
 	id				Int			@id @default(autoincrement())
 	name			String
-	course			Course		@relation(fields: [courseId], references: [id])
 	courseId		Int
+
+	course			Course		@relation(fields: [courseId], references: [id])
 	domains			Domain[]
 	subjects		Subject[]
 	lectures		Lecture[]
-	links			GraphLink[]
+	links			Link[]
+
 	createdAt		DateTime	@default(now())
 	updatedAt		DateTime	@updatedAt
+}
+
+enum DomainStyle {
+	PROSPEROUS_RED
+	ENERGIZING_ORANGE
+	SUNNY_YELLOW
+	ELECTRIC_GREEN
+	CONFIDENT_TURQUOISE
+	MYSTERIOUS_BLUE
+	MAJESTIC_PURPLE
+	POWERFUL_PINK
+	NEUTRAL_GRAY
+	SERIOUS_BROWN
 }
 
 model Domain {
 	id				Int			@id @default(autoincrement())
 	name			String		@default("")
+	style			DomainStyle?
+	ordering		Int			@default(-1)
 	x				Int			@default(0)
 	y				Int			@default(0)
-	style			String?
-	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
+
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	subjects		Subject[]
 	parentDomains	Domain[]	@relation("DomainRelation")
 	childDomains	Domain[]	@relation("DomainRelation")
@@ -170,31 +162,35 @@ model Domain {
 model Subject {
 	id				Int			@id @default(autoincrement())
 	name			String		@default("")
+	ordering		Int			@default(-1)
 	x				Int			@default(0)
 	y				Int			@default(0)
-	style			String?
-	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	graphId			Int
-	domain			Domain?		@relation(fields: [domainId], references: [id])
 	domainId		Int?
+
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
+	domain			Domain?		@relation(fields: [domainId], references: [id])
+	lectures		Lecture[]
 	parentSubjects	Subject[]	@relation("SubjectRelation")
 	childSubjects	Subject[]	@relation("SubjectRelation")
-	lectures		Lecture[]
 }
 
 model Lecture {
 	id				Int			@id @default(autoincrement())
-	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
-	graphId			Int
 	name			String		@default("")
+	ordering		Int			@default(-1)
+	graphId			Int
+
+	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
 	subjects		Subject[]
 }
 
-model GraphLink {
+model Link {
 	id				Int			@id @default(autoincrement())
-	name			String
+	name			String		@default("")
 	courseId		Int
 	graphId			Int?
+
 	course			Course		@relation(fields: [courseId], references: [id], onDelete: Cascade)
 	graph			Graph?		@relation(fields: [graphId], references: [id])
 }

@@ -1,7 +1,7 @@
 
 <div class="card">
 	<header class="header"><slot name="header" /></header>
-	<section class="body"><slot name="body" /></section>
+	<section class="body"><slot /></section>
 </div>
 
 
@@ -25,6 +25,7 @@
 			display: flex
 			flex-flow: row nowrap
 			align-items: center
+			gap: $form-small-gap
 
 			padding: $card-thin-padding $card-thick-padding
 

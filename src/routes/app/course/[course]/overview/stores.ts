@@ -1,26 +1,22 @@
 
 // External dependencies
-import { writable } from 'svelte/store'
+import { writable, derived } from 'svelte/store'
 
 // Internal dependencies
-import type { DropdownOption } from '$scripts/types'
+import { Validation } from '$scripts/validation'
 
 import type {
-	ControllerCache,
-	CourseController,
-	GraphController,
-	LinkController
+	CourseController
 } from '$scripts/controllers'
 
 // Exports
-export const cache = writable<ControllerCache | undefined>()
-export const course = writable<CourseController | undefined>()
-export const course_options = writable<DropdownOption<CourseController>[] | undefined>()
-export const graphs = writable<GraphController[] | undefined>()
-export const graph_options = writable<DropdownOption<number>[] | undefined>()
-export const links = writable<LinkController[] | undefined>()
+export const course = writable<CourseController>()
+export const courses = writable<CourseController[]>([])
 
-course.subscribe(async course => course_options.set(await course?.getCourseOptions()))
-course.subscribe(async course => graphs.set(await course?.getGraphs()))
-course.subscribe(async course => graph_options.set(await course?.getGraphOptions()))
-course.subscribe(async course => links.set(await course?.getLinks()))
+export const course_options = derived(courses, 
+	courses => courses.map(course => ({
+		value: course, 
+		label: course.name,
+		validation: Validation.success()
+	}))
+)

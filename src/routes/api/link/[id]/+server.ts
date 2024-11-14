@@ -3,47 +3,22 @@
 import { LinkHelper } from '$scripts/helpers'
 
 // Exports
-export { GET, DELETE }
+export { DELETE }
 
 
 // --------------------> API Endpoints
 
 
-/**
- * API endpoint for fetching a Link from the database.
- * @returns `SerializedLink`
- */
-
-async function GET({ params }) {
-
-	// Retrieve data
-	const id = Number(params.id)
-	if (!id || isNaN(id)) {
-		return new Response('Missing ID', { status: 400 })
-	}
-
-	// Delete the Link
-	return await LinkHelper.getById(id)
-		.then(
-			data => new Response(JSON.stringify(data), { status: 200 }),
-			error => new Response(error, { status: 400 })
-		)
-}
-
-/**
- * API endpoint for deleting a Link from the database.
- */
-
 async function DELETE({ params }) {
 
 	// Retrieve data
-	const id = Number(params.id)
-	if (!id || isNaN(id)) {
-		return new Response('Missing ID', { status: 400 })
+	const link_id = Number(params.id)
+	if (!link_id || isNaN(link_id)) {
+		return new Response('Missing link ID', { status: 400 })
 	}
 
 	// Delete the Link
-	return await LinkHelper.remove(id)
+	return await LinkHelper.remove(link_id)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })
