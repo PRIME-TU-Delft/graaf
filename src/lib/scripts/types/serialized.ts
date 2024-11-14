@@ -30,7 +30,6 @@ export function validSerializedProgram(object: any): object is SerializedProgram
 		&& (object.admin_ids === undefined  || Array.isArray(object.admin_ids))
 }
 
-
 export type SerializedCourse = {
 	id: number,
 	code: string,
