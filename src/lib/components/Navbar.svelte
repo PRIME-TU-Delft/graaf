@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Exports
-	export let path: { name: string, href: string }[] = []
+	export let path: { name: string, href?: string }[] = []
 
 </script>
 
@@ -13,7 +13,12 @@
 <nav>
 	<span class="url">
 		{#each path as link, index}
-			<a href={link.href}> {link.name} </a>
+			{#if link.href}
+				<a href={link.href}> {link.name} </a>
+			{:else}
+				{link.name}
+			{/if}
+
 			{#if index < path.length - 1}
 				/&nbsp;
 			{/if}

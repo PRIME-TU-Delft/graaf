@@ -32,7 +32,7 @@
 
 	{#if logged_in}
 		<LinkButton href="app/auth/logout"> Logout </LinkButton>
-		<Button href="app/dashboard"> Dashboard </Button>
+		<Button href="app/home"> Home </Button>
 	{:else}
 		<LinkButton href="app/auth/register"> Register </LinkButton>
 		<Button on:click={() => signIn("surfconext")}> Login </Button>

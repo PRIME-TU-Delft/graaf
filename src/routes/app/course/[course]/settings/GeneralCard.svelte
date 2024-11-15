@@ -36,7 +36,7 @@
 		<LinkButton on:click={() => archive_modal.hide()}> Cancel </LinkButton>
 		<Button on:click={async () => {
 			await $course.delete() // TODO this should archive, not delete
-			goto('/app/dashboard')
+			goto('/app/home')
 		}}> Archive </Button>
 	</svelte:fragment>
 </Modal>
