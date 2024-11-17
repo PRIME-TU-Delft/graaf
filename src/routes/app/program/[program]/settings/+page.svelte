@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { program } from './stores'
+	import { courses, program } from './stores'
 
 	import {
 		ControllerCache,
@@ -40,9 +40,9 @@
 
 		// Revive controllers into stores
 		program.set(ProgramController.revive(cache, awaited_program))
+		courses.set(awaited_course.map(course => CourseController.revive(cache, course)))
 
 		// Revive controllers into cache
-		awaited_course.forEach(course => CourseController.revive(cache, course))
 		awaited_user.forEach(user => UserController.revive(cache, user))
 	}
 

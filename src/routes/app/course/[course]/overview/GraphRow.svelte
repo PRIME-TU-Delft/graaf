@@ -82,7 +82,7 @@
 		<label for="course"> Target Course </label>
 		<Dropdown
 			id="course"
-			placeholder="Target Course"
+			placeholder="Select a course"
 			options={$course.copy_options}
 			bind:value={copy_modal.course}
 		/>

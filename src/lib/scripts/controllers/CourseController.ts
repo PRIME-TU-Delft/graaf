@@ -502,13 +502,13 @@ class CourseController {
 
 	// --------------------> Actions
 
-	static async create(cache: ControllerCache, code: string, name: string): Promise<CourseController> {
+	static async create(cache: ControllerCache, code: string, name: string, program?: ProgramController): Promise<CourseController> {
 
 		// Call the API to create a new program
 		const response = await fetch('/api/course', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ code, name })
+			body: JSON.stringify({ code, name, program_id: program?.id })
 		})
 
 		// Throw an error if the API request fails
@@ -521,6 +521,12 @@ class CourseController {
 		if (validSerializedCourse(data)) {
 			const course = CourseController.revive(cache, data)
 			course._untouched = true
+
+			// Assign the program if provided
+			if (program !== undefined) {
+				program.addCourse(course)
+			}
+
 			return course
 		}
 

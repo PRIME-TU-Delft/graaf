@@ -28,8 +28,8 @@
 <!-- Markup -->
 
 <Modal bind:this={remove_modal}>
-	<h3 slot="header"> Unnassign course </h3>
-	Are you certain you want to unnassign "{course.name}" from this program?
+	<h3 slot="header"> Unnassign Course </h3>
+	Are you certain you want to unnassign {course.code} {course.name} from this program?
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => remove_modal.hide()}> Cancel </LinkButton>
@@ -38,7 +38,7 @@
 			await $program.save()
 			$program = $program // Trigger reactivity
 			remove_modal.hide()
-		}}> Archive </Button>
+		}}> Unassign </Button>
 	</svelte:fragment>
 </Modal>
 
@@ -50,7 +50,7 @@
 			on:click={() => remove_modal.show()}
 		/>
 
-		{course.name}
+		{course.code} {course.name}
 
 		<LinkButton href="/app/course/{course.id}/settings">
 			Course Settings

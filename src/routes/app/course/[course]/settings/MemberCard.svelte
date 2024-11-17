@@ -106,7 +106,7 @@
 		<label for="user"> User </label>
 		<Dropdown
 			id="user"
-			placeholder="Choose a user"
+			placeholder="Select a user"
 			bind:value={member_modal.user}
 			options={member_modal.permission === 'EDITOR' ? $course.editor_options : $course.admin_options}
 		/>
@@ -114,7 +114,7 @@
         <label for="permissions"> Permissions </label>
         <Dropdown
             id="permissions"
-            placeholder="Choose their permissions"
+            placeholder="Select their permissions"
             bind:value={member_modal.permission}
             options={permission_options}
             />

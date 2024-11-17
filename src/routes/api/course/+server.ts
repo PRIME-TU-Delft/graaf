@@ -13,11 +13,11 @@ export { POST, PUT }
 async function POST({ request }) {
 
 	// Retrieve course code and name
-	const { code, name } = await request.json()
+	const { code, name, program_id } = await request.json()
 	if (!code || !name) return new Response('Missing code or name', { status: 400 })
 
 	// Create course
-	return await CourseHelper.create(code, name)
+	return await CourseHelper.create(code, name, program_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })

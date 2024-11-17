@@ -99,14 +99,14 @@
 </script>
 
 <Modal bind:this={member_modal.modal}>
-	<h3 slot="header"> New member </h3>
+	<h3 slot="header"> New Member </h3>
 	Assign a user as a member of this program. There are two types of members: editors and admins. Editors are by extention editors of all courses assigned to this program. Admins can also assign other members, change its name, assign new courses, and archive it.
 
 	<form>
 		<label for="user"> User </label>
 		<Dropdown
 			id="user"
-			placeholder="Choose a user"
+			placeholder="Select a user"
 			bind:value={member_modal.user}
 			options={member_modal.permission === 'EDITOR' ? $program.editor_options : $program.admin_options}
 		/>
@@ -114,7 +114,7 @@
         <label for="permissions"> Permissions </label>
         <Dropdown
             id="permissions"
-            placeholder="Choose their permissions"
+            placeholder="Select their permissions"
             bind:value={member_modal.permission}
             options={permission_options}
             />
