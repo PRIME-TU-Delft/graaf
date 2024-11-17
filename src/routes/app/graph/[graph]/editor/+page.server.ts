@@ -19,6 +19,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		.catch(error => { throw new Error(error) })
 	const domains = GraphHelper.getDomains(graph_id, 'graph', 'subjects', 'parents', 'children')
 		.catch(error => { throw new Error(error) })
+	const subjects = GraphHelper.getSubjects(graph_id, 'graph', 'domain', 'parents', 'children', 'lectures')
 
-	return { graph, course, domains }
+	return { graph, course, domains, subjects }
 }

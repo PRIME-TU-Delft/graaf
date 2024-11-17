@@ -16,19 +16,20 @@
 		ControllerCache,
 		GraphController,
 		CourseController,
-
-		DomainController
-
+		DomainController,
+		SubjectController
 	} from '$scripts/controllers'
 
 	// Components
 	import GeneralCard from './GeneralCard.svelte'
 	import DomainTab from './DomainTab.svelte'
+	import DomainHeader from './DomainHeader.svelte'
+	import SubjectTab from './SubjectTab.svelte'
+	import SubjectHeader from './SubjectHeader.svelte'
 
 	import Loading from '$components/Loading.svelte'
 	import Layout from '$components/Layout.svelte'
 	import Navbar from '$components/Navbar.svelte'
-	import DomainHeader from './DomainHeader.svelte';
 
 	// Functions
 	async function revive() {
@@ -37,11 +38,13 @@
 		const [
 			awaited_graph,
 			awaited_course,
-			awaited_domains
+			awaited_domains,
+			awaited_subjects
 		] = await Promise.all([
 			data.graph,
 			data.course,
-			data.domains
+			data.domains,
+			data.subjects
 		])
 
 		// Revive controllers into stores
@@ -50,6 +53,7 @@
 		// Revive controllers into cache
 		CourseController.revive(cache, awaited_course)
 		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
+		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
 	}
 
 	function setActiveTab(tab: string) {
@@ -99,7 +103,7 @@
 				}
 			]} />
 
-			Here you can change your graph settings, like its domains, subjects, and lectures.
+			Here you can edit your graph, like its domains, subjects, and lectures.
 		</svelte:fragment>
 
 		<GeneralCard />
@@ -132,7 +136,7 @@
 					{#if active_tab === 'domains'}
 						<DomainHeader />
 					{:else if active_tab === 'subjects'}
-						<!-- SubjectHeader /> -->
+						<SubjectHeader />
 					{:else if active_tab === 'lectures'}
 						<!-- <LectureHeader /> -->
 					{/if}
@@ -143,7 +147,7 @@
 				{#if active_tab === 'domains'}
 					<DomainTab />
 				{:else if active_tab === 'subjects'}
-					<!-- <SubjectTab /> -->
+					<SubjectTab />
 				{:else if active_tab === 'lectures'}
 					<!-- <LectureTab /> -->
 				{/if}

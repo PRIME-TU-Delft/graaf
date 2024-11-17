@@ -3,48 +3,47 @@
 	const SCROLL_ON_NEW = 55
 
 	// Internal dependencies
-	import { graph, domain_query } from './stores'
+	import { graph, subject_query } from './stores'
 
 	import {
-		DomainController,
-		DomainRelationController
+		SubjectController,
+		SubjectRelationController
 	} from '$scripts/controllers'
 
 	// Components
-	import DomainRow from './DomainRow.svelte'
+	import SubjectRow from './SubjectRow.svelte'
 	import RelationRow from './RelationRow.svelte'
 
-	import SortableList from '$components/SortableList.svelte'
 	import OrderedList from '$components/OrderedList.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
 
 	// Variables
-	$: filtered_domains = $graph.domains.filter(domain => domain.matchesQuery($domain_query))
-	$: filtered_relations = $graph.domain_relations.filter(relation => relation.matchesQuery($domain_query))
+	$: filtered_subjects = $graph.subjects.filter(subject => subject.matchesQuery($subject_query))
+	$: filtered_relations = $graph.subject_relations.filter(relation => relation.matchesQuery($subject_query))
 
 </script>
 
 <div class="tab">
 
-	<!-- Domains -->
-	{#if filtered_domains.length == 0}
+	<!-- Subjects -->
+	{#if filtered_subjects.length == 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
-		<SortableList let:item list={filtered_domains} on:rearrange={async event => await $graph.reorder(event.detail)}>
-			<DomainRow domain={item} />
-		</SortableList>
+		<OrderedList let:item list={filtered_subjects}>
+			<SubjectRow subject={item} />
+		</OrderedList>
 	{/if}
 
-	<!-- New domain -->
+	<!-- New subject -->
 	<button
 		on:click={async () => {
-			await DomainController.create($graph.cache, $graph)
+			await SubjectController.create($graph.cache, $graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
 		}}
-	> <img src={plus_icon} alt="New domain"> </button>
+	> <img src={plus_icon} alt="New subject"> </button>
 
 	<!-- Divider -->
 	<div class="divider" id="relations">
@@ -53,8 +52,8 @@
 		<div class="line" />
 	</div>
 
-	<!-- Domain Relations -->
-	{#if filtered_domains.length == 0}
+	<!-- Subject Relations -->
+	{#if filtered_subjects.length == 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
 		<OrderedList let:item list={filtered_relations}>
@@ -62,10 +61,10 @@
 		</OrderedList>
 	{/if}
 
-	<!-- New domain relation -->
+	<!-- New subject relation -->
 	<button on:click={
 		async () => {
-			await DomainRelationController.create($graph)
+			await SubjectRelationController.create($graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
 		}}

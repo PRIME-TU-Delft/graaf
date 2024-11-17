@@ -3,12 +3,12 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-
-	import type { DomainRelationController } from '$scripts/controllers'
+	import type { SubjectController } from '$scripts/controllers'
 
 	// Components
-	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import Textfield from '$components/Textfield.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
 	import Modal from '$components/Modal.svelte'
@@ -17,7 +17,7 @@
 	import trash_icon from '$assets/trash-icon.svg'
 
 	// Exports
-	export let relation: DomainRelationController
+	export let subject: SubjectController
 
 	// Modal
 	let delete_modal: Modal
@@ -27,16 +27,15 @@
 
 <!-- Markup -->
 
-
 <Modal bind:this={delete_modal}>
-	<h3 slot="header"> Delete Relation </h3>
-	Are you sure you want to delete this relation? This action cannot be undone.
+	<h3 slot="header"> Delete Subject </h3>
+	Are you sure you want to delete this subject? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
 		<Button on:click={async () => {
-			await relation.delete()
-			$graph = $graph // Trigger reactivity
+			await subject.delete()
+			$graph = $graph
 			delete_modal.hide()
 		}}> Delete </Button>
 	</svelte:fragment>
@@ -45,10 +44,10 @@
 <div class="row">
 	<IconButton scale
 		src={trash_icon}
-		description="Delete Relation"
+		description="Delete Subject"
 		on:click={async () => {
-			if (relation.untouched) {
-				await relation.delete()
+			if (subject.untouched) {
+				await subject.delete()
 				$graph = $graph // Trigger reactivity
 			} else {
 				delete_modal.show()
@@ -56,31 +55,26 @@
 		}}
 	/>
 
+	<Textfield
+		id="name"
+		placeholder="Subject Name"
+		bind:value={subject.name}
+		on:input={() => { $graph = $graph /* Trigger reactivity */ }}
+		on:change={async () => await subject.save() }
+	/>
+
 	<Dropdown
-		id="parent"
-		placeholder="Select a parent domain"
-		options={relation.parent_options}
-		bind:value={relation.parent}
+		id="domain"
+		placeholder="Select a domain"
+		options={subject.domain_options}
+		bind:value={subject.domain}
 		on:change={async () => {
-			await relation.save()
+			await subject.save()
 			$graph = $graph // Trigger reactivity
 		}}
 	/>
 
-	<span class="preview" style:background={relation.parent_color} />
-
-	<Dropdown
-		id="child"
-		placeholder="Select a child domain"
-		options={relation.child_options}
-		bind:value={relation.child}
-		on:change={async () => {
-			await relation.save()
-			$graph = $graph // Trigger reactivity
-		}}
-	/>
-
-	<span class="preview" style:background={relation.child_color} />
+	<span class="preview" style:background={subject.color} />
 </div>
 
 
@@ -94,15 +88,16 @@
 
 	.row
 		display: grid
-		grid-template: "delete parent parent-preview child child-preview" auto / $total-icon-size 1fr $total-icon-size 1fr $total-icon-size
+		grid-template: "delete name style preview" auto / $total-icon-size 1fr 1fr $total-icon-size
 		grid-gap: $form-small-gap
-		place-items: center center
+		place-items: center
 
 		width: 100%
+
+		color: $dark-gray
 
 		.preview
 			width: $input-icon-size
 			height: $input-icon-size
 			margin: $input-icon-padding
-
 </style>

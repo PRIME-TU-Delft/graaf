@@ -112,6 +112,15 @@ class SubjectController extends NodeController<SubjectController> {
 		this._untouched = false
 	}
 
+	get domain_options(): DropdownOption<DomainController>[] {
+		return this.cache.all(DomainController)
+			.map(domain => ({
+				value: domain,
+				label: domain.trimmed_name,
+				validation: Validation.success()
+			}))
+	}
+
 	// Lecture properties
 	get lecture_ids(): number[] {
 		if (this._lecture_ids === undefined)
@@ -128,14 +137,6 @@ class SubjectController extends NodeController<SubjectController> {
 		// Fetch lectures from cache
 		this._lectures = this._lecture_ids.map(id => this.cache.findOrThrow(LectureController, id))
 		return Array.from(this._lectures)
-	}
-
-	get lecture_options(): DropdownOption<LectureController>[] {
-		return this.lectures.map(lecture => ({
-			value: lecture,
-			label: lecture.name,
-			validation: Validation.success()
-		}))
 	}
 
 	// Untouched state

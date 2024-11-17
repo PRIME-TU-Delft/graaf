@@ -159,6 +159,7 @@ abstract class RelationController<T extends DomainController | SubjectController
 		await this.child?.save()
 	}
 
+	abstract delete(): void
 	
 	// --------------------> Utility
 
