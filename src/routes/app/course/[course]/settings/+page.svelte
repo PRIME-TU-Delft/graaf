@@ -16,7 +16,7 @@
 	} from '$scripts/controllers'
 
 	// Components
-	import CoordinatorCard from './CoordinatorCard.svelte'
+	import MemberCard from './MemberCard.svelte'
 	import GeneralCard from './GeneralCard.svelte'
 	import ProgramCard from './ProgramCard.svelte'
 
@@ -84,12 +84,12 @@
 				<LinkButton href={`/app/course/${$course.id}/overview`}> Course overview </LinkButton>
 			</Navbar>
 
-			Here you can change your course settings, like its coordinators, graphs, links, etc.
+			Here you can change your course settings, like its members, graphs, links, etc.
 		</svelte:fragment>
 
 		<GeneralCard />
+		<MemberCard />
 		<ProgramCard />
-		<CoordinatorCard />
 
 	</Layout>
 {/await}

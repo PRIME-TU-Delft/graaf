@@ -18,7 +18,7 @@
 	// Components
 	import GeneralCard from './GeneralCard.svelte'
 	import CoursesCard from './CoursesCard.svelte'
-	import CoordinatorCard from './CoordinatorCard.svelte'
+	import MemberCard from './MemberCard.svelte'
 
 	import Layout from '$components/Layout.svelte'
 	import Navbar from '$components/Navbar.svelte'
@@ -73,12 +73,12 @@
 				}
 			]} />
 
-			Here you can change your program settings, like its courses and coordinators.
+			Here you can change your program settings, like its courses and members.
 		</svelte:fragment>
 
 		<GeneralCard />
+		<MemberCard />
 		<CoursesCard />
-		<CoordinatorCard />
 
 	</Layout>
 {/await}
