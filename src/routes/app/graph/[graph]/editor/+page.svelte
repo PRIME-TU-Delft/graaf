@@ -82,8 +82,6 @@
 <!-- Markup -->
 
 
-<svelte:window on:beforeunload|preventDefault={async () => $graph.save()} />
-
 {#await revive()}
 	<Loading />
 {:then}

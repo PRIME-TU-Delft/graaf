@@ -46,7 +46,7 @@
 		src={trash_icon}
 		description="Delete Subject"
 		on:click={async () => {
-			if (subject.untouched) {
+			if (subject.unchanged) {
 				await subject.delete()
 				$graph = $graph // Trigger reactivity
 			} else {

@@ -30,6 +30,7 @@ import type {
 export async function reduce(domain: PrismaDomain, ...relations: DomainRelation[]): Promise<SerializedDomain> {
 	const serialized: SerializedDomain = {
 		id: domain.id,
+		unchanged: domain.unchanged,
 		name: domain.name,
 		style: domain.style,
 		order: domain.order,
@@ -118,6 +119,7 @@ export async function update(data: SerializedDomain) {
 				id: data.id
 			},
 			data: {
+				unchanged: data.unchanged,
 				name: data.name,
 				style: data.style,
 				order: data.order,

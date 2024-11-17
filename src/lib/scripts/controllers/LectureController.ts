@@ -30,15 +30,16 @@ export { LectureController }
 class LectureController {
 	public uuid: string = uuid.v4()
 
-	private _untouched: boolean = false
+	private _unsaved: boolean = false
 	private _graph?: GraphController
 	private _subjects?: SubjectController[]
 
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
+		private _unchanged: boolean,
 		private _name: string,
-		public order: number,
+		private _order: number,
 		private _graph_id?: number,
 		private _subject_ids?: number[]
 	) {
@@ -47,6 +48,11 @@ class LectureController {
 
 	// --------------------> Getters & Setters
 
+	// Unchanged properties
+	get unchanged(): boolean {
+		return this._unchanged
+	}
+
 	// Name properties
 	get name(): string {
 		return this._name
@@ -54,11 +60,23 @@ class LectureController {
 
 	set name(value: string) {
 		this._name = value
-		this._untouched = false
+		this._unchanged = false
+		this._unsaved = true
 	}
 
 	get trimmed_name(): string {
 		return this._name.trim()
+	}
+
+	// Order properties
+	get order(): number {
+		return this._order
+	}
+
+	set order(value: number) {
+		this._order = value
+		this._unchanged = false
+		this._unsaved = true
 	}
 
 	// Graph properties
@@ -106,40 +124,42 @@ class LectureController {
 		)
 	}
 
-	// Untouched state
-	get untouched(): boolean {
-		return this._untouched
-	}
-
 	// --------------------> Assignments
 
-	addSubject(subject: SubjectController) {
-		if (this._subject_ids === undefined)
-			return
-		if (this._subject_ids.includes(subject.id))
-			throw new Error(`LectureError: Subject with ID ${subject.id} already assigned to lecture with ID ${this.id}`)
-		this._subject_ids?.push(subject.id)
-		this._subjects?.push(subject)
-		this._untouched = false
-	}
+	assignSubject(subject: SubjectController, mirror: boolean = true) {
+		if (this._subject_ids !== undefined) {
+			if (this._subject_ids.includes(subject.id))
+				throw new Error(`LectureError: Subject with ID ${subject.id} already assigned to lecture with ID ${this.id}`)
+			this._subject_ids.push(subject.id)
+			this._subjects?.push(subject)
+			this._unchanged = false
+			this._unsaved = true
+		}
 
-	removeSubject(subject: SubjectController) {
-		if (this._subject_ids === undefined)
-			return
-		if (!this._subject_ids.includes(subject.id))
-			throw new Error(`LectureError: Subject with ID ${subject.id} not assigned to lecture with ID ${this.id}`)
-		this._subject_ids = this._subject_ids?.filter(id => id !== subject.id)
-		this._subjects = this._subjects?.filter(s => s.id !== subject.id)
-		this._untouched = false
+		if (mirror) {
+			subject.assignToLecture(this, false)
+		}
+	}	
+
+	unassignSubject(subject: SubjectController, mirror: boolean = true) {
+		if (this._subject_ids !== undefined) {
+			if (!this._subject_ids.includes(subject.id))
+				throw new Error(`LectureError: Subject with ID ${subject.id} not assigned to lecture with ID ${this.id}`)
+			this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
+			this._subjects = this._subjects?.filter(s => s.id !== subject.id)
+			this._unchanged = false
+		}
+
+		if (mirror) {
+			subject.unassignFromLecture(this, false)
+		}
 	}
 
 	// --------------------> Validation
 
 	validateName(strict: boolean = true): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -172,9 +192,7 @@ class LectureController {
 
 	validateSubjects(strict: boolean = true): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.subject_ids.length === 0) {
 			validation.add({
@@ -228,14 +246,13 @@ class LectureController {
 
 		// Revive the lecture
 		const data = await response.json()
-		if (validSerializedLecture(data)) {
-			const lecture = LectureController.revive(cache, data)
-			lecture._untouched = true
-			graph.addLecture(lecture)
-			return lecture
+		if (!validSerializedLecture(data)) {
+			throw new Error(`LectureError: Invalid lecture data received from API`)
 		}
 
-		throw new Error(`LectureError: Invalid lecture data received from API`)
+		const lecture = LectureController.revive(cache, data)
+		graph.assignLecture(lecture)
+		return lecture
 	}
 
 	static revive(cache: ControllerCache, data: SerializedLecture): LectureController {
@@ -259,6 +276,7 @@ class LectureController {
 		return new LectureController(
 			cache,
 			data.id,
+			data.unchanged,
 			data.name,
 			data.order,
 			data.graph_id,
@@ -268,6 +286,7 @@ class LectureController {
 
 	represents(data: SerializedLecture): boolean {
 		return this.id === data.id
+			&& this.unchanged === data.unchanged
 			&& this.trimmed_name === data.name
 			&& this.order === data.order
 			&& (this._graph_id === undefined    || data.graph_id === undefined    || this._graph_id === data.graph_id)
@@ -277,6 +296,7 @@ class LectureController {
 	reduce(): SerializedLecture {
 		return {
 			id: this.id,
+			unchanged: this.unchanged,
 			name: this.trimmed_name,
 			order: this.order,
 			graph_id: this._graph_id,
@@ -285,6 +305,7 @@ class LectureController {
 	}
 
 	async save() {
+		if (!this._unsaved) return
 
 		// Call the API to save the lecture
 		const response = await fetch('/api/lecture', {
@@ -297,17 +318,19 @@ class LectureController {
 		if (!response.ok) {
 			throw new Error(`APIError (/api/lecture PUT): ${response.status} ${response.statusText}`)
 		}
+
+		this._unsaved = false
 	}
 
 	async delete() {
 
 		// Unassign graph and subjects
 		if (this._graph_id !== undefined)
-			this.graph.removeLecture(this)
+			this.graph.unassignLecture(this)
 		if (this._subject_ids !== undefined)
 			for (const subject of this.subjects)
-				subject.removeLecture(this)
-
+				subject.unassignFromLecture(this, false)
+		
 		// Call the API to delete the lecture
 		const response = await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })
 
@@ -316,7 +339,15 @@ class LectureController {
 			throw new Error(`APIError (/api/lecture/${this.id} DELETE): ${response.status} ${response.statusText}`)
 		}
 
-		// Remove lecture from cache
+		// Remove the graph from the cache
 		this.cache.remove(this)
+	}
+
+	async copy(graph: GraphController): Promise<LectureController> {
+		const lecture_copy = await LectureController.create(this.cache, graph)
+		lecture_copy.name = this.name
+		lecture_copy.order = this.order
+
+		return lecture_copy
 	}
 }

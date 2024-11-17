@@ -60,8 +60,6 @@
 <!-- Markup -->
 
 
-<svelte:window on:beforeunload|preventDefault={async () => await $course.save()} />
-
 {#await revive()}
 	<Loading />
 {:then}

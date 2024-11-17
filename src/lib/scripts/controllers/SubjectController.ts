@@ -36,8 +36,8 @@ class SubjectController extends NodeController<SubjectController> {
 	private constructor(
 		cache: ControllerCache,
 		id: number,
+		unchanged: boolean,
 		name: string,
-		order: number,
 		x: number,
 		y: number,
 		_domain_id?: number | null,
@@ -47,7 +47,7 @@ class SubjectController extends NodeController<SubjectController> {
 		_lecture_ids?: number[]
 
 	) {
-		super(cache, id, name, order, x, y, _graph_id, _parent_ids, _child_ids)
+		super(cache, id, unchanged, name, x, y, _graph_id, _parent_ids, _child_ids)
 
 		this._domain_id = _domain_id
 		this._lecture_ids = _lecture_ids
@@ -56,11 +56,6 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	// --------------------> Getters & Setters
-
-	// Style properties
-	get style(): DomainStyle | null {
-		return this.domain?.style || null
-	}
 
 	// Parent properties
 	get parents(): SubjectController[] {
@@ -105,11 +100,12 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	set domain(domain: DomainController | null) {
-		this.domain?.removeSubject(this)
+		this.domain?.unassignSubject(this, false)
 		this._domain_id = domain ? domain.id : null
 		this._domain = domain
-		this.domain?.addSubject(this)
-		this._untouched = false
+		this.domain?.assignSubject(this, false)
+		this._unchanged = false
+		this._unsaved = true
 	}
 
 	get domain_options(): DropdownOption<DomainController>[] {
@@ -139,77 +135,140 @@ class SubjectController extends NodeController<SubjectController> {
 		return Array.from(this._lectures)
 	}
 
-	// Untouched state
-	get untouched(): boolean {
-		return this._untouched
+	// Style properties
+	get style(): DomainStyle | null {
+		return this.domain?.style || null
 	}
 
 	// --------------------> Assignments
 
-	addParent(parent: SubjectController) {
-		if (this._parent_ids === undefined)
-			return
-		if (this._parent_ids.includes(parent.id))
-			throw new Error(`SubjectError: Parent with ID ${parent.id} already assigned to subject with ID ${this.id}`)
-		this._parent_ids?.push(parent.id)
-		this._parents?.push(parent)
+	assignParent(parent: SubjectController, mirror: boolean = true) {
+		if (this._parent_ids !== undefined) {
+			if (this._parent_ids.includes(parent.id))
+				throw new Error(`SubjectError: Parent with ID ${parent.id} already assigned to subject with ID ${this.id}`)
+			this._parent_ids.push(parent.id)
+			this._parents?.push(parent)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			parent.assignChild(this, false)
+		}
 	}
 
-	addChild(child: SubjectController) {
-		if (this._child_ids === undefined)
-			return
-		if (this._child_ids.includes(child.id))
-			throw new Error(`SubjectError: Child with ID ${child.id} already assigned to subject with ID ${this.id}`)
-		this._child_ids?.push(child.id)
-		this._children?.push(child)
+	assignChild(child: SubjectController, mirror: boolean = true): void {
+		if (this._child_ids !== undefined) {
+			if (this._child_ids.includes(child.id))
+				throw new Error(`SubjectError: Child with ID ${child.id} already assigned to subject with ID ${this.id}`)
+			this._child_ids.push(child.id)
+			this._children?.push(child)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			child.assignParent(this, false)
+		}
 	}
 
-	addLecture(lecture: LectureController) {
-		if (this._lecture_ids === undefined)
-			return
-		if (this._lecture_ids.includes(lecture.id))
-			throw new Error(`SubjectError: Lecture with ID ${lecture.id} already assigned to subject with ID ${this.id}`)
-		this._lecture_ids?.push(lecture.id)
-		this._lectures?.push(lecture)
-		this._untouched = false
+	assignDomain(domain: DomainController, mirror: boolean = true): void {
+		if (this._domain_id !== undefined) {
+			if (this._domain_id === domain.id)
+				throw new Error(`SubjectError: Domain with ID ${domain.id} already assigned to subject with ID ${this.id}`)
+			if (this._domain_id !== null && mirror)
+				this.domain?.unassignSubject(this, false)
+			this._domain_id = domain.id
+			this._domain = domain
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			domain.assignSubject(this, false)
+		}
 	}
 
-	removeParent(parent: SubjectController): void {
-		if (this._parent_ids === undefined)
-			return
-		if (!this._parent_ids.includes(parent.id))
-			throw new Error(`SubjectError: Parent with ID ${parent.id} not assigned to subject with ID ${this.id}`)
-		this._parent_ids = this._parent_ids?.filter(id => id !== parent.id)
-		this._parents = this._parents?.filter(p => p.id !== parent.id)
+	assignToLecture(lecture: LectureController, mirror: boolean = true): void {
+		if (this._lecture_ids !== undefined) {
+			if (this._lecture_ids.includes(lecture.id))
+				throw new Error(`SubjectError: Lecture with ID ${lecture.id} already assigned to subject with ID ${this.id}`)
+			this._lecture_ids.push(lecture.id)
+			this._lectures?.push(lecture)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			lecture.unassignSubject(this, false)
+		}
 	}
 
+	unassignParent(parent: SubjectController, mirror: boolean = true): void {
+		if (this._parent_ids !== undefined) {
+			if (!this._parent_ids.includes(parent.id))
+				throw new Error(`SubjectError: Parent with ID ${parent.id} not assigned to subject with ID ${this.id}`)
+			this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
+			this._parents = this._parents?.filter(p => p.id !== parent.id)
+			this._unchanged = false
+			this._unsaved = true
+		}
 
-	removeChild(child: SubjectController): void {
-		if (this._child_ids === undefined)
-			return
-		if (!this._child_ids.includes(child.id))
-			throw new Error(`SubjectError: Child with ID ${child.id} not assigned to subject with ID ${this.id}`)
-		this._child_ids = this._child_ids?.filter(id => id !== child.id)
-		this._children = this._children?.filter(c => c.id !== child.id)
+		if (mirror) {
+			parent.unassignChild(this, false)
+		}
 	}
 
-	removeLecture(lecture: LectureController): void {
-		if (this._lecture_ids === undefined)
-			return
-		if (!this._lecture_ids.includes(lecture.id))
-			throw new Error(`SubjectError: Lecture with ID ${lecture.id} not assigned to subject with ID ${this.id}`)
-		this._lecture_ids = this._lecture_ids?.filter(id => id !== lecture.id)
-		this._lectures = this._lectures?.filter(l => l.id !== lecture.id)
-		this._untouched = false
+	unassignChild(child: SubjectController, mirror: boolean = true): void {
+		if (this._child_ids !== undefined) {
+			if (!this._child_ids.includes(child.id))
+				throw new Error(`SubjectError: Child with ID ${child.id} not assigned to subject with ID ${this.id}`)
+			this._child_ids = this._child_ids.filter(id => id !== child.id)
+			this._children = this._children?.filter(c => c.id !== child.id)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			child.unassignParent(this, false)
+		}
+	}
+
+	unassignDomain(domain: DomainController, mirror: boolean = true): void {
+		if (this._domain_id !== undefined) {
+			if (this._domain_id === null)
+				throw new Error(`SubjectError: Subject with ID ${this.id} has no domain assigned`)
+			this._domain_id = null
+			this._domain = null
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			domain.unassignSubject(this, false)
+		}
+	}
+
+	unassignFromLecture(lecture: LectureController, mirror: boolean = true): void {
+		if (this._lecture_ids !== undefined) {
+			if (!this._lecture_ids.includes(lecture.id))
+				throw new Error(`SubjectError: Lecture with ID ${lecture.id} not assigned to subject with ID ${this.id}`)
+			this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
+			this._lectures = this._lectures?.filter(l => l.id !== lecture.id)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			lecture.unassignSubject(this, false)
+		}
 	}
 
 	// --------------------> Validation
 
 	validateName(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -242,9 +301,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 	validateDomain(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.domain === null) {
 			validation.add({
@@ -260,9 +317,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 	validateLectures(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.lecture_ids.length === 0) {
 			validation.add({
@@ -306,8 +361,7 @@ class SubjectController extends NodeController<SubjectController> {
 		const data = await response.json()
 		if (validSerializedSubject(data)) {
 			const subject = SubjectController.revive(cache, data)
-			subject._untouched = true
-			graph.addSubject(subject)
+			graph.assignSubject(subject)
 			return subject
 		}
 
@@ -339,8 +393,8 @@ class SubjectController extends NodeController<SubjectController> {
 		return new SubjectController(
 			cache,
 			data.id,
+			data.unchanged,
 			data.name,
-			data.order,
 			data.x,
 			data.y,
 			data.domain_id,
@@ -353,8 +407,8 @@ class SubjectController extends NodeController<SubjectController> {
 
 	represents(data: SerializedSubject): boolean {
 		return this.id === data.id
+			&& this.unchanged === data.unchanged
 			&& this.trimmed_name === data.name
-			&& this.order === data.order
 			&& this.x === data.x
 			&& this.y === data.y
 			&& (this._domain_id === undefined   || data.domain_id === undefined   || this._domain_id === data.domain_id)
@@ -367,8 +421,8 @@ class SubjectController extends NodeController<SubjectController> {
 	reduce(): SerializedSubject {
 		return {
 			id: this.id,
+			unchanged: this._unchanged,
 			name: this.trimmed_name,
-			order: this.order,
 			x: this.x,
 			y: this.y,
 			domain_id: this._domain_id,
@@ -380,6 +434,7 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	async save() {
+		if (!this._unsaved) return
 
 		// Call the API to save the subject
 		const response = await fetch('/api/subject', {
@@ -392,24 +447,26 @@ class SubjectController extends NodeController<SubjectController> {
 		if (!response.ok) {
 			throw new Error(`APIError (/api/subject PUT): ${response.status} ${response.statusText}`)
 		}
+
+		this._unchanged = true
 	}
 
 	async delete() {
 
 		// Unassign graph, domain, parents, children, and lectures
 		if (this._graph_id !== undefined)
-			this.graph.removeSubject(this)
+			this.graph.unassignSubject(this)
 		if (this._domain_id !== undefined)
-			this.domain?.removeSubject(this)
+			this.domain?.unassignSubject(this, false)
 		if (this._parent_ids !== undefined)
 			for (const parent of this.parents)
-				parent.removeChild(this)
+				parent.unassignChild(this, false)
 		if (this._child_ids !== undefined)
 			for (const child of this.children)
-				child.removeParent(this)
+				child.unassignParent(this, false)
 		if (this._lecture_ids !== undefined)
 			for (const lecture of this.lectures)
-				lecture.removeSubject(this)
+				lecture.unassignSubject(this, false)
 
 		// Call the API to delete the subject
 		const response = await fetch(`/api/subject/${this.id}`, { method: 'DELETE' })
@@ -423,6 +480,14 @@ class SubjectController extends NodeController<SubjectController> {
 		this.cache.remove(this)
 	}
 
+	async copy(graph: GraphController): Promise<SubjectController> {
+		const subject_copy = await SubjectController.create(this.cache, graph)
+		subject_copy.name = this.trimmed_name
+		subject_copy.x = this.x
+		subject_copy.y = this.y
+
+		return subject_copy
+	}
 	
 	// --------------------> Utility
 

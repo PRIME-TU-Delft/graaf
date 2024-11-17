@@ -139,7 +139,7 @@
 		src={trash_icon}
 		description="Delete Link"
 		on:click={async () => {
-			if (link.untouched) {
+			if (link.unchanged) {
 				await link.delete()
 				$course = $course // Trigger reactivity
 			} else {

@@ -85,6 +85,7 @@ model VerificationToken {
 
 model Program {
 	id				Int			@id @default(autoincrement())
+	unchanged		Boolean		@default(true)
 	name			String
 
 	courses			Course[]
@@ -102,8 +103,9 @@ enum CourseType {
 
 model Course {
 	id				Int			@id @default(autoincrement())
-	code			String		@unique
+	unchanged		Boolean		@default(true)
 	type			CourseType	@default(COURSE)
+	code			String		@unique
 	name			String
 
 	programs		Program[]
@@ -118,6 +120,7 @@ model Course {
 
 model Graph {
 	id				Int			@id @default(autoincrement())
+	unchanged		Boolean		@default(true)
 	name			String
 	courseId		Int
 
@@ -146,6 +149,7 @@ enum DomainStyle {
 
 model Domain {
 	id				Int			@id @default(autoincrement())
+	unchanged		Boolean		@default(true)
 	name			String		@default("")
 	style			DomainStyle?
 	order			Int
@@ -161,8 +165,8 @@ model Domain {
 
 model Subject {
 	id				Int			@id @default(autoincrement())
+	unchanged		Boolean		@default(true)
 	name			String		@default("")
-	order			Int			@default(-1)
 	x				Int			@default(0)
 	y				Int			@default(0)
 	graphId			Int
@@ -177,6 +181,7 @@ model Subject {
 
 model Lecture {
 	id				Int			@id @default(autoincrement())
+	unchanged		Boolean		@default(true)
 	name			String		@default("")
 	order			Int			@default(-1)
 	graphId			Int
@@ -187,6 +192,7 @@ model Lecture {
 
 model Link {
 	id				Int			@id @default(autoincrement())
+	unchanged		Boolean		@default(true)
 	name			String		@default("")
 	courseId		Int
 	graphId			Int?

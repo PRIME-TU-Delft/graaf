@@ -46,7 +46,7 @@
 		src={trash_icon}
 		description="Delete Domain"
 		on:click={async () => {
-			if (domain.untouched) {
+			if (domain.unchanged) {
 				await domain.delete()
 				$graph = $graph // Trigger reactivity
 			} else {

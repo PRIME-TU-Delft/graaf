@@ -25,13 +25,14 @@ export { LinkController }
 class LinkController {
 	public uuid: string = uuid.v4()
 
-	private _untouched: boolean = false
+	private _unsaved: boolean = false
 	private _course?: CourseController
 	private _graph?: GraphController | null
 
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
+		private _unchanged: boolean,
 		private _name: string,
 		private _course_id?: number,
 		private _graph_id?: number | null,
@@ -41,6 +42,11 @@ class LinkController {
 
 	// --------------------> Getters & Setters
 
+	// Unchanged properties
+	get unchanged(): boolean {
+		return this._unchanged
+	}
+
 	// Name properties
 	get name(): string {
 		return this._name
@@ -48,18 +54,12 @@ class LinkController {
 
 	set name(name: string) {
 		this._name = name
-		this._untouched = false
+		this._unchanged = false
+		this._unsaved = true
 	}
 
 	get trimmed_name(): string {
 		return this._name.trim()
-	}
-
-	// URL properties
-	get url(): string {
-		if (this.validate().severity === Severity.error)
-			return ''
-		return `/app/course/${this.course.code}/${this.name}`
 	}
 
 	// Course properties
@@ -99,25 +99,60 @@ class LinkController {
 	}
 
 	set graph(graph: GraphController | null) {
-		this.graph?.removeLink(this)
+		this.graph?.unassignFromLink(this, false)
 		this._graph_id = graph ? graph.id : null
 		this._graph = graph
-		this.graph?.addLink(this)
-		this._untouched = false
+		this.graph?.assignToLink(this, false)
+		this._unchanged = false
+		this._unsaved = true
+	}
+	
+	// URL properties
+	get url(): string {
+		if (this.validate().severity === Severity.error)
+			return ''
+		return `/app/course/${this.course.code}/${this.name}`
 	}
 
-	// Untouched state
-	get untouched(): boolean {
-		return this._untouched
+	// --------------------> Assignments
+
+	assignGraph(graph: GraphController, mirror: boolean = true): void {
+		if (this._graph_id !== undefined) {
+			if (this._graph_id === graph.id)
+				throw new Error(`LinkError: Graph with ID ${graph.id} already assigned to link with ID ${this.id}`)
+			if (this._graph_id !== null && mirror)
+				this.graph?.unassignFromLink(this, false)
+			this._graph_id = graph.id
+			this._graph = graph
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			graph.assignToLink(this, false)
+		}
+	}
+
+	unassignGraph(graph: GraphController, mirror: boolean = true): void {
+		if (this._graph_id !== undefined) {
+			if (this._graph_id !== graph.id)
+				throw new Error(`LinkError: Graph with ID ${graph.id} not assigned to link with ID ${this.id}`)
+			this._graph_id = null
+			this._graph = null
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			graph.unassignFromLink(this, false)
+		}
 	}
 
 	// --------------------> Validation
 
 	validateName(strict: boolean = true): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -158,9 +193,7 @@ class LinkController {
 
 	validateGraph(strict: boolean = true): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.graph_id === null) {
 			validation.add({
@@ -201,14 +234,13 @@ class LinkController {
 
 		// Revive the link
 		const data = await response.json()
-		if (validSerializedLink(data)) {
-			const link = LinkController.revive(cache, data)
-			link._untouched = true
-			course.addLink(link)
-			return link
+		if (!validSerializedLink(data)) {
+			throw new Error(`LinkError: Invalid link data received from API`)
 		}
 
-		throw new Error(`LinkError: Invalid link data received from API`)
+		const link = LinkController.revive(cache, data)
+		course.assignLink(link)
+		return link
 	}
 
 	static revive(cache: ControllerCache, data: SerializedLink): LinkController {
@@ -232,6 +264,7 @@ class LinkController {
 		return new LinkController(
 			cache,
 			data.id,
+			data.unchanged,
 			data.name,
 			data.course_id,
 			data.graph_id
@@ -240,6 +273,7 @@ class LinkController {
 
 	represents(data: SerializedLink): boolean {
 		return this.id === data.id
+			&& this._unchanged === data.unchanged
 			&& this.trimmed_name === data.name
 			&& (this._graph_id === undefined  || data.graph_id === undefined  || this._graph_id === data.graph_id)
 			&& (this._course_id === undefined || data.course_id === undefined || this._course_id === data.course_id)
@@ -248,6 +282,7 @@ class LinkController {
 	reduce(): SerializedLink {
 		return {
 			id: this.id,
+			unchanged: this._unchanged,
 			name: this.trimmed_name,
 			course_id: this._course_id,
 			graph_id: this._graph_id
@@ -255,6 +290,7 @@ class LinkController {
 	}
 
 	async save() {
+		if (!this._unsaved) return
 
 		// Call the API to save the link
 		const response = await fetch('/api/link', {
@@ -267,15 +303,17 @@ class LinkController {
 		if (!response.ok) {
 			throw new Error(`APIError (/api/link PUT): ${response.status} ${response.statusText}`)
 		}
+
+		this._unsaved = false
 	}
 
 	async delete() {
 
 		// Unassign course and graph
 		if (this._course_id !== undefined)
-			this.course.removeLink(this)
+			this.course.unassignLink(this)
 		if (this._graph_id !== undefined)
-			this.graph?.removeLink(this)
+			this.graph?.unassignFromLink(this, false)
 
 		// Call the API to delete the link
 		const response = await fetch(`/api/link/${this.id}`, { method: 'DELETE' })

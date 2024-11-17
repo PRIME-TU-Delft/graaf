@@ -11,7 +11,10 @@
 		ControllerCache,
 		CourseController,
 		GraphController,
-		LinkController
+		LinkController,
+		DomainController,
+		SubjectController,
+		LectureController
 	} from '$scripts/controllers'
 
 	// Components
@@ -32,12 +35,16 @@
 			awaited_courses,
 			awaited_graphs,
 			awaited_links,
+			awaited_domains,
+			awaited_subjects,
 			awaited_lectures
 		] = await Promise.all([
 			data.course,
 			data.courses,
 			data.graphs,
 			data.links,
+			data.domains,
+			data.subjects,
 			data.lectures
 		])
 
@@ -48,7 +55,9 @@
 		awaited_courses.map(course => CourseController.revive(cache, course))
 		awaited_graphs.forEach(graph => GraphController.revive(cache, graph))
 		awaited_links.forEach(link => LinkController.revive(cache, link))
-		awaited_lectures.forEach(lecture => GraphController.revive(cache, lecture))
+		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
+		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
+		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
 	}
 
 	// Initialization
@@ -60,8 +69,6 @@
 
 <!-- Markup -->
 
-
-<svelte:window on:beforeunload|preventDefault={async () => await $course.save()} />
 
 {#await revive()}
 	<Loading />

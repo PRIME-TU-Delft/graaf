@@ -57,7 +57,14 @@
 			}
 
 			// Copy graph
-			await graph.copy(this.course)
+			const copied_graph = await graph.copy(this.course!)
+			await Promise.all([
+				copied_graph.save(),
+				copied_graph.domains.map(domain => domain.save()),
+				copied_graph.subjects.map(subject => subject.save()),
+				copied_graph.lectures.map(lecture => lecture.save())
+			])
+
 			$course = $course
 			this.hide()
 		}
@@ -83,7 +90,7 @@
 		<Dropdown
 			id="course"
 			placeholder="Select a course"
-			options={$course.copy_options}
+			options={graph.copy_options}
 			bind:value={copy_modal.course}
 		/>
 

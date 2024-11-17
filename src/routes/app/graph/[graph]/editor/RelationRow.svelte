@@ -51,7 +51,7 @@
 		src={trash_icon}
 		description="Delete Relation"
 		on:click={async () => {
-			if (relation.untouched) {
+			if (relation.unchanged) {
 				await relation.delete()
 				$graph = $graph // Trigger reactivity
 			} else {

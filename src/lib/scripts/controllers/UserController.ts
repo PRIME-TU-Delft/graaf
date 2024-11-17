@@ -21,6 +21,7 @@ export { UserController }
 
 
 class UserController {
+	private _unsaved: boolean = false
 	private _course_editors?: CourseController[]
 	private _course_admins?: CourseController[]
 	private _program_editors?: ProgramController[]
@@ -29,10 +30,10 @@ class UserController {
 	private constructor(
 		public cache: ControllerCache,
 		public id: string,
-		public role: UserRole,
-		public first_name: string | null,
-		public last_name: string | null,
-		public email: string,
+		private _role: UserRole,
+		private _first_name: string | null,
+		private _last_name: string | null,
+		private _email: string,
 		private _course_editor_ids?: number[],
 		private _course_admin_ids?: number[],
 		private _program_editor_ids?: number[],
@@ -43,6 +44,50 @@ class UserController {
 
 	// --------------------> Getters & Setters
 
+	// Unchanged properties
+	get role(): UserRole {
+		return this._role
+	}
+
+	set role(value: UserRole) {
+		this._role = value
+		this._unsaved = true
+	}
+
+	// Name properties
+	get first_name(): string | null {
+		return this._first_name
+	}
+
+	set first_name(value: string | null) {
+		this._first_name = value
+		this._unsaved = true
+	}
+
+	get last_name(): string | null {
+		return this._last_name
+	}
+
+	set last_name(value: string | null) {
+		this._last_name = value
+		this._unsaved = true
+	}
+
+	get full_name(): string {
+		return `${this.first_name} ${this.last_name}`
+	}
+
+	// Email properties
+	get email(): string {
+		return this._email
+	}
+
+	set email(value: string) {
+		this._email = value
+		this._unsaved = true
+	}
+
+	// Course properties
 	get course_editor_ids(): number[] {
 		if (this._course_editor_ids === undefined)
 			throw new Error('UserError: Course editor data unknown')
@@ -69,6 +114,7 @@ class UserController {
 		return this._course_admins
 	}
 
+	// Program properties
 	get program_editor_ids(): number[] {
 		if (this._program_editor_ids === undefined)
 			throw new Error('UserError: Program editor data unknown')
@@ -97,76 +143,116 @@ class UserController {
 
 	// --------------------> Assignments
 
-	addCourseEditor(course: CourseController) {
-		if (this._course_editor_ids === undefined)
-			return
-		if (this._course_editor_ids.includes(course.id))
-			throw new Error(`UserError: Course editor with ID ${course.id} already assigned to user with ID ${this.id}`)
-		this._course_editor_ids?.push(course.id)
-		this._course_editors?.push(course)
+	becomeCourseEditor(course: CourseController, mirror: boolean = true) {
+		if (this._course_editor_ids !== undefined) {
+			if (this._course_editor_ids.includes(course.id))
+				throw new Error(`UserError: Course editor with ID ${course.id} already assigned to user with ID ${this.id}`)
+			this._course_editor_ids.push(course.id)
+			this._course_editors?.push(course)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			course.assignEditor(this, false)
+		}
 	}
 
-	addCourseAdmin(course: CourseController) {
-		if (this._course_admin_ids === undefined)
-			return
-		if (this._course_admin_ids.includes(course.id))
-			throw new Error(`UserError: Course admin with ID ${course.id} already assigned to user with ID ${this.id}`)
-		this._course_admin_ids?.push(course.id)
-		this._course_admins?.push(course)
+	becomeCourseAdmin(course: CourseController, mirror: boolean = true) {
+		if (this._course_admin_ids !== undefined) {
+			if (this._course_admin_ids.includes(course.id))
+				throw new Error(`UserError: Course admin with ID ${course.id} already assigned to user with ID ${this.id}`)
+			this._course_admin_ids.push(course.id)
+			this._course_admins?.push(course)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			course.assignAdmin(this, false)
+		}
 	}
 
-	addProgramEditor(program: ProgramController) {
-		if (this._program_editor_ids === undefined)
-			return
-		if (this._program_editor_ids.includes(program.id))
-			throw new Error(`UserError: Program editor with ID ${program.id} already assigned to user with ID ${this.id}`)
-		this._program_editor_ids?.push(program.id)
-		this._program_editors?.push(program)
+	becomeProgramEditor(program: ProgramController, mirror: boolean = true) {
+		if (this._program_editor_ids !== undefined) {
+			if (this._program_editor_ids.includes(program.id))
+				throw new Error(`UserError: Program editor with ID ${program.id} already assigned to user with ID ${this.id}`)
+			this._program_editor_ids.push(program.id)
+			this._program_editors?.push(program)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			program.assignEditor(this, false)
+		}
 	}
 
-	addProgramAdmin(program: ProgramController) {
-		if (this._program_admin_ids === undefined)
-			return
-		if (this._program_admin_ids.includes(program.id))
-			throw new Error(`UserError: Program admin with ID ${program.id} already assigned to user with ID ${this.id}`)
-		this._program_admin_ids?.push(program.id)
-		this._program_admins?.push(program)
+	becomeProgramAdmin(program: ProgramController, mirror: boolean = true) {
+		if (this._program_admin_ids !== undefined) {
+			if (this._program_admin_ids.includes(program.id))
+				throw new Error(`UserError: Program admin with ID ${program.id} already assigned to user with ID ${this.id}`)
+			this._program_admin_ids.push(program.id)
+			this._program_admins?.push(program)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			program.assignAdmin(this, false)
+		}
 	}
 
-	removeCourseEditor(course: CourseController) {
-		if (this._course_editor_ids === undefined)
-			return
-		if (!this._course_editor_ids.includes(course.id))
-			throw new Error(`UserError: Course editor with ID ${course.id} not assigned to user with ID ${this.id}`)
-		this._course_editor_ids = this._course_editor_ids?.filter(id => id !== course.id)
-		this._course_editors = this._course_editors?.filter(c => c.id !== course.id)
+	resignAsCourseEditor(course: CourseController, mirror: boolean = true) {
+		if (this._course_editor_ids !== undefined) {
+			if (!this._course_editor_ids.includes(course.id))
+				throw new Error(`UserError: Course editor with ID ${course.id} not assigned to user with ID ${this.id}`)
+			this._course_editor_ids = this._course_editor_ids.filter(id => id !== course.id)
+			this._course_editors = this._course_editors?.filter(c => c.id !== course.id)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			course.unassignEditor(this, false)
+		}
 	}
 
-	removeCourseAdmin(course: CourseController) {
-		if (this._course_admin_ids === undefined)
-			return
-		if (!this._course_admin_ids.includes(course.id))
-			throw new Error(`UserError: Course admin with ID ${course.id} not assigned to user with ID ${this.id}`)
-		this._course_admin_ids = this._course_admin_ids?.filter(id => id !== course.id)
-		this._course_admins = this._course_admins?.filter(c => c.id !== course.id)
+	resignAsCourseAdmin(course: CourseController, mirror: boolean = true) {
+		if (this._course_admin_ids !== undefined) {
+			if (!this._course_admin_ids.includes(course.id))
+				throw new Error(`UserError: Course admin with ID ${course.id} not assigned to user with ID ${this.id}`)
+			this._course_admin_ids = this._course_admin_ids.filter(id => id !== course.id)
+			this._course_admins = this._course_admins?.filter(c => c.id !== course.id)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			course.unassignAdmin(this, false)
+		}
 	}
 
-	removeProgramEditor(program: ProgramController) {
-		if (this._program_editor_ids === undefined)
-			return
-		if (!this._program_editor_ids.includes(program.id))
-			throw new Error(`UserError: Program editor with ID ${program.id} not assigned to user with ID ${this.id}`)
-		this._program_editor_ids = this._program_editor_ids?.filter(id => id !== program.id)
-		this._program_editors = this._program_editors?.filter(p => p.id !== program.id)
+	resignAsProgramEditor(program: ProgramController, mirror: boolean = true) {
+		if (this._program_editor_ids !== undefined) {
+			if (!this._program_editor_ids.includes(program.id))
+				throw new Error(`UserError: Program editor with ID ${program.id} not assigned to user with ID ${this.id}`)
+			this._program_editor_ids = this._program_editor_ids.filter(id => id !== program.id)
+			this._program_editors = this._program_editors?.filter(p => p.id !== program.id)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			program.unassignEditor(this, false)
+		}
 	}
 
-	removeProgramAdmin(program: ProgramController) {
-		if (this._program_admin_ids === undefined)
-			return
-		if (!this._program_admin_ids.includes(program.id))
-			throw new Error(`UserError: Program admin with ID ${program.id} not assigned to user with ID ${this.id}`)
-		this._program_admin_ids = this._program_admin_ids?.filter(id => id !== program.id)
-		this._program_admins = this._program_admins?.filter(p => p.id !== program.id)
+	resignAsProgramAdmin(program: ProgramController, mirror: boolean = true) {
+		if (this._program_admin_ids !== undefined) {
+			if (!this._program_admin_ids.includes(program.id))
+				throw new Error(`UserError: Program admin with ID ${program.id} not assigned to user with ID ${this.id}`)
+			this._program_admin_ids = this._program_admin_ids.filter(id => id !== program.id)
+			this._program_admins = this._program_admins?.filter(p => p.id !== program.id)
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			program.unassignAdmin(this, false)
+		}
 	}
 
 	// --------------------> Actions

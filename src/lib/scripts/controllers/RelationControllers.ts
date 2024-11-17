@@ -11,9 +11,7 @@ import {
 	SubjectController
 } from '$scripts/controllers'
 
-import type {
-	DropdownOption
-} from '$scripts/types'
+import type { DropdownOption } from '$scripts/types'
 
 // Exports
 export { RelationController, DomainRelationController, SubjectRelationController }
@@ -24,15 +22,20 @@ export { RelationController, DomainRelationController, SubjectRelationController
 abstract class RelationController<T extends DomainController | SubjectController> {
 	uuid: string = uuid.v4()
 
-	protected _untouched: boolean = false
+	protected _unchanged: boolean = false
+	protected _parent: T | null = null
+	protected _child: T | null = null
 
 	constructor(
-		public graph: GraphController,
-		protected _parent: T | null = null,
-		protected _child: T | null = null
+		public graph: GraphController
 	) { }
 
 	// --------------------> Getters & Setters
+
+	// Unchanged properties
+	get unchanged(): boolean {
+		return this._unchanged
+	}
 
 	// Parent properties
 	get parent(): T | null {
@@ -45,18 +48,16 @@ abstract class RelationController<T extends DomainController | SubjectController
 		// Update parent and child references
 		if (this.child) {
 			if (this.parent) {
-				this.parent.removeChild(this.child as DomainController & SubjectController)
-				this.child.removeParent(this.parent as DomainController & SubjectController)
+				this.child.unassignParent(this.parent as DomainController & SubjectController)
 			}
 
 			if (parent) {
-				parent.addChild(this.child as DomainController & SubjectController)
-				this.child.addParent(parent as DomainController & SubjectController)
+				this.child.assignParent(parent as DomainController & SubjectController)
 			}
 		}
 
 		this._parent = parent
-		this._untouched = false
+		this._unchanged = false
 	}
 
 	get parent_color(): string {
@@ -76,18 +77,16 @@ abstract class RelationController<T extends DomainController | SubjectController
 		// Update parent and child references
 		if (this.parent) {
 			if (this.child) {
-				this.parent.removeChild(this.child as DomainController & SubjectController)
-				this.child.removeParent(this.parent as DomainController & SubjectController)
+				this.parent.unassignChild(this.child as DomainController & SubjectController)
 			}
 
 			if (child) {
-				this.parent.addChild(child as DomainController & SubjectController)
-				child.addParent(this.parent as DomainController & SubjectController)
+				this.parent.assignChild(child as DomainController & SubjectController)
 			}
 		}
 
 		this._child = child
-		this._untouched = false
+		this._unchanged = false
 	}
 
 	get child_color(): string {
@@ -95,11 +94,6 @@ abstract class RelationController<T extends DomainController | SubjectController
 	}
 
 	abstract child_options: DropdownOption<T>[]
-
-	// Untouched properties
-	get untouched(): boolean {
-		return this._untouched
-	}
 
 	// --------------------> Validation
 
@@ -227,7 +221,7 @@ class DomainRelationController extends RelationController<DomainController> {
 
 	validate(strict: boolean = true): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) return validation
+		if (!strict && this._unchanged) return validation
 
 		// Check if the parent and child are defined
 		if (this.parent === null || this.child === null) {
@@ -289,22 +283,26 @@ class DomainRelationController extends RelationController<DomainController> {
 
 	// --------------------> Actions
 
-	static create(graph: GraphController): DomainRelationController {
+	static create(graph: GraphController, parent: DomainController | null = null, child: DomainController | null = null): DomainRelationController {
 		const relation = new DomainRelationController(graph)
-		graph.addDomainRelation(relation)
-		relation._untouched = true
+		graph.assignDomainRelation(relation)
+		relation.parent = parent
+		relation.child = child
 		return relation
 	}
 
-	static revive(graph: GraphController, parent: DomainController, child: DomainController): DomainRelationController {
-		const relation = new DomainRelationController(graph, parent, child)
-		graph.addDomainRelation(relation)
+	static revive(graph: GraphController, parent: DomainController | null = null, child: DomainController | null = null): DomainRelationController {
+		const relation = new DomainRelationController(graph)
+		graph.assignDomainRelation(relation)
+		relation._parent = parent
+		relation._child = child
 		return relation
 	}
 
 	delete() {
-		this.parent = null // Unassigning the parent will invalidate the entire relation
-		this.graph.removeDomainRelation(this)
+		this.parent = null
+		this.child = null
+		this.graph.unassignDomainRelation(this)
 	}
 }
 
@@ -367,7 +365,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 
 	validate(strict: boolean = true): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) return validation
+		if (!strict && this._unchanged) return validation
 
 		// Check if the parent and child are defined
 		if (this.parent === null || this.child === null) {
@@ -429,21 +427,25 @@ class SubjectRelationController extends RelationController<SubjectController> {
 
 	// --------------------> Actions
 
-	static create(graph: GraphController): SubjectRelationController {
+	static create(graph: GraphController, parent: SubjectController | null = null, child: SubjectController | null = null): SubjectRelationController {
 		const relation = new SubjectRelationController(graph)
-		graph.addSubjectRelation(relation)
-		relation._untouched = true
+		graph.assignSubjectRelation(relation)
+		relation.parent = parent
+		relation.child = child
 		return relation
 	}
 
-	static revive(graph: GraphController, parent: SubjectController, child: SubjectController): SubjectRelationController {
-		const relation = new SubjectRelationController(graph, parent, child)
-		graph.addSubjectRelation(relation)
+	static revive(graph: GraphController, parent: SubjectController | null = null, child: SubjectController | null = null): SubjectRelationController {
+		const relation = new SubjectRelationController(graph)
+		graph.assignSubjectRelation(relation)
+		relation._parent = parent
+		relation._child = child
 		return relation
 	}
 
 	delete() {
-		this.parent = null // Unassigning the parent will invalidate the entire relation
-		this.graph.removeSubjectRelation(this)
+		this.parent = null
+		this.child = null
+		this.graph.unassignSubjectRelation(this)
 	}
 }

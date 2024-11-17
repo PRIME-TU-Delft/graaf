@@ -56,8 +56,6 @@
 <!-- Markup -->
 
 
-<svelte:window on:beforeunload|preventDefault={async () => await $program.save()} />
-
 {#await revive()}
 	<Loading />
 {:then}
