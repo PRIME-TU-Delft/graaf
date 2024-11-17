@@ -1,6 +1,7 @@
 
 // External dependencies
 import prisma from '$lib/server/prisma'
+
 import type { Graph as PrismaGraph } from '@prisma/client'
 
 // Internal dependencies
@@ -144,6 +145,25 @@ export async function update(data: SerializedGraph) {
 	} catch (error) {
 		return Promise.reject(error)
 	}
+}
+
+export async function reorder(domain_ids: number[]) {
+	return await Promise.all(
+		domain_ids.map(async (domain_id, order) => {
+			try {
+				return prisma.domain.update({
+					where: {
+						id: domain_id
+					},
+					data: {
+						order: order
+					}
+				})
+			} catch (error) {
+				return Promise.reject(error)
+			}
+		})
+	)
 }
 
 export async function remove(id: number) {

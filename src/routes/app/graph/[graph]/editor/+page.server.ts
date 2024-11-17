@@ -13,10 +13,12 @@ export const load: PageServerLoad = async ({ params }) => {
 		return Promise.reject('Invalid graph ID')
 	
 	// Start data streams
-	const graph = GraphHelper.getById(graph_id, 'course', 'domains')
+	const graph = GraphHelper.getById(graph_id, 'course', 'domains', 'subjects')
 		.catch(error => { throw new Error(error) })
 	const course = GraphHelper.getCourse(graph_id)
 		.catch(error => { throw new Error(error) })
+	const domains = GraphHelper.getDomains(graph_id, 'graph', 'subjects', 'parents', 'children')
+		.catch(error => { throw new Error(error) })
 
-	return { graph, course }
+	return { graph, course, domains }
 }

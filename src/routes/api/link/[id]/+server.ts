@@ -13,7 +13,7 @@ async function DELETE({ params }) {
 
 	// Retrieve data
 	const link_id = Number(params.id)
-	if (!link_id || isNaN(link_id)) {
+	if (isNaN(link_id)) {
 		return new Response('Missing link ID', { status: 400 })
 	}
 

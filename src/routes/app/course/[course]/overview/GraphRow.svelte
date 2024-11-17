@@ -131,13 +131,12 @@
 		<IconButton scale
 			src={open_eye_icon}
 			description="View Graph"
-			href="/app/graph/{graph.id}/overview"
 		/>
 	
 		<IconButton scale
 			src={pencil_icon}
 			description="Edit Graph"
-			href="/app/graph/{graph.id}/settings"
+			href="/app/graph/{graph.id}/editor"
 		/>
 	
 		<IconButton scale

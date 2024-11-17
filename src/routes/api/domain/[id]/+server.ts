@@ -13,7 +13,7 @@ async function DELETE({ params }) {
 
 	// Retrieve domain ID
 	const domain_id = Number(params.id)
-	if (!domain_id || isNaN(domain_id)) {
+	if (isNaN(domain_id)) {
 		return new Response('Missing domain ID', { status: 400 })
 	}
 

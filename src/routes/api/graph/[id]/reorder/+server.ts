@@ -3,22 +3,21 @@
 import { GraphHelper } from '$scripts/helpers'
 
 // Exports
-export { DELETE }
+export { PUT }
 
 
 // --------------------> API Endpoints
 
-
-async function DELETE({ params }) {
+async function PUT({ request }) {
 
 	// Retrieve data
-	const graph_id = Number(params.id)
-	if (isNaN(graph_id)) {
-		return new Response('Missing graph ID', { status: 400 })
+	const { domain_ids } = await request.json()
+	if (!domain_ids) {
+		return new Response('Missing data', { status: 400 })
 	}
 
-	// Delete the graph
-	return await GraphHelper.remove(graph_id)
+	// Reorder data
+	return await GraphHelper.reorder(domain_ids)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })

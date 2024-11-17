@@ -8,7 +8,9 @@ import {
 	ControllerCache,
 	CourseController,
 	DomainController,
+	DomainRelationController,
 	SubjectController,
+	SubjectRelationController,
 	LectureController,
 	LinkController,
 } from '$scripts/controllers'
@@ -31,7 +33,9 @@ class GraphController {
 	private _untouched: boolean = false
 	private _course?: CourseController
 	private _domains?: DomainController[]
+	private _domains_relations?: DomainRelationController[]
 	private _subjects?: SubjectController[]
+	private _subjects_relations?: SubjectRelationController[]
 	private _lectures?: LectureController[]
 	private _links?: LinkController[]
 
@@ -97,15 +101,24 @@ class GraphController {
 
 		// Fetch domains from the cache
 		this._domains = this._domain_ids.map(id => this.cache.findOrThrow(DomainController, id))
+		this._domains.sort((a, b) => a.order - b.order)
+
 		return Array.from(this._domains)
 	}
 
-	get domain_options(): DropdownOption<DomainController>[] {
-		return this.domains.map(domain => ({
-			value: domain,
-			label: domain.name,
-			validation: Validation.success()
-		}))
+	get domain_relations(): DomainRelationController[] {
+		if (this._domains_relations !== undefined)
+			return Array.from(this._domains_relations)
+
+		// Infer domain relations
+		this._domains_relations = []
+		for (const parent of this.domains) {
+			for (const child of parent.children) {
+				DomainRelationController.revive(this, parent, child)
+			}
+		}
+
+		return Array.from(this._domains_relations)
 	}
 
 	// Subject properties
@@ -126,12 +139,19 @@ class GraphController {
 		return Array.from(this._subjects)
 	}
 
-	get subject_options(): DropdownOption<SubjectController>[] {
-		return this.subjects.map(subject => ({
-			value: subject,
-			label: subject.name,
-			validation: Validation.success()
-		}))
+	get subject_relations(): SubjectRelationController[] {
+		if (this._subjects_relations !== undefined)
+			return Array.from(this._subjects_relations)
+
+		// Infer subject relations
+		this._subjects_relations = []
+		for (const parent of this.subjects) {
+			for (const child of parent.children) {
+				SubjectRelationController.revive(this, parent, child)
+			}
+		}
+
+		return Array.from(this._subjects_relations)
 	}
 
 	// Lecture properties
@@ -195,6 +215,15 @@ class GraphController {
 		this._untouched = false
 	}
 
+	addDomainRelation(relation: DomainRelationController) {
+		if (this._domains_relations === undefined)
+			return
+		if (this._domains_relations.includes(relation))
+			throw new Error(`GraphError: Domain relation already assigned to graph with ID ${this.id}`)
+		this._domains_relations.push(relation)
+		this._untouched = false
+	}
+
 	addSubject(subject: SubjectController) {
 		if (this._subject_ids === undefined)
 			return
@@ -202,6 +231,15 @@ class GraphController {
 			throw new Error(`GraphError: Subject with ID ${subject.id} already assigned to graph with ID ${this.id}`)
 		this._subject_ids?.push(subject.id)
 		this._subjects?.push(subject)
+		this._untouched = false
+	}
+
+	addSubjectRelation(relation: SubjectRelationController) {
+		if (this._subjects_relations === undefined)
+			return
+		if (this._subjects_relations.includes(relation))
+			throw new Error(`GraphError: Subject relation already assigned to graph with ID ${this.id}`)
+		this._subjects_relations.push(relation)
 		this._untouched = false
 	}
 
@@ -235,6 +273,15 @@ class GraphController {
 		this._untouched = false
 	}
 
+	removeDomainRelation(relation: DomainRelationController) {
+		if (this._domains_relations === undefined)
+			return
+		if (!this._domains_relations.includes(relation))
+			throw new Error(`GraphError: Domain relation not assigned to graph with ID ${this.id}`)
+		this._domains_relations = this._domains_relations?.filter(r => r !== relation)
+		this._untouched = false
+	}
+
 	removeSubject(subject: SubjectController) {
 		if (this._subject_ids === undefined)
 			return
@@ -242,6 +289,15 @@ class GraphController {
 			throw new Error(`GraphError: Subject with ID ${subject.id} not assigned to graph with ID ${this.id}`)
 		this._subject_ids = this._subject_ids?.filter(id => id !== subject.id)
 		this._subjects = this._subjects?.filter(s => s.id !== subject.id)
+		this._untouched = false
+	}
+
+	removeSubjectRelation(relation: SubjectRelationController) {
+		if (this._subjects_relations === undefined)
+			return
+		if (!this._subjects_relations.includes(relation))
+			throw new Error(`GraphError: Subject relation not assigned to graph with ID ${this.id}`)
+		this._subjects_relations = this._subjects_relations?.filter(r => r !== relation)
 		this._untouched = false
 	}
 
@@ -501,6 +557,32 @@ class GraphController {
 
 		// Remove the graph from the cache
 		this.cache.remove(this)
+	}
+
+	async reorder(domains?: DomainController[]) {
+
+		// Update the graph
+		if (domains !== undefined) {
+			this._domain_ids = domains.map(domain => domain.id)
+			this._domains = domains
+		}
+
+		// Update domains
+		for (const [index, domain] of this.domains.entries()) {
+			domain.order = index
+		}
+		
+		// Call the API to reorder the graph
+		const response = await fetch(`/api/graph/${this.id}/reorder`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(this.domain_ids)
+		})
+
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw new Error(`APIError (/api/graph/${this.id}/reorder PUT): ${response.status} ${response.statusText}`)
+		}
 	}
 
 	// --------------------> Utility

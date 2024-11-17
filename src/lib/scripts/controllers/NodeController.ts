@@ -13,7 +13,7 @@ import {
 	SubjectController
 } from '$scripts/controllers'
 
-import type { DropdownOption } from '$scripts/types'
+import type { DomainStyle } from '$scripts/types'
 
 // Exports
 export { NodeController }
@@ -34,7 +34,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		public cache: ControllerCache,
 		public id: number,
 		protected _name: string,
-		public ordering: number,
+		public order: number,
 		public x: number,
 		public y: number,
 		protected _graph_id?: number,
@@ -56,6 +56,11 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 
 	get trimmed_name(): string {
 		return this._name.trim()
+	}
+
+	// Color properties
+	get color(): string {
+		return this.style === null ? 'transparent' : settings.NODE_STYLES[this.style].stroke
 	}
 
 	// Graph properties
@@ -83,15 +88,6 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		return Array.from(this._parent_ids)
 	}
 
-	get parent_options(): DropdownOption<T>[] {
-		return this.parents.map(parent => ({
-				value: parent,
-				label: parent.name,
-				validation: Validation.success()
-			})
-		)
-	}
-
 	// Child properties
 	get child_ids(): number[] {
 		if (this._child_ids === undefined)
@@ -99,15 +95,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		return Array.from(this._child_ids)
 	}
 
-	get child_options(): DropdownOption<T>[] {
-		return this.children.map(child => ({
-				value: child,
-				label: child.name,
-				validation: Validation.success()
-			})
-		)
-	}
-
+	abstract get style(): DomainStyle | null
 	abstract get untouched(): boolean
 	abstract set untouched(value: boolean)
 	abstract get parents(): T[]

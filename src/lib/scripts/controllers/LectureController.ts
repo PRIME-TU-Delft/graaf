@@ -38,7 +38,7 @@ class LectureController {
 		public cache: ControllerCache,
 		public id: number,
 		private _name: string,
-		public ordering: number,
+		public order: number,
 		private _graph_id?: number,
 		private _subject_ids?: number[]
 	) {
@@ -260,7 +260,7 @@ class LectureController {
 			cache,
 			data.id,
 			data.name,
-			data.ordering,
+			data.order,
 			data.graph_id,
 			data.subject_ids
 		)
@@ -269,7 +269,7 @@ class LectureController {
 	represents(data: SerializedLecture): boolean {
 		return this.id === data.id
 			&& this.trimmed_name === data.name
-			&& this.ordering === data.ordering
+			&& this.order === data.order
 			&& (this._graph_id === undefined    || data.graph_id === undefined    || this._graph_id === data.graph_id)
 			&& (this._subject_ids === undefined || data.subject_ids === undefined || compareArrays(this._subject_ids, data.subject_ids))
 	}
@@ -278,7 +278,7 @@ class LectureController {
 		return {
 			id: this.id,
 			name: this.trimmed_name,
-			ordering: this.ordering,
+			order: this.order,
 			graph_id: this._graph_id,
 			subject_ids: this._subject_ids
 		}

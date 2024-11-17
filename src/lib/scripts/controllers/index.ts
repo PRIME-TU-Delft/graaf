@@ -9,3 +9,5 @@ export { SubjectController } from './SubjectController'
 export { LectureController } from './LectureController'
 export { LinkController } from './LinkController'
 export { UserController } from './UserController'
+export { RelationController, DomainRelationController, SubjectRelationController } from './RelationControllers'
+

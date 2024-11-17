@@ -32,7 +32,7 @@ export async function reduce(domain: PrismaDomain, ...relations: DomainRelation[
 		id: domain.id,
 		name: domain.name,
 		style: domain.style,
-		ordering: domain.ordering,
+		order: domain.order,
 		x: domain.x,
 		y: domain.y
 	}
@@ -81,11 +81,12 @@ export async function reduce(domain: PrismaDomain, ...relations: DomainRelation[
 	return serialized
 }
 
-export async function create(graph_id: number): Promise<SerializedDomain> {
+export async function create(graph_id: number, order: number): Promise<SerializedDomain> {
 	try {
 		var domain = await prisma.domain.create({
 			data: {
-				graphId: graph_id
+				graphId: graph_id,
+				order: order
 			}
 		})
 	} catch (error) {
@@ -119,7 +120,7 @@ export async function update(data: SerializedDomain) {
 			data: {
 				name: data.name,
 				style: data.style,
-				ordering: data.ordering,
+				order: data.order,
 				x: data.x,
 				y: data.y,
 				graph: graph_delta,

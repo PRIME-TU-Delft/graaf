@@ -14,8 +14,8 @@ import {
 import { validSerializedDomain } from '$scripts/types'
 
 import type {
-	DropdownOption,
 	DomainStyle,
+	DropdownOption,
 	SerializedDomain
 } from '$scripts/types'
 
@@ -36,7 +36,7 @@ class DomainController extends NodeController<DomainController> {
 		id: number,
 		name: string,
 		style: DomainStyle | null,
-		ordering: number,
+		order: number,
 		x: number,
 		y: number,
 		_graph_id?: number,
@@ -44,7 +44,7 @@ class DomainController extends NodeController<DomainController> {
 		_child_ids?: number[],
 		_subject_ids?: number[]
 	) {
-		super(cache, id, name, ordering, x, y, _graph_id, _parent_ids, _child_ids)
+		super(cache, id, name, order, x, y, _graph_id, _parent_ids, _child_ids)
 
 		this._style = style
 		this._subject_ids = _subject_ids
@@ -291,7 +291,7 @@ class DomainController extends NodeController<DomainController> {
 		const response = await fetch('/api/domain', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ graph_id: graph.id })
+			body: JSON.stringify({ graph_id: graph.id, order: graph.domain_ids.length })
 		})
 
 		// Throw an error if the API request fails
@@ -338,7 +338,7 @@ class DomainController extends NodeController<DomainController> {
 			data.id,
 			data.name,
 			data.style,
-			data.ordering,
+			data.order,
 			data.x,
 			data.y,
 			data.graph_id,
@@ -352,7 +352,7 @@ class DomainController extends NodeController<DomainController> {
 		return this.id === data.id
 			&& this.trimmed_name === data.name
 			&& this.style === data.style
-			&& this.ordering === data.ordering
+			&& this.order === data.order
 			&& this.x === data.x
 			&& this.y === data.y
 			&& (this._graph_id === undefined    || data.graph_id === undefined    || this._graph_id === data.graph_id)
@@ -366,7 +366,7 @@ class DomainController extends NodeController<DomainController> {
 			id: this.id,
 			name: this.trimmed_name,
 			style: this.style,
-			ordering: this.ordering,
+			order: this.order,
 			x: this.x,
 			y: this.y,
 			graph_id: this._graph_id,
@@ -406,6 +406,9 @@ class DomainController extends NodeController<DomainController> {
 			for (const subject of this.subjects)
 				subject.domain = null
 
+		// Fix order of remaining domains
+		await this.graph.reorder()
+
 		// Call the API to delete the domain
 		const response = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
 
@@ -416,5 +419,15 @@ class DomainController extends NodeController<DomainController> {
 
 		// Remove domain from cache
 		this.cache.remove(this)
+	}
+
+	// --------------------> Utility
+
+	matchesQuery(query: string): boolean {
+		const lower_query = query.toLowerCase()
+		const lower_name = this.trimmed_name.toLowerCase()
+		const lower_style = this.style ? settings.NODE_STYLES[this.style].display_name.toLowerCase() : ''
+
+		return lower_name.includes(lower_query) || lower_style.includes(lower_query)
 	}
 }

@@ -38,7 +38,7 @@ export async function reduce(subject: PrismaSubject, ...relations: SubjectRelati
 	const serialized: SerializedSubject = {
 		id: subject.id,
 		name: subject.name,
-		ordering: subject.ordering,
+		order: subject.order,
 		x: subject.x,
 		y: subject.y
 	}
@@ -128,7 +128,7 @@ export async function update(data: SerializedSubject) {
 			},
 			data: {
 				name: data.name,
-				ordering: data.ordering,
+				order: data.order,
 				x: data.x,
 				y: data.y,
 				graph: graph_delta,

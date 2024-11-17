@@ -31,7 +31,7 @@ export async function reduce(lecture: PrismaLecture, ...relations: LectureRelati
 	const serialized: SerializedLecture = {
 		id: lecture.id,
 		name: lecture.name,
-		ordering: lecture.ordering
+		order: lecture.order
 	}
 
 	// Fetch relations from database
@@ -95,7 +95,7 @@ export async function update(data: SerializedLecture) {
 			},
 			data: {
 				name: data.name,
-				ordering: data.ordering,
+				order: data.order,
 				graph: graph_delta,
 				subjects: subject_delta
 			}

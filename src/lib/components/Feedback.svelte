@@ -5,6 +5,7 @@
 	import { fade } from 'svelte/transition'
 
 	// Internal dependencies
+	import * as settings from '$scripts/settings'
 	import { Validation } from '$scripts/validation'
 	import { clickoutside } from '$scripts/actions/clickoutside'
 	import { tooltip } from '$scripts/actions/tooltip'
@@ -49,6 +50,7 @@
 	export let data: Validation
 	export let success_msg: string = ''
 	export let compact: boolean = false
+	export let animate: boolean = true
 
 	// Variables
 	let all_visible: boolean = false
@@ -123,7 +125,7 @@
 	{#if show_success_icon}
 		<span 
 			class="success"
-			transition:fade={{ duration: 150 }}
+			transition:fade={{ duration: animate ? settings.FEEDBACK_FADE_DURATION : 0 }}
 		>
 			<img src={success_icon} alt="" /> {success_msg}
 		</span>
@@ -137,7 +139,7 @@
 			on:click={compact ? show_all : show_errors}
 			disabled={error_disabled}
 			use:tooltip={error_tooltip}
-			transition:fade={{ duration: 150 }}
+			transition:fade={{ duration: animate ? settings.FEEDBACK_FADE_DURATION : 0 }}
 		>
 			<img src={error_icon} alt="" /> {error_msg}
 		</button>
@@ -151,7 +153,7 @@
 			on:click={compact ? show_all : show_warnings}
 			disabled={warning_disabled}
 			use:tooltip={warning_tooltip}
-			transition:fade={{ duration: 150 }}
+			transition:fade={{ duration: animate ? settings.FEEDBACK_FADE_DURATION : 0 }}
 		>
 			<img src={warning_icon} alt="" /> {warning_msg}
 		</button>

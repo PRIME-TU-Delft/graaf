@@ -14,7 +14,7 @@ async function POST({ request }) {
 	
 	// Retrieve data
 	const { graph_id } = await request.json()
-	if (!graph_id || isNaN(graph_id)) 
+	if (isNaN(graph_id)) 
 		return new Response('Missing graph ID', { status: 400 })
 
 	// Create graph

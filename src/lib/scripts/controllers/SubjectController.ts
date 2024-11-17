@@ -15,6 +15,7 @@ import {
 import { validSerializedSubject } from '$scripts/types'
 
 import type {
+	DomainStyle,
 	DropdownOption,
 	SerializedSubject
 } from '$scripts/types'
@@ -36,7 +37,7 @@ class SubjectController extends NodeController<SubjectController> {
 		cache: ControllerCache,
 		id: number,
 		name: string,
-		ordering: number,
+		order: number,
 		x: number,
 		y: number,
 		_domain_id?: number | null,
@@ -46,7 +47,7 @@ class SubjectController extends NodeController<SubjectController> {
 		_lecture_ids?: number[]
 
 	) {
-		super(cache, id, name, ordering, x, y, _graph_id, _parent_ids, _child_ids)
+		super(cache, id, name, order, x, y, _graph_id, _parent_ids, _child_ids)
 
 		this._domain_id = _domain_id
 		this._lecture_ids = _lecture_ids
@@ -55,6 +56,11 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	// --------------------> Getters & Setters
+
+	// Style properties
+	get style(): DomainStyle | null {
+		return this.domain?.style || null
+	}
 
 	// Parent properties
 	get parents(): SubjectController[] {
@@ -333,7 +339,7 @@ class SubjectController extends NodeController<SubjectController> {
 			cache,
 			data.id,
 			data.name,
-			data.ordering,
+			data.order,
 			data.x,
 			data.y,
 			data.domain_id,
@@ -347,7 +353,7 @@ class SubjectController extends NodeController<SubjectController> {
 	represents(data: SerializedSubject): boolean {
 		return this.id === data.id
 			&& this.trimmed_name === data.name
-			&& this.ordering === data.ordering
+			&& this.order === data.order
 			&& this.x === data.x
 			&& this.y === data.y
 			&& (this._domain_id === undefined   || data.domain_id === undefined   || this._domain_id === data.domain_id)
@@ -361,7 +367,7 @@ class SubjectController extends NodeController<SubjectController> {
 		return {
 			id: this.id,
 			name: this.trimmed_name,
-			ordering: this.ordering,
+			order: this.order,
 			x: this.x,
 			y: this.y,
 			domain_id: this._domain_id,
@@ -414,5 +420,16 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Remove the subject from the cache
 		this.cache.remove(this)
+	}
+
+	
+	// --------------------> Utility
+
+	matchesQuery(query: string): boolean {
+		const lower_query = query.toLowerCase()
+		const lower_name = this.trimmed_name.toLowerCase()
+		const lower_domain = this.domain?.trimmed_name.toLowerCase() || ''
+
+		return lower_name.includes(lower_query) || lower_domain.includes(lower_query)
 	}
 }

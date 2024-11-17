@@ -76,7 +76,7 @@ export type SerializedDomain = {
 	id: number,
 	name: string,
 	style: DomainStyle | null,
-	ordering: number,
+	order: number,
 	x: number,
 	y: number,
 	graph_id?: number,
@@ -89,7 +89,7 @@ export function validSerializedDomain(object: any): object is SerializedDomain {
 	return typeof object.id === 'number'
 		&& typeof object.name === 'string'
 		&& (object.style === null || validDomainStyle(object.style))
-		&& typeof object.ordering === 'number'
+		&& typeof object.order === 'number'
 		&& typeof object.x === 'number'
 		&& typeof object.y === 'number'
 		&& (object.graph_id === undefined || typeof object.graph_id === 'number')
@@ -101,7 +101,7 @@ export function validSerializedDomain(object: any): object is SerializedDomain {
 export type SerializedSubject = {
 	id: number,
 	name: string,
-	ordering: number,
+	order: number,
 	x: number,
 	y: number,
 	domain_id?: number | null,
@@ -114,7 +114,7 @@ export type SerializedSubject = {
 export function validSerializedSubject(object: any): object is SerializedSubject {
 	return typeof object.id === 'number'
 		&& typeof object.name === 'string'
-		&& typeof object.ordering === 'number'
+		&& typeof object.order === 'number'
 		&& typeof object.x === 'number'
 		&& typeof object.y === 'number'
 		&& (object.domain_id === undefined || object.domain_id === null || typeof object.domain_id === 'number')
@@ -127,7 +127,7 @@ export function validSerializedSubject(object: any): object is SerializedSubject
 export type SerializedLecture = {
 	id: number,
 	name: string,
-	ordering: number,
+	order: number,
 	graph_id?: number,
 	subject_ids?: number[]
 }
@@ -135,7 +135,7 @@ export type SerializedLecture = {
 export function validSerializedLecture(object: any): object is SerializedLecture {
 	return typeof object.id === 'number'
 		&& typeof object.name === 'string'
-		&& typeof object.ordering === 'number'
+		&& typeof object.order === 'number'
 		&& (object.graph_id === undefined || typeof object.graph_id === 'number')
 		&& (object.subject_ids === undefined || Array.isArray(object.subject_ids))
 }

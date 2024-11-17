@@ -1,0 +1,108 @@
+
+<script lang="ts">
+
+	// Internal dependencies
+	import { graph } from './stores'
+
+	import type { DomainRelationController } from '$scripts/controllers'
+
+	// Components
+	import IconButton from '$components/IconButton.svelte'
+	import LinkButton from '$components/LinkButton.svelte'
+	import Dropdown from '$components/Dropdown.svelte'
+	import Button from '$components/Button.svelte'
+	import Modal from '$components/Modal.svelte'
+
+	// Assets
+	import trash_icon from '$assets/trash-icon.svg'
+
+	// Exports
+	export let relation: DomainRelationController
+
+	// Modal
+	let delete_modal: Modal
+
+</script>
+
+
+<!-- Markup -->
+
+
+<Modal bind:this={delete_modal}>
+	<h3 slot="header"> Delete Relation </h3>
+	Are you sure you want to delete this relation? This action cannot be undone.
+
+	<svelte:fragment slot="footer">
+		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
+		<Button on:click={async () => {
+			await relation.delete()
+			$graph = $graph // Trigger reactivity
+			delete_modal.hide()
+		}}> Delete </Button>
+	</svelte:fragment>
+</Modal>
+
+<div class="row">
+	<IconButton scale
+		src={trash_icon}
+		description="Delete Relation"
+		on:click={async () => {
+			if (relation.untouched) {
+				await relation.delete()
+				$graph = $graph // Trigger reactivity
+			} else {
+				delete_modal.show()
+			}
+		}}
+	/>
+
+	<Dropdown
+		id="parent"
+		placeholder="Select a parent domain"
+		options={relation.parent_options}
+		bind:value={relation.parent}
+		on:change={async () => {
+			await relation.save()
+			$graph = $graph // Trigger reactivity
+		}}
+	/>
+
+	<span class="preview" style:background={relation.parent_color} />
+
+	<Dropdown
+		id="child"
+		placeholder="Select a child domain"
+		options={relation.child_options}
+		bind:value={relation.child}
+		on:change={async () => {
+			await relation.save()
+			$graph = $graph // Trigger reactivity
+		}}
+	/>
+
+	<span class="preview" style:background={relation.child_color} />
+</div>
+
+
+<!-- Styles -->
+
+
+<style lang="sass">
+
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
+
+	.row
+		display: grid
+		grid-template: "delete parent parent-preview child child-preview" auto / $total-icon-size 1fr $total-icon-size 1fr $total-icon-size
+		grid-gap: $form-small-gap
+		place-items: center center
+
+		width: 100%
+
+		.preview
+			width: $input-icon-size
+			height: $input-icon-size
+			margin: $input-icon-padding
+
+</style>

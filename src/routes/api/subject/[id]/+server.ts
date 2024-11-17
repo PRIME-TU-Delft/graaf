@@ -10,7 +10,7 @@ export async function DELETE({ params }) {
 
 	// Retrieve data
 	const subject_id = Number(params.id)
-	if (!subject_id || isNaN(subject_id)) {
+	if (isNaN(subject_id)) {
 		return new Response('Missing subject ID', { status: 400 })
 	}
 

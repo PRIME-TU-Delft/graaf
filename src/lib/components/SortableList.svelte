@@ -1,11 +1,16 @@
 
 <script lang="ts">
 
-	const ANIMATION_DURATION = 250
-
 	// External dependencies
 	import { createEventDispatcher } from 'svelte'
 	import { flip } from 'svelte/animate'
+
+	// Internal dependencies
+	import * as settings from '$scripts/settings'
+	import type { Validation } from '$scripts/validation'
+
+	// Components
+	import Feedback from '$components/Feedback.svelte'
 
 	// Functions
 	function getDataset(node: any) {
@@ -32,7 +37,8 @@
 		} 
 	}
 
-	function onDragEnd(event: DragEvent) {
+	function onDragEnd(_: DragEvent) {
+		dispatch('rearrange', list)
 		origin = null
 	}
 
@@ -43,50 +49,51 @@
 		list = new_list
 
 		animating.push(dropzone)
-		dispatch('rearrange', { from, to })
 
 		setTimeout(() => {
 			animating = animating.filter(id => id !== dropzone)
-		}, ANIMATION_DURATION)
+		}, settings.LIST_FLIP_DURATION)
 	}
 
 	// Variables
-	export let list: any[]
+	export let list: T[] & { uuid: string, validate: (strict: boolean) => Validation }[]
 
-	const dispatch = createEventDispatcher()
+	const dispatch = createEventDispatcher<{rearrange: T[]}>()
 	
 	let origin: number | null = null // Index of the element being dragged
 	let animating: number[] = []	 // List of elements currently being animated
 
+	type T = $$Generic
+
 </script>
 
-{#if list?.length}
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<div class="list">
-		{#each list as item, index (item.id)}
+<div class="list">
+	{#each list as item, index (item.uuid)}
 
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div
+			class="row"
+			class:dragging={index == origin}
+			data-index={index}
+			data-uuid={item.uuid}
+			on:dragover|preventDefault={onDragOver}
+			animate:flip={{ duration: settings.LIST_FLIP_DURATION }}
+		>
+			<!-- Validation -->
+			<Feedback compact animate={false} data={item.validate(false)} />
+
+			<!-- Drag handle -->
 			<div
-				class="row"
-				class:dragging={index == origin}
-				data-id={item.id}
-				data-index={index}
-				on:dragover|preventDefault={onDragOver}
-				animate:flip={{ duration: ANIMATION_DURATION }}
-			>
-				<!-- Drag handle element -->
-				<div
-					class="handle"
-					draggable="true"
-					on:dragstart={onDragStart}
-					on:dragend|preventDefault={onDragEnd}
-				> ⠿ </div>
+				class="handle"
+				draggable="true"
+				on:dragstart={onDragStart}
+				on:dragend|preventDefault={onDragEnd}
+			> ⠿ </div>
 
-				<slot {item} {index} />
-			</div>
-		{/each}
-	</div>
-{/if}
+			<slot {item} />
+		</div>
+	{/each}
+</div>
 
 <style lang="sass">
 
@@ -97,17 +104,15 @@
 	.list
 		display: flex
 		flex-flow: column nowrap
-		align-items: center
+		gap: $form-small-gap
 
 		.row
-			display: flex
-			flex-flow: row nowrap
-			justify-content: flex-start
-			align-items: center
+			display: grid
+			grid-template: "validate handle content" auto / $total-icon-size $total-icon-size 1fr
+			place-items: center center
+			grid-gap: $form-small-gap
 
 			width: 100%
-			height: $list-row-height
-			padding: $input-thin-padding $input-thick-padding
 
 			.handle
 				display: flex
@@ -119,5 +124,6 @@
 
 				cursor: ns-resize
 				user-select: none
+				color: $dark-gray
 
 </style>
