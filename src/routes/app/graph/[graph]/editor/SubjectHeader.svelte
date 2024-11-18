@@ -2,11 +2,15 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { subject_query } from './stores'
+	import { graph, subject_query } from './stores'
 
 	// Components
-	import Searchbar from '$components/Searchbar.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import Searchbar from '$components/Searchbar.svelte'
+	import Button from '$components/Button.svelte'
+
+	// Assets
+	import sort_icon from '$assets/sort-icon.svg'
 
 	// Functions
 	function getScrollBoundry() {
@@ -69,6 +73,12 @@
 	<div class="flex-spacer" />
 
 	<Searchbar placeholder="Search subjects and relations" bind:value={$subject_query} />
+	<Button on:click={() => {
+		$graph.sort()
+		$graph = $graph
+	}}> 
+		<img src={sort_icon} alt=""> Sort by Domains 
+	</Button>
 
 </div>
 

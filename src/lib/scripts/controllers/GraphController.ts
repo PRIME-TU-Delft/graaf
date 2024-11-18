@@ -7,6 +7,7 @@ import { Validation, Severity } from '$scripts/validation'
 import {
 	ControllerCache,
 	CourseController,
+	RelationController,
 	DomainController,
 	DomainRelationController,
 	SubjectController,
@@ -131,6 +132,8 @@ class GraphController {
 			}
 		}
 
+		this.sort()
+
 		return Array.from(this._domains_relations)
 	}
 
@@ -149,6 +152,8 @@ class GraphController {
 
 		// Fetch subjects from the cache
 		this._subjects = this._subject_ids.map(id => this.cache.findOrThrow(SubjectController, id))
+		this.sort()
+
 		return Array.from(this._subjects)
 	}
 
@@ -163,6 +168,8 @@ class GraphController {
 				SubjectRelationController.revive(this, parent, child)
 			}
 		}
+
+		this.sort()
 
 		return Array.from(this._subjects_relations)
 	}
@@ -610,6 +617,44 @@ class GraphController {
 		// Throw an error if the API request fails
 		if (!response.ok) {
 			throw new Error(`APIError (/api/graph/${this.id}/reorder PUT): ${response.status} ${response.statusText}`)
+		}
+	}
+
+	sort() {
+
+		// Custom sorting algorithm, as the default sort is unstable
+		function insertionSort<T>(array: T[], key: (item: T) => number) {
+			const n = array.length
+
+			for (let i = 1; i < n; i++) {
+				const x = array[i]
+				
+				let j = i
+				while (j > 0 && key(array[j - 1]) > key(x)) {
+					array[j] = array[j - 1]
+					j--
+				}
+
+				array[j] = x
+			}
+		}
+
+		// Sort domain relations
+		if (this._domains_relations !== undefined) {
+			insertionSort(this._domains_relations, relation => relation.child?.order ?? Infinity)
+			insertionSort(this._domains_relations, relation => relation.parent?.order ?? Infinity)
+		}
+
+		// Sort subjects
+		if (this._subjects !== undefined) {
+			insertionSort(this._subjects, subject => subject.domain?.order ?? Infinity)
+			this._subject_ids = this._subjects.map(subject => subject.id)
+		}
+
+		// Sort subject relations
+		if (this._subjects_relations !== undefined) {
+			insertionSort(this._subjects_relations, relation => relation.child?.domain?.order ?? Infinity)
+			insertionSort(this._subjects_relations, relation => relation.parent?.domain?.order ?? Infinity)
 		}
 	}
 
