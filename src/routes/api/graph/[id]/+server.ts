@@ -13,7 +13,7 @@ async function DELETE({ params }) {
 
 	// Retrieve data
 	const graph_id = Number(params.id)
-	if (!graph_id || isNaN(graph_id)) {
+	if (isNaN(graph_id)) {
 		return new Response('Missing graph ID', { status: 400 })
 	}
 

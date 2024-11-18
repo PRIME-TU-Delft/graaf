@@ -16,7 +16,7 @@
 	} from '$scripts/controllers'
 
 	// Components
-	import CoordinatorCard from './CoordinatorCard.svelte'
+	import MemberCard from './MemberCard.svelte'
 	import GeneralCard from './GeneralCard.svelte'
 	import ProgramCard from './ProgramCard.svelte'
 
@@ -60,8 +60,6 @@
 <!-- Markup -->
 
 
-<svelte:window on:beforeunload|preventDefault={async () => await $course.save()} />
-
 {#await revive()}
 	<Loading />
 {:then}
@@ -69,8 +67,8 @@
 		<svelte:fragment slot="title">
 			<Navbar path={[
 				{
-					name: 'Dashboard',
-					href: '/app/dashboard'
+					name: 'Home',
+					href: '/app/home'
 				},
 
 				{
@@ -78,19 +76,18 @@
 					href: `/app/course/${$course.id}/overview`
 				},
 				{
-					name: 'Course settings',
-					href: `/app/course/${$course.id}/settings`
+					name: 'Settings'
 				}
 			]}>
 				<LinkButton href={`/app/course/${$course.id}/overview`}> Course overview </LinkButton>
 			</Navbar>
 
-			Here you can change your course settings, like its coordinators, graphs, links, etc.
+			Here you can change your course settings, like its members, graphs, links, etc.
 		</svelte:fragment>
 
 		<GeneralCard />
+		<MemberCard />
 		<ProgramCard />
-		<CoordinatorCard />
 
 	</Layout>
 {/await}

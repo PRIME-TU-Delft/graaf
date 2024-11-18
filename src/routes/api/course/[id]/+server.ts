@@ -13,7 +13,7 @@ async function DELETE({ params }) {
 
 	// Retrieve course ID
 	const course_id = Number(params.id)
-	if (!course_id || isNaN(course_id)) {
+	if (isNaN(course_id)) {
 		return new Response('Missing course ID', { status: 400 })
 	}
 

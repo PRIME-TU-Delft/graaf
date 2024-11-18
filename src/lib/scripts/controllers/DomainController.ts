@@ -14,8 +14,8 @@ import {
 import { validSerializedDomain } from '$scripts/types'
 
 import type {
-	DropdownOption,
 	DomainStyle,
+	DropdownOption,
 	SerializedDomain
 } from '$scripts/types'
 
@@ -27,6 +27,7 @@ export { DomainController }
 
 
 class DomainController extends NodeController<DomainController> {
+	private _order: number
 	private _style: DomainStyle | null
 	private _subject_ids?: number[]
 	private _subjects?: SubjectController[]
@@ -34,9 +35,10 @@ class DomainController extends NodeController<DomainController> {
 	private constructor(
 		cache: ControllerCache,
 		id: number,
+		unchanged: boolean,
 		name: string,
 		style: DomainStyle | null,
-		ordering: number,
+		order: number,
 		x: number,
 		y: number,
 		_graph_id?: number,
@@ -44,8 +46,9 @@ class DomainController extends NodeController<DomainController> {
 		_child_ids?: number[],
 		_subject_ids?: number[]
 	) {
-		super(cache, id, name, ordering, x, y, _graph_id, _parent_ids, _child_ids)
+		super(cache, id, unchanged, name, x, y, _graph_id, _parent_ids, _child_ids)
 
+		this._order = order
 		this._style = style
 		this._subject_ids = _subject_ids
 
@@ -53,6 +56,17 @@ class DomainController extends NodeController<DomainController> {
 	}
 
 	// --------------------> Getters & Setters
+
+	// Order properties
+	get order(): number {
+		return this._order
+	}
+
+	set order(value: number) {
+		this._order = value
+		this._unchanged = false
+		this._unsaved = true
+	}
 
 	// Parent properties
 	get parents(): DomainController[] {
@@ -76,25 +90,6 @@ class DomainController extends NodeController<DomainController> {
 		// Fetch children from cache
 		this._children = this._child_ids.map(id => this.cache.findOrThrow(DomainController, id))
 		return Array.from(this._children)
-	}
-
-	// Style properties
-	get style(): DomainStyle | null {
-		return this._style
-	}
-
-	set style(value: DomainStyle | null) {
-		this._style = value
-		this._untouched = false
-	}
-
-	get style_options(): DropdownOption<string>[] {
-		return Object.keys(settings.NODE_STYLES).map(key => ({
-				value: key,
-				label: settings.NODE_STYLES[key].display_name,
-				validation: Validation.success()
-			})
-		)
 	}
 
 	// Subject properties
@@ -124,80 +119,123 @@ class DomainController extends NodeController<DomainController> {
 		)
 	}
 
-	// Untouched state
-	get untouched(): boolean {
-		return this._untouched
+	// Style properties
+	get style(): DomainStyle | null {
+		return this._style
+	}
+
+	set style(value: DomainStyle | null) {
+		this._style = value
+		this._unchanged = false
+		this._unsaved = true
+	}
+
+	get style_options(): DropdownOption<string>[] {
+		return Object.keys(settings.NODE_STYLES).map(key => ({
+				value: key,
+				label: settings.NODE_STYLES[key].display_name,
+				validation: Validation.success()
+			})
+		)
 	}
 
 	// --------------------> Assignments
 
-	addParent(parent: DomainController): void {
-		if (this._parent_ids === undefined)
-			return
-		if (this._parent_ids.includes(parent.id))
-			throw new Error(`DomainError: Domain with ID ${parent.id} already assigned to domain with ID ${this.id}`)
-		this._parent_ids?.push(parent.id)
-		this._parents?.push(parent)
-		this._untouched = false
+	assignParent(parent: DomainController, mirror: boolean = true): void {
+		if (this._parent_ids !== undefined) {
+			if (this._parent_ids.includes(parent.id))
+				throw new Error(`DomainError: Parent with ID ${parent.id} already assigned to domain with ID ${this.id}`)
+			this._parent_ids.push(parent.id)
+			this._parents?.push(parent)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			parent.assignChild(this, false)
+		}
 	}
 
-	addChild(child: DomainController): void {
-		if (this._child_ids === undefined)
-			return
-		if (this._child_ids.includes(child.id))
-			throw new Error(`DomainError: Domain with ID ${child.id} already assigned to domain with ID ${this.id}`)
-		this._child_ids?.push(child.id)
-		this._children?.push(child)
-		this._untouched = false
+	assignChild(child: DomainController, mirror: boolean = true): void {
+		if (this._child_ids !== undefined) {
+			if (this._child_ids.includes(child.id))
+				throw new Error(`DomainError: Child with ID ${child.id} already assigned to domain with ID ${this.id}`)
+			this._child_ids.push(child.id)
+			this._children?.push(child)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			child.assignParent(this, false)
+		}
 	}
 
-	addSubject(subject: SubjectController): void {
-		if (this._subject_ids === undefined)
-			return
-		if (this._subject_ids.includes(subject.id))
-			throw new Error(`DomainError: Subject with ID ${subject.id} already assigned to domain with ID ${this.id}`)
-		this._subject_ids?.push(subject.id)
-		this._subjects?.push(subject)
-		this._untouched = false
+	assignSubject(subject: SubjectController, mirror: boolean = true): void {
+		if (this._subject_ids !== undefined) {
+			if (this._subject_ids.includes(subject.id))
+				throw new Error(`DomainError: Subject with ID ${subject.id} already assigned to domain with ID ${this.id}`)
+			this._subject_ids.push(subject.id)
+			this._subjects?.push(subject)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			subject.assignDomain(this, false)
+		}
 	}
 
-	removeParent(parent: DomainController): void {
-		if (this._parent_ids === undefined)
-			return
-		if (!this._parent_ids.includes(parent.id))
-			throw new Error(`DomainError: Domain with ID ${parent.id} not assigned to domain with ID ${this.id}`)
-		this._parent_ids = this._parent_ids?.filter(id => id !== parent.id)
-		this._parents = this._parents?.filter(p => p.id !== parent.id)
-		this._untouched = false
+	unassignParent(parent: DomainController, mirror: boolean = true): void {
+		if (this._parent_ids !== undefined) {
+			if (!this._parent_ids.includes(parent.id))
+				throw new Error(`DomainError: Parent with ID ${parent.id} not assigned to domain with ID ${this.id}`)
+			this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
+			this._parents = this._parents?.filter(p => p.id !== parent.id)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			parent.unassignChild(this, false)
+		}
 	}
 
-	removeChild(child: DomainController): void {
-		if (this._child_ids === undefined)
-			return
-		if (!this._child_ids.includes(child.id))
-			throw new Error(`DomainError: Domain with ID ${child.id} not assigned to domain with ID ${this.id}`)
-		this._child_ids = this._child_ids?.filter(id => id !== child.id)
-		this._children = this._children?.filter(c => c.id !== child.id)
-		this._untouched = false
+	unassignChild(child: DomainController, mirror: boolean = true): void {
+		if (this._child_ids !== undefined) {
+			if (!this._child_ids.includes(child.id))
+				throw new Error(`DomainError: Child with ID ${child.id} not assigned to domain with ID ${this.id}`)
+			this._child_ids = this._child_ids.filter(id => id !== child.id)
+			this._children = this._children?.filter(c => c.id !== child.id)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			child.unassignParent(this, false)
+		}
 	}
 
-	removeSubject(subject: SubjectController): void {
-		if (this._subject_ids === undefined)
-			return
-		if (!this._subject_ids.includes(subject.id))
-			throw new Error(`DomainError: Subject with ID ${subject.id} not assigned to domain with ID ${this.id}`)
-		this._subject_ids = this._subject_ids?.filter(id => id !== subject.id)
-		this._subjects = this._subjects?.filter(s => s.id !== subject.id)
-		this._untouched = false
+	unassignSubject(subject: SubjectController, mirror: boolean = true): void {
+		if (this._subject_ids !== undefined) {
+			if (!this._subject_ids.includes(subject.id))
+				throw new Error(`DomainError: Subject with ID ${subject.id} not assigned to domain with ID ${this.id}`)
+			this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
+			this._subjects = this._subjects?.filter(s => s.id !== subject.id)
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		if (mirror) {
+			subject.unassignDomain(this, false)
+		}
 	}
 
 	// --------------------> Validation
 
 	validateName(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -230,9 +268,7 @@ class DomainController extends NodeController<DomainController> {
 
 	validateStyle(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.style === null) {
 			validation.add({
@@ -257,9 +293,7 @@ class DomainController extends NodeController<DomainController> {
 
 	validateSubjects(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._untouched) {
-			return validation
-		}
+		if (!strict && this._unchanged) return validation
 
 		if (this.subject_ids.length === 0) {
 			validation.add({
@@ -291,7 +325,7 @@ class DomainController extends NodeController<DomainController> {
 		const response = await fetch('/api/domain', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ graph_id: graph.id })
+			body: JSON.stringify({ graph_id: graph.id, order: graph.domain_ids.length })
 		})
 
 		// Throw an error if the API request fails
@@ -301,14 +335,13 @@ class DomainController extends NodeController<DomainController> {
 
 		// Revive the domain
 		const data = await response.json()
-		if (validSerializedDomain(data)) {
-			const domain = DomainController.revive(cache, data)
-			domain._untouched = true
-			graph.addDomain(domain)
-			return domain
+		if (!validSerializedDomain(data)) {
+			throw new Error(`DomainError: Invalid domain data received from API`)
 		}
 
-		throw new Error(`DomainError: Invalid domain data received from API`)
+		const domain = DomainController.revive(cache, data)
+		graph.assignDomain(domain)
+		return domain
 	}
 
 	static revive(cache: ControllerCache, data: SerializedDomain): DomainController {
@@ -336,9 +369,10 @@ class DomainController extends NodeController<DomainController> {
 		return new DomainController(
 			cache,
 			data.id,
+			data.unchanged,
 			data.name,
 			data.style,
-			data.ordering,
+			data.order,
 			data.x,
 			data.y,
 			data.graph_id,
@@ -350,9 +384,10 @@ class DomainController extends NodeController<DomainController> {
 
 	represents(data: SerializedDomain): boolean {
 		return this.id === data.id
+			&& this.unchanged === data.unchanged
 			&& this.trimmed_name === data.name
 			&& this.style === data.style
-			&& this.ordering === data.ordering
+			&& this.order === data.order
 			&& this.x === data.x
 			&& this.y === data.y
 			&& (this._graph_id === undefined    || data.graph_id === undefined    || this._graph_id === data.graph_id)
@@ -364,9 +399,10 @@ class DomainController extends NodeController<DomainController> {
 	reduce(): SerializedDomain {
 		return {
 			id: this.id,
+			unchanged: this.unchanged,
 			name: this.trimmed_name,
 			style: this.style,
-			ordering: this.ordering,
+			order: this.order,
 			x: this.x,
 			y: this.y,
 			graph_id: this._graph_id,
@@ -391,20 +427,25 @@ class DomainController extends NodeController<DomainController> {
 		}
 	}
 
-	async delete() {
+	async delete(reorder_graph: boolean = true) {
 
 		// Unassign graph, parents, children, and subjects
 		if (this._graph_id !== undefined)
-			this.graph.removeDomain(this)
+			this.graph.unassignDomain(this)
 		if (this._parent_ids !== undefined)
 			for (const parent of this.parents)
-				parent.removeChild(this)
+				parent.unassignChild(this, false)
 		if (this._child_ids !== undefined)
 			for (const child of this.children)
-				child.removeParent(this)
+				child.unassignParent(this, false)
 		if (this._subject_ids !== undefined)
 			for (const subject of this.subjects)
-				subject.domain = null
+				subject.unassignDomain(this, false)
+
+		// Fix order of remaining domains
+		if (reorder_graph) {
+			await this.graph.reorder()
+		}
 
 		// Call the API to delete the domain
 		const response = await fetch(`/api/domain/${this.id}`, { method: 'DELETE' })
@@ -414,7 +455,28 @@ class DomainController extends NodeController<DomainController> {
 			throw new Error(`APIError (/api/domain/${this.id} DELETE): ${response.status} ${response.statusText}`)
 		}
 
-		// Remove domain from cache
+		// Remove the course from the cache
 		this.cache.remove(this)
+	}
+
+	async copy(graph: GraphController): Promise<DomainController> {
+		const domain_copy = await DomainController.create(this.cache, graph)
+		domain_copy.name = this.trimmed_name
+		domain_copy.style = this.style
+		domain_copy.order = this.order
+		domain_copy.x = this.x
+		domain_copy.y = this.y
+
+		return domain_copy
+	}
+
+	// --------------------> Utility
+
+	matchesQuery(query: string): boolean {
+		const lower_query = query.toLowerCase()
+		const lower_name = this.trimmed_name.toLowerCase()
+		const lower_style = this.style ? settings.NODE_STYLES[this.style].display_name.toLowerCase() : ''
+
+		return lower_name.includes(lower_query) || lower_style.includes(lower_query)
 	}
 }

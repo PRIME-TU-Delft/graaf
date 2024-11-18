@@ -25,10 +25,10 @@
 		animation: figure-eight $duration infinite linear
 
 		&:nth-child(2)
-			animation-delay: -$duration / 3
+			animation-delay: math.div(-$duration, 3)
 
 		&:nth-child(3)
-			animation-delay: -$duration / 1.5
+			animation-delay: math.div(-$duration, 1.5)
 
 		&::after
 			content: ''

@@ -57,11 +57,19 @@
 			}
 
 			// Copy graph
-			await graph.copy(this.course)
+			const copied_graph = await graph.copy(this.course!)
+			await Promise.all([
+				copied_graph.save(),
+				copied_graph.domains.map(domain => domain.save()),
+				copied_graph.subjects.map(subject => subject.save()),
+				copied_graph.lectures.map(lecture => lecture.save())
+			])
+
 			$course = $course
 			this.hide()
 		}
 	}
+	
 	// Exports
 	export let graph: GraphController
 
@@ -82,8 +90,8 @@
 		<label for="course"> Target Course </label>
 		<Dropdown
 			id="course"
-			placeholder="Target Course"
-			options={$course.copy_options}
+			placeholder="Select a course"
+			options={graph.copy_options}
 			bind:value={copy_modal.course}
 		/>
 
@@ -131,13 +139,12 @@
 		<IconButton scale
 			src={open_eye_icon}
 			description="View Graph"
-			href="/app/graph/{graph.id}/overview"
 		/>
 	
 		<IconButton scale
 			src={pencil_icon}
 			description="Edit Graph"
-			href="/app/graph/{graph.id}/settings"
+			href="/app/graph/{graph.id}/editor"
 		/>
 	
 		<IconButton scale

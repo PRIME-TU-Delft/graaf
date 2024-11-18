@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { program } from './stores'
+	import { courses, program } from './stores'
 
 	import {
 		ControllerCache,
@@ -18,7 +18,7 @@
 	// Components
 	import GeneralCard from './GeneralCard.svelte'
 	import CoursesCard from './CoursesCard.svelte'
-	import CoordinatorCard from './CoordinatorCard.svelte'
+	import MemberCard from './MemberCard.svelte'
 
 	import Layout from '$components/Layout.svelte'
 	import Navbar from '$components/Navbar.svelte'
@@ -40,9 +40,9 @@
 
 		// Revive controllers into stores
 		program.set(ProgramController.revive(cache, awaited_program))
+		courses.set(awaited_course.map(course => CourseController.revive(cache, course)))
 
 		// Revive controllers into cache
-		awaited_course.forEach(course => CourseController.revive(cache, course))
 		awaited_user.forEach(user => UserController.revive(cache, user))
 	}
 
@@ -56,8 +56,6 @@
 <!-- Markup -->
 
 
-<svelte:window on:beforeunload|preventDefault={async () => await $program.save()} />
-
 {#await revive()}
 	<Loading />
 {:then}
@@ -65,25 +63,20 @@
 		<svelte:fragment slot="title">
 			<Navbar path={[
 				{
-					name: 'Dashboard',
-					href: '/app/dashboard'
+					name: 'Home',
+					href: '/app/home'
 				},
 				{
-					name: $program.name,
-					href: `/app/program/${$program.id}/settings`
-				},
-				{
-					name: 'Program settings',
-					href: `/app/course/${$program.id}/settings`
+					name: $program.name
 				}
 			]} />
 
-			Here you can change your program settings, like its courses and coordinators.
+			Here you can change your program settings, like its courses and members.
 		</svelte:fragment>
 
 		<GeneralCard />
+		<MemberCard />
 		<CoursesCard />
-		<CoordinatorCard />
 
 	</Layout>
 {/await}

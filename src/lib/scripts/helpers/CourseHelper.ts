@@ -36,6 +36,7 @@ import type {
 export async function reduce(course: PrismaCourse, ...relations: CourseRelation[]): Promise<SerializedCourse> {
 	const serialized: SerializedCourse = {
 		id: course.id,
+		unchanged: course.unchanged,
 		code: course.code,
 		name: course.name
 	}
@@ -98,12 +99,16 @@ export async function reduce(course: PrismaCourse, ...relations: CourseRelation[
 	return serialized
 }
 
-export async function create(code: string, name: string): Promise<SerializedCourse> {
+export async function create(code: string, name: string, program_id?: number): Promise<SerializedCourse> {
+
+	const program_delta = prismaUpdateArray<number, SerializedProgram>([], program_id ? [program_id] : [])
+
 	try {
 		var course = await prisma.course.create({
 			data: {
-				code,
-				name
+				code, 
+				name,
+				programs: program_delta								
 			}
 		})
 	} catch (error) {
@@ -137,6 +142,7 @@ export async function update(data: SerializedCourse) {
 				id: data.id
 			},
 			data: {
+				unchanged: data.unchanged,
 				name: data.name,
 				code: data.code,
 				programs: program_delta,

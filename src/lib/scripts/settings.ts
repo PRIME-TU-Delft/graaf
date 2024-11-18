@@ -6,15 +6,21 @@ type Milliseconds = number
 
 // -------------------> General settings
 
-export const MAX_PROGRAM_NAME_LENGTH = 50
-export const COURSE_CODE_REGEX = /^[A-Za-z0-9]*$/
-export const MAX_COURSE_CODE_LENGTH = 10
-export const MAX_COURSE_NAME_LENGTH = 50
-export const MAX_GRAPH_NAME_LENGTH = 50
-export const MAX_NODE_NAME_LENGTH = 35
-export const MAX_LECTURE_NAME_LENGTH = 50
-export const LINK_NAME_REGEX = /^[A-Za-z0-9_.\-~]*$/
-export const MAX_LINK_NAME_LENGTH = 35
+export const MAX_PROGRAM_NAME_LENGTH: Scalar = 50
+
+export const COURSE_CODE_REGEX: RegExp = /^[A-Za-z0-9]*$/
+export const MAX_COURSE_CODE_LENGTH: Scalar= 10
+export const MAX_COURSE_NAME_LENGTH: Scalar = 50
+
+export const LINK_NAME_REGEX: RegExp = /^[A-Za-z0-9_.\-~]*$/
+export const MAX_LINK_NAME_LENGTH: Scalar = 35
+
+export const MAX_GRAPH_NAME_LENGTH: Scalar = 50
+export const MAX_NODE_NAME_LENGTH: Scalar = 35
+export const MAX_LECTURE_NAME_LENGTH: Scalar = 50
+
+export const LIST_FLIP_DURATION: Milliseconds = 150
+export const FEEDBACK_FADE_DURATION: Milliseconds = 500
 
 // -------------------> Editor settings
 

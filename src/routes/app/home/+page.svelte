@@ -255,8 +255,8 @@
 {:then} 
 	<Layout>
 		<svelte:fragment slot="title">
-			<Navbar path={[{ name: 'Dashboard', href: '/app/dashboard' }]} />
-			Welcome to your Dashboard! Here you can find all Programs and associated Courses. Click on any of them to edit or view
+			<Navbar path={[{ name: 'Home' }]} />
+			Here you can find all Programs and associated Courses. Click on any of them to edit or view
 			more information. You can also create a sandbox environment to experiment with the Graph Editor. Can't find a specific
 			Program or Course? Maybe you don't have access to it. Contact one of its Admins to get access.
 		</svelte:fragment>

@@ -13,7 +13,7 @@ import {
 	SubjectController
 } from '$scripts/controllers'
 
-import type { DropdownOption } from '$scripts/types'
+import type { DomainStyle } from '$scripts/types'
 
 // Exports
 export { NodeController }
@@ -25,7 +25,7 @@ export { NodeController }
 abstract class NodeController<T extends DomainController | SubjectController> {
 	public uuid: string = uuid.v4()
 
-	protected _untouched: boolean = false
+	protected _unsaved: boolean = false
 	protected _graph?: GraphController
 	protected _parents?: T[]
 	protected _children?: T[]
@@ -33,16 +33,21 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	protected constructor(
 		public cache: ControllerCache,
 		public id: number,
+		protected _unchanged: boolean,
 		protected _name: string,
-		public ordering: number,
-		public x: number,
-		public y: number,
+		protected _x: number,
+		protected _y: number,
 		protected _graph_id?: number,
 		protected _parent_ids?: number[],
 		protected _child_ids?: number[]
 	) { }
 
 	// --------------------> Getters & Setters
+
+	// Unchanged properties
+	get unchanged(): boolean {
+		return this._unchanged
+	}
 
 	// Name properties
 	get name(): string {
@@ -51,11 +56,33 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 
 	set name(value: string) {
 		this._name = value
-		this._untouched = false
+		this._unchanged = false
+		this._unsaved = true
 	}
 
 	get trimmed_name(): string {
 		return this._name.trim()
+	}
+
+	// Position properties
+	get x(): number {
+		return this._x
+	}
+
+	set x(value: number) {
+		this._x = value
+		this._unchanged = false
+		this._unsaved = true
+	}
+
+	get y(): number {
+		return this._y
+	}
+
+	set y(value: number) {
+		this._y = value
+		this._unchanged = false
+		this._unsaved = true
 	}
 
 	// Graph properties
@@ -83,15 +110,6 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		return Array.from(this._parent_ids)
 	}
 
-	get parent_options(): DropdownOption<T>[] {
-		return this.parents.map(parent => ({
-				value: parent,
-				label: parent.name,
-				validation: Validation.success()
-			})
-		)
-	}
-
 	// Child properties
 	get child_ids(): number[] {
 		if (this._child_ids === undefined)
@@ -99,26 +117,21 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		return Array.from(this._child_ids)
 	}
 
-	get child_options(): DropdownOption<T>[] {
-		return this.children.map(child => ({
-				value: child,
-				label: child.name,
-				validation: Validation.success()
-			})
-		)
+	// Color properties
+	get color(): string {
+		return this.style === null ? 'transparent' : settings.NODE_STYLES[this.style].stroke
 	}
 
-	abstract get untouched(): boolean
-	abstract set untouched(value: boolean)
+	abstract get style(): DomainStyle | null
 	abstract get parents(): T[]
 	abstract get children(): T[]
 
 	// --------------------> Assignments
 
-	abstract addParent(parent: T): void
-	abstract removeParent(parent: T): void
-	abstract addChild(child: T): void
-	abstract removeChild(child: T): void
+	abstract assignParent(parent: T, mirror: boolean): void
+	abstract assignChild(child: T, mirror: boolean): void
+	abstract unassignParent(parent: T, mirror: boolean): void
+	abstract unassignChild(child: T, mirror: boolean): void
 
 	// --------------------> Validation
 
@@ -129,4 +142,5 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 
 	abstract save(): void
 	abstract delete(): void
+	abstract copy(graph: GraphController): Promise<T>
 }

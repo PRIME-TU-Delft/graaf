@@ -54,14 +54,14 @@ ALTER TABLE "SubjectLecture" DROP CONSTRAINT "SubjectLecture_subjectId_fkey";
 ALTER TABLE "Course" DROP COLUMN "description";
 
 -- AlterTable
-ALTER TABLE "Domain" ADD COLUMN     "ordering" INTEGER NOT NULL DEFAULT -1,
+ALTER TABLE "Domain" ADD COLUMN     "order" INTEGER NOT NULL DEFAULT -1,
 ALTER COLUMN "name" SET NOT NULL,
 ALTER COLUMN "name" SET DEFAULT '',
 DROP COLUMN "style",
 ADD COLUMN     "style" "DomainStyle";
 
 -- AlterTable
-ALTER TABLE "Lecture" ADD COLUMN     "ordering" INTEGER NOT NULL DEFAULT -1,
+ALTER TABLE "Lecture" ADD COLUMN     "order" INTEGER NOT NULL DEFAULT -1,
 ALTER COLUMN "name" SET NOT NULL,
 ALTER COLUMN "name" SET DEFAULT '';
 
@@ -70,7 +70,7 @@ ALTER TABLE "Program" DROP COLUMN "description";
 
 -- AlterTable
 ALTER TABLE "Subject" DROP COLUMN "style",
-ADD COLUMN     "ordering" INTEGER NOT NULL DEFAULT -1,
+ADD COLUMN     "order" INTEGER NOT NULL DEFAULT -1,
 ALTER COLUMN "name" SET NOT NULL,
 ALTER COLUMN "name" SET DEFAULT '';
 

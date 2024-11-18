@@ -21,7 +21,7 @@
 	$: filtered_courses = program.courses.filter(course => course.matchesQuery(query))
 
 	// Modals
-	let coordinator_modal: Modal
+	let member_modal: Modal
 
 </script>
 
@@ -29,7 +29,7 @@
 <!-- Markup -->
 
 
-<Modal bind:this={coordinator_modal}>
+<Modal bind:this={member_modal}>
 	<h3 slot="header"> Program Admins </h3>
 	<p> These are the admins of the {program.name} program. You can contact them via email to request access to a course. </p>
 
@@ -53,7 +53,7 @@
 		<IconButton
 			src={people_icon}
 			description="Program Admins"
-			on:click={coordinator_modal?.show}
+			on:click={member_modal?.show}
 			scale
 		/>
 

@@ -14,7 +14,7 @@ async function POST({ request }) {
 
 	// Retrieve data
 	const { course_id } = await request.json()
-	if (!course_id || isNaN(course_id)) 
+	if (isNaN(course_id)) 
         return new Response('Missing course ID', { status: 400 })
 
 	// Create Link

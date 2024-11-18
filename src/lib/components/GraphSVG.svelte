@@ -43,7 +43,7 @@
             on:click={() => controller.view = View.lectures}
         > Lectures </button>
 
-		<Dropdown label="Lecture" placeholder="Choose a Lecture" options={$graph.lecture_options} bind:value={controller.lecture} />
+		<Dropdown id=lecture" placeholder="Choose a Lecture" options={$graph.lecture_options} bind:value={controller.lecture} />
     </div>
 
 	<svg use:controller.attach />
