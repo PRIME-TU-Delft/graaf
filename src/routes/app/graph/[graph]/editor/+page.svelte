@@ -17,7 +17,8 @@
 		GraphController,
 		CourseController,
 		DomainController,
-		SubjectController
+		SubjectController,
+		LectureController
 	} from '$scripts/controllers'
 
 	// Components
@@ -26,6 +27,8 @@
 	import DomainHeader from './DomainHeader.svelte'
 	import SubjectTab from './SubjectTab.svelte'
 	import SubjectHeader from './SubjectHeader.svelte'
+	import LectureTab from './LectureTab.svelte'
+	import LectureHeader from './LectureHeader.svelte'
 
 	import Loading from '$components/Loading.svelte'
 	import Layout from '$components/Layout.svelte'
@@ -39,12 +42,14 @@
 			awaited_graph,
 			awaited_course,
 			awaited_domains,
-			awaited_subjects
+			awaited_subjects,
+			awaited_lectures
 		] = await Promise.all([
 			data.graph,
 			data.course,
 			data.domains,
-			data.subjects
+			data.subjects,
+			data.lectures
 		])
 
 		// Revive controllers into stores
@@ -54,6 +59,7 @@
 		CourseController.revive(cache, awaited_course)
 		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
 		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
+		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
 	}
 
 	function setActiveTab(tab: string) {
@@ -136,7 +142,7 @@
 					{:else if active_tab === 'subjects'}
 						<SubjectHeader />
 					{:else if active_tab === 'lectures'}
-						<!-- <LectureHeader /> -->
+						<LectureHeader />
 					{/if}
 				</div>
 			</div>
@@ -147,7 +153,7 @@
 				{:else if active_tab === 'subjects'}
 					<SubjectTab />
 				{:else if active_tab === 'lectures'}
-					<!-- <LectureTab /> -->
+					<LectureTab />
 				{/if}
 			</div>
 		</div>

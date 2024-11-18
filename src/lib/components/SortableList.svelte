@@ -1,6 +1,8 @@
 
 <script lang="ts">
 
+	const DROPZONE = 10
+
 	// External dependencies
 	import { createEventDispatcher } from 'svelte'
 	import { flip } from 'svelte/animate'
@@ -11,6 +13,9 @@
 
 	// Components
 	import Feedback from '$components/Feedback.svelte'
+
+	// Assets
+	import dnd_icon from '$assets/dnd-icon.svg'
 
 	// Functions
 	function getDataset(node: any) {
@@ -23,18 +28,24 @@
 
 	function onDragStart(event: DragEvent) {
 		const target = event.target as HTMLElement
-
 		const data = getDataset(target)
+
 		origin = data.index
 
 	}
 
 	function onDragOver(event: DragEvent) {
-		const data = getDataset(event.target)
-		if (!animating.includes(data.id) && data.index !== origin && origin !== null) {
-			rearrange(data.id, origin, data.index)
-			origin = data.index
-		} 
+		const target = event.target as HTMLElement
+		const data = getDataset(target)
+
+		if (origin === null 
+		 || data.index === origin 
+		 || data.index > origin && event.offsetY < target.clientHeight - DROPZONE
+		 || data.index < origin && event.offsetY > DROPZONE
+		) return
+
+		rearrange(origin, data.index)
+		origin = data.index
 	}
 
 	function onDragEnd(_: DragEvent) {
@@ -42,17 +53,11 @@
 		origin = null
 	}
 
-	function rearrange(dropzone: number, from: number, to: number) {
+	function rearrange(from: number, to: number) {
 		const new_list = [...list]
 		const moved = new_list.splice(from, 1)
 		new_list.splice(to, 0, moved[0])
 		list = new_list
-
-		animating.push(dropzone)
-
-		setTimeout(() => {
-			animating = animating.filter(id => id !== dropzone)
-		}, settings.LIST_FLIP_DURATION)
 	}
 
 	// Variables
@@ -61,7 +66,6 @@
 	const dispatch = createEventDispatcher<{rearrange: T[]}>()
 	
 	let origin: number | null = null // Index of the element being dragged
-	let animating: number[] = []	 // List of elements currently being animated
 
 	type T = $$Generic
 
@@ -88,7 +92,9 @@
 				draggable="true"
 				on:dragstart={onDragStart}
 				on:dragend|preventDefault={onDragEnd}
-			> ⠿ </div>
+			> 
+				<img src={dnd_icon} alt="Drag handle" />
+			</div>
 
 			<slot {item} />
 		</div>
@@ -109,21 +115,26 @@
 		.row
 			display: grid
 			grid-template: "validate handle content" auto / $total-icon-size $total-icon-size 1fr
-			place-items: center center
+			place-items: start center
 			grid-gap: $form-small-gap
 
 			width: 100%
 
 			.handle
 				display: flex
-				justify-content: center
 				align-items: center
+				justify-content: center
 
-				width: $total-icon-size
-				height: $total-icon-size
+				height: 1.5rem
+				padding: $input-thin-padding $input-icon-padding
+				box-sizing: content-box
 
 				cursor: ns-resize
-				user-select: none
-				color: $dark-gray
+
+				img
+					height: 0.8rem
+					filter: $dark-purple-filter
+
+					pointer-events: none
 
 </style>

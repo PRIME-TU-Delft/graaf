@@ -28,7 +28,7 @@
 <div class="tab">
 
 	<!-- Subjects -->
-	{#if filtered_subjects.length == 0}
+	{#if filtered_subjects.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
 		<OrderedList let:item list={filtered_subjects}>
@@ -53,7 +53,7 @@
 	</div>
 
 	<!-- Subject Relations -->
-	{#if filtered_subjects.length == 0}
+	{#if filtered_subjects.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
 		<OrderedList let:item list={filtered_relations}>

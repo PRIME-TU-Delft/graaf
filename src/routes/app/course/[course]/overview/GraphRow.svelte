@@ -69,6 +69,7 @@
 			this.hide()
 		}
 	}
+	
 	// Exports
 	export let graph: GraphController
 

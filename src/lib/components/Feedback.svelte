@@ -230,7 +230,9 @@
 		position: relative
 		gap: $input-thin-padding
 
-		min-height: $total-icon-size
+		height: 1.5rem
+		padding: $input-thin-padding
+		box-sizing: content-box
 
 		.success
 			display: flex

@@ -29,7 +29,7 @@
 <div class="tab">
 
 	<!-- Domains -->
-	{#if filtered_domains.length == 0}
+	{#if filtered_domains.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
 		<SortableList let:item list={filtered_domains} on:rearrange={async event => await $graph.reorder(event.detail)}>
@@ -54,7 +54,7 @@
 	</div>
 
 	<!-- Domain Relations -->
-	{#if filtered_domains.length == 0}
+	{#if filtered_domains.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
 		<OrderedList let:item list={filtered_relations}>

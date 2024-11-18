@@ -116,12 +116,27 @@ class LectureController {
 	}
 
 	get subject_options(): DropdownOption<SubjectController>[] {
-		return this.graph.subjects.map(subject => ({
+		return this.graph.subjects.map(subject => {
+			const validation = new Validation()
+
+			if (this.subject_ids.includes(subject.id)) {
+				validation.add({
+					severity: Severity.error,
+					short: 'Already assigned here'
+				})
+			} else if (this.graph.lectures.find(lecture => lecture.subject_ids.includes(subject.id))) {
+				validation.add({
+					severity: Severity.warning,
+					short: 'Already assigned elsewhere'
+				})
+			}
+
+			return {
 				value: subject,
-				label: subject.trimmed_name,
-				validation: Validation.success()
-			})
-		)
+				label: subject.name,
+				validation: validation
+			}
+		})
 	}
 
 	// --------------------> Assignments
@@ -148,6 +163,7 @@ class LectureController {
 			this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
 			this._subjects = this._subjects?.filter(s => s.id !== subject.id)
 			this._unchanged = false
+			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -349,5 +365,15 @@ class LectureController {
 		lecture_copy.order = this.order
 
 		return lecture_copy
+	}
+
+	// --------------------> Utility
+
+	matchesQuery(query: string): boolean {
+		const lower_query = query.toLowerCase()
+		const lower_name = this.trimmed_name.toLowerCase()
+		const lower_subjects = this.subjects.map(subject => subject.trimmed_name.toLowerCase())
+
+		return lower_name.includes(lower_query) || lower_subjects.some(subject => subject.includes(lower_query))
 	}
 }
