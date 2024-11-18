@@ -154,6 +154,8 @@
 
 <style lang="sass">
 
+	@use 'sass:math'
+
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
@@ -176,10 +178,10 @@
 			grid-area: subjects
 
 			width: 100%
-			margin-left: $total-icon-size / 2
+			margin-left: math.div($total-icon-size, 2)
 			border-left: 1px solid $gray
-			padding-left: $total-icon-size / 2 + $form-small-gap + $input-thick-padding
-			padding-right: $total-icon-size / 2
+			padding-left: math.div($total-icon-size, 2) + $form-small-gap + $input-thick-padding
+			padding-right: math.div($total-icon-size, 2)
 
 			.subject
 				display: flex

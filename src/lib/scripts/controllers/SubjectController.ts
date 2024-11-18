@@ -109,7 +109,7 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	get domain_options(): DropdownOption<DomainController>[] {
-		return this.cache.all(DomainController)
+		return this.graph.domains
 			.map(domain => ({
 				value: domain,
 				label: domain.trimmed_name,
