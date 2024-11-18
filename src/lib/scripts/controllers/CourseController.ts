@@ -526,8 +526,8 @@ class CourseController {
 
 		const course = CourseController.revive(cache, data)
 		if (program !== undefined) {
-			course.assignToProgram(program)
-		}
+			program.assignCourse(course, false)
+		}	
 
 		return course
 	}

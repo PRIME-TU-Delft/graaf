@@ -64,7 +64,6 @@ class DomainController extends NodeController<DomainController> {
 
 	set order(value: number) {
 		this._order = value
-		this._unchanged = false
 		this._unsaved = true
 	}
 

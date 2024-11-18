@@ -53,7 +53,9 @@
 				return
 			}
 
-			$course.addProgram(this.program!)
+			this.disabled = true
+			program_modal = program_modal // Trigger reactivity
+			$course.assignToProgram(this.program!)
 			await $course.save()
 			$course = $course // Trigger reactivity
 			this.hide()
@@ -86,7 +88,7 @@
 
 		<footer>
 			<Button
-				disabled={program_modal.validate().severity === Severity.error}
+				disabled={program_modal.disabled}
 				on:click={async () => await program_modal.submit()}
 			> Assign </Button>
 			<Feedback data={program_modal.validate()} />

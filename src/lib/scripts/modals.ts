@@ -2,14 +2,41 @@
 // External imports
 import type Modal from '$components/Modal.svelte'
 
+// Internal imports
+import { Validation, Severity } from './validation'
+
 
 // --------------------> Classes
 
+export abstract class SimpleModal {
+	disabled: boolean = false
+	modal?: Modal
+
+	show() {
+		this.modal?.show()
+	}
+
+	hide() {
+		this.modal?.hide()
+		this.disabled = false
+	}
+
+	abstract submit(): Promise<void>
+}
 
 export abstract class FormModal {
 	private defaults: { [key: string]: any } = {}
 	private changed: { [key: string]: boolean } = {}
+	private _disabled: boolean = false
 	private _modal?: Modal
+
+	get disabled() {
+		return this._disabled || this.validate().severity === Severity.error
+	}
+
+	set disabled(disabled: boolean) {
+		this._disabled = disabled
+	}
 
 	get modal() {
 		return this._modal
@@ -30,6 +57,7 @@ export abstract class FormModal {
 	}
 
 	protected reset() {
+		this.disabled = false
 		for (const property in this) {
 			if (this.isField(property)) {
 				this[property] = this.defaults[property]
@@ -54,7 +82,10 @@ export abstract class FormModal {
 	}
 
 	private isField(property: string): boolean {
-		return property !== '_modal' && property !== 'modal' && property !== 'defaults' && property !== 'changed'
+		return property !== '_modal' && property !== 'modal' 
+			&& property !== '_disabled' && property !== 'disabled'
+			&& property !== 'defaults' 
+			&& property !== 'changed' 
 	}
 
 	show() {
@@ -64,4 +95,6 @@ export abstract class FormModal {
 	hide() {
 		this.modal?.hide()
 	}
+
+	abstract validate(): Validation
 }

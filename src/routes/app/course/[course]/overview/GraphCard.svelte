@@ -71,6 +71,8 @@
 			}
 
 			// Create graph
+			this.disabled = true
+			graph_modal = graph_modal // Trigger reactivity
 			await GraphController.create($course.cache, $course, this.trimmed_name)
 			$course = $course // Trigger reactivity
 			graph_modal.hide()
@@ -94,7 +96,7 @@
 
 		<footer>
 			<Button
-				disabled={graph_modal.validate().severity === Severity.error}
+				disabled={graph_modal.disabled}
 				on:click={() => graph_modal.submit()}
 			> Create </Button>
 			<Feedback data={graph_modal.validate()} />

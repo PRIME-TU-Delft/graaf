@@ -9,7 +9,7 @@
 
 </script>
 
-<div class="header" >
+<div class="lecture-header" >
 	<h2> Lectures </h2>
 
 	<div class="flex-spacer" />
@@ -22,7 +22,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.header
+	.lecture-header
 		display: flex
 		flex-flow: row nowrap
 		align-content: center

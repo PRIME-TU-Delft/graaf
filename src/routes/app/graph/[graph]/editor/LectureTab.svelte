@@ -19,7 +19,7 @@
 
 </script>
 
-<div class="tab">
+<div class="lecture-tab">
 
 	<!-- Domains -->
 	{#if filtered_lectures.length == 0}
@@ -49,7 +49,7 @@
 	$left-gutter: $total-icon-size * 3 + $form-small-gap * 3
 	$right-gutter: $total-icon-size + $form-small-gap
 
-	.tab
+	.lecture-tab
 		display: flex
 		flex-flow: column nowrap
 		gap: $form-small-gap

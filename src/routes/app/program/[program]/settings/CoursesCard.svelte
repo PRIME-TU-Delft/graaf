@@ -55,7 +55,9 @@
 				return
 			}
 
-			$program.addCourse(this.course!)
+			this.disabled = true
+			assign_course_modal = assign_course_modal // Trigger reactivity
+			$program.assignCourse(this.course!)
 			await $program.save()
 			$program = $program // Trigger reactivity
 			this.hide()
@@ -138,6 +140,8 @@
 			}
 
 			// Create course
+			this.disabled = true
+			new_course_modal = new_course_modal // Trigger reactivity
 			const course = await CourseController.create($program.cache, this.trimmed_code, this.trimmed_name, $program)
 			$courses = [...$courses, course] // Trigger reactivity
 			$program = $program
@@ -167,7 +171,7 @@
 
 		<footer>
 			<Button
-				disabled={new_course_modal.validate().severity === Severity.error}
+				disabled={new_course_modal.disabled}
 				on:click={async () => await new_course_modal.submit()}
 			> Create </Button>
 			<Feedback data={new_course_modal.validate()} />
@@ -191,7 +195,7 @@
 
 		<footer>
 			<Button
-				disabled={assign_course_modal.validate().severity === Severity.error}
+				disabled={assign_course_modal.disabled}
 				on:click={async () => await assign_course_modal.submit()}
 			> Assign </Button>
 			<Feedback data={assign_course_modal.validate()} />

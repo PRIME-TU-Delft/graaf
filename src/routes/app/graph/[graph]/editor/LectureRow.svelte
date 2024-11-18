@@ -3,7 +3,7 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-	import { FormModal } from '$scripts/modals'
+	import { FormModal, SimpleModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
 	import type { 
@@ -57,6 +57,8 @@
 			}
 
 			// Assign subject
+			this.disabled = true
+			assign_subject_modal = assign_subject_modal // Trigger reactivity
 			lecture.assignSubject(this.subject!)
 			await lecture.save()
 			$graph = $graph
@@ -64,9 +66,19 @@
 		}
 	}
 
+	class DeleteModal extends SimpleModal {
+		async submit() {
+			this.disabled = true
+			delete_modal = delete_modal // Trigger reactivity
+			await lecture.delete()
+			$graph = $graph
+			this.hide()
+		}
+	}
+
 	// Modal
-	let delete_modal: Modal
-	let assign_subject_modal: AssignSubjectModal = new AssignSubjectModal()
+	let delete_modal = new DeleteModal()
+	let assign_subject_modal = new AssignSubjectModal()
 
 </script>
 
@@ -85,29 +97,28 @@
 
 		<footer>
 			<Button
-				disabled={assign_subject_modal.validate().severity === Severity.error}
-				on:click={() => assign_subject_modal.submit()}
+				disabled={assign_subject_modal.disabled}
+				on:click={async () => await assign_subject_modal.submit()}
 			> Copy </Button>
 			<Feedback data={assign_subject_modal.validate()} />
 		</footer>
 	</form>
 </Modal>
 
-<Modal bind:this={delete_modal}>
+<Modal bind:this={delete_modal.modal}>
 	<h3 slot="header"> Delete Lecture </h3>
 	Are you sure you want to delete this lecture? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={async () => {
-			await lecture.delete()
-			$graph = $graph
-			delete_modal.hide()
-		}}> Delete </Button>
+		<Button
+			disabled={delete_modal.disabled}
+			on:click={async () => await delete_modal.submit()}
+		> Delete </Button>
 	</svelte:fragment>
 </Modal>
 
-<div class="row">
+<div class="lecture-row">
 	<IconButton scale
 	  src={trash_icon}
 		description="Delete Domain"
@@ -161,7 +172,7 @@
 
 	$right-gutter: $total-icon-size + $form-small-gap
 
-	.row
+	.lecture-row
 		display: grid
 		grid-template: "delete title assign" auto "subjects subjects subjects" auto / $total-icon-size 1fr max-content
 		align-items: center

@@ -3,7 +3,7 @@
 
 	// Internal dependencies
 	import { course } from './stores'
-	import { FormModal } from '$scripts/modals'
+	import { FormModal, SimpleModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
 	import type {
@@ -16,7 +16,6 @@
 	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Feedback from '$components/Feedback.svelte'
-	import ListRow from '$components/ListRow.svelte'
 	import Button from '$components/Button.svelte'
 	import Modal from '$components/Modal.svelte'
 
@@ -57,6 +56,8 @@
 			}
 
 			// Copy graph
+			this.disabled = true
+			copy_modal = copy_modal // Trigger reactivity
 			const copied_graph = await graph.copy(this.course!)
 			await Promise.all([
 				copied_graph.save(),
@@ -64,7 +65,17 @@
 				copied_graph.subjects.map(subject => subject.save()),
 				copied_graph.lectures.map(lecture => lecture.save())
 			])
+			
+			$course = $course
+			this.hide()
+		}
+	}
 
+	class DeleteModal extends SimpleModal {
+		async submit() {
+			this.disabled = true
+			delete_modal = delete_modal // Trigger reactivity
+			await graph.delete()
 			$course = $course
 			this.hide()
 		}
@@ -74,7 +85,7 @@
 	export let graph: GraphController
 
 	// Modals
-	let delete_modal: Modal
+	let delete_modal = new DeleteModal()
 	let copy_modal = new CopyModal()
 
 </script>
@@ -97,7 +108,7 @@
 
 		<footer>
 			<Button
-				disabled={copy_modal.validate().severity === Severity.error}
+				disabled={copy_modal.disabled}
 				on:click={() => copy_modal.submit()}
 			> Copy </Button>
 			<Feedback data={copy_modal.validate()} />
@@ -105,61 +116,54 @@
 	</form>
 </Modal>
 
-<Modal bind:this={delete_modal}>
+<Modal bind:this={delete_modal.modal}>
 	<h3 slot="header"> Delete Graph </h3>
 	Are you sure you want to delete this graph? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={async () => {
-			await graph.delete()
-			$course = $course
-			delete_modal.hide()
-		}}> Delete </Button>
+		<Button
+			disabled={delete_modal.disabled}
+			on:click={async () => await delete_modal.submit()}
+		> Delete </Button>
 	</svelte:fragment>
 </Modal>
 
-<ListRow>
-	<div class="grid">
-		<img
-			src={link_icon}
-			alt="Link icon"
-			class="link-icon"
-			style:visibility={graph.link_ids.length > 0 ? 'visible' : 'hidden'}
-		/>
-	
-		<span>
-			{#if graph.name}
-				{graph.name}
-			{:else}
-				<i> Unnamed graph </i>
-			{/if}
-		</span>
-	
-		<IconButton scale
-			src={open_eye_icon}
-			description="View Graph"
-		/>
-	
-		<IconButton scale
-			src={pencil_icon}
-			description="Edit Graph"
-			href="/app/graph/{graph.id}/editor"
-		/>
-	
-		<IconButton scale
-			src={copy_icon}
-			description="Copy Graph"
-			on:click={() => copy_modal.show()}
-		/>
-	
-		<IconButton scale
-			src={trash_icon}
-			description="Delete Graph"
-			on:click={() => delete_modal.show()}
-		/>
-	</div>
-</ListRow>
+<span class="graph-row">
+	<IconButton scale
+		src={trash_icon}
+		description="Delete Graph"
+		on:click={() => delete_modal.show()}
+	/>
+	<IconButton scale
+		src={copy_icon}
+		description="Copy Graph"
+		on:click={() => copy_modal.show()}
+	/>
+	<IconButton scale
+		src={pencil_icon}
+		description="Edit Graph"
+		href="/app/graph/{graph.id}/editor"
+	/>
+	<IconButton scale
+		src={open_eye_icon}
+		description="Preview Graph"
+	/>
+
+	<span>
+		{#if graph.name}
+			{graph.name}
+		{:else}
+			<i> Unnamed graph </i>
+		{/if}
+	</span>
+
+	<img
+		src={link_icon}
+		alt="Link icon"
+		style:visibility={graph.link_ids.length > 0 ? 'visible' : 'hidden'}
+	/>
+</span>
 
 
 <!-- Styles -->
@@ -170,17 +174,31 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.grid
+	.graph-row
 		display: grid
-		grid-template: "link name view edit copy delete" auto / $total-icon-size 1fr $input-icon-size $input-icon-size $input-icon-size $input-icon-size
+		grid-template: "delete copy edit view name link" auto / $input-icon-size $input-icon-size $input-icon-size $input-icon-size 1fr max-content
 		grid-gap: $form-small-gap
-		place-items: center center
+		place-items: center start
+
+		box-sizing: content-box
+		height: $list-row-height
+		padding: $input-thin-padding $input-thick-padding
+
+		color: $dark-gray
+		border-bottom: 1px solid $gray
+
+		&:first-of-type
+			margin-top: -$input-thin-padding
+
+		&:last-of-type
+			border-bottom: none
+			margin-bottom: -$input-thin-padding
 
 		span
-			width: 100%
+			padding: $input-thin-padding $input-thick-padding
 
-		.link-icon
-			width: 0.9rem
+		img					
+			width: $input-icon-size
 			filter: $dark-purple-filter
 
 </style>
