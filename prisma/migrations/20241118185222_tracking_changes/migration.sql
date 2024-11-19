@@ -8,7 +8,8 @@
 ALTER TABLE "Course" ADD COLUMN     "unchanged" BOOLEAN NOT NULL DEFAULT true;
 
 -- AlterTable
-ALTER TABLE "Domain" ADD COLUMN     "unchanged" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Domain" ADD COLUMN     "unchanged" BOOLEAN NOT NULL DEFAULT true,
+ALTER COLUMN "order" DROP DEFAULT;
 
 -- AlterTable
 ALTER TABLE "Graph" ADD COLUMN     "unchanged" BOOLEAN NOT NULL DEFAULT true;
