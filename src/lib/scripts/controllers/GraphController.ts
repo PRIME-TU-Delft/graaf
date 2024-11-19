@@ -720,7 +720,7 @@ class GraphController {
 			const copied_lecture = await lecture.copy(copied_graph)
 
 			// Assign copied subjects
-			for (const subject of lecture.subjects) {
+			for (const subject of lecture.present_subjects) {
 				const copied_subject = subject_map.get(subject.id)
 				if (copied_subject === undefined) {
 					throw new Error(`GraphError: Subject incorrectly copied`)

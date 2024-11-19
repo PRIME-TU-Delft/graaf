@@ -25,15 +25,16 @@ export const FEEDBACK_FADE_DURATION: Milliseconds = 500
 // -------------------> Editor settings
 
 // Grid settings
-export const GRID_COLOR = '#a4a4a4'
+export const GRID_PADDING: GridUnits = 5
 export const GRID_UNIT: Scalar = 10
+export const GRID_COLOR = '#a4a4a4'
 
 // Zoom settings
 export const MIN_ZOOM: Scalar = 0
 export const MAX_ZOOM: Scalar = 1.5
 export const ZOOM_STEP: Scalar = 1.5
 
-// Field settings
+// Node settings
 export const NODE_WIDTH: GridUnits  = 16
 export const NODE_HEIGHT: GridUnits = 8
 export const NODE_MARGIN: GridUnits = 1.5
@@ -61,8 +62,12 @@ export const OVERLAY_SMALL_FONT: Pixels = 20
 export const OVERLAY_FADE_OUT: Milliseconds = 500
 export const OVERLAY_LINGER: Milliseconds = 1500
 
+// Simulation settings
+export const CENTER_FORCE: Scalar = 0.05
+export const CHARGE_FORCE: Scalar = -15
+
 // Animation settings
-export const FADE_DURATION: Milliseconds = 0
+export const FADE_DURATION: Milliseconds = 200
 export const ANIMATION_DURATION: Milliseconds = 1000
 export const SHAKE = {
 	delay: 150,
@@ -81,7 +86,7 @@ export const SHAKE = {
 	}
 }
 
-// Node style constants
+// Node style settings
 const top = STROKE_WIDTH / 2
 const right = NODE_WIDTH * GRID_UNIT - STROKE_WIDTH / 2
 const bottom = NODE_HEIGHT * GRID_UNIT - STROKE_WIDTH / 2

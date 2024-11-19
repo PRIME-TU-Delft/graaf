@@ -14,7 +14,7 @@
 
 	<div class="flex-spacer" />
 
-	<Searchbar placeholder="Search domains and relations" bind:value={$lecture_query} />
+	<Searchbar placeholder="Search lectures" bind:value={$lecture_query} />
 </div>
 
 <style lang="sass">

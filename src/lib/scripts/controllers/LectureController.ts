@@ -10,7 +10,8 @@ import { Validation, Severity } from '$scripts/validation'
 import {
 	ControllerCache,
 	GraphController,
-	SubjectController
+	SubjectController,
+	SubjectRelationController
 } from '$scripts/controllers'
 
 import { validSerializedLecture } from '$scripts/types'
@@ -32,7 +33,7 @@ class LectureController {
 
 	private _unsaved: boolean = false
 	private _graph?: GraphController
-	private _subjects?: SubjectController[]
+	private _present_subjects?: SubjectController[]
 
 	private constructor(
 		public cache: ControllerCache,
@@ -41,7 +42,7 @@ class LectureController {
 		private _name: string,
 		private _order: number,
 		private _graph_id?: number,
-		private _subject_ids?: number[]
+		private _present_subject_ids?: number[]
 	) {
 		this.cache.add(this)
 	}
@@ -96,34 +97,34 @@ class LectureController {
 		return this._graph
 	}
 
-	// Subject properties
-	get subject_ids(): number[] {
-		if (this._subject_ids === undefined)
+	// Present subject properties
+	get present_subject_ids(): number[] {
+		if (this._present_subject_ids === undefined)
 			throw new Error('LectureError: Subject data unknown')
-		return Array.from(this._subject_ids)
+		return Array.from(this._present_subject_ids)
 	}
 
-	get subjects(): SubjectController[] {
-		if (this._subject_ids === undefined)
+	get present_subjects(): SubjectController[] {
+		if (this._present_subject_ids === undefined)
 			throw new Error('LectureError: Subject data unknown')
-		if (this._subjects !== undefined)
-			return Array.from(this._subjects)
+		if (this._present_subjects !== undefined)
+			return Array.from(this._present_subjects)
 
 		// Fetch subjects from cache
-		this._subjects = this._subject_ids.map(id => this.cache.findOrThrow(SubjectController, id))
-		return Array.from(this._subjects)
+		this._present_subjects = this._present_subject_ids.map(id => this.cache.findOrThrow(SubjectController, id))
+		return Array.from(this._present_subjects)
 	}
 
 	get subject_options(): DropdownOption<SubjectController>[] {
 		return this.graph.subjects.map(subject => {
 			const validation = new Validation()
 
-			if (this.subject_ids.includes(subject.id)) {
+			if (this.present_subject_ids.includes(subject.id)) {
 				validation.add({
 					severity: Severity.error,
 					short: 'Already assigned here'
 				})
-			} else if (this.graph.lectures.find(lecture => lecture.subject_ids.includes(subject.id))) {
+			} else if (this.graph.lectures.find(lecture => lecture.present_subject_ids.includes(subject.id))) {
 				validation.add({
 					severity: Severity.warning,
 					short: 'Already assigned elsewhere'
@@ -138,14 +139,59 @@ class LectureController {
 		})
 	}
 
+	// Past subject properties
+	get past_subjects(): SubjectController[] {
+		const result: SubjectController[] = []
+		for (const subject of this.present_subjects) {
+			for (const parent of subject.parents) {
+				if (!result.includes(parent) && !this.present_subjects.includes(parent))
+					result.push(parent)
+			}
+		}
+
+		return result
+	}
+
+	// Future subject properties
+	get future_subjects(): SubjectController[] {
+		const result: SubjectController[] = []
+		for (const subject of this.present_subjects) {
+			for (const child of subject.children) {
+				if (!result.includes(child) && !this.present_subjects.includes(child))
+					result.push(child)
+			}
+		}
+
+		return result
+	}
+
+	// Subject properties
+	get subjects(): SubjectController[] {
+		return this.present_subjects
+			.concat(this.past_subjects)
+			.concat(this.future_subjects)
+	}
+
+	// Relation properties
+	get relations(): SubjectRelationController[] {
+		return this.graph.subject_relations
+			.filter(relation => relation.parent !== null && relation.child !== null)
+			.filter(relation => this.present_subjects.includes(relation.parent!) || this.present_subjects.includes(relation.child!))
+	}
+
+	// Height properties
+	get max_height(): number {
+		return Math.max(this.present_subjects.length, this.past_subjects.length, this.future_subjects.length)
+	}
+
 	// --------------------> Assignments
 
 	assignSubject(subject: SubjectController, mirror: boolean = true) {
-		if (this._subject_ids !== undefined) {
-			if (this._subject_ids.includes(subject.id))
+		if (this._present_subject_ids !== undefined) {
+			if (this._present_subject_ids.includes(subject.id))
 				throw new Error(`LectureError: Subject with ID ${subject.id} already assigned to lecture with ID ${this.id}`)
-			this._subject_ids.push(subject.id)
-			this._subjects?.push(subject)
+			this._present_subject_ids.push(subject.id)
+			this._present_subjects?.push(subject)
 			this._unchanged = false
 			this._unsaved = true
 		}
@@ -156,11 +202,11 @@ class LectureController {
 	}	
 
 	unassignSubject(subject: SubjectController, mirror: boolean = true) {
-		if (this._subject_ids !== undefined) {
-			if (!this._subject_ids.includes(subject.id))
+		if (this._present_subject_ids !== undefined) {
+			if (!this._present_subject_ids.includes(subject.id))
 				throw new Error(`LectureError: Subject with ID ${subject.id} not assigned to lecture with ID ${this.id}`)
-			this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
-			this._subjects = this._subjects?.filter(s => s.id !== subject.id)
+			this._present_subject_ids = this._present_subject_ids.filter(id => id !== subject.id)
+			this._present_subjects = this._present_subjects?.filter(s => s.id !== subject.id)
 			this._unchanged = false
 			this._unsaved = true
 		}
@@ -209,7 +255,7 @@ class LectureController {
 		const validation = new Validation()
 		if (!strict && this._unchanged) return validation
 
-		if (this.subject_ids.length === 0) {
+		if (this.present_subject_ids.length === 0) {
 			validation.add({
 				severity: Severity.warning,
 				short: 'Lecture has no subjects',
@@ -218,8 +264,8 @@ class LectureController {
 			})
 		} else if (this.graph.lectures
 			.find(lecture => 
-				lecture.id !== this.id && lecture.subject_ids.find(
-					id => this.subject_ids.includes(id)
+				lecture.id !== this.id && lecture.present_subject_ids.find(
+					id => this.present_subject_ids.includes(id)
 				)
 			)
 		) {
@@ -282,8 +328,8 @@ class LectureController {
 			// Update lecture where necessary
 			if (lecture._graph_id === undefined)
 				lecture._graph_id = data.graph_id
-			if (lecture._subject_ids === undefined)
-				lecture._subject_ids = data.subject_ids
+			if (lecture._present_subject_ids === undefined)
+				lecture._present_subject_ids = data.subject_ids
 
 			return lecture
 		}
@@ -305,7 +351,7 @@ class LectureController {
 			&& this.trimmed_name === data.name
 			&& this.order === data.order
 			&& (this._graph_id === undefined    || data.graph_id === undefined    || this._graph_id === data.graph_id)
-			&& (this._subject_ids === undefined || data.subject_ids === undefined || compareArrays(this._subject_ids, data.subject_ids))
+			&& (this._present_subject_ids === undefined || data.subject_ids === undefined || compareArrays(this._present_subject_ids, data.subject_ids))
 	}
 
 	reduce(): SerializedLecture {
@@ -315,7 +361,7 @@ class LectureController {
 			name: this.trimmed_name,
 			order: this.order,
 			graph_id: this._graph_id,
-			subject_ids: this._subject_ids
+			subject_ids: this._present_subject_ids
 		}
 	}
 
@@ -342,8 +388,8 @@ class LectureController {
 		// Unassign graph and subjects
 		if (this._graph_id !== undefined)
 			this.graph.unassignLecture(this)
-		if (this._subject_ids !== undefined)
-			for (const subject of this.subjects)
+		if (this._present_subject_ids !== undefined)
+			for (const subject of this.present_subjects)
 				subject.unassignFromLecture(this, false)
 		
 		// Call the API to delete the lecture
@@ -371,7 +417,7 @@ class LectureController {
 	matchesQuery(query: string): boolean {
 		const lower_query = query.toLowerCase()
 		const lower_name = this.trimmed_name.toLowerCase()
-		const lower_subjects = this.subjects.map(subject => subject.trimmed_name.toLowerCase())
+		const lower_subjects = this.present_subjects.map(subject => subject.trimmed_name.toLowerCase())
 
 		return lower_name.includes(lower_query) || lower_subjects.some(subject => subject.includes(lower_query))
 	}

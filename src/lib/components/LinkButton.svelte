@@ -61,6 +61,7 @@
 		padding: $input-thin-padding
 
 		color: $purple
+		white-space: nowrap
 		border: 1px solid transparent
 
 		cursor: pointer

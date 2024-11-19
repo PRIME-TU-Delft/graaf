@@ -176,7 +176,7 @@
 
 	.graph-row
 		display: grid
-		grid-template: "delete copy edit view name link" auto / $input-icon-size $input-icon-size $input-icon-size $input-icon-size 1fr max-content
+		grid-template: "delete copy edit view name link" auto / $input-icon-size $input-icon-size calc($input-icon-size - 2.5px) $input-icon-size 1fr max-content
 		grid-gap: $form-small-gap
 		place-items: center start
 

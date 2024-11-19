@@ -99,7 +99,7 @@
 			<Button
 				disabled={assign_subject_modal.disabled}
 				on:click={async () => await assign_subject_modal.submit()}
-			> Copy </Button>
+			> Assign </Button>
 			<Feedback data={assign_subject_modal.validate()} />
 		</footer>
 	</form>
@@ -145,7 +145,7 @@
 	</Button>
 
 	<div class="subjects">
-		{#each lecture.subjects as subject}
+		{#each lecture.present_subjects as subject}
 			<div class="subject">
 				{subject.trimmed_name}
 
