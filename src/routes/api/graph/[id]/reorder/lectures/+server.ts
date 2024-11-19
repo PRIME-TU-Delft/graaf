@@ -11,13 +11,13 @@ export { PUT }
 async function PUT({ request }) {
 
 	// Retrieve data
-	const { domain_ids } = await request.json()
-	if (!domain_ids) {
+	const { lecture_ids } = await request.json()
+	if (!lecture_ids) {
 		return new Response('Missing data', { status: 400 })
 	}
 
 	// Reorder data
-	return await GraphHelper.reorder(domain_ids)
+	return await GraphHelper.reorderLectures(lecture_ids)
 		.then(
 			() => new Response(null, { status: 200 }),
 			error => new Response(error, { status: 400 })

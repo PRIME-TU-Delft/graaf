@@ -383,7 +383,7 @@ class LectureController {
 		this._unsaved = false
 	}
 
-	async delete() {
+	async delete(reorder_graph: boolean = true) {
 
 		// Unassign graph and subjects
 		if (this._graph_id !== undefined)
@@ -391,6 +391,11 @@ class LectureController {
 		if (this._present_subject_ids !== undefined)
 			for (const subject of this.present_subjects)
 				subject.unassignFromLecture(this, false)
+
+		// Fix order of remaining lectures
+		if (reorder_graph) {
+			await this.graph.reorderLectures()
+		}
 		
 		// Call the API to delete the lecture
 		const response = await fetch(`/api/lecture/${this.id}`, { method: 'DELETE' })

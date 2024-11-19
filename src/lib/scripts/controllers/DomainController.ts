@@ -444,7 +444,7 @@ class DomainController extends NodeController<DomainController> {
 
 		// Fix order of remaining domains
 		if (reorder_graph) {
-			await this.graph.reorder()
+			await this.graph.reorderDomains()
 		}
 
 		// Call the API to delete the domain
