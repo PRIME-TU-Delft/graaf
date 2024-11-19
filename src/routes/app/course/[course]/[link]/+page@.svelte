@@ -1,34 +1,73 @@
 
 <script lang="ts">
 
+	// External dependencies
+	import type { PageData } from './$types'
+	import { page } from '$app/stores'
+
 	// Internal dependencies
 	import { GraphSVG } from '$scripts/svg'
-	import type { GraphController } from '$scripts/controllers'
+	import { validEditorView } from '$scripts/types'
+
+	import {
+		ControllerCache,
+		GraphController,
+		DomainController,
+		SubjectController,
+		LectureController
+	} from '$scripts/controllers'
 
 	// Components
 	import Dropdown from '$components/Dropdown.svelte'
+	import Loading from '$components/Loading.svelte'
 	import Button from '$components/Button.svelte'
 	import Graph from '$components/Graph.svelte'
 
-	// Assets
-	import plus_icon from '$assets/plus-icon.svg'
-
-	// Exports
-	export let graph: GraphController
-
 	// Functions
-	export function show() {
-		graphSVG.view = 'domains'
-		visible = true
+	async function revive() {
+
+		// Await all promises
+		const [
+			awaited_graph,
+			awaited_domains,
+			awaited_subjects,
+			awaited_lectures
+		] = await Promise.all([
+			data.graph,
+			data.domains,
+			data.subjects,
+			data.lectures
+		])
+
+		// Revive graph
+		graph = GraphController.revive(cache, awaited_graph)
+
+		// Revive controllers into cache
+		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
+		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
+		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
+
+		// Create graphSVG
+		graphSVG = new GraphSVG(graph, false)
+
+		const lecture = cache.find(LectureController, editor_lecture)
+		if (lecture !== undefined)
+			graphSVG.lecture = lecture
+		if (validEditorView(editor_view)) {
+			graphSVG.view = editor_view
+		}
 	}
 
-	export function hide() {
-		visible = false
-	}
+	// Initialization
+	export let data: PageData
+	const cache = new ControllerCache()
 
-	// Variables
-	const graphSVG = new GraphSVG(graph, false)
-	let visible = false
+	let graph: GraphController
+	let graphSVG: GraphSVG
+
+	const search_params = $page.url.searchParams
+	let editor_view = search_params.get('view')
+	let editor_lecture = Number(search_params.get('lecture'))
 
 </script>
 
@@ -36,8 +75,9 @@
 <!-- Markup -->
 
 
-{#if visible}
-	<div class="background" />
+{#await revive()}
+	<Loading />
+{:then}
 	<div class="tabular">
 		<div class="tabs">
 			<button
@@ -69,16 +109,12 @@
 				<Button on:click={() => graphSVG.findGraph()}>
 					Find Graph
 				</Button>
-
-				<button class="exit" on:click={hide}>
-					<img src={plus_icon} alt="Exit icon" class="icon" />
-				</button>
 			</div>
 		</div>
 
-		 <Graph {graphSVG} />
+		<Graph {graphSVG} />
 	</div>
-{/if}
+{/await}
 
 
 <!-- Styles -->
@@ -89,40 +125,20 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.background
-		position: fixed
-		z-index: 999
-		top: 0
-		left: 0
-
+	.tabular
+		position: relative
+		
 		width: 100vw
 		height: 100vh
-
-		opacity: 0.25
-		background-color: black
-
-	.tabular
-		position: fixed
-		translate: 0 -50%
-		z-index: 1000
-		top: 50%
-		left: 0
-
-		width: calc( 100% - 2 * $tudelft-logo-width )
-		max-width: $big-column
-		margin: 0 $tudelft-logo-width
-		box-sizing: content-box
-
 		background: $white
-		border: 1px solid $gray
-		border-radius: $border-radius
-		box-shadow: $shadow
-
-		:global(.graph)
-			height: 750px
 
 		.tabs
+			position: absolute
+			z-index: 1
+			top: 0
+
 			display: flex
+			width: 100%
 
 			background: $light-gray
 			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
@@ -156,25 +172,6 @@
 				flex: 1
 				padding: 0 $card-thick-padding
 				border-bottom: 1px solid $gray
-
-				.exit
-					display: flex
-					align-items: center
-					justify-content: center
-
-					margin-left: 1rem
-					overflow: hidden
-
-					.icon
-						width: $input-icon-size
-						rotate: 45deg
-
-						cursor: pointer
-						filter: $purple-filter
-
-					&:focus, .icon:hover
-						scale: $scale-on-hover
-						filter: $dark-purple-filter
 
 				:global(.dropdown)
 					max-width: 20rem

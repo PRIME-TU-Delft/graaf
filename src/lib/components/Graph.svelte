@@ -36,11 +36,12 @@
 	.graph
 		position: relative
 		width: 100%
-		height: 650px
+		height: 100%
 
 		svg
-			width: 100%
+			display: block
 			height: 100%
+			width: 100%
 
 		.zoom
 			position: absolute

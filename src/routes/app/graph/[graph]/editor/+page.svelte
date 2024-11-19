@@ -348,4 +348,7 @@
 			border-top: none
 			border-radius: 0 0 $border-radius $border-radius
 
+			:global(.graph)
+				height: 650px
+
 </style>

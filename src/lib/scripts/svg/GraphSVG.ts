@@ -198,12 +198,15 @@ class GraphSVG {
 	}
 
 	set lecture(lecture: LectureController | null) {
-		if (this.svg === undefined)
-			throw new Error('Failed to set lecture: GraphSVG not attached to DOM')
 		if (this.lecture === lecture || this.state === SVGState.animating)
 			return
 
 		this._lecture = lecture
+
+		if (this.state === SVGState.detached)
+			return
+		if (this.svg === undefined)
+			throw new Error('Failed to set lecture: GraphSVG not attached to DOM')
 
 		// Validate lecture
 		if (!this.validateView(this.view)) {
@@ -223,6 +226,8 @@ class GraphSVG {
 				this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
 			}
 		}
+
+		this.state = SVGState.lecture
 
 		// Update highlights
 		d3.select(this.svg)
@@ -811,9 +816,10 @@ class GraphSVG {
 		if (this.state === SVGState.broken) {
 			this.state = SVGState.animating
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
-				this.state = this.interactive ? SVGState.dynamic : SVGState.static
-			})
+			this.setBackground('subjects')
+			this.setContent(this.graph.subjects, this.graph.subject_relations)
+			this.restoreContent()
+			this.state = this.interactive ? SVGState.dynamic : SVGState.static
 
 			return
 		}
@@ -921,9 +927,9 @@ class GraphSVG {
 			this.state = SVGState.animating
 			this.setBackground('domains')
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
-				this.state = this.interactive ? SVGState.dynamic : SVGState.static
-			})
+			this.setContent(this.graph.domains, this.graph.domain_relations)
+			this.restoreContent()
+			this.state = this.interactive ? SVGState.dynamic : SVGState.static
 
 			return
 		}
@@ -949,9 +955,9 @@ class GraphSVG {
 			this.state = SVGState.animating
 			this.setBackground('subjects')
 			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
-				this.state = this.interactive ? SVGState.dynamic : SVGState.static
-			})
+			this.setContent(this.graph.subjects, this.graph.subject_relations)
+			this.restoreContent()
+			this.state = this.interactive ? SVGState.dynamic : SVGState.static
 
 			return
 		}

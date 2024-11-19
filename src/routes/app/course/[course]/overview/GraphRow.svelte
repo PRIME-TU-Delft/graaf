@@ -3,7 +3,6 @@
 
 	// Internal dependencies
 	import { course } from './stores'
-	import { GraphSVG } from '$scripts/svg'
 	import { FormModal, SimpleModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
@@ -87,8 +86,6 @@
 	export let graph: GraphController
 
 	// Variables
-	const graphSVG = new GraphSVG(graph, false)
-
 	let delete_modal = new DeleteModal()
 	let copy_modal = new CopyModal()
 	let preview_modal: GraphPreview

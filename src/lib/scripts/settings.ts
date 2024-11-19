@@ -6,6 +6,8 @@ type Milliseconds = number
 
 // -------------------> General settings
 
+export const ROOT_URL = 'localhost:5173'
+
 export const MAX_PROGRAM_NAME_LENGTH: Scalar = 50
 
 export const COURSE_CODE_REGEX: RegExp = /^[A-Za-z0-9]*$/

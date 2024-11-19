@@ -1,9 +1,9 @@
 
 <script lang="ts">
 
-	const ROOT_URL = 'localhost:5173/app'
-
 	// Internal dependencies
+	import * as settings from '$scripts/settings'
+
 	import { course } from './stores'
 	import { Validation, Severity } from '$scripts/validation'
 	import { FormModal, SimpleModal } from '$scripts/modals'
@@ -39,7 +39,7 @@
 
 		get embed() {
 			if (this.validate().severity === Severity.error) return ''
-			let embed = `<iframe src="${ROOT_URL}/graph/${$course.code}/${link.name}?view=${this.view}`
+			let embed = `<iframe src="${settings.ROOT_URL}/app/course/${$course.code}/${link.name}?view=${this.view}`
 			if (this.lecture) embed += `&lecture=${this.lecture.id}`
 			embed += `" style="width: 100%!important; height: ${this.height}px" allow="fullscreen" allowfullscreen></iframe>`
 
@@ -142,7 +142,7 @@
 </Modal>
 
 <div class="link-row">
-	<Feedback compact data={link.validate(false)} />
+	<Feedback compact data={link.validate(false)} animate={false} />
 
 	<IconButton scale
 		src={trash_icon}
