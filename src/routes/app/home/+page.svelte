@@ -82,9 +82,9 @@
 			}
 
 			// Create program
-			const program = await ProgramController.create(cache, this.trimmed_name)
-			$programs = [...$programs, program] // Trigger reactivity
+			const program = ProgramController.create(cache, this.trimmed_name)
 			this.hide()
+			$programs = [...$programs, await program] // Trigger reactivity
 		}
 	}
 
@@ -164,9 +164,9 @@
 			}
 
 			// Create course
-			const course = await CourseController.create(cache, this.trimmed_code, this.trimmed_name)
-			$courses = [...$courses, course] // Trigger reactivity
+			const course = CourseController.create(cache, this.trimmed_code, this.trimmed_name)
 			this.hide()
+			$courses = [...$courses, await course] // Trigger reactivity
 		}
 	}
 

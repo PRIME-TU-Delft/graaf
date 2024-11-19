@@ -19,13 +19,13 @@
 
 </script>
 
-<div class="tab">
+<div class="lecture-tab">
 
 	<!-- Domains -->
 	{#if filtered_lectures.length == 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
-		<SortableList let:item list={filtered_lectures} >
+		<SortableList let:item list={filtered_lectures} on:rearrange={async event => await $graph.reorderLectures(event.detail)} >
 			<LectureRow lecture={item} />
 		</SortableList>
 	{/if}
@@ -49,7 +49,7 @@
 	$left-gutter: $total-icon-size * 3 + $form-small-gap * 3
 	$right-gutter: $total-icon-size + $form-small-gap
 
-	.tab
+	.lecture-tab
 		display: flex
 		flex-flow: column nowrap
 		gap: $form-small-gap

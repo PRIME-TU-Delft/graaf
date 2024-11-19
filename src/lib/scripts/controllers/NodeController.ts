@@ -24,6 +24,8 @@ export { NodeController }
 
 abstract class NodeController<T extends DomainController | SubjectController> {
 	public uuid: string = uuid.v4()
+	public fx?: number
+	public fy?: number
 
 	protected _unsaved: boolean = false
 	protected _graph?: GraphController
@@ -40,7 +42,10 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		protected _graph_id?: number,
 		protected _parent_ids?: number[],
 		protected _child_ids?: number[]
-	) { }
+	) {
+		this.fx = this._x
+		this.fy = this._y
+	}
 
 	// --------------------> Getters & Setters
 

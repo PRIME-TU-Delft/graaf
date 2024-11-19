@@ -15,6 +15,11 @@ export {
 	validPermission
 } from './permissions'
 
+export {
+	validEditorType,
+	validEditorView
+} from './editor'
+
 export { validDomainStyle } from './styles'
 
 export type {
@@ -44,6 +49,10 @@ export type {
 	Permission
 } from './permissions'
 
+export type {
+	EditorView,
+	EditorType
+} from './editor'
+
 export type { DropdownOption } from './dropdown'
 export type { DomainStyle } from './styles'
-export type { EditorView } from './editor'

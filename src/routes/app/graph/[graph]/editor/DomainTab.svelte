@@ -26,13 +26,13 @@
 
 </script>
 
-<div class="tab">
+<div class="domain-tab">
 
 	<!-- Domains -->
 	{#if filtered_domains.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
-		<SortableList let:item list={filtered_domains} on:rearrange={async event => await $graph.reorder(event.detail)}>
+		<SortableList let:item list={filtered_domains} on:rearrange={async event => await $graph.reorderDomains(event.detail)}>
 			<DomainRow domain={item} />
 		</SortableList>
 	{/if}
@@ -80,7 +80,7 @@
 	$left-gutter: $total-icon-size * 3 + $form-small-gap * 3
 	$right-gutter: $total-icon-size + $form-small-gap
 
-	.tab
+	.domain-tab
 		display: flex
 		flex-flow: column nowrap
 		gap: $form-small-gap

@@ -111,7 +111,7 @@ class LinkController {
 	get url(): string {
 		if (this.validate().severity === Severity.error)
 			return ''
-		return `/app/course/${this.course.code}/${this.name}`
+		return `${settings.ROOT_URL}/app/course/${this.course.code}/${this.name}`
 	}
 
 	// --------------------> Assignments

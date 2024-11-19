@@ -189,6 +189,8 @@ class GraphController {
 
 		// Fetch lectures from the cache
 		this._lectures = this._lecture_ids.map(id => this.cache.findOrThrow(LectureController, id))
+		this._lectures.sort((a, b) => a.order - b.order)
+
 		return Array.from(this._lectures)
 	}
 
@@ -577,7 +579,7 @@ class GraphController {
 		if (this._subject_ids !== undefined)
 			promises.push(...this.subjects.map(async subject => await subject.delete()))
 		if (this._lecture_ids !== undefined)
-			promises.push(...this.lectures.map(async lecture => await lecture.delete()))
+			promises.push(...this.lectures.map(async lecture => await lecture.delete(false)))
 		await Promise.all(promises)
 
 		// Call the API to delete the graph
@@ -592,7 +594,7 @@ class GraphController {
 		this.cache.remove(this)
 	}
 
-	async reorder(domains?: DomainController[]) {
+	async reorderDomains(domains?: DomainController[]) {
 
 		// Update the graph
 		if (domains !== undefined) {
@@ -608,7 +610,7 @@ class GraphController {
 		}
 		
 		// Call the API to reorder the graph
-		const response = await fetch(`/api/graph/${this.id}/reorder`, {
+		const response = await fetch(`/api/graph/${this.id}/reorder/domains`, {
 			method: 'PUT',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ domain_ids: this.domain_ids })
@@ -616,7 +618,35 @@ class GraphController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/graph/${this.id}/reorder PUT): ${response.status} ${response.statusText}`)
+			throw new Error(`APIError (/api/graph/${this.id}/reorder/domains PUT): ${response.status} ${response.statusText}`)
+		}
+	}
+
+	async reorderLectures(lectures?: LectureController[]) {
+
+		// Update the graph
+		if (lectures !== undefined) {
+			this._lecture_ids = lectures.map(lecture => lecture.id)
+			this._lectures = lectures
+			this._unchanged = false
+			this._unsaved = true
+		}
+
+		// Update lectures
+		for (const [index, lecture] of this.lectures.entries()) {
+			lecture.order = index
+		}
+		
+		// Call the API to reorder the graph
+		const response = await fetch(`/api/graph/${this.id}/reorder/lectures`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ lecture_ids: this.lecture_ids })
+		})
+
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw new Error(`APIError (/api/graph/${this.id}/reorder/lectures PUT): ${response.status} ${response.statusText}`)
 		}
 	}
 
@@ -720,7 +750,7 @@ class GraphController {
 			const copied_lecture = await lecture.copy(copied_graph)
 
 			// Assign copied subjects
-			for (const subject of lecture.subjects) {
+			for (const subject of lecture.present_subjects) {
 				const copied_subject = subject_map.get(subject.id)
 				if (copied_subject === undefined) {
 					throw new Error(`GraphError: Subject incorrectly copied`)

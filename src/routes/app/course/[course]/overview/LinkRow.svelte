@@ -1,12 +1,12 @@
 
 <script lang="ts">
 
-	const ROOT_URL = 'localhost:5173/app'
-
 	// Internal dependencies
+	import * as settings from '$scripts/settings'
+
 	import { course } from './stores'
 	import { Validation, Severity } from '$scripts/validation'
-	import { FormModal } from '$scripts/modals'
+	import { FormModal, SimpleModal } from '$scripts/modals'
 
 	import type { LectureController, LinkController } from '$scripts/controllers'
 	import type { EditorView } from '$scripts/types'
@@ -39,7 +39,7 @@
 
 		get embed() {
 			if (this.validate().severity === Severity.error) return ''
-			let embed = `<iframe src="${ROOT_URL}/graph/${$course.code}/${link.name}?view=${this.view}`
+			let embed = `<iframe src="${settings.ROOT_URL}/app/course/${$course.code}/${link.name}?view=${this.view}`
 			if (this.lecture) embed += `&lecture=${this.lecture.id}`
 			embed += `" style="width: 100%!important; height: ${this.height}px" allow="fullscreen" allowfullscreen></iframe>`
 
@@ -67,12 +67,22 @@
 		}
 	}
 
+	class DeleteModal extends SimpleModal {
+		async submit() {
+			this.disabled = true
+			delete_modal = delete_modal // Trigger reactivity
+			await link.delete()
+			$course = $course // Trigger reactivity
+			this.hide()
+		}
+	}
+
 	// Exports
 	export let link: LinkController
 
 	// Modal
 	let embed_modal = new EmbedModal()
-	let delete_modal: Modal
+	let delete_modal = new DeleteModal()
 
 	// Options
 	let view_options = [
@@ -118,22 +128,21 @@
 	</form>
 </Modal>
 
-<Modal bind:this={delete_modal}>
+<Modal bind:this={delete_modal.modal}>
 	<h3 slot="header"> Delete Link </h3>
 	Are you sure you want to delete this link? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={async () => {
-			await link.delete()
-			$course = $course
-			delete_modal.hide()
-		}}> Delete </Button>
+		<Button
+			disabled={delete_modal.disabled}
+			on:click={async () => await delete_modal.submit()}
+		> Delete </Button>
 	</svelte:fragment>
 </Modal>
 
 <div class="link-row">
-	<Feedback compact data={link.validate(false)} />
+	<Feedback compact data={link.validate(false)} animate={false} />
 
 	<IconButton scale
 		src={trash_icon}

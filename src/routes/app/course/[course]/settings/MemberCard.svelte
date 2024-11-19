@@ -64,12 +64,14 @@
                 return
             }
 
+            this.disabled = true
+            member_modal = member_modal // Trigger reactivity
             if (this.permission === 'EDITOR') {
-                $course.addEditor(this.user!)
+                $course.assignEditor(this.user!)
             } else {
-                $course.addAdmin(this.user!)
+                $course.assignAdmin(this.user!)
             }
-
+            
             await $course.save()
             $course = $course // Trigger reactivity
             this.hide()
@@ -121,7 +123,7 @@
 
 		<footer>
 			<Button
-				disabled={member_modal.validate().severity === Severity.error}
+				disabled={member_modal.disabled}
 				on:click={async () => await member_modal.submit()}
 			> Assign </Button>
 			<Feedback data={member_modal.validate()} />

@@ -149,13 +149,32 @@ export async function update(data: SerializedGraph) {
 	}
 }
 
-export async function reorder(domain_ids: number[]) {
+export async function reorderDomains(domain_ids: number[]) {
 	return await Promise.all(
 		domain_ids.map(async (domain_id, order) => {
 			try {
 				return prisma.domain.update({
 					where: {
 						id: domain_id
+					},
+					data: {
+						order: order
+					}
+				})
+			} catch (error) {
+				return Promise.reject(error)
+			}
+		})
+	)
+}
+
+export async function reorderLectures(lecture_ids: number[]) {
+	return await Promise.all(
+		lecture_ids.map(async (lecture_id, order) => {
+			try {
+				return prisma.lecture.update({
+					where: {
+						id: lecture_id
 					},
 					data: {
 						order: order
