@@ -3,6 +3,7 @@
 
 	// Internal dependencies
 	import { course } from './stores'
+	import { GraphSVG } from '$scripts/svg'
 	import { FormModal, SimpleModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
@@ -12,6 +13,7 @@
 	} from '$scripts/controllers'
 
 	// Components
+	import GraphPreview from '$components/GraphPreview.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
@@ -84,14 +86,19 @@
 	// Exports
 	export let graph: GraphController
 
-	// Modals
+	// Variables
+	const graphSVG = new GraphSVG(graph, false)
+
 	let delete_modal = new DeleteModal()
 	let copy_modal = new CopyModal()
+	let preview_modal: GraphPreview
 
 </script>
 
 
 <!-- Markup -->
+
+<GraphPreview {graph} bind:this={preview_modal} />
 
 <Modal bind:this={copy_modal.modal}>
 	<h3 slot="header"> Copy Graph </h3>
@@ -148,6 +155,7 @@
 	<IconButton scale
 		src={open_eye_icon}
 		description="Preview Graph"
+		on:click={() => preview_modal.show()}
 	/>
 
 	<span>

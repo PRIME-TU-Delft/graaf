@@ -8,7 +8,8 @@ import { NODE_STYLES } from '$scripts/settings'
 
 import {
 	GraphSVG,
-	RelationSVG
+	RelationSVG,
+	SVGState
 } from '$scripts/svg'
 
 import {
@@ -107,6 +108,7 @@ class NodeSVG {
 		// Drag behaviour
 		selection.call(
 			d3.drag<SVGGElement, NodeController<DomainController | SubjectController>>()
+				.filter(event => graphSVG.state === SVGState.dynamic)
 				.on('start', function() {
 					const selection = d3.select<SVGGElement, NodeController<DomainController | SubjectController>>(this)
 					selection.call(NodeSVG.setFixed, true)

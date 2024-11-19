@@ -35,7 +35,7 @@ export { GraphSVG, SVGState }
 const ANIMATE = () => {}
 
 enum SVGState {
-	hidden,		// When the graph is not displayed
+	detached,	// When the graph is detached from the DOM
 	static,		// When the graph cannot be interacted with
 	dynamic,	// When the graph can be interacted with
 	animating,	// When the graph is in the process of transitioning
@@ -47,7 +47,7 @@ class GraphSVG {
 	private _graph: GraphController
 	private _interactive: boolean
 	private _view: EditorView = 'domains'
-	private _state: SVGState = SVGState.hidden
+	private _state: SVGState = SVGState.detached
 	private _lecture: LectureController | null = null
 
 	private svg?: SVGSVGElement
@@ -82,7 +82,7 @@ class GraphSVG {
 			return
 
 		// If hidden, save view for later
-		if (this.state === SVGState.hidden) {
+		if (this.state === SVGState.detached) {
 			this._view = view
 			return
 		}
@@ -139,13 +139,11 @@ class GraphSVG {
 			throw new Error('Failed to set state: GraphSVG not attached to DOM')
 
 		// If moving out of dynamic state:
-		//  - Disable pointer events
 		//  - Fix all nodes
 		//  - Save all nodes
 		//  - Stop simulation
 		if (this.state === SVGState.dynamic) {
 			d3.select(this.svg)
-				.attr('pointer-events', 'none')
 				.select('#content')
 					.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
 						.call(NodeSVG.setFixed, true)
@@ -161,9 +159,9 @@ class GraphSVG {
 				.call(OverlaySVG.reset)
 		}
 
-		// If moving out of hidden state:
+		// If moving out of detached state:
 		//  - Set initial view
-		else if (this.state === SVGState.hidden) {
+		else if (this.state === SVGState.detached) {
 			switch (this.view) {
 				case 'domains':
 					this.DomainsView()
@@ -179,24 +177,17 @@ class GraphSVG {
 
 		this._state = state // NEW STATE
 
-		// If moving into dynamic state:
-		//  - Enable pointer events
-		if (state === SVGState.dynamic) {
-			d3.select(this.svg)
-				.attr('pointer-events', 'all')
-		}
-
 		// If moving into broken state:
 		//  - Set overlay to broken
-		else if (state === SVGState.broken) {
+		if (state === SVGState.broken) {
 			d3.select<SVGGElement, unknown>('#overlay')
 				.call(OverlaySVG.broken)
 		}
 
-		// If moving into hidden state:
+		// If moving into detached state:
 		//  - Clear background
 		//  - Clear content
-		else if (state === SVGState.hidden) {
+		else if (state === SVGState.detached) {
 			this.clearBackground()
 			this.clearContent()
 		}
@@ -253,8 +244,6 @@ class GraphSVG {
 		// SVG setup
 		this.svg = element
 		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
-			.attr('pointer-events', this.state === SVGState.dynamic ? 'all' : 'none')
-
 		const definitions = svg.append('defs')
 		svg.append('g').attr('id', 'background')
 		svg.append('g').attr('id', 'content')
@@ -369,7 +358,7 @@ class GraphSVG {
 			throw new Error('GraphSVG not attached to DOM')
 
 		// Exit current state
-		this.state = SVGState.hidden
+		this.state = SVGState.detached
 
 		// Clear SVG
 		d3.select(this.svg)
@@ -410,7 +399,7 @@ class GraphSVG {
 	}
 
 	findGraph() {
-		if (this.state !== SVGState.dynamic) return
+		if (this.state !== SVGState.dynamic && this.state !== SVGState.static) return
 
 		this.state = SVGState.animating
 		const bbx = this.boundingBox(this.view === 'domains' ? this.graph.domains : this.graph.subjects)

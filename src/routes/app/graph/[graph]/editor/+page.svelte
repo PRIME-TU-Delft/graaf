@@ -348,12 +348,4 @@
 			border-top: none
 			border-radius: 0 0 $border-radius $border-radius
 
-			svg
-				display: block
-				width: 100%
-				height: 600px
-
-				&:empty
-					display: none
-
 </style>
