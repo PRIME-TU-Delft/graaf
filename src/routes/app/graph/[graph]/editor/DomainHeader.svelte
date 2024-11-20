@@ -91,7 +91,7 @@
 		display: flex
 		flex-flow: row nowrap
 		align-content: center
-		gap: $form-small-gap
+		gap: $form-medium-gap
 
 		padding: $card-thick-padding
 

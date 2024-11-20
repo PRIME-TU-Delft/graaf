@@ -77,7 +77,7 @@
 		$graph.sort()
 		$graph = $graph
 	}}> 
-		<img src={sort_icon} alt=""> Sort by Domains 
+		<img src={sort_icon} alt=""> Sort by Domains
 	</Button>
 
 </div>

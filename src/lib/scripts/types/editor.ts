@@ -1,8 +1,8 @@
 
-export type EditorType = 'nodes' | 'layout'
+export type EditorType = 'data' | 'layout'
 
 export function validEditorType(type: any): type is EditorType {
-    return type === 'nodes' || type === 'layout'
+    return type === 'data' || type === 'layout'
 }
 
 export type EditorView = 'domains' | 'subjects' | 'lectures'

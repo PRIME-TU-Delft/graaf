@@ -25,7 +25,13 @@
 	{#if filtered_lectures.length == 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
-		<SortableList let:item list={filtered_lectures} on:rearrange={async event => await $graph.reorderLectures(event.detail)} >
+		<SortableList let:item 
+			list={filtered_lectures} 
+			on:rearrange={async event => {
+				await $graph.reorderLectures(event.detail)
+				$graph = $graph // Trigger reactivity
+			}}
+		>
 			<LectureRow lecture={item} />
 		</SortableList>
 	{/if}

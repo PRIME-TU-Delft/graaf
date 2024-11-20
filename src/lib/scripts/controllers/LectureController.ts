@@ -116,27 +116,11 @@ class LectureController {
 	}
 
 	get subject_options(): DropdownOption<SubjectController>[] {
-		return this.graph.subjects.map(subject => {
-			const validation = new Validation()
-
-			if (this.present_subject_ids.includes(subject.id)) {
-				validation.add({
-					severity: Severity.error,
-					short: 'Already assigned here'
-				})
-			} else if (this.graph.lectures.find(lecture => lecture.present_subject_ids.includes(subject.id))) {
-				validation.add({
-					severity: Severity.warning,
-					short: 'Already assigned elsewhere'
-				})
-			}
-
-			return {
-				value: subject,
-				label: subject.name,
-				validation: validation
-			}
-		})
+		return this.graph.subjects.map(subject => ({
+			value: subject,
+			label: subject.name,
+			validation: this.validateOption(subject)
+		}))
 	}
 
 	// Past subject properties
@@ -176,7 +160,9 @@ class LectureController {
 	get relations(): SubjectRelationController[] {
 		return this.graph.subject_relations
 			.filter(relation => relation.parent !== null && relation.child !== null)
-			.filter(relation => this.present_subjects.includes(relation.parent!) || this.present_subjects.includes(relation.child!))
+			.filter(relation => this.past_subjects.includes(relation.parent!) && this.present_subjects.includes(relation.child!)
+							 || this.present_subjects.includes(relation.parent!) && this.future_subjects.includes(relation.child!)
+			)
 	}
 
 	// Height properties
@@ -218,32 +204,91 @@ class LectureController {
 
 	// --------------------> Validation
 
+	private hasNoName(): boolean {
+		return this.trimmed_name === ''
+	}
+
+	private nameTooLong(): boolean {
+		return this.trimmed_name.length > settings.MAX_LECTURE_NAME_LENGTH
+	}
+
+	private otherLectureWithDuplicateName(): LectureController | undefined {
+		return this.graph.lectures
+			.find(lecture => lecture.id !== this.id && lecture.trimmed_name === this.trimmed_name)
+	}
+
+	private hasNoSubjects(): boolean {
+		return this.present_subject_ids.length === 0
+	}
+
+	private subjectAlreadyCoveredHere(subject: SubjectController): boolean {
+		return this.present_subject_ids.includes(subject.id)
+	}
+
+	private otherLecturesCoveringSubject(subject: SubjectController): LectureController[] {
+		return this.graph.lectures
+			.filter(lecture => lecture.id !== this.id && lecture.present_subject_ids.includes(subject.id))
+	}
+
+	private missingSubjectPrerequisites(subject: SubjectController): SubjectController[] {
+		const covered_subject_ids = this.graph.lectures
+			.filter(lecture => lecture.order <= this.order)
+			.flatMap(lecture => lecture.present_subject_ids)
+		
+		return subject.parents.filter(parent => !covered_subject_ids.includes(parent.id))
+	}
+
+	private validateOption(subject: SubjectController): Validation {
+		const validation = new Validation()
+
+		if (this.subjectAlreadyCoveredHere(subject)) {
+			validation.add({
+				severity: Severity.error,
+				short: 'Duplicate'
+			})
+		}
+
+		else if (this.otherLecturesCoveringSubject(subject).length > 0) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Covered elsewhere'
+			})
+		}
+
+		else if (this.missingSubjectPrerequisites(subject).length > 0) {
+			validation.add({
+				severity: Severity.warning,
+				short: 'Misses prerequisites'
+			})
+		}
+
+		return validation
+	}
+
 	validateName(strict: boolean = true): Validation {
 		const validation = new Validation()
 		if (!strict && this._unchanged) return validation
 
-		if (this.trimmed_name === '') {
+		if (this.hasNoName()) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Lecture has no name',
-				url: `/app/graph/${this.graph_id}/settings?tab=lectures`,
+				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
 				uuid: this.uuid
 			})
-		} else if (this.trimmed_name.length > settings.MAX_LECTURE_NAME_LENGTH) {
+		} else if (this.nameTooLong()) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Lecture name is too long',
 				long: `Lecture name cannot exceed ${settings.MAX_LECTURE_NAME_LENGTH} characters`,
-				url: `/app/graph/${this.graph_id}/settings?tab=lectures`,
+				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
 				uuid: this.uuid
 			})
-		} else if (this.graph.lectures
-			.find(lecture => lecture.id !== this.id && lecture.trimmed_name === this.trimmed_name)
-		) {
+		} else if (this.otherLectureWithDuplicateName()) {
 			validation.add({
 				severity: Severity.warning,
 				short: 'Lecture name is not unique',
-				url: `/app/graph/${this.graph_id}/settings?tab=lectures`,
+				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
 				uuid: this.uuid
 			})
 		}
@@ -255,26 +300,37 @@ class LectureController {
 		const validation = new Validation()
 		if (!strict && this._unchanged) return validation
 
-		if (this.present_subject_ids.length === 0) {
+		if (this.hasNoSubjects()) {
 			validation.add({
-				severity: Severity.warning,
+				severity: Severity.error,
 				short: 'Lecture has no subjects',
-				url: `/app/graph/${this.graph_id}/settings?tab=lectures`,
+				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
 				uuid: this.uuid
 			})
-		} else if (this.graph.lectures
-			.find(lecture => 
-				lecture.id !== this.id && lecture.present_subject_ids.find(
-					id => this.present_subject_ids.includes(id)
-				)
-			)
-		) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Lecture subjects are not unique',
-				url: `/app/graph/${this.graph_id}/settings?tab=lectures`,
-				uuid: this.uuid
-			})
+		} 
+		
+		for (const subject of this.present_subjects) {
+			const other_lectures = this.otherLecturesCoveringSubject(subject)
+			if (other_lectures.length > 0) {
+				validation.add({
+					severity: Severity.warning,
+					short: 'Subject covered elsewhere',
+					long: `${subject.name} is already covered by ${other_lectures.map(lecture => lecture.name).join(', ')}`,
+					url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
+					uuid: this.uuid
+				})
+			}
+
+			const missing_prerequisites = this.missingSubjectPrerequisites(subject)
+			if (missing_prerequisites.length > 0) {
+				validation.add({
+					severity: Severity.warning,
+					short: 'Subject has missing prerequisites',
+					long: `${missing_prerequisites.map(subject => subject.name).join(', ')} should be covered before ${subject.name}`,
+					url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
+					uuid: this.uuid
+				})
+			}
 		}
 
 		return validation
