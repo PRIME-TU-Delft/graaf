@@ -35,7 +35,7 @@ class NodeSVG {
 		selection
 			.attr('id', node => node.uuid)
 			.attr('class', 'node fixed')
-			.attr('pointer-events', graphSVG.state === SVGState.dynamic ? 'all' : 'none')
+			.attr('pointer-events', graphSVG.interactive ? 'all' : 'none')
 			.attr('transform', node => `translate(
 				${node.x * settings.GRID_UNIT},
 				${node.y * settings.GRID_UNIT}

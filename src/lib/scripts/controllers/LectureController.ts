@@ -160,7 +160,9 @@ class LectureController {
 	get relations(): SubjectRelationController[] {
 		return this.graph.subject_relations
 			.filter(relation => relation.parent !== null && relation.child !== null)
-			.filter(relation => this.present_subjects.includes(relation.parent!) || this.present_subjects.includes(relation.child!))
+			.filter(relation => this.past_subjects.includes(relation.parent!) && this.present_subjects.includes(relation.child!)
+							 || this.present_subjects.includes(relation.parent!) && this.future_subjects.includes(relation.child!)
+			)
 	}
 
 	// Height properties
