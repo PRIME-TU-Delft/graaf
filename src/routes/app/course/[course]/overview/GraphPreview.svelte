@@ -18,7 +18,7 @@
 
 	// Functions
 	export function show() {
-		graphSVG.view = 'domains'
+		graphSVG.view = 'subjects'
 		visible = true
 	}
 
@@ -42,9 +42,9 @@
 		<div class="tabs">
 			<button
 				class="tab"
-				class:active={graphSVG.view === 'domains'}
-				on:click={() => graphSVG.view = 'domains'}
-			> Domains </button>
+				class:active={graphSVG.view === 'lectures'}
+				on:click={() => graphSVG.view = 'lectures'}
+			> Lectures </button>
 
 			<button
 				class="tab"
@@ -54,9 +54,9 @@
 
 			<button
 				class="tab"
-				class:active={graphSVG.view === 'lectures'}
-				on:click={() => graphSVG.view = 'lectures'}
-			> Lectures </button>
+				class:active={graphSVG.view === 'domains'}
+				on:click={() => graphSVG.view = 'domains'}
+			> Domains </button>
 
 			<div class="toolbar">
 				<Dropdown
@@ -103,14 +103,13 @@
 
 	.tabular
 		position: fixed
-		translate: 0 -50%
+		translate: -50% -50%
 		z-index: 1000
 		top: 50%
-		left: 0
+		left: 50%
 
 		width: calc( 100% - 2 * $tudelft-logo-width )
 		max-width: $big-column
-		margin: 0 $tudelft-logo-width
 		box-sizing: content-box
 
 		background: $white
