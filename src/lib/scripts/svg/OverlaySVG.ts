@@ -22,12 +22,12 @@ class OverlaySVG {
 				.remove()
 	}
 
-	static broken(selection: OverlaySelection) {
-		if (selection.classed('broken')) return
+	static brokenView(selection: OverlaySelection) {
+		if (selection.classed('brokenGraph')) return
 		OverlaySVG.reset(selection)
 
 		selection
-			.attr('class', 'broken')
+			.attr('class', 'brokenGraph')
 
 		selection.append('rect')
 			.attr('width', '100%')
@@ -46,6 +46,39 @@ class OverlaySVG {
 
 		text.append('tspan')
 			.text('There are outstanding errors in this graph')
+			.attr('x', '50%')
+			.attr('y', '50%')
+			.attr('dy', settings.OVERLAY_BIG_FONT)
+			.attr('font-size', settings.OVERLAY_SMALL_FONT)
+			.attr('dominant-baseline', 'middle')
+			.attr('text-anchor', 'middle')
+			.attr('fill', 'black')
+	}
+
+	static awaitLecture(selection: OverlaySelection) {
+		if (selection.classed('awaitLecture')) return
+		OverlaySVG.reset(selection)
+
+		selection
+			.attr('class', 'awaitLecture')
+
+		selection.append('rect')
+			.attr('width', '100%')
+			.attr('height', '100%')
+			.attr('fill', 'white')			
+
+		const text = selection.append('text')
+		text.append('tspan')
+			.text('No lecture selected')
+			.attr('x', '50%')
+			.attr('y', '50%')
+			.attr('font-size', settings.OVERLAY_BIG_FONT)
+			.attr('dominant-baseline', 'middle')
+			.attr('text-anchor', 'middle')
+			.attr('fill', 'black')
+
+		text.append('tspan')
+			.text('Select a lecture to view its content')
 			.attr('x', '50%')
 			.attr('y', '50%')
 			.attr('dy', settings.OVERLAY_BIG_FONT)

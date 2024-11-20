@@ -6,7 +6,7 @@ type Milliseconds = number
 
 // -------------------> General settings
 
-export const ROOT_URL = 'localhost:5173'
+export const ROOT_URL = 'https://beta.prime-applets.ewi.tudelft.nl'
 
 export const MAX_PROGRAM_NAME_LENGTH: Scalar = 50
 

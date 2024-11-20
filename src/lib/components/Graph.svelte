@@ -18,12 +18,10 @@
 <div class="graph">
 	<svg use:graphSVG.attach />
 
-	{#if graphSVG.interactive}
-		<div class="zoom">
-			<button on:click={() => graphSVG.zoomIn()}><img src={zoom_in_icon} alt="Zoom in"></button>
-			<button on:click={() => graphSVG.zoomOut()}><img src={zoom_out_icon} alt="Zoom out"></button>
-		</div>
-	{/if}
+	<div class="zoom">
+		<button on:click={() => graphSVG.zoomIn()}><img src={zoom_in_icon} alt="Zoom in"></button>
+		<button on:click={() => graphSVG.zoomOut()}><img src={zoom_out_icon} alt="Zoom out"></button>
+	</div>
 </div>
 
 <!-- Styles -->

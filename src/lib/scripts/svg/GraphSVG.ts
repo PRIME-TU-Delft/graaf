@@ -35,12 +35,13 @@ export { GraphSVG, SVGState }
 const ANIMATE = () => {}
 
 enum SVGState {
-	detached,	// When the graph is detached from the DOM
-	static,		// When the graph cannot be interacted with
-	dynamic,	// When the graph can be interacted with
-	animating,	// When the graph is in the process of transitioning
-	lecture,	// When the graph is displaying a lecture 
-	broken		// When the current view is broken
+	detached,			// When the graph is detached from the DOM
+	static,				// When the graph cannot be interacted with
+	dynamic,			// When the graph can be interacted with
+	animating,			// When the graph is animating
+	lecture,			// When the graph is displaying a lecture
+	await_lecture,		// When the graph is waiting for the user to select a lecture
+	broken				// When the current view is broken
 }
 
 class GraphSVG {
@@ -81,7 +82,7 @@ class GraphSVG {
 		if (this.view === view || this.state === SVGState.animating)
 			return
 
-		// If hidden, save view for later
+		// If detached, save view for later
 		if (this.state === SVGState.detached) {
 			this._view = view
 			return
@@ -99,28 +100,28 @@ class GraphSVG {
 			case 'domains':
 				switch (view) {
 					case 'subjects':
-						this.domainToSubject()
+						this.domainsToSubjects()
 						break
 					case 'lectures':
-						this.domainToLecture()
+						this.domainsToLectures()
 						break
 				} break
 			case 'subjects':
 				switch (view) {
 					case 'domains':
-						this.subjectToDomain()
+						this.subjectsToDomains()
 						break
 					case 'lectures':
-						this.subjectToLecture()
+						this.subjectsToLectures()
 						break
 				} break
 			case 'lectures':
 				switch (view) {
 					case 'domains':
-						this.lectureToDomain()
+						this.lecturesToDomains()
 						break
 					case 'subjects':
-						this.lectureToSubject()
+						this.lecturesToSubjects()
 						break
 				} break
 		}
@@ -133,17 +134,38 @@ class GraphSVG {
 	}
 
 	private set state(state: SVGState) {
-		if (this.state === state)
+		// Check if state is changing
+		if (this.state === state) {
 			return
-		if (this.svg === undefined || this.simulation === undefined)
+		}
+
+		// Check if SVG is properly attached
+		if (this.svg === undefined || this.simulation === undefined) {
 			throw new Error('Failed to set state: GraphSVG not attached to DOM')
+		}
+
+		// If moving out of broken state:
+		//  - Reset overlay
+		if (this.state === SVGState.broken) {
+			d3.select<SVGGElement, unknown>('#overlay')
+				.call(OverlaySVG.reset)
+		}
+
+		// If moving out of awaiting lecture state:
+		//  - Reset overlay
+		if (this.state === SVGState.await_lecture) {
+			d3.select<SVGGElement, unknown>('#overlay')
+				.call(OverlaySVG.reset)
+		}
 
 		// If moving out of dynamic state:
+		//  - Disable pointer events
 		//  - Fix all nodes
 		//  - Save all nodes
 		//  - Stop simulation
 		if (this.state === SVGState.dynamic) {
 			d3.select(this.svg)
+				.style('pointer-events', 'none')
 				.select('#content')
 					.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
 						.call(NodeSVG.setFixed, true)
@@ -152,45 +174,42 @@ class GraphSVG {
 			this.simulation.stop()
 		}
 
-		// If moving out of broken state:
-		//  - Reset overlay
-		else if (this.state === SVGState.broken) {
-			d3.select<SVGGElement, unknown>('#overlay')
-				.call(OverlaySVG.reset)
+		// If moving out of static state:
+		//  - Disable pointer events
+		if (this.state === SVGState.static) {
+			d3.select(this.svg)
+				.style('pointer-events', 'none')
 		}
-
-		// If moving out of detached state:
-		//  - Set initial view
-		else if (this.state === SVGState.detached) {
-			switch (this.view) {
-				case 'domains':
-					this.DomainsView()
-					break
-				case 'subjects':
-					this.SubjectsView()
-					break
-				case 'lectures':
-					this.LecturesView()
-					break
-			}
-		}
-
-		this._state = state // NEW STATE
 
 		// If moving into broken state:
 		//  - Set overlay to broken
 		if (state === SVGState.broken) {
 			d3.select<SVGGElement, unknown>('#overlay')
-				.call(OverlaySVG.broken)
+				.call(OverlaySVG.brokenView)
 		}
 
-		// If moving into detached state:
-		//  - Clear background
-		//  - Clear content
-		else if (state === SVGState.detached) {
-			this.clearBackground()
-			this.clearContent()
+		// If moving into awaiting lecture state:
+		//  - Set overlay to await lecture
+		if (state === SVGState.await_lecture) {
+			d3.select<SVGGElement, unknown>('#overlay')
+				.call(OverlaySVG.awaitLecture)
 		}
+
+		// If moving into dynamic state:
+		//  - Enable pointer events
+		if (state === SVGState.dynamic) {
+			d3.select(this.svg)
+				.style('pointer-events', 'all')
+		}
+
+		// If moving into static state:
+		//  - Enable pointer events
+		if (state === SVGState.static) {
+			d3.select(this.svg)
+				.style('pointer-events', 'all')
+		}
+
+		this._state = state // NEW STATE
 	}
 
 	get lecture() {
@@ -201,12 +220,18 @@ class GraphSVG {
 		if (this.lecture === lecture || this.state === SVGState.animating)
 			return
 
-		this._lecture = lecture
-
-		if (this.state === SVGState.detached)
+		// If detached, save lecture for later
+		if (this.state === SVGState.detached) {
+			this._lecture = lecture
 			return
-		if (this.svg === undefined)
-			throw new Error('Failed to set lecture: GraphSVG not attached to DOM')
+		}
+
+		// Check if properly attached
+		if (this.svg === undefined) {
+			throw new Error('GraphSVG not attached to DOM')
+		}
+
+		this._lecture = lecture // NEW LECTURE
 
 		// Validate lecture
 		if (!this.validateView(this.view)) {
@@ -216,18 +241,8 @@ class GraphSVG {
 
 		// Update content
 		if (this.view === 'lectures') {
-			this.setBackground('lectures')
-			this.moveCamera(0, 0, 1)
-
-			if (this.lecture === null) {
-				this.clearContent()
-			} else {
-				this.setContent(this.lecture.subjects, this.lecture.relations)
-				this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
-			}
+			this.Lectures()
 		}
-
-		this.state = SVGState.lecture
 
 		// Update highlights
 		d3.select(this.svg)
@@ -237,6 +252,12 @@ class GraphSVG {
 	}
 
 	get autolayout_enabled() {
+
+		// Check easy case
+		if (this.state !== SVGState.dynamic)
+			return false
+
+		// Check if any nodes are not fixed
 		return d3.select('#content')
 			.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node:not(.fixed)')
 				.size() > 0
@@ -246,9 +267,17 @@ class GraphSVG {
 
 	attach(element: SVGSVGElement) {
 
+		// Check if already attached
+		if (this.state !== SVGState.detached) {
+			throw new Error('GraphSVG already attached to DOM')
+		}
+
 		// SVG setup
 		this.svg = element
 		const svg = d3.select<SVGSVGElement, unknown>(this.svg)
+			.attr('display', 'block')
+			.attr('pointer-events', 'none')
+
 		const definitions = svg.append('defs')
 		svg.append('g').attr('id', 'background')
 		svg.append('g').attr('id', 'content')
@@ -349,9 +378,24 @@ class GraphSVG {
 						.call(NodeSVG.updatePosition)
 			})
 
-		// Exit hidden state
-		this.simulation.stop() // Stop simulation to prevent node movement on first render
-		this.state = this.view === 'lectures' ? SVGState.lecture : this.interactive ? SVGState.dynamic : SVGState.static
+		// Exit detached state
+		if (!this.validateView(this.view)) {
+			this.state = SVGState.broken
+			return
+		}
+
+		this.simulation.stop()
+		switch (this.view) {
+			case 'domains':
+				this.Domains()
+				break
+			case 'subjects':
+				this.Subjects()
+				break
+			case 'lectures':
+				this.Lectures()
+				break
+		}
 
 		return {
 			destroy: () => this.detach()
@@ -359,8 +403,16 @@ class GraphSVG {
 	}
 
 	detach() {
-		if (this.svg === undefined)
+
+		// Check if already detached
+		if (this.state === SVGState.detached) {
+			throw new Error('GraphSVG already detached from DOM')
+		}
+
+		// Check if properly attached
+		if (this.svg === undefined) {
 			throw new Error('GraphSVG not attached to DOM')
+		}
 
 		// Exit current state
 		this.state = SVGState.detached
@@ -380,7 +432,7 @@ class GraphSVG {
 	zoomIn() {
 		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
-		if (this.state !== SVGState.dynamic)
+		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -393,7 +445,7 @@ class GraphSVG {
 	zoomOut() {
 		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
-		if (this.state !== SVGState.dynamic)
+		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -440,15 +492,17 @@ class GraphSVG {
 			.restart()
 	}
 
-	// -----------------> Private Methods
+	// -----------------> Toolbox
 
 	private validateView(view: EditorView) {
 		switch (view) {
 			case 'domains':
 				return this.graph.domains.every(domain => domain.validate().severity !== Severity.error)
+					&& this.graph.domain_relations.every(relation => relation.validate().severity !== Severity.error)
 
 			case 'subjects':
 				return this.graph.subjects.every(subject => subject.validate().severity !== Severity.error)
+					&& this.graph.subject_relations.every(relation => relation.validate().severity !== Severity.error)
 
 			case 'lectures':
 				return (
@@ -462,6 +516,8 @@ class GraphSVG {
 	private boundingBox(nodes: NodeController<DomainController | SubjectController>[]) {
 		if (this.svg === undefined)
 			throw new Error('GraphSVG not attached to DOM')
+		if (nodes.length === 0)
+			return { x: 0, y: 0, k: 1 }
 
 		let min_x = Infinity
 		let min_y = Infinity
@@ -636,7 +692,7 @@ class GraphSVG {
 		}
 
 		// Grid background
-		else {
+		else if (this.interactive) {
 			background.append('rect')
 				.attr('fill', 'url(#grid)')
 				.attr('width', '100%')
@@ -653,6 +709,10 @@ class GraphSVG {
 	private setContent(nodes: NodeController<DomainController | SubjectController>[], relations: RelationController<DomainController | SubjectController>[], callback?: () => void) {
 		if (this.simulation === undefined)
 			throw new Error('GraphSVG not attached to DOM')
+		if (nodes.length === 0) {
+			this.clearContent(callback)
+			return
+		}
 
 		const content = d3.select<SVGGElement, unknown>('#content')
 		const lecture = this.lecture
@@ -786,46 +846,56 @@ class GraphSVG {
 		}
 	}
 
-	private DomainsView() {
+	// -----------------> Transitions
+
+	private Domains() {
 		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground('domains')
 		this.setContent(this.graph.domains, this.graph.domain_relations)
+		this.restoreContent()
+
+		this.state = this.interactive ? SVGState.dynamic : SVGState.static
 	}
 
-	private SubjectsView() {
+	private Subjects() {
 		const bbx = this.boundingBox(this.graph.subjects)
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground('subjects')
 		this.setContent(this.graph.subjects, this.graph.subject_relations)
+		this.restoreContent()
+
+		this.state = this.interactive ? SVGState.dynamic : SVGState.static
 	}
 
-	private LecturesView() {
-		this.setBackground('lectures')
-		this.moveCamera(0, 0, 1)
+	private Lectures() {
 
-		if (this.lecture !== null) {
-			this.setContent(this.lecture.subjects, this.lecture.relations)
-			this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
-		}
-	}
-
-	private domainToSubject() {
-		const bbx = this.boundingBox(this.graph.subjects)
-
-		if (this.state === SVGState.broken) {
-			this.state = SVGState.animating
-			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setBackground('subjects')
-			this.setContent(this.graph.subjects, this.graph.subject_relations)
-			this.restoreContent()
-			this.state = this.interactive ? SVGState.dynamic : SVGState.static
-
+		// If going to empty lecture, await lecture selection
+		if (this.lecture === null) {
+			this.state = SVGState.await_lecture
 			return
 		}
 
+		this.moveCamera(0, 0, 1)
+		this.setBackground('lectures')
+		this.setContent(this.lecture.subjects, this.lecture.relations)
+		this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
+
+		this.state = SVGState.lecture
+	}
+
+	private domainsToSubjects() {
+
+		// If coming out of broken state, skip animation
+		if (this.state === SVGState.broken) {
+			this.Subjects()
+			return
+		}
+
+		// Animate from domains to subjects
 		this.state = SVGState.animating
 
+		const bbx = this.boundingBox(this.graph.subjects)
 		this.setContent(this.graph.subjects, this.graph.subject_relations)
 		this.moveContent(this.graph.subjects, this.domainTransform)
 
@@ -835,25 +905,21 @@ class GraphSVG {
 		})
 	}
 
-	private domainToLecture() {
-		if (this.lecture === null) {
-			this.setBackground('lectures')
-			this.clearContent()
-			this.state = SVGState.lecture
+	private domainsToLectures() {
 
-			return
-		}
-
+		// If coming out of overlay state, skip animation
 		if (this.state === SVGState.broken) {
-			this.moveCamera(0, 0, 1)
-			this.setBackground('lectures')
-			this.setContent(this.lecture.subjects, this.lecture.relations)
-			this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
-			this.state = SVGState.lecture
-
+			this.Lectures()
 			return
 		}
 
+		// If going to empty lecture, await lecture selection
+		if (this.lecture === null) {
+			this.state = SVGState.await_lecture
+			return
+		}
+
+		// Animate from domains to lectures
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.domains)
@@ -866,21 +932,18 @@ class GraphSVG {
 		})
 	}
 
-	private subjectToDomain() {
-		const bbx = this.boundingBox(this.graph.domains)
+	private subjectsToDomains() {
 
+		// If coming out of broken state, skip animation
 		if (this.state === SVGState.broken) {
-			this.state = SVGState.animating
-			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
-				this.state = this.interactive ? SVGState.dynamic : SVGState.static
-			})
-
+			this.Domains()
 			return
 		}
 
+		// Animate from subjects to domains
 		this.state = SVGState.animating
 
+		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.moveContent(this.graph.subjects, this.domainTransform, () => {
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
@@ -889,25 +952,21 @@ class GraphSVG {
 		})
 	}
 
-	private subjectToLecture() {
-		if (this.lecture === null) {
-			this.setBackground('lectures')
-			this.clearContent()
-			this.state = SVGState.lecture
+	private subjectsToLectures() {
 
-			return
-		}
-
+		// If coming out of broken state, skip animation
 		if (this.state === SVGState.broken) {
-			this.moveCamera(0, 0, 1)
-			this.setBackground('lectures')
-			this.setContent(this.lecture.subjects, this.lecture.relations)
-			this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
-			this.state = SVGState.lecture
-
+			this.Lectures()
 			return
 		}
 
+		// If going to empty lecture, await lecture selection
+		if (this.lecture === null) {
+			this.state = SVGState.await_lecture
+			return
+		}
+
+		// Animate from subjects to lectures
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.subjects)
@@ -920,53 +979,45 @@ class GraphSVG {
 		})
 	}
 
-	private lectureToDomain() {
-		const bbx = this.boundingBox(this.graph.domains)
+	private lecturesToDomains() {
 
-		if (this.state === SVGState.broken || this.lecture === null) {
-			this.state = SVGState.animating
-			this.setBackground('domains')
-			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setContent(this.graph.domains, this.graph.domain_relations)
-			this.restoreContent()
-			this.state = this.interactive ? SVGState.dynamic : SVGState.static
-
+		// If coming out of overlay state, skip animation
+		if (this.state === SVGState.broken || this.state === SVGState.await_lecture) {
+			this.Domains()
 			return
 		}
 
+		// Animate from lectures to domains
 		this.state = SVGState.animating
 
+		const bbx = this.boundingBox(this.graph.domains)
 		this.panCamera(bbx.x, bbx.y)
 		this.setBackground('domains')
-		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
+		this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y))
 
 		this.zoomCamera(bbx.k, ANIMATE)
-		this.moveContent(this.lecture.subjects, this.domainTransform, () => {
+		this.moveContent(this.lecture!.subjects, this.domainTransform, () => {
 			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
 				this.state = this.interactive ? SVGState.dynamic : SVGState.static
 			})
 		})
 	}
 
-	private lectureToSubject() {
-		const bbx = this.boundingBox(this.graph.subjects)
+	private lecturesToSubjects() {
 
-		if (this.state === SVGState.broken || this.lecture === null) {
-			this.state = SVGState.animating
-			this.setBackground('subjects')
-			this.moveCamera(bbx.x, bbx.y, bbx.k)
-			this.setContent(this.graph.subjects, this.graph.subject_relations)
-			this.restoreContent()
-			this.state = this.interactive ? SVGState.dynamic : SVGState.static
-
+		// If coming out of broken state, or from empty lecture, skip animation
+		if (this.state === SVGState.broken || this.state === SVGState.await_lecture) {
+			this.Subjects()
 			return
 		}
 
+		// Animate from lectures to subjects
 		this.state = SVGState.animating
 
+		const bbx = this.boundingBox(this.graph.subjects)
 		this.panCamera(bbx.x, bbx.y)
 		this.setBackground('subjects')
-		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y))
+		this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y))
 
 		this.zoomCamera(bbx.k, ANIMATE)
 		this.restoreContent(() => {
@@ -975,6 +1026,8 @@ class GraphSVG {
 			})
 		})
 	}
+
+	// -----------------> Transforms
 
 	private domainTransform(subject: SubjectController) {
 		subject.x = subject.domain!.x

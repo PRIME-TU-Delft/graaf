@@ -82,9 +82,9 @@
 		<div class="tabs">
 			<button
 				class="tab"
-				class:active={graphSVG.view === 'domains'}
-				on:click={() => graphSVG.view = 'domains'}
-			> Domains </button>
+				class:active={graphSVG.view === 'lectures'}
+				on:click={() => graphSVG.view = 'lectures'}
+			> Lectures </button>
 
 			<button
 				class="tab"
@@ -94,10 +94,10 @@
 
 			<button
 				class="tab"
-				class:active={graphSVG.view === 'lectures'}
-				on:click={() => graphSVG.view = 'lectures'}
-			> Lectures </button>
-
+				class:active={graphSVG.view === 'domains'}
+				on:click={() => graphSVG.view = 'domains'}
+			> Domains </button>
+			
 			<div class="toolbar">
 				<Dropdown
 					id="lecture"

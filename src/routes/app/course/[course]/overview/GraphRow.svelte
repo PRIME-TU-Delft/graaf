@@ -12,7 +12,8 @@
 	} from '$scripts/controllers'
 
 	// Components
-	import GraphPreview from '$components/GraphPreview.svelte'
+	import GraphPreview from './GraphPreview.svelte'
+
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
