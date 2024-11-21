@@ -76,7 +76,9 @@
 			</div>
 		</div>
 
-		 <Graph {graphSVG} />
+		<div class="content">
+			<Graph {graphSVG} />
+		</div>
 	</div>
 {/if}
 
@@ -116,9 +118,6 @@
 		border: 1px solid $gray
 		border-radius: $border-radius
 		box-shadow: $shadow
-
-		:global(.graph)
-			height: 750px
 
 		.tabs
 			display: flex
@@ -178,5 +177,8 @@
 				:global(.dropdown)
 					max-width: 20rem
 					margin-left: $form-medium-gap
+
+		.content
+			height: min(750px, calc(100vh - 2 * $tudelft-logo-width))
 
 </style>
