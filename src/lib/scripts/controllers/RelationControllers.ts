@@ -22,7 +22,7 @@ export { RelationController, DomainRelationController, SubjectRelationController
 abstract class RelationController<T extends DomainController | SubjectController> {
 	uuid: string = uuid.v4()
 
-	protected _unchanged: boolean = false
+	protected _unchanged: boolean = true
 	protected _parent: T | null = null
 	protected _child: T | null = null
 

@@ -60,7 +60,7 @@
 
 <svelte:document on:scroll={event => throttleEventCall(event, onScroll)} />
 
-<div class="header" >
+<div class="subject-header" >
 
 	{#if above_scroll_boundry}
 		<h2> Subjects </h2>
@@ -77,7 +77,7 @@
 		$graph.sort()
 		$graph = $graph
 	}}> 
-		<img src={sort_icon} alt=""> Sort by Domains 
+		<img src={sort_icon} alt=""> Sort by Domains
 	</Button>
 
 </div>
@@ -87,7 +87,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.header
+	.subject-header
 		display: flex
 		flex-flow: row nowrap
 		align-content: center

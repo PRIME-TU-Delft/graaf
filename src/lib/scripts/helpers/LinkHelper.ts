@@ -159,3 +159,25 @@ export async function getGraph(id: number, ...relations: GraphRelation[]): Promi
 		return await GraphHelper.reduce(data.graph, ...relations)
 	return null
 }
+
+export async function getGraphFromCourseAndName(course_code: string, link_name: string, ...relations: GraphRelation[]): Promise<SerializedGraph> {
+	try {
+		var data = await prisma.link.findFirstOrThrow({
+			where: {
+				course: {
+					code: course_code
+				},
+				name: link_name
+			},
+			select: {
+				graph: true
+			}
+		})
+	} catch (error) {
+		return Promise.reject(error)
+	}
+
+	if (data.graph !== null)
+		return await GraphHelper.reduce(data.graph, ...relations)
+	return Promise.reject('No graph associated with this link')
+}

@@ -60,7 +60,7 @@
 
 <svelte:document on:scroll={event => throttleEventCall(event, onScroll)} />
 
-<div class="header" >
+<div class="domain-header" >
 
 	{#if above_scroll_boundry}
 		<h2> Domains </h2>
@@ -87,11 +87,11 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.header
+	.domain-header
 		display: flex
 		flex-flow: row nowrap
 		align-content: center
-		gap: $form-small-gap
+		gap: $form-medium-gap
 
 		padding: $card-thick-padding
 

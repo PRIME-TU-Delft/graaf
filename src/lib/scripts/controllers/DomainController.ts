@@ -64,7 +64,6 @@ class DomainController extends NodeController<DomainController> {
 
 	set order(value: number) {
 		this._order = value
-		this._unchanged = false
 		this._unsaved = true
 	}
 
@@ -432,19 +431,20 @@ class DomainController extends NodeController<DomainController> {
 		// Unassign graph, parents, children, and subjects
 		if (this._graph_id !== undefined)
 			this.graph.unassignDomain(this)
-		if (this._parent_ids !== undefined)
-			for (const parent of this.parents)
-				parent.unassignChild(this, false)
-		if (this._child_ids !== undefined)
-			for (const child of this.children)
-				child.unassignParent(this, false)
 		if (this._subject_ids !== undefined)
 			for (const subject of this.subjects)
 				subject.unassignDomain(this, false)
+		for (const relation of this.graph.domain_relations) {
+			if (relation.parent === this)
+				relation.parent = null
+			else if (relation.child === this)
+				relation.child = null
+		}
+				
 
 		// Fix order of remaining domains
 		if (reorder_graph) {
-			await this.graph.reorder()
+			await this.graph.reorderDomains()
 		}
 
 		// Call the API to delete the domain

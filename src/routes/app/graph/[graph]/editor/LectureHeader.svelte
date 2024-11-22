@@ -9,12 +9,12 @@
 
 </script>
 
-<div class="header" >
+<div class="lecture-header" >
 	<h2> Lectures </h2>
 
 	<div class="flex-spacer" />
 
-	<Searchbar placeholder="Search domains and relations" bind:value={$lecture_query} />
+	<Searchbar placeholder="Search lectures" bind:value={$lecture_query} />
 </div>
 
 <style lang="sass">
@@ -22,7 +22,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.header
+	.lecture-header
 		display: flex
 		flex-flow: row nowrap
 		align-content: center

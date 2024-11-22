@@ -17,7 +17,7 @@
 
 
 
-<div class="textfield" class:disabled={url === ''}>
+<div class="link-url" class:disabled={url === ''}>
 	<input
 		type="url"
 		disabled={true}
@@ -51,7 +51,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.textfield
+	.link-url
 		width: 100%
 		position: relative
 

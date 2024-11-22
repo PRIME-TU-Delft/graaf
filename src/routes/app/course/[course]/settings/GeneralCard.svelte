@@ -7,6 +7,7 @@
 	// Internal dependencies
 	import { course } from './stores'
 	import { Severity } from '$scripts/validation'
+	import { SimpleModal } from '$scripts/modals'
 
 	// Components
 	import Feedback from '$components/Feedback.svelte'
@@ -19,25 +20,35 @@
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
 
+	// Helpers
+	class ArchiveModal extends SimpleModal {
+		async submit() {
+			this.disabled = true
+			archive_modal = archive_modal // Trigger reactivity
+			await $course.delete() // TODO this should archive, not delete
+			goto('/app/home')
+		}
+	}
+
 	// Variables
-	let archive_modal: Modal
+	let archive_modal = new ArchiveModal()
 
 </script>
 
 
 <!-- Markup -->
 
-<Modal bind:this={archive_modal}>
+<Modal bind:this={archive_modal.modal}>
 	<h3 slot="header"> Archive Course </h3>
 	Are you certain you want to archive this course?
 	When you archive a course, it, and all associated graphs and links will no longer be visible to anyone except program administrators. Only they can restore them.
 
 	<svelte:fragment slot="footer">
 		<LinkButton on:click={() => archive_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={async () => {
-			await $course.delete() // TODO this should archive, not delete
-			goto('/app/home')
-		}}> Archive </Button>
+		<Button 
+			disabled={archive_modal.disabled}
+			on:click={async () => await archive_modal.submit()}
+		> Archive </Button>
 	</svelte:fragment>
 </Modal>
 
