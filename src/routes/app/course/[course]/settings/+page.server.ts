@@ -26,6 +26,10 @@ export const load: PageServerLoad = async ({ params }) => {
 		.catch(error => { throw new Error(error) })
 	const users = UserHelper.getAll()
 		.catch(error => { throw new Error(error) })
+	const graphs = CourseHelper.getGraphs(course_id)
+		.catch(error => { throw new Error(error) })
+	const links = CourseHelper.getLinks(course_id)
+		.catch(error => { throw new Error(error) })
 
-	return { programs, courses, course, users }
+	return { programs, courses, course, users, graphs, links }
 }

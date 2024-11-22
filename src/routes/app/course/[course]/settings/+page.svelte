@@ -10,8 +10,10 @@
 
 	import {
 		ControllerCache,
-		CourseController,
 		ProgramController,
+		CourseController,
+		GraphController,
+		LinkController,
 		UserController
 	} from '$scripts/controllers'
 
@@ -33,12 +35,16 @@
 			awaited_course,
 			awaited_courses,
 			awaited_programs,
-			awaited_users
+			awaited_users,
+			awaited_graphs,
+			awaited_links
 		] = await Promise.all([
 			data.course,
 			data.courses,
 			data.programs,
-			data.users
+			data.users,
+			data.graphs,
+			data.links
 		])
 
 		// Revive controllers into stores
@@ -48,6 +54,8 @@
 		awaited_programs.forEach(program => ProgramController.revive(cache, program))
 		awaited_courses.forEach(course => CourseController.revive(cache, course))
 		awaited_users.forEach(user => UserController.revive(cache, user))
+		awaited_graphs.forEach(graph => GraphController.revive(cache, graph))
+		awaited_links.forEach(link => LinkController.revive(cache, link))
 	}
 
 	// Initialization
