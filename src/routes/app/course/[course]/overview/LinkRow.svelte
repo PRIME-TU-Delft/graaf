@@ -25,12 +25,14 @@
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
+	import copy_icon from '$assets/copy-icon.svg'
 
 	// Helpers
 	class EmbedModal extends FormModal {
 		lecture?: LectureController
-		view: EditorView | null = 'domains'
+		view: EditorView | null = 'lectures'
 		height: number = 500
+		copied: boolean = false
 
 		constructor() {
 			super()
@@ -125,6 +127,22 @@
 		/>
 
 		<Textarea readonly id="embed" value={embed_modal.embed} />
+
+		<footer>
+			<Button
+				on:click={async () => {
+					embed_modal.copied = true
+					await navigator.clipboard.writeText(embed_modal.embed)
+					setTimeout(() => embed_modal.copied = false, 2000)
+				}}
+			>
+				{#if embed_modal.copied}
+					Embed Copied!
+				{:else}
+					Copy Embed
+				{/if}
+			</Button>
+		</footer>
 	</form>
 </Modal>
 
@@ -209,5 +227,5 @@
 
 		&:last-child
 			padding-bottom: $input-thin-padding
-
+	
 </style>

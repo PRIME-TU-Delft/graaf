@@ -26,6 +26,7 @@
 		/>
 
 	<button
+		class="copy-button"
 		on:click={async () => {
 			copied = true
 			await navigator.clipboard.writeText(url)
@@ -77,7 +78,7 @@
 			color: $dark-gray
 			cursor: text
 
-		button
+		.copy-button
 			position: absolute
 			top: 0
 			right: 0

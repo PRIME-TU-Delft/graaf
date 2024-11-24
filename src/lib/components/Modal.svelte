@@ -145,9 +145,10 @@
 		:global(footer)
 			display: flex
 			flex-flow: row nowrap
-			grid-column: content
 			gap: $form-medium-gap
+			grid-column: content
 
+			width: 100%
 			margin-top: $form-medium-gap
 
 
