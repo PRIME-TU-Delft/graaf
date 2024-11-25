@@ -2,22 +2,19 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { courses } from './stores'
+	import { courses, query } from './stores'
 
 	// Components
 	import Grid from './Grid.svelte'
+
 	import Card from '$components/Card.svelte'
 
-	// Exports
-	export let query: string
-
-	$: filtered_courses = $courses.filter(course => course.matchesQuery(query))
+	// Main
+	$: filtered_courses = $courses.filter(course => course.matchesQuery($query))
 
 </script>
 
-
 <!-- Markup -->
-
 
 <Card>
 	<h3 slot="header"> My Courses </h3>

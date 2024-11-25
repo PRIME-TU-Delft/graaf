@@ -4,57 +4,46 @@
 
 	// Internal dependencies
 	import { program } from './stores'
-	import { SimpleModal } from '$scripts/modals'
 	import type { CourseController } from '$scripts/controllers'
 
 	// Components
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	// Assets
-	import trashIcon from '$assets/trash-icon.svg'
+	import trash_icon from '$assets/trash-icon.svg'
 
-	// Helpers
-	class UnassignModal extends SimpleModal {
-		async submit() {
-			this.disabled = true
-			unassign_modal = unassign_modal // Trigger reactivity
-			$program.unassignCourse(course)
-			await $program.save()
-			$program = $program // Trigger reactivity
-			this.hide()
-		}
-	}
-
-	// Exports
+	// Main
 	export let course: CourseController
-
-	// Variables
-	let unassign_modal = new UnassignModal()
+	let unassign_modal: SimpleModal
 
 </script>
 
-
 <!-- Markup -->
 
-<Modal bind:this={unassign_modal.modal}>
+<SimpleModal bind:this={unassign_modal}>
 	<h3 slot="header"> Unnassign Course </h3>
 	Are you certain you want to unnassign {course.code} {course.name} from this program?
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => unassign_modal.hide()}> Cancel </LinkButton>
+		<LinkButton
+			on:click={() => unassign_modal.hide()}
+		> Cancel </LinkButton>
 		<Button
-			disabled={unassign_modal.disabled}
-			on:click={async () => await unassign_modal.submit()}
+			on:click={async () => {
+				$program.unassignCourse(course)
+				await $program.save()
+				$program = $program // Trigger reactivity
+			}}
 		> Unassign </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
-<span class="course-row">
-	<IconButton 
-		src={trashIcon}
+<div class="row">
+	<IconButton
+		src={trash_icon}
 		description="Unassign course"
 		on:click={() => unassign_modal.show()}
 	/>
@@ -64,18 +53,16 @@
 	<LinkButton href="/app/course/{course.id}/settings">
 		Course Settings
 	</LinkButton>
-</span>
-
+</div>
 
 <!-- Styles -->
-
 
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.course-row
+	.row
 		display: grid
 		grid-template: "trash name settings" auto / $total-icon-size 1fr max-content
 		grid-gap: $form-small-gap
@@ -88,10 +75,10 @@
 		color: $dark-gray
 		border-bottom: 1px solid $gray
 
-		&:first-of-type
+		&:first-child
 			margin-top: -$input-thin-padding
 
-		&:last-of-type
+		&:first-child
 			border-bottom: none
 			margin-bottom: -$input-thin-padding
 

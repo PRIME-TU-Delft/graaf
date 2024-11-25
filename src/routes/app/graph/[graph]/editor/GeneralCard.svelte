@@ -9,37 +9,41 @@
 	import { Severity } from '$scripts/validation'
 
 	// Components
-	import Feedback from '$components/Feedback.svelte'
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
+	import Feedback from '$components/Feedback.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 	import Card from '$components/Card.svelte'
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
 
 	// Variables
-	let delete_modal: Modal
+	let delete_modal: SimpleModal
 
 </script>
 
 
 <!-- Markup -->
 
-<Modal bind:this={delete_modal}>
+<SimpleModal bind:this={delete_modal}>
 	<h3 slot="header"> Delete Graph </h3>
 	Are you certain you want to archive this graph?
 	When you archive a graph, it, and all associated courses and graphs, will no longer be visible to anyone except super-admins. Only they can restore them.
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={async () => {
-			await $graph.delete()
-			goto(`/app/course/${$graph.course_id}/overview`)
-		}}> Delete </Button>
+		<LinkButton
+			on:click={() => delete_modal.hide()}
+		> Cancel </LinkButton>
+		<Button
+			on:click={async () => {
+				await $graph.delete()
+				goto(`/app/course/${$graph.course_id}/overview`)
+			}}
+		> Delete </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
 <Card>
 	<svelte:fragment slot="header">

@@ -1,100 +1,88 @@
 
-// External imports
-import type Modal from '$components/Modal.svelte'
-
-// Internal imports
-import { Validation, Severity } from './validation'
-
+// Internal dependencies
+import type { Validation } from './validation'
 
 // --------------------> Classes
 
-export abstract class SimpleModal {
-	disabled: boolean = false
-	modal?: Modal
+export abstract class AbstractFormModal {
+	private _changed: { [key: string]: boolean } = {}
+	private _defaults: { [key: string]: any } = {}
 
-	show() {
-		this.modal?.show()
+	public show = () => {} // To be overwritten by the FormModal component
+	public hide = () => {} // To be overwritten by the FormModal component
+
+	/**
+	 * Check if a property is a field of the form
+	 * @param property The property to check
+	 * @returns True if the property is a field, false otherwise
+	 */
+
+	private isField(property: string): boolean {
+		return this.hasOwnProperty(property)
+			&& property !== '_defaults' 
+			&& property !== '_changed'
+			&& property !== 'show'
+			&& property !== 'hide'
 	}
 
-	hide() {
-		this.modal?.hide()
-		this.disabled = false
-	}
-
-	abstract submit(): Promise<void>
-}
-
-export abstract class FormModal {
-	private defaults: { [key: string]: any } = {}
-	private changed: { [key: string]: boolean } = {}
-	private _disabled: boolean = false
-	private _modal?: Modal
-
-	get disabled() {
-		return this._disabled || this.validate().severity === Severity.error
-	}
-
-	set disabled(disabled: boolean) {
-		this._disabled = disabled
-	}
-
-	get modal() {
-		return this._modal
-	}
-
-	set modal(modal: Modal | undefined) {
-		this._modal = modal
-		this.modal?.setHideCallback(() => this.reset())
-	}
+	/**
+	 * Initialize the form by registering all fields and their default values.
+	 * This method should be called in the constructor of the child class.
+	 */
 
 	protected initialize() {
 		for (const property in this) {
 			if (this.isField(property)) {
-				this.defaults[property] = this[property]
-				this.changed[property] = false
+				this._defaults[property] = this[property]
+				this._changed[property] = false
 			}
 		}
 	}
 
-	protected reset() {
-		this.disabled = false
-		for (const property in this) {
-			if (this.isField(property)) {
-				this[property] = this.defaults[property]
-				this.changed[property] = false
-			}
-		}
-	}
+	/**
+	 * Check if a field has changed since the form was reset
+	 * @param property The field to check
+	 * @returns True if the field has changed, false otherwise
+	 * @throws Error if the property is not a field of the form
+	 */
 
 	protected hasChanged(property: string): boolean {
+		if (!this.isField(property))
+			throw new Error(`Property "${property}" is not a field of the form`)
+		if (this._changed[property])
+			return true
+
 		const cast = property as Extract<keyof this, string>
-		if (this[cast] !== this.defaults[property])
-			this.changed[property] = true
-		return this.changed[property]
+		if (this[cast] !== this._defaults[property])
+			this._changed[property] = true
+		return this._changed[property]
 	}
 
-	protected touchAll() {
+	/**
+	 * Mark all fields as changed
+	 */
+
+	public touchAll() {
 		for (const property in this) {
 			if (this.isField(property)) {
-				this.changed[property] = true
+				this._changed[property] = true
 			}
 		}
 	}
 
-	private isField(property: string): boolean {
-		return property !== '_modal' && property !== 'modal' 
-			&& property !== '_disabled' && property !== 'disabled'
-			&& property !== 'defaults' 
-			&& property !== 'changed' 
-	}
+	/**
+	 * Reset the form to its default values, marking all fields as unchanged
+	 */
 
-	show() {
-		this.modal?.show()
-	}
-
-	hide() {
-		this.modal?.hide()
+	public reset() {
+		for (const property in this) {
+			if (this.isField(property)) {
+				this[property] = this._defaults[property]
+				this._changed[property] = false
+			}
+		}
 	}
 
 	abstract validate(): Validation
+	abstract submit(): Promise<void>
 }

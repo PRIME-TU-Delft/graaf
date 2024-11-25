@@ -50,15 +50,13 @@
 		awaited_users.forEach(user => UserController.revive(cache, user))
 	}
 
-	// Initialization
+	// Main
 	export let data: PageData
 	const cache = new ControllerCache()
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#await revive()}
 	<Loading />

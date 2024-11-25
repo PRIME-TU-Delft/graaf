@@ -3,54 +3,45 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-	import { SimpleModal } from '$scripts/modals'
 	import type { SubjectController } from '$scripts/controllers'
 
 	// Components
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
-
-	// Helpers
-	class DeleteModal extends SimpleModal {
-		async submit() {
-			this.disabled = true
-			delete_modal = delete_modal // Trigger reactivity
-			await subject.delete()
-			$graph = $graph // Trigger reactivity
-			this.hide()
-		}
-	}
 
 	// Exports
 	export let subject: SubjectController
 
 	// Modal
-	let delete_modal = new DeleteModal()
+	let delete_modal: SimpleModal
 
 </script>
 
-
 <!-- Markup -->
 
-<Modal bind:this={delete_modal.modal}>
+<SimpleModal bind:this={delete_modal}>
 	<h3 slot="header"> Delete Subject </h3>
 	Are you sure you want to delete this subject? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
+		<LinkButton
+			on:click={() => delete_modal.hide()}
+		> Cancel </LinkButton>
 		<Button
-			disabled={delete_modal.disabled}
-			on:click={async () => await delete_modal.submit()}
+			on:click={async () => {
+				await subject.delete()
+				$graph = $graph // Trigger reactivity
+			}}
 		> Delete </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
 <div class="subject-row">
 	<IconButton scale

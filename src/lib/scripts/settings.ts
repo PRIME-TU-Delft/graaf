@@ -22,7 +22,7 @@ export const MAX_NODE_NAME_LENGTH: Scalar = 35
 export const MAX_LECTURE_NAME_LENGTH: Scalar = 50
 
 export const LIST_FLIP_DURATION: Milliseconds = 150
-export const FEEDBACK_FADE_DURATION: Milliseconds = 500
+export const FEEDBACK_FADE_DURATION: Milliseconds = 100
 
 // -------------------> Editor settings
 

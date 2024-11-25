@@ -27,10 +27,10 @@
 	import LectureTab from './LectureTab.svelte'
 	import LectureHeader from './LectureHeader.svelte'
 
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 	import Graph from '$components/Graph.svelte'
 
 	// Assets
@@ -57,7 +57,7 @@
 	let editor_type = search_params.get('type') as EditorType
 	let editor_view = search_params.get('view') as EditorView
 
-	let autolayout_modal: Modal
+	let autolayout_modal: SimpleModal
 
 	navigateEditor(
 		validEditorType(editor_type) ? editor_type : 'data',
@@ -66,7 +66,9 @@
 
 </script>
 
-<Modal bind:this={autolayout_modal}>
+<!-- Markup -->
+
+<SimpleModal bind:this={autolayout_modal}>
 	<h3 slot="header"> Autolayout </h3>
 	Are you certain you want to start the autolayout process? This will irreversibly rearrange all nodes and relations in the graph.
 
@@ -81,13 +83,17 @@
 	</div>
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => autolayout_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={() => {
-			graphSVG.toggleAutolayout()
-			autolayout_modal.hide()
-		}}> Start Autolayout </Button>
+		<LinkButton
+			on:click={() => autolayout_modal.hide()}
+		> Cancel </LinkButton>
+		<Button
+			on:click={() => {
+				graphSVG.toggleAutolayout()
+				autolayout_modal.hide()
+			}}
+		> Start Autolayout </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
 <div class="tabular">
 	<div class="sticky" id="sticky-tabular-header">

@@ -7,10 +7,10 @@
 
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
-	import { programs, courses } from './stores'
+	import { programs, courses, query } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
-	import { FormModal } from '$scripts/modals'
+	import { AbstractFormModal } from '$scripts/modals'
 
 	import {
 		ControllerCache,
@@ -23,25 +23,20 @@
 	import CoursesCard from './CoursesCard.svelte'
 	import ProgramCard from './ProgramCard.svelte'
 
-	import Textfield from '$components/Textfield.svelte'
+	import FormModal from '$components/FormModal.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
-	import Feedback from '$components/Feedback.svelte'
+	import Textfield from '$components/Textfield.svelte'
 	import Loading from '$components/Loading.svelte'
 	import Layout from '$components/Layout.svelte'
 	import Navbar from '$components/Navbar.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
 
-	// Helpers
-	class ProgramModal extends FormModal {
+	// Modals
+	class ProgramModal extends AbstractFormModal {
 		name: string = ''
-
-		get trimmed_name() {
-			return this.name.trim()
-		}
 
 		constructor() {
 			super()
@@ -53,17 +48,17 @@
 
 			// Validate name
 			if (this.hasChanged('name')) {
-				if (this.trimmed_name === '') {
+				if (this.name.trim() === '') {
 					validation.add({
 						severity: Severity.error,
 						short: 'Program name is required'
 					})
-				} else if (this.trimmed_name.length > settings.MAX_PROGRAM_NAME_LENGTH) {
+				} else if (this.name.trim().length > settings.MAX_PROGRAM_NAME_LENGTH) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Program name is too long'
 					})
-				} else if ($programs.some(program => program.name === this.trimmed_name)) {
+				} else if ($programs.some(program => program.name === this.name.trim())) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Program name isn\'t unique'
@@ -75,30 +70,14 @@
 		}
 
 		async submit() {
-			this.touchAll()
-			if (this.validate().severity === Severity.error) {
-				program_modal = program_modal // Trigger reactivity
-				return
-			}
-
-			// Create program
-			const program = ProgramController.create(cache, this.trimmed_name)
-			this.hide()
-			$programs = [...$programs, await program] // Trigger reactivity
+			const program = await ProgramController.create(cache, this.name.trim())
+			$programs = [...$programs, program] // Trigger reactivity
 		}
 	}
 
-	class CourseModal extends FormModal {
+	class CourseModal extends AbstractFormModal {
 		code: string = ''
 		name: string = ''
-
-		get trimmed_code() {
-			return this.code.trim()
-		}
-
-		get trimmed_name() {
-			return this.name.trim()
-		}
 
 		constructor() {
 			super()
@@ -110,22 +89,22 @@
 
 			// Validate code
 			if (this.hasChanged('code')) {
-				if (this.trimmed_code === '') {
+				if (this.code.trim() === '') {
 					validation.add({
 						severity: Severity.error,
 						short: 'Course code is required'
 					})
-				} else if (!settings.COURSE_CODE_REGEX.test(this.trimmed_code)) {
+				} else if (!settings.COURSE_CODE_REGEX.test(this.code.trim())) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Course code is invalid'
 					})
-				} else if (this.trimmed_code.length > settings.MAX_COURSE_CODE_LENGTH) {
+				} else if (this.code.trim().length > settings.MAX_COURSE_CODE_LENGTH) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Course code is too long'
 					})
-				} else if ($courses.some(course => course.code === this.trimmed_code)) {
+				} else if ($courses.some(course => course.code === this.code.trim())) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Course code isn\'t unique'
@@ -135,17 +114,17 @@
 
 			// Validate name
 			if (this.hasChanged('name')) {
-				if (this.trimmed_name === '') {
+				if (this.name.trim() === '') {
 					validation.add({
 						severity: Severity.error,
 						short: 'Course name is required'
 					})
-				} else if (this.trimmed_name.length > settings.MAX_COURSE_NAME_LENGTH) {
+				} else if (this.name.trim().length > settings.MAX_COURSE_NAME_LENGTH) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Course name is too long'
 					})
-				} else if ($courses.some(course => course.name === this.trimmed_name)) {
+				} else if ($courses.some(course => course.name === this.name.trim())) {
 					validation.add({
 						severity: Severity.warning,
 						short: 'Course name isn\'t unique'
@@ -157,16 +136,8 @@
 		}
 
 		async submit() {
-			this.touchAll()
-			if (this.validate().severity === Severity.error) {
-				course_modal = course_modal // Trigger reactivity
-				return
-			}
-
-			// Create course
-			const course = CourseController.create(cache, this.trimmed_code, this.trimmed_name)
-			this.hide()
-			$courses = [...$courses, await course] // Trigger reactivity
+			const course = await CourseController.create(cache, this.code.trim(), this.name.trim())
+			$courses = [...$courses, course] // Trigger reactivity
 		}
 	}
 
@@ -192,63 +163,45 @@
 		awaited_admins.forEach(admin => UserController.revive(cache, admin))
 	}
 
-	// Initialization
+	// Main
 	export let data: PageData
+
+	const program_modal = new ProgramModal()
+	const course_modal = new CourseModal()
 	const cache = new ControllerCache()
-
-	// Modals
-	let program_modal = new ProgramModal()
-	let course_modal = new CourseModal()
-
-	// Variables
-	let query: string = ''
 
 </script>
 
-
 <!-- Markup -->
 
-
-<Modal bind:this={program_modal.modal}>
+<FormModal controller={program_modal}>
 	<h3 slot="header"> Create Program </h3>
 
 	Programs are collections of Courses, usually pertaining to the same field of study. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="name"> Program Name </label>
 		<Textfield id="name" bind:value={program_modal.name} />
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				disabled={program_modal.validate().severity === Severity.error}
-				on:click={async () => await program_modal.submit()}
-			> Create </Button>
-			<Feedback data={program_modal.validate()} />
-	</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit"> Create </svelte:fragment>
+</FormModal>
 
-<Modal bind:this={course_modal.modal}>
+<FormModal controller={course_modal}>
 	<h3 slot="header"> Create Course </h3>
 
 	Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="code"> Course Code </label>
 		<Textfield id="code" bind:value={course_modal.code} />
 
 		<label for="name"> Course Name </label>
 		<Textfield id="name" bind:value={course_modal.name} />
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				disabled={course_modal.validate().severity === Severity.error}
-				on:click={async () => await course_modal.submit()}
-			> Create </Button>
-			<Feedback data={course_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit"> Create </svelte:fragment>
+</FormModal>
 
 {#await revive()}
 	<Loading />
@@ -272,13 +225,13 @@
 
 			<div class="flex-spacer" />
 
-			<Searchbar placeholder="Search courses" bind:value={query} />
+			<Searchbar placeholder="Search courses" bind:value={$query} />
 		</svelte:fragment>
 
-		<CoursesCard {query} />
+		<CoursesCard />
 
 		{#each $programs as program}
-			<ProgramCard {program} {query} />
+			<ProgramCard {program} />
 		{/each}
 	</Layout>
 {/await}

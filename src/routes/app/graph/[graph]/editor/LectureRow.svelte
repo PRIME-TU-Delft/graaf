@@ -3,7 +3,7 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-	import { FormModal, SimpleModal } from '$scripts/modals'
+	import { AbstractFormModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
 	import type { 
@@ -12,13 +12,13 @@
 	} from '$scripts/controllers'
 	
 	// Components
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import FormModal from '$components/FormModal.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
-	import Feedback from '$components/Feedback.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
@@ -27,8 +27,8 @@
 	// Exports
 	export let lecture: LectureController
 
-	// Helpers
-	class AssignSubjectModal extends FormModal {
+	// Modals
+	class AssignSubjectModal extends AbstractFormModal {
 		subject: SubjectController | null = null
 
 		constructor() {
@@ -50,43 +50,25 @@
 		}
 
 		async submit() {
-			this.touchAll() // Validate all fields
-			if (this.validate().severity === Severity.error) {
-				assign_subject_modal = assign_subject_modal // Trigger reactivity
-				return
-			}
-
-			// Assign subject
-			this.disabled = true
-			assign_subject_modal = assign_subject_modal // Trigger reactivity
-			lecture.assignSubject(this.subject!)
+			lecture.assignSubject(this.subject as SubjectController)
 			await lecture.save()
 			$graph = $graph
-			this.hide()
 		}
 	}
 
-	class DeleteModal extends SimpleModal {
-		async submit() {
-			this.disabled = true
-			delete_modal = delete_modal // Trigger reactivity
-			await lecture.delete()
-			$graph = $graph
-			this.hide()
-		}
-	}
-
-	// Modal
-	let delete_modal = new DeleteModal()
-	let assign_subject_modal = new AssignSubjectModal()
+	// Main
+	const assign_subject_modal = new AssignSubjectModal()
+	let delete_modal: SimpleModal
 
 </script>
 
-<Modal bind:this={assign_subject_modal.modal}>
+<!-- Markup -->
+
+<FormModal controller={assign_subject_modal}>
 	<h3 slot="header"> Assign Subject </h3>
 	Assign a subject to this lecture.
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="subject"> Target Subject </label>
 		<Dropdown
 			id="subject"
@@ -94,29 +76,29 @@
 			options={lecture.subject_options}
 			bind:value={assign_subject_modal.subject}
 		/>
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				disabled={assign_subject_modal.disabled}
-				on:click={async () => await assign_subject_modal.submit()}
-			> Assign </Button>
-			<Feedback data={assign_subject_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit">
+		Assign
+	</svelte:fragment>
+</FormModal>
 
-<Modal bind:this={delete_modal.modal}>
+<SimpleModal bind:this={delete_modal}>
 	<h3 slot="header"> Delete Lecture </h3>
 	Are you sure you want to delete this lecture? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
+		<LinkButton
+			on:click={() => delete_modal.hide()}
+		> Cancel </LinkButton>
 		<Button
-			disabled={delete_modal.disabled}
-			on:click={async () => await delete_modal.submit()}
+			on:click={async () => {
+				await lecture.delete()
+				$graph = $graph // Trigger reactivity
+			}}
 		> Delete </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
 <div class="lecture-row">
 	<IconButton scale

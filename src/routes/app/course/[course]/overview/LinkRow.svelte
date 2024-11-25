@@ -6,29 +6,29 @@
 
 	import { course } from './stores'
 	import { Validation, Severity } from '$scripts/validation'
-	import { FormModal, SimpleModal } from '$scripts/modals'
+	import { AbstractFormModal } from '$scripts/modals'
 
 	import type { LectureController, LinkController } from '$scripts/controllers'
 	import type { EditorView } from '$scripts/types'
 
 	// Components
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import FormModal from '$components/FormModal.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Textarea from '$components/Textarea.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Feedback from '$components/Feedback.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	import LinkURL from './LinkURL.svelte'
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
-	import copy_icon from '$assets/copy-icon.svg'
 
-	// Helpers
-	class EmbedModal extends FormModal {
+	// Modals
+	class EmbedModal extends AbstractFormModal {
 		lecture?: LectureController
 		view: EditorView | null = 'lectures'
 		height: number = 500
@@ -67,56 +67,41 @@
 
 			return validation
 		}
-	}
 
-	class DeleteModal extends SimpleModal {
 		async submit() {
-			this.disabled = true
-			delete_modal = delete_modal // Trigger reactivity
-			await link.delete()
-			$course = $course // Trigger reactivity
-			this.hide()
+			embed_modal.copied = true
+			await navigator.clipboard.writeText(embed_modal.embed)
+			await new Promise(resolve => setTimeout(resolve, 2500))
+			embed_modal.copied = false
 		}
 	}
 
-	// Exports
+	// Main
 	export let link: LinkController
 
-	// Modal
-	let embed_modal = new EmbedModal()
-	let delete_modal = new DeleteModal()
-
-	// Options
-	let view_options = [
+	const embed_modal = new EmbedModal()
+	const view_options = [
 		{ value: 'domains', label: 'Domains', validation: Validation.success() },
 		{ value: 'subjects', label: 'Subjects', validation: Validation.success() },
 		{ value: 'lectures', label: 'Lectures', validation: Validation.success() }
 	]
 
-</script>
+	let delete_modal: SimpleModal
 
+</script>
 
 <!-- Markup -->
 
-<Modal bind:this={embed_modal.modal}>
+<FormModal controller={embed_modal}>
 	<h3 slot="header"> Create Embed </h3>
 	Create an embed to display this graph in your own website. You can customize the initial state and the height of the IFrame.
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="height"> IFrame Height </label>
-		<Textfield 
-			id="height" 
-			type="number" 
-			bind:value={embed_modal.height}
-		/>
+		<Textfield id="height" type="number" bind:value={embed_modal.height} />
 
 		<label for="view"> Initial View </label>
-		<Dropdown 
-			id="view"
-			placeholder="Select an initial view"
-			bind:value={embed_modal.view}
-			options={view_options}
-		/>
+		<Dropdown id="view" placeholder="Select an initial view" bind:value={embed_modal.view} options={view_options} />
 
 		<label for="lecture"> Initial Lecture </label>
 		<Dropdown 
@@ -126,40 +111,39 @@
 			options={link.graph?.lecture_options || []}
 		/>
 
+		<div /> <!-- Spacer -->
+
 		<Textarea readonly id="embed" value={embed_modal.embed} />
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				on:click={async () => {
-					embed_modal.copied = true
-					await navigator.clipboard.writeText(embed_modal.embed)
-					setTimeout(() => embed_modal.copied = false, 2000)
-				}}
-			>
-				{#if embed_modal.copied}
-					Embed Copied!
-				{:else}
-					Copy Embed
-				{/if}
-			</Button>
-		</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit">
+		{#if embed_modal.copied}
+			Embed Copied!
+		{:else}
+			Copy Embed
+		{/if}
+	</svelte:fragment>
+</FormModal>
 
-<Modal bind:this={delete_modal.modal}>
+<SimpleModal bind:this={delete_modal}>
 	<h3 slot="header"> Delete Link </h3>
-	Are you sure you want to delete this link? This action cannot be undone.
+	Are you sure you want to delete this link? This will invalidate every reference and embed associated to this link. This action cannot be undone.
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
+		<LinkButton
+			on:click={() => delete_modal.hide()}
+		> Cancel </LinkButton>
+
 		<Button
-			disabled={delete_modal.disabled}
-			on:click={async () => await delete_modal.submit()}
+			on:click={async () => {
+				await link.delete()
+				$course = $course // Trigger reactivity
+			}}
 		> Delete </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
-<div class="link-row">
+<div class="row">
 	<Feedback compact data={link.validate(false)} animate={false} />
 
 	<IconButton scale
@@ -197,6 +181,7 @@
 	/>
 
 	<LinkURL url={link.url} />
+
 	<Button
 		disabled={link.validate().severity === Severity.error}
 		on:click={() => embed_modal.show()}
@@ -212,7 +197,7 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.link-row
+	.row
 		display: grid
 		grid-template: "validation delete name graph url embed" auto / $total-icon-size $total-icon-size 1fr 1fr max-content max-content
 		grid-gap: $form-small-gap

@@ -6,32 +6,24 @@
 	import { course } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
-	import { FormModal } from '$scripts/modals'
-
-	import {
-		GraphController
-	} from '$scripts/controllers'
+	import { GraphController } from '$scripts/controllers'
+	import { AbstractFormModal } from '$scripts/modals'
 
 	// Components
 	import GraphRow from './GraphRow.svelte'
 
-	import Textfield from '$components/Textfield.svelte'
+	import FormModal from '$components/FormModal.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
-	import Feedback from '$components/Feedback.svelte'
+	import Textfield from '$components/Textfield.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 	import Card from '$components/Card.svelte'
 
-    // Assets
+	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
 
-    // Helpers
-	class GraphModal extends FormModal {
+	// Modals
+	class GraphModal extends AbstractFormModal {
 		name: string = ''
-		
-		get trimmed_name() {
-			return this.name.trim()
-		}
 
 		constructor() {
 			super()
@@ -42,17 +34,17 @@
 			const validation = new Validation()
 
 			if (this.hasChanged('name')) {
-				if (this.trimmed_name === '') {
+				if (this.name.trim() === '') {
 					validation.add({
 						severity: Severity.error,
 						short: 'Graph name is required'
 					})
-				} else if (this.trimmed_name.length > settings.MAX_GRAPH_NAME_LENGTH) {
+				} else if (this.name.trim().length > settings.MAX_GRAPH_NAME_LENGTH) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Graph name is too long'
 					})
-				} else if ($course.graphs.some(graph => graph.name === this.trimmed_name)) {
+				} else if ($course.graphs.some(graph => graph.name === this.name.trim())) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Graph name isn\'t unique'
@@ -64,61 +56,53 @@
 		}
 
 		async submit() {
-			this.touchAll()
-			if (this.validate().severity === Severity.error) {
-				graph_modal = graph_modal // Trigger reactivity
-				return
-			}
-
-			// Create graph
-			this.disabled = true
-			graph_modal = graph_modal // Trigger reactivity
-			await GraphController.create($course.cache, $course, this.trimmed_name)
+			await GraphController.create($course.cache, $course, this.name.trim())
 			$course = $course // Trigger reactivity
-			graph_modal.hide()
 		}
 	}
 
-    // Variables
-    let graph_modal = new GraphModal()
-    let graph_query = ''
-    $: filtered_graphs = $course.graphs.filter(graph => graph.matchesQuery(graph_query))
+	// Main
+	const graph_modal = new GraphModal()
+
+	let query = ''
+
+	$: filtered_graphs = $course.graphs.filter(graph => graph.matchesQuery(query))
 
 </script>
 
-<Modal bind:this={graph_modal.modal}>
+<!-- Markup -->
+
+<FormModal controller={graph_modal}>
 	<h3 slot="header"> Create Graph </h3>
 	Add a new graph to this course. Graphs are visual representations of the course content. They are intended to help students understand the course structure.
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="name"> Graph Name </label>
 		<Textfield id="name" bind:value={graph_modal.name} />
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				disabled={graph_modal.disabled}
-				on:click={() => graph_modal.submit()}
-			> Create </Button>
-			<Feedback data={graph_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit">
+		Create
+	</svelte:fragment>
+</FormModal>
 
 <Card>
-    <svelte:fragment slot="header">
-        <h3 slot="header"> Graphs </h3>
-        <div class="flex-spacer" />
-        <Searchbar placeholder="Search graphs" bind:value={graph_query} />
-        <Button on:click={() => graph_modal.show()}>
-            <img src={plus_icon} alt="" /> New Graph
-        </Button>
-    </svelte:fragment>
+	<svelte:fragment slot="header">
+		<h3 slot="header"> Graphs </h3>
 
-    {#if filtered_graphs.length === 0}
-        <p class="grayed"> There's nothing here </p>
-    {:else}
-        {#each filtered_graphs as graph}
-            <GraphRow {graph} />
-        {/each}
-    {/if}
+		<div class="flex-spacer" />
+
+		<Searchbar placeholder="Search graphs" bind:value={query} />
+		<Button on:click={() => graph_modal.show()}>
+			<img src={plus_icon} alt="" /> New Graph
+		</Button>
+	</svelte:fragment>
+
+	{#if filtered_graphs.length === 0}
+		<p class="grayed"> There's nothing here </p>
+	{:else}
+		{#each filtered_graphs as graph}
+			<GraphRow {graph} />
+		{/each}
+	{/if}
 </Card>

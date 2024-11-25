@@ -5,25 +5,24 @@
 	import { course } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
-	import { FormModal } from '$scripts/modals'
+	import { AbstractFormModal } from '$scripts/modals'
 
 	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
 	import ProgramRow from './ProgramRow.svelte'
 
+	import FormModal from '$components/FormModal.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
-	import Feedback from '$components/Feedback.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 	import Card from '$components/Card.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
 
 	// Modals
-	class AddProgramModal extends FormModal {
+	class AddProgramModal extends AbstractFormModal {
 		program: ProgramController | null = null
 
 		constructor() {
@@ -47,54 +46,43 @@
 		}
 
 		async submit() {
-			this.touchAll()
-			if (this.validate().severity === Severity.error) {
-				program_modal = program_modal // Trigger reactivity
-				return
-			}
-
-			this.disabled = true
-			program_modal = program_modal // Trigger reactivity
-			$course.assignToProgram(this.program!)
+			$course.assignToProgram(this.program as ProgramController)
 			await $course.save()
 			$course = $course // Trigger reactivity
-			this.hide()
 		}
 	}
 
 
 
 	// Variables
-	let program_modal = new AddProgramModal()
+	const program_modal = new AddProgramModal()
+	
 	let query: string = ''
 
 	$: filtered_programs = $course.programs.filter(program => program.matchesQuery(query))
 
 </script>
 
-<Modal bind:this={program_modal.modal}>
+<!-- Markup -->
+
+<FormModal controller={program_modal}>
 	<h3 slot="header"> Assign to Program </h3>
 	Assign this course to a program. Programs are collections of courses that are related to each other in some way.
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="program"> Target Program </label>
-
 		<Dropdown
 			id="program"
 			placeholder="Select a program"
 			bind:value={program_modal.program}
 			options={$course.program_options}
 		/>
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				disabled={program_modal.disabled}
-				on:click={async () => await program_modal.submit()}
-			> Assign </Button>
-			<Feedback data={program_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit">
+		Assign
+	</svelte:fragment>
+</FormModal>
 
 <Card>
 	<svelte:fragment slot="header">
