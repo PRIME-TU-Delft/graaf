@@ -44,7 +44,7 @@ export const NODE_PADDING: GridUnits = 1
 export const NODE_FONT_SIZE: Pixels = 15
 export const NODE_MAX_CHARS: Scalar = 35
 export const NODE_HIGHLIGHT_DEVIATION: Pixels = 5
-export const NODE_HIGHLIGHT_OPACITY: Scalar = 0.75
+export const NODE_HIGHLIGHT_OPACITY: Scalar = 1
 export const NODE_HIGHLIGHT_COLOR: string = 'green'
 
 // Stroke settings
