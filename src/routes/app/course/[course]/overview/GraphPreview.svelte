@@ -12,6 +12,7 @@
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
+	import LinkButton from '$components/LinkButton.svelte';
 
 	// Exports
 	export let graph: GraphController
@@ -32,9 +33,7 @@
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#if visible}
 	<div class="background" />
@@ -59,6 +58,10 @@
 			> Domains </button>
 
 			<div class="toolbar">
+				<LinkButton href="/app/graph/{graph.id}/editor?type=layout&view={graphSVG.view}">
+					Edit Layout
+				</LinkButton>
+
 				<Dropdown
 					id="lecture"
 					placeholder="Select lecture"
@@ -82,9 +85,7 @@
 	</div>
 {/if}
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

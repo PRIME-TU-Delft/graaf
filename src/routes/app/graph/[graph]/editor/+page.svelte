@@ -7,7 +7,6 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
-	import { GraphSVG } from '$scripts/svg'
 
 	import {
 		ControllerCache,
