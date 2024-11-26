@@ -134,8 +134,8 @@
 					/>
 
 					<Button
-						on:click={() => graphSVG.findGraph()}
-					> Find Graph </Button>
+						on:click={() => graphSVG.centerGraph()}
+					> Center Graph </Button>
 
 					<Button
 						on:click={() => {

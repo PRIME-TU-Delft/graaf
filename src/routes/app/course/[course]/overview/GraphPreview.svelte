@@ -66,8 +66,8 @@
 					options={graph.lecture_options}
 				/>
 
-				<Button on:click={() => graphSVG.findGraph()}>
-					Find Graph
+				<Button on:click={() => graphSVG.centerGraph()}>
+					Center Graph
 				</Button>
 
 				<button class="exit" on:click={hide}>

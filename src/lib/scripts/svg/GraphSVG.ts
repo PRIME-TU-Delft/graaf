@@ -455,7 +455,7 @@ class GraphSVG {
 			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP)
 	}
 
-	findGraph() {
+	centerGraph() {
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static) return
 
 		this.state = SVGState.animating
