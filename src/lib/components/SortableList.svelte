@@ -81,7 +81,7 @@
 			data-index={index}
 			data-uuid={item.uuid}
 			on:dragover|preventDefault={onDragOver}
-			animate:flip={{ duration: settings.LIST_FLIP_DURATION }}
+			animate:flip={{ duration: settings.UNIVERSAL_FADE_DURATION }}
 		>
 			<!-- Validation -->
 			<Feedback compact animate={false} data={item.validate(false)} />

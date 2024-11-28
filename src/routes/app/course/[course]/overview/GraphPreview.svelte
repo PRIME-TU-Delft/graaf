@@ -1,18 +1,22 @@
 
 <script lang="ts">
 
+	// External dependencies
+	import { onDestroy } from 'svelte'
+
 	// Internal dependencies
-	import { GraphSVG } from '$scripts/svg'
+	import { GraphSVG, SVGState } from '$scripts/svg'
+
 	import type { GraphController } from '$scripts/controllers'
 
 	// Components
+	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
 	import Graph from '$components/Graph.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
-	import LinkButton from '$components/LinkButton.svelte';
 
 	// Exports
 	export let graph: GraphController
@@ -27,9 +31,21 @@
 		visible = false
 	}
 
+	function updateUI() {
+		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
+	}
+
 	// Variables
 	const graphSVG = new GraphSVG(graph, false)
+	let disable_graph_controls = false
 	let visible = false
+
+	// Main
+	graphSVG.subscribe(updateUI)
+
+	onDestroy(() => {
+		graphSVG.unsubscribe(updateUI)
+	})
 
 </script>
 
@@ -69,9 +85,10 @@
 					options={graph.lecture_options}
 				/>
 
-				<Button on:click={() => graphSVG.centerGraph()}>
-					Center Graph
-				</Button>
+				<Button
+					disabled={disable_graph_controls}
+					on:click={() => graphSVG.centerGraph()}
+				> Center Graph </Button>
 
 				<button class="exit" on:click={hide}>
 					<img src={plus_icon} alt="Exit icon" class="icon" />

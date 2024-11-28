@@ -4,6 +4,7 @@
 	// External dependencies
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import { onDestroy } from 'svelte'
 
 	// Internal dependencies
 	import { graph } from './stores'
@@ -50,19 +51,30 @@
 		graphSVG.view = view
 	}
 
+	function updateUI() {
+		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
+	}
+
 	// Initialization
+	const search_params = $page.url.searchParams
 	const graphSVG = new GraphSVG($graph)
 
-	const search_params = $page.url.searchParams
 	let editor_type = search_params.get('type') as EditorType
 	let editor_view = search_params.get('view') as EditorView
+	let disable_graph_controls = false
 
 	let autolayout_modal: SimpleModal
+
+	graphSVG.subscribe(updateUI)
 
 	navigateEditor(
 		validEditorType(editor_type) ? editor_type : 'data',
 		validEditorView(editor_view) ? editor_view : 'domains'
 	)
+
+	onDestroy(() => {
+		graphSVG.unsubscribe(updateUI)
+	})
 
 </script>
 
@@ -134,10 +146,12 @@
 					/>
 
 					<Button
+						disabled={disable_graph_controls}
 						on:click={() => graphSVG.centerGraph()}
 					> Center Graph </Button>
 
 					<Button
+						disabled={disable_graph_controls}
 						on:click={() => {
 							if (graphSVG.autolayout_enabled) {
 								graphSVG.toggleAutolayout()

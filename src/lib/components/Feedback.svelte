@@ -125,7 +125,7 @@
 	{#if show_success_icon}
 		<span 
 			class="success"
-			transition:fade={{ duration: animate ? settings.FEEDBACK_FADE_DURATION : 0 }}
+			transition:fade={{ duration: animate ? settings.UNIVERSAL_FADE_DURATION : 0 }}
 		>
 			<img src={success_icon} alt="" /> {success_msg}
 		</span>
@@ -139,7 +139,7 @@
 			on:click={compact ? show_all : show_errors}
 			disabled={error_disabled}
 			use:tooltip={error_tooltip}
-			transition:fade={{ duration: animate ? settings.FEEDBACK_FADE_DURATION : 0 }}
+			transition:fade={{ duration: animate ? settings.UNIVERSAL_FADE_DURATION : 0 }}
 		>
 			<img src={error_icon} alt="" /> {error_msg}
 		</button>
@@ -153,7 +153,7 @@
 			on:click={compact ? show_all : show_warnings}
 			disabled={warning_disabled}
 			use:tooltip={warning_tooltip}
-			transition:fade={{ duration: animate ? settings.FEEDBACK_FADE_DURATION : 0 }}
+			transition:fade={{ duration: animate ? settings.UNIVERSAL_FADE_DURATION : 0 }}
 		>
 			<img src={warning_icon} alt="" /> {warning_msg}
 		</button>

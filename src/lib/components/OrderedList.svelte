@@ -19,7 +19,7 @@
 
 <div class="list">
 	{#each list as item, index (item.uuid)}
-		<div class="row" animate:flip={{ duration: settings.LIST_FLIP_DURATION }}>
+		<div class="row" animate:flip={{ duration: settings.UNIVERSAL_FADE_DURATION }}>
 
 			<!-- Validation -->
 			<Feedback compact animate={false} data={item.validate(false)} />
