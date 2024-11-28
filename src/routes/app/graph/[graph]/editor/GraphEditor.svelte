@@ -253,6 +253,9 @@
 					border-width: 0 0 1px 1px
 					border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 
+					&:not(.active)
+						cursor: pointer
+
 					&.active
 						background: $white
 						border-width: 0 1px 0 1px
