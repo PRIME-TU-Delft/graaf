@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation'
 
 	// Internal dependencies
-	import { graph } from './stores.js'
+	import { graph } from './stores'
 	import { Severity } from '$scripts/validation'
 
 	// Components
