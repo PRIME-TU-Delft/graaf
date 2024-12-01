@@ -81,21 +81,6 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	.domain-row
-		display: grid
-		grid-template: "delete name style preview" auto / $total-icon-size 1fr 1fr $total-icon-size
-		grid-gap: $form-small-gap
-		place-items: center
-
-		width: 100%
-
-		color: $dark-gray
-
-		.preview
-			width: $input-icon-size
-			height: $input-icon-size
-			margin: $input-icon-padding
+	@import "./styles.sass"
+		
 </style>

@@ -60,7 +60,7 @@
 
 <svelte:document on:scroll={event => throttleEventCall(event, onScroll)} />
 
-<div class="subject-header" >
+<div class="tab-header" >
 
 	{#if above_scroll_boundry}
 		<h2> Subjects </h2>
@@ -84,15 +84,6 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	.subject-header
-		display: flex
-		flex-flow: row nowrap
-		align-content: center
-		gap: $form-medium-gap
-
-		padding: $card-thick-padding
+	@import "./styles.sass"
 
 </style>

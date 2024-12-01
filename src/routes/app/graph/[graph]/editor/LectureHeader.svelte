@@ -11,7 +11,7 @@
 
 <!-- Markdown -->
 
-<div class="lecture-header" >
+<div class="tab-header" >
 	<h2> Lectures </h2>
 
 	<div class="flex-spacer" />
@@ -23,15 +23,6 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	.lecture-header
-		display: flex
-		flex-flow: row nowrap
-		align-content: center
-		gap: $form-small-gap
-
-		padding: $card-thick-padding
+	@import "./styles.sass"
 
 </style>

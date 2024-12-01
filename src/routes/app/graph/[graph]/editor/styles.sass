@@ -1,0 +1,102 @@
+
+@use "$styles/variables.sass" as *
+@use "$styles/palette.sass" as *
+
+$left-gutter: $total-icon-size * 3 + $form-small-gap * 3
+$right-gutter: $total-icon-size + $form-small-gap
+
+.tab-header
+	display: flex
+	flex-flow: row nowrap
+	align-content: center
+	gap: $form-medium-gap
+
+	padding: $card-thick-padding
+
+.tab
+	display: flex
+	flex-flow: column nowrap
+	align-items: stretch
+	gap: $form-small-gap
+
+	padding:
+		top: 0
+		right: $card-thick-padding
+		bottom: $card-thick-padding
+		left: $card-thick-padding
+
+.grayed
+	width: auto
+	margin:
+		right: $right-gutter
+		bottom: $card-thick-padding
+		left: $left-gutter
+
+.divider
+	display: flex
+	flex-flow: row nowrap
+	align-items: center
+	justify-content: center
+	gap: $form-small-gap
+
+	margin:
+		top: $card-thick-padding
+		right: $right-gutter
+		bottom: $card-thick-padding
+		left: $left-gutter
+
+	color: $dark-gray
+
+	.line
+		flex-grow: 1
+		border-top: 1px dashed $dark-gray
+
+.preview
+	width: $input-icon-size
+	height: $input-icon-size
+	margin: $input-icon-padding
+
+.list-header
+	padding-left: 2 * ($total-icon-size + $form-small-gap)
+
+.domain-row, .subject-row, .relation-row
+	display: grid
+	grid-gap: $form-small-gap
+	place-items: center start
+
+	width: 100%
+
+	color: $dark-gray
+
+.domain-row
+	grid-template: "delete name style preview" auto / $total-icon-size 1fr 1fr $total-icon-size
+
+.subject-row
+	grid-template: "delete name style preview" auto / $total-icon-size 1fr 1fr $total-icon-size
+
+.relation-row
+	grid-template: "delete parent parent-preview child child-preview" auto / $total-icon-size 1fr $total-icon-size 1fr $total-icon-size
+
+.row-button
+	display: flex
+	align-items: center
+	justify-content: center
+
+	padding: $input-thin-padding $input-thick-padding
+	margin:
+		top: 0
+		right: $right-gutter
+		bottom: 0
+		left: $left-gutter
+
+	border: 1px solid $gray
+	border-radius: $border-radius
+	cursor: pointer
+
+	&:hover
+		background-color: $light-gray
+
+	img
+		width: $input-icon-size
+		filter: $dark-gray-filter
+		pointer-events: none

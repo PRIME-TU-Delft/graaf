@@ -8,7 +8,9 @@
 
 	// Components
     import LectureRow from './LectureRow.svelte'
+
 	import SortableList from '$components/SortableList.svelte'
+	import Feedback from '$components/Feedback.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
@@ -20,25 +22,32 @@
 
 <!-- Markdown -->
 
-<div class="lecture-tab">
+<div class="tab">
 
 	<!-- Lectures -->
 	{#if filtered_lectures.length == 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
-		<SortableList let:item 
+		<SortableList
 			list={filtered_lectures} 
 			on:rearrange={async event => {
 				await $graph.reorderLectures(event.detail)
 				$graph = $graph // Trigger reactivity
 			}}
 		>
-			<LectureRow lecture={item} />
+			<svelte:fragment slot="left" let:item>
+				<Feedback compact data={item.validate(false)} />
+			</svelte:fragment>
+
+			<svelte:fragment slot="right" let:item>
+				<LectureRow lecture={item} />
+			</svelte:fragment>
 		</SortableList>
 	{/if}
 
 	<!-- New lecture -->
 	<button
+		class="row-button"
 		on:click={async () => {
 			await LectureController.create($graph.cache, $graph)
 			$graph = $graph // Trigger reactivity
@@ -52,47 +61,6 @@
 
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	$left-gutter: $total-icon-size * 3 + $form-small-gap * 3
-	$right-gutter: $total-icon-size + $form-small-gap
-
-	.lecture-tab
-		display: flex
-		flex-flow: column nowrap
-		gap: $form-small-gap
-		padding: 0 $card-thick-padding $card-thick-padding
-
-		.grayed
-			width: auto
-			margin:
-				right: $right-gutter
-				bottom: $card-thick-padding
-				left: $left-gutter
-
-		button
-			display: flex
-			align-items: center
-			justify-content: center
-
-			width: calc( 100% - $left-gutter - $right-gutter )
-			padding: $input-thin-padding $input-thick-padding
-			margin:
-				top: 0
-				right: $right-gutter
-				bottom: 0
-				left: $left-gutter
-
-			border: 1px solid $gray
-			border-radius: $border-radius
-			cursor: pointer
-
-			&:hover
-				background-color: $light-gray
-
-			img
-				width: $input-icon-size
-				filter: $dark-gray-filter
+	@import "./styles.sass"
 
 </style>

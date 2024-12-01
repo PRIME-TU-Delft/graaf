@@ -11,9 +11,6 @@
 	import * as settings from '$scripts/settings'
 	import type { Validation } from '$scripts/validation'
 
-	// Components
-	import Feedback from '$components/Feedback.svelte'
-
 	// Assets
 	import dnd_icon from '$assets/dnd-icon.svg'
 
@@ -31,17 +28,16 @@
 		const data = getDataset(target)
 
 		origin = data.index
-
 	}
 
 	function onDragOver(event: DragEvent) {
 		const target = event.target as HTMLElement
 		const data = getDataset(target)
 
-		if (origin === null 
-		 || data.index === origin 
-		 || data.index > origin && event.offsetY < target.clientHeight - DROPZONE
-		 || data.index < origin && event.offsetY > DROPZONE
+		if (origin === null // Not dragging (very strange case)
+		 || data.index === origin // Dragging over itself
+		 || data.index > origin && event.offsetY < target.clientHeight - DROPZONE // Dragging down, but not close enough
+		 || data.index < origin && event.offsetY > DROPZONE // Dragging up, but not close enough
 		) return
 
 		rearrange(origin, data.index)
@@ -60,52 +56,48 @@
 		list = new_list
 	}
 
-	// Variables
+	// Main
+	type T = $$Generic
 	export let list: T[] & { uuid: string, validate: (strict: boolean) => Validation }[]
-
-	const dispatch = createEventDispatcher<{rearrange: T[]}>()
-	
 	let origin: number | null = null // Index of the element being dragged
 
-	type T = $$Generic
+	const dispatch = createEventDispatcher<{rearrange: T[]}>()
 
 </script>
 
-<div class="list">
+<!-- Markup -->
+
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<div class="list" on:dragover|preventDefault>
 	{#each list as item, index (item.uuid)}
 
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="row"
-			class:dragging={index == origin}
 			data-index={index}
-			data-uuid={item.uuid}
 			on:dragover|preventDefault={onDragOver}
 			animate:flip={{ duration: settings.UNIVERSAL_FADE_DURATION }}
 		>
-			<!-- Validation -->
-			<Feedback compact animate={false} data={item.validate(false)} />
+			<slot name="left" {item} />
 
-			<!-- Drag handle -->
-			<div
+			<img
+				src={dnd_icon} alt="Drag handle"
 				class="handle"
 				draggable="true"
 				on:dragstart={onDragStart}
 				on:dragend|preventDefault={onDragEnd}
-			> 
-				<img src={dnd_icon} alt="Drag handle" />
-			</div>
+			>
 
-			<slot {item} />
+			<slot name="right" {item} />
 		</div>
 	{/each}
 </div>
+
+<!-- Styles -->
 
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
-
 
 	.list
 		display: flex
@@ -113,28 +105,17 @@
 		gap: $form-small-gap
 
 		.row
-			display: grid
-			grid-template: "validate handle content" auto / $total-icon-size $total-icon-size 1fr
-			place-items: start center
-			grid-gap: $form-small-gap
-
-			width: 100%
+			display: flex
+			flex-flow: row nowrap
+			gap: $form-small-gap
 
 			.handle
-				display: flex
-				align-items: center
-				justify-content: center
+				width: $total-icon-size
+				height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
+				padding: 0.4rem
 
-				height: 1.5rem
-				padding: $input-thin-padding $input-icon-padding
-				box-sizing: content-box
+				cursor: move
 
-				cursor: ns-resize
-
-				img
-					height: 0.8rem
-					filter: $dark-purple-filter
-
-					pointer-events: none
+				filter: $dark-purple-filter
 
 </style>

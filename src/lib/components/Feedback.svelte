@@ -116,11 +116,9 @@
 
 </script>
 
-
 <!-- Markup -->
 
-
-<div class="validation">
+<div class="feedback">
 
 	{#if show_success_icon}
 		<span 
@@ -216,26 +214,42 @@
 	{/if}
 </div>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.validation
+	.feedback
 		display: flex
-		position: relative
+		flex-flow: row nowrap
+		align-items: center
 		gap: $input-thin-padding
 
-		height: 1.5rem
-		padding: $input-thin-padding
-		box-sizing: content-box
+		position: relative
+
+		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
+		min-width: $total-icon-size
+		padding: $input-icon-padding
+
+		.toggle
+			display: flex
+			flex-flow: row nowrap
+			align-items: center
+			gap: $input-thin-padding
+
+			&:not(:disabled)
+				cursor: pointer
+
+			img
+				width: $input-icon-size
+				height: $input-icon-size
+				pointer-events: none
 
 		.success
 			display: flex
+			flex-flow: row nowrap
 			align-items: center
 			gap: $input-thin-padding
 			color: $green
@@ -256,20 +270,7 @@
 
 			img
 				filter: $red-filter
-
-		.toggle
-			display: flex
-			align-items: center
-			gap: $input-thin-padding
-
-			&:not(:disabled)
-				cursor: pointer
-
-			img
-				width: $input-icon-size
-				height: $input-icon-size
-				cursor: pointer
-
+	
 		.dropdown
 			position: absolute
 			top: calc( 100% + $input-thin-padding )
@@ -286,15 +287,16 @@
 
 			.item
 				display: grid
-				grid-template: "icon short show" auto "icon long long" auto / $input-icon-size auto 1fr
+				grid-template: "icon short" auto "icon long" auto / $input-icon-size auto 1fr
 				column-gap: $input-thin-padding
+				place-items: start center
 
 				img
 					grid-area: icon
 
 					width: $input-icon-size
 					height: $input-icon-size
-					margin-top: $input-icon-padding
+					margin-top: 0.7rem - $input-icon-size * 0.5
 
 				.short
 					grid-area: short

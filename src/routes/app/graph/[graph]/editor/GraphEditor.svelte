@@ -190,10 +190,7 @@
 	</div>
 </div>
 
-
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

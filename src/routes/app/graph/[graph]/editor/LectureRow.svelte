@@ -125,27 +125,29 @@
 		<img src={plus_icon} alt=""> Assign Subject
 	</Button>
 
-	<div class="subjects">
-		{#each lecture.present_subjects as subject}
-			<div class="subject">
-				{#if subject.trimmed_name.length > 0}
-					{subject.trimmed_name}
-				{:else}
-					<i> Unnamed subject </i>
-				{/if}
+	{#if lecture.present_subjects.length > 0}
+		<div class="subjects">
+			{#each lecture.present_subjects as subject}
+				<div class="subject">
+					{#if subject.trimmed_name.length > 0}
+						{subject.trimmed_name}
+					{:else}
+						<i> Unnamed subject </i>
+					{/if}
 
-				<div class="line" />
+					<div class="line" />
 
-				<LinkButton
-					on:click={async () => {
-						lecture.unassignSubject(subject)
-						await lecture.save()
-						$graph = $graph
-					}}
-				> Unassign from lecture </LinkButton>
-			</div>
-		{/each}
-	</div>
+					<LinkButton
+						on:click={async () => {
+							lecture.unassignSubject(subject)
+							await lecture.save()
+							$graph = $graph
+						}}
+					> Unassign from lecture </LinkButton>
+				</div>
+			{/each}
+		</div>
+	{/if}
 </div>
 
 <!-- Styles -->
@@ -161,7 +163,7 @@
 		display: grid
 		grid-template: "delete title assign" auto "subjects subjects subjects" auto / $total-icon-size 1fr max-content
 		align-items: center
-		gap: $form-small-gap
+		column-gap: $form-small-gap
 
 		width: 100%
 		padding-right: $total-icon-size + $form-small-gap
@@ -173,6 +175,7 @@
 
 			grid-area: subjects
 
+			margin-top: $form-small-gap
 			margin-left: math.div($total-icon-size, 2)
 			border-left: 1px solid $gray
 			padding-left: math.div($total-icon-size, 2) + $form-small-gap + $input-thick-padding
