@@ -8,157 +8,99 @@
 	import * as settings from '$scripts/settings'
 	import { Validation } from '$scripts/validation'
 	import { clickoutside } from '$scripts/actions/clickoutside'
-	import { tooltip } from '$scripts/actions/tooltip'
 
 	// Assets
 	import error_icon from '$assets/error-icon.svg'
 	import warning_icon from '$assets/warning-icon.svg'
-	import success_icon from '$assets/success-icon.svg'
 	
 	// Functions
-	export function show_all() {
-		all_visible = true
-		errors_visible = false
-		warnings_visible = false
+	function onMouseEnter() {
+		timeout = setTimeout(() => {
+			show_dropdown = data.errors.length + data.warnings.length > 1 || compact
+		}, 800)
 	}
 
-	export function hide_all() {
-		all_visible = false
+	function onMouseLeave() {
+		clearTimeout(timeout)
+		show_dropdown = lock_dropdown
 	}
 
-	export function show_errors() {
-		all_visible = false
-		errors_visible = true
-		warnings_visible = false
-	}
-
-	export function hide_errors() {
-		errors_visible = false
-	}
-
-	export function show_warnings() {
-		all_visible = false
-		warnings_visible = true
-		errors_visible = false
-	}
-
-	export function hide_warnings() {
-		warnings_visible = false
+	function setDropdown(value?: boolean) {
+		if (value !== undefined) lock_dropdown = value
+		else lock_dropdown = !lock_dropdown && (data.errors.length + data.warnings.length > 1 || compact)
+		show_dropdown = lock_dropdown
+		clearTimeout(timeout)
 	}
 
 	// Exports
 	export let data: Validation
-	export let success_msg: string = ''
 	export let compact: boolean = false
 	export let animate: boolean = true
 
-	// Variables
-	let all_visible: boolean = false
-	let errors_visible: boolean = false
-	let warnings_visible: boolean = false
+	// Main
+	let timeout: NodeJS.Timeout
+	let show_dropdown = false
+	let lock_dropdown = false
 
-	// Define derived states for errors and warnings
-	$: has_errors = data.errors.length > 0
-	$: has_warnings = data.warnings.length > 0
-	$: one_error = data.errors.length === 1
-	$: multiple_errors = data.errors.length > 1
-	$: one_warning = data.warnings.length === 1
-	$: multiple_warnings = data.warnings.length > 1
+	$: show_error_icon = data.errors.length > 0
+	$: error_message = compact || data.errors.length === 0 ? ''
+					 : data.errors.length > 0 && data.warnings.length > 0 ? data.errors.length
+					 : data.errors.length > 1 ? `${data.errors[0].short} (${data.errors.length - 1} more)`
+					 : data.errors[0].short
 
-	// Define when icons should be displayed
-	$: show_success_icon = !compact && !has_errors && !has_warnings && success_msg !== ''
-	$: show_error_icon = has_errors
-	$: show_warning_icon = has_warnings && (!compact || !has_errors)
-
-	// Control when error and warning icons are disabled
-	$: error_disabled = !compact && one_error && !has_warnings
-	$: warning_disabled = !compact && one_warning && !has_errors
-
-	// Generate error and warning messages
-	$: error_msg = compact || !has_errors
-		? '' 
-		: has_warnings 
-			? data.errors.length 
-			: data.errors[0].short 
-				+ (multiple_errors ? ' (+' + (data.errors.length - 1) + ')' : '')
-
-	$: warning_msg = compact || !has_warnings 
-		? '' 
-		: has_errors
-			? data.warnings.length
-			: data.warnings[0].short 
-				+ (multiple_warnings ? ' (+' + (data.warnings.length - 1) + ')' : '')
-
-	// Tooltip logic based on visibility and compact mode
-	$: error_tooltip = error_disabled 
-		? '' 
-		: compact 
-			? compact_tooltip 
-			: errors_visible 
-				? 'Hide errors' 
-				: 'Show errors'
-
-	$: warning_tooltip = warning_disabled 
-		? '' 
-		: compact 
-			? compact_tooltip 
-			: warnings_visible 
-				? 'Hide warnings' 
-				: 'Show warnings'
-
-	// Generate compact tooltip
-	$: compact_tooltip = (all_visible ? 'Hide ' : 'Show ')
-		+ (has_errors ? 'error' : '')
-		+ (multiple_errors ? 's' : '')
-		+ (has_errors && has_warnings ? ' & ' : '')
-		+ (has_warnings ? 'warning' : '')
-		+ (multiple_warnings ? 's' : '')
+	$: show_warning_icon = !(compact && show_error_icon) && data.warnings.length > 0
+	$: warning_message = compact || data.warnings.length === 0 ? ''
+					   : data.errors.length > 0 && data.warnings.length > 0 ? data.warnings.length
+					   : data.warnings.length > 1 ? `${data.warnings[0].short} (${data.warnings.length - 1} more)`
+					   : data.warnings[0].short
 
 </script>
 
 <!-- Markup -->
 
-<div class="feedback">
+<div class="feedback" use:clickoutside={ () => setDropdown(false) }>
+	<button 
+		class="toggle" 
+		on:mouseenter={ onMouseEnter }
+		on:mouseleave={ onMouseLeave }
+		on:click={ () => setDropdown() }
+		disabled={ data.errors.length === 0 && data.warnings.length === 0 }
+	>
+		{#if show_error_icon}
+			<img 
+				src={error_icon} 
+				alt="Error" 
+				class="error" 
+				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
+			>
+		{/if}
 
-	{#if show_success_icon}
-		<span 
-			class="success"
-			transition:fade={{ duration: animate ? settings.UNIVERSAL_FADE_DURATION : 0 }}
-		>
-			<img src={success_icon} alt="" /> {success_msg}
-		</span>
-	{/if}
+		{#if error_message}
+			<span 
+				class="error"
+				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
+			> {error_message} </span>
+		{/if}
 
-	{#if show_error_icon}
-		<button
-			type="button"
-			class="error toggle"
-			tabindex="-1"
-			on:click={compact ? show_all : show_errors}
-			disabled={error_disabled}
-			use:tooltip={error_tooltip}
-			transition:fade={{ duration: animate ? settings.UNIVERSAL_FADE_DURATION : 0 }}
-		>
-			<img src={error_icon} alt="" /> {error_msg}
-		</button>
-	{/if}
+		{#if show_warning_icon}
+			<img
+				src={warning_icon}
+				alt="Warning"
+				class="warning"
+				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
+			>
+		{/if}
 
-	{#if show_warning_icon}
-		<button
-			type="button"
-			class="warning toggle"
-			tabindex="-1"
-			on:click={compact ? show_all : show_warnings}
-			disabled={warning_disabled}
-			use:tooltip={warning_tooltip}
-			transition:fade={{ duration: animate ? settings.UNIVERSAL_FADE_DURATION : 0 }}
-		>
-			<img src={warning_icon} alt="" /> {warning_msg}
-		</button>
-	{/if}
+		{#if warning_message}
+			<span
+				class="warning"
+				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
+			> {warning_message} </span>
+		{/if}
+	</button>
 
-	{#if all_visible}
-		<div class="dropdown" use:clickoutside={hide_all}>
+	{#if show_dropdown}
+		<div class="dropdown">
 			{#each data.errors as error}
 				<div class="error item">
 					<img src={error_icon} alt="" />
@@ -170,36 +112,6 @@
 				</div>
 			{/each}
 
-			{#each data.warnings as warning}
-				<div class="warning item">
-					<img src={warning_icon} alt="" />
-					<span class="short"> {warning.short} </span>
-
-					{#if warning.long !== undefined}
-						<span class="long"> {warning.long} </span>
-					{/if}
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	{#if errors_visible}
-		<div class="dropdown" use:clickoutside={hide_errors}>
-			{#each data.errors as error}
-				<div class="error item">
-					<img src={error_icon} alt="" />
-					<span class="short"> {error.short} </span>
-
-					{#if error.long !== undefined}
-						<span class="long"> {error.long} </span>
-					{/if}
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	{#if warnings_visible}
-		<div class="dropdown" use:clickoutside={hide_warnings}>
 			{#each data.warnings as warning}
 				<div class="warning item">
 					<img src={warning_icon} alt="" />
@@ -222,16 +134,22 @@
 	@use "$styles/palette.sass" as *
 
 	.feedback
-		display: flex
-		flex-flow: row nowrap
-		align-items: center
-		gap: $input-thin-padding
-
 		position: relative
 
-		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
-		min-width: $total-icon-size
-		padding: $input-icon-padding
+		img
+			width: $input-icon-size
+			height: $input-icon-size
+			pointer-events: none
+
+		span
+			color: black
+			pointer-events: none
+
+		.error
+			filter: $red-filter
+
+		.warning
+			filter: $yellow-filter
 
 		.toggle
 			display: flex
@@ -239,38 +157,13 @@
 			align-items: center
 			gap: $input-thin-padding
 
+			height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
+			min-width: $total-icon-size
+			padding: $input-icon-padding
+
 			&:not(:disabled)
 				cursor: pointer
-
-			img
-				width: $input-icon-size
-				height: $input-icon-size
-				pointer-events: none
-
-		.success
-			display: flex
-			flex-flow: row nowrap
-			align-items: center
-			gap: $input-thin-padding
-			color: $green
-
-			img
-				width: $input-icon-size
-				height: $input-icon-size
-				filter: $green-filter
-
-		.warning
-			color: $yellow
-
-			img
-				filter: $yellow-filter
-
-		.error
-			color: $red
-
-			img
-				filter: $red-filter
-	
+			
 		.dropdown
 			position: absolute
 			top: calc( 100% + $input-thin-padding )
