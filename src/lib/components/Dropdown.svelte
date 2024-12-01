@@ -98,7 +98,7 @@
 			<div class="options" use:focusFirstChild use:loopFocus>
 				{#if options.length >= 5}
 					<div class="option searchbar">
-						<input type="search" placeholder="Search..." bind:value={query} use:focusOnKeydown>
+						<input type="text" placeholder="Search..." bind:value={query} use:focusOnKeydown>
 						<img src={searchIcon} alt="Searchbar" />
 					</div>
 				{/if}
