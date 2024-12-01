@@ -86,6 +86,7 @@
 		padding: 0 $card-thick-padding $card-thick-padding
 
 		.grayed
+			width: auto
 			margin:
 				right: $right-gutter
 				bottom: $card-thick-padding
