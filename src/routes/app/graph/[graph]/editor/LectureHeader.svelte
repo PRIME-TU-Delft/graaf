@@ -9,6 +9,8 @@
 
 </script>
 
+<!-- Markdown -->
+
 <div class="lecture-header" >
 	<h2> Lectures </h2>
 
@@ -16,6 +18,8 @@
 
 	<Searchbar placeholder="Search lectures" bind:value={$lecture_query} />
 </div>
+
+<!-- Styles -->
 
 <style lang="sass">
 

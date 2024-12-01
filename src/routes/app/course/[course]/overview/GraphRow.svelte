@@ -3,6 +3,7 @@
 
 	// Internal dependencies
 	import { course } from './stores'
+
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
 
@@ -58,7 +59,7 @@
 				copied_graph.subjects.map(subject => subject.save()),
 				copied_graph.lectures.map(lecture => lecture.save())
 			])
-			
+
 			$course = $course // Trigger reactivity
 		}
 	}
@@ -72,7 +73,6 @@
 	let delete_modal: SimpleModal
 
 </script>
-
 
 <!-- Markup -->
 
@@ -181,7 +181,7 @@
 		span
 			padding: $input-thin-padding $input-thick-padding
 
-		img					
+		img
 			width: $input-icon-size
 			filter: $dark-purple-filter
 

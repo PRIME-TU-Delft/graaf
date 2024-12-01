@@ -3,8 +3,8 @@
 
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
-
 	import { course } from './stores'
+
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
 
@@ -12,6 +12,8 @@
 	import type { EditorView } from '$scripts/types'
 
 	// Components
+	import LinkURL from './LinkURL.svelte'
+
 	import SimpleModal from '$components/SimpleModal.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
@@ -21,8 +23,6 @@
 	import Dropdown from '$components/Dropdown.svelte'
 	import Feedback from '$components/Feedback.svelte'
 	import Button from '$components/Button.svelte'
-
-	import LinkURL from './LinkURL.svelte'
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
@@ -104,7 +104,7 @@
 		<Dropdown id="view" placeholder="Select an initial view" bind:value={embed_modal.view} options={view_options} />
 
 		<label for="lecture"> Initial Lecture </label>
-		<Dropdown 
+		<Dropdown
 			id="lecture"
 			placeholder="Select an initial lecture"
 			bind:value={embed_modal.lecture}
@@ -188,9 +188,7 @@
 	> <b>&lt;/&gt;</b> </Button>
 </div>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -199,7 +197,7 @@
 
 	.row
 		display: grid
-		grid-template: "validation delete name graph url embed" auto / $total-icon-size $total-icon-size 1fr 1fr max-content max-content
+		grid-template: "validation delete name graph url embed" auto / $total-icon-size $total-icon-size 3fr 3fr 2fr 62px
 		grid-gap: $form-small-gap
 		place-items: center
 
@@ -212,5 +210,5 @@
 
 		&:last-child
 			padding-bottom: $input-thin-padding
-	
+
 </style>

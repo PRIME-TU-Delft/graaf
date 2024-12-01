@@ -63,7 +63,6 @@
 
 	// Main
 	const graph_modal = new GraphModal()
-
 	let query = ''
 
 	$: filtered_graphs = $course.graphs.filter(graph => graph.matchesQuery(query))

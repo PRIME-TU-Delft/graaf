@@ -32,6 +32,11 @@
 	{#if filtered_domains.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
+		<div class="domain-row">
+			<h4 style="grid-area: name"> Name </h4>
+			<h4 style="grid-area: style"> Style </h4>
+		</div>
+
 		<SortableList let:item 
 			list={filtered_domains} 
 			on:rearrange={async event => {
@@ -60,9 +65,14 @@
 	</div>
 
 	<!-- Domain Relations -->
-	{#if filtered_domains.length === 0}
+	{#if filtered_relations.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
+		<div class="relation-row">
+			<h4 style="grid-area: parent"> Parent </h4>
+			<h4 style="grid-area: child"> Child </h4>
+		</div>
+
 		<OrderedList let:item list={filtered_relations}>
 			<RelationRow relation={item} />
 		</OrderedList>
@@ -118,6 +128,20 @@
 				flex-grow: 1
 				border-top: 1px dashed $dark-gray
 
+		.domain-row
+			display: grid
+			grid-template: ". . . name style ." auto / $total-icon-size $total-icon-size $total-icon-size 1fr 1fr $total-icon-size
+			grid-gap: $form-small-gap
+
+			color: $dark-gray
+
+		.relation-row
+			display: grid
+			grid-template: ". . . parent . child ." auto / $total-icon-size $total-icon-size $total-icon-size 1fr $total-icon-size 1fr $total-icon-size
+			grid-gap: $form-small-gap
+			
+			color: $dark-gray
+
 		button
 			display: flex
 			align-items: center
@@ -141,5 +165,6 @@
 			img
 				width: $input-icon-size
 				filter: $dark-gray-filter
+				pointer-events: none
 
 </style>

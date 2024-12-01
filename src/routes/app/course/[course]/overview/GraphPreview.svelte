@@ -6,7 +6,6 @@
 
 	// Internal dependencies
 	import { GraphSVG, SVGState } from '$scripts/svg'
-
 	import type { GraphController } from '$scripts/controllers'
 
 	// Components
@@ -17,9 +16,6 @@
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
-
-	// Exports
-	export let graph: GraphController
 
 	// Functions
 	export function show() {
@@ -35,13 +31,14 @@
 		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
 	}
 
-	// Variables
+	// Main
+	export let graph: GraphController
+
 	const graphSVG = new GraphSVG(graph, false)
+	graphSVG.subscribe(updateUI)
+
 	let disable_graph_controls = false
 	let visible = false
-
-	// Main
-	graphSVG.subscribe(updateUI)
 
 	onDestroy(() => {
 		graphSVG.unsubscribe(updateUI)

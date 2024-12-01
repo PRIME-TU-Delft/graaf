@@ -1,6 +1,6 @@
 <script lang="ts">
 
-    const SCROLL_ON_NEW = 55
+    const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
 	import { graph, lecture_query } from './stores'
@@ -8,20 +8,21 @@
 
 	// Components
     import LectureRow from './LectureRow.svelte'
-
 	import SortableList from '$components/SortableList.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
 
-    // Variables
+    // Main
     $: filtered_lectures = $graph.lectures.filter(lecture => lecture.matchesQuery($lecture_query))
 
 </script>
 
+<!-- Markdown -->
+
 <div class="lecture-tab">
 
-	<!-- Domains -->
+	<!-- Lectures -->
 	{#if filtered_lectures.length == 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
@@ -36,16 +37,18 @@
 		</SortableList>
 	{/if}
 
-	<!-- New domain -->
+	<!-- New lecture -->
 	<button
 		on:click={async () => {
 			await LectureController.create($graph.cache, $graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
 		}}
-	> <img src={plus_icon} alt="New domain"> </button>
+	> <img src={plus_icon} alt="New lecture"> </button>
 
 </div>
+
+<!-- Styles -->
 
 <style lang="sass">
 

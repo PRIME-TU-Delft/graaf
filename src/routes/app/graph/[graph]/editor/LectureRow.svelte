@@ -3,14 +3,15 @@
 
 	// Internal dependencies
 	import { graph } from './stores'
+
 	import { AbstractFormModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
 
-	import type { 
-		LectureController, 
-		SubjectController 
+	import type {
+		LectureController,
+		SubjectController
 	} from '$scripts/controllers'
-	
+
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
 	import IconButton from '$components/IconButton.svelte'
@@ -23,9 +24,6 @@
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
 	import plus_icon from '$assets/plus-icon.svg'
-
-	// Exports
-	export let lecture: LectureController
 
 	// Modals
 	class AssignSubjectModal extends AbstractFormModal {
@@ -57,6 +55,7 @@
 	}
 
 	// Main
+	export let lecture: LectureController
 	const assign_subject_modal = new AssignSubjectModal()
 	let delete_modal: SimpleModal
 
@@ -114,25 +113,29 @@
 		}}
 	/>
 
-	<Textfield 
+	<Textfield
 		id="name"
 		placeholder="Lecture name"
-		bind:value={lecture.name} 
+		bind:value={lecture.name}
 		on:input={() => $graph = $graph}
 		on:change={async () => await lecture.save()}
 	/>
 
 	<Button on:click={() => assign_subject_modal.show()}>
-		<img src={plus_icon} alt=""> Assign Subject 
+		<img src={plus_icon} alt=""> Assign Subject
 	</Button>
 
 	<div class="subjects">
 		{#each lecture.present_subjects as subject}
 			<div class="subject">
-				{subject.trimmed_name}
+				{#if subject.trimmed_name.length > 0}
+					{subject.trimmed_name}
+				{:else}
+					<i> Unnamed subject </i>
+				{/if}
 
 				<div class="line" />
-	
+
 				<LinkButton
 					on:click={async () => {
 						lecture.unassignSubject(subject)
@@ -145,14 +148,14 @@
 	</div>
 </div>
 
+<!-- Styles -->
+
 <style lang="sass">
 
 	@use 'sass:math'
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
-
-	$right-gutter: $total-icon-size + $form-small-gap
 
 	.lecture-row
 		display: grid
@@ -161,7 +164,7 @@
 		gap: $form-small-gap
 
 		width: 100%
-		padding-right: $right-gutter
+		padding-right: $total-icon-size + $form-small-gap
 
 		.subjects
 			display: flex
@@ -170,7 +173,6 @@
 
 			grid-area: subjects
 
-			width: 100%
 			margin-left: math.div($total-icon-size, 2)
 			border-left: 1px solid $gray
 			padding-left: math.div($total-icon-size, 2) + $form-small-gap + $input-thick-padding

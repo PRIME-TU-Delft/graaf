@@ -74,11 +74,11 @@
 	<Layout>
 		<svelte:fragment slot="title">
 			<Navbar path={[
-				{	
+				{
 					name: 'Home',
 					href: '/app/home'
 				},
-				{	
+				{
 					name: `${$course.code} ${$course.name}`
 				}
 			]}>
