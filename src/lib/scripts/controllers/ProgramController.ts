@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+import { debounce, compareArrays } from '$scripts/utility'
 import { Validation, Severity} from '$scripts/validation'
 
 import {

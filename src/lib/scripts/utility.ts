@@ -1,7 +1,6 @@
 
 // --------------------> Types
 
-
 interface IWithID<ID> {
 	id: ID
 }
@@ -10,9 +9,23 @@ export type UpdateArray<ID> = { connect?: { id: ID }[], disconnect?: { id: ID }[
 export type UpdateRequiredField<ID> = {} | { connect: { id: ID }, disconnect: { id: ID } }
 export type UpdateOptionalField<ID> = { connect?: { id: ID }, disconnect?: { id: ID } }
 
-
 // --------------------> Utility Functions
 
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number, immediate?: boolean) : (...args: Parameters<T>) => void {
+	let timeout: NodeJS.Timeout | undefined
+
+	return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
+		const later = () => {
+			timeout = undefined
+			if (!immediate) callback.apply(this, args)
+		}
+
+		const call_now = immediate && timeout === undefined
+		clearTimeout(timeout)
+		timeout = setTimeout(later, delay)
+		if (call_now) callback.apply(this, args)
+	}
+}
 
 export async function asyncFlatmap<Input, Output>(input: Input[], callback: (input: Input) => Output | Output[] | Promise<Output | Output[]>): Promise<Output[]> {
 	const outputs = await Promise.all(input.map(callback))
