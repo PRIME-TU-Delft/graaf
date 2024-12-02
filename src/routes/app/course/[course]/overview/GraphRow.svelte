@@ -6,6 +6,7 @@
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
+	import { tooltip } from '$scripts/actions/tooltip'
 
 	import type {
 		CourseController,
@@ -144,11 +145,12 @@
 		{/if}
 	</span>
 
-	<img
-		src={link_icon}
-		alt="Link icon"
-		style:visibility={graph.link_ids.length > 0 ? 'visible' : 'hidden'}
-	/>
+	{#if graph.link_ids.length > 0}
+		<div
+			class="link-icon"
+			use:tooltip={`Has ${graph.link_ids.length} associated link${graph.link_ids.length > 1 ? 's' : ''}`}
+		> <img src={link_icon} alt="Link icon" /> </div>	
+	{/if}
 </span>
 
 <!-- Styles -->
@@ -181,8 +183,11 @@
 		span
 			padding: $input-thin-padding $input-thick-padding
 
-		img
-			width: $input-icon-size
-			filter: $dark-purple-filter
+		.link-icon
+			height: $input-icon-size
+
+			img
+				width: $input-icon-size
+				filter: $dark-purple-filter
 
 </style>
