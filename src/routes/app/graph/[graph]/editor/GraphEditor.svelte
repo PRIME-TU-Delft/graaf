@@ -4,6 +4,7 @@
 	// External dependencies
 	import { goto } from '$app/navigation'
 	import { page } from '$app/stores'
+	import { onDestroy } from 'svelte'
 
 	// Internal dependencies
 	import { graph } from './stores'
@@ -27,10 +28,10 @@
 	import LectureTab from './LectureTab.svelte'
 	import LectureHeader from './LectureHeader.svelte'
 
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 	import Graph from '$components/Graph.svelte'
 
 	// Assets
@@ -50,23 +51,36 @@
 		graphSVG.view = view
 	}
 
+	function updateUI() {
+		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
+	}
+
 	// Initialization
+	const search_params = $page.url.searchParams
 	const graphSVG = new GraphSVG($graph)
 
-	const search_params = $page.url.searchParams
 	let editor_type = search_params.get('type') as EditorType
 	let editor_view = search_params.get('view') as EditorView
+	let disable_graph_controls = false
 
-	let autolayout_modal: Modal
+	let autolayout_modal: SimpleModal
+
+	graphSVG.subscribe(updateUI)
 
 	navigateEditor(
 		validEditorType(editor_type) ? editor_type : 'data',
 		validEditorView(editor_view) ? editor_view : 'domains'
 	)
 
+	onDestroy(() => {
+		graphSVG.unsubscribe(updateUI)
+	})
+
 </script>
 
-<Modal bind:this={autolayout_modal}>
+<!-- Markup -->
+
+<SimpleModal bind:this={autolayout_modal}>
 	<h3 slot="header"> Autolayout </h3>
 	Are you certain you want to start the autolayout process? This will irreversibly rearrange all nodes and relations in the graph.
 
@@ -81,13 +95,17 @@
 	</div>
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => autolayout_modal.hide()}> Cancel </LinkButton>
-		<Button on:click={() => {
-			graphSVG.toggleAutolayout()
-			autolayout_modal.hide()
-		}}> Start Autolayout </Button>
+		<LinkButton
+			on:click={() => autolayout_modal.hide()}
+		> Cancel </LinkButton>
+		<Button
+			on:click={() => {
+				graphSVG.toggleAutolayout()
+				autolayout_modal.hide()
+			}}
+		> Start Autolayout </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
 <div class="tabular">
 	<div class="sticky" id="sticky-tabular-header">
@@ -128,10 +146,12 @@
 					/>
 
 					<Button
-						on:click={() => graphSVG.findGraph()}
-					> Find Graph </Button>
+						disabled={disable_graph_controls}
+						on:click={() => graphSVG.centerGraph()}
+					> Center Graph </Button>
 
 					<Button
+						disabled={disable_graph_controls}
 						on:click={() => {
 							if (graphSVG.autolayout_enabled) {
 								graphSVG.toggleAutolayout()
@@ -170,10 +190,7 @@
 	</div>
 </div>
 
-
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -233,6 +250,9 @@
 					border-width: 0 0 1px 1px
 					border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
 
+					&:not(.active)
+						cursor: pointer
+
 					&.active
 						background: $white
 						border-width: 0 1px 0 1px
@@ -270,6 +290,6 @@
 			border-radius: 0 0 $border-radius $border-radius
 
 			:global(.graph)
-				height: 650px
+				height: 850px
 
 </style>

@@ -1,6 +1,6 @@
 <script lang="ts">
 
-	const SCROLL_ON_NEW = 55
+	const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
 	import { graph, subject_query } from './stores'
@@ -25,12 +25,19 @@
 
 </script>
 
-<div class="subject-tab">
+<!-- Markdown -->
+
+<div class="tab">
 
 	<!-- Subjects -->
 	{#if filtered_subjects.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
+		<div class="subject-row list-header">
+			<h4 style="grid-area: name"> Name </h4>
+			<h4 style="grid-area: style"> Style </h4>
+		</div>
+
 		<OrderedList let:item list={filtered_subjects}>
 			<SubjectRow subject={item} />
 		</OrderedList>
@@ -38,6 +45,7 @@
 
 	<!-- New subject -->
 	<button
+		class="row-button"
 		on:click={async () => {
 			await SubjectController.create($graph.cache, $graph)
 			$graph = $graph // Trigger reactivity
@@ -53,17 +61,23 @@
 	</div>
 
 	<!-- Subject Relations -->
-	{#if filtered_subjects.length === 0}
+	{#if filtered_relations.length === 0}
 		<p class="grayed"> There's nothing here </p>
 	{:else}
+		<div class="relation-row list-header">
+			<h4 style="grid-area: parent"> Parent </h4>
+			<h4 style="grid-area: child"> Child </h4>
+		</div>
+
 		<OrderedList let:item list={filtered_relations}>
 			<RelationRow relation={item} />
 		</OrderedList>
 	{/if}
 
 	<!-- New subject relation -->
-	<button on:click={
-		async () => {
+	<button 
+		class="row-button"
+		on:click={async () => {
 			await SubjectRelationController.create($graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
@@ -71,67 +85,10 @@
 	> <img src={plus_icon} alt="New relation"> </button>
 </div>
 
+<!-- Styles -->
+
 <style lang="sass">
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	$left-gutter: $total-icon-size * 3 + $form-small-gap * 3
-	$right-gutter: $total-icon-size + $form-small-gap
-
-	.subject-tab
-		display: flex
-		flex-flow: column nowrap
-		gap: $form-small-gap
-		padding: 0 $card-thick-padding $card-thick-padding
-
-		.grayed
-			margin:
-				right: $right-gutter
-				bottom: $card-thick-padding
-				left: $left-gutter
-
-		.divider
-			display: flex
-			flex-flow: row nowrap
-			align-items: center
-			justify-content: center
-			gap: $form-small-gap
-
-			margin:
-				top: $card-thick-padding
-				right: $right-gutter
-				bottom: $card-thick-padding
-				left: $left-gutter
-
-			color: $dark-gray
-
-			.line
-				flex-grow: 1
-				border-top: 1px dashed $dark-gray
-
-		button
-			display: flex
-			align-items: center
-			justify-content: center
-
-			width: calc( 100% - $left-gutter - $right-gutter )
-			padding: $input-thin-padding $input-thick-padding
-			margin:
-				top: 0
-				right: $right-gutter
-				bottom: 0
-				left: $left-gutter
-
-			border: 1px solid $gray
-			border-radius: $border-radius
-			cursor: pointer
-
-			&:hover
-				background-color: $light-gray
-
-			img
-				width: $input-icon-size
-				filter: $dark-gray-filter
+	@import "./styles.sass"
 
 </style>

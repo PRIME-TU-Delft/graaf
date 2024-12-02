@@ -18,7 +18,7 @@
 	} from '$scripts/controllers'
 
 	// Components
-	import GraphEditor from './GraphEditor.svelte'
+	import GeneralCard from '../settings/GeneralCard.svelte'
 
 	import LinkButton from '$components/LinkButton.svelte'
 	import Loading from '$components/Loading.svelte'
@@ -31,16 +31,10 @@
 		// Await all promises
 		const [
 			awaited_graph,
-			awaited_course,
-			awaited_domains,
-			awaited_subjects,
-			awaited_lectures
+			awaited_course
 		] = await Promise.all([
 			data.graph,
-			data.course,
-			data.domains,
-			data.subjects,
-			data.lectures
+			data.course
 		])
 
 		// Revive controllers into stores
@@ -48,9 +42,6 @@
 
 		// Revive controllers into cache
 		CourseController.revive(cache, awaited_course)
-		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
-		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
-		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
 	}
 
 	// Initialization
@@ -77,15 +68,19 @@
 					href: `/app/course/${$graph.course_id}/overview`
 				},
 				{
-					name: $graph.name
+					name: $graph.name,
+					href: `/app/graph/${$graph.id}/editor`
+				},
+				{
+					name: 'Settings'
 				}
 			]}>
-				<LinkButton href="/app/graph/{$graph.id}/settings"> Graph Settings </LinkButton>
+				<LinkButton href="/app/graph/{$graph.id}/editor"> Graph Editor </LinkButton>
 			</Navbar>
 
 			Here you can edit your graph, like its domains, subjects, and lectures.
 		</svelte:fragment>
 
-		<GraphEditor />
+		<GeneralCard />		
 	</Layout>
 {/await}

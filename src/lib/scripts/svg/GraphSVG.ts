@@ -50,7 +50,8 @@ class GraphSVG {
 	private _view: EditorView = 'domains'
 	private _state: SVGState = SVGState.detached
 	private _lecture: LectureController | null = null
-
+	private _subscribers: (() => void)[] = []
+ 
 	private svg?: SVGSVGElement
 	private zoom?: d3.ZoomBehavior<SVGSVGElement, unknown>
 	private simulation?: d3.Simulation<d3.SimulationNodeDatum, undefined>
@@ -127,6 +128,9 @@ class GraphSVG {
 		}
 
 		this._view = view
+
+		// Notify subscribers
+		this._subscribers.forEach(subscriber => subscriber())
 	}
 
 	get state() {
@@ -210,6 +214,9 @@ class GraphSVG {
 		}
 
 		this._state = state // NEW STATE
+
+		// Notify subscribers
+		this._subscribers.forEach(subscriber => subscriber())
 	}
 
 	get lecture() {
@@ -249,6 +256,9 @@ class GraphSVG {
 			.select('#content')
 				.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
 					.call(NodeSVG.updateHighlight, this.lecture)
+		
+		// Notify subscribers
+		this._subscribers.forEach(subscriber => subscriber())
 	}
 
 	get autolayout_enabled() {
@@ -429,6 +439,18 @@ class GraphSVG {
 		this.keys = {}
 	}
 
+	subscribe(callback: () => void) {
+		// Svelte 4 is really bad at detecting changes inside objects. Thus the need for a custom subscriber pattern.
+		// Subscribers to a graphSVG will be notified when the view, state, or lecture changes.
+		// Maybe Svelte 5 is better at this? we will see.
+
+		this._subscribers.push(callback)
+	}
+
+	unsubscribe(callback: () => void) {
+		this._subscribers = this._subscribers.filter(subscriber => subscriber !== callback)
+	}
+
 	zoomIn() {
 		if (this.svg === undefined || this.zoom === undefined)
 			throw new Error('GraphSVG not attached to DOM')
@@ -455,7 +477,7 @@ class GraphSVG {
 			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP)
 	}
 
-	findGraph() {
+	centerGraph() {
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static) return
 
 		this.state = SVGState.animating
@@ -738,13 +760,13 @@ class GraphSVG {
 				function(exit) {
 					return exit
 						.transition()
-							.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+							.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
 							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
 				}
 			)
 			.transition()
-				.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+				.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
 			.style('opacity', 1)
 
 		// Update relations
@@ -765,13 +787,13 @@ class GraphSVG {
 				function(exit) {
 					return exit
 						.transition()
-							.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+							.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
 							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
 				}
 			)
 			.transition()
-				.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+				.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
 			.style('opacity', 1)
 
 		// Update simulation
@@ -784,7 +806,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.FADE_DURATION)
+			}, settings.UNIVERSAL_FADE_DURATION)
 		}
 	}
 
@@ -834,7 +856,7 @@ class GraphSVG {
 		d3.select<SVGGElement, unknown>('#content')
 			.selectAll('*')
 				.transition()
-					.duration(callback !== undefined ? settings.FADE_DURATION : 0)
+					.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
 					.ease(d3.easeSinInOut)
 					.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 				.style('opacity', 0)
@@ -842,7 +864,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.FADE_DURATION)
+			}, settings.UNIVERSAL_FADE_DURATION)
 		}
 	}
 

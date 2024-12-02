@@ -4,53 +4,43 @@
 
 	// Internal dependencies
 	import { course } from './stores'
-	import { SimpleModal } from '$scripts/modals'
 	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	// Assets
 	import trashIcon from '$assets/trash-icon.svg'
 
-	// Helpers
-	class UnassignModal extends SimpleModal {
-		async submit() {
-			this.disabled = true
-			unassign_modal = unassign_modal // Trigger reactivity
-			$course.unassignFromProgram(program)
-			await $course.save()
-			$course = $course // Trigger reactivity
-			this.hide()
-		}
-	}
-
-	// Exports
+	// Main
 	export let program: ProgramController
-
-	// Variables
-	let unassign_modal = new UnassignModal()
+	let unassign_modal: SimpleModal
 
 </script>
 
 
 <!-- Markup -->
 
-<Modal bind:this={unassign_modal.modal}>
-	<h3 slot="header"> Unnassign from program </h3>
-	Are you certain you want to unnassign this course from "{program.name}"?
+<SimpleModal bind:this={unassign_modal}>
+	<h3 slot="header"> Unnassign Course </h3>
+	Are you certain you want to unnassign this course from {program.name}?
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => unassign_modal.hide()}> Cancel </LinkButton>
+		<LinkButton
+			on:click={() => unassign_modal.hide()}
+		> Cancel </LinkButton>
 		<Button
-			disabled={unassign_modal.disabled}
-			on:click={async () => await unassign_modal.submit()}
-		> Archive </Button>
+			on:click={async () => {
+				$course.unassignFromProgram(program)
+				await $course.save()
+				$course = $course // Trigger reactivity
+			}}
+		> Unassign </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
 <span class="program-row">
 	<IconButton 
@@ -66,9 +56,7 @@
 	</LinkButton>
 </span>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

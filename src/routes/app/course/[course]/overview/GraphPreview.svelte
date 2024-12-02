@@ -1,20 +1,21 @@
 
 <script lang="ts">
 
+	// External dependencies
+	import { onDestroy } from 'svelte'
+
 	// Internal dependencies
-	import { GraphSVG } from '$scripts/svg'
+	import { GraphSVG, SVGState } from '$scripts/svg'
 	import type { GraphController } from '$scripts/controllers'
 
 	// Components
+	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
 	import Graph from '$components/Graph.svelte'
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
-
-	// Exports
-	export let graph: GraphController
 
 	// Functions
 	export function show() {
@@ -26,15 +27,26 @@
 		visible = false
 	}
 
-	// Variables
+	function updateUI() {
+		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
+	}
+
+	// Main
+	export let graph: GraphController
+
 	const graphSVG = new GraphSVG(graph, false)
+	graphSVG.subscribe(updateUI)
+
+	let disable_graph_controls = false
 	let visible = false
+
+	onDestroy(() => {
+		graphSVG.unsubscribe(updateUI)
+	})
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#if visible}
 	<div class="background" />
@@ -59,6 +71,10 @@
 			> Domains </button>
 
 			<div class="toolbar">
+				<LinkButton href="/app/graph/{graph.id}/editor?type=layout&view={graphSVG.view}">
+					Edit Layout
+				</LinkButton>
+
 				<Dropdown
 					id="lecture"
 					placeholder="Select lecture"
@@ -66,9 +82,10 @@
 					options={graph.lecture_options}
 				/>
 
-				<Button on:click={() => graphSVG.findGraph()}>
-					Find Graph
-				</Button>
+				<Button
+					disabled={disable_graph_controls}
+					on:click={() => graphSVG.centerGraph()}
+				> Center Graph </Button>
 
 				<button class="exit" on:click={hide}>
 					<img src={plus_icon} alt="Exit icon" class="icon" />
@@ -82,9 +99,7 @@
 	</div>
 {/if}
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -132,6 +147,9 @@
 				border-style: solid
 				border-width: 0 0 1px 1px
 				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+
+				&:not(.active)
+					cursor: pointer
 
 				&.active
 					background: $white

@@ -11,3 +11,4 @@ import type {
 // Stores
 export const programs = writable<ProgramController[]>([])
 export const courses = writable<CourseController[]>([])
+export const query = writable<string>('')

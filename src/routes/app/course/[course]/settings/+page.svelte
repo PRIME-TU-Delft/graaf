@@ -58,15 +58,13 @@
 		awaited_links.forEach(link => LinkController.revive(cache, link))
 	}
 
-	// Initialization
+	// Main
 	export let data: PageData
 	const cache = new ControllerCache()
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#await revive()}
 	<Loading />

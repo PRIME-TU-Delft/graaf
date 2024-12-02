@@ -2,47 +2,48 @@
 <script lang="ts">
 
 	// Internal dependencies
+	import { query } from './stores'
+	
 	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
 	import Grid from './Grid.svelte'
-	import Card from '$components/Card.svelte'
-	import Modal from '$components/Modal.svelte'
-	import IconButton from '$components/IconButton.svelte'
+
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import IconButton from '$components/IconButton.svelte'
+	import Card from '$components/Card.svelte'
 
 	// Assets
 	import people_icon from '$assets/people-icon.svg'
 
-	// Exports
+	// Main
 	export let program: ProgramController
-	export let query: string
 
-	$: filtered_courses = program.courses.filter(course => course.matchesQuery(query))
+	let member_modal: SimpleModal
 
-	// Modals
-	let member_modal: Modal
+	$: filtered_courses = program.courses.filter(course => course.matchesQuery($query))
 
 </script>
 
-
 <!-- Markup -->
 
-
-<Modal bind:this={member_modal}>
+<SimpleModal bind:this={member_modal}>
 	<h3 slot="header"> Program Admins </h3>
-	<p> These are the admins of the {program.name} program. You can contact them via email to request access to a course. </p>
+	These are the admins of this program. You can contact them via email to request access to a course.
 
-	{#if program.admins.length === 0}
-		<p class="grayed"> There's nothing here </p>
-	{:else}
-		<ul>
-			{#each program.admins as admin}
-				<li> {admin.first_name} {admin.last_name} <span class="email"> {admin.email} </span></li>
-			{/each}
-		</ul>
-	{/if}
-</Modal>
+	<svelte:fragment slot="footer">
+		{#if program.admins.length === 0}
+			<p class="grayed"> There's nothing here </p>
+		{:else}
+			<ul>
+				{#each program.admins as admin}
+					<li> {admin.first_name} {admin.last_name} <span class="email"> {admin.email} </span></li>
+				{/each}
+			</ul>
+		{/if}
+	</svelte:fragment>
+</SimpleModal>
 
 <Card>
 	<svelte:fragment slot="header">
@@ -53,7 +54,7 @@
 		<IconButton
 			src={people_icon}
 			description="Program Admins"
-			on:click={member_modal?.show}
+			on:click={member_modal.show}
 			scale
 		/>
 

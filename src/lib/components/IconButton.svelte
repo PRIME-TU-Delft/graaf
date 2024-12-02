@@ -62,16 +62,19 @@
 	@use "$styles/palette.sass" as *
 
 	.icon-button
-		box-sizing: content-box
-		width: $input-icon-size
-		height: $input-icon-size
+		display: flex
+		align-items: center
+		justify-content: center
+
+		width: $total-icon-size
+		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
 		padding: $input-icon-padding
 
 		cursor: pointer
 
 		.icon
-			width: 100%
-			height: 100%
+			width: $input-icon-size
+			height: $input-icon-size
 
 			filter: $purple-filter
 			transform-origin: center

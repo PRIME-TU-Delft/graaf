@@ -4,18 +4,13 @@
 	// Assets
 	import copy_icon from "$assets/copy-icon.svg"
 
-	// Exports
+	// Main
 	export let url: string
-
-	// Variables
 	let copied: boolean = false
 
 </script>
 
-
 <!-- Markup -->
-
-
 
 <div class="link-url" class:disabled={url === ''}>
 	<input
@@ -23,9 +18,10 @@
 		disabled={true}
 		placeholder="Invalid link"
 		bind:value={url}
-		/>
+	/>
 
 	<button
+		class="copy-button"
 		on:click={async () => {
 			copied = true
 			await navigator.clipboard.writeText(url)
@@ -35,16 +31,14 @@
 		<img src={copy_icon} alt="Copy link" />
 
 		{#if copied}
-			<span class="popup"> 
-				Link copied! 
+			<span class="popup">
+				Link copied!
 			</span>
 		{/if}
 	</button>
 </div>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -77,7 +71,7 @@
 			color: $dark-gray
 			cursor: text
 
-		button
+		.copy-button
 			position: absolute
 			top: 0
 			right: 0

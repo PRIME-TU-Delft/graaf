@@ -1,5 +1,4 @@
 
-
 <script lang="ts">
 
 	// External dependencies
@@ -29,12 +28,12 @@
 
 		// Await all promises
 		const [
-			awaited_program, 
-			awaited_course, 
+			awaited_program,
+			awaited_course,
 			awaited_user
 		] = await Promise.all([
-			data.program, 
-			data.courses, 
+			data.program,
+			data.courses,
 			data.users
 		])
 
@@ -46,15 +45,13 @@
 		awaited_user.forEach(user => UserController.revive(cache, user))
 	}
 
-	// Initialization
+	// Main
 	export let data: PageData
 	const cache = new ControllerCache()
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#await revive()}
 	<Loading />

@@ -20,9 +20,7 @@
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#if href === undefined}
 
@@ -81,6 +79,9 @@
 
 		cursor: pointer
 		transition: all $default-transition
+
+		& > :global(*)
+			pointer-events: none
 
 		&.dangerous
 			background: $red

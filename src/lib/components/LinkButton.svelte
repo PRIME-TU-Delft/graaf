@@ -73,6 +73,9 @@
 
 			:global(img)
 				filter: $gray-filter
+		
+		& > :global(*)
+			pointer-events: none
 
 		:global(img)
 			box-sizing: content-box

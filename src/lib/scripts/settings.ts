@@ -21,8 +21,7 @@ export const MAX_GRAPH_NAME_LENGTH: Scalar = 50
 export const MAX_NODE_NAME_LENGTH: Scalar = 35
 export const MAX_LECTURE_NAME_LENGTH: Scalar = 50
 
-export const LIST_FLIP_DURATION: Milliseconds = 150
-export const FEEDBACK_FADE_DURATION: Milliseconds = 500
+export const UNIVERSAL_FADE_DURATION: Milliseconds = 150 // When changing this, also change transition in variables.sass
 
 // -------------------> Editor settings
 
@@ -44,7 +43,7 @@ export const NODE_PADDING: GridUnits = 1
 export const NODE_FONT_SIZE: Pixels = 15
 export const NODE_MAX_CHARS: Scalar = 35
 export const NODE_HIGHLIGHT_DEVIATION: Pixels = 5
-export const NODE_HIGHLIGHT_OPACITY: Scalar = 0.75
+export const NODE_HIGHLIGHT_OPACITY: Scalar = 1
 export const NODE_HIGHLIGHT_COLOR: string = 'green'
 
 // Stroke settings
@@ -69,7 +68,6 @@ export const CENTER_FORCE: Scalar = 0.05
 export const CHARGE_FORCE: Scalar = -15
 
 // Animation settings
-export const FADE_DURATION: Milliseconds = 200
 export const ANIMATION_DURATION: Milliseconds = 1000
 export const SHAKE = {
 	delay: 150,

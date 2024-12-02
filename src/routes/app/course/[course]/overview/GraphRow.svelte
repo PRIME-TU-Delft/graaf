@@ -3,8 +3,10 @@
 
 	// Internal dependencies
 	import { course } from './stores'
-	import { FormModal, SimpleModal } from '$scripts/modals'
+
 	import { Validation, Severity } from '$scripts/validation'
+	import { AbstractFormModal } from '$scripts/modals'
+	import { tooltip } from '$scripts/actions/tooltip'
 
 	import type {
 		CourseController,
@@ -14,12 +16,12 @@
 	// Components
 	import GraphPreview from './GraphPreview.svelte'
 
+	import SimpleModal from '$components/SimpleModal.svelte'
 	import IconButton from '$components/IconButton.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import FormModal from '$components/FormModal.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
-	import Feedback from '$components/Feedback.svelte'
 	import Button from '$components/Button.svelte'
-	import Modal from '$components/Modal.svelte'
 
 	// Assets
 	import open_eye_icon from '$assets/open-eye-icon.svg'
@@ -28,8 +30,8 @@
 	import copy_icon from '$assets/copy-icon.svg'
 	import link_icon from '$assets/link-icon.svg'
 
-	// Helpers
-	class CopyModal extends FormModal {
+	// Modals
+	class CopyModal extends AbstractFormModal {
 		course: CourseController | null = null
 
 		constructor() {
@@ -51,58 +53,37 @@
 		}
 
 		async submit() {
-			this.touchAll() // Validate all fields
-			if (this.validate().severity === Severity.error) {
-				copy_modal = copy_modal // Trigger reactivity
-				return
-			}
-
-			// Copy graph
-			this.disabled = true
-			copy_modal = copy_modal // Trigger reactivity
-			const copied_graph = await graph.copy(this.course!)
+			const copied_graph = await graph.copy(this.course as CourseController)
 			await Promise.all([
 				copied_graph.save(),
 				copied_graph.domains.map(domain => domain.save()),
 				copied_graph.subjects.map(subject => subject.save()),
 				copied_graph.lectures.map(lecture => lecture.save())
 			])
-			
-			$course = $course
-			this.hide()
+
+			$course = $course // Trigger reactivity
 		}
 	}
 
-	class DeleteModal extends SimpleModal {
-		async submit() {
-			this.disabled = true
-			delete_modal = delete_modal // Trigger reactivity
-			await graph.delete()
-			$course = $course
-			this.hide()
-		}
-	}
-	
-	// Exports
+	// Main
 	export let graph: GraphController
 
-	// Variables
-	let delete_modal = new DeleteModal()
-	let copy_modal = new CopyModal()
+	const copy_modal = new CopyModal()
+
 	let preview_modal: GraphPreview
+	let delete_modal: SimpleModal
 
 </script>
-
 
 <!-- Markup -->
 
 <GraphPreview {graph} bind:this={preview_modal} />
 
-<Modal bind:this={copy_modal.modal}>
+<FormModal controller={copy_modal}>
 	<h3 slot="header"> Copy Graph </h3>
 	Copy this graph to another course. This will create a new graph with the same content in the selected course.
 
-	<form>
+	<svelte:fragment slot="form">
 		<label for="course"> Target Course </label>
 		<Dropdown
 			id="course"
@@ -110,31 +91,31 @@
 			options={graph.copy_options}
 			bind:value={copy_modal.course}
 		/>
+	</svelte:fragment>
 
-		<footer>
-			<Button
-				disabled={copy_modal.disabled}
-				on:click={() => copy_modal.submit()}
-			> Copy </Button>
-			<Feedback data={copy_modal.validate()} />
-		</footer>
-	</form>
-</Modal>
+	<svelte:fragment slot="submit">
+		Copy
+	</svelte:fragment>
+</FormModal>
 
-<Modal bind:this={delete_modal.modal}>
+<SimpleModal bind:this={delete_modal}>
 	<h3 slot="header"> Delete Graph </h3>
 	Are you sure you want to delete this graph? This action cannot be undone.
 
 	<svelte:fragment slot="footer">
-		<LinkButton on:click={() => delete_modal.hide()}> Cancel </LinkButton>
+		<LinkButton
+			on:click={() => delete_modal.hide()}
+		> Cancel </LinkButton>
 		<Button
-			disabled={delete_modal.disabled}
-			on:click={async () => await delete_modal.submit()}
+			on:click={async () => {
+				await graph.delete()
+				$course = $course // Trigger reactivity
+			}}
 		> Delete </Button>
 	</svelte:fragment>
-</Modal>
+</SimpleModal>
 
-<span class="graph-row">
+<span class="row">
 	<IconButton scale
 		src={trash_icon}
 		description="Delete Graph"
@@ -164,23 +145,22 @@
 		{/if}
 	</span>
 
-	<img
-		src={link_icon}
-		alt="Link icon"
-		style:visibility={graph.link_ids.length > 0 ? 'visible' : 'hidden'}
-	/>
+	{#if graph.link_ids.length > 0}
+		<div
+			class="link-icon"
+			use:tooltip={`Has ${graph.link_ids.length} associated link${graph.link_ids.length > 1 ? 's' : ''}`}
+		> <img src={link_icon} alt="Link icon" /> </div>	
+	{/if}
 </span>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	.graph-row
+	.row
 		display: grid
 		grid-template: "delete copy edit view name link" auto / $input-icon-size $input-icon-size calc($input-icon-size - 2.5px) $input-icon-size 1fr max-content
 		grid-gap: $form-small-gap
@@ -203,8 +183,11 @@
 		span
 			padding: $input-thin-padding $input-thick-padding
 
-		img					
-			width: $input-icon-size
-			filter: $dark-purple-filter
+		.link-icon
+			height: $input-icon-size
+
+			img
+				width: $input-icon-size
+				filter: $dark-purple-filter
 
 </style>

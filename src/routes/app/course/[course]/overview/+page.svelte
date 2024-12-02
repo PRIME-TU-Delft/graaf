@@ -60,15 +60,13 @@
 		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
 	}
 
-	// Initialization
+	// Main
 	export let data: PageData
 	const cache = new ControllerCache()
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#await revive()}
 	<Loading />
@@ -76,11 +74,11 @@
 	<Layout>
 		<svelte:fragment slot="title">
 			<Navbar path={[
-				{	
+				{
 					name: 'Home',
 					href: '/app/home'
 				},
-				{	
+				{
 					name: `${$course.code} ${$course.name}`
 				}
 			]}>
