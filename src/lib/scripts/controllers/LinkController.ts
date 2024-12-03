@@ -5,6 +5,7 @@ import * as uuid from 'uuid'
 // Internal dependencies
 import * as settings from '$scripts/settings'
 import { Validation, Severity } from '$scripts/validation'
+import { debounce } from '$scripts/utility'
 
 import {
 	ControllerCache,
@@ -28,6 +29,8 @@ class LinkController {
 	private _unsaved: boolean = false
 	private _course?: CourseController
 	private _graph?: GraphController | null
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		public cache: ControllerCache,
@@ -289,7 +292,7 @@ class LinkController {
 		}
 	}
 
-	async save() {
+	private async _save() {
 		if (!this._unsaved) return
 
 		// Call the API to save the link

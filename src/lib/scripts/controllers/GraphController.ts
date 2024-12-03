@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -35,6 +35,8 @@ class GraphController {
 	private _subjects_relations?: SubjectRelationController[]
 	private _lectures?: LectureController[]
 	private _links?: LinkController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		public cache: ControllerCache,
@@ -545,7 +547,7 @@ class GraphController {
 		}
 	}
 
-	async save() {
+	private async _save() {
 		if (!this._unsaved) return
 
 		// Call the API to save the graph

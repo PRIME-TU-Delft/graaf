@@ -59,7 +59,7 @@
 	<Textfield 
 		id="name"
 		bind:value={$graph.name}
-		on:change={async () => {
+		on:input={async () => {
 			if ($graph.validateName().severity !== Severity.error) {
 				await $graph.save()
 			}

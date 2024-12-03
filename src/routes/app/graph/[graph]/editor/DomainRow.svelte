@@ -60,7 +60,7 @@
 		placeholder="Domain Name"
 		bind:value={domain.name}
 		on:input={() => { $graph = $graph /* Trigger reactivity */ }}
-		on:change={async () => await domain.save() }
+		on:input={async () => await domain.save() }
 	/>
 
 	<Dropdown

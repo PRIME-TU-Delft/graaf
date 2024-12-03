@@ -1,6 +1,7 @@
 
 // Internal dependencies
-import { compareArrays } from '$scripts/utility'
+import * as settings from '$scripts/settings'
+import { compareArrays, debounce } from '$scripts/utility'
 
 import {
 	ControllerCache,
@@ -26,6 +27,8 @@ class UserController {
 	private _course_admins?: CourseController[]
 	private _program_editors?: ProgramController[]
 	private _program_admins?: ProgramController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		public cache: ControllerCache,
@@ -319,7 +322,8 @@ class UserController {
 		}
 	}
 
-	async save() {
+	private async _save() {
+		if (!this._unsaved) return
 
 		// Call the API to save the user
 		const response = await fetch('/api/user', {

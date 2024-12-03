@@ -11,19 +11,17 @@ export type UpdateOptionalField<ID> = { connect?: { id: ID }, disconnect?: { id:
 
 // --------------------> Utility Functions
 
-export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number, immediate?: boolean) : (...args: Parameters<T>) => void {
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number) : (...args: Parameters<T>) => void {
 	let timeout: NodeJS.Timeout | undefined
 
 	return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
 		const later = () => {
 			timeout = undefined
-			if (!immediate) callback.apply(this, args)
+			callback.apply(this, args)
 		}
 
-		const call_now = immediate && timeout === undefined
 		clearTimeout(timeout)
 		timeout = setTimeout(later, delay)
-		if (call_now) callback.apply(this, args)
 	}
 }
 

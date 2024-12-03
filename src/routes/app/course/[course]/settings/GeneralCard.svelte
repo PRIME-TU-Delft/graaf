@@ -61,7 +61,7 @@
 		<Textfield 
 			id="code"
 			bind:value={$course.code}
-			on:change={async () => {
+			on:input={async () => {
 				if ($course.validateCode().severity !== Severity.error) {
 					await $course.save()
 				}
@@ -71,7 +71,7 @@
 		<Textfield 
 			id="name"
 			bind:value={$course.name}
-			on:change={async () => {
+			on:input={async () => {
 				if ($course.validateName().severity !== Severity.error) {
 					await $course.save()
 				}

@@ -163,7 +163,7 @@
 		id="link-name"
 		placeholder="Link Name"
 		bind:value={link.name}
-		on:change={async () => {
+		on:input={async () => {
 			await link.save()
 			$course = $course // Trigger reactivity
 		}}

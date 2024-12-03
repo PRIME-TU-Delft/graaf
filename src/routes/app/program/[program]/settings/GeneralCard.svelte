@@ -59,7 +59,7 @@
 	<Textfield
 		id="name"
 		bind:value={$program.name}
-		on:change={async () => {
+		on:input={async () => {
 			if ($program.validateName().severity !== Severity.error) {
 				await $program.save()
 			}

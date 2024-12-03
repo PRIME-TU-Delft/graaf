@@ -26,6 +26,8 @@ class ProgramController {
 	private _editors?: UserController[]
 	private _admins?: UserController[]
 
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
+
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
@@ -406,7 +408,7 @@ class ProgramController {
 		}
 	}
 
-	async save() {
+	private async _save() {
 		if (!this._unsaved) return
 
 		// Call the API to save the program

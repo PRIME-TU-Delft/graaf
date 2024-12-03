@@ -4,7 +4,7 @@ import * as uuid from 'uuid'
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -29,11 +29,12 @@ export { LectureController }
 
 
 class LectureController {
-	public uuid: string = uuid.v4()
-
 	private _unsaved: boolean = false
 	private _graph?: GraphController
 	private _present_subjects?: SubjectController[]
+
+	public uuid: string = uuid.v4()
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		public cache: ControllerCache,
@@ -421,7 +422,7 @@ class LectureController {
 		}
 	}
 
-	async save() {
+	private async _save() {
 		if (!this._unsaved) return
 
 		// Call the API to save the lecture

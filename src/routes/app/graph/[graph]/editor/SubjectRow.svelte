@@ -61,8 +61,10 @@
 		id="name"
 		placeholder="Subject Name"
 		bind:value={subject.name}
-		on:input={() => { $graph = $graph /* Trigger reactivity */ }}
-		on:change={async () => await subject.save() }
+		on:input={async () => {
+			await subject.save() 
+			$graph = $graph // Trigger reactivity
+		}}
 	/>
 
 	<Dropdown

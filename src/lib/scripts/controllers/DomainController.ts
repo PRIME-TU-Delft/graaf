@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -31,6 +31,8 @@ class DomainController extends NodeController<DomainController> {
 	private _style: DomainStyle | null
 	private _subject_ids?: number[]
 	private _subjects?: SubjectController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		cache: ControllerCache,
@@ -411,7 +413,7 @@ class DomainController extends NodeController<DomainController> {
 		}
 	}
 
-	async save() {
+	private async _save() {
 
 		// Call the API to save the domain
 		const response = await fetch('/api/domain', {

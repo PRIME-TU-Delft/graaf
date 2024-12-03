@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -32,6 +32,8 @@ class SubjectController extends NodeController<SubjectController> {
 	private _domain?: DomainController | null
 	private _lecture_ids?: number[]
 	private _lectures?: LectureController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		cache: ControllerCache,
@@ -433,7 +435,7 @@ class SubjectController extends NodeController<SubjectController> {
 		}
 	}
 
-	async save() {
+	private async _save() {
 		if (!this._unsaved) return
 
 		// Call the API to save the subject

@@ -117,8 +117,10 @@
 		id="name"
 		placeholder="Lecture name"
 		bind:value={lecture.name}
-		on:input={() => $graph = $graph}
-		on:change={async () => await lecture.save()}
+		on:input={async () => {
+			await lecture.save()
+			$graph = $graph // Trigger reactivity
+		}}
 	/>
 
 	<Button on:click={() => assign_subject_modal.show()}>
