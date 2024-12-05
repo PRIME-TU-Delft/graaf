@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 	import type { SubjectController } from '$scripts/controllers'
 
 	// Components
@@ -62,7 +62,8 @@
 		placeholder="Subject Name"
 		bind:value={subject.name}
 		on:input={async () => {
-			await subject.save() 
+			$save_status.setUnsaved()
+			await subject.save($save_status) 
 			$graph = $graph // Trigger reactivity
 		}}
 	/>
@@ -73,7 +74,8 @@
 		options={subject.domain_options}
 		bind:value={subject.domain}
 		on:change={async () => {
-			await subject.save()
+			$save_status.setUnsaved()
+			await subject.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>

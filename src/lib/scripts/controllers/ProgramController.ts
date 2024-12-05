@@ -1,6 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
+
 import { debounce, compareArrays } from '$scripts/utility'
 import { Validation, Severity} from '$scripts/validation'
 
@@ -11,6 +12,8 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedProgram } from '$scripts/types'
+
+import type SaveStatus from '$components/SaveStatus.svelte'
 import type { DropdownOption, SerializedProgram } from '$scripts/types'
 
 // Exports
@@ -408,8 +411,11 @@ class ProgramController {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		if (this.validateName().severity === Severity.error) return
+
+		save_status?.setSaving(true)
 
 		// Call the API to save the program
 		const response = await fetch('/api/program', {
@@ -424,6 +430,7 @@ class ProgramController {
 		}
 
 		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete() {

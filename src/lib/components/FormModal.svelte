@@ -75,7 +75,7 @@
 					on:click={ async () => await submit() }
 					disabled={ submitting || controller.validate().severity === Severity.error }
 				> <slot name="submit" /> </Button>
-				<Feedback data={ controller.validate() } />
+				<Feedback animate data={ controller.validate() } />
 			</div>
 		</form>
 	</dialog>

@@ -4,6 +4,7 @@ import * as uuid from 'uuid'
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
+
 import { Validation, Severity } from '$scripts/validation'
 import { debounce } from '$scripts/utility'
 
@@ -14,7 +15,9 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedLink } from '$scripts/types'
+
 import type { SerializedLink } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 // Exports
 export { LinkController }
@@ -292,8 +295,9 @@ class LinkController {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the link
 		const response = await fetch('/api/link', {
@@ -308,6 +312,7 @@ class LinkController {
 		}
 
 		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete() {

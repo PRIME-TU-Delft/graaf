@@ -9,10 +9,8 @@ import {
 	CourseController
 } from '$scripts/controllers'
 
-import type {
-	SerializedUser,
-	UserRole
-} from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
+import type { SerializedUser, UserRole } from '$scripts/types'
 
 // Exports
 export { UserController }
@@ -322,8 +320,9 @@ class UserController {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the user
 		const response = await fetch('/api/user', {
@@ -336,6 +335,9 @@ class UserController {
 		if (!response.ok) {
 			throw new Error(`APIError (/api/user PUT): ${response.status} ${response.statusText}`)
 		}
+
+		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	// --------------------> Utility

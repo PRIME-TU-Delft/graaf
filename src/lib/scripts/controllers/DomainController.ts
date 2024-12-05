@@ -1,6 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
+
 import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
@@ -12,6 +13,7 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedDomain } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 import type {
 	DomainStyle,
@@ -413,7 +415,9 @@ class DomainController extends NodeController<DomainController> {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
+		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the domain
 		const response = await fetch('/api/domain', {
@@ -426,6 +430,9 @@ class DomainController extends NodeController<DomainController> {
 		if (!response.ok) {
 			throw new Error(`APIError (/api/domain PUT): ${response.status} ${response.statusText}`)
 		}
+
+		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete(reorder_graph: boolean = true) {

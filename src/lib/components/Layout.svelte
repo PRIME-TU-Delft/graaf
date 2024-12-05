@@ -59,4 +59,6 @@
 			place-items: stretch start
 			gap: 2rem
 
+			position: relative
+
 </style>

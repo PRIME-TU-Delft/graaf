@@ -5,11 +5,12 @@
 	import { goto } from '$app/navigation'
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 	import { Severity } from '$scripts/validation'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Feedback from '$components/Feedback.svelte'
@@ -43,45 +44,47 @@
 	</svelte:fragment>
 </SimpleModal>
 
-<Card>
-	<svelte:fragment slot="header">
-		<h3> General </h3>
+<div class="wrapper">
+	<SaveStatus bind:this={ $save_status } />
 
-		<div class="flex-spacer" />
+	<Card>
+		<svelte:fragment slot="header">
+			<h3> General </h3>
 
-		<Button dangerous on:click={() => archive_modal.show()}>
-			<img src={trash_icon} alt="" /> Archive Course
-		</Button>
-	</svelte:fragment>
+			<div class="flex-spacer" />
 
-	<div class="grid">
-		<label for="code"> Course Code </label>
-		<label for="name"> Course Name </label>
+			<Button dangerous on:click={() => archive_modal.show()}>
+				<img src={trash_icon} alt="" /> Archive Course
+			</Button>
+		</svelte:fragment>
 
-		<Textfield 
-			id="code"
-			bind:value={$course.code}
-			on:input={async () => {
-				if ($course.validateCode().severity !== Severity.error) {
-					await $course.save()
-				}
-			}}
-		/>
+		<div class="grid">
+			<label for="code"> Course Code </label>
+			<label for="name"> Course Name </label>
 
-		<Textfield 
-			id="name"
-			bind:value={$course.name}
-			on:input={async () => {
-				if ($course.validateName().severity !== Severity.error) {
-					await $course.save()
-				}
-			}}
-		/>
+			<Textfield 
+				id="code"
+				bind:value={$course.code}
+				on:input={async () => {
+					$save_status.setUnsaved()
+					await $course.save($save_status)
+				}}
+			/>
 
-		<Feedback data={$course.validateCode()} />
-		<Feedback data={$course.validateName()} />
-	</div>
-</Card>
+			<Textfield 
+				id="name"
+				bind:value={$course.name}
+				on:input={async () => {
+					$save_status.setUnsaved()
+					await $course.save($save_status)
+				}}
+			/>
+
+			<Feedback animate data={$course.validateCode()} />
+			<Feedback animate data={$course.validateName()} />
+		</div>
+	</Card>
+</div>
 
 <!-- Styles -->
 
@@ -89,6 +92,11 @@
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
+
+	.wrapper
+		display: flex
+		flex-flow: column nowrap
+		gap: $form-small-gap
 
 	.grid
 		display: grid

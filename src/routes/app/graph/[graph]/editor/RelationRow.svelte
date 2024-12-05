@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import type { 
 		RelationController, 
@@ -67,7 +67,8 @@
 		options={relation.parent_options}
 		bind:value={relation.parent}
 		on:change={async () => {
-			await relation.save()
+			$save_status.setUnsaved()
+			await relation.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>
@@ -80,7 +81,8 @@
 		options={relation.child_options}
 		bind:value={relation.child}
 		on:change={async () => {
-			await relation.save()
+			$save_status.setUnsaved()
+			await relation.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>

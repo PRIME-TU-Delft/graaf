@@ -22,7 +22,7 @@
 		<div class="row" animate:flip={{ duration: settings.UNIVERSAL_FADE_DURATION }}>
 
 			<!-- Validation -->
-			<Feedback compact animate={false} data={item.validate(false)} />
+			<Feedback compact data={item.validate(false)} />
 
 			<!-- Item Index -->
 			{index + 1}

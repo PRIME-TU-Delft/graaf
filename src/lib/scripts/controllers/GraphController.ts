@@ -1,13 +1,13 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
+
 import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
 	ControllerCache,
 	CourseController,
-	RelationController,
 	DomainController,
 	DomainRelationController,
 	SubjectController,
@@ -17,6 +17,8 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedGraph } from '$scripts/types'
+
+import type SaveStatus from '$components/SaveStatus.svelte'
 import type { DropdownOption, SerializedGraph } from '$scripts/types'
 
 // Exports
@@ -547,8 +549,11 @@ class GraphController {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		if (this.validateName().severity === Severity.error) return
+
+		save_status?.setSaving(true)
 
 		// Call the API to save the graph
 		const response = await fetch('/api/graph', {
@@ -563,6 +568,7 @@ class GraphController {
 		}
 
 		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete() {

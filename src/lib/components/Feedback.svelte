@@ -35,7 +35,7 @@
 	// Exports
 	export let data: Validation
 	export let compact: boolean = false
-	export let animate: boolean = true
+	export let animate: boolean = false
 
 	// Main
 	let timeout: NodeJS.Timeout

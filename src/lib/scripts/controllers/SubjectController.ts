@@ -1,6 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
+
 import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
@@ -13,6 +14,7 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedSubject } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 import type {
 	DomainStyle,
@@ -435,8 +437,9 @@ class SubjectController extends NodeController<SubjectController> {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the subject
 		const response = await fetch('/api/subject', {
@@ -450,7 +453,8 @@ class SubjectController extends NodeController<SubjectController> {
 			throw new Error(`APIError (/api/subject PUT): ${response.status} ${response.statusText}`)
 		}
 
-		this._unchanged = true
+		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete() {

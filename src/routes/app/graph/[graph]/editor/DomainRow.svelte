@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 	import type { DomainController } from '$scripts/controllers'
 
 	// Components
@@ -59,8 +59,11 @@
 		id="name"
 		placeholder="Domain Name"
 		bind:value={domain.name}
-		on:input={() => { $graph = $graph /* Trigger reactivity */ }}
-		on:input={async () => await domain.save() }
+		on:input={async () => {
+			$save_status.setUnsaved()
+			await domain.save($save_status)
+			$graph = $graph /* Trigger reactivity */
+		}}
 	/>
 
 	<Dropdown
@@ -69,7 +72,8 @@
 		options={domain.style_options}
 		bind:value={domain.style}
 		on:change={async () => {
-			await domain.save()
+			$save_status.setUnsaved()
+			await domain.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>

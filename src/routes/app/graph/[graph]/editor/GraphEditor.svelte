@@ -7,7 +7,7 @@
 	import { onDestroy } from 'svelte'
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 	import { GraphSVG, SVGState } from '$scripts/svg'
 
 	import {
@@ -29,6 +29,7 @@
 	import LectureHeader from './LectureHeader.svelte'
 
 	import SimpleModal from '$components/SimpleModal.svelte'
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
@@ -109,6 +110,8 @@
 
 <div class="tabular">
 	<div class="sticky" id="sticky-tabular-header">
+		<SaveStatus bind:this={ $save_status } />
+
 		<div class="tabs">
 			<button
 				class="tab"
@@ -230,12 +233,14 @@
 			top: 0
 
 			// Workaround for sticky elements, as overflow: hidden is not supported
-			margin-top: -$form-medium-gap
-			padding-top: $form-medium-gap
+			margin-top: -$form-small-gap
+			padding-top: $form-small-gap
 			background: $white
 
 			.tabs
 				display: flex
+
+				margin-top: $form-small-gap
 
 				background: $light-gray
 				border: 1px solid $gray

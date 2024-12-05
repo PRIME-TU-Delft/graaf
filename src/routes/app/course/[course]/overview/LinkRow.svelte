@@ -144,7 +144,7 @@
 </SimpleModal>
 
 <div class="row">
-	<Feedback compact data={link.validate(false)} animate={false} />
+	<Feedback compact data={link.validate(false)} />
 
 	<IconButton scale
 		src={trash_icon}

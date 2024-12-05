@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import { AbstractFormModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
@@ -118,7 +118,8 @@
 		placeholder="Lecture name"
 		bind:value={lecture.name}
 		on:input={async () => {
-			await lecture.save()
+			$save_status.setUnsaved()
+			await lecture.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>
@@ -142,7 +143,8 @@
 					<LinkButton
 						on:click={async () => {
 							lecture.unassignSubject(subject)
-							await lecture.save()
+							$save_status.setUnsaved()
+							await lecture.save($save_status)
 							$graph = $graph
 						}}
 					> Unassign from lecture </LinkButton>

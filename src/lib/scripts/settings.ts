@@ -8,7 +8,7 @@ type Milliseconds = number
 
 export const ROOT_URL = 'https://beta.prime-applets.ewi.tudelft.nl'
 
-export const DEBOUNCE_DELAY: Milliseconds = 1000
+export const DEBOUNCE_DELAY: Milliseconds = 800
 
 export const MAX_PROGRAM_NAME_LENGTH: Scalar = 50
 

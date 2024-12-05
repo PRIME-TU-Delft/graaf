@@ -12,6 +12,7 @@ import {
 } from '$scripts/controllers'
 
 import type { DropdownOption } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 // Exports
 export { RelationController, DomainRelationController, SubjectRelationController }
@@ -148,9 +149,14 @@ abstract class RelationController<T extends DomainController | SubjectController
 
 	// --------------------> Actions
 
-	async save() {
-		await this.parent?.save()
-		await this.child?.save()
+	async save(save_status?: SaveStatus) {
+		save_status?.setSaving(true)
+		await Promise.all([
+			this.parent?.save(),
+			this.child?.save()
+		])
+		
+		save_status?.setSaving(false)
 	}
 
 	abstract delete(): void

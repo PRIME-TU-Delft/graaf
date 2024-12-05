@@ -50,7 +50,6 @@
 
 </script>
 
-
 <!-- Markup -->
 
 {#await revive()}

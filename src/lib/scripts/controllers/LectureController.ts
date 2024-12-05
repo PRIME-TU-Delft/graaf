@@ -4,6 +4,7 @@ import * as uuid from 'uuid'
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
+
 import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
@@ -15,6 +16,7 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedLecture } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 import type {
 	DropdownOption,
@@ -422,8 +424,9 @@ class LectureController {
 		}
 	}
 
-	private async _save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the lecture
 		const response = await fetch('/api/lecture', {
@@ -438,6 +441,7 @@ class LectureController {
 		}
 
 		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete(reorder_graph: boolean = true) {

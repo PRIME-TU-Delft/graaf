@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import {
 		ControllerCache,
