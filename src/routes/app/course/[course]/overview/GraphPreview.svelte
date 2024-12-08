@@ -86,10 +86,8 @@
 					disabled={disable_graph_controls}
 					on:click={() => graphSVG.centerGraph()}
 				> Center Graph </Button>
-
-				<button class="exit" on:click={hide}>
-					<img src={plus_icon} alt="Exit icon" class="icon" />
-				</button>
+				
+				<button class="exit" on:click={ hide } />
 			</div>
 		</div>
 
@@ -105,6 +103,7 @@
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
+	@use "sass:math"
 
 	.background
 		position: fixed
@@ -136,6 +135,8 @@
 
 		.tabs
 			display: flex
+
+			width: 100%
 
 			background: $light-gray
 			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
@@ -174,27 +175,38 @@
 				border-bottom: 1px solid $gray
 
 				.exit
-					display: flex
-					align-items: center
-					justify-content: center
+					position: relative
 
-					margin-left: 1rem
-					overflow: hidden
+					min-width: $total-icon-size
+					min-height: $total-icon-size
+					padding: $input-icon-padding
 
-					.icon
-						width: $input-icon-size
+					cursor: pointer
+					caret-color: transparent !important
+
+					&:focus-visible
+						outline: 1px solid $tudelft-blue
+
+					&:hover::before, &:hover::after
+						height: $input-icon-size * math.sqrt(2)
+
+					&::before, &::after
+						content: ''
+
+						position: absolute
+						translate: -50% -50%
 						rotate: 45deg
+						left: 50%
+						top: 50%
 
-						cursor: pointer
-						filter: $purple-filter
+						height: $input-icon-size
 
-					&:focus, .icon:hover
-						scale: $scale-on-hover
-						filter: $dark-purple-filter
+						pointer-events: none
+						border-left: 2px solid $dark-gray
+						transition: height $default-transition
 
-				:global(.dropdown)
-					max-width: 20rem
-					margin-left: $form-medium-gap
+					&::after
+						rotate: -45deg
 
 		.content
 			height: min(750px, calc(100vh - 2 * $tudelft-logo-width))
