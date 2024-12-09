@@ -406,10 +406,6 @@ class GraphSVG {
 				this.Lectures()
 				break
 		}
-
-		return {
-			destroy: () => this.detach()
-		}
 	}
 
 	detach() {

@@ -14,6 +14,7 @@ import {
 } from '$scripts/controllers'
 
 import type { DomainStyle } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 // Exports
 export { NodeController }
@@ -127,6 +128,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		return this.style === null ? 'transparent' : settings.NODE_STYLES[this.style].stroke
 	}
 
+	abstract get display_name(): string
 	abstract get style(): DomainStyle | null
 	abstract get parents(): T[]
 	abstract get children(): T[]
@@ -145,7 +147,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 
 	// --------------------> Actions
 
-	abstract save(): void
+	abstract save(save_status?: SaveStatus): void
 	abstract delete(): void
 	abstract copy(graph: GraphController): Promise<T>
 }

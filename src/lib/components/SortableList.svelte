@@ -107,9 +107,11 @@
 		.row
 			display: flex
 			flex-flow: row nowrap
+			align-items: center
 			gap: $form-small-gap
 
 			.handle
+				align-self: start
 				width: $total-icon-size
 				height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
 				padding: 0.4rem

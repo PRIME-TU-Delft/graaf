@@ -1,7 +1,6 @@
 
 // --------------------> Types
 
-
 interface IWithID<ID> {
 	id: ID
 }
@@ -10,9 +9,34 @@ export type UpdateArray<ID> = { connect?: { id: ID }[], disconnect?: { id: ID }[
 export type UpdateRequiredField<ID> = {} | { connect: { id: ID }, disconnect: { id: ID } }
 export type UpdateOptionalField<ID> = { connect?: { id: ID }, disconnect?: { id: ID } }
 
-
 // --------------------> Utility Functions
 
+export function oxfordCommaList(list: string[]): string {
+	if (list.length === 0) {
+		return ''
+	} else if (list.length === 1) {
+		return list[0]
+	} else if (list.length === 2) {
+		return `${list[0]} and ${list[1]}`
+	} else {
+		const last = list.pop()
+		return `${list.join(', ')}, and ${last}`
+	}
+}
+
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number) : (...args: Parameters<T>) => void {
+	let timeout: NodeJS.Timeout | undefined
+
+	return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
+		const later = () => {
+			timeout = undefined
+			callback.apply(this, args)
+		}
+
+		clearTimeout(timeout)
+		timeout = setTimeout(later, delay)
+	}
+}
 
 export async function asyncFlatmap<Input, Output>(input: Input[], callback: (input: Input) => Output | Output[] | Promise<Output | Output[]>): Promise<Output[]> {
 	const outputs = await Promise.all(input.map(callback))

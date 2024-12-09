@@ -17,12 +17,14 @@
 
 </script>
 
+<!-- Markdown -->
+
 <div class="list">
 	{#each list as item, index (item.uuid)}
 		<div class="row" animate:flip={{ duration: settings.UNIVERSAL_FADE_DURATION }}>
 
 			<!-- Validation -->
-			<Feedback compact animate={false} data={item.validate(false)} />
+			<Feedback compact data={item.validate(false)} />
 
 			<!-- Item Index -->
 			{index + 1}
@@ -33,11 +35,12 @@
 	{/each}
 </div>
 
+<!-- Styles -->
+
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
-
 
 	.list
 		display: flex
@@ -49,7 +52,5 @@
 			grid-template: "validate index content" auto / $total-icon-size $total-icon-size 1fr
 			place-items: center center
 			grid-gap: $form-small-gap
-
-			width: 100%
 
 </style>

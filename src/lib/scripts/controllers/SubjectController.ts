@@ -1,7 +1,8 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+
+import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -13,6 +14,7 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedSubject } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 import type {
 	DomainStyle,
@@ -32,6 +34,8 @@ class SubjectController extends NodeController<SubjectController> {
 	private _domain?: DomainController | null
 	private _lecture_ids?: number[]
 	private _lectures?: LectureController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		cache: ControllerCache,
@@ -56,6 +60,11 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	// --------------------> Getters & Setters
+
+	// Name properties
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled subject' : this.trimmed_name
+	}
 
 	// Parent properties
 	get parents(): SubjectController[] {
@@ -113,7 +122,7 @@ class SubjectController extends NodeController<SubjectController> {
 			.map(domain => ({
 				value: domain,
 				label: domain.trimmed_name,
-				validation: Validation.success()
+				color: domain.color
 			}))
 	}
 
@@ -273,26 +282,20 @@ class SubjectController extends NodeController<SubjectController> {
 		if (this.trimmed_name === '') {
 			validation.add({
 				severity: Severity.error,
-				short: 'Subject has no name',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject has no name'
 			})
 		} else if (this.trimmed_name.length > settings.MAX_NODE_NAME_LENGTH) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject name is too long',
-				long: `Subject name cannot exceed ${settings.MAX_NODE_NAME_LENGTH} characters`,
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				long: `Subject name cannot exceed ${settings.MAX_NODE_NAME_LENGTH} characters`
 			})
 		} else if (this.cache.all(SubjectController)
 			.find(subject => subject.id !== this.id && subject.trimmed_name === this.trimmed_name)
 		) {
 			validation.add({
 				severity: Severity.warning,
-				short: 'Subject name is not unique',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject name is not unique'
 			})
 		}
 
@@ -306,9 +309,7 @@ class SubjectController extends NodeController<SubjectController> {
 		if (this.domain === null) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Subject has no domain',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject has no domain'
 			})
 		}
 
@@ -322,9 +323,7 @@ class SubjectController extends NodeController<SubjectController> {
 		if (this.lecture_ids.length === 0) {
 			validation.add({
 				severity: Severity.warning,
-				short: 'Subject has no lectures',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject not assigned to a lecture'
 			})
 		}
 
@@ -433,8 +432,9 @@ class SubjectController extends NodeController<SubjectController> {
 		}
 	}
 
-	async save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the subject
 		const response = await fetch('/api/subject', {
@@ -448,7 +448,8 @@ class SubjectController extends NodeController<SubjectController> {
 			throw new Error(`APIError (/api/subject PUT): ${response.status} ${response.statusText}`)
 		}
 
-		this._unchanged = true
+		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete() {

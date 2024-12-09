@@ -9,7 +9,7 @@ $right-gutter: $total-icon-size + $form-small-gap
 	display: flex
 	flex-flow: row nowrap
 	align-content: center
-	gap: $form-medium-gap
+	gap: $form-small-gap
 
 	padding: $card-thick-padding
 
@@ -20,7 +20,7 @@ $right-gutter: $total-icon-size + $form-small-gap
 	gap: $form-small-gap
 
 	padding:
-		top: 0
+		top: 2px
 		right: $card-thick-padding
 		bottom: $card-thick-padding
 		left: $card-thick-padding
@@ -89,12 +89,17 @@ $right-gutter: $total-icon-size + $form-small-gap
 		bottom: 0
 		left: $left-gutter
 
+	background: $white
 	border: 1px solid $gray
-	border-radius: $border-radius
+	border-radius: $default-border-radius
 	cursor: pointer
 
 	&:hover
 		background-color: $light-gray
+
+	&:focus-visible
+		outline: $default-outline
+		border-color: $white
 
 	img
 		width: $input-icon-size

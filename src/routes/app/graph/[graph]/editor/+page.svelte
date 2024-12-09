@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import {
 		ControllerCache,
@@ -73,11 +73,11 @@
 					href: '/app/home'
 				},
 				{
-					name: $graph.course.code + ' ' + $graph.course.name,
+					name: $graph.course.display_name,
 					href: `/app/course/${$graph.course_id}/overview`
 				},
 				{
-					name: $graph.name
+					name: $graph.display_name
 				}
 			]}>
 				<LinkButton href="/app/graph/{$graph.id}/settings"> Graph Settings </LinkButton>

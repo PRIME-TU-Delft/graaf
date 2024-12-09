@@ -50,7 +50,7 @@ class NodeSVG {
 
 		// Node text
 		selection.append('text')
-			.text(node => node.name!)
+			.text(node => node.display_name)
 			.style('text-anchor', 'middle')
 			.style('dominant-baseline', 'middle')
 			.style('font-size', settings.NODE_FONT_SIZE)

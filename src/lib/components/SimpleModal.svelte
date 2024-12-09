@@ -2,10 +2,12 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { loopFocus, focusFirstChild } from "$scripts/actions/hocusfocus"
+	import { loopFocus, focusLastChild } from "$scripts/actions/hocusfocus"
 
 	// Functions
 	function onkeydown(event: KeyboardEvent) {
+		if (!open) return
+
 		if (event.key === 'Escape') {
 			hide()
 		}
@@ -25,7 +27,7 @@
 
 {#if open}
 	<div class="backdrop" />
-	<dialog use:loopFocus use:focusFirstChild>
+	<dialog use:loopFocus use:focusLastChild>
 		<div class="header">
 			<button class="exit" on:click={ hide } />
 			<slot name="header" />
@@ -49,7 +51,7 @@
 
 	.backdrop
 		position: fixed
-		z-index: 999
+		z-index: 3
 		top: 0
 		left: 0
 
@@ -61,7 +63,7 @@
 	dialog
 		position: fixed
 		translate: -50% -50%
-		z-index: 1000
+		z-index: 4
 		top: 50%
 		left: 50%
 
@@ -73,8 +75,8 @@
 		padding: $card-thick-padding
 
 		background-color: $white
-		border-radius: $border-radius
-		box-shadow: $shadow
+		border-radius: $default-border-radius
+		box-shadow: $default-box-shadow
 
 		.header
 			display: flex
@@ -101,16 +103,17 @@
 			top: $card-thick-padding
 			right: $card-thick-padding
 
+			box-sizing: content-box
 			width: $input-icon-size
 			height: $input-icon-size
 			padding: $input-icon-padding
-			box-sizing: content-box
+
+			border-radius: $default-border-radius
 
 			cursor: pointer
-			caret-color: transparent !important
 
 			&:focus-visible
-				outline: 1px solid $tudelft-blue
+				outline: $default-outline
 
 			&:hover::before, &:hover::after
 				height: $input-icon-size * math.sqrt(2)

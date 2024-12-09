@@ -44,7 +44,7 @@
 						severity: Severity.error,
 						short: 'Graph name is too long'
 					})
-				} else if ($course.graphs.some(graph => graph.name === this.name.trim())) {
+				} else if ($course.graphs.some(graph => graph.trimmed_name === this.name.trim())) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Graph name isn\'t unique'

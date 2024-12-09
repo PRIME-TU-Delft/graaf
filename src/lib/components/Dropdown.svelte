@@ -1,296 +1,331 @@
 
 <script lang="ts">
 
-	// Svelte imports
 	import { createEventDispatcher } from "svelte"
 
-	// Internal imports
-	import { focusOnLoad, loopFocus, focusOnHover, focusFirstChild, focusOnKeydown } from '$scripts/actions/hocusfocus'
-	import { clickoutside } from '$scripts/actions/clickoutside'
-	import { Severity } from '$scripts/validation'
+	import { Severity } from "$scripts/validation"
+	import { loopFocus, focusOnLoad } from "$scripts/actions/hocusfocus"
+	import { clickoutside } from "$scripts/actions/clickoutside"
+	import type { DropdownOption } from "$scripts/types"
 
-	import type { DropdownOption } from '$scripts/types'
+	import error_icon from "$assets/error-icon.svg"
+	import warning_icon from "$assets/warning-icon.svg"
+	import search_icon from "$assets/search-icon.svg"
 
-	// Assets
-	import errorIcon from '$assets/error-icon.svg'
-	import warningIcon from '$assets/warning-icon.svg'
-	import searchIcon from '$assets/search-icon.svg'
+	function onKeydown(event: KeyboardEvent) {
+		if (!open) return
 
-	// Types
+		if (event.key === 'Tab') {
+			if (options.length === 0)
+				setOpen(false)
+			return
+		}
+
+		if (event.key === 'Escape') {
+			setOpen(false)
+			return
+		}
+
+		if (event.key === 'Enter' || event.key === 'Shift') {
+			return
+		}
+
+		search.focus()
+	}
+
+	function setOpen(value: boolean) {
+		if (!value) query = ''
+		open = value
+	}
+
+	function setValue(new_value: T | null) {
+		dispatch('change', new_value)
+		value = new_value
+		setOpen(false)
+	}
+
 	type T = $$Generic
 
-	// Exports
-	export let id: string
-	export let value: T | null = null
+	export let placeholder: string = 'Select an option'
 	export let options: DropdownOption<T>[]
-	export let placeholder: string
+	export let value: T | null
 
-	// Functions
-	function visibility(value: boolean) {
-		visible = value
-		query = ''
-
-		setTimeout(() => {
-			wrapper.style.height = visible ? wrapper.scrollHeight + 'px' : 'auto', 0
-		})
-	}
-
-	function set(new_value: T | null) {
-		focusOnLoad(header)
-		visibility(false)
-
-		if (value !== new_value) {
-			value = new_value
-			dispatch('change', new_value)
-		}
-	}
-
-	// Variables
 	const dispatch = createEventDispatcher<{change: T | null}>()
-	let visible: boolean = false
-	let dropdown: HTMLDivElement
-	let wrapper: HTMLDivElement
-	let header: HTMLButtonElement
+
+	let search: HTMLDivElement
+	let open: boolean = false
 	let query: string = ''
 
-	$: choice = options.find(option => option.value === value)
-	$: options = options.sort((a, b) => {
-		if (a.validation.severity === Severity.error) return 1
-		if (b.validation.severity === Severity.error) return -1
-		return 0
-	})
+	$: show_preview = options.some(option => option.color)
+	$: selected = options.find(option => option.value === value) || null
+	$: filtered_options = options
+		.filter(option => option.label.toLowerCase().includes(query.toLowerCase()))
+		.toSorted((a, b) => {
+			if (a.validation?.severity === Severity.error) return 1
+			if (b.validation?.severity === Severity.error) return -1
+			return 0
+		})
 
 </script>
 
-
 <!-- Markup -->
 
+<svelte:window on:keydown={ onKeydown } />
 
-<div class="dropdown" bind:this={dropdown}>
-	<div
-		class="wrapper"
-		class:visible
-		use:clickoutside={() => visibility(false)}
-		bind:this={wrapper}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+
+<div class="dropdown">
+	<div 
+		class:open
+		class="wrapper" 
+		use:clickoutside={ () => setOpen(false) }
 	>
-
-		<!-- Hidden input to bind the selected value to a submittable element -->
-		<input id={id} type="hidden" tabindex="-1" bind:value />
-		<button
-			type="button"
+		<button 
 			class="header"
-			class:grayed={!choice}
-			on:click={() => visibility(!visible)}
-			bind:this={header}
+			class:grayed={ !selected }
+			on:click={ () => setOpen(!open) }
 		>
-			{#if choice}
-				{#if choice.label.trim() === ''}
-					<i> Unnamed option </i>
-				{:else}
-					{choice.label}
-				{/if}
+			{#if selected?.label}
+				{ selected.label }
+			{:else if selected}
+				<i> Untitled option </i>
 			{:else}
-				{placeholder}
+				{ placeholder }
 			{/if}
 		</button>
 
-		{#if visible}
-			<div class="options" use:focusFirstChild use:loopFocus>
-				{#if options.length >= 5}
-					<div class="option searchbar">
-						<input type="text" placeholder="Search..." bind:value={query} use:focusOnKeydown>
-						<img src={searchIcon} alt="Searchbar" />
-					</div>
-				{/if}
-
-				{#each options as option}
-					{#if options.length < 5 || option.label.toLowerCase().includes(query.toLowerCase())}
-						<button
-							type="button"
-							class="option"
-							tabindex={option.validation.severity === Severity.error ? 0 : -1}
-							disabled={option.validation.severity === Severity.error}
-							on:click={() => set(option.value)}
-							use:focusOnHover
-						>
-							{#if option.label.trim() === ''}
-								<i> Unnamed option </i>
-							{:else}
-								{option.label}
-							{/if}
-
-							{#if option.validation.severity === Severity.error}
-								<span class="error">
-									<img src={errorIcon} alt="" /> {option.validation.errors[0].short}
-								</span>
-							{:else if option.validation.severity === Severity.warning}
-								<span class="warning">
-									<img src={warningIcon} alt="" /> {option.validation.warnings[0].short}
-								</span>
-							{/if}
-						</button>
-					{/if}
-				{/each}
-
+		{#if open}
+			<div class="options" use:loopFocus={ filtered_options }>
 				{#if options.length === 0}
-					<button type="button" disabled class="option grayed">
+					<button class="option" disabled>
 						<i> No options available </i>
 					</button>
-				{/if}
+				{:else}
+					<div class="search">
+						<input
+							type="text"
+							placeholder="Search"
+							bind:value={ query }
+							bind:this={ search }
+							use:focusOnLoad
+						/>
 
-				{#if value !== null}
-					<button type="button" class="option grayed" on:click={() => set(null)} use:focusOnHover>
-						<i> Remove choice </i>
-					</button>
+						<img src={ search_icon } alt="Search" />
+					</div>
+
+					{#each filtered_options as option}
+						<button
+							class="option"
+							disabled={ option.validation?.severity === Severity.error }
+							on:click={ () => setValue(option.value) }
+						>
+							{#if option.label}
+								{ option.label }
+							{:else}
+								<i> Nameless option </i>
+							{/if}
+
+							{#if option.validation}
+								{#if option.validation.severity === Severity.error}
+									<div class="error">
+										{ option.validation.errors[0].short }
+										<img src={ error_icon } alt="Error" />
+									</div>
+								{:else if option.validation.severity === Severity.warning}
+									<div class="warning">
+										{ option.validation.warnings[0].short }
+										<img src={ warning_icon } alt="Warning" />
+									</div>
+								{/if}
+							{/if}
+
+							{#if show_preview}
+								<div
+									class="preview"
+									style:grid-area="preview"
+									style:background={ option.color }
+								/>
+							{/if}
+						</button>
+					{/each}
+
+					{#if selected !== null}
+						<button
+							class="option"
+							on:click={ () => setValue(null) }>
+							<i> Remove choice </i>
+						</button>
+					{:else if filtered_options.length === 0}
+						<button disabled class="option">
+							<i> No results found </i>
+						</button>
+					{/if}
 				{/if}
 			</div>
 		{/if}
 	</div>
 </div>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
 	@use '$styles/variables.sass' as *
 	@use '$styles/palette.sass' as *
-
-	$caret-size: calc($input-icon-size / sqrt(2))
+	@use 'sass:math'
 
 	.dropdown
 		position: relative
+		
 		width: 100%
+		min-width: 3 * $input-thick-padding + $input-icon-size
 		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
 
 		.wrapper
 			position: absolute
+			top: 0
 			left: 0
 
 			width: 100%
-			height: auto
-			overflow: hidden
 
-			&.visible .header
-				border-color: $tudelft-blue
-				border-bottom-color: $gray
-				border-bottom-style: dashed
-				border-radius: $border-radius $border-radius 0 0
+			border-radius: $default-border-radius
+			border: 1px solid $gray
 
-				&::after
-					translate: 0 80%
-					rotate: -135deg
+			background: $white
+
+			&:focus-within
+				outline: $default-outline
+				border-color: $white
+
+				.header, .search, .option
+					border-color: $white
+				&.open .header
+					border-bottom-color: $gray
+
+			&.open 
+				z-index: 1
+				
+				.header
+					border-bottom: 1px dashed $gray
+					border-radius: $default-border-radius $default-border-radius 0 0
+
+					&::after
+						translate: 0 50%
+						rotate: -135deg
 
 			.header
-				position: relative
-				display: block
-
 				width: 100%
 				padding:
 					top: $input-thin-padding
-					right: $caret-size + 2 * $input-thick-padding
+					right: 2 * $input-thick-padding + $input-icon-size
 					bottom: $input-thin-padding
 					left: $input-thick-padding
 
 				overflow: hidden
-				text-overflow: ellipsis
 				white-space: nowrap
-
-				border: 1px solid $gray
-				border-radius: $border-radius
-				background-color: $white
+				text-overflow: ellipsis
 				text-align: left
-				cursor: pointer
 
-				&:focus
-					border-color:
-						top: $tudelft-blue
-						right: $tudelft-blue
-						bottom: $gray
-						left: $tudelft-blue
+				border-radius: $default-border-radius
 
+				.grayed
+					color: $placeholder-color
 
 				&::after
-					content: ""
+					content: ''
 
 					position: absolute
-					translate: 0 15%
 					rotate: 45deg
-					right: $input-thick-padding
-					bottom: 50%
+					top: $input-thin-padding + math.div((2 - math.sqrt(2)) * $input-icon-size, 4)
+					right: $input-thick-padding + math.div((2 - math.sqrt(2)) * $input-icon-size, 4)
 
-					box-sizing: border-box
-					width: $caret-size
-					height: $caret-size
+					width: math.div($input-icon-size, math.sqrt(2))
+					height: math.div($input-icon-size, math.sqrt(2))
 
-					border: 1px solid $black
-					border-width: 0 1px 1px 0
+					border-width: 0 2px 2px 0
+					border-style: solid
+					border-color: $dark-gray
 
 			.options
-				position: absolute
-				z-index: 1
-
-				display: flex
-				flex-flow: column nowrap
-
 				width: 100%
-				max-height: $max-dropdown-height
-				overflow-y: auto
+				max-height: 15rem
+				overflow: auto
 
-				border: 1px solid $tudelft-blue
-				border-width: 0 1px 1px 1px
-				border-radius: 0 0 $border-radius $border-radius
-				background-color: $white
+				.search
+					position: relative
+
+					input
+						width: 100%
+						padding:
+							top: $input-thin-padding
+							right: 2 * $input-thick-padding + $input-icon-size
+							bottom: $input-thin-padding
+							left: $input-thick-padding
+
+						cursor: text
+
+					img
+						position: absolute
+						translate: 0 -50%
+						top: 50%
+						right: $input-thick-padding
+
+						width: $input-icon-size
+						height: $input-icon-size
+
+						filter: $gray-filter
+						pointer-events: none
 
 				.option
-					display: flex
-					flex-flow: row nowrap
-					align-items: center
+					display: grid
+					grid-template: "label validation preview" auto / 1fr max-content auto
+					place-items: center start
+					gap: $input-thick-padding
 
+					width: 100%
 					padding: $input-thin-padding $input-thick-padding
 
-					text-align: left
 					cursor: pointer
+					text-align: left
+					background: $white
 
-					&:focus
-						background-color: $light-gray
+					&:last-child
+						border-bottom-width: 1px
+						border-radius: 0 0 $default-border-radius $default-border-radius
+
+					&:not(:disabled)
+						&:hover, &:focus
+							background: $light-gray
 
 					&:disabled
 						cursor: not-allowed
 						color: $placeholder-color
 
+					& > *
+						pointer-events: none
+
 					.error, .warning
 						display: flex
+						flex-flow: row nowrap
 						align-items: center
-						justify-content: end
 						gap: $form-small-gap
-
-						pointer-events: none
-						color: $red
-						flex: 1
 
 						img
 							width: $input-icon-size
 							height: $input-icon-size
-							filter: $red-filter
+
+					.error
+						filter: $red-filter
 
 					.warning
-						color: $yellow
+						filter: $yellow-filter
 
-						img
-							filter: $yellow-filter
-
-				.searchbar
-					position: relative
-					padding-right: calc($input-icon-size + 2 * $input-thin-padding)
-
-					img
-						position: absolute
-						right: $input-thin-padding
+					.preview
 						width: $input-icon-size
 						height: $input-icon-size
 
-						filter: $gray-filter
+					i
+						color: $placeholder-color
 
 </style>

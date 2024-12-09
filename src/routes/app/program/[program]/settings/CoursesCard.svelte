@@ -103,7 +103,7 @@
 						severity: Severity.error,
 						short: 'Course name is too long'
 					})
-				} else if ($courses.some(course => course.name === this.name.trim())) {
+				} else if ($courses.some(course => course.trimmed_name === this.name.trim())) {
 					validation.add({
 						severity: Severity.warning,
 						short: 'Course name isn\'t unique'
@@ -155,7 +155,6 @@
 	<svelte:fragment slot="form">
 		<label for="program"> Target Program </label>
 		<Dropdown
-			id="program"
 			placeholder="Select a program"
 			bind:value={assign_course_modal.course}
 			options={$program.course_options}

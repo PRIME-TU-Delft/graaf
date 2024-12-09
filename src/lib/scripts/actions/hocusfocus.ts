@@ -11,40 +11,18 @@ export function focusFirstChild(element: HTMLElement) {
 	}
 }
 
+export function focusLastChild(element: HTMLElement) {
+	const focusable = getFocusableChildren(element)
+	if (focusable.length) {
+		focusable[focusable.length - 1].focus()
+	}
+}
+
 export function focusOnLoad(element: HTMLElement) {
 	element.focus()
 }
 
-export function focusOnHover(element: HTMLElement) {
-	function onHover() {
-		element.focus()
-	}
-
-	element.addEventListener('mouseenter', onHover)
-
-	return {
-		destroy() {
-			element.removeEventListener('mouseenter', onHover)
-		}
-	}
-}
-
-export function focusOnKeydown(element: HTMLElement, key?: string) {
-	function onKeyDown(event: KeyboardEvent) {
-		if (event.key === 'Tab' || event.key === 'Enter' || key && event.key !== key) return
-		element.focus()
-	}
-
-	document.addEventListener('keydown', onKeyDown)
-
-	return {
-		destroy() {
-			document.removeEventListener('keydown', onKeyDown)
-		}
-	}
-}
-
-export function loopFocus(element: HTMLElement) {
+export function loopFocus(element: HTMLElement, _sensitivity: any = null) {
 	let focusable = getFocusableChildren(element)
 	let index = focusable.findIndex(e => e === document.activeElement)
 
@@ -60,7 +38,7 @@ export function loopFocus(element: HTMLElement) {
 			
 			// Go to the next focusable element
 			index = (index + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
-			while (!element.contains(focusable[index])) 
+			while (!element.contains(focusable[index]) || (focusable[index] as HTMLButtonElement).disabled)
 				index = (index + (event.shiftKey ? -1 : 1) + focusable.length) % focusable.length
 			focusable[index].focus()
 		}
@@ -70,29 +48,13 @@ export function loopFocus(element: HTMLElement) {
 	element.addEventListener('focusin', onFocusIn)
 
 	return {
+		update(_new_sensitivity: any) {
+			focusable = getFocusableChildren(element)
+			index = focusable.findIndex(e => e === document.activeElement)
+		},
 		destroy() {
 			element.removeEventListener('keydown', onKeyDown)
 			element.removeEventListener('focusin', onFocusIn)
-		}
-	}
-}
-
-export function preventFocus(element: HTMLElement) {
-	let last_focus = document.activeElement as HTMLElement | null
-
-	function onFocus(event: FocusEvent) {
-		if (element === event.target || element.contains(event.target as HTMLElement)) {
-			last_focus?.focus()
-		} else {
-			last_focus = document.activeElement as HTMLElement | null
-		}
-	}
-
-	document.addEventListener('focus', onFocus)
-
-	return {
-		destroy() {
-			document.removeEventListener('focus', onFocus)
 		}
 	}
 }

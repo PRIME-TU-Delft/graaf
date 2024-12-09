@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import type { 
 		RelationController, 
@@ -62,12 +62,12 @@
 	/>
 
 	<Dropdown
-		id="parent"
 		placeholder="Select a parent"
 		options={relation.parent_options}
 		bind:value={relation.parent}
 		on:change={async () => {
-			await relation.save()
+			$save_status.setUnsaved()
+			await relation.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>
@@ -75,12 +75,12 @@
 	<span class="preview" style:background={relation.parent_color} />
 
 	<Dropdown
-		id="child"
 		placeholder="Select a child"
 		options={relation.child_options}
 		bind:value={relation.child}
 		on:change={async () => {
-			await relation.save()
+			$save_status.setUnsaved()
+			await relation.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>

@@ -64,7 +64,7 @@
 					href: '/app/home'
 				},
 				{
-					name: $program.name
+					name: $program.display_name
 				}
 			]} />
 

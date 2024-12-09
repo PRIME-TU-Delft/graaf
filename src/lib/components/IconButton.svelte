@@ -31,7 +31,6 @@
 		class="icon-button"
 		class:disabled
 		class:scale
-		tabindex="-1"
 		use:tooltip={description}
 		on:click
 	>
@@ -45,7 +44,6 @@
 		class="icon-button"
 		class:disabled
 		class:scale
-		tabindex="-1"
 		use:tooltip={description}
 		on:click
 	>
@@ -67,8 +65,10 @@
 		justify-content: center
 
 		width: $total-icon-size
-		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
+		height: $total-icon-size
 		padding: $input-icon-padding
+
+		border-radius: $default-border-radius
 
 		cursor: pointer
 
@@ -85,6 +85,9 @@
 
 			.icon
 				filter: $gray-filter
+
+		&:focus-visible
+			outline: $default-outline
 
 		&:hover
 			.icon

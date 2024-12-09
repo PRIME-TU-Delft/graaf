@@ -1,7 +1,8 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+
+import { debounce, compareArrays } from '$scripts/utility'
 import { Validation, Severity} from '$scripts/validation'
 
 import {
@@ -11,6 +12,8 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedProgram } from '$scripts/types'
+
+import type SaveStatus from '$components/SaveStatus.svelte'
 import type { DropdownOption, SerializedProgram } from '$scripts/types'
 
 // Exports
@@ -25,6 +28,8 @@ class ProgramController {
 	private _courses?: CourseController[]
 	private _editors?: UserController[]
 	private _admins?: UserController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		public cache: ControllerCache,
@@ -60,6 +65,10 @@ class ProgramController {
 		return this._name.trim()
 	}
 
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled program' : this.trimmed_name
+	}
+
 	// Course properties
 	get course_ids(): number[] {
 		if (this._course_ids === undefined)
@@ -93,7 +102,7 @@ class ProgramController {
 
 			result.push({
 				value: course,
-				label: course.trimmed_code + ' ' + course.trimmed_name,
+				label: course.display_name,
 				validation
 			})
 		}
@@ -406,8 +415,11 @@ class ProgramController {
 		}
 	}
 
-	async save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		if (this.validateName().severity === Severity.error) return
+
+		save_status?.setSaving(true)
 
 		// Call the API to save the program
 		const response = await fetch('/api/program', {
@@ -422,6 +434,7 @@ class ProgramController {
 		}
 
 		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete() {

@@ -4,7 +4,8 @@ import * as uuid from 'uuid'
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+
+import { oxfordCommaList, compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -15,6 +16,7 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedLecture } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 import type {
 	DropdownOption,
@@ -29,11 +31,12 @@ export { LectureController }
 
 
 class LectureController {
-	public uuid: string = uuid.v4()
-
 	private _unsaved: boolean = false
 	private _graph?: GraphController
 	private _present_subjects?: SubjectController[]
+
+	public uuid: string = uuid.v4()
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		public cache: ControllerCache,
@@ -67,6 +70,10 @@ class LectureController {
 
 	get trimmed_name(): string {
 		return this._name.trim()
+	}
+
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled lecture' : this.trimmed_name
 	}
 
 	// Order properties
@@ -118,7 +125,7 @@ class LectureController {
 	get subject_options(): DropdownOption<SubjectController>[] {
 		return this.graph.subjects.map(subject => ({
 			value: subject,
-			label: subject.name,
+			label: subject.display_name,
 			validation: this.validateOption(subject)
 		}))
 	}
@@ -231,11 +238,26 @@ class LectureController {
 	}
 
 	private missingSubjectPrerequisites(subject: SubjectController): SubjectController[] {
-		const covered_subject_ids = this.graph.lectures
+		const covered_subjects = this.graph.lectures
 			.filter(lecture => lecture.order <= this.order)
-			.flatMap(lecture => lecture.present_subject_ids)
+			.flatMap(lecture => lecture.present_subjects)
+
+		console.log(covered_subjects)
 		
-		return subject.parents.filter(parent => !covered_subject_ids.includes(parent.id))
+		const stack = [subject]
+		const missing_prerequisites = []
+		while (stack.length > 0) {
+			const current = stack.pop() as SubjectController
+
+			for (const parent of current.parents) {
+				stack.push(parent)
+				if (!covered_subjects.includes(parent)) {
+					missing_prerequisites.push(parent)
+				}
+			}
+		}
+
+		return missing_prerequisites
 	}
 
 	private validateOption(subject: SubjectController): Validation {
@@ -272,24 +294,18 @@ class LectureController {
 		if (this.hasNoName()) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Lecture has no name',
-				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
-				uuid: this.uuid
+				short: 'Lecture has no name'
 			})
 		} else if (this.nameTooLong()) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Lecture name is too long',
-				long: `Lecture name cannot exceed ${settings.MAX_LECTURE_NAME_LENGTH} characters`,
-				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
-				uuid: this.uuid
+				long: `Lecture name cannot exceed ${settings.MAX_LECTURE_NAME_LENGTH} characters`
 			})
 		} else if (this.otherLectureWithDuplicateName()) {
 			validation.add({
 				severity: Severity.warning,
-				short: 'Lecture name is not unique',
-				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
-				uuid: this.uuid
+				short: 'Lecture name is not unique'
 			})
 		}
 
@@ -303,9 +319,7 @@ class LectureController {
 		if (this.hasNoSubjects()) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Lecture has no subjects',
-				url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
-				uuid: this.uuid
+				short: 'Lecture has no subjects'
 			})
 		} 
 		
@@ -315,9 +329,7 @@ class LectureController {
 				validation.add({
 					severity: Severity.warning,
 					short: 'Subject covered elsewhere',
-					long: `${subject.name} is already covered by ${other_lectures.map(lecture => lecture.name).join(', ')}`,
-					url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
-					uuid: this.uuid
+					long: `${subject.display_name} is already covered by ${oxfordCommaList(other_lectures.map(lecture => lecture.display_name))}`
 				})
 			}
 
@@ -326,7 +338,7 @@ class LectureController {
 				validation.add({
 					severity: Severity.warning,
 					short: 'Subject has missing prerequisites',
-					long: `${missing_prerequisites.map(subject => subject.name).join(', ')} should be covered before ${subject.name}`,
+					long: `${oxfordCommaList(missing_prerequisites.map(subject => subject.display_name))} should be covered before ${subject.display_name}`,
 					url: `/app/graph/${this.graph_id}/settings?type=nodes&view=lectures`,
 					uuid: this.uuid
 				})
@@ -421,8 +433,9 @@ class LectureController {
 		}
 	}
 
-	async save() {
+	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the lecture
 		const response = await fetch('/api/lecture', {
@@ -437,6 +450,7 @@ class LectureController {
 		}
 
 		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete(reorder_graph: boolean = true) {
@@ -467,7 +481,7 @@ class LectureController {
 
 	async copy(graph: GraphController): Promise<LectureController> {
 		const lecture_copy = await LectureController.create(this.cache, graph)
-		lecture_copy.name = this.name
+		lecture_copy.name = this.trimmed_name
 		lecture_copy.order = this.order
 
 		return lecture_copy

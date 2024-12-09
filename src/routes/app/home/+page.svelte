@@ -58,7 +58,7 @@
 						severity: Severity.error,
 						short: 'Program name is too long'
 					})
-				} else if ($programs.some(program => program.name === this.name.trim())) {
+				} else if ($programs.some(program => program.trimmed_name === this.name.trim())) {
 					validation.add({
 						severity: Severity.error,
 						short: 'Program name isn\'t unique'
@@ -124,7 +124,7 @@
 						severity: Severity.error,
 						short: 'Course name is too long'
 					})
-				} else if ($courses.some(course => course.name === this.name.trim())) {
+				} else if ($courses.some(course => course.trimmed_name === this.name.trim())) {
 					validation.add({
 						severity: Severity.warning,
 						short: 'Course name isn\'t unique'

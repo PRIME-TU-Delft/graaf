@@ -5,11 +5,12 @@
 	import { goto } from '$app/navigation'
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 	import { Severity } from '$scripts/validation'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Feedback from '$components/Feedback.svelte'
@@ -23,7 +24,6 @@
 	let delete_modal: SimpleModal
 
 </script>
-
 
 <!-- Markup -->
 
@@ -45,26 +45,41 @@
 	</svelte:fragment>
 </SimpleModal>
 
-<Card>
-	<svelte:fragment slot="header">
-		<h3> General </h3>
-		<div class="flex-spacer" />
-		<Button dangerous on:click={() => delete_modal.show()}>
-			<img src={trash_icon} alt="" /> Delete Graph
-		</Button>
-	</svelte:fragment>
+<div class="wrapper">
+	<SaveStatus bind:this={ $save_status } />
 
-	<label for="name"> Graph Name </label>
+	<Card>
+		<svelte:fragment slot="header">
+			<h3> General </h3>
+			<div class="flex-spacer" />
+			<Button dangerous on:click={() => delete_modal.show()}>
+				<img src={trash_icon} alt="" /> Delete Graph
+			</Button>
+		</svelte:fragment>
 
-	<Textfield 
-		id="name"
-		bind:value={$graph.name}
-		on:change={async () => {
-			if ($graph.validateName().severity !== Severity.error) {
-				await $graph.save()
-			}
-		}}
-	/>
+		<label for="name"> Graph Name </label>
 
-	<Feedback data={$graph.validateName()} />
-</Card>
+		<Textfield 
+			id="name"
+			bind:value={$graph.name}
+			on:input={async () => {
+				$save_status.setUnsaved()
+				await $graph.save($save_status)
+			}}
+		/>
+
+		<Feedback animate data={$graph.validateName()} />
+	</Card>
+</div>
+
+<style lang="sass">
+
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
+
+	.wrapper
+		display: flex
+		flex-flow: column nowrap
+		gap: $form-small-gap
+
+</style>

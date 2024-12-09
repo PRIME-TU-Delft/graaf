@@ -32,19 +32,19 @@
 		width: 100%
 		height: 100px
 		padding: $input-thin-padding $input-thick-padding
-		box-sizing: border-box
 
 		border: 1px solid $gray
-		border-radius: $border-radius
+		border-radius: $default-border-radius
 
-		color: $dark-gray
 		font-size: 1rem
+		color: $dark-gray
+		background: $white
+
+		cursor: text
 		resize: vertical
 
 		&:focus
-			border-color: $tudelft-blue
-
-		&:not(:read-only)
-			cursor: pointer
+			outline: $default-outline
+			border-color: $white
 
 </style>

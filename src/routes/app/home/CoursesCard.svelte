@@ -24,7 +24,7 @@
 	{:else}
 		<Grid>
 			{#each filtered_courses as course}
-				<a href="./course/{course.id}/overview"> {course.code} {course.name} </a>
+				<a href="./course/{course.id}/overview"> {course.display_name} </a>
 			{/each}
 		</Grid>
 	{/if}

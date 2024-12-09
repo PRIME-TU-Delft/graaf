@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 	import type { SubjectController } from '$scripts/controllers'
 
 	// Components
@@ -61,17 +61,20 @@
 		id="name"
 		placeholder="Subject Name"
 		bind:value={subject.name}
-		on:input={() => { $graph = $graph /* Trigger reactivity */ }}
-		on:change={async () => await subject.save() }
+		on:input={async () => {
+			$save_status.setUnsaved()
+			await subject.save($save_status) 
+			$graph = $graph // Trigger reactivity
+		}}
 	/>
 
 	<Dropdown
-		id="domain"
 		placeholder="Select a domain"
 		options={subject.domain_options}
 		bind:value={subject.domain}
 		on:change={async () => {
-			await subject.save()
+			$save_status.setUnsaved()
+			await subject.save($save_status)
 			$graph = $graph // Trigger reactivity
 		}}
 	/>

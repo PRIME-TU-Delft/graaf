@@ -21,6 +21,8 @@ export const MAX_GRAPH_NAME_LENGTH: Scalar = 50
 export const MAX_NODE_NAME_LENGTH: Scalar = 35
 export const MAX_LECTURE_NAME_LENGTH: Scalar = 50
 
+export const DEBOUNCE_DELAY: Milliseconds = 800
+export const UNIVERSAL_HOVER_DELAY: Milliseconds = 750
 export const UNIVERSAL_FADE_DURATION: Milliseconds = 150 // When changing this, also change transition in variables.sass
 
 // -------------------> Editor settings
@@ -68,7 +70,7 @@ export const CENTER_FORCE: Scalar = 0.05
 export const CHARGE_FORCE: Scalar = -15
 
 // Animation settings
-export const ANIMATION_DURATION: Milliseconds = 1000
+export const ANIMATION_DURATION: Milliseconds = 150
 export const SHAKE = {
 	delay: 150,
 	keyframes: [

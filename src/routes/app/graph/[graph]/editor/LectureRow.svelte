@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import { AbstractFormModal } from '$scripts/modals'
 	import { Validation, Severity } from '$scripts/validation'
@@ -70,7 +70,6 @@
 	<svelte:fragment slot="form">
 		<label for="subject"> Target Subject </label>
 		<Dropdown
-			id="subject"
 			placeholder="Select a subject"
 			options={lecture.subject_options}
 			bind:value={assign_subject_modal.subject}
@@ -117,8 +116,11 @@
 		id="name"
 		placeholder="Lecture name"
 		bind:value={lecture.name}
-		on:input={() => $graph = $graph}
-		on:change={async () => await lecture.save()}
+		on:input={async () => {
+			$save_status.setUnsaved()
+			await lecture.save($save_status)
+			$graph = $graph // Trigger reactivity
+		}}
 	/>
 
 	<Button on:click={() => assign_subject_modal.show()}>
@@ -132,7 +134,7 @@
 					{#if subject.trimmed_name.length > 0}
 						{subject.trimmed_name}
 					{:else}
-						<i> Unnamed subject </i>
+						<i> Untitled subject </i>
 					{/if}
 
 					<div class="line" />
@@ -140,7 +142,8 @@
 					<LinkButton
 						on:click={async () => {
 							lecture.unassignSubject(subject)
-							await lecture.save()
+							$save_status.setUnsaved()
+							await lecture.save($save_status)
 							$graph = $graph
 						}}
 					> Unassign from lecture </LinkButton>

@@ -79,7 +79,7 @@
 					href: '/app/home'
 				},
 				{
-					name: `${$course.code} ${$course.name}`
+					name: $course.display_name
 				}
 			]}>
 

@@ -1,7 +1,8 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays } from '$scripts/utility'
+
+import { compareArrays, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -12,6 +13,7 @@ import {
 } from '$scripts/controllers'
 
 import { validSerializedDomain } from '$scripts/types'
+import type SaveStatus from '$components/SaveStatus.svelte'
 
 import type {
 	DomainStyle,
@@ -31,6 +33,8 @@ class DomainController extends NodeController<DomainController> {
 	private _style: DomainStyle | null
 	private _subject_ids?: number[]
 	private _subjects?: SubjectController[]
+
+	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
 
 	private constructor(
 		cache: ControllerCache,
@@ -56,6 +60,11 @@ class DomainController extends NodeController<DomainController> {
 	}
 
 	// --------------------> Getters & Setters
+
+	// Name properties
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled domain' : this.trimmed_name
+	}
 
 	// Order properties
 	get order(): number {
@@ -129,13 +138,26 @@ class DomainController extends NodeController<DomainController> {
 		this._unsaved = true
 	}
 
-	get style_options(): DropdownOption<string>[] {
-		return Object.keys(settings.NODE_STYLES).map(key => ({
-				value: key,
-				label: settings.NODE_STYLES[key].display_name,
-				validation: Validation.success()
+	get style_options(): DropdownOption<DomainStyle>[] {
+		const used_styles = this.graph.domains
+			.filter(domain => domain.id !== this.id && domain.style !== null)
+			.map(domain => domain.style as DomainStyle)
+
+		const options: DropdownOption<DomainStyle>[] = []
+		for (const style of Object.keys(settings.NODE_STYLES) as DomainStyle[]) {
+			const validation = used_styles.includes(style) 
+							 ? Validation.warning('Duplicate style') 
+							 : Validation.success()
+			
+			options.push({
+				value: style,
+				label: settings.NODE_STYLES[style].display_name,
+				validation,
+				color: settings.NODE_STYLES[style].stroke
 			})
-		)
+		}
+
+		return options
 	}
 
 	// --------------------> Assignments
@@ -411,7 +433,9 @@ class DomainController extends NodeController<DomainController> {
 		}
 	}
 
-	async save() {
+	private async _save(save_status?: SaveStatus) {
+		if (!this._unsaved) return
+		save_status?.setSaving(true)
 
 		// Call the API to save the domain
 		const response = await fetch('/api/domain', {
@@ -424,6 +448,9 @@ class DomainController extends NodeController<DomainController> {
 		if (!response.ok) {
 			throw new Error(`APIError (/api/domain PUT): ${response.status} ${response.statusText}`)
 		}
+
+		this._unsaved = false
+		save_status?.setSaving(false)
 	}
 
 	async delete(reorder_graph: boolean = true) {

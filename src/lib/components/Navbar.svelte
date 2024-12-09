@@ -39,21 +39,21 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
-	:global(.link-button)
-		padding: 0 !important
-		line-height: 2.125rem
-
 	nav
 		display: flex
-		flex-flow: row wrap
-		align-content: center
+		flex-flow: row nowrapwrap
+		align-items: start
+
+		:global(.link-button)
+			margin-right: -$input-thick-padding
+			line-height: 2.125rem
 
 		.url
 			color: $purple
 			font-size: 1.75rem
 			transition: all $default-transition
 
-			a:hover
+			a:hover, a:focus-visible
 				cursor: pointer
 				color: $dark-purple
 				text-decoration: underline

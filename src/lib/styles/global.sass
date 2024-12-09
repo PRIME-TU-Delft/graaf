@@ -28,9 +28,7 @@
 	font-weight: bold
 	font-style: italic
 
-
 // ------------------> Global styles
-
 
 *
 	box-sizing: border-box
@@ -41,6 +39,7 @@
 
 	cursor: default
 	user-select: none
+	caret-color: transparent
 
 	&::placeholder
 		opacity: 1
@@ -71,12 +70,13 @@ h2
 	font-size: 1.75rem
 h3
 	font-size: 1.25rem
-ul
-	padding-left: 2rem
+h4, h5, h6
+	font-size: 1rem
 
+input
+	caret-color: $black
 
 // ------------------> Utility styles
-
 
 .flex-spacer
 	flex-grow: 1

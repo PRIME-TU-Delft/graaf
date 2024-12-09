@@ -7,7 +7,7 @@
 	import { onDestroy } from 'svelte'
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status, domain_query, subject_query, lecture_query } from './stores'
 	import { GraphSVG, SVGState } from '$scripts/svg'
 
 	import {
@@ -22,31 +22,35 @@
 
 	// Components
 	import DomainTab from './DomainTab.svelte'
-	import DomainHeader from './DomainHeader.svelte'
 	import SubjectTab from './SubjectTab.svelte'
-	import SubjectHeader from './SubjectHeader.svelte'
 	import LectureTab from './LectureTab.svelte'
-	import LectureHeader from './LectureHeader.svelte'
+	import StickyHeader from './StickyHeader.svelte'
 
 	import SimpleModal from '$components/SimpleModal.svelte'
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
+	import Searchbar from '$components/Searchbar.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
 	import Graph from '$components/Graph.svelte'
 
 	// Assets
 	import info_icon from '$assets/info-icon.svg'
+	import sort_icon from '$assets/sort-icon.svg'
 
 	// Functions
 	function navigateEditor(type: EditorType, view: EditorView) {
-		if (graphSVG.state === SVGState.animating) return
-
-		editor_view = view
+		if (
+			graphSVG.state === SVGState.animating ||
+			editor_type === type && editor_view === view
+		) return
+		
 		editor_type = type
+		editor_view = view
 
 		search_params.set('type', editor_type)
 		search_params.set('view', editor_view)
-		goto(`?${search_params.toString()}`, { replaceState: true })
+		goto(`?${search_params.toString()}`, { replaceState: true, noScroll: true })
 
 		graphSVG.view = view
 	}
@@ -108,23 +112,28 @@
 </SimpleModal>
 
 <div class="tabular">
-	<div class="sticky" id="sticky-tabular-header">
+	<div class="sticky" id="sticky-header">
+		<SaveStatus bind:this={ $save_status } />
+
 		<div class="tabs">
 			<button
 				class="tab"
 				class:active={editor_view === 'domains'}
+				tabindex="-1"
 				on:click={() => navigateEditor(editor_type, 'domains')}
 			> Domains </button>
 
 			<button
 				class="tab"
 				class:active={editor_view === 'subjects'}
+				tabindex="-1"
 				on:click={() => navigateEditor(editor_type, 'subjects')}
 			> Subjects </button>
 
 			<button
 				class="tab"
 				class:active={editor_view === 'lectures'}
+				tabindex="-1"
 				on:click={() => navigateEditor(editor_type, 'lectures')}
 			> Lectures </button>
 
@@ -133,13 +142,9 @@
 					<LinkButton on:click={() => navigateEditor('layout', editor_view)}>
 						Edit Graph Layout
 					</LinkButton>
-				{:else}
-					<LinkButton on:click={() => navigateEditor('data', editor_view)}>
-						Edit Graph Data
-					</LinkButton>
 
+				{:else}
 					<Dropdown
-						id="lecture"
 						placeholder="Select lecture"
 						bind:value={graphSVG.lecture}
 						options={graphSVG.graph.lecture_options}
@@ -160,6 +165,12 @@
 							}
 						}}
 					> Toggle Autolayout </Button>
+
+					<div class="flex-spacer" />
+
+					<LinkButton on:click={() => navigateEditor('data', editor_view)}>
+						Edit Graph Data
+					</LinkButton>
 				{/if}
 			</div>
 		</div>
@@ -167,11 +178,51 @@
 		{#if editor_type === 'data'}
 			<div class="header">
 				{#if editor_view === 'domains'}
-					<DomainHeader />
+					<StickyHeader>
+						<svelte:fragment slot="above" let:scrollTo>
+							<h2> Domains </h2>
+							<LinkButton on:click={() => scrollTo('relations')}> Go to relations </LinkButton>
+						</svelte:fragment>
+						<svelte:fragment slot="below" let:scrollTo>
+							<h2> Relations </h2>
+							<LinkButton on:click={() => scrollTo('nodes')}> Go to domains </LinkButton>
+						</svelte:fragment>
+
+						<div class="flex-spacer" />
+						<Searchbar placeholder="Search domains and relations" bind:value={$domain_query} />
+						<Button on:click={() => {
+							$graph.sort()
+							$graph = $graph
+						}}> 
+							<img src={sort_icon} alt=""> Sort by Domains
+						</Button>
+					</StickyHeader>
 				{:else if editor_view === 'subjects'}
-					<SubjectHeader />
+					<StickyHeader>
+						<svelte:fragment slot="above" let:scrollTo>
+							<h2> Subjects </h2>
+							<LinkButton on:click={() => scrollTo('relations')}> Go to relations </LinkButton>
+						</svelte:fragment>
+						<svelte:fragment slot="below" let:scrollTo>
+							<h2> Relations </h2>
+							<LinkButton on:click={() => scrollTo('nodes')}> Go to subjects </LinkButton>
+						</svelte:fragment>
+
+						<div class="flex-spacer" />
+						<Searchbar placeholder="Search subjects and relations" bind:value={$subject_query} />
+						<Button on:click={() => {
+							$graph.sort()
+							$graph = $graph
+						}}> 
+							<img src={sort_icon} alt=""> Sort by Domains
+						</Button>
+					</StickyHeader>
 				{:else if editor_view === 'lectures'}
-					<LectureHeader />
+					<div class="tab-header" >
+						<h2> Lectures </h2>
+						<div class="flex-spacer" />
+						<Searchbar placeholder="Search lectures" bind:value={$lecture_query} />
+					</div>
 				{/if}
 			</div>
 		{/if}
@@ -197,6 +248,8 @@
 	@use "$styles/variables.sass" as *
 	@use "$styles/palette.sass" as *
 
+	@import "./styles.sass"
+
 	.infobox
 		display: flex
 		flex-flow: row nowrap
@@ -204,7 +257,7 @@
 		margin: $card-thin-padding $card-thick-padding
 
 		border: 1px solid $purple
-		border-radius: $border-radius
+		border-radius: $default-border-radius
 		background-color: rgba($purple, 0.1)
 
 		.sidebar
@@ -226,21 +279,23 @@
 	.tabular
 		.sticky
 			position: sticky
-			z-index: 1
+			z-index: 2
 			top: 0
 
 			// Workaround for sticky elements, as overflow: hidden is not supported
-			margin-top: -$form-medium-gap
-			padding-top: $form-medium-gap
+			margin-top: -$form-small-gap
+			padding-top: $form-small-gap
 			background: $white
 
 			.tabs
 				display: flex
 
+				margin-top: $form-small-gap
+
 				background: $light-gray
 				border: 1px solid $gray
 				border-bottom: none
-				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+				border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 				.tab
 					padding: ($card-thin-padding + $input-thin-padding) $card-thick-padding
@@ -248,7 +303,7 @@
 					border-color: $gray
 					border-style: solid
 					border-width: 0 0 1px 1px
-					border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+					border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 					&:not(.active)
 						cursor: pointer
@@ -272,13 +327,11 @@
 					gap: $form-small-gap
 
 					flex: 1
-					padding: 0 $card-thick-padding
+					padding-left: $card-thick-padding
 					border-bottom: 1px solid $gray
 
 					:global(.dropdown)
 						max-width: 20rem
-						margin-left: $form-medium-gap
-
 
 			.header
 				border: 1px solid $gray
@@ -287,9 +340,10 @@
 		.content
 			border: 1px solid $gray
 			border-top: none
-			border-radius: 0 0 $border-radius $border-radius
+			border-radius: 0 0 $default-border-radius $default-border-radius
 
 			:global(.graph)
 				height: 850px
+				max-height: calc( 100vh - $footer-height - $form-small-gap - 2 * $card-thick-padding - 3rem - 2px )
 
 </style>

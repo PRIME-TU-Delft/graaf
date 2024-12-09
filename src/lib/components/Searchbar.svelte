@@ -10,18 +10,14 @@
 
 </script>
 
-
 <!-- Markup -->
-
 
 <div class="search">
 	<input type="text" placeholder={placeholder} bind:value on:input on:change/>
 	<img src={search_icon} alt="search-icon" />
 </div>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -43,13 +39,16 @@
 				left: $input-thick-padding
 
 			border: 1px solid $gray
-			border-radius: $border-radius
+			border-radius: $default-border-radius
 
 			color: $dark-gray
 			background-color: $white
 
+			cursor: text
+
 			&:focus
-				border-color: $tudelft-blue
+				outline: $default-outline
+				border-color: $white
 
 		img
 			position: absolute
@@ -59,6 +58,7 @@
 
 			width: $input-icon-size
 
-			filter: $dark-gray-filter
+			filter: $gray-filter
+			pointer-events: none
 
 </style>

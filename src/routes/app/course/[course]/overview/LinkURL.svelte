@@ -12,7 +12,7 @@
 
 <!-- Markup -->
 
-<div class="link-url" class:disabled={url === ''}>
+<div class="link-url">
 	<input
 		type="url"
 		disabled={true}
@@ -21,7 +21,7 @@
 	/>
 
 	<button
-		class="copy-button"
+		disabled={url === ''}
 		on:click={async () => {
 			copied = true
 			await navigator.clipboard.writeText(url)
@@ -46,18 +46,11 @@
 	@use "$styles/palette.sass" as *
 
 	.link-url
-		width: 100%
 		position: relative
-
-		&.disabled
-			pointer-events: none
-
-			button
-				background-color: $gray
+		width: 100%
 
 		input
 			width: 100%
-			box-sizing: border-box
 			padding:
 				top: $input-thin-padding
 				right: calc(2 * $input-thin-padding + $input-thick-padding + $input-icon-size)
@@ -65,13 +58,13 @@
 				left: $input-thick-padding
 
 			border: 1px solid $gray
-			border-radius: $border-radius
-			background-color: $light-gray
-
+			border-radius: $default-border-radius
+			background: $light-gray
 			color: $dark-gray
+			
 			cursor: text
 
-		.copy-button
+		button
 			position: absolute
 			top: 0
 			right: 0
@@ -83,19 +76,26 @@
 			height: 100%
 
 			border: none
-			border-radius: 0 $border-radius $border-radius 0
-			background-color: $purple
-			transition: all $default-transition
+			border-radius: 0 $default-border-radius $default-border-radius 0
+			background: $purple
+
 			cursor: pointer
+			transition: all $default-transition, outline 0s
 
 			&:hover
 				background-color: $dark-purple
+
+			&:focus
+				outline: $default-outline
+
+			&:disabled
+				background: $gray
+				cursor: defaultS
 
 			img
 				width: $input-icon-size
 				height: $input-icon-size
 				margin: $input-thin-padding
-
 
 				filter: $white-filter
 
@@ -104,11 +104,11 @@
 			.popup
 				position: absolute
 				bottom: calc(100% + 10px)
-				z-index: 9999
+				z-index: 5
 
 				width: max-content
 				padding: 0 $input-thick-padding
-				border-radius: $border-radius
+				border-radius: $default-border-radius
 
 				color: $white
 				background: $dark-gray

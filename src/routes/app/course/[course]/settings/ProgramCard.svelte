@@ -72,7 +72,6 @@
 	<svelte:fragment slot="form">
 		<label for="program"> Target Program </label>
 		<Dropdown
-			id="program"
 			placeholder="Select a program"
 			bind:value={program_modal.program}
 			options={$course.program_options}

@@ -35,13 +35,13 @@
 		copied: boolean = false
 
 		constructor() {
-			super()
+			super(false)
 			this.initialize()
 		}
 
 		get embed() {
 			if (this.validate().severity === Severity.error) return ''
-			let embed = `<iframe src="${settings.ROOT_URL}/app/course/${$course.code}/${link.name}?view=${this.view}`
+			let embed = `<iframe src="${settings.ROOT_URL}/app/course/${$course.trimmed_code}/${link.trimmed_name}?view=${this.view}`
 			if (this.lecture) embed += `&lecture=${this.lecture.id}`
 			embed += `" style="width: 100%!important; height: ${this.height}px" allow="fullscreen" allowfullscreen></iframe>`
 
@@ -69,10 +69,9 @@
 		}
 
 		async submit() {
-			embed_modal.copied = true
 			await navigator.clipboard.writeText(embed_modal.embed)
-			await new Promise(resolve => setTimeout(resolve, 2500))
-			embed_modal.copied = false
+			embed_modal.copied = true
+			setTimeout(() => embed_modal.copied = false, 2000)
 		}
 	}
 
@@ -101,11 +100,14 @@
 		<Textfield id="height" type="number" bind:value={embed_modal.height} />
 
 		<label for="view"> Initial View </label>
-		<Dropdown id="view" placeholder="Select an initial view" bind:value={embed_modal.view} options={view_options} />
+		<Dropdown
+			placeholder="Select an initial view" 
+			bind:value={embed_modal.view} 
+			options={view_options} 
+		/>
 
 		<label for="lecture"> Initial Lecture </label>
 		<Dropdown
-			id="lecture"
 			placeholder="Select an initial lecture"
 			bind:value={embed_modal.lecture}
 			options={link.graph?.lecture_options || []}
@@ -144,7 +146,7 @@
 </SimpleModal>
 
 <div class="row">
-	<Feedback compact data={link.validate(false)} animate={false} />
+	<Feedback compact data={link.validate(false)} />
 
 	<IconButton scale
 		src={trash_icon}
@@ -163,14 +165,13 @@
 		id="link-name"
 		placeholder="Link Name"
 		bind:value={link.name}
-		on:change={async () => {
+		on:input={async () => {
 			await link.save()
 			$course = $course // Trigger reactivity
 		}}
 	/>
 
 	<Dropdown
-		id="graph"
 		placeholder="Select a graph"
 		options={$course.graph_options}
 		bind:value={link.graph}
