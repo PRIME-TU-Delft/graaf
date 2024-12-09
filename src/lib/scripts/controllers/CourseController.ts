@@ -87,6 +87,10 @@ class CourseController {
 		return this._name.trim()
 	}
 
+	get display_name(): string {
+		return this.trimmed_code + ' ' + this.trimmed_name
+	}
+
 	// Program properties
 	get program_ids(): number[] {
 		if (this._program_ids === undefined)
@@ -120,7 +124,7 @@ class CourseController {
 
 			result.push({
 				value: program,
-				label: program.name,
+				label: program.display_name,
 				validation
 			})
 		}
@@ -149,7 +153,7 @@ class CourseController {
 	get graph_options(): DropdownOption<GraphController>[] {
 		return this.graphs.map(graph => ({
 			value: graph,
-			label: graph.name,
+			label: graph.display_name,
 			validation: Validation.success()
 		}))
 	}

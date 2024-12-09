@@ -233,10 +233,8 @@ class DomainRelationController extends RelationController<DomainController> {
 		if (this.parent === null || this.child === null) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Domain relation is not fully defined',
-				long: 'Both the parent and child domains must be selected',
-				url: `/app/graph/${this.graph.id}/editor?tab=domains`,
-				uuid: this.uuid
+				short: 'Incomplete relation',
+				long: 'Both the parent and child domains must be selected'
 			})
 		}
 
@@ -244,10 +242,8 @@ class DomainRelationController extends RelationController<DomainController> {
 		else if (this.isSelfReferential(this.parent, this.child)) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Domain relation is self-referential',
-				long: 'The parent and child domains are the same',
-				url: `/app/graph/${this.graph.id}/editor?tab=domains`,
-				uuid: this.uuid
+				short: 'Self-referential relation',
+				long: 'The parent and child domains are the same'
 			})
 		}
 
@@ -255,10 +251,8 @@ class DomainRelationController extends RelationController<DomainController> {
 		else if (this.isDuplicate(this.parent, this.child)) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Domain relation is a duplicate',
-				long: 'The relation already exists in the graph',
-				url: `/app/graph/${this.graph.id}/editor?tab=domains`,
-				uuid: this.uuid
+				short: 'Duplicate relation',
+				long: 'The relation already exists in the graph'
 			})
 		}
 
@@ -266,10 +260,8 @@ class DomainRelationController extends RelationController<DomainController> {
 		else if (this.isCyclic(this.parent, this.child)) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Domain relation is cyclic',
-				long: 'The parent and child domains are cyclically related',
-				url: `/app/graph/${this.graph.id}/editor?tab=domains`,
-				uuid: this.uuid
+				short: 'Cyclic relation',
+				long: 'The parent and child domains are cyclically related'
 			})
 		}
 
@@ -277,10 +269,8 @@ class DomainRelationController extends RelationController<DomainController> {
 		else if (this.isInconsistent(this.parent, this.child)) {
 			validation.add({
 				severity: Severity.warning,
-				short: 'Domain relation is inconsistent',
-				long: 'No subject relation exists that connects these domains',
-				url: `/app/graph/${this.graph.id}/editor?tab=domains`,
-				uuid: this.uuid
+				short: 'Inconsistent relation',
+				long: 'No subject relation exists that connects these domains'
 			})
 		}
 

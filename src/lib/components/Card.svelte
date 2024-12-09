@@ -19,7 +19,7 @@
 		align-items: stretch
 
 		border: 1px solid $gray
-		border-radius: $border-radius
+		border-radius: $default-border-radius
 
 		.header
 			display: flex
@@ -31,7 +31,7 @@
 
 			background-color: $light-gray
 			border-bottom: 1px solid $gray
-			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+			border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 		.body
 			display: flex
@@ -40,6 +40,6 @@
 			padding: $card-thick-padding
 
 			background-color: $white
-			border-radius: 0 0 calc($border-radius - 1px) calc($border-radius - 1px)
+			border-radius: 0 0 calc($default-border-radius - 1px) calc($default-border-radius - 1px)
 
 </style>

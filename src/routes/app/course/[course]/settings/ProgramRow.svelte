@@ -26,7 +26,7 @@
 
 <SimpleModal bind:this={unassign_modal}>
 	<h3 slot="header"> Unnassign Course </h3>
-	Are you certain you want to unnassign this course from {program.name}?
+	Are you certain you want to unnassign this course from {program.display_name}?
 
 	<svelte:fragment slot="footer">
 		<LinkButton
@@ -49,7 +49,7 @@
 		on:click={() => unassign_modal.show()}
 	/>
 
-	{program.name}
+	{program.display_name}
 
 	<LinkButton href="/app/program/{program.id}/settings">
 		Program Settings

@@ -6,6 +6,7 @@
 
 	// Internal dependencies
 	import { GraphSVG, SVGState } from '$scripts/svg'
+	import { focusOnLoad, loopFocus } from '$scripts/actions/hocusfocus'
 	import type { GraphController } from '$scripts/controllers'
 
 	// Components
@@ -13,9 +14,6 @@
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
 	import Graph from '$components/Graph.svelte'
-
-	// Assets
-	import plus_icon from '$assets/plus-icon.svg'
 
 	// Functions
 	export function show() {
@@ -50,44 +48,48 @@
 
 {#if visible}
 	<div class="background" />
-	<div class="tabular">
+	<div class="tabular" use:loopFocus={ updateUI }>
 		<div class="tabs">
 			<button
+				tabindex="-1"
 				class="tab"
-				class:active={graphSVG.view === 'lectures'}
-				on:click={() => graphSVG.view = 'lectures'}
+				class:active={ graphSVG.view === 'lectures' }
+				on:click={ () => graphSVG.view = 'lectures' } 
 			> Lectures </button>
 
 			<button
+				tabindex="-1"
 				class="tab"
-				class:active={graphSVG.view === 'subjects'}
-				on:click={() => graphSVG.view = 'subjects'}
+				class:active={ graphSVG.view === 'subjects' }
+				on:click={ () => graphSVG.view = 'subjects' }
 			> Subjects </button>
 
 			<button
+				tabindex="-1"
 				class="tab"
-				class:active={graphSVG.view === 'domains'}
-				on:click={() => graphSVG.view = 'domains'}
+				class:active={ graphSVG.view === 'domains' }
+				on:click={ () => graphSVG.view = 'domains' }
 			> Domains </button>
 
 			<div class="toolbar">
-				<LinkButton href="/app/graph/{graph.id}/editor?type=layout&view={graphSVG.view}">
-					Edit Layout
-				</LinkButton>
-
 				<Dropdown
-					id="lecture"
 					placeholder="Select lecture"
-					bind:value={graphSVG.lecture}
-					options={graph.lecture_options}
+					bind:value={ graphSVG.lecture }
+					options={ graph.lecture_options }
 				/>
 
 				<Button
-					disabled={disable_graph_controls}
-					on:click={() => graphSVG.centerGraph()}
+					disabled={ disable_graph_controls }
+					on:click={ () => graphSVG.centerGraph() }
 				> Center Graph </Button>
+
+				<div class="flex-spacer" />
+
+				<LinkButton href="/app/graph/{graph.id}/editor?type=layout&view={graphSVG.view}">
+					Edit Layout
+				</LinkButton>
 				
-				<button class="exit" on:click={ hide } />
+				<button class="exit" on:click={ hide } use:focusOnLoad />
 			</div>
 		</div>
 
@@ -107,7 +109,7 @@
 
 	.background
 		position: fixed
-		z-index: 999
+		z-index: 3
 		top: 0
 		left: 0
 
@@ -120,7 +122,7 @@
 	.tabular
 		position: fixed
 		translate: -50% -50%
-		z-index: 1000
+		z-index: 4
 		top: 50%
 		left: 50%
 
@@ -130,8 +132,8 @@
 
 		background: $white
 		border: 1px solid $gray
-		border-radius: $border-radius
-		box-shadow: $shadow
+		border-radius: $default-border-radius
+		box-shadow: $default-box-shadow
 
 		.tabs
 			display: flex
@@ -139,7 +141,7 @@
 			width: 100%
 
 			background: $light-gray
-			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+			border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 			.tab
 				padding: ($card-thin-padding + $input-thin-padding) $card-thick-padding
@@ -147,7 +149,7 @@
 				border-color: $gray
 				border-style: solid
 				border-width: 0 0 1px 1px
-				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+				border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 				&:not(.active)
 					cursor: pointer
@@ -174,18 +176,23 @@
 				padding: 0 $card-thick-padding
 				border-bottom: 1px solid $gray
 
+				:global(.dropdown)
+					max-width: 20rem
+
 				.exit
 					position: relative
 
 					min-width: $total-icon-size
 					min-height: $total-icon-size
+					margin-left: $card-thick-padding - $form-small-gap
 					padding: $input-icon-padding
 
+					border-radius: $default-border-radius
+
 					cursor: pointer
-					caret-color: transparent !important
 
 					&:focus-visible
-						outline: 1px solid $tudelft-blue
+						outline: $default-outline
 
 					&:hover::before, &:hover::after
 						height: $input-icon-size * math.sqrt(2)

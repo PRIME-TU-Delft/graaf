@@ -76,6 +76,10 @@ class GraphController {
 		return this._name.trim()
 	}
 
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled graph' : this.trimmed_name
+	}
+
 	// Course properties
 	get course_id(): number {
 		if (this._course_id === undefined)
@@ -99,7 +103,7 @@ class GraphController {
 		const courses = this.cache.all(CourseController)
 		return courses.map(course => ({
 			value: course,
-			label: course.code + ' ' + course.name,
+			label: course.code + ' ' + course.display_name,
 			validation: Validation.success()
 		}))
 	}
@@ -201,7 +205,7 @@ class GraphController {
 	get lecture_options(): DropdownOption<LectureController>[] {
 		return this.lectures.map(lecture => ({
 			value: lecture,
-			label: lecture.name,
+			label: lecture.display_name,
 			validation: Validation.success()
 		}))
 	}
@@ -699,7 +703,7 @@ class GraphController {
 	async copy(course: CourseController): Promise<GraphController> {
 
 		// Copy graph
-		const copied_graph = await GraphController.create(this.cache, course, `${this.name} (Copied from ${this.course.code})`)
+		const copied_graph = await GraphController.create(this.cache, course, `${this.display_name} (Copied from ${this.course.code})`)
 
 		// Copy domains
 		const domain_map = new Map<number, DomainController>()

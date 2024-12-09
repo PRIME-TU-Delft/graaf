@@ -69,7 +69,6 @@
 	/>
 
 	<Dropdown
-		id="domain"
 		placeholder="Select a domain"
 		options={subject.domain_options}
 		bind:value={subject.domain}

@@ -100,7 +100,6 @@
 			
 			<div class="toolbar">
 				<Dropdown
-					id="lecture"
 					placeholder="Select lecture"
 					bind:value={graphSVG.lecture}
 					options={graph.lecture_options}
@@ -134,14 +133,14 @@
 
 		.tabs
 			position: absolute
-			z-index: 1
+			z-index: 2
 			top: 0
 
 			display: flex
 			width: 100%
 
 			background: $light-gray
-			border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+			border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 			.tab
 				padding: ($card-thin-padding + $input-thin-padding) $card-thick-padding
@@ -149,7 +148,7 @@
 				border-color: $gray
 				border-style: solid
 				border-width: 0 0 1px 1px
-				border-radius: calc($border-radius - 1px) calc($border-radius - 1px) 0 0
+				border-radius: calc($default-border-radius - 1px) calc($default-border-radius - 1px) 0 0
 
 				&.active
 					background: $white

@@ -50,6 +50,7 @@
 
 	onDestroy(() => {
 		graphSVG.unsubscribe(updateUI)
+		graphSVG.detach()
 	})
 
 </script>
@@ -59,7 +60,7 @@
 <div class="graph">
 	<svg use:graphSVG.attach />
 
-	{#if show_legend}
+	{#if show_legend && graphSVG.graph.domains.length > 0}
 		<button 
 			class="legend" 
 			class:expand={expand_legend} 
@@ -69,7 +70,7 @@
 			<h4 class="title"> Domain Legend </h4>
 			{#if expand_legend}
 				{#each graphSVG.graph.domains as domain}
-					<span> {domain.name} <div class="preview" style:background={domain.color}/> </span>
+					<span> {domain.display_name} <div class="preview" style:background={domain.color}/> </span>
 				{/each}
 			{/if}
 		</button>
@@ -113,7 +114,7 @@
 
 			background: $white
 			border: 1px solid $gray
-			border-radius: $border-radius
+			border-radius: $default-border-radius
 
 			cursor: pointer
 

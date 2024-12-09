@@ -128,6 +128,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 		return this.style === null ? 'transparent' : settings.NODE_STYLES[this.style].stroke
 	}
 
+	abstract get display_name(): string
 	abstract get style(): DomainStyle | null
 	abstract get parents(): T[]
 	abstract get children(): T[]
@@ -146,7 +147,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 
 	// --------------------> Actions
 
-	abstract save(save_status: SaveStatus): void
+	abstract save(save_status?: SaveStatus): void
 	abstract delete(): void
 	abstract copy(graph: GraphController): Promise<T>
 }

@@ -34,7 +34,7 @@
 		max-width: $big-column
 
 		margin: auto
-		padding: $main-padding $tudelft-logo-width
+		padding: $main-padding $tudelft-logo-width $footer-height
 
 		@media screen and (max-width: $phone-breakpoint)
 			width: $small-column

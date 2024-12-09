@@ -1,9 +1,6 @@
 
 <script lang="ts">
 
-	// Internal dependencies
-	import { preventFocus } from '$scripts/actions/hocusfocus'
-
 	// Exports
 	export let href: string | undefined = undefined
 	export let submit: boolean = false
@@ -13,11 +10,6 @@
 	// Variables
 	let button: HTMLButtonElement | HTMLAnchorElement
 
-	// Property validation
-	$: if (submit && href !== undefined) {
-		href = undefined
-	}
-
 </script>
 
 <!-- Markup -->
@@ -25,14 +17,12 @@
 {#if href === undefined}
 
 	<button
-		tabindex="-1"
 		class="button"
 		class:disabled
 		class:dangerous
-		disabled={disabled}
-		type={submit ? 'submit' : 'button'}
-		bind:this={button}
-		use:preventFocus
+		disabled={ disabled }
+		type={ submit ? 'submit' : 'button' }
+		bind:this={ button }
 		on:click
 	>
 		<slot />
@@ -41,23 +31,18 @@
 {:else}
 
 	<a
-		href={href}
-		tabindex="-1"
+		href={ disabled ? '' : href}
 		class="button"
 		class:disabled
 		class:dangerous
 		bind:this={button}
-		use:preventFocus
-		on:click
 	>
 		<slot />
 	</a>
 
 {/if}
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -68,28 +53,30 @@
 		position: relative
 		display: inline-flex
 		flex-flow: row nowrap
-		align-items: center
 
-		padding: $input-thin-padding $input-thick-padding
-		border-radius: $border-radius
+		padding: calc($input-thin-padding + 1px) calc($input-thick-padding + 1px)
+		border-radius: $default-border-radius
 
 		color: $white
 		background: $purple
-		white-space: nowrap
 
 		cursor: pointer
-		transition: all $default-transition
+		white-space: nowrap
+		transition: all $default-transition, outline 0s
 
+		// Prevent pointer events on children
 		& > :global(*)
 			pointer-events: none
 
+		// Styling options
 		&.dangerous
 			background: $red
-		
+
 		&.disabled
 			background: $gray
 			pointer-events: none
 
+		// Icon support
 		&:has(img)
 			padding-left: $input-thin-padding
 
@@ -99,11 +86,19 @@
 			margin-right: $input-thin-padding
 
 			filter: $white-filter
-			transition: all $default-transition
-			
+		
+		// User interaction
+		&:focus-visible:not(:hover)
+			outline: 2px solid $tudelft-blue
+
 		&:hover
+			box-shadow: 3px 3px 3px 0px rgba(0,0,0,0.2)
+		
+		&:active
+			translate: 2px 2px
+			box-shadow: 1px 1px 3px 0px rgba(0,0,0,0.2)
 			background: $dark-purple
-			
+
 			&.dangerous
 				background: $dark-red
 

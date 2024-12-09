@@ -6,25 +6,17 @@
 	export let submit: boolean = false
 	export let disabled: boolean = false
 
-	// Property validation
-	$: if (submit && href !== undefined) {
-		console.warn("LinkButton: submit type does not require a 'href' prop. Ignoring 'href' prop.")
-		href = undefined
-	}
-
 </script>
 
-
 <!-- Markup -->
-
 
 {#if href === undefined}
 
 	<button
-		type={submit ? 'submit' : 'button'}
 		class="link-button"
 		class:disabled
-		tabindex="-1"
+		disabled={ disabled }
+		type={ submit ? 'submit' : 'button' }
 		on:click
 	>
 		<slot />
@@ -33,20 +25,16 @@
 {:else}
 
 	<a 
-		href={href}
+		href={ disabled ? '' : href }
 		class="link-button" 
 		class:disabled
-		tabindex="-1"
-		on:click
 	>
 		<slot />
 	</a>
 
 {/if}
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -54,29 +42,32 @@
 	@use "$styles/palette.sass" as *
 
 	.link-button
+		position: relative
 		display: inline-flex
 		flex-flow: row nowrap
-		place-items: center start
 
-		padding: $input-thin-padding
+		padding: $input-thin-padding $input-thick-padding
+		border-radius: $default-border-radius
 
 		color: $purple
-		white-space: nowrap
-		border: 1px solid transparent
 
 		cursor: pointer
-		transition: all $default-transition
+		white-space: nowrap
+		transition: all $default-transition, outline 0s
 
+		// Prevent pointer events on children				
+		& > :global(*)
+			pointer-events: none
+
+		// Styling options
 		&.disabled
 			color: $gray
 			pointer-events: none
 
 			:global(img)
 				filter: $gray-filter
-		
-		& > :global(*)
-			pointer-events: none
 
+		// Icon support
 		:global(img)
 			box-sizing: content-box
 			width: $input-icon-size
@@ -86,7 +77,11 @@
 			transform-origin: center
 			transition: all $default-transition
 
-		&:hover, &:focus
+		// User interaction
+		&:focus-visible
+			outline: $default-outline
+
+		&:hover
 			color: $dark-purple
 			text-decoration: underline
 

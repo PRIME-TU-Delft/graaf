@@ -1,9 +1,6 @@
 
 <script lang="ts">
 
-	// External dependencies
-	import { fade } from 'svelte/transition'
-
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
 	import { Validation } from '$scripts/validation'
@@ -17,7 +14,7 @@
 	function onMouseEnter() {
 		timeout = setTimeout(() => {
 			show_dropdown = data.errors.length + data.warnings.length > 1 || compact
-		}, 800)
+		}, settings.UNIVERSAL_HOVER_DELAY)
 	}
 
 	function onMouseLeave() {
@@ -35,7 +32,6 @@
 	// Exports
 	export let data: Validation
 	export let compact: boolean = false
-	export let animate: boolean = false
 
 	// Main
 	let timeout: NodeJS.Timeout
@@ -53,6 +49,11 @@
 					   : data.errors.length > 0 && data.warnings.length > 0 ? data.warnings.length
 					   : data.warnings.length > 1 ? `${data.warnings[0].short} (${data.warnings.length - 1} more)`
 					   : data.warnings[0].short
+	
+	$: disable_toggle = !compact && data.errors.length + data.warnings.length < 2
+					  || compact && data.errors.length + data.warnings.length < 1
+	
+	$: if (disable_toggle) setDropdown(false)
 
 </script>
 
@@ -64,21 +65,19 @@
 		on:mouseenter={ onMouseEnter }
 		on:mouseleave={ onMouseLeave }
 		on:click={ () => setDropdown() }
-		disabled={ data.errors.length === 0 && data.warnings.length === 0 }
+		disabled={ disable_toggle }
 	>
 		{#if show_error_icon}
 			<img 
 				src={error_icon} 
 				alt="Error" 
 				class="error" 
-				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
 			>
 		{/if}
 
 		{#if error_message}
 			<span 
 				class="error"
-				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
 			> {error_message} </span>
 		{/if}
 
@@ -87,14 +86,12 @@
 				src={warning_icon}
 				alt="Warning"
 				class="warning"
-				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
 			>
 		{/if}
 
 		{#if warning_message}
 			<span
 				class="warning"
-				transition:fade={{ duration: animate ? settings.ANIMATION_DURATION : 0}}
 			> {warning_message} </span>
 		{/if}
 	</button>
@@ -157,12 +154,17 @@
 			align-items: center
 			gap: $input-thin-padding
 
-			height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
+			height: $total-icon-size
 			min-width: $total-icon-size
 			padding: $input-icon-padding
 
+			border-radius: $default-border-radius
+
 			&:not(:disabled)
 				cursor: pointer
+			
+			&:focus-visible
+				outline: $default-outline
 			
 		.dropdown
 			position: absolute
@@ -174,15 +176,14 @@
 
 			background: $white
 			border: 1px solid $gray
-			border-radius: $border-radius
+			border-radius: $default-border-radius
 
-			box-shadow: $shadow
+			box-shadow: $default-box-shadow
 
 			.item
 				display: grid
 				grid-template: "icon short" auto "icon long" auto / $input-icon-size auto 1fr
 				column-gap: $input-thin-padding
-				place-items: start center
 
 				img
 					grid-area: icon

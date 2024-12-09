@@ -67,7 +67,6 @@
 	/>
 
 	<Dropdown
-		id="style"
 		placeholder="Select a style"
 		options={domain.style_options}
 		bind:value={domain.style}

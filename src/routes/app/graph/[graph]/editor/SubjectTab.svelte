@@ -54,7 +54,7 @@
 	> <img src={plus_icon} alt="New subject"> </button>
 
 	<!-- Divider -->
-	<div class="divider" id="relations">
+	<div class="divider" id="scroll-divider">
 		<div class="line" />
 		<h3> Relations </h3>
 		<div class="line" />

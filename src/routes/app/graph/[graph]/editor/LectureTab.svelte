@@ -36,7 +36,9 @@
 			}}
 		>
 			<svelte:fragment slot="left" let:item>
-				<Feedback compact data={item.validate(false)} />
+				<div class="feedback-alignment">
+					<Feedback compact data={item.validate(false)} />
+				</div>
 			</svelte:fragment>
 
 			<svelte:fragment slot="right" let:item>
@@ -61,6 +63,13 @@
 
 <style lang="sass">
 
+	@use "$styles/variables.sass" as *
+	@use "$styles/palette.sass" as *
+
 	@import "./styles.sass"
+
+	.feedback-alignment
+		align-self: stretch
+		padding-top: calc( 0.75rem + $input-thin-padding + 1px - $total-icon-size * 0.5 )
 
 </style>

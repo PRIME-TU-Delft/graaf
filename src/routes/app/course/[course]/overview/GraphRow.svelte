@@ -86,7 +86,6 @@
 	<svelte:fragment slot="form">
 		<label for="course"> Target Course </label>
 		<Dropdown
-			id="course"
 			placeholder="Select a course"
 			options={graph.copy_options}
 			bind:value={copy_modal.course}
@@ -138,10 +137,10 @@
 	/>
 
 	<span>
-		{#if graph.name}
-			{graph.name}
+		{#if graph.trimmed_name}
+			{graph.trimmed_name}
 		{:else}
-			<i> Unnamed graph </i>
+			<i> {graph.display_name} </i>
 		{/if}
 	</span>
 

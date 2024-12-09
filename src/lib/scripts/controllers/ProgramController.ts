@@ -65,6 +65,10 @@ class ProgramController {
 		return this._name.trim()
 	}
 
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled program' : this.trimmed_name
+	}
+
 	// Course properties
 	get course_ids(): number[] {
 		if (this._course_ids === undefined)
@@ -98,7 +102,7 @@ class ProgramController {
 
 			result.push({
 				value: course,
-				label: course.trimmed_code + ' ' + course.trimmed_name,
+				label: course.display_name,
 				validation
 			})
 		}

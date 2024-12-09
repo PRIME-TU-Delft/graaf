@@ -1,40 +1,56 @@
 
 <script lang="ts">
 
-	import { Validation, Severity } from "$scripts/validation"
+	import { createEventDispatcher } from "svelte"
+
+	import { Severity } from "$scripts/validation"
+	import { loopFocus, focusOnLoad } from "$scripts/actions/hocusfocus"
+	import { clickoutside } from "$scripts/actions/clickoutside"
+	import type { DropdownOption } from "$scripts/types"
 
 	import error_icon from "$assets/error-icon.svg"
 	import warning_icon from "$assets/warning-icon.svg"
 	import search_icon from "$assets/search-icon.svg"
 
 	function onKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') { 
-			open = false
+		if (!open) return
+
+		if (event.key === 'Tab') {
+			if (options.length === 0)
+				setOpen(false)
 			return
 		}
 
-		if (event.key == 'Tab') {
+		if (event.key === 'Escape') {
+			setOpen(false)
 			return
 		}
 
-		if (event.key === 'Enter') {
+		if (event.key === 'Enter' || event.key === 'Shift') {
 			return
 		}
 
 		search.focus()
 	}
 
-	type T = number
-	type DropdownOption = {
-		value: T
-		label: string
-		validation?: Validation
-		color?: string
+	function setOpen(value: boolean) {
+		if (!value) query = ''
+		open = value
 	}
 
+	function setValue(new_value: T | null) {
+		dispatch('change', new_value)
+		value = new_value
+		setOpen(false)
+	}
+
+	type T = $$Generic
+
 	export let placeholder: string = 'Select an option'
-	export let options: DropdownOption[]
+	export let options: DropdownOption<T>[]
 	export let value: T | null
+
+	const dispatch = createEventDispatcher<{change: T | null}>()
 
 	let search: HTMLDivElement
 	let open: boolean = false
@@ -59,79 +75,94 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 
-<div class="dropdown-wrapper">
-	<div class="dropdown" class:open>
-		<button class="header" on:click={ () => open = !open }>
-			{ selected ? selected.label : placeholder }
+<div class="dropdown">
+	<div 
+		class:open
+		class="wrapper" 
+		use:clickoutside={ () => setOpen(false) }
+	>
+		<button 
+			class="header"
+			class:grayed={ !selected }
+			on:click={ () => setOpen(!open) }
+		>
+			{#if selected?.label}
+				{ selected.label }
+			{:else if selected}
+				<i> Untitled option </i>
+			{:else}
+				{ placeholder }
+			{/if}
 		</button>
 
 		{#if open}
-			{#if options.length === 0}
-				<button class="option" disabled>
-					<i> No options available </i>
-				</button>
-			{:else}
-				<div class="search">
-					<input 
-						type="text" 
-						placeholder="Search" 
-						bind:value={ query }
-						bind:this={ search }
-					/>
+			<div class="options" use:loopFocus={ filtered_options }>
+				{#if options.length === 0}
+					<button class="option" disabled>
+						<i> No options available </i>
+					</button>
+				{:else}
+					<div class="search">
+						<input
+							type="text"
+							placeholder="Search"
+							bind:value={ query }
+							bind:this={ search }
+							use:focusOnLoad
+						/>
 
-					<img src={ search_icon } alt="Search" />
-				</div>
+						<img src={ search_icon } alt="Search" />
+					</div>
 
-				{#each filtered_options as option}
-					<button 
-						class="option" 
-						disabled={ option.validation?.severity === Severity.error }
-						on:click={ () => { 
-							value = option.value
-							open = false
-						}}
-					>
-						{ option.label }
-
-						{#if option.validation}
-							{#if option.validation.severity === Severity.error}
-								<div class="error">
-									{ option.validation.errors[0].short }
-									<img src={ error_icon } alt="Error" />
-								</div>
-							{:else if option.validation.severity === Severity.warning}
-								<div class="warning">
-									{ option.validation.warnings[0].short }
-									<img src={ warning_icon } alt="Warning" />
-								</div>
+					{#each filtered_options as option}
+						<button
+							class="option"
+							disabled={ option.validation?.severity === Severity.error }
+							on:click={ () => setValue(option.value) }
+						>
+							{#if option.label}
+								{ option.label }
+							{:else}
+								<i> Nameless option </i>
 							{/if}
-						{/if}
 
-						{#if show_preview}
-							<div 
-								class="preview" 
-								style:grid-area="preview"
-								style:background={ option.color } 
-							/>
-						{/if}
-					</button>
-				{/each}
+							{#if option.validation}
+								{#if option.validation.severity === Severity.error}
+									<div class="error">
+										{ option.validation.errors[0].short }
+										<img src={ error_icon } alt="Error" />
+									</div>
+								{:else if option.validation.severity === Severity.warning}
+									<div class="warning">
+										{ option.validation.warnings[0].short }
+										<img src={ warning_icon } alt="Warning" />
+									</div>
+								{/if}
+							{/if}
 
-				{#if selected !== null}
-					<button 
-						class="option" 
-						on:click={ () => { 
-							value = null
-							open = false
-						}}>
-						<i> Remove choice </i>
-					</button>
-				{:else if filtered_options.length === 0}
-					<button disabled class="option">
-						<i> No results found </i>
-					</button>
+							{#if show_preview}
+								<div
+									class="preview"
+									style:grid-area="preview"
+									style:background={ option.color }
+								/>
+							{/if}
+						</button>
+					{/each}
+
+					{#if selected !== null}
+						<button
+							class="option"
+							on:click={ () => setValue(null) }>
+							<i> Remove choice </i>
+						</button>
+					{:else if filtered_options.length === 0}
+						<button disabled class="option">
+							<i> No results found </i>
+						</button>
+					{/if}
 				{/if}
-			{/if}
+			</div>
 		{/if}
 	</div>
 </div>
@@ -144,39 +175,48 @@
 	@use '$styles/palette.sass' as *
 	@use 'sass:math'
 
-	.dropdown-wrapper
+	.dropdown
 		position: relative
-
+		
 		width: 100%
+		min-width: 3 * $input-thick-padding + $input-icon-size
 		height: calc( 1.5rem + 2 * $input-thin-padding + 2px )
 
-		.dropdown
+		.wrapper
 			position: absolute
-			z-index: 1
+			top: 0
 			left: 0
 
 			width: 100%
-			overflow: hidden
+
+			border-radius: $default-border-radius
+			border: 1px solid $gray
+
 			background: $white
 
-			&::after
-				content: ''
+			&:focus-within
+				outline: $default-outline
+				border-color: $white
 
-				position: absolute
-				rotate: 45deg
-				top: $input-thin-padding + math.div((2 - math.sqrt(2)) * $input-icon-size, 4)
-				right: $input-thick-padding + math.div((2 - math.sqrt(2)) * $input-icon-size, 4)
+				.header, .search, .option
+					border-color: $white
+				&.open .header
+					border-bottom-color: $gray
 
-				width: math.div($input-icon-size, math.sqrt(2))
-				height: math.div($input-icon-size, math.sqrt(2))
+			&.open 
+				z-index: 1
+				
+				.header
+					border-bottom: 1px dashed $gray
+					border-radius: $default-border-radius $default-border-radius 0 0
 
-				border-width: 0 2px 2px 0
-				border-style: solid
-				border-color: $dark-gray
+					&::after
+						translate: 0 50%
+						rotate: -135deg
 
 			.header
 				width: 100%
-				padding: 
+				padding:
 					top: $input-thin-padding
 					right: 2 * $input-thick-padding + $input-icon-size
 					bottom: $input-thin-padding
@@ -187,24 +227,33 @@
 				text-overflow: ellipsis
 				text-align: left
 
-				border: 1px solid $gray
-				border-radius: $border-radius
+				border-radius: $default-border-radius
 
-			&.open
+				.grayed
+					color: $placeholder-color
+
 				&::after
-					translate: 0 50%
-					rotate: -135deg
+					content: ''
 
-				.header
-					border-bottom: 1px dashed $gray
-					border-radius: $border-radius $border-radius 0 0
+					position: absolute
+					rotate: 45deg
+					top: $input-thin-padding + math.div((2 - math.sqrt(2)) * $input-icon-size, 4)
+					right: $input-thick-padding + math.div((2 - math.sqrt(2)) * $input-icon-size, 4)
+
+					width: math.div($input-icon-size, math.sqrt(2))
+					height: math.div($input-icon-size, math.sqrt(2))
+
+					border-width: 0 2px 2px 0
+					border-style: solid
+					border-color: $dark-gray
+
+			.options
+				width: 100%
+				max-height: 15rem
+				overflow: auto
 
 				.search
 					position: relative
-
-					border-width: 0 1px
-					border-style: solid
-					border-color: $gray
 
 					input
 						width: 100%
@@ -237,18 +286,16 @@
 					width: 100%
 					padding: $input-thin-padding $input-thick-padding
 
-					border-width: 0 1px
-					border-style: solid
-					border-color: $gray
-
 					cursor: pointer
+					text-align: left
+					background: $white
 
 					&:last-child
 						border-bottom-width: 1px
-						border-radius: 0 0 $border-radius $border-radius
+						border-radius: 0 0 $default-border-radius $default-border-radius
 
 					&:not(:disabled)
-						&:hover, &:focus	
+						&:hover, &:focus
 							background: $light-gray
 
 					&:disabled
@@ -277,14 +324,8 @@
 					.preview
 						width: $input-icon-size
 						height: $input-icon-size
-					
+
 					i
 						color: $placeholder-color
-
-			&:focus-within
-				.header, .search, .option	
-					border-color: $tudelft-blue
-				&.open .header
-					border-bottom-color: $gray	
 
 </style>

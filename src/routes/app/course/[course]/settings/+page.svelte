@@ -70,7 +70,7 @@
 				},
 
 				{
-					name: `${$course.code} ${$course.name}`,
+					name: $course.display_name,
 					href: `/app/course/${$course.id}/overview`
 				},
 				{

@@ -62,7 +62,6 @@
 	/>
 
 	<Dropdown
-		id="parent"
 		placeholder="Select a parent"
 		options={relation.parent_options}
 		bind:value={relation.parent}
@@ -76,7 +75,6 @@
 	<span class="preview" style:background={relation.parent_color} />
 
 	<Dropdown
-		id="child"
 		placeholder="Select a child"
 		options={relation.child_options}
 		bind:value={relation.child}

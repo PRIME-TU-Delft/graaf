@@ -61,6 +61,11 @@ class SubjectController extends NodeController<SubjectController> {
 
 	// --------------------> Getters & Setters
 
+	// Name properties
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled subject' : this.trimmed_name
+	}
+
 	// Parent properties
 	get parents(): SubjectController[] {
 		if (this._parent_ids === undefined)
@@ -117,7 +122,7 @@ class SubjectController extends NodeController<SubjectController> {
 			.map(domain => ({
 				value: domain,
 				label: domain.trimmed_name,
-				validation: Validation.success()
+				color: domain.color
 			}))
 	}
 
@@ -277,26 +282,20 @@ class SubjectController extends NodeController<SubjectController> {
 		if (this.trimmed_name === '') {
 			validation.add({
 				severity: Severity.error,
-				short: 'Subject has no name',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject has no name'
 			})
 		} else if (this.trimmed_name.length > settings.MAX_NODE_NAME_LENGTH) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject name is too long',
-				long: `Subject name cannot exceed ${settings.MAX_NODE_NAME_LENGTH} characters`,
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				long: `Subject name cannot exceed ${settings.MAX_NODE_NAME_LENGTH} characters`
 			})
 		} else if (this.cache.all(SubjectController)
 			.find(subject => subject.id !== this.id && subject.trimmed_name === this.trimmed_name)
 		) {
 			validation.add({
 				severity: Severity.warning,
-				short: 'Subject name is not unique',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject name is not unique'
 			})
 		}
 
@@ -310,9 +309,7 @@ class SubjectController extends NodeController<SubjectController> {
 		if (this.domain === null) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Subject has no domain',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject has no domain'
 			})
 		}
 
@@ -326,9 +323,7 @@ class SubjectController extends NodeController<SubjectController> {
 		if (this.lecture_ids.length === 0) {
 			validation.add({
 				severity: Severity.warning,
-				short: 'Subject has no lectures',
-				url: `/app/graph/${this.graph_id}/settings?tab=subjects`,
-				uuid: this.uuid
+				short: 'Subject not assigned to a lecture'
 			})
 		}
 

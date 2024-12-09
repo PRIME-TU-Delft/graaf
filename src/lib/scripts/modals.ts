@@ -11,6 +11,10 @@ export abstract class AbstractFormModal {
 	public show = () => {} // To be overwritten by the FormModal component
 	public hide = () => {} // To be overwritten by the FormModal component
 
+	constructor(
+		public close_on_submit: boolean = true
+	) { }
+
 	/**
 	 * Check if a property is a field of the form
 	 * @param property The property to check
@@ -21,6 +25,7 @@ export abstract class AbstractFormModal {
 		return this.hasOwnProperty(property)
 			&& property !== '_defaults' 
 			&& property !== '_changed'
+			&& property !== 'close_on_submit'
 			&& property !== 'show'
 			&& property !== 'hide'
 	}

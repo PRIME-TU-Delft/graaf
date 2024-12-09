@@ -27,13 +27,13 @@
 	.tooltip
 		position: absolute
 		translate: -50% -150%
-		z-index: 9998
+		z-index: 5
 		left: 50%
 		top: 0
 
 		width: max-content
 		padding: 0 $input-thick-padding
-		border-radius: $border-radius
+		border-radius: $default-border-radius
 
 		color: $white
 		background: $dark-gray

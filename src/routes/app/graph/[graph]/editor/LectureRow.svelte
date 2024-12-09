@@ -70,7 +70,6 @@
 	<svelte:fragment slot="form">
 		<label for="subject"> Target Subject </label>
 		<Dropdown
-			id="subject"
 			placeholder="Select a subject"
 			options={lecture.subject_options}
 			bind:value={assign_subject_modal.subject}
@@ -135,7 +134,7 @@
 					{#if subject.trimmed_name.length > 0}
 						{subject.trimmed_name}
 					{:else}
-						<i> Unnamed subject </i>
+						<i> Untitled subject </i>
 					{/if}
 
 					<div class="line" />

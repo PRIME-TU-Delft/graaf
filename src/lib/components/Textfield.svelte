@@ -14,14 +14,15 @@
 	export let type: 'text' | 'number' | 'obfuscated' = 'text'
 	export let value: string | number = type === 'number' ? 0 : ''
 
-	// Main
-	let input: HTMLInputElement
-	let obfuscated: boolean = true
-
+	// Functions
 	function toggle_obfuscation() {
 		obfuscated = !obfuscated
 		input.type = obfuscated ? "text" : "password"
 	}
+
+	// Main
+	let input: HTMLInputElement
+	let obfuscated: boolean = true
 
 	$: if (type === 'number') {
 		value = Number(value)
@@ -29,9 +30,7 @@
 
 </script>
 
-
 <!-- Markup -->
-
 
 {#if type === 'obfuscated'}
 
@@ -76,9 +75,7 @@
 
 {/if}
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
@@ -91,13 +88,15 @@
 		box-sizing: border-box
 
 		border: 1px solid $gray
-		border-radius: $border-radius
+		border-radius: $default-border-radius
 
 		color: $dark-gray
+		background: $white
 		cursor: text
 
 		&:focus
-			border-color: $tudelft-blue
+			outline: $default-outline
+			border-color: $white
 
 	div
 		position: relative

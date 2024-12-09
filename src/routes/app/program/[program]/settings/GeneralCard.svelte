@@ -69,7 +69,7 @@
 			}}
 		/>
 	
-		<Feedback animate data={$program.validateName()} />
+		<Feedback data={$program.validateName()} />
 	</Card>
 </div>
 

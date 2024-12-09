@@ -68,6 +68,10 @@ class LinkController {
 		return this._name.trim()
 	}
 
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled link' : this.trimmed_name
+	}
+
 	// Course properties
 	get course_id(): number {
 		if (this._course_id === undefined)
@@ -117,7 +121,7 @@ class LinkController {
 	get url(): string {
 		if (this.validate().severity === Severity.error)
 			return ''
-		return `${settings.ROOT_URL}/app/course/${this.course.code}/${this.name}?view=subjects`
+		return `${settings.ROOT_URL}/app/course/${this.course.trimmed_code}/${this.trimmed_name}?view=subjects`
 	}
 
 	// --------------------> Assignments
@@ -163,34 +167,26 @@ class LinkController {
 		if (this.trimmed_name === '') {
 			validation.add({
 				severity: Severity.error,
-				short: 'Link has no name',
-				url: `/app/course/${this.course_id}/overview`,
-				uuid: this.uuid
+				short: 'Link has no name'
 			})
 		} else if (this.trimmed_name.length > settings.MAX_LINK_NAME_LENGTH) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Link name is too long',
-				long: `Link name cannot exceed ${settings.MAX_LINK_NAME_LENGTH} characters`,
-				url: `/app/course/${this.course_id}/overview`,
-				uuid: this.uuid
+				long: `Link name cannot exceed ${settings.MAX_LINK_NAME_LENGTH} characters`
 			})
 		} else if (!settings.LINK_NAME_REGEX.test(this.trimmed_name)) {
 			validation.add({
 				severity: Severity.error,
 				short: 'Link name is invalid',
-				long: 'Link names can only contain letters, numbers, and these special characters: -_.~',
-				url: `/app/course/${this.course_id}/overview`,
-				uuid: this.uuid
+				long: 'Link names can only contain letters, numbers, and these special characters: -_.~'
 			})
 		} else if (this.course.links
 			.find(link => link !== this && link.trimmed_name === this.trimmed_name)
 		) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Link name is not unique',
-				url: `/app/course/${this.course_id}/overview`,
-				uuid: this.uuid
+				short: 'Link name is not unique'
 			})
 		}
 
@@ -204,9 +200,7 @@ class LinkController {
 		if (this.graph_id === null) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Link has no graph',
-				url: `/app/course/${this.course_id}/overview`,
-				uuid: this.uuid
+				short: 'Link has no graph'
 			})
 		}
 
@@ -340,7 +334,7 @@ class LinkController {
 	matchesQuery(query: string): boolean {
 		const lower_query = query.toLowerCase()
 		const lower_name = this.trimmed_name.toLowerCase()
-		const lower_graph = this.graph?.name.toLowerCase() || ''
+		const lower_graph = this.graph?.trimmed_name.toLowerCase() || ''
 		return lower_name.includes(lower_query) || lower_graph.includes(lower_query)
 	}
 }

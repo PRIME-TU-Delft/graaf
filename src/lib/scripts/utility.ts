@@ -11,6 +11,19 @@ export type UpdateOptionalField<ID> = { connect?: { id: ID }, disconnect?: { id:
 
 // --------------------> Utility Functions
 
+export function oxfordCommaList(list: string[]): string {
+	if (list.length === 0) {
+		return ''
+	} else if (list.length === 1) {
+		return list[0]
+	} else if (list.length === 2) {
+		return `${list[0]} and ${list[1]}`
+	} else {
+		const last = list.pop()
+		return `${list.join(', ')}, and ${last}`
+	}
+}
+
 export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number) : (...args: Parameters<T>) => void {
 	let timeout: NodeJS.Timeout | undefined
 

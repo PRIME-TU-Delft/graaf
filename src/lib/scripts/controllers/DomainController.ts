@@ -61,6 +61,11 @@ class DomainController extends NodeController<DomainController> {
 
 	// --------------------> Getters & Setters
 
+	// Name properties
+	get display_name(): string {
+		return this.trimmed_name === '' ? 'Untitled domain' : this.trimmed_name
+	}
+
 	// Order properties
 	get order(): number {
 		return this._order
@@ -133,13 +138,26 @@ class DomainController extends NodeController<DomainController> {
 		this._unsaved = true
 	}
 
-	get style_options(): DropdownOption<string>[] {
-		return Object.keys(settings.NODE_STYLES).map(key => ({
-				value: key,
-				label: settings.NODE_STYLES[key].display_name,
-				validation: Validation.success()
+	get style_options(): DropdownOption<DomainStyle>[] {
+		const used_styles = this.graph.domains
+			.filter(domain => domain.id !== this.id && domain.style !== null)
+			.map(domain => domain.style as DomainStyle)
+
+		const options: DropdownOption<DomainStyle>[] = []
+		for (const style of Object.keys(settings.NODE_STYLES) as DomainStyle[]) {
+			const validation = used_styles.includes(style) 
+							 ? Validation.warning('Duplicate style') 
+							 : Validation.success()
+			
+			options.push({
+				value: style,
+				label: settings.NODE_STYLES[style].display_name,
+				validation,
+				color: settings.NODE_STYLES[style].stroke
 			})
-		)
+		}
+
+		return options
 	}
 
 	// --------------------> Assignments

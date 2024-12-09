@@ -1,4 +1,7 @@
 
+// Internal dependencies
+import * as settings from '$scripts/settings'
+
 // Components
 import Tooltip from '$components/Tooltip.svelte'
 
@@ -15,7 +18,7 @@ export function tooltip(element: HTMLElement, text: string) {
 				target: element,
 				props: { text }
 			})
-		}, 800)
+		}, settings.UNIVERSAL_HOVER_DELAY)
 	}
 
 	function mouseLeave() {
