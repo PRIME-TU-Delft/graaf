@@ -455,7 +455,7 @@ class GraphSVG {
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(settings.ANIMATION_DURATION)
+				.duration(settings.GRAPH_ANIMATION_DURATION)
 				.ease(d3.easeSinInOut)
 			.call(this.zoom.scaleBy, settings.ZOOM_STEP)
 	}
@@ -468,7 +468,7 @@ class GraphSVG {
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(settings.ANIMATION_DURATION)
+				.duration(settings.GRAPH_ANIMATION_DURATION)
 				.ease(d3.easeSinInOut)
 			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP)
 	}
@@ -578,7 +578,7 @@ class GraphSVG {
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.call(
 				this.zoom.transform,
@@ -594,7 +594,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -605,7 +605,7 @@ class GraphSVG {
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.call(
 				this.zoom.translateTo,
@@ -617,7 +617,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -628,7 +628,7 @@ class GraphSVG {
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.call(this.zoom.scaleTo, k)
 
@@ -636,7 +636,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -756,13 +756,13 @@ class GraphSVG {
 				function(exit) {
 					return exit
 						.transition()
-							.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+							.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
 				}
 			)
 			.transition()
-				.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 			.style('opacity', 1)
 
 		// Update relations
@@ -783,13 +783,13 @@ class GraphSVG {
 				function(exit) {
 					return exit
 						.transition()
-							.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+							.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
 				}
 			)
 			.transition()
-				.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 			.style('opacity', 1)
 
 		// Update simulation
@@ -802,7 +802,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.UNIVERSAL_FADE_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -829,7 +829,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -844,7 +844,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -852,7 +852,7 @@ class GraphSVG {
 		d3.select<SVGGElement, unknown>('#content')
 			.selectAll('*')
 				.transition()
-					.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+					.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 					.ease(d3.easeSinInOut)
 					.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 				.style('opacity', 0)
@@ -860,7 +860,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.UNIVERSAL_FADE_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
