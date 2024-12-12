@@ -183,7 +183,7 @@ model Lecture {
 	id				Int			@id @default(autoincrement())
 	unchanged		Boolean		@default(true)
 	name			String		@default("")
-	order			Int			@default(-1)
+	order			Int
 	graphId			Int
 
 	graph			Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
