@@ -103,7 +103,7 @@
 	  src={trash_icon}
 		description="Delete Domain"
 		on:click={async () => {
-			if (lecture.unchanged) {
+			if (lecture.is_empty) {
 				await lecture.delete()
 				$graph = $graph // Trigger reactivity
 			} else {

@@ -26,7 +26,6 @@ export { CourseController }
 
 
 class CourseController {
-	private _unsaved: boolean = false
 	private _programs?: ProgramController[]
 	private _graphs?: GraphController[]
 	private _links?: LinkController[]
@@ -38,9 +37,8 @@ class CourseController {
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
-		private _unchanged: boolean,
-		private _code: string,
-		private _name: string,
+		public code: string,
+		public name: string,
 		private _program_ids?: number[],
 		private _graph_ids?: number[],
 		private _link_ids?: number[],
@@ -52,39 +50,13 @@ class CourseController {
 
 	// --------------------> Getters & Setters
 
-	// Unchanged properties
-	get unchanged(): boolean {
-		return this._unchanged
-	}
-
-	// Code properties
-	get code(): string {
-		return this._code
-	}
-
-	set code(value: string) {
-		this._code = value
-		this._unchanged = false
-		this._unsaved = true
-	}
-
+	// Code & Name properties
 	get trimmed_code(): string {
-		return this._code.trim()
-	}
-
-	// Name properties
-	get name(): string {
-		return this._name
-	}
-
-	set name(value: string) {
-		this._name = value
-		this._unchanged = false
-		this._unsaved = true
+		return this.code.trim()
 	}
 
 	get trimmed_name(): string {
-		return this._name.trim()
+		return this.name.trim()
 	}
 
 	get display_name(): string {
@@ -153,8 +125,7 @@ class CourseController {
 	get graph_options(): DropdownOption<GraphController>[] {
 		return this.graphs.map(graph => ({
 			value: graph,
-			label: graph.display_name,
-			validation: Validation.success()
+			label: graph.display_name
 		}))
 	}
 
@@ -197,8 +168,7 @@ class CourseController {
 	get editor_options(): DropdownOption<UserController>[] {
 		return this.editors.map(editor => ({
 			value: editor,
-			label: editor.first_name + ' ' + editor.last_name,
-			validation: Validation.success()
+			label: editor.first_name + ' ' + editor.last_name
 		}))
 	}
 
@@ -223,8 +193,7 @@ class CourseController {
 	get admin_options(): DropdownOption<UserController>[] {
 		return this.admins.map(admin => ({
 			value: admin,
-			label: admin.first_name + ' ' + admin.last_name,
-			validation: Validation.success()
+			label: admin.first_name + ' ' + admin.last_name
 		}))
 	}
 
@@ -236,8 +205,6 @@ class CourseController {
 				throw new Error(`CourseError: Program with ID ${program.id} already assigned to course with ID ${this.id}`)
 			this._program_ids.push(program.id)
 			this._programs?.push(program)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -251,8 +218,6 @@ class CourseController {
 				throw new Error(`CourseError: Graph with ID ${graph.id} already assigned to course with ID ${this.id}`)
 			this._graph_ids.push(graph.id)
 			this._graphs?.push(graph)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
@@ -262,8 +227,6 @@ class CourseController {
 				throw new Error(`CourseError: Link with ID ${link.id} already assigned to course with ID ${this.id}`)
 			this._link_ids.push(link.id)
 			this._links?.push(link)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
@@ -273,8 +236,6 @@ class CourseController {
 				throw new Error(`CourseError: Editor with ID ${editor.id} already assigned to course with ID ${this.id}`)
 			this._editor_ids.push(editor.id)
 			this._editors?.push(editor)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -288,8 +249,6 @@ class CourseController {
 				throw new Error(`CourseError: Admin with ID ${admin.id} already assigned to course with ID ${this.id}`)
 			this._admin_ids.push(admin.id)
 			this._admins?.push(admin)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -303,8 +262,6 @@ class CourseController {
 				throw new Error(`CourseError: Program with ID ${program.id} not assigned to course with ID ${this.id}`)
 			this._program_ids = this._program_ids.filter(id => id !== program.id)
 			this._programs = this._programs?.filter(p => p.id !== program.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -318,8 +275,6 @@ class CourseController {
 				throw new Error(`CourseError: Graph with ID ${graph.id} not assigned to course with ID ${this.id}`)
 			this._graph_ids = this._graph_ids.filter(id => id !== graph.id)
 			this._graphs = this._graphs?.filter(g => g.id !== graph.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
@@ -329,8 +284,6 @@ class CourseController {
 				throw new Error(`CourseError: Link with ID ${link.id} not assigned to course with ID ${this.id}`)
 			this._link_ids = this._link_ids?.filter(id => id !== link.id)
 			this._links = this._links?.filter(l => l.id !== link.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
@@ -340,8 +293,6 @@ class CourseController {
 				throw new Error(`CourseError: Editor with ID ${editor.id} not assigned to course with ID ${this.id}`)
 			this._editor_ids = this._editor_ids?.filter(id => id !== editor.id)
 			this._editors = this._editors?.filter(e => e.id !== editor.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -355,8 +306,6 @@ class CourseController {
 				throw new Error(`CourseError: Admin with ID ${admin.id} not assigned to course with ID ${this.id}`)
 			this._admin_ids = this._admin_ids?.filter(id => id !== admin.id)
 			this._admins = this._admins?.filter(a => a.id !== admin.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -366,9 +315,8 @@ class CourseController {
 
 	// --------------------> Validation
 
-	validateCode(strict: boolean = true) {
+	validateCode() {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_code === '') {
 			validation.add({
@@ -392,16 +340,15 @@ class CourseController {
 		) {
 			validation.add({
 				severity: Severity.error,
-				short: 'Course code is not unique'			
+				short: 'Course code is not unique'
 			})
 		}
 
 		return validation
 	}
 
-	validateName(strict: boolean = true) {
+	validateName() {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -426,94 +373,10 @@ class CourseController {
 		return validation
 	}
 
-	// NOTE Commented out, as it is not currently used
-/*	validatePrograms(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this.unchanged) return validation
-
-		if (this.program_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Course has no programs'
-			})
-		}
-
-		return validation
-	}
-
-	validateGraphs(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this.unchanged) return validation
-
-		if (this.graph_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Course has no graphs'
-			})
-		}
-
-		return validation
-	}
-
-	validateLinks(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this.unchanged) return validation
-
-		if (this.link_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Course has no links'
-			})
-		}
-
-		return validation
-	}
-
-	validateEditors(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this.unchanged) return validation
-
-		if (this.editor_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Course has no editors'
-			})
-		}
-
-		return validation
-	}
-
-	validateAdmins(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this.unchanged) return validation
-
-		if (this.admin_ids.length === 0) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Course has no admins'
-			})
-		}
-
-		return validation
-	}
-
-	validate(strict: boolean = true): Validation {
-		const validation = new Validation()
-
-		validation.add(this.validateCode(strict))
-		validation.add(this.validateName(strict))
-		validation.add(this.validatePrograms(strict))
-		validation.add(this.validateGraphs(strict))
-		validation.add(this.validateLinks(strict))
-		validation.add(this.validateEditors(strict))
-		validation.add(this.validateAdmins(strict))
-
-		return validation
-	} */
-
 	// --------------------> Actions
 
-	static async create(cache: ControllerCache, code: string, name: string, program?: ProgramController): Promise<CourseController> {
+	static async create(cache: ControllerCache, code: string, name: string, program?: ProgramController, save_status?: SaveStatus): Promise<CourseController> {
+		save_status?.setSaving(true)
 
 		// Call the API to create a new program
 		const response = await fetch('/api/course', {
@@ -534,10 +397,8 @@ class CourseController {
 		}
 
 		const course = CourseController.revive(cache, data)
-		if (program !== undefined) {
-			program.assignCourse(course, false)
-		}	
-
+		if (program !== undefined) program.assignCourse(course, false)
+		save_status?.setSaving(false)
 		return course
 	}
 
@@ -568,7 +429,6 @@ class CourseController {
 		return new CourseController(
 			cache,
 			data.id,
-			data.unchanged,
 			data.code,
 			data.name,
 			data.program_ids,
@@ -581,7 +441,6 @@ class CourseController {
 
 	represents(data: SerializedCourse): boolean {
 		return this.id === data.id
-			&& this.unchanged === data.unchanged
 			&& this.trimmed_code === data.code
 			&& this.trimmed_name === data.name
 			&& (this._program_ids === undefined || data.program_ids === undefined || compareArrays(this._program_ids, data.program_ids))
@@ -594,7 +453,6 @@ class CourseController {
 	reduce(): SerializedCourse {
 		return {
 			id: this.id,
-			unchanged: this.unchanged,
 			name: this.trimmed_name,
 			code: this.trimmed_code,
 			program_ids: this._program_ids,
@@ -606,9 +464,9 @@ class CourseController {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		if (!this._unsaved) return
-		if (this.validateCode().severity === Severity.error 
-		 || this.validateName().severity === Severity.error
+		if (
+			this.validateCode().severity === Severity.error ||
+			this.validateName().severity === Severity.error
 		) return
 
 		save_status?.setSaving(true)
@@ -625,12 +483,11 @@ class CourseController {
 			throw new Error(`APIError (/api/course PUT): ${response.status} ${response.statusText}`)
 		}
 
-		this._unsaved = false
 		save_status?.setSaving(false)
 	}
 
-	async delete() {
-		const promises: Promise<void>[] = []
+	async delete(save_status?: SaveStatus) {
+		save_status?.setSaving(true)
 
 		// Unassign programs, editors, and admins
 		if (this._program_ids !== undefined)
@@ -644,6 +501,7 @@ class CourseController {
 				admin.resignAsCourseAdmin(this, false)
 
 		// Delete graphs and links
+		const promises: Promise<void>[] = []
 		if (this._graph_ids !== undefined)
 			promises.push(...this.graphs.map(async graph => await graph.delete()))
 		if (this._link_ids !== undefined)
@@ -660,6 +518,7 @@ class CourseController {
 
 		// Remove the course from the cache
 		this.cache.remove(this)
+		save_status?.setSaving(false)
 	}
 
 	// --------------------> Utility

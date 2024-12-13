@@ -28,7 +28,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	public fx?: number
 	public fy?: number
 
-	protected _unsaved: boolean = false
+	protected _name_unchanged: boolean = false
 	protected _graph?: GraphController
 	protected _parents?: T[]
 	protected _children?: T[]
@@ -36,24 +36,18 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	protected constructor(
 		public cache: ControllerCache,
 		public id: number,
-		protected _unchanged: boolean,
 		protected _name: string,
-		protected _x: number,
-		protected _y: number,
+		public x: number,
+		public y: number,
 		protected _graph_id?: number,
 		protected _parent_ids?: number[],
 		protected _child_ids?: number[]
 	) {
-		this.fx = this._x
-		this.fy = this._y
+		this.fx = this.x
+		this.fy = this.y
 	}
 
 	// --------------------> Getters & Setters
-
-	// Unchanged properties
-	get unchanged(): boolean {
-		return this._unchanged
-	}
 
 	// Name properties
 	get name(): string {
@@ -62,33 +56,11 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 
 	set name(value: string) {
 		this._name = value
-		this._unchanged = false
-		this._unsaved = true
+		this._name_unchanged = false
 	}
 
 	get trimmed_name(): string {
 		return this._name.trim()
-	}
-
-	// Position properties
-	get x(): number {
-		return this._x
-	}
-
-	set x(value: number) {
-		this._x = value
-		this._unchanged = false
-		this._unsaved = true
-	}
-
-	get y(): number {
-		return this._y
-	}
-
-	set y(value: number) {
-		this._y = value
-		this._unchanged = false
-		this._unsaved = true
 	}
 
 	// Graph properties
@@ -129,6 +101,7 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	}
 
 	abstract get display_name(): string
+	abstract get is_empty(): boolean
 	abstract get style(): DomainStyle | null
 	abstract get parents(): T[]
 	abstract get children(): T[]
@@ -148,6 +121,4 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	// --------------------> Actions
 
 	abstract save(save_status?: SaveStatus): void
-	abstract delete(): void
-	abstract copy(graph: GraphController): Promise<T>
 }

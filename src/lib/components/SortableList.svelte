@@ -58,7 +58,7 @@
 
 	// Main
 	type T = $$Generic
-	export let list: T[] & { uuid: string, validate: (strict: boolean) => Validation }[]
+	export let list: T[] & { id: number, validate: (strict: boolean) => Validation }[]
 	let origin: number | null = null // Index of the element being dragged
 
 	const dispatch = createEventDispatcher<{rearrange: T[]}>()
@@ -69,7 +69,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="list" on:dragover|preventDefault>
-	{#each list as item, index (item.uuid)}
+	{#each list as item, index (item.id)}
 
 		<div
 			class="row"

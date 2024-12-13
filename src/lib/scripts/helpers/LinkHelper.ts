@@ -30,7 +30,6 @@ import type {
 export async function reduce(link: PrismaLink, ...relations: LinkRelation[]): Promise<SerializedLink> {
 	const serialized: SerializedLink = {
 		id: link.id,
-		unchanged: link.unchanged,
 		name: link.name
 	}
 
@@ -75,7 +74,6 @@ export async function update(data: SerializedLink) {
 				id: data.id
 			},
 			data: {
-				unchanged: data.unchanged,
 				name: data.name,
 				course: course_delta,
 				graph: graph_delta

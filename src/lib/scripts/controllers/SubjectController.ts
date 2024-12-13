@@ -30,9 +30,8 @@ export { SubjectController }
 
 
 class SubjectController extends NodeController<SubjectController> {
-	private _domain_id?: number | null
+	private _domain_unchanged: boolean = false
 	private _domain?: DomainController | null
-	private _lecture_ids?: number[]
 	private _lectures?: LectureController[]
 
 	public save = debounce(this._save, settings.DEBOUNCE_DELAY)
@@ -40,30 +39,34 @@ class SubjectController extends NodeController<SubjectController> {
 	private constructor(
 		cache: ControllerCache,
 		id: number,
-		unchanged: boolean,
 		name: string,
 		x: number,
 		y: number,
-		_domain_id?: number | null,
+		private _domain_id?: number | null,
 		_graph_id?: number,
 		_parent_ids?: number[],
 		_child_ids?: number[],
-		_lecture_ids?: number[]
+		private _lecture_ids?: number[]
 
 	) {
-		super(cache, id, unchanged, name, x, y, _graph_id, _parent_ids, _child_ids)
-
-		this._domain_id = _domain_id
-		this._lecture_ids = _lecture_ids
-
+		super(cache, id, name, x, y, _graph_id, _parent_ids, _child_ids)
 		this.cache.add(this)
 	}
 
 	// --------------------> Getters & Setters
 
-	// Name properties
+	// Name property
 	get display_name(): string {
 		return this.trimmed_name === '' ? 'Untitled subject' : this.trimmed_name
+	}
+
+	// Is Empty property
+	get is_empty(): boolean {
+		return this.trimmed_name === ''
+			&& this._domain_id === null
+			&& this._lecture_ids?.length === 0
+			&& this._parent_ids?.length === 0
+			&& this._child_ids?.length === 0
 	}
 
 	// Parent properties
@@ -113,8 +116,6 @@ class SubjectController extends NodeController<SubjectController> {
 		this._domain_id = domain ? domain.id : null
 		this._domain = domain
 		this.domain?.assignSubject(this, false)
-		this._unchanged = false
-		this._unsaved = true
 	}
 
 	get domain_options(): DropdownOption<DomainController>[] {
@@ -157,8 +158,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Parent with ID ${parent.id} already assigned to subject with ID ${this.id}`)
 			this._parent_ids.push(parent.id)
 			this._parents?.push(parent)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -172,8 +171,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Child with ID ${child.id} already assigned to subject with ID ${this.id}`)
 			this._child_ids.push(child.id)
 			this._children?.push(child)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -189,8 +186,6 @@ class SubjectController extends NodeController<SubjectController> {
 				this.domain?.unassignSubject(this, false)
 			this._domain_id = domain.id
 			this._domain = domain
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -204,8 +199,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Lecture with ID ${lecture.id} already assigned to subject with ID ${this.id}`)
 			this._lecture_ids.push(lecture.id)
 			this._lectures?.push(lecture)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -219,8 +212,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Parent with ID ${parent.id} not assigned to subject with ID ${this.id}`)
 			this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
 			this._parents = this._parents?.filter(p => p.id !== parent.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -234,8 +225,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Child with ID ${child.id} not assigned to subject with ID ${this.id}`)
 			this._child_ids = this._child_ids.filter(id => id !== child.id)
 			this._children = this._children?.filter(c => c.id !== child.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -249,8 +238,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Subject with ID ${this.id} has no domain assigned`)
 			this._domain_id = null
 			this._domain = null
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -264,8 +251,6 @@ class SubjectController extends NodeController<SubjectController> {
 				throw new Error(`SubjectError: Lecture with ID ${lecture.id} not assigned to subject with ID ${this.id}`)
 			this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
 			this._lectures = this._lectures?.filter(l => l.id !== lecture.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -277,7 +262,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 	validateName(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
+		if (!strict && this._name_unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -304,7 +289,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 	validateDomain(strict: boolean): Validation {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
+		if (!strict && this._domain_unchanged) return validation
 
 		if (this.domain === null) {
 			validation.add({
@@ -316,9 +301,8 @@ class SubjectController extends NodeController<SubjectController> {
 		return validation
 	}
 
-	validateLectures(strict: boolean): Validation {
+	validateLectures(): Validation {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
 
 		if (this.lecture_ids.length === 0) {
 			validation.add({
@@ -335,14 +319,15 @@ class SubjectController extends NodeController<SubjectController> {
 
 		validation.add(this.validateName(strict))
 		validation.add(this.validateDomain(strict))
-		validation.add(this.validateLectures(strict))
+		validation.add(this.validateLectures())
 
 		return validation
 	}
 
 	// --------------------> Actions
 
-	static async create(cache: ControllerCache, graph: GraphController): Promise<SubjectController> {
+	static async create(cache: ControllerCache, graph: GraphController, save_status?: SaveStatus): Promise<SubjectController> {
+		save_status?.setSaving(true)
 
 		// Call the API to create a new subject
 		const response = await fetch('/api/subject', {
@@ -358,13 +343,17 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Revive the subject
 		const data = await response.json()
-		if (validSerializedSubject(data)) {
-			const subject = SubjectController.revive(cache, data)
-			graph.assignSubject(subject)
-			return subject
+		if (!validSerializedSubject(data)) {
+			throw new Error(`SubjectError: Invalid subject data received from API`)
 		}
 
-		throw new Error(`SubjectError: Invalid subject data received from API`)
+		const subject = SubjectController.revive(cache, data)
+		subject._name_unchanged = true
+		subject._domain_unchanged = true
+		graph.assignSubject(subject)
+		save_status?.setSaving(false)
+
+		return subject
 	}
 
 	static revive(cache: ControllerCache, data: SerializedSubject): SubjectController {
@@ -392,7 +381,6 @@ class SubjectController extends NodeController<SubjectController> {
 		return new SubjectController(
 			cache,
 			data.id,
-			data.unchanged,
 			data.name,
 			data.x,
 			data.y,
@@ -406,7 +394,6 @@ class SubjectController extends NodeController<SubjectController> {
 
 	represents(data: SerializedSubject): boolean {
 		return this.id === data.id
-			&& this.unchanged === data.unchanged
 			&& this.trimmed_name === data.name
 			&& this.x === data.x
 			&& this.y === data.y
@@ -420,7 +407,6 @@ class SubjectController extends NodeController<SubjectController> {
 	reduce(): SerializedSubject {
 		return {
 			id: this.id,
-			unchanged: this._unchanged,
 			name: this.trimmed_name,
 			x: this.x,
 			y: this.y,
@@ -433,7 +419,6 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		if (!this._unsaved) return
 		save_status?.setSaving(true)
 
 		// Call the API to save the subject
@@ -448,11 +433,11 @@ class SubjectController extends NodeController<SubjectController> {
 			throw new Error(`APIError (/api/subject PUT): ${response.status} ${response.statusText}`)
 		}
 
-		this._unsaved = false
 		save_status?.setSaving(false)
 	}
 
-	async delete() {
+	async delete(save_status?: SaveStatus) {
+		save_status?.setSaving(true)
 
 		// Unassign graph, domain, parents, children, and lectures
 		if (this._graph_id !== undefined)
@@ -479,6 +464,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Remove the subject from the cache
 		this.cache.remove(this)
+		save_status?.setSaving(false)
 	}
 
 	async copy(graph: GraphController): Promise<SubjectController> {
@@ -489,7 +475,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 		return subject_copy
 	}
-	
+
 	// --------------------> Utility
 
 	matchesQuery(query: string): boolean {

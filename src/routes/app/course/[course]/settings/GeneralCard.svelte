@@ -80,8 +80,8 @@
 				}}
 			/>
 
-			<Feedback animate data={$course.validateCode()} />
-			<Feedback animate data={$course.validateName()} />
+			<Feedback data={$course.validateCode()} />
+			<Feedback data={$course.validateName()} />
 		</div>
 	</Card>
 </div>

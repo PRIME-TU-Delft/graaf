@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// External dependencies
-	import { goto } from '$app/navigation'
+	import { beforeNavigate, goto } from '$app/navigation'
 	import { page } from '$app/stores'
 	import { onDestroy } from 'svelte'
 
@@ -39,7 +39,7 @@
 	import sort_icon from '$assets/sort-icon.svg'
 
 	// Functions
-	function navigateEditor(type: EditorType, view: EditorView) {
+	async function navigateEditor(type: EditorType, view: EditorView) {
 		if (
 			graphSVG.state === SVGState.animating ||
 			editor_type === type && editor_view === view
@@ -48,10 +48,12 @@
 		editor_type = type
 		editor_view = view
 
+		// Update URL
 		search_params.set('type', editor_type)
 		search_params.set('view', editor_view)
 		goto(`?${search_params.toString()}`, { replaceState: true, noScroll: true })
 
+		// Update UI
 		graphSVG.view = view
 	}
 
@@ -66,6 +68,7 @@
 	let editor_type = search_params.get('type') as EditorType
 	let editor_view = search_params.get('view') as EditorView
 	let disable_graph_controls = false
+	let prune_on_navigation = true
 
 	let autolayout_modal: SimpleModal
 
@@ -75,6 +78,27 @@
 		validEditorType(editor_type) ? editor_type : 'data',
 		validEditorView(editor_view) ? editor_view : 'domains'
 	)
+
+	beforeNavigate(async navigation => {
+
+		// Yeah okay so this is a very sketchy workaround, as this callback isnt supposed to be async
+		// So instead we cancel any and all navigation, prune the graph, and then navigate to the new page
+		// prune_on_navigation is used to prevent an infinite loop of navigation events
+		// Otherwise we get a NetworkError: when attempting to fetch resource
+
+		if (prune_on_navigation) {
+			navigation.cancel()
+			await $graph.prune()
+
+			// Check if user cancelled navigation.type === 'leave'
+			if (navigation.to) {
+				prune_on_navigation = false
+				goto(navigation.to.url, { replaceState: true })
+			}
+		} else {
+			prune_on_navigation = true
+		}
+	})
 
 	onDestroy(() => {
 		graphSVG.unsubscribe(updateUI)
@@ -120,26 +144,26 @@
 				class="tab"
 				class:active={editor_view === 'domains'}
 				tabindex="-1"
-				on:click={() => navigateEditor(editor_type, 'domains')}
+				on:click={async () => await navigateEditor(editor_type, 'domains')}
 			> Domains </button>
 
 			<button
 				class="tab"
 				class:active={editor_view === 'subjects'}
 				tabindex="-1"
-				on:click={() => navigateEditor(editor_type, 'subjects')}
+				on:click={async () => await navigateEditor(editor_type, 'subjects')}
 			> Subjects </button>
 
 			<button
 				class="tab"
 				class:active={editor_view === 'lectures'}
 				tabindex="-1"
-				on:click={() => navigateEditor(editor_type, 'lectures')}
+				on:click={async () => await navigateEditor(editor_type, 'lectures')}
 			> Lectures </button>
 
 			<div class="toolbar">
 				{#if editor_type === 'data'}
-					<LinkButton on:click={() => navigateEditor('layout', editor_view)}>
+					<LinkButton on:click={async () => await navigateEditor('layout', editor_view)}>
 						Edit Graph Layout
 					</LinkButton>
 
@@ -168,7 +192,7 @@
 
 					<div class="flex-spacer" />
 
-					<LinkButton on:click={() => navigateEditor('data', editor_view)}>
+					<LinkButton on:click={async () => await navigateEditor('data', editor_view)}>
 						Edit Graph Data
 					</LinkButton>
 				{/if}

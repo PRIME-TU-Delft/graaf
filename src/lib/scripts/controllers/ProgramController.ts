@@ -24,7 +24,6 @@ export { ProgramController }
 
 
 class ProgramController {
-	private _unsaved: boolean = false
 	private _courses?: CourseController[]
 	private _editors?: UserController[]
 	private _admins?: UserController[]
@@ -34,8 +33,7 @@ class ProgramController {
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
-		private _unchanged: boolean,
-		private _name: string,
+		public name: string,
 		private _course_ids?: number[],
 		private _editor_ids?: string[],
 		private _admin_ids?: string[]
@@ -45,24 +43,9 @@ class ProgramController {
 
 	// --------------------> Getters & Setters
 
-	// Unchanged properties
-	get unchanged(): boolean {
-		return this._unchanged
-	}
-
 	// Name properties
-	get name(): string {
-		return this._name
-	}
-
-	set name(value: string) {
-		this._name = value
-		this._unchanged = false
-		this._unsaved = true
-	}
-
 	get trimmed_name(): string {
-		return this._name.trim()
+		return this.name.trim()
 	}
 
 	get display_name(): string {
@@ -131,8 +114,7 @@ class ProgramController {
 	get editor_options(): DropdownOption<UserController>[] {
 		return this.editors.map(editor => ({
 				value: editor,
-				label: editor.first_name + ' ' + editor.last_name,
-				validation: Validation.success()
+				label: editor.first_name + ' ' + editor.last_name
 			})
 		)
 	}
@@ -158,22 +140,19 @@ class ProgramController {
 	get admin_options(): DropdownOption<UserController>[] {
 		return this.admins.map(admin => ({
 				value: admin,
-				label: admin.first_name + ' ' + admin.last_name,
-				validation: Validation.success()
+				label: admin.first_name + ' ' + admin.last_name
 			})
 		)
 	}
 
 	// --------------------> Assignments
 
-	assignCourse(course: CourseController, mirror: boolean = true) {		
+	assignCourse(course: CourseController, mirror: boolean = true) {
 		if (this._course_ids !== undefined) {
 			if (this._course_ids.includes(course.id))
 				throw new Error(`ProgramError: Course with ID ${course.id} already assigned to program with ID ${this.id}`)
 			this._course_ids.push(course.id)
 			this._courses?.push(course)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -187,8 +166,6 @@ class ProgramController {
 				throw new Error(`ProgramError: Editor with ID ${editor.id} already assigned to program with ID ${this.id}`)
 			this._editor_ids.push(editor.id)
 			this._editors?.push(editor)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -202,8 +179,6 @@ class ProgramController {
 				throw new Error(`ProgramError: Admin with ID ${admin.id} already assigned to program with ID ${this.id}`)
 			this._admin_ids.push(admin.id)
 			this._admins?.push(admin)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -217,8 +192,6 @@ class ProgramController {
 				throw new Error(`ProgramError: Course with ID ${course.id} not assigned to program with ID ${this.id}`)
 			this._course_ids = this._course_ids.filter(id => id !== course.id)
 			this._courses = this._courses?.filter(c => c.id !== course.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -232,8 +205,6 @@ class ProgramController {
 				throw new Error(`ProgramError: Editor with ID ${editor.id} not assigned to program with ID ${this.id}`)
 			this._editor_ids = this._editor_ids.filter(id => id !== editor.id)
 			this._editors = this._editors?.filter(e => e.id !== editor.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -248,8 +219,6 @@ class ProgramController {
 			throw new Error(`ProgramError: Admin with ID ${admin.id} not assigned to program with ID ${this.id}`)
 		this._admin_ids = this._admin_ids?.filter(id => id !== admin.id)
 		this._admins = this._admins?.filter(a => a.id !== admin.id)
-		this._unchanged = false
-		this._unsaved = true
 
 		if (mirror) {
 			admin.resignAsProgramAdmin(this, false)
@@ -258,9 +227,8 @@ class ProgramController {
 
 	// --------------------> Validation
 
-	validateName(strict: boolean = true): Validation {
+	validateName(): Validation {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -284,64 +252,11 @@ class ProgramController {
 
 		return validation
 	}
- 
-// NOTE Commented out, as it is not currently used
-/*	validateCourses(strict: boolean = true): Validation {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.course_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Program has no courses'
-			})
-		}
-
-		return validation
-	}
-
-	validateEditors(strict: boolean = true): Validation {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.editor_ids.length === 0) {
-			validation.add({
-				severity: Severity.warning,
-				short: 'Program has no editors'
-			})
-		}
-
-		return validation
-	}
-
-	validateAdmins(strict: boolean = true): Validation {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.admin_ids.length === 0) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Program has no admins'
-			})
-		}
-
-		return validation
-	}
-
-	validate(strict: boolean = true): Validation {
-		const validation = new Validation()
-
-		validation.add(this.validateName(strict))
-		validation.add(this.validateCourses(strict))
-		validation.add(this.validateEditors(strict))
-		validation.add(this.validateAdmins(strict))
-
-		return validation
-	} */
 
 	// --------------------> Actions
 
-	static async create(cache: ControllerCache, name: string): Promise<ProgramController> {
+	static async create(cache: ControllerCache, name: string, save_status?: SaveStatus): Promise<ProgramController> {
+		save_status?.setSaving(true)
 
 		// Call the API to create a new program
 		const response = await fetch('/api/program', {
@@ -361,6 +276,7 @@ class ProgramController {
 			throw new Error(`ProgramError: Invalid program data received from API`)
 		}
 
+		save_status?.setSaving(false)
 		return ProgramController.revive(cache, data)
 	}
 
@@ -387,7 +303,6 @@ class ProgramController {
 		return new ProgramController(
 			cache,
 			data.id,
-			data.unchanged,
 			data.name,
 			data.course_ids,
 			data.editor_ids,
@@ -397,7 +312,6 @@ class ProgramController {
 
 	represents(data: SerializedProgram): boolean {
 		return this.id === data.id
-			&& this.unchanged === data.unchanged
 			&& this.trimmed_name === data.name
 			&& (this._course_ids === undefined || data.course_ids === undefined || compareArrays(this._course_ids, data.course_ids))
 			&& (this._editor_ids === undefined || data.editor_ids === undefined || compareArrays(this._editor_ids, data.editor_ids))
@@ -407,7 +321,6 @@ class ProgramController {
 	reduce(): SerializedProgram {
 		return {
 			id: this.id,
-			unchanged: this.unchanged,
 			name: this.trimmed_name,
 			course_ids: this._course_ids,
 			editor_ids: this._editor_ids,
@@ -416,9 +329,7 @@ class ProgramController {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		if (!this._unsaved) return
 		if (this.validateName().severity === Severity.error) return
-
 		save_status?.setSaving(true)
 
 		// Call the API to save the program
@@ -433,11 +344,11 @@ class ProgramController {
 			throw new Error(`APIError (/api/program PUT): ${response.status} ${response.statusText}`)
 		}
 
-		this._unsaved = false
 		save_status?.setSaving(false)
 	}
 
-	async delete() {
+	async delete(save_status?: SaveStatus) {
+		save_status?.setSaving(true)
 
 		// Unassign courses, editors, and admins
 		if (this._course_ids !== undefined)
@@ -449,7 +360,7 @@ class ProgramController {
 		if (this._admin_ids !== undefined)
 			for (const admin of this.admins)
 				admin.resignAsProgramAdmin(this, false)
-		
+
 		// Call the API to delete the program
 		const response = await fetch(`/api/program/${this.id}`, { method: 'DELETE' })
 
@@ -460,7 +371,7 @@ class ProgramController {
 
 		// Remove the program from the cache
 		this.cache.remove(this)
-
+		save_status?.setSaving(false)
 	}
 
 	// --------------------> Utility
@@ -468,7 +379,7 @@ class ProgramController {
 	matchesQuery(query: string): boolean {
 		const lower_query = query.toLowerCase()
 		const lower_name = this.trimmed_name.toLowerCase()
-	
+
 		return lower_name.includes(lower_query)
 	}
 }

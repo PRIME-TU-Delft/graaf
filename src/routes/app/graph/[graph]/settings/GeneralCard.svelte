@@ -68,7 +68,7 @@
 			}}
 		/>
 
-		<Feedback animate data={$graph.validateName()} />
+		<Feedback data={$graph.validateName()} />
 	</Card>
 </div>
 
