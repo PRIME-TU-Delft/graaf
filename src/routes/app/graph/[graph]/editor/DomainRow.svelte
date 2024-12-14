@@ -34,7 +34,7 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await domain.delete()
+				await domain.delete(true, $save_status)
 				$graph = $graph // Trigger reactivity
 			}}
 		> Delete </Button>
@@ -47,7 +47,7 @@
 		description="Delete Domain"
 		on:click={async () => {
 			if (domain.is_empty) {
-				await domain.delete()
+				await domain.delete(true, $save_status)
 				$graph = $graph // Trigger reactivity
 			} else {
 				delete_modal.show()

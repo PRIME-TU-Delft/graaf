@@ -2,7 +2,7 @@
 // Internal dependencies
 import * as settings from '$scripts/settings'
 
-import { compareArrays, debounce } from '$scripts/utility'
+import { compareArrays, customError, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -66,13 +66,13 @@ class CourseController {
 	// Program properties
 	get program_ids(): number[] {
 		if (this._program_ids === undefined)
-			throw new Error('CourseError: Program data unknown')
+			throw customError('CourseError', 'Program data unknown')
 		return Array.from(this._program_ids)
 	}
 
 	get programs(): ProgramController[] {
 		if (this._program_ids === undefined)
-			throw new Error('CourseError: Program data unknown')
+			throw customError('CourseError', 'Program data unknown')
 		if (this._programs !== undefined)
 			return Array.from(this._programs)
 
@@ -107,13 +107,13 @@ class CourseController {
 	// Graph properties
 	get graph_ids(): number[] {
 		if (this._graph_ids === undefined)
-			throw new Error('CourseError: Graph data unknown')
+			throw customError('CourseError', 'Graph data unknown')
 		return Array.from(this._graph_ids)
 	}
 
 	get graphs(): GraphController[] {
 		if (this._graph_ids === undefined)
-			throw new Error('CourseError: Graph data unknown')
+			throw customError('CourseError', 'Graph data unknown')
 		if (this._graphs !== undefined)
 			return Array.from(this._graphs)
 
@@ -132,13 +132,13 @@ class CourseController {
 	// Link properties
 	get link_ids(): number[] {
 		if (this._link_ids === undefined)
-			throw new Error('CourseError: Link data unknown')
+			throw customError('CourseError', 'Link data unknown')
 		return Array.from(this._link_ids)
 	}
 
 	get links(): LinkController[] {
 		if (this._link_ids === undefined)
-			throw new Error('CourseError: Link data unknown')
+			throw customError('CourseError', 'Link data unknown')
 		if (this._links !== undefined)
 			return Array.from(this._links)
 
@@ -150,13 +150,13 @@ class CourseController {
 	// Editor properties
 	get editor_ids(): string[] {
 		if (this._editor_ids === undefined)
-			throw new Error('CourseError: Editor data unknown')
+			throw customError('CourseError', 'Editor data unknown')
 		return Array.from(this._editor_ids)
 	}
 
 	get editors(): UserController[] {
 		if (this._editor_ids === undefined)
-			throw new Error('CourseError: Editor data unknown')
+			throw customError('CourseError', 'Editor data unknown')
 		if (this._editors !== undefined)
 			return Array.from(this._editors)
 
@@ -175,13 +175,13 @@ class CourseController {
 	// Admin properties
 	get admin_ids(): string[] {
 		if (this._admin_ids === undefined)
-			throw new Error('CourseError: Admin data unknown')
+			throw customError('CourseError', 'Admin data unknown')
 		return Array.from(this._admin_ids)
 	}
 
 	get admins(): UserController[] {
 		if (this._admin_ids === undefined)
-			throw new Error('CourseError: Admin data unknown')
+			throw customError('CourseError', 'Admin data unknown')
 		if (this._admins !== undefined)
 			return Array.from(this._admins)
 
@@ -202,7 +202,7 @@ class CourseController {
 	assignToProgram(program: ProgramController, mirror: boolean = true) {
 		if (this._program_ids !== undefined) {
 			if (this._program_ids.includes(program.id))
-				throw new Error(`CourseError: Program with ID ${program.id} already assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Program with ID ${program.id} already assigned to course with ID ${this.id}`)
 			this._program_ids.push(program.id)
 			this._programs?.push(program)
 		}
@@ -215,7 +215,7 @@ class CourseController {
 	assignGraph(graph: GraphController) {
 		if (this._graph_ids !== undefined) {
 			if (this._graph_ids.includes(graph.id))
-				throw new Error(`CourseError: Graph with ID ${graph.id} already assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Graph with ID ${graph.id} already assigned to course with ID ${this.id}`)
 			this._graph_ids.push(graph.id)
 			this._graphs?.push(graph)
 		}
@@ -224,7 +224,7 @@ class CourseController {
 	assignLink(link: LinkController) {
 		if (this._link_ids !== undefined) {
 			if (this._link_ids.includes(link.id))
-				throw new Error(`CourseError: Link with ID ${link.id} already assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Link with ID ${link.id} already assigned to course with ID ${this.id}`)
 			this._link_ids.push(link.id)
 			this._links?.push(link)
 		}
@@ -233,7 +233,7 @@ class CourseController {
 	assignEditor(editor: UserController, mirror: boolean = true) {
 		if (this._editor_ids !== undefined) {
 			if (this._editor_ids.includes(editor.id))
-				throw new Error(`CourseError: Editor with ID ${editor.id} already assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Editor with ID ${editor.id} already assigned to course with ID ${this.id}`)
 			this._editor_ids.push(editor.id)
 			this._editors?.push(editor)
 		}
@@ -246,7 +246,7 @@ class CourseController {
 	assignAdmin(admin: UserController, mirror: boolean = true) {
 		if (this._admin_ids !== undefined) {
 			if (this._admin_ids.includes(admin.id))
-				throw new Error(`CourseError: Admin with ID ${admin.id} already assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Admin with ID ${admin.id} already assigned to course with ID ${this.id}`)
 			this._admin_ids.push(admin.id)
 			this._admins?.push(admin)
 		}
@@ -259,7 +259,7 @@ class CourseController {
 	unassignFromProgram(program: ProgramController, mirror: boolean = true) {
 		if (this._program_ids !== undefined) {
 			if (!this._program_ids.includes(program.id))
-				throw new Error(`CourseError: Program with ID ${program.id} not assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Program with ID ${program.id} not assigned to course with ID ${this.id}`)
 			this._program_ids = this._program_ids.filter(id => id !== program.id)
 			this._programs = this._programs?.filter(p => p.id !== program.id)
 		}
@@ -272,7 +272,7 @@ class CourseController {
 	unassignGraph(graph: GraphController) {
 		if (this._graph_ids !== undefined) {
 			if (!this._graph_ids.includes(graph.id))
-				throw new Error(`CourseError: Graph with ID ${graph.id} not assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Graph with ID ${graph.id} not assigned to course with ID ${this.id}`)
 			this._graph_ids = this._graph_ids.filter(id => id !== graph.id)
 			this._graphs = this._graphs?.filter(g => g.id !== graph.id)
 		}
@@ -281,7 +281,7 @@ class CourseController {
 	unassignLink(link: LinkController) {
 		if (this._link_ids !== undefined) {
 			if (!this._link_ids.includes(link.id))
-				throw new Error(`CourseError: Link with ID ${link.id} not assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Link with ID ${link.id} not assigned to course with ID ${this.id}`)
 			this._link_ids = this._link_ids?.filter(id => id !== link.id)
 			this._links = this._links?.filter(l => l.id !== link.id)
 		}
@@ -290,7 +290,7 @@ class CourseController {
 	unassignEditor(editor: UserController, mirror: boolean = true) {
 		if (this._editor_ids !== undefined) {
 			if (!this._editor_ids.includes(editor.id))
-				throw new Error(`CourseError: Editor with ID ${editor.id} not assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Editor with ID ${editor.id} not assigned to course with ID ${this.id}`)
 			this._editor_ids = this._editor_ids?.filter(id => id !== editor.id)
 			this._editors = this._editors?.filter(e => e.id !== editor.id)
 		}
@@ -303,7 +303,7 @@ class CourseController {
 	unassignAdmin(admin: UserController, mirror: boolean = true) {
 		if (this._admin_ids !== undefined) {
 			if (!this._admin_ids.includes(admin.id))
-				throw new Error(`CourseError: Admin with ID ${admin.id} not assigned to course with ID ${this.id}`)
+				throw customError('CourseError', `Admin with ID ${admin.id} not assigned to course with ID ${this.id}`)
 			this._admin_ids = this._admin_ids?.filter(id => id !== admin.id)
 			this._admins = this._admins?.filter(a => a.id !== admin.id)
 		}
@@ -387,13 +387,13 @@ class CourseController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/course POST): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/course POST)', await response.text())
 		}
 
 		// Revive the program
 		const data = await response.json()
 		if (!validSerializedCourse(data)) {
-			throw new Error(`CourseError: Invalid course data received from API`)
+			throw customError('CourseError', 'Invalid course data received from API')
 		}
 
 		const course = CourseController.revive(cache, data)
@@ -408,7 +408,7 @@ class CourseController {
 
 			// Throw an error if the existing course is inconsistent
 			if (!course.represents(data)) {
-				throw new Error(`CourseError: Course with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('CourseError', `Course with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update the existing course where necessary
@@ -480,7 +480,7 @@ class CourseController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/course PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/course PUT)', await response.text())
 		}
 
 		save_status?.setSaving(false)
@@ -513,7 +513,7 @@ class CourseController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/course/${this.id} DELETE): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/course DELETE)', await response.text())
 		}
 
 		// Remove the course from the cache

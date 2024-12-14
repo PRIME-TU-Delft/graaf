@@ -3,7 +3,7 @@
     const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
-	import { graph, lecture_query } from './stores'
+	import { graph, lecture_query, save_status } from './stores'
 	import { LectureController } from '$scripts/controllers'
 
 	// Components
@@ -31,7 +31,7 @@
 		<SortableList
 			list={filtered_lectures} 
 			on:rearrange={async event => {
-				await $graph.reorderLectures(event.detail)
+				await $graph.reorderLectures(event.detail, $save_status)
 				$graph = $graph // Trigger reactivity
 			}}
 		>
@@ -51,7 +51,7 @@
 	<button
 		class="row-button"
 		on:click={async () => {
-			await LectureController.create($graph.cache, $graph)
+			await LectureController.create($graph.cache, $graph, $save_status)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
 		}}

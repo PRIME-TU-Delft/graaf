@@ -5,6 +5,7 @@ import * as uuid from 'uuid'
 // Internal dependencies
 import * as settings from '$scripts/settings'
 import { Validation } from '$scripts/validation'
+import { customError } from '$scripts/utility'
 
 import {
 	ControllerCache,
@@ -66,13 +67,13 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	// Graph properties
 	get graph_id(): number {
 		if (this._graph_id === undefined)
-			throw new Error('NodeError: Graph data unknown')
+			throw customError('NodeError', 'Graph data unknown')
 		return this._graph_id
 	}
 
 	get graph(): GraphController {
 		if (this._graph_id === undefined)
-			throw new Error('NodeError: Graph data unknown')
+			throw customError('NodeError', 'Graph data unknown')
 		if (this._graph !== undefined)
 			return this._graph
 
@@ -84,14 +85,14 @@ abstract class NodeController<T extends DomainController | SubjectController> {
 	// Parent properties
 	get parent_ids(): number[] {
 		if (this._parent_ids === undefined)
-			throw new Error('NodeError: Parent data unknown')
+			throw customError('NodeError', 'Parent data unknown')
 		return Array.from(this._parent_ids)
 	}
 
 	// Child properties
 	get child_ids(): number[] {
 		if (this._child_ids === undefined)
-			throw new Error('NodeError: Child data unknown')
+			throw customError('NodeError', 'Child data unknown')
 		return Array.from(this._child_ids)
 	}
 

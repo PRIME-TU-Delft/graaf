@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 
 // Internal imports
 import * as settings from '$scripts/settings'
+import { customError } from '$scripts/utility'
 import { Severity } from '$scripts/validation'
 
 import {
@@ -145,7 +146,7 @@ class GraphSVG {
 
 		// Check if SVG is properly attached
 		if (this.svg === undefined || this.simulation === undefined) {
-			throw new Error('Failed to set state: GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		}
 
 		// If moving out of broken state:
@@ -235,7 +236,7 @@ class GraphSVG {
 
 		// Check if properly attached
 		if (this.svg === undefined) {
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		}
 
 		this._lecture = lecture // NEW LECTURE
@@ -279,7 +280,7 @@ class GraphSVG {
 
 		// Check if already attached
 		if (this.state !== SVGState.detached) {
-			throw new Error('GraphSVG already attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG already attached to DOM')
 		}
 
 		// SVG setup
@@ -412,12 +413,12 @@ class GraphSVG {
 
 		// Check if already detached
 		if (this.state === SVGState.detached) {
-			throw new Error('GraphSVG already detached from DOM')
+			throw customError('GraphSVGError', 'GraphSVG already detached from DOM')
 		}
 
 		// Check if properly attached
 		if (this.svg === undefined) {
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		}
 
 		// Exit current state
@@ -449,7 +450,7 @@ class GraphSVG {
 
 	zoomIn() {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
@@ -462,7 +463,7 @@ class GraphSVG {
 
 	zoomOut() {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
@@ -485,7 +486,7 @@ class GraphSVG {
 
 	toggleAutolayout() {
 		if (this.simulation === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic)
 			return
 
@@ -504,7 +505,7 @@ class GraphSVG {
 
 	microwaveSimulation() {
 		if (this.simulation === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		this.simulation
 			.alpha(1)
 			.restart()
@@ -533,7 +534,7 @@ class GraphSVG {
 
 	private boundingBox(nodes: NodeController<DomainController | SubjectController>[]) {
 		if (this.svg === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (nodes.length === 0)
 			return { x: 0, y: 0, k: 1 }
 
@@ -573,7 +574,7 @@ class GraphSVG {
 
 	private moveCamera(x: number, y: number, k: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -600,7 +601,7 @@ class GraphSVG {
 
 	private panCamera(x: number, y: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -623,7 +624,7 @@ class GraphSVG {
 
 	private zoomCamera(k: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -642,7 +643,7 @@ class GraphSVG {
 
 	private setBackground(view: EditorView) {
 		if (this.svg === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		const background = d3.select<SVGGElement, unknown>('#background')
 
 		// Remove old background
@@ -726,7 +727,7 @@ class GraphSVG {
 
 	private setContent(nodes: NodeController<DomainController | SubjectController>[], relations: RelationController<DomainController | SubjectController>[], callback?: () => void) {
 		if (this.simulation === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (nodes.length === 0) {
 			this.clearContent(callback)
 			return

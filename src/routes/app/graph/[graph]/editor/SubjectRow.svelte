@@ -49,7 +49,7 @@
 		description="Delete Subject"
 		on:click={async () => {
 			if (subject.is_empty) {
-				await subject.delete()
+				await subject.delete($save_status)
 				$graph = $graph // Trigger reactivity
 			} else {
 				delete_modal.show()

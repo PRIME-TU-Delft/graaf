@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
@@ -47,12 +47,11 @@
 
 		async submit() {
 			$course.assignToProgram(this.program as ProgramController)
-			await $course.save()
+			$save_status.setUnsaved()
+			await $course.save($save_status)
 			$course = $course // Trigger reactivity
 		}
 	}
-
-
 
 	// Variables
 	const program_modal = new AddProgramModal()

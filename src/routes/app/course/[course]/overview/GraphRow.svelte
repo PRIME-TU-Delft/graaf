@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
@@ -53,7 +53,7 @@
 		}
 
 		async submit() {
-			const copied_graph = await graph.copy(this.course as CourseController)
+			const copied_graph = await graph.copy(this.course as CourseController, $save_status)
 			await Promise.all([
 				copied_graph.save(),
 				copied_graph.domains.map(domain => domain.save()),
@@ -107,7 +107,7 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await graph.delete()
+				await graph.delete($save_status)
 				$course = $course // Trigger reactivity
 			}}
 		> Delete </Button>

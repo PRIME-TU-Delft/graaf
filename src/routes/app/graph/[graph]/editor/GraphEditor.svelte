@@ -301,6 +301,9 @@
 			color: $dark-purple
 
 	.tabular
+		:globel(.save-status)
+			margin-bottom: none
+			
 		.sticky
 			position: sticky
 			z-index: 2

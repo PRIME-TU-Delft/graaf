@@ -3,7 +3,7 @@
 	const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
-	import { graph, domain_query } from './stores'
+	import { graph, domain_query, save_status } from './stores'
 
 	import {
 		DomainController,
@@ -43,7 +43,7 @@
 		<SortableList 
 			list={filtered_domains} 
 			on:rearrange={async event => {
-				await $graph.reorderDomains(event.detail)
+				await $graph.reorderDomains(event.detail, $save_status)
 				$graph = $graph // Trigger reactivity
 			}}
 		>
@@ -61,7 +61,7 @@
 	<button
 		class="row-button"
 		on:click={async () => {
-			await DomainController.create($graph.cache, $graph)
+			await DomainController.create($graph.cache, $graph, $save_status)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
 		}}

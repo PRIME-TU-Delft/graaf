@@ -2,7 +2,7 @@
 // Internal dependencies
 import * as settings from '$scripts/settings'
 
-import { compareArrays, debounce } from '$scripts/utility'
+import { compareArrays, debounce, customError } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -72,7 +72,7 @@ class SubjectController extends NodeController<SubjectController> {
 	// Parent properties
 	get parents(): SubjectController[] {
 		if (this._parent_ids === undefined)
-			throw new Error('SubjectError: Parent data unknown')
+			throw customError('SubjectError', 'Parent data unknown')
 		if (this._parents !== undefined)
 			return Array.from(this._parents)
 
@@ -84,7 +84,7 @@ class SubjectController extends NodeController<SubjectController> {
 	// Child properties
 	get children(): SubjectController[] {
 		if (this._child_ids === undefined)
-			throw new Error('SubjectError: Child data unknown')
+			throw customError('SubjectError', 'Child data unknown')
 		if (this._children !== undefined)
 			return Array.from(this._children)
 
@@ -96,13 +96,13 @@ class SubjectController extends NodeController<SubjectController> {
 	// Domain properties
 	get domain_id(): number | null {
 		if (this._domain_id === undefined)
-			throw new Error('SubjectError: Domain data unknown')
+			throw customError('SubjectError', 'Domain data unknown')
 		return this._domain_id
 	}
 
 	get domain(): DomainController | null {
 		if (this._domain_id === undefined)
-			throw new Error('SubjectError: Domain data unknown')
+			throw customError('SubjectError', 'Domain data unknown')
 		if (this._domain !== undefined)
 			return this._domain
 
@@ -130,13 +130,13 @@ class SubjectController extends NodeController<SubjectController> {
 	// Lecture properties
 	get lecture_ids(): number[] {
 		if (this._lecture_ids === undefined)
-			throw new Error('SubjectError: Lecture data unknown')
+			throw customError('SubjectError', 'Lecture data unknown')
 		return Array.from(this._lecture_ids)
 	}
 
 	get lectures(): LectureController[] {
 		if (this._lecture_ids === undefined)
-			throw new Error('SubjectError: Lecture data unknown')
+			throw customError('SubjectError', 'Lecture data unknown')
 		if (this._lectures !== undefined)
 			return Array.from(this._lectures)
 
@@ -155,7 +155,7 @@ class SubjectController extends NodeController<SubjectController> {
 	assignParent(parent: SubjectController, mirror: boolean = true) {
 		if (this._parent_ids !== undefined) {
 			if (this._parent_ids.includes(parent.id))
-				throw new Error(`SubjectError: Parent with ID ${parent.id} already assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Parent with ID ${parent.id} already assigned to subject with ID ${this.id}`)
 			this._parent_ids.push(parent.id)
 			this._parents?.push(parent)
 		}
@@ -168,7 +168,7 @@ class SubjectController extends NodeController<SubjectController> {
 	assignChild(child: SubjectController, mirror: boolean = true): void {
 		if (this._child_ids !== undefined) {
 			if (this._child_ids.includes(child.id))
-				throw new Error(`SubjectError: Child with ID ${child.id} already assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Child with ID ${child.id} already assigned to subject with ID ${this.id}`)
 			this._child_ids.push(child.id)
 			this._children?.push(child)
 		}
@@ -181,7 +181,7 @@ class SubjectController extends NodeController<SubjectController> {
 	assignDomain(domain: DomainController, mirror: boolean = true): void {
 		if (this._domain_id !== undefined) {
 			if (this._domain_id === domain.id)
-				throw new Error(`SubjectError: Domain with ID ${domain.id} already assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Domain with ID ${domain.id} already assigned to subject with ID ${this.id}`)
 			if (this._domain_id !== null && mirror)
 				this.domain?.unassignSubject(this, false)
 			this._domain_id = domain.id
@@ -196,7 +196,7 @@ class SubjectController extends NodeController<SubjectController> {
 	assignToLecture(lecture: LectureController, mirror: boolean = true): void {
 		if (this._lecture_ids !== undefined) {
 			if (this._lecture_ids.includes(lecture.id))
-				throw new Error(`SubjectError: Lecture with ID ${lecture.id} already assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Lecture with ID ${lecture.id} already assigned to subject with ID ${this.id}`)
 			this._lecture_ids.push(lecture.id)
 			this._lectures?.push(lecture)
 		}
@@ -209,7 +209,7 @@ class SubjectController extends NodeController<SubjectController> {
 	unassignParent(parent: SubjectController, mirror: boolean = true): void {
 		if (this._parent_ids !== undefined) {
 			if (!this._parent_ids.includes(parent.id))
-				throw new Error(`SubjectError: Parent with ID ${parent.id} not assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Parent with ID ${parent.id} not assigned to subject with ID ${this.id}`)
 			this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
 			this._parents = this._parents?.filter(p => p.id !== parent.id)
 		}
@@ -222,7 +222,7 @@ class SubjectController extends NodeController<SubjectController> {
 	unassignChild(child: SubjectController, mirror: boolean = true): void {
 		if (this._child_ids !== undefined) {
 			if (!this._child_ids.includes(child.id))
-				throw new Error(`SubjectError: Child with ID ${child.id} not assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Child with ID ${child.id} not assigned to subject with ID ${this.id}`)
 			this._child_ids = this._child_ids.filter(id => id !== child.id)
 			this._children = this._children?.filter(c => c.id !== child.id)
 		}
@@ -235,7 +235,7 @@ class SubjectController extends NodeController<SubjectController> {
 	unassignDomain(domain: DomainController, mirror: boolean = true): void {
 		if (this._domain_id !== undefined) {
 			if (this._domain_id === null)
-				throw new Error(`SubjectError: Subject with ID ${this.id} has no domain assigned`)
+				throw customError('SubjectError', `Subject with ID ${this.id} has no domain assigned`)
 			this._domain_id = null
 			this._domain = null
 		}
@@ -248,7 +248,7 @@ class SubjectController extends NodeController<SubjectController> {
 	unassignFromLecture(lecture: LectureController, mirror: boolean = true): void {
 		if (this._lecture_ids !== undefined) {
 			if (!this._lecture_ids.includes(lecture.id))
-				throw new Error(`SubjectError: Lecture with ID ${lecture.id} not assigned to subject with ID ${this.id}`)
+				throw customError('SubjectError', `Lecture with ID ${lecture.id} not assigned to subject with ID ${this.id}`)
 			this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
 			this._lectures = this._lectures?.filter(l => l.id !== lecture.id)
 		}
@@ -338,13 +338,13 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/subject POST): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/subject POST)', await response.text())
 		}
 
 		// Revive the subject
 		const data = await response.json()
 		if (!validSerializedSubject(data)) {
-			throw new Error(`SubjectError: Invalid subject data received from API`)
+			throw customError('SubjectError', `Invalid subject data received from API`)
 		}
 
 		const subject = SubjectController.revive(cache, data)
@@ -362,7 +362,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 			// Throw error if subject data is inconsistent
 			if (!subject.represents(data)) {
-				throw new Error(`SubjectError: Subject with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('SubjectError', `Subject with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update subject where necessary
@@ -430,7 +430,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/subject PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/subject PUT)', await response.text())
 		}
 
 		save_status?.setSaving(false)
@@ -459,7 +459,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/subject/${this.id} DELETE): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/subject/${this.id} DELETE)', await response.text())
 		}
 
 		// Remove the subject from the cache

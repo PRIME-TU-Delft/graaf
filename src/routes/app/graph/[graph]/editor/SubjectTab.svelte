@@ -3,7 +3,7 @@
 	const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
-	import { graph, subject_query } from './stores'
+	import { graph, save_status, subject_query } from './stores'
 
 	import {
 		SubjectController,
@@ -47,7 +47,7 @@
 	<button
 		class="row-button"
 		on:click={async () => {
-			await SubjectController.create($graph.cache, $graph)
+			await SubjectController.create($graph.cache, $graph, $save_status)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
 		}}

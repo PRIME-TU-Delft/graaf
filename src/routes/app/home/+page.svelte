@@ -1,5 +1,4 @@
 
-
 <script lang="ts">
 
 	// External dependencies
@@ -8,6 +7,7 @@
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
 	import { programs, courses, query } from './stores'
+	import { asyncTry } from '$scripts/utility'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
@@ -70,8 +70,8 @@
 		}
 
 		async submit() {
-			const program = await ProgramController.create(cache, this.name.trim())
-			$programs = [...$programs, program] // Trigger reactivity
+			await asyncTry(ProgramController.create(cache, this.name.trim()))
+				.then(program => $programs = [...$programs, program]) // Trigger reactivity
 		}
 	}
 
@@ -136,8 +136,8 @@
 		}
 
 		async submit() {
-			const course = await CourseController.create(cache, this.code.trim(), this.name.trim())
-			$courses = [...$courses, course] // Trigger reactivity
+			await asyncTry(CourseController.create(cache, this.code.trim(), this.name.trim()))
+				.then(course => $courses = [...$courses, course]) // Trigger reactivity
 		}
 	}
 

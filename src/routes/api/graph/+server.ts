@@ -14,7 +14,7 @@ async function POST({ request }) {
 	
 	// Retrieve data
 	const { course_id, name } = await request.json()
-	if (isNaN(course_id)) 
+	if (isNaN(course_id) || true) 
 		return new Response('Missing course ID or name', { status: 400 })
 
 	// Create graph

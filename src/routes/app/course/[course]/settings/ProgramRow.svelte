@@ -1,9 +1,8 @@
 
-
 <script lang="ts">
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
@@ -35,7 +34,8 @@
 		<Button
 			on:click={async () => {
 				$course.unassignFromProgram(program)
-				await $course.save()
+				$save_status.setUnsaved()
+				await $course.save($save_status)
 				$course = $course // Trigger reactivity
 			}}
 		> Unassign </Button>

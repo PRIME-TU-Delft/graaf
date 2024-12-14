@@ -3,24 +3,34 @@
 
 	import success_icon from '$assets/success-icon.svg'
 	import warning_icon from '$assets/warning-icon.svg'
+	import error_icon from '$assets/error-icon.svg'
 
 	export function setSaving(value: boolean) {
 		saving = value
 
 		if (value) {
 			unsaved = false
+			error = undefined
 			if (timer) clearTimeout(timer)
 			timer = setTimeout(() => timer = undefined, MIN_SAVE_TIME)
 		}
 	}
 
 	export function setUnsaved() {
+		error = undefined
+		unsaved = true
+	}
+
+	export function setError(message: string) {
+		error = message
+		saving = false
 		unsaved = true
 	}
 
 	const MIN_SAVE_TIME = 1000
 
 	let timer: NodeJS.Timeout | undefined
+	let error: string | undefined
 	let unsaved = false
 	let saving = false
 
@@ -28,9 +38,14 @@
 
 <!-- Markdown -->
 
-<div class="saving">
+<div class="save-status">
 
-	{#if saving || timer !== undefined}
+	{#if error}
+
+		<img src={ error_icon } alt="">
+		{ error }
+
+	{:else if saving || timer !== undefined}
 
 		<span class="spinner" />
 		Saving...
@@ -59,13 +74,14 @@
 	$spinner-size: 1rem
 	$spinner-width: 1.5px
 
-	.saving
+	.save-status
 		display: flex
 		flex-flow: row nowrap
 		align-items: center
 		gap: $form-small-gap
 
 		width: max-content
+		margin-bottom: $form-small-gap - 2rem
 		color: $gray
 
 		img

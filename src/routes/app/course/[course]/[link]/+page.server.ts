@@ -3,6 +3,8 @@
 import type { PageServerLoad } from './$types'
 
 // Internal dependencies
+import { customError } from '$scripts/utility'
+
 import {
 	GraphHelper,
 	LinkHelper
@@ -18,11 +20,11 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	// Start data streams
 	const domains = GraphHelper.getDomains(graph.id, 'graph', 'parents', 'children', 'subjects')
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 	const subjects = GraphHelper.getSubjects(graph.id, 'graph', 'parents', 'children', 'domain', 'lectures')
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 	const lectures = GraphHelper.getLectures(graph.id, 'graph', 'subjects')
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 
 	return { graph, domains, subjects, lectures }
 }

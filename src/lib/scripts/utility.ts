@@ -1,4 +1,6 @@
 
+import type SaveStatus from "$components/SaveStatus.svelte"
+
 // --------------------> Types
 
 interface IWithID<ID> {
@@ -21,6 +23,25 @@ export function oxfordCommaList(list: string[]): string {
 	} else {
 		const last = list.pop()
 		return `${list.join(', ')}, and ${last}`
+	}
+}
+
+export function customError(name: string, message: string): Error {
+	const error = new Error(message)
+	error.name = name
+	return error
+}
+
+export async function asyncTry<T>(promise: Promise<T>, save_status?: SaveStatus): Promise<T> {
+	try {
+		return await promise
+	} catch (error) {
+		const name = error instanceof Error ? error.name : 'Error'
+		const message = error instanceof Error ? error.message : 'An error occurred'
+
+		console.error(`${name}: ${message}`)
+		save_status?.setError(`${name}: ${message}`)
+		return Promise.reject()
 	}
 }
 

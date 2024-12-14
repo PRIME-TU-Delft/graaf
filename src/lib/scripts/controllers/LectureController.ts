@@ -2,7 +2,7 @@
 // Internal dependencies
 import * as settings from '$scripts/settings'
 
-import { oxfordCommaList, compareArrays, debounce } from '$scripts/utility'
+import { oxfordCommaList, compareArrays, customError, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -75,13 +75,13 @@ class LectureController {
 	// Graph properties
 	get graph_id(): number {
 		if (this._graph_id === undefined)
-			throw new Error('LectureError: Graph data unknown')
+			throw customError('LectureError', 'Graph data unknown')
 		return this._graph_id
 	}
 
 	get graph(): GraphController {
 		if (this._graph_id === undefined)
-			throw new Error('LectureError: Graph data unknown')
+			throw customError('LectureError', 'Graph data unknown')
 		if (this._graph !== undefined)
 			return this._graph
 
@@ -93,13 +93,13 @@ class LectureController {
 	// Present subject properties
 	get present_subject_ids(): number[] {
 		if (this._present_subject_ids === undefined)
-			throw new Error('LectureError: Subject data unknown')
+			throw customError('LectureError', 'Subject data unknown')
 		return Array.from(this._present_subject_ids)
 	}
 
 	get present_subjects(): SubjectController[] {
 		if (this._present_subject_ids === undefined)
-			throw new Error('LectureError: Subject data unknown')
+			throw customError('LectureError', 'Subject data unknown')
 		if (this._present_subjects !== undefined)
 			return Array.from(this._present_subjects)
 
@@ -168,7 +168,7 @@ class LectureController {
 	assignSubject(subject: SubjectController, mirror: boolean = true) {
 		if (this._present_subject_ids !== undefined) {
 			if (this._present_subject_ids.includes(subject.id))
-				throw new Error(`LectureError: Subject with ID ${subject.id} already assigned to lecture with ID ${this.id}`)
+				throw customError('LectureError', `Subject with ID ${subject.id} already assigned to lecture with ID ${this.id}`)
 			this._present_subject_ids.push(subject.id)
 			this._present_subjects?.push(subject)
 			this._subjects_unchanged = false
@@ -182,7 +182,7 @@ class LectureController {
 	unassignSubject(subject: SubjectController, mirror: boolean = true) {
 		if (this._present_subject_ids !== undefined) {
 			if (!this._present_subject_ids.includes(subject.id))
-				throw new Error(`LectureError: Subject with ID ${subject.id} not assigned to lecture with ID ${this.id}`)
+				throw customError('LectureError', `Subject with ID ${subject.id} not assigned to lecture with ID ${this.id}`)
 			this._present_subject_ids = this._present_subject_ids.filter(id => id !== subject.id)
 			this._present_subjects = this._present_subjects?.filter(s => s.id !== subject.id)
 			this._subjects_unchanged = false
@@ -225,8 +225,6 @@ class LectureController {
 		const covered_subjects = this.graph.lectures
 			.filter(lecture => lecture.order <= this.order)
 			.flatMap(lecture => lecture.present_subjects)
-
-		console.log(covered_subjects)
 
 		const stack = [subject]
 		const missing_prerequisites = []
@@ -353,13 +351,13 @@ class LectureController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/lecture POST): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/lecture POST)', await response.text())
 		}
 
 		// Revive the lecture
 		const data = await response.json()
 		if (!validSerializedLecture(data)) {
-			throw new Error(`LectureError: Invalid lecture data received from API`)
+			throw customError('LectureError', `Invalid lecture data received from API`)
 		}
 
 		const lecture = LectureController.revive(cache, data)
@@ -377,7 +375,7 @@ class LectureController {
 
 			// Throw error if lecture data is inconsistent
 			if (!lecture.represents(data)) {
-				throw new Error(`LectureError: Lecture with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('LectureError', `Lecture with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update lecture where necessary
@@ -429,7 +427,7 @@ class LectureController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/lecture PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/lecture PUT)', await response.text())
 		}
 
 		save_status?.setSaving(false)
@@ -455,7 +453,7 @@ class LectureController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/lecture/${this.id} DELETE): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/lecture/${this.id} DELETE)', await response.text())
 		}
 
 		// Remove the graph from the cache

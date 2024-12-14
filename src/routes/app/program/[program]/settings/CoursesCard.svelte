@@ -2,7 +2,7 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { program, courses } from './stores'
+	import { program, courses, save_status } from './stores'
 	import * as settings from '$scripts/settings'
 
 	import { Validation, Severity } from '$scripts/validation'
@@ -49,7 +49,8 @@
 
 		async submit() {
 			$program.assignCourse(this.course as CourseController)
-			await $program.save()
+			$save_status.setUnsaved()
+			await $program.save($save_status)
 			$program = $program // Trigger reactivity
 		}
 	}
@@ -115,7 +116,7 @@
 		}
 
 		async submit() {
-			const course = await CourseController.create($program.cache, this.code.trim(), this.name.trim(), $program)
+			const course = await CourseController.create($program.cache, this.code.trim(), this.name.trim(), $program, $save_status)
 			$courses = [...$courses, course] // Trigger reactivity
 			$program = $program
 		}

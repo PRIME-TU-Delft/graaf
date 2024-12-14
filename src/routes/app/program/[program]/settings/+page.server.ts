@@ -2,6 +2,9 @@
 // External dependencies
 import type { PageServerLoad } from './$types'
 
+// Internal dependencies
+import { customError } from '$scripts/utility'
+
 import {
 	CourseHelper,
 	ProgramHelper,
@@ -16,11 +19,11 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	// Start data streams
 	const program = ProgramHelper.getById(program_id, 'courses', 'editors', 'admins')
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 	const courses = CourseHelper.getAll()
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 	const users = UserHelper.getAll()
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 
 	return { program, courses, users }
 }

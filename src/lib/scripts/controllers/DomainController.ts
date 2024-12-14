@@ -2,7 +2,7 @@
 // Internal dependencies
 import * as settings from '$scripts/settings'
 
-import { compareArrays, debounce } from '$scripts/utility'
+import { compareArrays, customError, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -70,7 +70,7 @@ class DomainController extends NodeController<DomainController> {
 	// Parent properties
 	get parents(): DomainController[] {
 		if (this._parent_ids === undefined)
-			throw new Error('DomainError: Parent data unknown')
+			throw customError('DomainError', 'Parent data unknown')
 		if (this._parents !== undefined)
 			return Array.from(this._parents)
 
@@ -82,7 +82,7 @@ class DomainController extends NodeController<DomainController> {
 	// Child properties
 	get children(): DomainController[] {
 		if (this._child_ids === undefined)
-			throw new Error('DomainError: Child data unknown')
+			throw customError('DomainError', 'Child data unknown')
 		if (this._children !== undefined)
 			return Array.from(this._children)
 
@@ -94,13 +94,13 @@ class DomainController extends NodeController<DomainController> {
 	// Subject properties
 	get subject_ids(): number[] {
 		if (this._subject_ids === undefined)
-			throw new Error('DomainError: Subject data unknown')
+			throw customError('DomainError', 'Subject data unknown')
 		return Array.from(this._subject_ids)
 	}
 
 	get subjects(): SubjectController[] {
 		if (this._subject_ids === undefined)
-			throw new Error('DomainError: Subject data unknown')
+			throw customError('DomainError', 'Subject data unknown')
 		if (this._subjects !== undefined)
 			return Array.from(this._subjects)
 
@@ -155,7 +155,7 @@ class DomainController extends NodeController<DomainController> {
 	assignParent(parent: DomainController, mirror: boolean = true): void {
 		if (this._parent_ids !== undefined) {
 			if (this._parent_ids.includes(parent.id))
-				throw new Error(`DomainError: Parent with ID ${parent.id} already assigned to domain with ID ${this.id}`)
+				throw customError('DomainError', `Parent with ID ${parent.id} already assigned to domain with ID ${this.id}`)
 			this._parent_ids.push(parent.id)
 			this._parents?.push(parent)
 		}
@@ -168,7 +168,7 @@ class DomainController extends NodeController<DomainController> {
 	assignChild(child: DomainController, mirror: boolean = true): void {
 		if (this._child_ids !== undefined) {
 			if (this._child_ids.includes(child.id))
-				throw new Error(`DomainError: Child with ID ${child.id} already assigned to domain with ID ${this.id}`)
+				throw customError('DomainError', `Child with ID ${child.id} already assigned to domain with ID ${this.id}`)
 			this._child_ids.push(child.id)
 			this._children?.push(child)
 		}
@@ -181,7 +181,7 @@ class DomainController extends NodeController<DomainController> {
 	assignSubject(subject: SubjectController, mirror: boolean = true): void {
 		if (this._subject_ids !== undefined) {
 			if (this._subject_ids.includes(subject.id))
-				throw new Error(`DomainError: Subject with ID ${subject.id} already assigned to domain with ID ${this.id}`)
+				throw customError('DomainError', `Subject with ID ${subject.id} already assigned to domain with ID ${this.id}`)
 			this._subject_ids.push(subject.id)
 			this._subjects?.push(subject)
 		}
@@ -194,7 +194,7 @@ class DomainController extends NodeController<DomainController> {
 	unassignParent(parent: DomainController, mirror: boolean = true): void {
 		if (this._parent_ids !== undefined) {
 			if (!this._parent_ids.includes(parent.id))
-				throw new Error(`DomainError: Parent with ID ${parent.id} not assigned to domain with ID ${this.id}`)
+				throw customError('DomainError', `Parent with ID ${parent.id} not assigned to domain with ID ${this.id}`)
 			this._parent_ids = this._parent_ids.filter(id => id !== parent.id)
 			this._parents = this._parents?.filter(p => p.id !== parent.id)
 		}
@@ -207,7 +207,7 @@ class DomainController extends NodeController<DomainController> {
 	unassignChild(child: DomainController, mirror: boolean = true): void {
 		if (this._child_ids !== undefined) {
 			if (!this._child_ids.includes(child.id))
-				throw new Error(`DomainError: Child with ID ${child.id} not assigned to domain with ID ${this.id}`)
+				throw customError('DomainError', `Child with ID ${child.id} not assigned to domain with ID ${this.id}`)
 			this._child_ids = this._child_ids.filter(id => id !== child.id)
 			this._children = this._children?.filter(c => c.id !== child.id)
 		}
@@ -220,7 +220,7 @@ class DomainController extends NodeController<DomainController> {
 	unassignSubject(subject: SubjectController, mirror: boolean = true): void {
 		if (this._subject_ids !== undefined) {
 			if (!this._subject_ids.includes(subject.id))
-				throw new Error(`DomainError: Subject with ID ${subject.id} not assigned to domain with ID ${this.id}`)
+				throw customError('DomainError', `Subject with ID ${subject.id} not assigned to domain with ID ${this.id}`)
 			this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
 			this._subjects = this._subjects?.filter(s => s.id !== subject.id)
 		}
@@ -328,13 +328,13 @@ class DomainController extends NodeController<DomainController> {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/domain POST): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/domain POST)', await response.text())
 		}
 
 		// Revive the domain
 		const data = await response.json()
 		if (!validSerializedDomain(data)) {
-			throw new Error(`DomainError: Invalid domain data received from API`)
+			throw customError('DomainError', `Invalid domain data received from API`)
 		}
 
 		const domain = DomainController.revive(cache, data)
@@ -352,7 +352,7 @@ class DomainController extends NodeController<DomainController> {
 
 			// Throw error if domain data is inconsistent
 			if (!domain.represents(data)) {
-				throw new Error(`DomainError: Domain with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('DomainError', `Domain with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update domain where necessary
@@ -423,7 +423,7 @@ class DomainController extends NodeController<DomainController> {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/domain PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/domain PUT)', await response.text())
 		}
 
 		save_status?.setSaving(false)
@@ -455,7 +455,7 @@ class DomainController extends NodeController<DomainController> {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/domain/${this.id} DELETE): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/domain/${this.id} DELETE)', await response.text())
 		}
 
 		// Remove the course from the cache

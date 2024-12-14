@@ -3,7 +3,7 @@
 
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { GraphController } from '$scripts/controllers'
@@ -56,7 +56,7 @@
 		}
 
 		async submit() {
-			await GraphController.create($course.cache, $course, this.name.trim())
+			await GraphController.create($course.cache, $course, this.name.trim(), $save_status)
 			$course = $course // Trigger reactivity
 		}
 	}

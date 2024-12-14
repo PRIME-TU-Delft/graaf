@@ -1,12 +1,9 @@
 
-// External dependencies
-import * as uuid from 'uuid'
-
 // Internal dependencies
 import * as settings from '$scripts/settings'
 
 import { Validation, Severity } from '$scripts/validation'
-import { debounce } from '$scripts/utility'
+import { debounce, customError } from '$scripts/utility'
 
 import {
 	ControllerCache,
@@ -73,13 +70,13 @@ class LinkController {
 	// Course properties
 	get course_id(): number {
 		if (this._course_id === undefined)
-			throw new Error('LinkError: Course data unknown')
+			throw customError('LinkError', 'Course data unknown')
 		return this._course_id
 	}
 
 	get course(): CourseController {
 		if (this._course_id === undefined)
-			throw new Error('LinkError: Course data unknown')
+			throw customError('LinkError', 'Course data unknown')
 		if (this._course !== undefined)
 			return this._course
 
@@ -91,13 +88,13 @@ class LinkController {
 	// Graph properties
 	get graph_id(): number | null {
 		if (this._graph_id === undefined)
-			throw new Error('LinkError: Graph data unknown')
+			throw customError('LinkError', 'Graph data unknown')
 		return this._graph_id
 	}
 
 	get graph(): GraphController | null {
 		if (this._graph_id === undefined)
-			throw new Error('LinkError: Graph data unknown')
+			throw customError('LinkError', 'Graph data unknown')
 		if (this._graph !== undefined)
 			return this._graph
 
@@ -126,7 +123,7 @@ class LinkController {
 	assignGraph(graph: GraphController, mirror: boolean = true): void {
 		if (this._graph_id !== undefined) {
 			if (this._graph_id === graph.id)
-				throw new Error(`LinkError: Graph with ID ${graph.id} already assigned to link with ID ${this.id}`)
+				throw customError('LinkError', `Graph with ID ${graph.id} already assigned to link with ID ${this.id}`)
 			if (this._graph_id !== null && mirror)
 				this.graph?.unassignFromLink(this, false)
 			this._graph_unchanged = false
@@ -142,7 +139,7 @@ class LinkController {
 	unassignGraph(graph: GraphController, mirror: boolean = true): void {
 		if (this._graph_id !== undefined) {
 			if (this._graph_id !== graph.id)
-				throw new Error(`LinkError: Graph with ID ${graph.id} not assigned to link with ID ${this.id}`)
+				throw customError('LinkError', `Graph with ID ${graph.id} not assigned to link with ID ${this.id}`)
 			this._graph_unchanged = false
 			this._graph_id = null
 			this._graph = null
@@ -225,13 +222,13 @@ class LinkController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/link POST): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/link POST)', await response.text())
 		}
 
 		// Revive the link
 		const data = await response.json()
 		if (!validSerializedLink(data)) {
-			throw new Error(`LinkError: Invalid link data received from API`)
+			throw customError('LinkError', `Invalid link data received from API`)
 		}
 
 		const link = LinkController.revive(cache, data)
@@ -249,7 +246,7 @@ class LinkController {
 
 			// Throw error if link data is inconsistent
 			if (!link.represents(data)) {
-				throw new Error(`LinkError: Link with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('LinkError', `Link with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update link where necessary
@@ -298,7 +295,7 @@ class LinkController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/link PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/link PUT)', await response.text())
 		}
 
 		save_status?.setSaving(false)
@@ -318,7 +315,7 @@ class LinkController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/link/${this.id} DELETE): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/link/${this.id} DELETE)', await response.text())
 		}
 
 		// Remove the link from the cache

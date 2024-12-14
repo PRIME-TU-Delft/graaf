@@ -1,5 +1,7 @@
 
 // Internal dependencies
+import { customError } from '$scripts/utility'
+
 import {
 	UserController,
 	ProgramController,
@@ -54,7 +56,7 @@ class ControllerCache {
 		} else if (type === LinkController) {
 			return this.links
 		} else {
-			throw new Error(`CacheError: Invalid object type ${type}`)
+			throw customError('CacheError', `Invalid object type ${type}`)
 		}
 	}
 
@@ -69,7 +71,7 @@ class ControllerCache {
 	findOrThrow(type: any, id: any): any {
 		const object = this.find(type, id)
 		if (object === undefined)
-			throw new Error(`CacheMiss: ${type.name} with ID ${id} not found`)
+			throw customError('CacheMiss', `${type.name} with ID ${id} not found`)
 		return object
 	}
 
@@ -99,7 +101,7 @@ class ControllerCache {
 		} else if (type === LinkController) {
 			return this.links.find(link => link.id === id)
 		} else {
-			throw new Error(`CacheError: Invalid object type ${type}`)
+			throw customError('CacheError', `Invalid object type ${type}`)
 		}
 	}
 
@@ -114,38 +116,38 @@ class ControllerCache {
 	add(object: any): void {
 		if (object instanceof UserController) {
 			if (this.users.find(user => user.id === object.id))
-				throw new Error(`CacheHit: User with ID ${object.id} already exists`)
+				throw customError('CacheHit', `User with ID ${object.id} already exists`)
 			this.users.push(object)
 		} else if (object instanceof ProgramController) {
 			if (this.programs.find(program => program.id === object.id))
-				throw new Error(`CacheHit: Program with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Program with ID ${object.id} already exists`)
 			this.programs.push(object)
 		} else if (object instanceof CourseController) {
 			if (this.courses.find(course => course.id === object.id))
-				throw new Error(`CacheHit: Course with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Course with ID ${object.id} already exists`)
 			this.courses.push(object)
 		} else if (object instanceof GraphController) {
 			if (this.graphs.find(graph => graph.id === object.id))
-				throw new Error(`CacheHit: Graph with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Graph with ID ${object.id} already exists`)
 			this.graphs.push(object)
 		} else if (object instanceof DomainController) {
 			if (this.domains.find(domain => domain.id === object.id))
-				throw new Error(`CacheHit: Domain with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Domain with ID ${object.id} already exists`)
 			this.domains.push(object)
 		} else if (object instanceof SubjectController) {
 			if (this.subjects.find(subject => subject.id === object.id))
-				throw new Error(`CacheHit: Subject with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Subject with ID ${object.id} already exists`)
 			this.subjects.push(object)
 		} else if (object instanceof LectureController) {
 			if (this.lectures.find(lecture => lecture.id === object.id))
-				throw new Error(`CacheHit: Lecture with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Lecture with ID ${object.id} already exists`)
 			this.lectures.push(object)
 		} else if (object instanceof LinkController) {
 			if (this.links.find(link => link.id === object.id))
-				throw new Error(`CacheHit: Link with ID ${object.id} already exists`)
+				throw customError('CacheHit', `Link with ID ${object.id} already exists`)
 			this.links.push(object)
 		} else {
-			throw new Error(`CacheError: Invalid object type ${object.constructor}`)
+			throw customError('CacheError', `Invalid object type ${object.constructor}`)
 		}
 	}
 
@@ -160,38 +162,38 @@ class ControllerCache {
 	remove(object: any): void {
 		if (object instanceof UserController) {
 			if (!this.users.find(user => user.id === object.id))
-				throw new Error(`CacheMiss: User with ID ${object.id} not found`)
+				throw customError('CacheMiss', `User with ID ${object.id} not found`)
 			this.users = this.users.filter(user => user.id !== object.id)
 		} else if (object instanceof ProgramController) {
 			if (!this.programs.find(program => program.id === object.id))
-				throw new Error(`CacheMiss: Program with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Program with ID ${object.id} not found`)
 			this.programs = this.programs.filter(program => program.id !== object.id)
 		} else if (object instanceof CourseController) {
 			if (!this.courses.find(course => course.id === object.id))
-				throw new Error(`CacheMiss: Course with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Course with ID ${object.id} not found`)
 			this.courses = this.courses.filter(course => course.id !== object.id)
 		} else if (object instanceof GraphController) {
 			if (!this.graphs.find(graph => graph.id === object.id))
-				throw new Error(`CacheMiss: Graph with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Graph with ID ${object.id} not found`)
 			this.graphs = this.graphs.filter(graph => graph.id !== object.id)
 		} else if (object instanceof DomainController) {
 			if (!this.domains.find(domain => domain.id === object.id))
-				throw new Error(`CacheMiss: Domain with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Domain with ID ${object.id} not found`)
 			this.domains = this.domains.filter(domain => domain.id !== object.id)
 		} else if (object instanceof SubjectController) {
 			if (!this.subjects.find(subject => subject.id === object.id))
-				throw new Error(`CacheMiss: Subject with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Subject with ID ${object.id} not found`)
 			this.subjects = this.subjects.filter(subject => subject.id !== object.id)
 		} else if (object instanceof LectureController) {
 			if (!this.lectures.find(lecture => lecture.id === object.id))
-				throw new Error(`CacheMiss: Lecture with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Lecture with ID ${object.id} not found`)
 			this.lectures = this.lectures.filter(lecture => lecture.id !== object.id)
 		} else if (object instanceof LinkController) {
 			if (!this.links.find(link => link.id === object.id))
-				throw new Error(`CacheMiss: Link with ID ${object.id} not found`)
+				throw customError('CacheMiss', `Link with ID ${object.id} not found`)
 			this.links = this.links.filter(link => link.id !== object.id)
 		} else {
-			throw new Error(`CacheError: Invalid object type ${object.constructor}`)
+			throw customError('CacheError', `Invalid object type ${object.constructor}`)
 		}
 	}
 }

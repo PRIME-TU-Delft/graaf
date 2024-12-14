@@ -6,7 +6,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 
 	import {
 		ControllerCache,
@@ -22,6 +22,7 @@
 	import GeneralCard from './GeneralCard.svelte'
 	import ProgramCard from './ProgramCard.svelte'
 
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Loading from '$components/Loading.svelte'
 	import Layout from '$components/Layout.svelte'
@@ -91,6 +92,7 @@
 			Here you can change your course settings, like its members, graphs, links, etc.
 		</svelte:fragment>
 
+		<SaveStatus bind:this={ $save_status } />
 		<GeneralCard />
 		<MemberCard />
 		<ProgramCard />
