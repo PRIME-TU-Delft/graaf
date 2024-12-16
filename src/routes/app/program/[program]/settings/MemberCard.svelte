@@ -2,21 +2,20 @@
 	// Internal dependencies
 	import { program } from './stores';
 
-	import { Validation, Severity } from '$scripts/validation';
 	import { AbstractFormModal } from '$scripts/modals';
+	import { Severity, Validation } from '$scripts/validation';
 
-	import type { Permission } from '$scripts/types';
 	import type { UserController } from '$scripts/controllers';
+	import type { Permission } from '$scripts/types';
 
 	// Components
 	import UserRow from './UserRow.svelte';
 
-	import FormModal from '$components/FormModal.svelte';
-	import Searchbar from '$components/Searchbar.svelte';
-	import Feedback from '$components/Feedback.svelte';
-	import Dropdown from '$components/Dropdown.svelte';
 	import Button from '$components/Button.svelte';
 	import Card from '$components/Card.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import FormModal from '$components/FormModal.svelte';
+	import Searchbar from '$components/Searchbar.svelte';
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg';
@@ -141,7 +140,7 @@
 		<UserRow user={editor} />
 	{/each}
 
-	{#each filtered_admins as admin, index}
+	{#each filtered_admins as admin}
 		<UserRow user={admin} />
 	{/each}
 </Card>

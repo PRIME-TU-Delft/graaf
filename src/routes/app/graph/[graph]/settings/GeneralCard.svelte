@@ -4,17 +4,14 @@
 
 	// Internal dependencies
 	import { graph, save_status } from './stores';
-	import { Severity } from '$scripts/validation';
-
 	// Components
-	import SimpleModal from '$components/SimpleModal.svelte';
-	import SaveStatus from '$components/SaveStatus.svelte';
-	import LinkButton from '$components/LinkButton.svelte';
-	import Textfield from '$components/Textfield.svelte';
-	import Feedback from '$components/Feedback.svelte';
 	import Button from '$components/Button.svelte';
 	import Card from '$components/Card.svelte';
-
+	import Feedback from '$components/Feedback.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import SaveStatus from '$components/SaveStatus.svelte';
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import Textfield from '$components/Textfield.svelte';
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg';
 

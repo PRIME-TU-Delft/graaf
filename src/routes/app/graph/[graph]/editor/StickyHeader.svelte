@@ -1,7 +1,7 @@
 <script lang="ts">
 	interface Props {
-		above?: import('svelte').Snippet<[any]>;
-		below?: import('svelte').Snippet<[any]>;
+		above?: import('svelte').Snippet<[{ scrollTo: (target: 'nodes' | 'relations') => void }]>;
+		below?: import('svelte').Snippet<[{ scrollTo: (target: 'nodes' | 'relations') => void }]>;
 		children?: import('svelte').Snippet;
 	}
 

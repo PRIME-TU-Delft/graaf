@@ -3,23 +3,22 @@
 	import type { PageData } from './$types';
 
 	// Internal dependencies
-	import { graph, save_status } from './stores';
+	import { graph } from './stores';
 
 	import {
 		ControllerCache,
-		GraphController,
 		CourseController,
 		DomainController,
-		SubjectController,
-		LectureController
+		GraphController,
+		LectureController,
+		SubjectController
 	} from '$scripts/controllers';
-
 	// Components
 	import GraphEditor from './GraphEditor.svelte';
 
+	import Layout from '$components/Layout.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 	import Loading from '$components/Loading.svelte';
-	import Layout from '$components/Layout.svelte';
 	import Navbar from '$components/Navbar.svelte';
 
 	// Functions

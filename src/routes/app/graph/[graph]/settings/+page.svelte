@@ -5,21 +5,13 @@
 	// Internal dependencies
 	import { graph } from './stores';
 
-	import {
-		ControllerCache,
-		GraphController,
-		CourseController,
-		DomainController,
-		SubjectController,
-		LectureController
-	} from '$scripts/controllers';
-
+	import { ControllerCache, CourseController, GraphController } from '$scripts/controllers';
 	// Components
 	import GeneralCard from '../settings/GeneralCard.svelte';
 
+	import Layout from '$components/Layout.svelte';
 	import LinkButton from '$components/LinkButton.svelte';
 	import Loading from '$components/Loading.svelte';
-	import Layout from '$components/Layout.svelte';
 	import Navbar from '$components/Navbar.svelte';
 
 	// Functions
