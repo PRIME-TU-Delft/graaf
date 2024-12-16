@@ -7,8 +7,7 @@ export function clickoutside(element: HTMLElement, callback: () => void) {
 	}
 
 	// Add a timeout to prevent the click event from firing immediately
-	var timeout: NodeJS.Timeout;
-	timeout = setTimeout(() => document.body.addEventListener('click', onClick), 0);
+	const timeout = setTimeout(() => document.body.addEventListener('click', onClick), 0);
 
 	return {
 		destroy() {

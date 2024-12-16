@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	import { Severity } from '$scripts/validation';
 	import { loopFocus, focusOnLoad } from '$scripts/actions/hocusfocus';
 	import { clickoutside } from '$scripts/actions/clickoutside';
@@ -7,8 +7,6 @@
 	import error_icon from '$assets/error-icon.svg';
 	import warning_icon from '$assets/warning-icon.svg';
 	import search_icon from '$assets/search-icon.svg';
-
-	type T = $$Generic;
 
 	interface Props {
 		placeholder?: string;
@@ -75,9 +73,6 @@
 <!-- Markup -->
 
 <svelte:window onkeydown={onKeydown} />
-
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 
 <div class="dropdown">
 	<div class:open class="wrapper" use:clickoutside={() => setOpen(false)}>

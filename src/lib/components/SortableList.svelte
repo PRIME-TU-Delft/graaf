@@ -32,9 +32,12 @@
 		ondragover = () => {}
 	}: Props = $props();
 
+	// Main
+	let origin: number | null = null; // Index of the element being dragged
+
 	// Functions
-	function getDataset(node: any) {
-		if (!node.dataset.index) {
+	function getDataset(node: HTMLElement): { [key: string]: string | undefined } {
+		if (!node.dataset.index && node.parentElement) {
 			return getDataset(node.parentElement);
 		} else {
 			return { ...node.dataset };
@@ -45,7 +48,13 @@
 		const target = event.target as HTMLElement;
 		const data = getDataset(target);
 
-		origin = data.index;
+		if (!data.index) {
+			// Not a draggable element
+			event.preventDefault();
+			return;
+		}
+
+		origin = Number(data.index);
 	}
 
 	function onDragOver(event: DragEvent) {
@@ -54,16 +63,24 @@
 		const target = event.target as HTMLElement;
 		const data = getDataset(target);
 
+		if (data.index === undefined) {
+			// Not a draggable element
+			origin = null;
+			return;
+		}
+
+		const index = Number(data.index);
+
 		if (
 			origin === null || // Not dragging (very strange case)
-			data.index === origin || // Dragging over itself
-			(data.index > origin && event.offsetY < target.clientHeight - DROPZONE) || // Dragging down, but not close enough
-			(data.index < origin && event.offsetY > DROPZONE) // Dragging up, but not close enough
+			index === origin || // Dragging over itself
+			(index > origin && event.offsetY < target.clientHeight - DROPZONE) || // Dragging down, but not close enough
+			(index < origin && event.offsetY > DROPZONE) // Dragging up, but not close enough
 		)
 			return;
 
-		rearrange(origin, data.index);
-		origin = data.index;
+		rearrange(origin, index);
+		origin = index;
 	}
 
 	function onDragEnd(event: DragEvent) {
@@ -79,10 +96,6 @@
 		new_list.splice(to, 0, moved[0]);
 		list = new_list;
 	}
-
-	// Main
-
-	let origin: number | null = null; // Index of the element being dragged
 </script>
 
 <!-- Markup -->

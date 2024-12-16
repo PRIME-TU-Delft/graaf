@@ -25,7 +25,7 @@ export function focusOnLoad(element: HTMLElement) {
 	element.focus();
 }
 
-export function loopFocus(element: HTMLElement, _sensitivity: any = null) {
+export function loopFocus(element: HTMLElement, _sensitivity: unknown = null) {
 	let focusable = getFocusableChildren(element);
 	let index = focusable.findIndex((e) => e === document.activeElement);
 

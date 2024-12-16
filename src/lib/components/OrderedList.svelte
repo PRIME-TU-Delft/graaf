@@ -1,4 +1,4 @@
-<script lang="ts">
+<script lang="ts" generics="T">
 	// External dependencies
 	import type { Snippet } from 'svelte';
 	import { flip } from 'svelte/animate';
@@ -17,7 +17,6 @@
 	}
 
 	let { list, children }: Props = $props();
-	type T = $$Generic;
 </script>
 
 <!-- Markdown -->

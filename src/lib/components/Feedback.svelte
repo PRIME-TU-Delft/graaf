@@ -37,7 +37,7 @@
 	let { data, compact = false }: Props = $props();
 
 	// Main
-	let timeout: NodeJS.Timeout;
+	let timeout: ReturnType<typeof setTimeout>;
 	let show_dropdown = $state(false);
 	let lock_dropdown = false;
 
