@@ -5,11 +5,14 @@ import type { Domain as PrismaDomain } from '@prisma/client'
 
 // Internal dependencies
 import { prismaUpdateArray, prismaUpdateRequiredField} from '$scripts/utility'
+import * as settings from '$scripts/settings'
 
 import {
 	GraphHelper,
 	SubjectHelper
 } from '$scripts/helpers'
+
+import { validDomainStyle, type DomainStyle } from '$scripts/types'
 
 import type {
 	GraphRelation,
@@ -81,11 +84,36 @@ export async function reduce(domain: PrismaDomain, ...relations: DomainRelation[
 	return serialized
 }
 
-export async function create(graph_id: number, order: number): Promise<SerializedDomain> {
+export async function create(graph_id: number): Promise<SerializedDomain> {
 	try {
+		const order = await prisma.domain.count({
+			where: {
+				graphId: graph_id
+			}
+		})
+
+		const used_styles = await prisma.domain.findMany({
+			where: {
+				graphId: graph_id
+			},
+			select: {
+				style: true
+			}
+		})
+
+		let style: DomainStyle | null = null
+		for (const key in settings.NODE_STYLES) {
+			if (!validDomainStyle(key)) continue
+			if (!used_styles.some(style => style.style === key)) {
+				style = key
+				break
+			}
+		}
+
 		var domain = await prisma.domain.create({
 			data: {
 				graphId: graph_id,
+				style: style,
 				order: order
 			}
 		})

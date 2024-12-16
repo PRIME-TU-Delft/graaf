@@ -323,7 +323,7 @@ class DomainController extends NodeController<DomainController> {
 		const response = await fetch('/api/domain', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ graph_id: graph.id, order: graph.domain_ids.length })
+			body: JSON.stringify({ graph_id: graph.id })
 		})
 
 		// Throw an error if the API request fails

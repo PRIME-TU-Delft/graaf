@@ -346,7 +346,7 @@ class LectureController {
 		const response = await fetch('/api/lecture', {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ graph_id: graph.id, order: graph.lecture_ids.length })
+			body: JSON.stringify({ graph_id: graph.id })
 		})
 
 		// Throw an error if the API request fails

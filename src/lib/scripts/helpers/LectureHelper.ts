@@ -62,8 +62,14 @@ export async function reduce(lecture: PrismaLecture, ...relations: LectureRelati
 	return serialized
 }
 
-export async function create(graph_id: number, order: number): Promise<SerializedLecture> {
+export async function create(graph_id: number): Promise<SerializedLecture> {
 	try {
+		const order = await prisma.lecture.count({
+			where: {
+				graphId: graph_id
+			}
+		})
+
 		var lecture = await prisma.lecture.create({
 			data: {
 				graphId: graph_id,
