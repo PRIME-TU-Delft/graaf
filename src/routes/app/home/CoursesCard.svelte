@@ -10,14 +10,16 @@
 	import Card from '$components/Card.svelte'
 
 	// Main
-	$: filtered_courses = $courses.filter(course => course.matchesQuery($query))
+	let filtered_courses = $derived($courses.filter(course => course.matchesQuery($query)))
 
 </script>
 
 <!-- Markup -->
 
 <Card>
-	<h3 slot="header"> My Courses </h3>
+	{#snippet header()}
+		<h3 > My Courses </h3>
+	{/snippet}
 
 	{#if filtered_courses.length === 0}
 		<p class="grayed"> There's nothing here </p>

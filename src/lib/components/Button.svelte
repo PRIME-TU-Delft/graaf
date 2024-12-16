@@ -1,45 +1,41 @@
-
 <script lang="ts">
+	interface Props {
+		// Exports
+		href?: string | undefined;
+		submit?: boolean;
+		disabled?: boolean;
+		dangerous?: boolean;
+		onclick?: (event: MouseEvent) => void;
+		children?: import('svelte').Snippet;
+	}
 
-	// Exports
-	export let href: string | undefined = undefined
-	export let submit: boolean = false
-	export let disabled: boolean = false
-	export let dangerous: boolean = false
-
-	// Variables
-	let button: HTMLButtonElement | HTMLAnchorElement
-
+	let {
+		href = undefined,
+		submit = false,
+		disabled = false,
+		dangerous = false,
+		onclick,
+		children
+	}: Props = $props();
 </script>
 
 <!-- Markup -->
 
 {#if href === undefined}
-
 	<button
 		class="button"
 		class:disabled
 		class:dangerous
-		disabled={ disabled }
-		type={ submit ? 'submit' : 'button' }
-		bind:this={ button }
-		on:click
+		{disabled}
+		type={submit ? 'submit' : 'button'}
+		{onclick}
 	>
-		<slot />
+		{@render children?.()}
 	</button>
-
 {:else}
-
-	<a
-		href={ disabled ? '' : href}
-		class="button"
-		class:disabled
-		class:dangerous
-		bind:this={button}
-	>
-		<slot />
+	<a href={disabled ? '' : href} class="button" class:disabled class:dangerous>
+		{@render children?.()}
 	</a>
-
 {/if}
 
 <!-- Styles -->
@@ -77,7 +73,7 @@
 			pointer-events: none
 
 		// Icon support
-		&:has(img)
+		&:has(:global(img))
 			padding-left: $input-thin-padding
 
 		:global(img)

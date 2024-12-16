@@ -45,8 +45,13 @@
 		awaited_user.forEach(user => UserController.revive(cache, user))
 	}
 
-	// Main
-	export let data: PageData
+	
+	interface Props {
+		// Main
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	const cache = new ControllerCache()
 
 </script>
@@ -57,19 +62,21 @@
 	<Loading />
 {:then}
 	<Layout>
-		<svelte:fragment slot="title">
-			<Navbar path={[
-				{
-					name: 'Home',
-					href: '/app/home'
-				},
-				{
-					name: $program.display_name
-				}
-			]} />
+		{#snippet title()}
+			
+				<Navbar path={[
+					{
+						name: 'Home',
+						href: '/app/home'
+					},
+					{
+						name: $program.display_name
+					}
+				]} />
 
-			Here you can change your program settings, like its courses and members.
-		</svelte:fragment>
+				Here you can change your program settings, like its courses and members.
+			
+			{/snippet}
 
 		<GeneralCard />
 		<MemberCard />

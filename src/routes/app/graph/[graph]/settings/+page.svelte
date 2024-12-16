@@ -44,8 +44,13 @@
 		CourseController.revive(cache, awaited_course)
 	}
 
-	// Initialization
-	export let data: PageData
+	
+	interface Props {
+		// Initialization
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	const cache = new ControllerCache()
 
 </script>
@@ -56,29 +61,31 @@
 	<Loading />
 {:then}
 	<Layout>
-		<svelte:fragment slot="title">
-			<Navbar path={[
-				{
-					name: 'Home',
-					href: '/app/home'
-				},
-				{
-					name: $graph.course.display_name,
-					href: `/app/course/${$graph.course_id}/overview`
-				},
-				{
-					name: $graph.display_name,
-					href: `/app/graph/${$graph.id}/editor`
-				},
-				{
-					name: 'Settings'
-				}
-			]}>
-				<LinkButton href="/app/graph/{$graph.id}/editor"> Graph Editor </LinkButton>
-			</Navbar>
+		{#snippet title()}
+			
+				<Navbar path={[
+					{
+						name: 'Home',
+						href: '/app/home'
+					},
+					{
+						name: $graph.course.display_name,
+						href: `/app/course/${$graph.course_id}/overview`
+					},
+					{
+						name: $graph.display_name,
+						href: `/app/graph/${$graph.id}/editor`
+					},
+					{
+						name: 'Settings'
+					}
+				]}>
+					<LinkButton href="/app/graph/{$graph.id}/editor"> Graph Editor </LinkButton>
+				</Navbar>
 
-			Here you can edit your graph, like its domains, subjects, and lectures.
-		</svelte:fragment>
+				Here you can edit your graph, like its domains, subjects, and lectures.
+			
+			{/snippet}
 
 		<GeneralCard />		
 	</Layout>

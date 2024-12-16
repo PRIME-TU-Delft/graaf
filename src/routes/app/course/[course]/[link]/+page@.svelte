@@ -1,13 +1,11 @@
-
 <script lang="ts">
-
 	// External dependencies
-	import type { PageData } from './$types'
-	import { page } from '$app/stores'
+	import type { PageData } from './$types';
+	import { page } from '$app/stores';
 
 	// Internal dependencies
-	import { GraphSVG } from '$scripts/svg'
-	import { validEditorView } from '$scripts/types'
+	import { GraphSVG } from '$scripts/svg';
+	import { validEditorView } from '$scripts/types';
 
 	import {
 		ControllerCache,
@@ -15,109 +13,113 @@
 		DomainController,
 		SubjectController,
 		LectureController
-	} from '$scripts/controllers'
+	} from '$scripts/controllers';
 
 	// Components
-	import Dropdown from '$components/Dropdown.svelte'
-	import Loading from '$components/Loading.svelte'
-	import Button from '$components/Button.svelte'
-	import Graph from '$components/Graph.svelte'
+	import Dropdown from '$components/Dropdown.svelte';
+	import Loading from '$components/Loading.svelte';
+	import Button from '$components/Button.svelte';
+	import Graph from '$components/Graph.svelte';
 
 	// Functions
 	async function revive() {
-
 		// Await all promises
-		const [
-			awaited_graph,
-			awaited_domains,
-			awaited_subjects,
-			awaited_lectures
-		] = await Promise.all([
+		const [awaited_graph, awaited_domains, awaited_subjects, awaited_lectures] = await Promise.all([
 			data.graph,
 			data.domains,
 			data.subjects,
 			data.lectures
-		])
+		]);
 
 		// Revive graph
-		graph = GraphController.revive(cache, awaited_graph)
+		graph = GraphController.revive(cache, awaited_graph);
 
 		// Revive controllers into cache
-		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
-		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
-		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
+		awaited_domains.forEach((domain) => DomainController.revive(cache, domain));
+		awaited_subjects.forEach((subject) => SubjectController.revive(cache, subject));
+		awaited_lectures.forEach((lecture) => LectureController.revive(cache, lecture));
 
 		// Create graphSVG
-		graphSVG = new GraphSVG(graph, false)
+		graphSVG = new GraphSVG(graph, false);
 
-		const lecture = cache.find(LectureController, editor_lecture)
-		if (lecture !== undefined)
-			graphSVG.lecture = lecture
+		const lecture = cache.find(LectureController, editor_lecture);
+		if (lecture !== undefined) graphSVG.lecture = lecture;
 		if (validEditorView(editor_view)) {
-			graphSVG.view = editor_view
+			graphSVG.view = editor_view;
 		}
 	}
 
-	// Initialization
-	export let data: PageData
-	const cache = new ControllerCache()
+	interface Props {
+		// Initialization
+		data: PageData;
+	}
 
-	let graph: GraphController
-	let graphSVG: GraphSVG
+	let { data }: Props = $props();
+	const cache = new ControllerCache();
 
-	const search_params = $page.url.searchParams
-	let editor_view = search_params.get('view')
-	let editor_lecture = Number(search_params.get('lecture'))
+	let graph = $state<GraphController>();
+	let graphSVG = $state<GraphSVG>();
 
+	const search_params = $page.url.searchParams;
+	let editor_view = search_params.get('view');
+	let editor_lecture = Number(search_params.get('lecture'));
+
+	function setView(view: 'lectures' | 'subjects' | 'domains') {
+		if (!graphSVG) return;
+
+		graphSVG.view = view;
+	}
 </script>
 
-
 <!-- Markup -->
-
 
 {#await revive()}
 	<Loading />
 {:then}
-	<div class="tabular">
-		<div class="tabs">
-			<button
-				class="tab"
-				class:active={graphSVG.view === 'lectures'}
-				on:click={() => graphSVG.view = 'lectures'}
-			> Lectures </button>
+	{#if graphSVG && graph}
+		<div class="tabular">
+			<div class="tabs">
+				<button
+					class="tab"
+					class:active={graphSVG?.view === 'lectures'}
+					onclick={() => setView('lectures')}
+				>
+					Lectures
+				</button>
 
-			<button
-				class="tab"
-				class:active={graphSVG.view === 'subjects'}
-				on:click={() => graphSVG.view = 'subjects'}
-			> Subjects </button>
+				<button
+					class="tab"
+					class:active={graphSVG?.view === 'subjects'}
+					onclick={() => setView('subjects')}
+				>
+					Subjects
+				</button>
 
-			<button
-				class="tab"
-				class:active={graphSVG.view === 'domains'}
-				on:click={() => graphSVG.view = 'domains'}
-			> Domains </button>
-			
-			<div class="toolbar">
-				<Dropdown
-					placeholder="Select lecture"
-					bind:value={graphSVG.lecture}
-					options={graph.lecture_options}
-				/>
+				<button
+					class="tab"
+					class:active={graphSVG?.view === 'domains'}
+					onclick={() => setView('domains')}
+				>
+					Domains
+				</button>
 
-				<Button on:click={() => graphSVG.centerGraph()}>
-					Center Graph
-				</Button>
+				<div class="toolbar">
+					<Dropdown
+						placeholder="Select lecture"
+						bind:value={graphSVG.lecture}
+						options={graph.lecture_options}
+					/>
+
+					<Button onclick={() => graphSVG?.centerGraph()}>Center Graph</Button>
+				</div>
 			</div>
-		</div>
 
-		<Graph {graphSVG} />
-	</div>
+			<Graph {graphSVG} />
+		</div>
+	{/if}
 {/await}
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

@@ -1,10 +1,15 @@
 
 <script lang="ts">
 
-	// Exports
-	export let id: string
-	export let value: string = ''
-	export let readonly: boolean = false
+	
+	interface Props {
+		// Exports
+		id: string;
+		value?: string;
+		readonly?: boolean;
+	}
+
+	let { id, value = $bindable(''), readonly = false }: Props = $props();
 
 </script>
 
@@ -17,7 +22,7 @@
 	class="textarea"
 	bind:value={value} 
 	readonly={readonly} 
-/>
+></textarea>
 
 
 <!-- Styles -->

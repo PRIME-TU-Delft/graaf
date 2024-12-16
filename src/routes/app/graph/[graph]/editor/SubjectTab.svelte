@@ -20,8 +20,8 @@
 	import plus_icon from '$assets/plus-icon.svg'
 
 	// Variables
-	$: filtered_subjects = $graph.subjects.filter(subject => subject.matchesQuery($subject_query))
-	$: filtered_relations = $graph.subject_relations.filter(relation => relation.matchesQuery($subject_query))
+	let filtered_subjects = $derived($graph.subjects.filter(subject => subject.matchesQuery($subject_query)))
+	let filtered_relations = $derived($graph.subject_relations.filter(relation => relation.matchesQuery($subject_query)))
 
 </script>
 
@@ -38,15 +38,17 @@
 			<h4 style="grid-area: style"> Style </h4>
 		</div>
 
-		<OrderedList let:item list={filtered_subjects}>
-			<SubjectRow subject={item} />
-		</OrderedList>
+		<OrderedList  list={filtered_subjects}>
+			{#snippet children({ item })}
+						<SubjectRow subject={item} />
+								{/snippet}
+				</OrderedList>
 	{/if}
 
 	<!-- New subject -->
 	<button
 		class="row-button"
-		on:click={async () => {
+		onclick={async () => {
 			await SubjectController.create($graph.cache, $graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
@@ -55,9 +57,9 @@
 
 	<!-- Divider -->
 	<div class="divider" id="scroll-divider">
-		<div class="line" />
+		<div class="line"></div>
 		<h3> Relations </h3>
-		<div class="line" />
+		<div class="line"></div>
 	</div>
 
 	<!-- Subject Relations -->
@@ -69,15 +71,17 @@
 			<h4 style="grid-area: child"> Child </h4>
 		</div>
 
-		<OrderedList let:item list={filtered_relations}>
-			<RelationRow relation={item} />
-		</OrderedList>
+		<OrderedList  list={filtered_relations}>
+			{#snippet children({ item })}
+						<RelationRow relation={item} />
+								{/snippet}
+				</OrderedList>
 	{/if}
 
 	<!-- New subject relation -->
 	<button 
 		class="row-button"
-		on:click={async () => {
+		onclick={async () => {
 			await SubjectRelationController.create($graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)

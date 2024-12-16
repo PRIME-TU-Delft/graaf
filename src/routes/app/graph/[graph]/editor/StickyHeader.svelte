@@ -1,5 +1,12 @@
 
 <script lang="ts">
+	interface Props {
+		above?: import('svelte').Snippet<[any]>;
+		below?: import('svelte').Snippet<[any]>;
+		children?: import('svelte').Snippet;
+	}
+
+	let { above, below, children }: Props = $props();
 
 	function scrollTo(target: 'nodes' | 'relations') {
 		if (target === 'nodes') {
@@ -48,24 +55,24 @@
 	}
 
 	// Initialization
-	let above_scroll_boundry: boolean = true
+	let above_scroll_boundry: boolean = $state(true)
 	let throttled: boolean = false
 
 </script>
 
 <!-- Markup -->
 
-<svelte:document on:scroll={event => throttleEventCall(event, onScroll)} />
+<svelte:document onscroll={event => throttleEventCall(event, onScroll)} />
 
 <div class="tab-header" >
 
 	{#if above_scroll_boundry}
-		<slot name="above" { scrollTo } />
+		{@render above?.({ scrollTo, })}
 	{:else}
-		<slot name="below" { scrollTo } />
+		{@render below?.({ scrollTo, })}
 	{/if}
 
-	<slot />
+	{@render children?.()}
 
 </div>
 

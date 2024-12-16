@@ -4,6 +4,7 @@ import * as settings from '$scripts/settings'
 
 // Components
 import Tooltip from '$components/Tooltip.svelte'
+import { mount } from "svelte";
 
 // Exports
 export function tooltip(element: HTMLElement, text: string) {
@@ -14,10 +15,10 @@ export function tooltip(element: HTMLElement, text: string) {
 
 	function mouseEnter() {
 		timeout = setTimeout(() => {
-			instance = new Tooltip({
-				target: element,
-				props: { text }
-			})
+			instance = mount(Tooltip, {
+            				target: element,
+            				props: { text }
+            			})
 		}, settings.UNIVERSAL_HOVER_DELAY)
 	}
 

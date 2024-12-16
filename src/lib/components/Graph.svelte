@@ -40,11 +40,16 @@
 		}
 	}
 
-	// Main
-	export let graphSVG: GraphSVG
-	let expand_legend = false
-	let show_legend = true
-	let show_zoom = true
+	
+	interface Props {
+		// Main
+		graphSVG: GraphSVG;
+	}
+
+	let { graphSVG }: Props = $props();
+	let expand_legend = $state(false)
+	let show_legend = $state(true)
+	let show_zoom = $state(true)
 
 	graphSVG.subscribe(updateUI)
 
@@ -64,13 +69,13 @@
 		<button 
 			class="legend" 
 			class:expand={expand_legend} 
-			on:click={ () => expand_legend = !expand_legend }
+			onclick={() => expand_legend = !expand_legend}
 			transition:fade={{ duration: settings.UNIVERSAL_FADE_DURATION }}
 		>
 			<h4 class="title"> Domain Legend </h4>
 			{#if expand_legend}
 				{#each graphSVG.graph.domains as domain}
-					<span> {domain.display_name} <div class="preview" style:background={domain.color}/> </span>
+					<span> {domain.display_name} <div class="preview" style:background={domain.color}></div> </span>
 				{/each}
 			{/if}
 		</button>
@@ -78,8 +83,8 @@
 
 	{#if show_zoom}
 		<div class="zoom" transition:fade={{ duration: settings.UNIVERSAL_FADE_DURATION }} >
-			<button on:click={() => graphSVG.zoomIn()}><img src={zoom_in_icon} alt="Zoom in"></button>
-			<button on:click={() => graphSVG.zoomOut()}><img src={zoom_out_icon} alt="Zoom out"></button>
+			<button onclick={() => graphSVG.zoomIn()}><img src={zoom_in_icon} alt="Zoom in"></button>
+			<button onclick={() => graphSVG.zoomOut()}><img src={zoom_out_icon} alt="Zoom out"></button>
 		</div>
 	{/if}
 </div>

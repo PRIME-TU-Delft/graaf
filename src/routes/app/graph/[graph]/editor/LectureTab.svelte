@@ -16,7 +16,7 @@
 	import plus_icon from '$assets/plus-icon.svg'
 
     // Main
-    $: filtered_lectures = $graph.lectures.filter(lecture => lecture.matchesQuery($lecture_query))
+    let filtered_lectures = $derived($graph.lectures.filter(lecture => lecture.matchesQuery($lecture_query)))
 
 </script>
 
@@ -35,22 +35,26 @@
 				$graph = $graph // Trigger reactivity
 			}}
 		>
-			<svelte:fragment slot="left" let:item>
-				<div class="feedback-alignment">
-					<Feedback compact data={item.validate(false)} />
-				</div>
-			</svelte:fragment>
+			{#snippet left({ item })}
+					
+					<div class="feedback-alignment">
+						<Feedback compact data={item.validate(false)} />
+					</div>
+				
+					{/snippet}
 
-			<svelte:fragment slot="right" let:item>
-				<LectureRow lecture={item} />
-			</svelte:fragment>
+			{#snippet right({ item })}
+					
+					<LectureRow lecture={item} />
+				
+					{/snippet}
 		</SortableList>
 	{/if}
 
 	<!-- New lecture -->
 	<button
 		class="row-button"
-		on:click={async () => {
+		onclick={async () => {
 			await LectureController.create($graph.cache, $graph)
 			$graph = $graph // Trigger reactivity
 			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)

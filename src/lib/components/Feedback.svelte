@@ -1,98 +1,107 @@
-
 <script lang="ts">
-
 	// Internal dependencies
-	import * as settings from '$scripts/settings'
-	import { Validation } from '$scripts/validation'
-	import { clickoutside } from '$scripts/actions/clickoutside'
+	import * as settings from '$scripts/settings';
+	import { Validation } from '$scripts/validation';
+	import { clickoutside } from '$scripts/actions/clickoutside';
 
 	// Assets
-	import error_icon from '$assets/error-icon.svg'
-	import warning_icon from '$assets/warning-icon.svg'
-	
+	import error_icon from '$assets/error-icon.svg';
+	import warning_icon from '$assets/warning-icon.svg';
+
 	// Functions
 	function onMouseEnter() {
 		timeout = setTimeout(() => {
-			show_dropdown = data.errors.length + data.warnings.length > 1 || compact
-		}, settings.UNIVERSAL_HOVER_DELAY)
+			show_dropdown = data.errors.length + data.warnings.length > 1 || compact;
+		}, settings.UNIVERSAL_HOVER_DELAY);
 	}
 
 	function onMouseLeave() {
-		clearTimeout(timeout)
-		show_dropdown = lock_dropdown
+		clearTimeout(timeout);
+		show_dropdown = lock_dropdown;
 	}
 
 	function setDropdown(value?: boolean) {
-		if (value !== undefined) lock_dropdown = value
-		else lock_dropdown = !lock_dropdown && (data.errors.length + data.warnings.length > 1 || compact)
-		show_dropdown = lock_dropdown
-		clearTimeout(timeout)
+		if (value !== undefined) lock_dropdown = value;
+		else
+			lock_dropdown = !lock_dropdown && (data.errors.length + data.warnings.length > 1 || compact);
+		show_dropdown = lock_dropdown;
+		clearTimeout(timeout);
 	}
 
-	// Exports
-	export let data: Validation
-	export let compact: boolean = false
+	interface Props {
+		// Exports
+		data: Validation;
+		compact?: boolean;
+	}
+
+	let { data, compact = false }: Props = $props();
 
 	// Main
-	let timeout: NodeJS.Timeout
-	let show_dropdown = false
-	let lock_dropdown = false
+	let timeout: NodeJS.Timeout;
+	let show_dropdown = $state(false);
+	let lock_dropdown = false;
 
-	$: show_error_icon = data.errors.length > 0
-	$: error_message = compact || data.errors.length === 0 ? ''
-					 : data.errors.length > 0 && data.warnings.length > 0 ? data.errors.length
-					 : data.errors.length > 1 ? `${data.errors[0].short} (${data.errors.length - 1} more)`
-					 : data.errors[0].short
+	let show_error_icon = $derived(data.errors.length > 0);
+	let error_message = $derived(
+		compact || data.errors.length === 0
+			? ''
+			: data.errors.length > 0 && data.warnings.length > 0
+				? data.errors.length
+				: data.errors.length > 1
+					? `${data.errors[0].short} (${data.errors.length - 1} more)`
+					: data.errors[0].short
+	);
 
-	$: show_warning_icon = !(compact && show_error_icon) && data.warnings.length > 0
-	$: warning_message = compact || data.warnings.length === 0 ? ''
-					   : data.errors.length > 0 && data.warnings.length > 0 ? data.warnings.length
-					   : data.warnings.length > 1 ? `${data.warnings[0].short} (${data.warnings.length - 1} more)`
-					   : data.warnings[0].short
-	
-	$: disable_toggle = !compact && data.errors.length + data.warnings.length < 2
-					  || compact && data.errors.length + data.warnings.length < 1
-	
-	$: if (disable_toggle) setDropdown(false)
+	let show_warning_icon = $derived(!(compact && show_error_icon) && data.warnings.length > 0);
+	let warning_message = $derived.by(() => {
+		if (compact || data.warnings.length === 0) return '';
 
+		if (data.errors.length > 0) {
+			if (data.warnings.length > 1)
+				return `${data.warnings[0].short} (${data.warnings.length - 1} more)`;
+			return data.warnings[0].short;
+		}
+
+		if (data.warnings.length > 1)
+			return `${data.warnings[0].short} (${data.warnings.length - 1} more)`;
+
+		return data.warnings[0].short;
+	});
+
+	let disable_toggle = $derived(
+		(!compact && data.errors.length + data.warnings.length < 2) ||
+			(compact && data.errors.length + data.warnings.length < 1)
+	);
+
+	$effect(() => {
+		if (disable_toggle) setDropdown(false);
+	});
 </script>
 
 <!-- Markup -->
 
-<div class="feedback" use:clickoutside={ () => setDropdown(false) }>
-	<button 
-		class="toggle" 
-		on:mouseenter={ onMouseEnter }
-		on:mouseleave={ onMouseLeave }
-		on:click={ () => setDropdown() }
-		disabled={ disable_toggle }
+<div class="feedback" use:clickoutside={() => setDropdown(false)}>
+	<button
+		class="toggle"
+		onmouseenter={onMouseEnter}
+		onmouseleave={onMouseLeave}
+		onclick={() => setDropdown()}
+		disabled={disable_toggle}
 	>
 		{#if show_error_icon}
-			<img 
-				src={error_icon} 
-				alt="Error" 
-				class="error" 
-			>
+			<img src={error_icon} alt="Error" class="error" />
 		{/if}
 
 		{#if error_message}
-			<span 
-				class="error"
-			> {error_message} </span>
+			<span class="error"> {error_message} </span>
 		{/if}
 
 		{#if show_warning_icon}
-			<img
-				src={warning_icon}
-				alt="Warning"
-				class="warning"
-			>
+			<img src={warning_icon} alt="Warning" class="warning" />
 		{/if}
 
 		{#if warning_message}
-			<span
-				class="warning"
-			> {warning_message} </span>
+			<span class="warning"> {warning_message} </span>
 		{/if}
 	</button>
 

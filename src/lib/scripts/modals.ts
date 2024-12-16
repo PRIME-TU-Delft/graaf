@@ -1,19 +1,16 @@
-
 // Internal dependencies
-import type { Validation } from './validation'
+import type { Validation } from './validation';
 
 // --------------------> Classes
 
 export abstract class AbstractFormModal {
-	private _changed: { [key: string]: boolean } = {}
-	private _defaults: { [key: string]: any } = {}
+	private _changed: { [key: string]: boolean } = {};
+	private _defaults: { [key: string]: any } = {};
 
-	public show = () => {} // To be overwritten by the FormModal component
-	public hide = () => {} // To be overwritten by the FormModal component
+	public show = $state(() => {}); // To be overwritten by the FormModal component
+	public hide = $state(() => {}); // To be overwritten by the FormModal component
 
-	constructor(
-		public close_on_submit: boolean = true
-	) { }
+	constructor(public close_on_submit: boolean = true) {}
 
 	/**
 	 * Check if a property is a field of the form
@@ -22,12 +19,14 @@ export abstract class AbstractFormModal {
 	 */
 
 	private isField(property: string): boolean {
-		return this.hasOwnProperty(property)
-			&& property !== '_defaults' 
-			&& property !== '_changed'
-			&& property !== 'close_on_submit'
-			&& property !== 'show'
-			&& property !== 'hide'
+		return (
+			this.hasOwnProperty(property) &&
+			property !== '_defaults' &&
+			property !== '_changed' &&
+			property !== 'close_on_submit' &&
+			property !== 'show' &&
+			property !== 'hide'
+		);
 	}
 
 	/**
@@ -38,8 +37,8 @@ export abstract class AbstractFormModal {
 	protected initialize() {
 		for (const property in this) {
 			if (this.isField(property)) {
-				this._defaults[property] = this[property]
-				this._changed[property] = false
+				this._defaults[property] = this[property];
+				this._changed[property] = false;
 			}
 		}
 	}
@@ -53,14 +52,12 @@ export abstract class AbstractFormModal {
 
 	protected hasChanged(property: string): boolean {
 		if (!this.isField(property))
-			throw new Error(`Property "${property}" is not a field of the form`)
-		if (this._changed[property])
-			return true
+			throw new Error(`Property "${property}" is not a field of the form`);
+		if (this._changed[property]) return true;
 
-		const cast = property as Extract<keyof this, string>
-		if (this[cast] !== this._defaults[property])
-			this._changed[property] = true
-		return this._changed[property]
+		const cast = property as Extract<keyof this, string>;
+		if (this[cast] !== this._defaults[property]) this._changed[property] = true;
+		return this._changed[property];
 	}
 
 	/**
@@ -70,7 +67,7 @@ export abstract class AbstractFormModal {
 	public touchAll() {
 		for (const property in this) {
 			if (this.isField(property)) {
-				this._changed[property] = true
+				this._changed[property] = true;
 			}
 		}
 	}
@@ -82,12 +79,12 @@ export abstract class AbstractFormModal {
 	public reset() {
 		for (const property in this) {
 			if (this.isField(property)) {
-				this[property] = this._defaults[property]
-				this._changed[property] = false
+				this[property] = this._defaults[property];
+				this._changed[property] = false;
 			}
 		}
 	}
 
-	abstract validate(): Validation
-	abstract submit(): Promise<void>
+	abstract validate(): Validation;
+	abstract submit(): Promise<void>;
 }

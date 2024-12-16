@@ -53,8 +53,13 @@
 		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
 	}
 
-	// Initialization
-	export let data: PageData
+	
+	interface Props {
+		// Initialization
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	const cache = new ControllerCache()
 
 </script>
@@ -66,25 +71,27 @@
 	<Loading />
 {:then}
 	<Layout>
-		<svelte:fragment slot="title">
-			<Navbar path={[
-				{
-					name: 'Home',
-					href: '/app/home'
-				},
-				{
-					name: $graph.course.display_name,
-					href: `/app/course/${$graph.course_id}/overview`
-				},
-				{
-					name: $graph.display_name
-				}
-			]}>
-				<LinkButton href="/app/graph/{$graph.id}/settings"> Graph Settings </LinkButton>
-			</Navbar>
+		{#snippet title()}
+			
+				<Navbar path={[
+					{
+						name: 'Home',
+						href: '/app/home'
+					},
+					{
+						name: $graph.course.display_name,
+						href: `/app/course/${$graph.course_id}/overview`
+					},
+					{
+						name: $graph.display_name
+					}
+				]}>
+					<LinkButton href="/app/graph/{$graph.id}/settings"> Graph Settings </LinkButton>
+				</Navbar>
 
-			Here you can edit your graph, like its domains, subjects, and lectures.
-		</svelte:fragment>
+				Here you can edit your graph, like its domains, subjects, and lectures.
+			
+			{/snippet}
 
 		<GraphEditor />
 	</Layout>

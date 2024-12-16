@@ -60,8 +60,13 @@
 		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
 	}
 
-	// Main
-	export let data: PageData
+	
+	interface Props {
+		// Main
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	const cache = new ControllerCache()
 
 </script>
@@ -72,22 +77,24 @@
 	<Loading />
 {:then}
 	<Layout>
-		<svelte:fragment slot="title">
-			<Navbar path={[
-				{
-					name: 'Home',
-					href: '/app/home'
-				},
-				{
-					name: $course.display_name
-				}
-			]}>
+		{#snippet title()}
+			
+				<Navbar path={[
+					{
+						name: 'Home',
+						href: '/app/home'
+					},
+					{
+						name: $course.display_name
+					}
+				]}>
 
-				<LinkButton href="/app/course/{$course.id}/settings"> Course settings </LinkButton>
-			</Navbar>
+					<LinkButton href="/app/course/{$course.id}/settings"> Course settings </LinkButton>
+				</Navbar>
 
-			Here you can view the graphs and links associated to this course, and edit their properties.
-		</svelte:fragment>
+				Here you can view the graphs and links associated to this course, and edit their properties.
+			
+			{/snippet}
 
 		<GraphCard />
 		<LinkCard />

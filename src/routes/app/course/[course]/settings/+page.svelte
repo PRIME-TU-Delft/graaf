@@ -58,8 +58,13 @@
 		awaited_links.forEach(link => LinkController.revive(cache, link))
 	}
 
-	// Main
-	export let data: PageData
+	
+	interface Props {
+		// Main
+		data: PageData;
+	}
+
+	let { data }: Props = $props();
 	const cache = new ControllerCache()
 
 </script>
@@ -70,26 +75,28 @@
 	<Loading />
 {:then}
 	<Layout>
-		<svelte:fragment slot="title">
-			<Navbar path={[
-				{
-					name: 'Home',
-					href: '/app/home'
-				},
+		{#snippet title()}
+			
+				<Navbar path={[
+					{
+						name: 'Home',
+						href: '/app/home'
+					},
 
-				{
-					name: $course.display_name,
-					href: `/app/course/${$course.id}/overview`
-				},
-				{
-					name: 'Settings'
-				}
-			]}>
-				<LinkButton href={`/app/course/${$course.id}/overview`}> Course overview </LinkButton>
-			</Navbar>
+					{
+						name: $course.display_name,
+						href: `/app/course/${$course.id}/overview`
+					},
+					{
+						name: 'Settings'
+					}
+				]}>
+					<LinkButton href={`/app/course/${$course.id}/overview`}> Course overview </LinkButton>
+				</Navbar>
 
-			Here you can change your course settings, like its members, graphs, links, etc.
-		</svelte:fragment>
+				Here you can change your course settings, like its members, graphs, links, etc.
+			
+			{/snippet}
 
 		<GeneralCard />
 		<MemberCard />

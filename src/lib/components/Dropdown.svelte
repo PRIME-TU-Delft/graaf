@@ -1,102 +1,98 @@
-
 <script lang="ts">
+	import { Severity } from '$scripts/validation';
+	import { loopFocus, focusOnLoad } from '$scripts/actions/hocusfocus';
+	import { clickoutside } from '$scripts/actions/clickoutside';
+	import type { DropdownOption } from '$scripts/types';
 
-	import { createEventDispatcher } from "svelte"
+	import error_icon from '$assets/error-icon.svg';
+	import warning_icon from '$assets/warning-icon.svg';
+	import search_icon from '$assets/search-icon.svg';
 
-	import { Severity } from "$scripts/validation"
-	import { loopFocus, focusOnLoad } from "$scripts/actions/hocusfocus"
-	import { clickoutside } from "$scripts/actions/clickoutside"
-	import type { DropdownOption } from "$scripts/types"
+	type T = $$Generic;
 
-	import error_icon from "$assets/error-icon.svg"
-	import warning_icon from "$assets/warning-icon.svg"
-	import search_icon from "$assets/search-icon.svg"
+	interface Props {
+		placeholder?: string;
+		options: DropdownOption<T>[];
+		value: T | null;
+		onchange?: (value: T | null) => void;
+	}
+
+	let {
+		placeholder = 'Select an option',
+		options,
+		value = $bindable(),
+		onchange = () => {}
+	}: Props = $props();
 
 	function onKeydown(event: KeyboardEvent) {
-		if (!open) return
+		if (!open) return;
 
 		if (event.key === 'Tab') {
-			if (options.length === 0)
-				setOpen(false)
-			return
+			if (options.length === 0) setOpen(false);
+			return;
 		}
 
 		if (event.key === 'Escape') {
-			setOpen(false)
-			return
+			setOpen(false);
+			return;
 		}
 
 		if (event.key === 'Enter' || event.key === 'Shift') {
-			return
+			return;
 		}
 
-		search.focus()
+		search?.focus();
 	}
 
 	function setOpen(value: boolean) {
-		if (!value) query = ''
-		open = value
+		if (!value) query = '';
+		open = value;
 	}
 
 	function setValue(new_value: T | null) {
-		dispatch('change', new_value)
-		value = new_value
-		setOpen(false)
+		onchange(new_value);
+		value = new_value;
+		setOpen(false);
 	}
 
-	type T = $$Generic
+	let search = $state<HTMLDivElement>();
+	let open: boolean = $state(false);
+	let query: string = $state('');
 
-	export let placeholder: string = 'Select an option'
-	export let options: DropdownOption<T>[]
-	export let value: T | null
-
-	const dispatch = createEventDispatcher<{change: T | null}>()
-
-	let search: HTMLDivElement
-	let open: boolean = false
-	let query: string = ''
-
-	$: show_preview = options.some(option => option.color)
-	$: selected = options.find(option => option.value === value) || null
-	$: filtered_options = options
-		.filter(option => option.label.toLowerCase().includes(query.toLowerCase()))
-		.toSorted((a, b) => {
-			if (a.validation?.severity === Severity.error) return 1
-			if (b.validation?.severity === Severity.error) return -1
-			return 0
-		})
-
+	let show_preview = $derived(options.some((option) => option.color));
+	let selected = $derived(options.find((option) => option.value === value) || null);
+	let filtered_options = $derived(
+		options
+			.filter((option) => option.label.toLowerCase().includes(query.toLowerCase()))
+			.toSorted((a, b) => {
+				if (a.validation?.severity === Severity.error) return 1;
+				if (b.validation?.severity === Severity.error) return -1;
+				return 0;
+			})
+	);
 </script>
 
 <!-- Markup -->
 
-<svelte:window on:keydown={ onKeydown } />
+<svelte:window onkeydown={onKeydown} />
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 
 <div class="dropdown">
-	<div 
-		class:open
-		class="wrapper" 
-		use:clickoutside={ () => setOpen(false) }
-	>
-		<button 
-			class="header"
-			class:grayed={ !selected }
-			on:click={ () => setOpen(!open) }
-		>
+	<div class:open class="wrapper" use:clickoutside={() => setOpen(false)}>
+		<button class="header" class:grayed={!selected} onclick={() => setOpen(!open)}>
 			{#if selected?.label}
-				{ selected.label }
+				{selected.label}
 			{:else if selected}
 				<i> Untitled option </i>
 			{:else}
-				{ placeholder }
+				{placeholder}
 			{/if}
 		</button>
 
 		{#if open}
-			<div class="options" use:loopFocus={ filtered_options }>
+			<div class="options" use:loopFocus={filtered_options}>
 				{#if options.length === 0}
 					<button class="option" disabled>
 						<i> No options available </i>
@@ -106,22 +102,22 @@
 						<input
 							type="text"
 							placeholder="Search"
-							bind:value={ query }
-							bind:this={ search }
+							bind:value={query}
+							bind:this={search}
 							use:focusOnLoad
 						/>
 
-						<img src={ search_icon } alt="Search" />
+						<img src={search_icon} alt="Search" />
 					</div>
 
 					{#each filtered_options as option}
 						<button
 							class="option"
-							disabled={ option.validation?.severity === Severity.error }
-							on:click={ () => setValue(option.value) }
+							disabled={option.validation?.severity === Severity.error}
+							onclick={() => setValue(option.value)}
 						>
 							{#if option.label}
-								{ option.label }
+								{option.label}
 							{:else}
 								<i> Nameless option </i>
 							{/if}
@@ -129,13 +125,13 @@
 							{#if option.validation}
 								{#if option.validation.severity === Severity.error}
 									<div class="error">
-										{ option.validation.errors[0].short }
-										<img src={ error_icon } alt="Error" />
+										{option.validation.errors[0].short}
+										<img src={error_icon} alt="Error" />
 									</div>
 								{:else if option.validation.severity === Severity.warning}
 									<div class="warning">
-										{ option.validation.warnings[0].short }
-										<img src={ warning_icon } alt="Warning" />
+										{option.validation.warnings[0].short}
+										<img src={warning_icon} alt="Warning" />
 									</div>
 								{/if}
 							{/if}
@@ -144,16 +140,14 @@
 								<div
 									class="preview"
 									style:grid-area="preview"
-									style:background={ option.color }
-								/>
+									style:background={option.color}
+								></div>
 							{/if}
 						</button>
 					{/each}
 
 					{#if selected !== null}
-						<button
-							class="option"
-							on:click={ () => setValue(null) }>
+						<button class="option" onclick={() => setValue(null)}>
 							<i> Remove choice </i>
 						</button>
 					{:else if filtered_options.length === 0}

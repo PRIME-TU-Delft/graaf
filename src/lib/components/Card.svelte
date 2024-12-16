@@ -1,7 +1,16 @@
+<script lang="ts">
+	interface Props {
+		header?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+	}
+
+	let { header, children }: Props = $props();
+</script>
+
 
 <div class="card">
-	<header class="header"><slot name="header" /></header>
-	<section class="body"><slot /></section>
+	<header class="header">{@render header?.()}</header>
+	<section class="body">{@render children?.()}</section>
 </div>
 
 

@@ -1,19 +1,27 @@
-
 <script lang="ts">
-
 	// Assets
-	import search_icon from '$assets/search-icon.svg'
+	import search_icon from '$assets/search-icon.svg';
 
-	// Exports
-	export let placeholder: string = ''
-	export let value: string = ''
+	interface Props {
+		// Exports
+		placeholder?: string;
+		value?: string;
+		oninput?: (event: Event) => void;
+		onchange?: (event: Event) => void;
+	}
 
+	let {
+		placeholder = '',
+		value = $bindable(''),
+		oninput = () => {},
+		onchange = () => {}
+	}: Props = $props();
 </script>
 
 <!-- Markup -->
 
 <div class="search">
-	<input type="text" placeholder={placeholder} bind:value on:input on:change/>
+	<input type="text" {placeholder} bind:value {oninput} {onchange} />
 	<img src={search_icon} alt="search-icon" />
 </div>
 

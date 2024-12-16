@@ -2,7 +2,12 @@
 <script lang="ts">
 
 	import '$styles/global.sass'
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 </script>
 
-<slot />
+{@render children?.()}

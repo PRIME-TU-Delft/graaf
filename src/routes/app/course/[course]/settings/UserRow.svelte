@@ -1,11 +1,11 @@
-
-
 <script lang="ts">
-
 	// Internal dependencies
-	import type { UserController } from '$scripts/controllers'
+	import type { UserController } from '$scripts/controllers';
 
-	// Exports
-	export let user: UserController
+	interface Props {
+		// Exports
+		user: UserController;
+	}
 
+	let { user }: Props = $props();
 </script>

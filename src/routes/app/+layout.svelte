@@ -11,6 +11,11 @@
 	// Assets
 	import PRIME_logo from '$assets/PRIME-logo.svg'
 	import TUDelft_logo from '$assets/TUD-logo.svg'
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	// Variables
 	let logged_in = false // TODO temporary
@@ -28,7 +33,7 @@
 
 	<h1> Graph editor </h1>
 
-	<div class="flex-spacer" />
+	<div class="flex-spacer"></div>
 
 	{#if logged_in}
 		<LinkButton href="app/auth/logout"> Logout </LinkButton>
@@ -39,7 +44,7 @@
 	{/if}
 </header>
 
-<slot />
+{@render children?.()}
 
 <footer>
 	<img id="TUDelft-logo" src={TUDelft_logo} alt="TUDelft logo" />

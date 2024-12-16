@@ -1,48 +1,48 @@
-
 <script lang="ts">
-
 	// Internal dependencies
-	import { course } from './stores'
-	import { LinkController } from '$scripts/controllers'
+	import { course } from './stores';
+	import { LinkController } from '$scripts/controllers';
 
 	// Components
-	import LinkRow from './LinkRow.svelte'
+	import LinkRow from './LinkRow.svelte';
 
-	import Searchbar from '$components/Searchbar.svelte'
-	import Button from '$components/Button.svelte'
-	import Card from '$components/Card.svelte'
+	import Searchbar from '$components/Searchbar.svelte';
+	import Button from '$components/Button.svelte';
+	import Card from '$components/Card.svelte';
 
 	// Assets
-	import plus_icon from '$assets/plus-icon.svg'
+	import plus_icon from '$assets/plus-icon.svg';
 
 	// Main
-	let link_query = ''
-	$: filtered_links = $course.links.filter(link => link.matchesQuery(link_query))
-
+	let link_query = $state('');
+	const filtered_links = $derived($course.links.filter((link) => link.matchesQuery(link_query)));
 </script>
 
 <!-- Markup -->
 
 <Card>
-	<svelte:fragment slot="header">
-		<h3 slot="header">Links</h3>
-		<div class="flex-spacer" />
+	{#snippet header()}
+		<h3>Links</h3>
+
+		<div class="flex-spacer"></div>
 		<Searchbar placeholder="Search links" bind:value={link_query} />
-		<Button on:click={async () => {
-			await LinkController.create($course.cache, $course)
-			$course = $course // Trigger reactivity
-		}}>
+		<Button
+			onclick={async () => {
+				await LinkController.create($course.cache, $course);
+				$course = $course; // Trigger reactivity
+			}}
+		>
 			<img src={plus_icon} alt="" /> New Link
 		</Button>
-	</svelte:fragment>
+	{/snippet}
 
 	{#if filtered_links.length === 0}
-		<p class="grayed"> There's nothing here </p>
+		<p class="grayed">There's nothing here</p>
 	{:else}
 		<div class="header">
-			<h4 style="grid-area: name"> Name </h4>
-			<h4 style="grid-area: graph"> Graph </h4>
-			<h4 style="grid-area: url"> URL </h4>
+			<h4 style="grid-area: name">Name</h4>
+			<h4 style="grid-area: graph">Graph</h4>
+			<h4 style="grid-area: url">URL</h4>
 		</div>
 
 		{#each filtered_links as link}

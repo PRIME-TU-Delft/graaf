@@ -1,52 +1,41 @@
-
 <script lang="ts">
-
-	import success_icon from '$assets/success-icon.svg'
-	import warning_icon from '$assets/warning-icon.svg'
+	import success_icon from '$assets/success-icon.svg';
+	import warning_icon from '$assets/warning-icon.svg';
 
 	export function setSaving(value: boolean) {
-		saving = value
+		saving = value;
 
 		if (value) {
-			unsaved = false
-			if (timer) clearTimeout(timer)
-			timer = setTimeout(() => timer = undefined, MIN_SAVE_TIME)
+			unsaved = false;
+			if (timer) clearTimeout(timer);
+			timer = setTimeout(() => (timer = undefined), MIN_SAVE_TIME);
 		}
 	}
 
 	export function setUnsaved() {
-		unsaved = true
+		unsaved = true;
 	}
 
-	const MIN_SAVE_TIME = 1000
+	const MIN_SAVE_TIME = 1000;
 
-	let timer: NodeJS.Timeout | undefined
-	let unsaved = false
-	let saving = false
-
+	let timer = $state<ReturnType<typeof setTimeout>>();
+	let unsaved = $state(false);
+	let saving = $state(false);
 </script>
 
 <!-- Markdown -->
 
 <div class="saving">
-
 	{#if saving || timer !== undefined}
-
-		<span class="spinner" />
+		<span class="spinner"></span>
 		Saving...
-
 	{:else if unsaved}
-
-		<img src={ warning_icon } alt="">
+		<img src={warning_icon} alt="" />
 		Unsaved changes
-
 	{:else}
-
-		<img src={ success_icon } alt="">
+		<img src={success_icon} alt="" />
 		Saved
-		
 	{/if}
-
 </div>
 
 <!-- Styles -->

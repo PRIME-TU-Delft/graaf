@@ -1,7 +1,7 @@
 
-<div class="loader" />
-<div class="loader" />
-<div class="loader" />
+<div class="loader"></div>
+<div class="loader"></div>
+<div class="loader"></div>
 
 <style lang="sass">
 

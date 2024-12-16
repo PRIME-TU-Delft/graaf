@@ -4,9 +4,14 @@
 	// Assets
 	import copy_icon from "$assets/copy-icon.svg"
 
-	// Main
-	export let url: string
-	let copied: boolean = false
+	
+	interface Props {
+		// Main
+		url: string;
+	}
+
+	let { url = $bindable() }: Props = $props();
+	let copied: boolean = $state(false)
 
 </script>
 
@@ -22,7 +27,7 @@
 
 	<button
 		disabled={url === ''}
-		on:click={async () => {
+		onclick={async () => {
 			copied = true
 			await navigator.clipboard.writeText(url)
 			setTimeout(() => copied = false, 2000)
