@@ -1,26 +1,21 @@
-
 // Internal dependencies
-import { DomainHelper } from '$scripts/helpers'
+import { DomainHelper } from '$scripts/helpers';
 
 // Exports
-export { DELETE }
-
+export { DELETE };
 
 // --------------------> API Endpoints
 
-
 async function DELETE({ params }) {
-
 	// Retrieve domain ID
-	const domain_id = Number(params.id)
+	const domain_id = Number(params.id);
 	if (isNaN(domain_id)) {
-		return new Response('Missing domain ID', { status: 400 })
+		return new Response('Missing domain ID', { status: 400 });
 	}
 
 	// Delete the domain
-	return await DomainHelper.remove(domain_id)
-		.then(
-			() => new Response(null, { status: 200 }),
-			error => new Response(error, { status: 400 })
-		)
+	return await DomainHelper.remove(domain_id).then(
+		() => new Response(null, { status: 200 }),
+		(error) => new Response(error, { status: 400 })
+	);
 }

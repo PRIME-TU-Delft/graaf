@@ -1,4 +1,3 @@
-
 export {
 	validSerializedProgram,
 	validSerializedCourse,
@@ -8,19 +7,13 @@ export {
 	validSerializedLecture,
 	validSerializedLink,
 	validSerializedUser
-} from './serialized'
+} from './serialized';
 
-export { 
-	validUserRole,
-	validPermission
-} from './permissions'
+export { validUserRole, validPermission } from './permissions';
 
-export {
-	validEditorType,
-	validEditorView
-} from './editor'
+export { validEditorType, validEditorView } from './editor';
 
-export { validDomainStyle } from './styles'
+export { validDomainStyle } from './styles';
 
 export type {
 	SerializedProgram,
@@ -31,7 +24,7 @@ export type {
 	SerializedLecture,
 	SerializedLink,
 	SerializedUser
-} from './serialized'
+} from './serialized';
 
 export type {
 	ProgramRelation,
@@ -42,17 +35,11 @@ export type {
 	LectureRelation,
 	LinkRelation,
 	UserRelation
-} from './relations'
+} from './relations';
 
-export type { 
-	UserRole,
-	Permission
-} from './permissions'
+export type { UserRole, Permission } from './permissions';
 
-export type {
-	EditorView,
-	EditorType
-} from './editor'
+export type { EditorView, EditorType } from './editor';
 
-export type { DropdownOption } from './dropdown'
-export type { DomainStyle } from './styles'
+export type { DropdownOption } from './dropdown';
+export type { DomainStyle } from './styles';

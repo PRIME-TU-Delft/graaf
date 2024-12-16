@@ -1,26 +1,21 @@
-
 // Internal dependencies
-import { LectureHelper } from '$scripts/helpers'
+import { LectureHelper } from '$scripts/helpers';
 
 // Exports
-export { DELETE }
-
+export { DELETE };
 
 // --------------------> API Endpoints
 
-
 async function DELETE({ params }) {
-
 	// Retrieve data
-	const lecture_id = Number(params.id)
+	const lecture_id = Number(params.id);
 	if (isNaN(lecture_id)) {
-		return new Response('Missing lecture ID', { status: 400 })
+		return new Response('Missing lecture ID', { status: 400 });
 	}
 
 	// Delete the lecture
-	return await LectureHelper.remove(lecture_id)
-		.then(
-			() => new Response(null, { status: 200 }),
-			error => new Response(error, { status: 400 })
-		)
+	return await LectureHelper.remove(lecture_id).then(
+		() => new Response(null, { status: 200 }),
+		(error) => new Response(error, { status: 400 })
+	);
 }

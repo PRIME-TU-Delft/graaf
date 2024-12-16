@@ -8,7 +8,6 @@
 	let { title, toolbar, children }: Props = $props();
 </script>
 
-
 <main>
 	<section class="title">
 		{@render title?.()}
@@ -25,9 +24,7 @@
 	</section>
 </main>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

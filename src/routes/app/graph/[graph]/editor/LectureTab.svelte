@@ -1,53 +1,48 @@
 <script lang="ts">
-
-    const SCROLL_ON_NEW = 60
+	const SCROLL_ON_NEW = 60;
 
 	// Internal dependencies
-	import { graph, lecture_query } from './stores'
-	import { LectureController } from '$scripts/controllers'
+	import { graph, lecture_query } from './stores';
+	import { LectureController } from '$scripts/controllers';
 
 	// Components
-    import LectureRow from './LectureRow.svelte'
+	import LectureRow from './LectureRow.svelte';
 
-	import SortableList from '$components/SortableList.svelte'
-	import Feedback from '$components/Feedback.svelte'
+	import SortableList from '$components/SortableList.svelte';
+	import Feedback from '$components/Feedback.svelte';
 
 	// Assets
-	import plus_icon from '$assets/plus-icon.svg'
+	import plus_icon from '$assets/plus-icon.svg';
 
-    // Main
-    let filtered_lectures = $derived($graph.lectures.filter(lecture => lecture.matchesQuery($lecture_query)))
-
+	// Main
+	let filtered_lectures = $derived(
+		$graph.lectures.filter((lecture) => lecture.matchesQuery($lecture_query))
+	);
 </script>
 
 <!-- Markdown -->
 
 <div class="tab">
-
 	<!-- Lectures -->
 	{#if filtered_lectures.length == 0}
-		<p class="grayed"> There's nothing here </p>
+		<p class="grayed">There's nothing here</p>
 	{:else}
 		<SortableList
-			list={filtered_lectures} 
-			on:rearrange={async event => {
-				await $graph.reorderLectures(event.detail)
-				$graph = $graph // Trigger reactivity
+			list={filtered_lectures}
+			on:rearrange={async (event) => {
+				await $graph.reorderLectures(event.detail);
+				$graph = $graph; // Trigger reactivity
 			}}
 		>
 			{#snippet left({ item })}
-					
-					<div class="feedback-alignment">
-						<Feedback compact data={item.validate(false)} />
-					</div>
-				
-					{/snippet}
+				<div class="feedback-alignment">
+					<Feedback compact data={item.validate(false)} />
+				</div>
+			{/snippet}
 
 			{#snippet right({ item })}
-					
-					<LectureRow lecture={item} />
-				
-					{/snippet}
+				<LectureRow lecture={item} />
+			{/snippet}
 		</SortableList>
 	{/if}
 
@@ -55,12 +50,13 @@
 	<button
 		class="row-button"
 		onclick={async () => {
-			await LectureController.create($graph.cache, $graph)
-			$graph = $graph // Trigger reactivity
-			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			await LectureController.create($graph.cache, $graph);
+			$graph = $graph; // Trigger reactivity
+			setTimeout(() => scrollBy({ top: SCROLL_ON_NEW, behavior: 'smooth' }), 0);
 		}}
-	> <img src={plus_icon} alt="New lecture"> </button>
-
+	>
+		<img src={plus_icon} alt="New lecture" />
+	</button>
 </div>
 
 <!-- Styles -->

@@ -1,12 +1,9 @@
-
-
 <script lang="ts">
-
 	// External dependencies
-	import type { PageData } from './$types'
+	import type { PageData } from './$types';
 
 	// Internal dependencies
-	import { graph, save_status } from './stores'
+	import { graph, save_status } from './stores';
 
 	import {
 		ControllerCache,
@@ -15,55 +12,40 @@
 		DomainController,
 		SubjectController,
 		LectureController
-	} from '$scripts/controllers'
+	} from '$scripts/controllers';
 
 	// Components
-	import GraphEditor from './GraphEditor.svelte'
+	import GraphEditor from './GraphEditor.svelte';
 
-	import LinkButton from '$components/LinkButton.svelte'
-	import Loading from '$components/Loading.svelte'
-	import Layout from '$components/Layout.svelte'
-	import Navbar from '$components/Navbar.svelte'
+	import LinkButton from '$components/LinkButton.svelte';
+	import Loading from '$components/Loading.svelte';
+	import Layout from '$components/Layout.svelte';
+	import Navbar from '$components/Navbar.svelte';
 
 	// Functions
 	async function revive() {
-
 		// Await all promises
-		const [
-			awaited_graph,
-			awaited_course,
-			awaited_domains,
-			awaited_subjects,
-			awaited_lectures
-		] = await Promise.all([
-			data.graph,
-			data.course,
-			data.domains,
-			data.subjects,
-			data.lectures
-		])
+		const [awaited_graph, awaited_course, awaited_domains, awaited_subjects, awaited_lectures] =
+			await Promise.all([data.graph, data.course, data.domains, data.subjects, data.lectures]);
 
 		// Revive controllers into stores
-		graph.set(GraphController.revive(cache, awaited_graph))
+		graph.set(GraphController.revive(cache, awaited_graph));
 
 		// Revive controllers into cache
-		CourseController.revive(cache, awaited_course)
-		awaited_domains.forEach(domain => DomainController.revive(cache, domain))
-		awaited_subjects.forEach(subject => SubjectController.revive(cache, subject))
-		awaited_lectures.forEach(lecture => LectureController.revive(cache, lecture))
+		CourseController.revive(cache, awaited_course);
+		awaited_domains.forEach((domain) => DomainController.revive(cache, domain));
+		awaited_subjects.forEach((subject) => SubjectController.revive(cache, subject));
+		awaited_lectures.forEach((lecture) => LectureController.revive(cache, lecture));
 	}
 
-	
 	interface Props {
 		// Initialization
 		data: PageData;
 	}
 
 	let { data }: Props = $props();
-	const cache = new ControllerCache()
-
+	const cache = new ControllerCache();
 </script>
-
 
 <!-- Markup -->
 
@@ -72,8 +54,8 @@
 {:then}
 	<Layout>
 		{#snippet title()}
-			
-				<Navbar path={[
+			<Navbar
+				path={[
 					{
 						name: 'Home',
 						href: '/app/home'
@@ -85,13 +67,13 @@
 					{
 						name: $graph.display_name
 					}
-				]}>
-					<LinkButton href="/app/graph/{$graph.id}/settings"> Graph Settings </LinkButton>
-				</Navbar>
+				]}
+			>
+				<LinkButton href="/app/graph/{$graph.id}/settings">Graph Settings</LinkButton>
+			</Navbar>
 
-				Here you can edit your graph, like its domains, subjects, and lectures.
-			
-			{/snippet}
+			Here you can edit your graph, like its domains, subjects, and lectures.
+		{/snippet}
 
 		<GraphEditor />
 	</Layout>

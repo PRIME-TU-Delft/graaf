@@ -1,26 +1,21 @@
-
 // Internal dependencies
-import { GraphHelper } from '$scripts/helpers'
+import { GraphHelper } from '$scripts/helpers';
 
 // Exports
-export { DELETE }
-
+export { DELETE };
 
 // --------------------> API Endpoints
 
-
 async function DELETE({ params }) {
-
 	// Retrieve data
-	const graph_id = Number(params.id)
+	const graph_id = Number(params.id);
 	if (isNaN(graph_id)) {
-		return new Response('Missing graph ID', { status: 400 })
+		return new Response('Missing graph ID', { status: 400 });
 	}
 
 	// Delete the graph
-	return await GraphHelper.remove(graph_id)
-		.then(
-			() => new Response(null, { status: 200 }),
-			error => new Response(error, { status: 400 })
-		)
+	return await GraphHelper.remove(graph_id).then(
+		() => new Response(null, { status: 200 }),
+		(error) => new Response(error, { status: 400 })
+	);
 }

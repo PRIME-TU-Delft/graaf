@@ -1,46 +1,33 @@
-
 // External dependencies
-import prisma from '$lib/server/prisma'
-import type { Link as PrismaLink } from '@prisma/client'
+import prisma from '$lib/server/prisma';
+import type { Link as PrismaLink } from '@prisma/client';
 
 // Internal dependencies
-import { prismaUpdateOptionalField, prismaUpdateRequiredField } from '$scripts/utility'
+import { prismaUpdateOptionalField, prismaUpdateRequiredField } from '$scripts/utility';
 
-import {
-	CourseHelper,
-	GraphHelper
-} from '$scripts/helpers'
+import { CourseHelper, GraphHelper } from '$scripts/helpers';
 
-import type {
-	CourseRelation,
-	GraphRelation,
-	LinkRelation
-} from '$scripts/types'
+import type { CourseRelation, GraphRelation, LinkRelation } from '$scripts/types';
 
-import type {
-	SerializedCourse,
-	SerializedGraph,
-	SerializedLink
-} from '$scripts/types'
-
+import type { SerializedCourse, SerializedGraph, SerializedLink } from '$scripts/types';
 
 // --------------------> Helper Functions
 
-
-export async function reduce(link: PrismaLink, ...relations: LinkRelation[]): Promise<SerializedLink> {
+export async function reduce(
+	link: PrismaLink,
+	...relations: LinkRelation[]
+): Promise<SerializedLink> {
 	const serialized: SerializedLink = {
 		id: link.id,
 		unchanged: link.unchanged,
 		name: link.name
-	}
+	};
 
 	// Add relations if requested
-	if (relations.includes('course'))
-		serialized.course_id = link.courseId
-	if (relations.includes('graph'))
-		serialized.graph_id = link.graphId
+	if (relations.includes('course')) serialized.course_id = link.courseId;
+	if (relations.includes('graph')) serialized.graph_id = link.graphId;
 
-	return serialized
+	return serialized;
 }
 
 export async function create(course_id: number): Promise<SerializedLink> {
@@ -49,25 +36,21 @@ export async function create(course_id: number): Promise<SerializedLink> {
 			data: {
 				courseId: course_id
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await reduce(link, 'course', 'graph')
+	return await reduce(link, 'course', 'graph');
 }
 
 export async function update(data: SerializedLink) {
-
 	// Get deltas
-	const [course, graph] = await Promise.all([
-		getCourse(data.id),
-		getGraph(data.id)
-	])
+	const [course, graph] = await Promise.all([getCourse(data.id), getGraph(data.id)]);
 
-	const course_delta = prismaUpdateRequiredField<number, SerializedCourse>(course, data.course_id)
-	const graph_delta = prismaUpdateOptionalField<number, SerializedGraph>(graph, data.graph_id)
-	
+	const course_delta = prismaUpdateRequiredField<number, SerializedCourse>(course, data.course_id);
+	const graph_delta = prismaUpdateOptionalField<number, SerializedGraph>(graph, data.graph_id);
+
 	// Update database
 	try {
 		await prisma.link.update({
@@ -80,9 +63,9 @@ export async function update(data: SerializedLink) {
 				course: course_delta,
 				graph: graph_delta
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 }
 
@@ -92,22 +75,20 @@ export async function remove(id: number) {
 			where: {
 				id
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 }
 
 export async function getAll(...relations: LinkRelation[]): Promise<SerializedLink[]> {
 	try {
-		var links = await prisma.link.findMany()
+		var links = await prisma.link.findMany();
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await Promise.all(
-		links.map(async link => await reduce(link, ...relations))
-	)
+	return await Promise.all(links.map(async (link) => await reduce(link, ...relations)));
 }
 
 export async function getById(id: number, ...relations: LinkRelation[]): Promise<SerializedLink> {
@@ -116,15 +97,18 @@ export async function getById(id: number, ...relations: LinkRelation[]): Promise
 			where: {
 				id
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await reduce(link, ...relations)
+	return await reduce(link, ...relations);
 }
 
-export async function getCourse(id: number, ...relations: CourseRelation[]): Promise<SerializedCourse> {
+export async function getCourse(
+	id: number,
+	...relations: CourseRelation[]
+): Promise<SerializedCourse> {
 	try {
 		var data = await prisma.link.findUniqueOrThrow({
 			where: {
@@ -133,15 +117,18 @@ export async function getCourse(id: number, ...relations: CourseRelation[]): Pro
 			select: {
 				course: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await CourseHelper.reduce(data.course, ...relations)
+	return await CourseHelper.reduce(data.course, ...relations);
 }
 
-export async function getGraph(id: number, ...relations: GraphRelation[]): Promise<SerializedGraph | null> {
+export async function getGraph(
+	id: number,
+	...relations: GraphRelation[]
+): Promise<SerializedGraph | null> {
 	try {
 		var data = await prisma.link.findUniqueOrThrow({
 			where: {
@@ -150,17 +137,20 @@ export async function getGraph(id: number, ...relations: GraphRelation[]): Promi
 			select: {
 				graph: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	if (data.graph !== null)
-		return await GraphHelper.reduce(data.graph, ...relations)
-	return null
+	if (data.graph !== null) return await GraphHelper.reduce(data.graph, ...relations);
+	return null;
 }
 
-export async function getGraphFromCourseAndName(course_code: string, link_name: string, ...relations: GraphRelation[]): Promise<SerializedGraph> {
+export async function getGraphFromCourseAndName(
+	course_code: string,
+	link_name: string,
+	...relations: GraphRelation[]
+): Promise<SerializedGraph> {
 	try {
 		var data = await prisma.link.findFirstOrThrow({
 			where: {
@@ -172,12 +162,11 @@ export async function getGraphFromCourseAndName(course_code: string, link_name: 
 			select: {
 				graph: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	if (data.graph !== null)
-		return await GraphHelper.reduce(data.graph, ...relations)
-	return Promise.reject('No graph associated with this link')
+	if (data.graph !== null) return await GraphHelper.reduce(data.graph, ...relations);
+	return Promise.reject('No graph associated with this link');
 }

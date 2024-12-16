@@ -1,4 +1,3 @@
-
 <script lang="ts">
 	interface Props {
 		above?: import('svelte').Snippet<[any]>;
@@ -10,70 +9,67 @@
 
 	function scrollTo(target: 'nodes' | 'relations') {
 		if (target === 'nodes') {
-			window.scrollTo(0, 0)
+			window.scrollTo(0, 0);
 		} else {
-			const header = document.getElementById('sticky-header')
-			const divider = document.getElementById('scroll-divider')
+			const header = document.getElementById('sticky-header');
+			const divider = document.getElementById('scroll-divider');
 
 			if (!header || !divider) {
-				console.error('Sticky header or divider not found')
-				return
+				console.error('Sticky header or divider not found');
+				return;
 			}
 
-			const header_rect = header.getBoundingClientRect()
-			const divider_rect = divider.getBoundingClientRect()
+			const header_rect = header.getBoundingClientRect();
+			const divider_rect = divider.getBoundingClientRect();
 
-			window.scrollBy(0, divider_rect.bottom - header_rect.height)
+			window.scrollBy(0, divider_rect.bottom - header_rect.height);
 		}
 	}
 
 	// Functions
 	function throttleEventCall(event: Event, callback: (event: Event) => void) {
-		if (throttled) return
+		if (throttled) return;
 
 		window.requestAnimationFrame(() => {
-			callback(event)
-			throttled = false
-		})
+			callback(event);
+			throttled = false;
+		});
 
-		throttled = true
+		throttled = true;
 	}
 
 	function onScroll(_: Event) {
-		const header = document.getElementById('sticky-header')
-		const divider = document.getElementById('scroll-divider')
+		const header = document.getElementById('sticky-header');
+		const divider = document.getElementById('scroll-divider');
 
 		if (!header || !divider) {
-			console.error('Header or divider not found')
-			return
+			console.error('Header or divider not found');
+			return;
 		}
 
-		const header_rect = header.getBoundingClientRect()
-		const divider_rect = divider.getBoundingClientRect()
+		const header_rect = header.getBoundingClientRect();
+		const divider_rect = divider.getBoundingClientRect();
 
-		above_scroll_boundry = divider_rect.bottom - divider_rect.height / 2 > header_rect.bottom
+		above_scroll_boundry = divider_rect.bottom - divider_rect.height / 2 > header_rect.bottom;
 	}
 
 	// Initialization
-	let above_scroll_boundry: boolean = $state(true)
-	let throttled: boolean = false
-
+	let above_scroll_boundry: boolean = $state(true);
+	let throttled: boolean = false;
 </script>
 
 <!-- Markup -->
 
-<svelte:document onscroll={event => throttleEventCall(event, onScroll)} />
+<svelte:document onscroll={(event) => throttleEventCall(event, onScroll)} />
 
-<div class="tab-header" >
-
+<div class="tab-header">
 	{#if above_scroll_boundry}
-		{@render above?.({ scrollTo, })}
+		{@render above?.({ scrollTo })}
 	{:else}
-		{@render below?.({ scrollTo, })}
+		{@render below?.({ scrollTo })}
 	{/if}
 
 	{@render children?.()}
-
 </div>
 
 <!-- Styles -->

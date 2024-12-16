@@ -6,7 +6,6 @@
 	let { children }: Props = $props();
 </script>
 
-
 <!-- Markup -->
 
 <div class="grid">
@@ -14,7 +13,7 @@
 </div>
 
 <!-- Styles -->
- 
+
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *

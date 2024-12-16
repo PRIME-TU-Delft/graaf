@@ -1,7 +1,7 @@
+<!-- Markup -->
+<svelte:options />
 
 <script lang="ts">
-
-	
 	interface Props {
 		// Exports
 		text: string;
@@ -9,24 +9,14 @@
 
 	let { text }: Props = $props();
 
-
-	export {
-		text,
-	}
+	export { text };
 </script>
-
-
-<!-- Markup -->
-
-<svelte:options />
 
 <span class="tooltip">
 	{text}
 </span>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

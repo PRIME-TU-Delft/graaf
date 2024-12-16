@@ -7,15 +7,12 @@
 	let { header, children }: Props = $props();
 </script>
 
-
 <div class="card">
 	<header class="header">{@render header?.()}</header>
 	<section class="body">{@render children?.()}</section>
 </div>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 
