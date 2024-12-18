@@ -1,37 +1,38 @@
-
 <script lang="ts">
+	interface Props {
+		// Exports
+		href?: string | undefined;
+		submit?: boolean;
+		disabled?: boolean;
+		onclick?: (event: MouseEvent) => void;
+		children?: import('svelte').Snippet;
+	}
 
-	// Exports
-	export let href: string | undefined = undefined
-	export let submit: boolean = false
-	export let disabled: boolean = false
-
+	let {
+		href = undefined,
+		submit = false,
+		disabled = false,
+		onclick = () => {},
+		children
+	}: Props = $props();
 </script>
 
 <!-- Markup -->
 
 {#if href === undefined}
-
 	<button
 		class="link-button"
 		class:disabled
-		disabled={ disabled }
-		type={ submit ? 'submit' : 'button' }
-		on:click
+		{disabled}
+		type={submit ? 'submit' : 'button'}
+		{onclick}
 	>
-		<slot />
+		{@render children?.()}
 	</button>
-
 {:else}
-
-	<a 
-		href={ disabled ? '' : href }
-		class="link-button" 
-		class:disabled
-	>
-		<slot />
+	<a href={disabled ? '' : href} class="link-button" class:disabled>
+		{@render children?.()}
 	</a>
-
 {/if}
 
 <!-- Styles -->

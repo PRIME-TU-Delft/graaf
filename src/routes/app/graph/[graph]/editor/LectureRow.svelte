@@ -1,113 +1,116 @@
-
 <script lang="ts">
-
 	// Internal dependencies
-	import { graph, save_status } from './stores'
+	import { graph, save_status } from './stores';
 
-	import { AbstractFormModal } from '$scripts/modals'
-	import { Validation, Severity } from '$scripts/validation'
+	import { AbstractFormModal } from '$scripts/modals.svelte';
+	import { Validation, Severity } from '$scripts/validation';
 
-	import type {
-		LectureController,
-		SubjectController
-	} from '$scripts/controllers'
+	import type { LectureController, SubjectController } from '$scripts/controllers';
 
 	// Components
-	import SimpleModal from '$components/SimpleModal.svelte'
-	import IconButton from '$components/IconButton.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import FormModal from '$components/FormModal.svelte'
-	import Textfield from '$components/Textfield.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import IconButton from '$components/IconButton.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import FormModal from '$components/FormModal.svelte';
+	import Textfield from '$components/Textfield.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import Button from '$components/Button.svelte';
 
 	// Assets
-	import trash_icon from '$assets/trash-icon.svg'
-	import plus_icon from '$assets/plus-icon.svg'
+	import trash_icon from '$assets/trash-icon.svg';
+	import plus_icon from '$assets/plus-icon.svg';
 
 	// Modals
 	class AssignSubjectModal extends AbstractFormModal {
-		subject: SubjectController | null = null
+		subject: SubjectController | null = null;
 
 		constructor() {
-			super()
-			this.initialize()
+			super();
+			this.initialize();
 		}
 
 		validate(): Validation {
-			const result = new Validation()
+			const result = new Validation();
 
 			if (this.hasChanged('subject') && this.subject === null) {
 				result.add({
 					severity: Severity.error,
 					short: 'Subject is required'
-				})
+				});
 			}
 
-			return result
+			return result;
 		}
 
 		async submit() {
-			lecture.assignSubject(this.subject as SubjectController)
-			await lecture.save()
-			$graph = $graph
+			lecture.assignSubject(this.subject as SubjectController);
+			await lecture.save();
+			$graph = $graph;
 		}
 	}
 
-	// Main
-	export let lecture: LectureController
-	const assign_subject_modal = new AssignSubjectModal()
-	let delete_modal: SimpleModal
+	interface Props {
+		// Main
+		lecture: LectureController;
+	}
 
+	let { lecture = $bindable() }: Props = $props();
+	const assign_subject_modal = $state(new AssignSubjectModal());
+	let delete_modal = $state<SimpleModal>();
 </script>
 
 <!-- Markup -->
 
 <FormModal controller={assign_subject_modal}>
-	<h3 slot="header"> Assign Subject </h3>
+	{#snippet header()}
+		<h3>Assign Subject</h3>
+	{/snippet}
 	Assign a subject to this lecture.
 
-	<svelte:fragment slot="form">
+	{#snippet form()}
 		<label for="subject"> Target Subject </label>
 		<Dropdown
 			placeholder="Select a subject"
 			options={lecture.subject_options}
 			bind:value={assign_subject_modal.subject}
 		/>
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="submit">
+	{#snippet submit()}
 		Assign
-	</svelte:fragment>
+	{/snippet}
 </FormModal>
 
 <SimpleModal bind:this={delete_modal}>
-	<h3 slot="header"> Delete Lecture </h3>
+	{#snippet header()}
+		<h3>Delete Lecture</h3>
+	{/snippet}
 	Are you sure you want to delete this lecture? This action cannot be undone.
 
-	<svelte:fragment slot="footer">
-		<LinkButton
-			on:click={() => delete_modal.hide()}
-		> Cancel </LinkButton>
+	{#snippet footer()}
+		<LinkButton onclick={() => delete_modal?.hide()}>Cancel</LinkButton>
 		<Button
-			on:click={async () => {
-				await lecture.delete()
-				$graph = $graph // Trigger reactivity
+			onclick={async () => {
+				await lecture.delete();
+				$graph = $graph; // Trigger reactivity
 			}}
-		> Delete </Button>
-	</svelte:fragment>
+		>
+			Delete
+		</Button>
+	{/snippet}
 </SimpleModal>
 
 <div class="lecture-row">
-	<IconButton scale
-	  src={trash_icon}
+	<IconButton
+		scale
+		src={trash_icon}
 		description="Delete Domain"
-		on:click={async () => {
+		onclick={async () => {
 			if (lecture.unchanged) {
-				await lecture.delete()
-				$graph = $graph // Trigger reactivity
+				await lecture.delete();
+				$graph = $graph; // Trigger reactivity
 			} else {
-				delete_modal.show()
+				delete_modal?.show();
 			}
 		}}
 	/>
@@ -116,15 +119,15 @@
 		id="name"
 		placeholder="Lecture name"
 		bind:value={lecture.name}
-		on:input={async () => {
-			$save_status.setUnsaved()
-			await lecture.save($save_status)
-			$graph = $graph // Trigger reactivity
+		oninput={async () => {
+			$save_status.setUnsaved();
+			await lecture.save($save_status);
+			$graph = $graph; // Trigger reactivity
 		}}
 	/>
 
-	<Button on:click={() => assign_subject_modal.show()}>
-		<img src={plus_icon} alt=""> Assign Subject
+	<Button onclick={() => assign_subject_modal.show()}>
+		<img src={plus_icon} alt="" /> Assign Subject
 	</Button>
 
 	{#if lecture.present_subjects.length > 0}
@@ -137,16 +140,18 @@
 						<i> Untitled subject </i>
 					{/if}
 
-					<div class="line" />
+					<div class="line"></div>
 
 					<LinkButton
-						on:click={async () => {
-							lecture.unassignSubject(subject)
-							$save_status.setUnsaved()
-							await lecture.save($save_status)
-							$graph = $graph
+						onclick={async () => {
+							lecture.unassignSubject(subject);
+							$save_status.setUnsaved();
+							await lecture.save($save_status);
+							$graph = $graph;
 						}}
-					> Unassign from lecture </LinkButton>
+					>
+						Unassign from lecture
+					</LinkButton>
 				</div>
 			{/each}
 		</div>

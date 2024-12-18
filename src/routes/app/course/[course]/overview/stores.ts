@@ -1,9 +1,8 @@
-
 // External dependencies
-import { writable } from 'svelte/store'
+import { writable } from 'svelte/store';
 
 // Internal dependencies
-import type { CourseController } from '$scripts/controllers'
+import type { CourseController } from '$scripts/controllers';
 
 // Exports
-export const course = writable<CourseController>()
+export const course = writable<CourseController>();

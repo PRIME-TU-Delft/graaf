@@ -1,10 +1,9 @@
-import { SvelteKitAuth } from "@auth/sveltekit";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import { SvelteKitAuth } from '@auth/sveltekit';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 
-import prisma from "$lib/server/prisma";
-import { env } from "$env/dynamic/private";
-import type { OIDCConfig } from "@auth/sveltekit/providers";
-
+import prisma from '$lib/server/prisma';
+import { env } from '$env/dynamic/private';
+import type { OIDCConfig } from '@auth/sveltekit/providers';
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;
@@ -13,7 +12,6 @@ interface SurfConextProfile extends Record<string, any> {
 	email: string;
 }
 
-
 /**
  * Workaround for Auth.js not automatically fetching userinfo through endpoint specified in .well-known config
  *
@@ -21,21 +19,20 @@ interface SurfConextProfile extends Record<string, any> {
  * @returns Object containing user information
  */
 async function fetchUserInfo(accessToken: string | undefined) {
-	if (!accessToken) throw new Error("No access token provided");
+	if (!accessToken) throw new Error('No access token provided');
 	const res = await fetch(`${env.SURFCONEXT_ISSUER}/oidc/userinfo`, {
 		headers: {
-			"Authorization": `Bearer ${accessToken}`
+			Authorization: `Bearer ${accessToken}`
 		}
 	});
 	return await res.json();
 }
 
-
 function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
 	return {
-		id: "surfconext",
-		name: "SURFconext",
-		type: "oidc",
+		id: 'surfconext',
+		name: 'SURFconext',
+		type: 'oidc',
 		issuer: env.SURFCONEXT_ISSUER,
 		wellKnown: `${env.SURFCONEXT_ISSUER}/.well-known/openid-configuration`,
 		clientId: env.SURFCONEXT_CLIENT_ID,
@@ -47,13 +44,12 @@ function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
 				nickname: userInfo.nickname,
 				firstName: userInfo.given_name,
 				lastName: userInfo.family_name,
-				email: userInfo.email,
+				email: userInfo.email
 			};
 			return res;
 		}
 	};
 }
-
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
 	providers: [SurfConextProvider],

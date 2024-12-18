@@ -1,55 +1,54 @@
-
 <script lang="ts">
-
 	// Internal imports
-	import { tooltip } from '$scripts/actions/tooltip'
+	import { tooltip } from '$scripts/actions/tooltip';
 
-	// Exports
-	export let src: string
-	export let description: string = ''
-	export let href: string | undefined = undefined
-	export let submit: boolean = false
-	export let disabled: boolean = false
-	export let scale: boolean = false
-
-	// Property validation
-	$: if (submit && href !== undefined) {
-		console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.")
-		href = undefined
+	interface Props {
+		// Exports
+		src: string;
+		description?: string;
+		href?: string | undefined;
+		submit?: boolean;
+		disabled?: boolean;
+		scale?: boolean;
+		onclick?: (event: MouseEvent) => void;
 	}
 
-</script>
+	let {
+		src,
+		description = '',
+		href = $bindable(undefined),
+		submit = false,
+		disabled = false,
+		scale = false,
+		onclick = () => {}
+	}: Props = $props();
 
+	// Property validation
+	$effect(() => {
+		if (submit && href !== undefined) {
+			console.warn("Button: submit type does not require a 'href' prop. Ignoring 'href' prop.");
+			href = undefined;
+		}
+	});
+</script>
 
 <!-- Markup -->
 
-
 {#if href === undefined}
-
 	<button
 		type={submit ? 'submit' : 'button'}
 		class="icon-button"
 		class:disabled
 		class:scale
 		use:tooltip={description}
-		on:click
+		{onclick}
 	>
 		<img {src} alt={description} class="icon" />
 	</button>
-
 {:else}
-
-	<a
-		{href}
-		class="icon-button"
-		class:disabled
-		class:scale
-		use:tooltip={description}
-		on:click
-	>
+	<a {href} class="icon-button" class:disabled class:scale use:tooltip={description} {onclick}>
 		<img {src} alt="" class="icon" />
 	</a>
-
 {/if}
 
 <!-- Styles -->

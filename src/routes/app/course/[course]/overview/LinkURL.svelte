@@ -1,39 +1,33 @@
-
 <script lang="ts">
-
 	// Assets
-	import copy_icon from "$assets/copy-icon.svg"
+	import copy_icon from '$assets/copy-icon.svg';
 
-	// Main
-	export let url: string
-	let copied: boolean = false
+	interface Props {
+		// Main
+		url: string;
+	}
 
+	let { url = $bindable() }: Props = $props();
+	let copied: boolean = $state(false);
 </script>
 
 <!-- Markup -->
 
 <div class="link-url">
-	<input
-		type="url"
-		disabled={true}
-		placeholder="Invalid link"
-		bind:value={url}
-	/>
+	<input type="url" disabled={true} placeholder="Invalid link" bind:value={url} />
 
 	<button
 		disabled={url === ''}
-		on:click={async () => {
-			copied = true
-			await navigator.clipboard.writeText(url)
-			setTimeout(() => copied = false, 2000)
+		onclick={async () => {
+			copied = true;
+			await navigator.clipboard.writeText(url);
+			setTimeout(() => (copied = false), 2000);
 		}}
 	>
 		<img src={copy_icon} alt="Copy link" />
 
 		{#if copied}
-			<span class="popup">
-				Link copied!
-			</span>
+			<span class="popup"> Link copied! </span>
 		{/if}
 	</button>
 </div>

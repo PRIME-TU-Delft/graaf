@@ -1,7 +1,39 @@
+<div class="loader"></div>
+<div class="loader"></div>
+<div class="loader"></div>
 
-<div class="loader" />
-<div class="loader" />
-<div class="loader" />
+<!-- .loader {
+  width: calc(100px - 14px);
+  height: 50px;
+  border-radius: 50px;
+  background: 
+   radial-gradient(farthest-side,#0000 calc(100% - 15px),#ccc calc(100% - 14px) 99%,#0000) left,
+   radial-gradient(farthest-side,#0000 calc(100% - 15px),#ccc calc(100% - 14px) 99%,#0000) right;
+  background-size: calc(50% + 7px) 100%;
+  background-repeat: no-repeat;
+  position: relative;
+  animation: l10-0 1s infinite linear;
+}
+.loader:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto; 
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f03355;
+  transform-origin: -14px 50%;
+  animation: l10-1 0.5s infinite linear;
+}
+@keyframes l10-0 { 
+    0%,49.99% { transform:scaleX(1)}
+    50%,100% { transform:scaleX(-1)} 
+}
+@keyframes l10-1 { 
+    100% { transform:rotate(1turn)} 
+}
+ -->
 
 <style lang="sass">
 
@@ -65,36 +97,3 @@
 			rotate: 0deg
 
 </style>
-
-<!-- .loader {
-  width: calc(100px - 14px);
-  height: 50px;
-  border-radius: 50px;
-  background: 
-   radial-gradient(farthest-side,#0000 calc(100% - 15px),#ccc calc(100% - 14px) 99%,#0000) left,
-   radial-gradient(farthest-side,#0000 calc(100% - 15px),#ccc calc(100% - 14px) 99%,#0000) right;
-  background-size: calc(50% + 7px) 100%;
-  background-repeat: no-repeat;
-  position: relative;
-  animation: l10-0 1s infinite linear;
-}
-.loader:before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  margin: auto; 
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #f03355;
-  transform-origin: -14px 50%;
-  animation: l10-1 0.5s infinite linear;
-}
-@keyframes l10-0 { 
-    0%,49.99% { transform:scaleX(1)}
-    50%,100% { transform:scaleX(-1)} 
-}
-@keyframes l10-1 { 
-    100% { transform:rotate(1turn)} 
-}
- -->

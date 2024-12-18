@@ -1,14 +1,16 @@
-
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 
-	// Exports
-	export let path: { name: string, href?: string }[] = []
+	interface Props {
+		// Exports
+		path?: { name: string; href?: string }[];
+		children?: Snippet;
+	}
 
+	let { path = [], children }: Props = $props();
 </script>
 
-
 <!-- Markup -->
-
 
 <nav>
 	<span class="url">
@@ -25,14 +27,12 @@
 		{/each}
 	</span>
 
-	<div class="flex-spacer" />
+	<div class="flex-spacer"></div>
 
-	<slot />
+	{@render children?.()}
 </nav>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

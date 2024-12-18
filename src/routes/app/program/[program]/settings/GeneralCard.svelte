@@ -1,74 +1,72 @@
-
 <script lang="ts">
-
 	// External dependencies
-	import { goto } from '$app/navigation'
+	import { goto } from '$app/navigation';
 
 	// Internal dependencies
-	import { program, save_status } from './stores'
-	import { Severity } from '$scripts/validation'
-
+	import { program, save_status } from './stores';
 	// Components
-	import SimpleModal from '$components/SimpleModal.svelte'
-	import SaveStatus from '$components/SaveStatus.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Textfield from '$components/Textfield.svelte'
-	import Feedback from '$components/Feedback.svelte'
-	import Button from '$components/Button.svelte'
-	import Card from '$components/Card.svelte'
-
+	import Button from '$components/Button.svelte';
+	import Card from '$components/Card.svelte';
+	import Feedback from '$components/Feedback.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import SaveStatus from '$components/SaveStatus.svelte';
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import Textfield from '$components/Textfield.svelte';
 	// Assets
-	import trash_icon from '$assets/trash-icon.svg'
+	import trash_icon from '$assets/trash-icon.svg';
 
 	// Main
-	let archive_modal: SimpleModal
-
+	let archive_modal = $state<SimpleModal>();
 </script>
 
 <!-- Markup -->
 
 <SimpleModal bind:this={archive_modal}>
-	<h3 slot="header"> Archive Program </h3>
-	Are you certain you want to archive this program? When you archive a program, it, and all associated courses and graphs, will no longer be visible to anyone except super-admins. Only they can restore them.
+	{#snippet header()}
+		<h3>Archive Program</h3>
+	{/snippet}
+	Are you certain you want to archive this program? When you archive a program, it, and all associated
+	courses and graphs, will no longer be visible to anyone except super-admins. Only they can restore
+	them.
 
-	<svelte:fragment slot="footer">
-		<LinkButton
-			on:click={() => archive_modal.hide()}
-		> Cancel </LinkButton>
+	{#snippet footer()}
+		<LinkButton onclick={() => archive_modal?.hide()}>Cancel</LinkButton>
 		<Button
-			on:click={async () => {
-				await $program.delete() // TODO this should archive, not delete
-				goto('/app/home')
+			onclick={async () => {
+				await $program.delete(); // TODO this should archive, not delete
+				goto('/app/home');
 			}}
-		> Archive </Button>
-	</svelte:fragment>
+		>
+			Archive
+		</Button>
+	{/snippet}
 </SimpleModal>
 
 <div class="wrapper">
-	<SaveStatus bind:this={ $save_status } />
+	<SaveStatus bind:this={$save_status} />
 
 	<Card>
-		<svelte:fragment slot="header">
-			<h3> General </h3>
-	
-			<div class="flex-spacer" />
-	
-			<Button dangerous on:click={() => archive_modal.show()}>
+		{#snippet header()}
+			<h3>General</h3>
+
+			<div class="flex-spacer"></div>
+
+			<Button dangerous onclick={() => archive_modal?.show()}>
 				<img src={trash_icon} alt="" /> Archive Program
 			</Button>
-		</svelte:fragment>
-	
+		{/snippet}
+
 		<label for="name"> Program Name </label>
-	
+
 		<Textfield
 			id="name"
 			bind:value={$program.name}
-			on:input={async () => {
-				$save_status.setUnsaved()
-				await $program.save($save_status)
+			oninput={async () => {
+				$save_status.setUnsaved();
+				await $program.save($save_status);
 			}}
 		/>
-	
+
 		<Feedback data={$program.validateName()} />
 	</Card>
 </div>

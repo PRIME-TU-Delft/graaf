@@ -1,42 +1,46 @@
-
 <script lang="ts">
-
 	// Internal dependencies
-	import { loopFocus, focusLastChild } from "$scripts/actions/hocusfocus"
+	import { loopFocus, focusLastChild } from '$scripts/actions/hocusfocus';
+	interface Props {
+		header?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+		footer?: import('svelte').Snippet;
+	}
+
+	let { header, children, footer }: Props = $props();
 
 	// Functions
 	function onkeydown(event: KeyboardEvent) {
-		if (!open) return
+		if (!open) return;
 
 		if (event.key === 'Escape') {
-			hide()
+			hide();
 		}
 	}
 
 	// Main
-	export const show = () => open = true
-	export const hide = () => open = false
-	
-	let open: boolean = false
+	export const show = () => (open = true);
+	export const hide = () => (open = false);
 
+	let open: boolean = $state(false);
 </script>
 
 <!-- Markup -->
 
-<svelte:window on:keydown={ onkeydown } />
+<svelte:window {onkeydown} />
 
 {#if open}
-	<div class="backdrop" />
+	<div class="backdrop"></div>
 	<dialog use:loopFocus use:focusLastChild>
 		<div class="header">
-			<button class="exit" on:click={ hide } />
-			<slot name="header" />
+			<!-- <button class="exit" onclick={hide}></button> TODO: this does nothing -->
+			{@render header?.()}
 		</div>
 
-		<slot />
+		{@render children?.()}
 
 		<div class="footer">
-			<slot name="footer" />
+			{@render footer?.()}
 		</div>
 	</dialog>
 {/if}

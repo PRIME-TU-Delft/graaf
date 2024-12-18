@@ -1,83 +1,93 @@
-
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 
 	// Internal dependencies
-	import { loopFocus, focusFirstChild } from '$scripts/actions/hocusfocus'
-	import { Severity } from '$scripts/validation'
+	import { focusFirstChild, loopFocus } from '$scripts/actions/hocusfocus';
+	import { Severity } from '$scripts/validation';
 
-	import type { AbstractFormModal } from  '$scripts/modals'
+	import type { AbstractFormModal } from '$scripts/modals.svelte';
 
 	// Components
-	import Button from '$components/Button.svelte'
-	import Feedback from '$components/Feedback.svelte'
+	import Button from '$components/Button.svelte';
+	import Feedback from '$components/Feedback.svelte';
+
+	// Props
+	type Props = {
+		controller: AbstractFormModal;
+		children: Snippet;
+		header?: Snippet;
+		form?: Snippet;
+		submit?: Snippet;
+	};
+
+	let { controller, children, header, form, submit }: Props = $props();
 
 	// Functions
 	async function onkeydown(event: KeyboardEvent) {
-		if (!open) return
-		
+		if (!open) return;
+
 		if (event.key === 'Escape') {
-			hide()
+			hide();
 		} else if (event.key === 'Enter') {
-			await submit()
+			await submitForm();
 		}
 	}
 
-	async function submit() {
-		controller.touchAll()
+	async function submitForm() {
+		controller.touchAll();
 		if (controller.validate().severity === Severity.error) {
-			controller = controller
-			return
+			controller = controller;
+			return;
 		}
 
-		submitting = true
-		await controller.submit()
-		submitting = false
-		if (controller.close_on_submit) hide()
+		submitting = true;
+		await controller.submit();
+		submitting = false;
+		if (controller.close_on_submit) hide();
 	}
 
 	function show() {
-		open = true
+		open = true;
 	}
 
 	function hide() {
-		open = false
-		controller.reset()
+		open = false;
+		controller.reset();
 	}
 
 	// Main
-	export let controller: AbstractFormModal
 
-	controller.show = show
-	controller.hide = hide
+	controller.show = show;
+	controller.hide = hide;
 
-	let submitting: boolean = false
-	let open: boolean = false
-
+	let submitting: boolean = $state(false);
+	let open: boolean = $state(false);
 </script>
 
 <!-- Markup -->
 
-<svelte:window on:keydown={ async event => await onkeydown(event) } />
+<svelte:window onkeydown={async (event) => await onkeydown(event)} />
 
 {#if open}
-	<div class="backdrop" />
 	<dialog use:loopFocus>
 		<div class="header">
-			<button class="exit" on:click={ hide } />
-			<slot name="header" />
+			<!-- <button class="exit" onclick={hide} /> TODO: this does nothing -->
+			{@render header?.()}
 		</div>
 
-		<slot />
+		{@render children()}
 
 		<form use:focusFirstChild>
-			<slot name="form" />
+			{@render form?.()}
 
 			<div class="footer">
 				<Button
-					on:click={ async () => await submit() }
-					disabled={ submitting || controller.validate().severity === Severity.error }
-				> <slot name="submit" /> </Button>
-				<Feedback animate data={ controller.validate() } />
+					onclick={async () => await submitForm()}
+					disabled={submitting || controller.validate().severity === Severity.error}
+				>
+					{@render submit?.()}
+				</Button>
+				<Feedback data={controller.validate()} />
 			</div>
 		</form>
 	</dialog>

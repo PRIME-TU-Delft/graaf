@@ -1,78 +1,66 @@
-
 <script lang="ts">
-
 	// Components
-	import IconButton from "$components/IconButton.svelte"
+	import IconButton from '$components/IconButton.svelte';
 
 	// Assets
-	import openEyeIcon from "$assets/open-eye-icon.svg"
-	import closedEyeIcon from "$assets/closed-eye-icon.svg"
+	import openEyeIcon from '$assets/open-eye-icon.svg';
+	import closedEyeIcon from '$assets/closed-eye-icon.svg';
 
-	// Exports
-	export let id: string
-	export let placeholder: string = ''
-	export let type: 'text' | 'number' | 'obfuscated' = 'text'
-	export let value: string | number = type === 'number' ? 0 : ''
+	interface Props {
+		// Exports
+		id: string;
+		placeholder?: string;
+		type?: 'text' | 'number' | 'obfuscated';
+		value?: string | number;
+		onchange?: (event: Event) => void;
+		oninput?: (event: Event) => void;
+	}
+
+	let {
+		id,
+		placeholder = '',
+		type = 'text',
+		value = $bindable(type === 'number' ? 0 : ''),
+		onchange = () => {},
+		oninput = () => {}
+	}: Props = $props();
 
 	// Functions
 	function toggle_obfuscation() {
-		obfuscated = !obfuscated
-		input.type = obfuscated ? "text" : "password"
+		obfuscated = !obfuscated;
+
+		if (input) {
+			input.type = obfuscated ? 'text' : 'password';
+		}
 	}
 
 	// Main
-	let input: HTMLInputElement
-	let obfuscated: boolean = true
+	let input = $state<HTMLInputElement>();
+	let obfuscated: boolean = $state(true);
 
-	$: if (type === 'number') {
-		value = Number(value)
-	}
-
+	$effect(() => {
+		if (type === 'number') {
+			value = Number(value);
+		}
+	});
 </script>
 
 <!-- Markup -->
 
 {#if type === 'obfuscated'}
-
 	<div class="textfield">
-		<input
-			id={id}
-			type="password"
-			placeholder={placeholder}
-			on:change on:input
-			bind:this={input}
-			bind:value
-		/>
+		<input {id} type="password" {placeholder} {onchange} {oninput} bind:this={input} bind:value />
 
-		<IconButton 
-			src={ obfuscated ? closedEyeIcon : openEyeIcon } 
-			description={ obfuscated ? "Hide" : "Show" } 
-			on:click={toggle_obfuscation} 
+		<IconButton
+			src={obfuscated ? closedEyeIcon : openEyeIcon}
+			description={obfuscated ? 'Hide' : 'Show'}
+			onclick={toggle_obfuscation}
 		/>
 	</div>
-
 {:else if type === 'number'}
-
-	<input
-		id={id}
-		type="number"
-		placeholder={placeholder}
-		class="textfield"
-		on:change on:input
-		bind:value
-	/>
-
+	<input {id} type="number" {placeholder} class="textfield" {onchange} {oninput} bind:value />
 {:else}
-
-	<input
-		id={id}
-		type="text"
-		placeholder={placeholder}
-		class="textfield"
-		on:change on:input
-		bind:value
-	/>
-
+	<input {id} type="text" {placeholder} class="textfield" {onchange} {oninput} bind:value />
 {/if}
 
 <!-- Styles -->

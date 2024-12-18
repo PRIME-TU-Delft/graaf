@@ -1,95 +1,101 @@
-
 <script lang="ts">
-
 	// External dependencies
-	import { onDestroy } from 'svelte'
+	import { onDestroy } from 'svelte';
 
 	// Internal dependencies
-	import { GraphSVG, SVGState } from '$scripts/svg'
-	import { focusOnLoad, loopFocus } from '$scripts/actions/hocusfocus'
-	import type { GraphController } from '$scripts/controllers'
+	import { GraphSVG, SVGState } from '$scripts/svg';
+	import { focusOnLoad, loopFocus } from '$scripts/actions/hocusfocus';
+	import type { GraphController } from '$scripts/controllers';
 
 	// Components
-	import LinkButton from '$components/LinkButton.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
-	import Graph from '$components/Graph.svelte'
+	import LinkButton from '$components/LinkButton.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import Button from '$components/Button.svelte';
+	import Graph from '$components/Graph.svelte';
 
 	// Functions
 	export function show() {
-		graphSVG.view = 'subjects'
-		visible = true
+		graphSVG.view = 'subjects';
+		visible = true;
 	}
 
 	export function hide() {
-		visible = false
+		visible = false;
 	}
 
 	function updateUI() {
-		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
+		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken;
 	}
 
-	// Main
-	export let graph: GraphController
+	interface Props {
+		// Main
+		graph: GraphController;
+	}
 
-	const graphSVG = new GraphSVG(graph, false)
-	graphSVG.subscribe(updateUI)
+	let { graph }: Props = $props();
 
-	let disable_graph_controls = false
-	let visible = false
+	const graphSVG = $state(new GraphSVG(graph, false));
+	graphSVG.subscribe(updateUI);
+
+	let disable_graph_controls = $state(false);
+	let visible = $state(false);
 
 	onDestroy(() => {
-		graphSVG.unsubscribe(updateUI)
-	})
-
+		graphSVG.unsubscribe(updateUI);
+	});
 </script>
 
 <!-- Markup -->
 
 {#if visible}
-	<div class="background" />
-	<div class="tabular" use:loopFocus={ updateUI }>
+	<div class="background"></div>
+	<div class="tabular" use:loopFocus={updateUI}>
 		<div class="tabs">
 			<button
 				tabindex="-1"
 				class="tab"
-				class:active={ graphSVG.view === 'lectures' }
-				on:click={ () => graphSVG.view = 'lectures' } 
-			> Lectures </button>
+				class:active={graphSVG.view === 'lectures'}
+				onclick={() => (graphSVG.view = 'lectures')}
+			>
+				Lectures
+			</button>
 
 			<button
 				tabindex="-1"
 				class="tab"
-				class:active={ graphSVG.view === 'subjects' }
-				on:click={ () => graphSVG.view = 'subjects' }
-			> Subjects </button>
+				class:active={graphSVG.view === 'subjects'}
+				onclick={() => (graphSVG.view = 'subjects')}
+			>
+				Subjects
+			</button>
 
 			<button
 				tabindex="-1"
 				class="tab"
-				class:active={ graphSVG.view === 'domains' }
-				on:click={ () => graphSVG.view = 'domains' }
-			> Domains </button>
+				class:active={graphSVG.view === 'domains'}
+				onclick={() => (graphSVG.view = 'domains')}
+			>
+				Domains
+			</button>
 
 			<div class="toolbar">
 				<Dropdown
 					placeholder="Select lecture"
-					bind:value={ graphSVG.lecture }
-					options={ graph.lecture_options }
+					bind:value={graphSVG.lecture}
+					options={graph.lecture_options}
 				/>
 
-				<Button
-					disabled={ disable_graph_controls }
-					on:click={ () => graphSVG.centerGraph() }
-				> Center Graph </Button>
+				<Button disabled={disable_graph_controls} onclick={() => graphSVG.centerGraph()}>
+					Center Graph
+				</Button>
 
-				<div class="flex-spacer" />
+				<div class="flex-spacer"></div>
 
 				<LinkButton href="/app/graph/{graph.id}/editor?type=layout&view={graphSVG.view}">
 					Edit Layout
 				</LinkButton>
-				
-				<button class="exit" on:click={ hide } use:focusOnLoad />
+
+				<button class="exit" onclick={hide} use:focusOnLoad></button>
 			</div>
 		</div>
 

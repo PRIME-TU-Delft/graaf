@@ -1,148 +1,148 @@
-
 <script lang="ts">
-
 	// External dependencies
-	import { goto } from '$app/navigation'
-	import { page } from '$app/stores'
-	import { onDestroy } from 'svelte'
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
+	import { onDestroy } from 'svelte';
 
 	// Internal dependencies
-	import { graph, save_status, domain_query, subject_query, lecture_query } from './stores'
-	import { GraphSVG, SVGState } from '$scripts/svg'
+	import { graph, save_status, domain_query, subject_query, lecture_query } from './stores';
+	import { GraphSVG, SVGState } from '$scripts/svg';
 
-	import {
-		validEditorType,
-		validEditorView
-	} from '$scripts/types'
+	import { validEditorType, validEditorView } from '$scripts/types';
 
-	import type {
-		EditorType,
-		EditorView
-	} from '$scripts/types'
+	import type { EditorType, EditorView } from '$scripts/types';
 
 	// Components
-	import DomainTab from './DomainTab.svelte'
-	import SubjectTab from './SubjectTab.svelte'
-	import LectureTab from './LectureTab.svelte'
-	import StickyHeader from './StickyHeader.svelte'
+	import DomainTab from './DomainTab.svelte';
+	import SubjectTab from './SubjectTab.svelte';
+	import LectureTab from './LectureTab.svelte';
+	import StickyHeader from './StickyHeader.svelte';
 
-	import SimpleModal from '$components/SimpleModal.svelte'
-	import SaveStatus from '$components/SaveStatus.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Searchbar from '$components/Searchbar.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
-	import Graph from '$components/Graph.svelte'
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import SaveStatus from '$components/SaveStatus.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import Searchbar from '$components/Searchbar.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import Button from '$components/Button.svelte';
+	import Graph from '$components/Graph.svelte';
 
 	// Assets
-	import info_icon from '$assets/info-icon.svg'
-	import sort_icon from '$assets/sort-icon.svg'
+	import info_icon from '$assets/info-icon.svg';
+	import sort_icon from '$assets/sort-icon.svg';
 
 	// Functions
 	function navigateEditor(type: EditorType, view: EditorView) {
-		if (
-			graphSVG.state === SVGState.animating ||
-			editor_type === type && editor_view === view
-		) return
-		
-		editor_type = type
-		editor_view = view
+		if (graphSVG.state === SVGState.animating || (editor_type === type && editor_view === view))
+			return;
 
-		search_params.set('type', editor_type)
-		search_params.set('view', editor_view)
-		goto(`?${search_params.toString()}`, { replaceState: true, noScroll: true })
+		editor_type = type;
+		editor_view = view;
 
-		graphSVG.view = view
+		search_params.set('type', editor_type);
+		search_params.set('view', editor_view);
+		goto(`?${search_params.toString()}`, { replaceState: true, noScroll: true });
+
+		graphSVG.view = view;
 	}
 
 	function updateUI() {
-		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken
+		disable_graph_controls = graphSVG.view === 'lectures' || graphSVG.state === SVGState.broken;
 	}
 
 	// Initialization
-	const search_params = $page.url.searchParams
-	const graphSVG = new GraphSVG($graph)
+	const search_params = $page.url.searchParams;
+	const graphSVG = $state(new GraphSVG($graph));
 
-	let editor_type = search_params.get('type') as EditorType
-	let editor_view = search_params.get('view') as EditorView
-	let disable_graph_controls = false
+	let editor_type = $state(search_params.get('type') as EditorType);
+	let editor_view = $state(search_params.get('view') as EditorView);
+	let disable_graph_controls = $state(false);
 
-	let autolayout_modal: SimpleModal
+	let autolayout_modal = $state<SimpleModal>();
 
-	graphSVG.subscribe(updateUI)
+	graphSVG.subscribe(updateUI);
 
 	navigateEditor(
 		validEditorType(editor_type) ? editor_type : 'data',
 		validEditorView(editor_view) ? editor_view : 'domains'
-	)
+	);
 
 	onDestroy(() => {
-		graphSVG.unsubscribe(updateUI)
-	})
-
+		graphSVG.unsubscribe(updateUI);
+	});
 </script>
 
 <!-- Markup -->
 
 <SimpleModal bind:this={autolayout_modal}>
-	<h3 slot="header"> Autolayout </h3>
-	Are you certain you want to start the autolayout process? This will irreversibly rearrange all nodes and relations in the graph.
+	{#snippet header()}
+		<h3>Autolayout</h3>
+	{/snippet}
+	Are you certain you want to start the autolayout process? This will irreversibly rearrange all nodes
+	and relations in the graph.
 
 	<div class="infobox">
 		<div class="sidebar">
-			<img src={info_icon} alt="">
+			<img src={info_icon} alt="" />
 		</div>
 		<div class="content">
-			During autolayout, your graph will become <b>force directed</b>. This means that nodes will be <b>attracted</b> to their parents and children, and <b>repelled</b> by other nodes.
-			<b>Unlocked</b> nodes are subject to these forces, and have a dashed outline. Click or drag a node to <b>lock</b> it in place.
+			During autolayout, your graph will become <b>force directed</b>. This means that nodes will be
+			<b>attracted</b>
+			to their parents and children, and <b>repelled</b> by other nodes.
+			<b>Unlocked</b> nodes are subject to these forces, and have a dashed outline. Click or drag a
+			node to <b>lock</b> it in place.
 		</div>
 	</div>
 
-	<svelte:fragment slot="footer">
-		<LinkButton
-			on:click={() => autolayout_modal.hide()}
-		> Cancel </LinkButton>
+	{#snippet footer()}
+		<LinkButton onclick={() => autolayout_modal?.hide()}>Cancel</LinkButton>
 		<Button
-			on:click={() => {
-				graphSVG.toggleAutolayout()
-				autolayout_modal.hide()
+			onclick={() => {
+				graphSVG.toggleAutolayout();
+				autolayout_modal?.hide();
 			}}
-		> Start Autolayout </Button>
-	</svelte:fragment>
+		>
+			Start Autolayout
+		</Button>
+	{/snippet}
 </SimpleModal>
 
 <div class="tabular">
 	<div class="sticky" id="sticky-header">
-		<SaveStatus bind:this={ $save_status } />
+		<SaveStatus bind:this={$save_status} />
 
 		<div class="tabs">
 			<button
 				class="tab"
 				class:active={editor_view === 'domains'}
 				tabindex="-1"
-				on:click={() => navigateEditor(editor_type, 'domains')}
-			> Domains </button>
+				onclick={() => navigateEditor(editor_type, 'domains')}
+			>
+				Domains
+			</button>
 
 			<button
 				class="tab"
 				class:active={editor_view === 'subjects'}
 				tabindex="-1"
-				on:click={() => navigateEditor(editor_type, 'subjects')}
-			> Subjects </button>
+				onclick={() => navigateEditor(editor_type, 'subjects')}
+			>
+				Subjects
+			</button>
 
 			<button
 				class="tab"
 				class:active={editor_view === 'lectures'}
 				tabindex="-1"
-				on:click={() => navigateEditor(editor_type, 'lectures')}
-			> Lectures </button>
+				onclick={() => navigateEditor(editor_type, 'lectures')}
+			>
+				Lectures
+			</button>
 
 			<div class="toolbar">
 				{#if editor_type === 'data'}
-					<LinkButton on:click={() => navigateEditor('layout', editor_view)}>
+					<LinkButton onclick={() => navigateEditor('layout', editor_view)}>
 						Edit Graph Layout
 					</LinkButton>
-
 				{:else}
 					<Dropdown
 						placeholder="Select lecture"
@@ -150,25 +150,26 @@
 						options={graphSVG.graph.lecture_options}
 					/>
 
-					<Button
-						disabled={disable_graph_controls}
-						on:click={() => graphSVG.centerGraph()}
-					> Center Graph </Button>
+					<Button disabled={disable_graph_controls} onclick={() => graphSVG.centerGraph()}>
+						Center Graph
+					</Button>
 
 					<Button
 						disabled={disable_graph_controls}
-						on:click={() => {
+						onclick={() => {
 							if (graphSVG.autolayout_enabled) {
-								graphSVG.toggleAutolayout()
+								graphSVG.toggleAutolayout();
 							} else {
-								autolayout_modal.show()
+								autolayout_modal?.show();
 							}
 						}}
-					> Toggle Autolayout </Button>
+					>
+						Toggle Autolayout
+					</Button>
 
-					<div class="flex-spacer" />
+					<div class="flex-spacer"></div>
 
-					<LinkButton on:click={() => navigateEditor('data', editor_view)}>
+					<LinkButton onclick={() => navigateEditor('data', editor_view)}>
 						Edit Graph Data
 					</LinkButton>
 				{/if}
@@ -179,48 +180,52 @@
 			<div class="header">
 				{#if editor_view === 'domains'}
 					<StickyHeader>
-						<svelte:fragment slot="above" let:scrollTo>
-							<h2> Domains </h2>
-							<LinkButton on:click={() => scrollTo('relations')}> Go to relations </LinkButton>
-						</svelte:fragment>
-						<svelte:fragment slot="below" let:scrollTo>
-							<h2> Relations </h2>
-							<LinkButton on:click={() => scrollTo('nodes')}> Go to domains </LinkButton>
-						</svelte:fragment>
+						{#snippet above({ scrollTo })}
+							<h2>Domains</h2>
+							<LinkButton onclick={() => scrollTo('relations')}>Go to relations</LinkButton>
+						{/snippet}
+						{#snippet below({ scrollTo })}
+							<h2>Relations</h2>
+							<LinkButton onclick={() => scrollTo('nodes')}>Go to domains</LinkButton>
+						{/snippet}
 
-						<div class="flex-spacer" />
+						<div class="flex-spacer"></div>
 						<Searchbar placeholder="Search domains and relations" bind:value={$domain_query} />
-						<Button on:click={() => {
-							$graph.sort()
-							$graph = $graph
-						}}> 
-							<img src={sort_icon} alt=""> Sort by Domains
+						<Button
+							onclick={() => {
+								$graph.sort();
+								$graph = $graph;
+							}}
+						>
+							<img src={sort_icon} alt="" /> Sort by Domains
 						</Button>
 					</StickyHeader>
 				{:else if editor_view === 'subjects'}
 					<StickyHeader>
-						<svelte:fragment slot="above" let:scrollTo>
-							<h2> Subjects </h2>
-							<LinkButton on:click={() => scrollTo('relations')}> Go to relations </LinkButton>
-						</svelte:fragment>
-						<svelte:fragment slot="below" let:scrollTo>
-							<h2> Relations </h2>
-							<LinkButton on:click={() => scrollTo('nodes')}> Go to subjects </LinkButton>
-						</svelte:fragment>
+						{#snippet above({ scrollTo })}
+							<h2>Subjects</h2>
+							<LinkButton onclick={() => scrollTo('relations')}>Go to relations</LinkButton>
+						{/snippet}
+						{#snippet below({ scrollTo })}
+							<h2>Relations</h2>
+							<LinkButton onclick={() => scrollTo('nodes')}>Go to subjects</LinkButton>
+						{/snippet}
 
-						<div class="flex-spacer" />
+						<div class="flex-spacer"></div>
 						<Searchbar placeholder="Search subjects and relations" bind:value={$subject_query} />
-						<Button on:click={() => {
-							$graph.sort()
-							$graph = $graph
-						}}> 
-							<img src={sort_icon} alt=""> Sort by Domains
+						<Button
+							onclick={() => {
+								$graph.sort();
+								$graph = $graph;
+							}}
+						>
+							<img src={sort_icon} alt="" /> Sort by Domains
 						</Button>
 					</StickyHeader>
 				{:else if editor_view === 'lectures'}
-					<div class="tab-header" >
-						<h2> Lectures </h2>
-						<div class="flex-spacer" />
+					<div class="tab-header">
+						<h2>Lectures</h2>
+						<div class="flex-spacer"></div>
 						<Searchbar placeholder="Search lectures" bind:value={$lecture_query} />
 					</div>
 				{/if}

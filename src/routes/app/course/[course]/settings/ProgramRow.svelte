@@ -1,59 +1,58 @@
-
-
 <script lang="ts">
-
 	// Internal dependencies
-	import { course } from './stores'
-	import type { ProgramController } from '$scripts/controllers'
+	import { course } from './stores';
+	import type { ProgramController } from '$scripts/controllers';
 
 	// Components
-	import SimpleModal from '$components/SimpleModal.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import IconButton from '$components/IconButton.svelte'
-	import Button from '$components/Button.svelte'
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import IconButton from '$components/IconButton.svelte';
+	import Button from '$components/Button.svelte';
 
 	// Assets
-	import trashIcon from '$assets/trash-icon.svg'
+	import trashIcon from '$assets/trash-icon.svg';
 
-	// Main
-	export let program: ProgramController
-	let unassign_modal: SimpleModal
+	interface Props {
+		// Main
+		program: ProgramController;
+	}
 
+	let { program }: Props = $props();
+	let unassign_modal = $state<SimpleModal>();
 </script>
-
 
 <!-- Markup -->
 
 <SimpleModal bind:this={unassign_modal}>
-	<h3 slot="header"> Unnassign Course </h3>
+	{#snippet header()}
+		<h3>Unnassign Course</h3>
+	{/snippet}
 	Are you certain you want to unnassign this course from {program.display_name}?
 
-	<svelte:fragment slot="footer">
-		<LinkButton
-			on:click={() => unassign_modal.hide()}
-		> Cancel </LinkButton>
+	{#snippet footer()}
+		<LinkButton onclick={() => unassign_modal?.hide()}>Cancel</LinkButton>
 		<Button
-			on:click={async () => {
-				$course.unassignFromProgram(program)
-				await $course.save()
-				$course = $course // Trigger reactivity
+			onclick={async () => {
+				$course.unassignFromProgram(program);
+				await $course.save();
+				$course = $course; // Trigger reactivity
 			}}
-		> Unassign </Button>
-	</svelte:fragment>
+		>
+			Unassign
+		</Button>
+	{/snippet}
 </SimpleModal>
 
 <span class="program-row">
-	<IconButton 
+	<IconButton
 		src={trashIcon}
 		description="Unassign from program"
-		on:click={() => unassign_modal.show()}
+		onclick={() => unassign_modal?.show()}
 	/>
 
 	{program.display_name}
 
-	<LinkButton href="/app/program/{program.id}/settings">
-		Program Settings
-	</LinkButton>
+	<LinkButton href="/app/program/{program.id}/settings">Program Settings</LinkButton>
 </span>
 
 <!-- Styles -->

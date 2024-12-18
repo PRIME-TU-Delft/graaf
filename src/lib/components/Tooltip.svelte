@@ -1,23 +1,22 @@
+<!-- Markup -->
+<svelte:options />
 
 <script lang="ts">
+	interface Props {
+		// Exports
+		text: string;
+	}
 
-	// Exports
-	export let text: string
+	let { text }: Props = $props();
 
+	export { text };
 </script>
-
-
-<!-- Markup -->
-
-<svelte:options accessors/>
 
 <span class="tooltip">
 	{text}
 </span>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

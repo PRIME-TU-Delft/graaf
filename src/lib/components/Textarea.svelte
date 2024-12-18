@@ -1,27 +1,19 @@
-
 <script lang="ts">
+	interface Props {
+		// Exports
+		id: string;
+		value?: string;
+		readonly?: boolean;
+	}
 
-	// Exports
-	export let id: string
-	export let value: string = ''
-	export let readonly: boolean = false
-
+	let { id, value = $bindable(''), readonly = false }: Props = $props();
 </script>
-
 
 <!-- Markup -->
 
-
-<textarea 
-	id={id} 
-	class="textarea"
-	bind:value={value} 
-	readonly={readonly} 
-/>
-
+<textarea {id} class="textarea" bind:value {readonly}></textarea>
 
 <!-- Styles -->
-
 
 <style lang="sass">
 

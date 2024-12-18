@@ -1,12 +1,19 @@
+<script lang="ts">
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
+</script>
 
 <!-- Markup -->
 
 <div class="grid">
-	<slot />
+	{@render children?.()}
 </div>
 
 <!-- Styles -->
- 
+
 <style lang="sass">
 
 	@use "$styles/variables.sass" as *

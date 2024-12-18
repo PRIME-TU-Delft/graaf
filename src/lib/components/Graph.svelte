@@ -1,58 +1,59 @@
-
 <script lang="ts">
-
 	// External dependencies
-	import { onDestroy } from 'svelte'
-	import { fade } from 'svelte/transition'
+	import { onDestroy } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	// Internal dependencies
-	import * as settings from '$scripts/settings'
-	import { SVGState } from '$scripts/svg'
-	import type { GraphSVG } from '$scripts/svg'
+	import * as settings from '$scripts/settings';
+	import { SVGState } from '$scripts/svg';
+	import type { GraphSVG } from '$scripts/svg';
 
 	// Assets
-	import zoom_out_icon from '$assets/zoom-out-icon.svg'
-	import zoom_in_icon from '$assets/zoom-in-icon.svg'
+	import zoom_out_icon from '$assets/zoom-out-icon.svg';
+	import zoom_in_icon from '$assets/zoom-in-icon.svg';
 
 	// Functions
 	function updateUI() {
 		if (graphSVG.state === SVGState.broken || graphSVG.state === SVGState.await_lecture) {
-			show_legend = false
-			show_zoom = false
-			return
+			show_legend = false;
+			show_zoom = false;
+			return;
 		}
 
 		switch (graphSVG.view) {
 			case 'domains':
-				show_legend = false
-				show_zoom = true
-				break
-			
+				show_legend = false;
+				show_zoom = true;
+				break;
+
 			case 'subjects':
-				show_legend = true
-				show_zoom = true
-				break
-			
+				show_legend = true;
+				show_zoom = true;
+				break;
+
 			case 'lectures':
-				show_legend = true
-				show_zoom = false
-				break
+				show_legend = true;
+				show_zoom = false;
+				break;
 		}
 	}
 
-	// Main
-	export let graphSVG: GraphSVG
-	let expand_legend = false
-	let show_legend = true
-	let show_zoom = true
+	interface Props {
+		// Main
+		graphSVG: GraphSVG;
+	}
 
-	graphSVG.subscribe(updateUI)
+	let { graphSVG }: Props = $props();
+	let expand_legend = $state(false);
+	let show_legend = $state(true);
+	let show_zoom = $state(true);
+
+	graphSVG.subscribe(updateUI);
 
 	onDestroy(() => {
-		graphSVG.unsubscribe(updateUI)
-		graphSVG.detach()
-	})
-
+		graphSVG.unsubscribe(updateUI);
+		graphSVG.detach();
+	});
 </script>
 
 <!-- Markup -->
@@ -61,25 +62,28 @@
 	<svg use:graphSVG.attach />
 
 	{#if show_legend && graphSVG.graph.domains.length > 0}
-		<button 
-			class="legend" 
-			class:expand={expand_legend} 
-			on:click={ () => expand_legend = !expand_legend }
+		<button
+			class="legend"
+			class:expand={expand_legend}
+			onclick={() => (expand_legend = !expand_legend)}
 			transition:fade={{ duration: settings.UNIVERSAL_FADE_DURATION }}
 		>
-			<h4 class="title"> Domain Legend </h4>
+			<h4 class="title">Domain Legend</h4>
 			{#if expand_legend}
 				{#each graphSVG.graph.domains as domain}
-					<span> {domain.display_name} <div class="preview" style:background={domain.color}/> </span>
+					<span>
+						{domain.display_name}
+						<div class="preview" style:background={domain.color}></div>
+					</span>
 				{/each}
 			{/if}
 		</button>
 	{/if}
 
 	{#if show_zoom}
-		<div class="zoom" transition:fade={{ duration: settings.UNIVERSAL_FADE_DURATION }} >
-			<button on:click={() => graphSVG.zoomIn()}><img src={zoom_in_icon} alt="Zoom in"></button>
-			<button on:click={() => graphSVG.zoomOut()}><img src={zoom_out_icon} alt="Zoom out"></button>
+		<div class="zoom" transition:fade={{ duration: settings.UNIVERSAL_FADE_DURATION }}>
+			<button onclick={() => graphSVG.zoomIn()}><img src={zoom_in_icon} alt="Zoom in" /></button>
+			<button onclick={() => graphSVG.zoomOut()}><img src={zoom_out_icon} alt="Zoom out" /></button>
 		</div>
 	{/if}
 </div>

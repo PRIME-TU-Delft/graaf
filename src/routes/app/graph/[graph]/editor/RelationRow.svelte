@@ -1,62 +1,66 @@
-
 <script lang="ts">
-
 	// Internal dependencies
-	import { graph, save_status } from './stores'
+	import { graph, save_status } from './stores';
 
-	import type { 
-		RelationController, 
-		DomainController, 
-		SubjectController 
-	} from '$scripts/controllers'
+	import type {
+		RelationController,
+		DomainController,
+		SubjectController
+	} from '$scripts/controllers';
 
 	// Components
-	import SimpleModal from '$components/SimpleModal.svelte'
-	import IconButton from '$components/IconButton.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import IconButton from '$components/IconButton.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import Button from '$components/Button.svelte';
 
 	// Assets
-	import trash_icon from '$assets/trash-icon.svg'
+	import trash_icon from '$assets/trash-icon.svg';
 
-	// Exports
-	export let relation: RelationController<DomainController | SubjectController>
+	interface Props {
+		// Exports
+		relation: RelationController<DomainController | SubjectController>;
+	}
+
+	let { relation = $bindable() }: Props = $props();
 
 	// Modal
-	let delete_modal: SimpleModal
-
+	let delete_modal = $state<SimpleModal>();
 </script>
 
 <!-- Markup -->
 
 <SimpleModal bind:this={delete_modal}>
-	<h3 slot="header"> Delete Relation </h3>
+	{#snippet header()}
+		<h3>Delete Relation</h3>
+	{/snippet}
 	Are you sure you want to delete this relation? This action cannot be undone.
 
-	<svelte:fragment slot="footer">
-		<LinkButton
-			on:click={() => delete_modal.hide()}
-		> Cancel </LinkButton>
+	{#snippet footer()}
+		<LinkButton onclick={() => delete_modal?.hide()}>Cancel</LinkButton>
 		<Button
-			on:click={async () => {
-				await relation.delete()
-				$graph = $graph // Trigger reactivity
+			onclick={async () => {
+				await relation.delete();
+				$graph = $graph; // Trigger reactivity
 			}}
-		> Delete </Button>
-	</svelte:fragment>
+		>
+			Delete
+		</Button>
+	{/snippet}
 </SimpleModal>
 
 <div class="relation-row">
-	<IconButton scale
+	<IconButton
+		scale
 		src={trash_icon}
 		description="Delete Relation"
-		on:click={async () => {
+		onclick={async () => {
 			if (relation.unchanged) {
-				await relation.delete()
-				$graph = $graph // Trigger reactivity
+				await relation.delete();
+				$graph = $graph; // Trigger reactivity
 			} else {
-				delete_modal.show()
+				delete_modal?.show();
 			}
 		}}
 	/>
@@ -65,27 +69,27 @@
 		placeholder="Select a parent"
 		options={relation.parent_options}
 		bind:value={relation.parent}
-		on:change={async () => {
-			$save_status.setUnsaved()
-			await relation.save($save_status)
-			$graph = $graph // Trigger reactivity
+		onchange={async () => {
+			$save_status.setUnsaved();
+			await relation.save($save_status);
+			$graph = $graph; // Trigger reactivity
 		}}
 	/>
 
-	<span class="preview" style:background={relation.parent_color} />
+	<span class="preview" style:background={relation.parent_color}></span>
 
 	<Dropdown
 		placeholder="Select a child"
 		options={relation.child_options}
 		bind:value={relation.child}
-		on:change={async () => {
-			$save_status.setUnsaved()
-			await relation.save($save_status)
-			$graph = $graph // Trigger reactivity
+		onchange={async () => {
+			$save_status.setUnsaved();
+			await relation.save($save_status);
+			$graph = $graph; // Trigger reactivity
 		}}
 	/>
 
-	<span class="preview" style:background={relation.child_color} />
+	<span class="preview" style:background={relation.child_color}></span>
 </div>
 
 <!-- Styles -->

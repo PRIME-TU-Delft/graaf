@@ -1,3 +1,3 @@
 export function match(param) {
-	return !isNaN(Number(param))
+	return !isNaN(Number(param));
 }

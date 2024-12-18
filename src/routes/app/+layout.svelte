@@ -1,53 +1,51 @@
-
 <script lang="ts">
-
 	// External dependencies
-	import { signIn } from '@auth/sveltekit/client'
+	import { signIn } from '@auth/sveltekit/client';
 
 	// Components
-	import Button from '$components/Button.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
+	import Button from '$components/Button.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
 
 	// Assets
-	import PRIME_logo from '$assets/PRIME-logo.svg'
-	import TUDelft_logo from '$assets/TUD-logo.svg'
+	import PRIME_logo from '$assets/PRIME-logo.svg';
+	import TUDelft_logo from '$assets/TUD-logo.svg';
+	interface Props {
+		children?: import('svelte').Snippet;
+	}
+
+	let { children }: Props = $props();
 
 	// Variables
-	let logged_in = false // TODO temporary
-
+	let logged_in = false; // TODO temporary
 </script>
 
-
 <!-- Markup -->
-
 
 <header>
 	<a id="PRIME-logo" href="/app">
 		<img src={PRIME_logo} alt="PRIME logo" />
 	</a>
 
-	<h1> Graph editor </h1>
+	<h1>Graph editor</h1>
 
-	<div class="flex-spacer" />
+	<div class="flex-spacer"></div>
 
 	{#if logged_in}
-		<LinkButton href="app/auth/logout"> Logout </LinkButton>
-		<Button href="app/home"> Home </Button>
+		<LinkButton href="app/auth/logout">Logout</LinkButton>
+		<Button href="app/home">Home</Button>
 	{:else}
-		<LinkButton href="app/auth/register"> Register </LinkButton>
-		<Button on:click={() => signIn("surfconext")}> Login </Button>
+		<LinkButton href="app/auth/register">Register</LinkButton>
+		<Button on:click={() => signIn('surfconext')}>Login</Button>
 	{/if}
 </header>
 
-<slot />
+{@render children?.()}
 
 <footer>
 	<img id="TUDelft-logo" src={TUDelft_logo} alt="TUDelft logo" />
 </footer>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

@@ -1,78 +1,76 @@
-
 <script lang="ts">
-
 	// Internal dependencies
-	import { course } from './stores'
+	import { course } from './stores';
 
-	import { Validation, Severity } from '$scripts/validation'
-	import { AbstractFormModal } from '$scripts/modals'
-	import { tooltip } from '$scripts/actions/tooltip'
+	import { Validation, Severity } from '$scripts/validation';
+	import { AbstractFormModal } from '$scripts/modals.svelte';
+	import { tooltip } from '$scripts/actions/tooltip';
 
-	import type {
-		CourseController,
-		GraphController
-	} from '$scripts/controllers'
+	import type { CourseController, GraphController } from '$scripts/controllers';
 
 	// Components
-	import GraphPreview from './GraphPreview.svelte'
+	import GraphPreview from './GraphPreview.svelte';
 
-	import SimpleModal from '$components/SimpleModal.svelte'
-	import IconButton from '$components/IconButton.svelte'
-	import LinkButton from '$components/LinkButton.svelte'
-	import FormModal from '$components/FormModal.svelte'
-	import Dropdown from '$components/Dropdown.svelte'
-	import Button from '$components/Button.svelte'
+	import SimpleModal from '$components/SimpleModal.svelte';
+	import IconButton from '$components/IconButton.svelte';
+	import LinkButton from '$components/LinkButton.svelte';
+	import FormModal from '$components/FormModal.svelte';
+	import Dropdown from '$components/Dropdown.svelte';
+	import Button from '$components/Button.svelte';
 
 	// Assets
-	import open_eye_icon from '$assets/open-eye-icon.svg'
-	import pencil_icon from '$assets/pencil-icon.svg'
-	import trash_icon from '$assets/trash-icon.svg'
-	import copy_icon from '$assets/copy-icon.svg'
-	import link_icon from '$assets/link-icon.svg'
+	import open_eye_icon from '$assets/open-eye-icon.svg';
+	import pencil_icon from '$assets/pencil-icon.svg';
+	import trash_icon from '$assets/trash-icon.svg';
+	import copy_icon from '$assets/copy-icon.svg';
+	import link_icon from '$assets/link-icon.svg';
 
 	// Modals
 	class CopyModal extends AbstractFormModal {
-		course: CourseController | null = null
+		course: CourseController | null = null;
 
 		constructor() {
-			super()
-			this.initialize()
+			super();
+			this.initialize();
 		}
 
 		validate(): Validation {
-			const result = new Validation()
+			const result = new Validation();
 
 			if (this.hasChanged('course') && this.course === null) {
 				result.add({
 					severity: Severity.error,
 					short: 'Course is required'
-				})
+				});
 			}
 
-			return result
+			return result;
 		}
 
 		async submit() {
-			const copied_graph = await graph.copy(this.course as CourseController)
+			const copied_graph = await graph.copy(this.course as CourseController);
 			await Promise.all([
 				copied_graph.save(),
-				copied_graph.domains.map(domain => domain.save()),
-				copied_graph.subjects.map(subject => subject.save()),
-				copied_graph.lectures.map(lecture => lecture.save())
-			])
+				copied_graph.domains.map((domain) => domain.save()),
+				copied_graph.subjects.map((subject) => subject.save()),
+				copied_graph.lectures.map((lecture) => lecture.save())
+			]);
 
-			$course = $course // Trigger reactivity
+			$course = $course; // Trigger reactivity
 		}
 	}
 
-	// Main
-	export let graph: GraphController
+	interface Props {
+		// Main
+		graph: GraphController;
+	}
 
-	const copy_modal = new CopyModal()
+	let { graph }: Props = $props();
 
-	let preview_modal: GraphPreview
-	let delete_modal: SimpleModal
+	const copy_modal = $state(new CopyModal());
 
+	let preview_modal = $state<GraphPreview>();
+	let delete_modal = $state<SimpleModal>();
 </script>
 
 <!-- Markup -->
@@ -80,60 +78,64 @@
 <GraphPreview {graph} bind:this={preview_modal} />
 
 <FormModal controller={copy_modal}>
-	<h3 slot="header"> Copy Graph </h3>
-	Copy this graph to another course. This will create a new graph with the same content in the selected course.
+	{#snippet header()}
+		<h3>Copy Graph</h3>
+	{/snippet}
+	Copy this graph to another course. This will create a new graph with the same content in the selected
+	course.
 
-	<svelte:fragment slot="form">
+	{#snippet form()}
 		<label for="course"> Target Course </label>
 		<Dropdown
 			placeholder="Select a course"
 			options={graph.copy_options}
 			bind:value={copy_modal.course}
 		/>
-	</svelte:fragment>
+	{/snippet}
 
-	<svelte:fragment slot="submit">
+	{#snippet submit()}
 		Copy
-	</svelte:fragment>
+	{/snippet}
 </FormModal>
 
 <SimpleModal bind:this={delete_modal}>
-	<h3 slot="header"> Delete Graph </h3>
+	{#snippet header()}
+		<h3>Delete Graph</h3>
+	{/snippet}
 	Are you sure you want to delete this graph? This action cannot be undone.
 
-	<svelte:fragment slot="footer">
-		<LinkButton
-			on:click={() => delete_modal.hide()}
-		> Cancel </LinkButton>
+	{#snippet footer()}
+		<LinkButton onclick={() => delete_modal?.hide()}>Cancel</LinkButton>
 		<Button
-			on:click={async () => {
-				await graph.delete()
-				$course = $course // Trigger reactivity
+			onclick={async () => {
+				await graph.delete();
+				$course = $course; // Trigger reactivity
 			}}
-		> Delete </Button>
-	</svelte:fragment>
+		>
+			Delete
+		</Button>
+	{/snippet}
 </SimpleModal>
 
 <span class="row">
-	<IconButton scale
+	<IconButton
+		scale
 		src={trash_icon}
 		description="Delete Graph"
-		on:click={() => delete_modal.show()}
+		onclick={() => delete_modal?.show()}
 	/>
-	<IconButton scale
-		src={copy_icon}
-		description="Copy Graph"
-		on:click={() => copy_modal.show()}
-	/>
-	<IconButton scale
+	<IconButton scale src={copy_icon} description="Copy Graph" onclick={() => copy_modal.show()} />
+	<IconButton
+		scale
 		src={pencil_icon}
 		description="Edit Graph"
 		href="/app/graph/{graph.id}/editor"
 	/>
-	<IconButton scale
+	<IconButton
+		scale
 		src={open_eye_icon}
 		description="Preview Graph"
-		on:click={() => preview_modal.show()}
+		onclick={() => preview_modal?.show()}
 	/>
 
 	<span>
@@ -148,7 +150,9 @@
 		<div
 			class="link-icon"
 			use:tooltip={`Has ${graph.link_ids.length} associated link${graph.link_ids.length > 1 ? 's' : ''}`}
-		> <img src={link_icon} alt="Link icon" /> </div>	
+		>
+			<img src={link_icon} alt="Link icon" />
+		</div>
 	{/if}
 </span>
 

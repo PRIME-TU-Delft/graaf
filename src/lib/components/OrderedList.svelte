@@ -1,20 +1,22 @@
-
-<script lang="ts">
-
+<script lang="ts" generics="T">
 	// External dependencies
-	import { flip } from 'svelte/animate'
-
+	import type { Snippet } from 'svelte';
+	import { flip } from 'svelte/animate';
 	// Internal dependencies
-	import * as settings from '$scripts/settings'
-	import type { Validation } from '$scripts/validation'
-
+	import * as settings from '$scripts/settings';
+	import type { Validation } from '$scripts/validation';
 	// Components
-	import Feedback from '$components/Feedback.svelte'
+	import Feedback from '$components/Feedback.svelte';
 
-	// Variables
-	export let list: T[] & { uuid: string, validate: (strict: boolean) => Validation }[]
-	type T = $$Generic
+	type ListItem = T[] & { uuid: string; validate: (strict: boolean) => Validation };
 
+	interface Props {
+		// Variables
+		list: ListItem[];
+		children?: Snippet<[{ item: ListItem }]>;
+	}
+
+	let { list, children }: Props = $props();
 </script>
 
 <!-- Markdown -->
@@ -22,15 +24,14 @@
 <div class="list">
 	{#each list as item, index (item.uuid)}
 		<div class="row" animate:flip={{ duration: settings.UNIVERSAL_FADE_DURATION }}>
-
 			<!-- Validation -->
 			<Feedback compact data={item.validate(false)} />
 
 			<!-- Item Index -->
 			{index + 1}
-			
+
 			<!-- Item Content -->
-			<slot {item} />
+			{@render children?.({ item })}
 		</div>
 	{/each}
 </div>

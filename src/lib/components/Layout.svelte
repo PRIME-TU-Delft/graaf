@@ -1,23 +1,30 @@
+<script lang="ts">
+	interface Props {
+		title?: import('svelte').Snippet;
+		toolbar?: import('svelte').Snippet;
+		children?: import('svelte').Snippet;
+	}
+
+	let { title, toolbar, children }: Props = $props();
+</script>
 
 <main>
 	<section class="title">
-		<slot name="title" />
+		{@render title?.()}
 	</section>
 
-	{#if $$slots.toolbar}
+	{#if toolbar}
 		<section class="toolbar">
-			<slot name="toolbar" />
+			{@render toolbar?.()}
 		</section>
 	{/if}
 
 	<section class="content">
-		<slot />
+		{@render children?.()}
 	</section>
 </main>
 
-
 <!-- Styles -->
-
 
 <style lang="sass">
 

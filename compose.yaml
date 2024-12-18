@@ -1,6 +1,5 @@
 name: graph
 
-
 services:
   caddy:
     image: docker.io/caddy:2.8-alpine
@@ -30,7 +29,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
       test: pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}
-
 
 volumes:
   postgres_data:

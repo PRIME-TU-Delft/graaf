@@ -1,11 +1,10 @@
-
 // External dependencies
-import prisma from '$lib/server/prisma'
+import prisma from '$lib/server/prisma';
 
-import type { Graph as PrismaGraph } from '@prisma/client'
+import type { Graph as PrismaGraph } from '@prisma/client';
 
 // Internal dependencies
-import { prismaUpdateArray, prismaUpdateRequiredField} from '$scripts/utility'
+import { prismaUpdateArray, prismaUpdateRequiredField } from '$scripts/utility';
 
 import {
 	CourseHelper,
@@ -13,7 +12,7 @@ import {
 	SubjectHelper,
 	LectureHelper,
 	LinkHelper
-} from '$scripts/helpers'
+} from '$scripts/helpers';
 
 import type {
 	CourseRelation,
@@ -22,7 +21,7 @@ import type {
 	SubjectRelation,
 	LectureRelation,
 	LinkRelation
-} from '$scripts/types'
+} from '$scripts/types';
 
 import type {
 	SerializedCourse,
@@ -31,18 +30,19 @@ import type {
 	SerializedSubject,
 	SerializedLecture,
 	SerializedLink
-} from '$scripts/types'
-
+} from '$scripts/types';
 
 // --------------------> Helper Functions
 
-
-export async function reduce(graph: PrismaGraph, ...relations: GraphRelation[]): Promise<SerializedGraph> {
+export async function reduce(
+	graph: PrismaGraph,
+	...relations: GraphRelation[]
+): Promise<SerializedGraph> {
 	const serialized: SerializedGraph = {
 		id: graph.id,
 		unchanged: graph.unchanged,
 		name: graph.name
-	}
+	};
 
 	// Fetch relations from database
 	try {
@@ -72,28 +72,22 @@ export async function reduce(graph: PrismaGraph, ...relations: GraphRelation[]):
 					}
 				}
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
 	// Add relations if requested
-	if (relations.includes('course'))
-		serialized.course_id = graph.courseId
+	if (relations.includes('course')) serialized.course_id = graph.courseId;
 	if (relations.includes('domains'))
-		serialized.domain_ids = data.domains
-			.map(domain => domain.id)
+		serialized.domain_ids = data.domains.map((domain) => domain.id);
 	if (relations.includes('subjects'))
-		serialized.subject_ids = data.subjects
-			.map(subject => subject.id)
+		serialized.subject_ids = data.subjects.map((subject) => subject.id);
 	if (relations.includes('lectures'))
-		serialized.lecture_ids = data.lectures
-			.map(lecture => lecture.id)
-	if (relations.includes('links'))
-		serialized.link_ids = data.links
-			.map(link => link.id)
+		serialized.lecture_ids = data.lectures.map((lecture) => lecture.id);
+	if (relations.includes('links')) serialized.link_ids = data.links.map((link) => link.id);
 
-	return serialized
+	return serialized;
 }
 
 export async function create(course_id: number, name: string): Promise<SerializedGraph> {
@@ -103,16 +97,15 @@ export async function create(course_id: number, name: string): Promise<Serialize
 				courseId: course_id,
 				name
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await reduce(graph, 'course', 'domains', 'subjects', 'lectures', 'links')
+	return await reduce(graph, 'course', 'domains', 'subjects', 'lectures', 'links');
 }
 
 export async function update(data: SerializedGraph) {
-
 	// Get deltas
 	const [course, domains, subjects, lectures, links] = await Promise.all([
 		getCourse(data.id),
@@ -120,13 +113,13 @@ export async function update(data: SerializedGraph) {
 		getSubjects(data.id),
 		getLectures(data.id),
 		getLinks(data.id)
-	])
+	]);
 
-	const course_delta = prismaUpdateRequiredField<number, SerializedCourse>(course, data.course_id)
-	const domains_delta = prismaUpdateArray<number, SerializedDomain>(domains, data.domain_ids)
-	const subjects_delta = prismaUpdateArray<number, SerializedSubject>(subjects, data.subject_ids)
-	const lectures_delta = prismaUpdateArray<number, SerializedLecture>(lectures, data.lecture_ids)
-	const links_delta = prismaUpdateArray<number, SerializedLink>(links, data.link_ids)
+	const course_delta = prismaUpdateRequiredField<number, SerializedCourse>(course, data.course_id);
+	const domains_delta = prismaUpdateArray<number, SerializedDomain>(domains, data.domain_ids);
+	const subjects_delta = prismaUpdateArray<number, SerializedSubject>(subjects, data.subject_ids);
+	const lectures_delta = prismaUpdateArray<number, SerializedLecture>(lectures, data.lecture_ids);
+	const links_delta = prismaUpdateArray<number, SerializedLink>(links, data.link_ids);
 
 	// Update database
 	try {
@@ -143,9 +136,9 @@ export async function update(data: SerializedGraph) {
 				lectures: lectures_delta,
 				links: links_delta
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 }
 
@@ -160,12 +153,12 @@ export async function reorderDomains(domain_ids: number[]) {
 					data: {
 						order: order
 					}
-				})
+				});
 			} catch (error) {
-				return Promise.reject(error)
+				return Promise.reject(error);
 			}
 		})
-	)
+	);
 }
 
 export async function reorderLectures(lecture_ids: number[]) {
@@ -179,12 +172,12 @@ export async function reorderLectures(lecture_ids: number[]) {
 					data: {
 						order: order
 					}
-				})
+				});
 			} catch (error) {
-				return Promise.reject(error)
+				return Promise.reject(error);
 			}
 		})
-	)
+	);
 }
 
 export async function remove(id: number) {
@@ -193,22 +186,20 @@ export async function remove(id: number) {
 			where: {
 				id
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 }
 
 export async function getAll(...relations: GraphRelation[]): Promise<SerializedGraph[]> {
 	try {
-		var graphs = await prisma.graph.findMany()
+		var graphs = await prisma.graph.findMany();
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await Promise.all(
-		graphs.map(async graph => await reduce(graph, ...relations))
-	)
+	return await Promise.all(graphs.map(async (graph) => await reduce(graph, ...relations)));
 }
 
 export async function getById(id: number, ...relations: GraphRelation[]): Promise<SerializedGraph> {
@@ -217,15 +208,18 @@ export async function getById(id: number, ...relations: GraphRelation[]): Promis
 			where: {
 				id
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await reduce(graph, ...relations)
+	return await reduce(graph, ...relations);
 }
 
-export async function getCourse(id: number, ...relations: CourseRelation[]): Promise<SerializedCourse> {
+export async function getCourse(
+	id: number,
+	...relations: CourseRelation[]
+): Promise<SerializedCourse> {
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
 			where: {
@@ -234,15 +228,18 @@ export async function getCourse(id: number, ...relations: CourseRelation[]): Pro
 			select: {
 				course: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
-	return await CourseHelper.reduce(data.course, ...relations)
+	return await CourseHelper.reduce(data.course, ...relations);
 }
 
-export async function getDomains(id: number, ...relations: DomainRelation[]): Promise<SerializedDomain[]> {
+export async function getDomains(
+	id: number,
+	...relations: DomainRelation[]
+): Promise<SerializedDomain[]> {
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
 			where: {
@@ -251,17 +248,20 @@ export async function getDomains(id: number, ...relations: DomainRelation[]): Pr
 			select: {
 				domains: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
 	return await Promise.all(
-		data.domains.map(async domain => await DomainHelper.reduce(domain, ...relations))
-	)
+		data.domains.map(async (domain) => await DomainHelper.reduce(domain, ...relations))
+	);
 }
 
-export async function getSubjects(id: number, ...relations: SubjectRelation[]): Promise<SerializedSubject[]> {
+export async function getSubjects(
+	id: number,
+	...relations: SubjectRelation[]
+): Promise<SerializedSubject[]> {
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
 			where: {
@@ -270,17 +270,20 @@ export async function getSubjects(id: number, ...relations: SubjectRelation[]): 
 			select: {
 				subjects: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
 	return await Promise.all(
-		data.subjects.map(async subject => await SubjectHelper.reduce(subject, ...relations))
-	)
+		data.subjects.map(async (subject) => await SubjectHelper.reduce(subject, ...relations))
+	);
 }
 
-export async function getLectures(id: number, ...relations: LectureRelation[]): Promise<SerializedLecture[]> {
+export async function getLectures(
+	id: number,
+	...relations: LectureRelation[]
+): Promise<SerializedLecture[]> {
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
 			where: {
@@ -289,17 +292,20 @@ export async function getLectures(id: number, ...relations: LectureRelation[]): 
 			select: {
 				lectures: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
 	return await Promise.all(
-		data.lectures.map(async lecture => await LectureHelper.reduce(lecture, ...relations))
-	)
+		data.lectures.map(async (lecture) => await LectureHelper.reduce(lecture, ...relations))
+	);
 }
 
-export async function getLinks(id: number, ...relations: LinkRelation[]): Promise<SerializedLink[]> {
+export async function getLinks(
+	id: number,
+	...relations: LinkRelation[]
+): Promise<SerializedLink[]> {
 	try {
 		var data = await prisma.graph.findUniqueOrThrow({
 			where: {
@@ -308,12 +314,12 @@ export async function getLinks(id: number, ...relations: LinkRelation[]): Promis
 			select: {
 				links: true
 			}
-		})
+		});
 	} catch (error) {
-		return Promise.reject(error)
+		return Promise.reject(error);
 	}
 
 	return await Promise.all(
-		data.links.map(async link => await LinkHelper.reduce(link, ...relations))
-	)
+		data.links.map(async (link) => await LinkHelper.reduce(link, ...relations))
+	);
 }
