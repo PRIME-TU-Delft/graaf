@@ -4,7 +4,7 @@
 	import * as settings from '$scripts/settings';
 
 	import { Validation, Severity } from '$scripts/validation';
-	import { AbstractFormModal } from '$scripts/modals';
+	import { AbstractFormModal } from '$scripts/modals.svelte';
 
 	import { CourseController } from '$scripts/controllers';
 

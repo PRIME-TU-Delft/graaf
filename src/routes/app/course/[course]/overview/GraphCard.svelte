@@ -5,7 +5,7 @@
 
 	import { Validation, Severity } from '$scripts/validation';
 	import { GraphController } from '$scripts/controllers';
-	import { AbstractFormModal } from '$scripts/modals';
+	import { AbstractFormModal } from '$scripts/modals.svelte';
 
 	// Components
 	import GraphRow from './GraphRow.svelte';

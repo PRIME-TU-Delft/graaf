@@ -2,7 +2,7 @@
 	// Internal dependencies
 	import { graph, save_status } from './stores';
 
-	import { AbstractFormModal } from '$scripts/modals';
+	import { AbstractFormModal } from '$scripts/modals.svelte';
 	import { Validation, Severity } from '$scripts/validation';
 
 	import type { LectureController, SubjectController } from '$scripts/controllers';

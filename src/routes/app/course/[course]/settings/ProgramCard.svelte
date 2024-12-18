@@ -3,7 +3,7 @@
 	import { course } from './stores';
 
 	import { Validation, Severity } from '$scripts/validation';
-	import { AbstractFormModal } from '$scripts/modals';
+	import { AbstractFormModal } from '$scripts/modals.svelte';
 
 	import type { ProgramController } from '$scripts/controllers';
 

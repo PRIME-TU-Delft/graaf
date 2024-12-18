@@ -5,7 +5,7 @@
 	import { focusFirstChild, loopFocus } from '$scripts/actions/hocusfocus';
 	import { Severity } from '$scripts/validation';
 
-	import type { AbstractFormModal } from '$scripts/modals';
+	import type { AbstractFormModal } from '$scripts/modals.svelte';
 
 	// Components
 	import Button from '$components/Button.svelte';

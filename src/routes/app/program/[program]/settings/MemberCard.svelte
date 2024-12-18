@@ -2,7 +2,7 @@
 	// Internal dependencies
 	import { program } from './stores';
 
-	import { AbstractFormModal } from '$scripts/modals';
+	import { AbstractFormModal } from '$scripts/modals.svelte';
 	import { Severity, Validation } from '$scripts/validation';
 
 	import type { UserController } from '$scripts/controllers';
