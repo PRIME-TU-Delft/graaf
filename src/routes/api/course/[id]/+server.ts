@@ -2,14 +2,11 @@
 // Internal dependencies
 import { CourseHelper } from '$scripts/helpers'
 
-// Exports
-export { DELETE }
 
 
 // --------------------> API Endpoints
 
-
-async function DELETE({ params }) {
+export async function DELETE({ params }) {
 
 	// Retrieve course ID
 	const course_id = Number(params.id)

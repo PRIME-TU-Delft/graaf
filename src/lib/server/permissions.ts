@@ -1,13 +1,14 @@
 import { UserRole } from "@prisma/client";
 import prisma from "./prisma";
+import type { Session } from "@auth/sveltekit";
 
 
 export enum Permission {
 	SuperAdmin,
 	ProgramAdmin,
-	ProgramEditor,
 	CourseAdmin,
-	CourseEditor
+	CourseEditor,
+	Viewer
 }
 
 
@@ -29,36 +30,42 @@ export async function isUserSuperAdmin(userId: string): Promise<boolean> {
  * @param courseId Optional: the course ID to check a user's permissions for
  * @returns Set of permissions the user has for the given program and course
  */
-export async function checkPermissions(userId: string, programId?: number, courseId?: number): Promise<Set<Permission>> {
+export async function checkPermissions(session?: Session | null, programIds?: number[], courseId?: number): Promise<Set<Permission>> {
+	const userId = session?.user?.id;
 	const permissions = new Set<Permission>();
+
+	// Not logged in -> no permissions
+	if (!userId) return permissions;
+
+	// Logged in -> viewer permission
+	permissions.add(Permission.Viewer);
 
 	if (await isUserSuperAdmin(userId))
 		permissions.add(Permission.SuperAdmin);
 
-	if (programId) {
-		const program = await prisma.program.findUnique({
-			where: {
-				id: programId
-			},
-			select: {
-				admins: {
-					where: {
-						id: userId
-					}
+	if (programIds) {
+		for (const programId of programIds) {
+			const program = await prisma.program.findUnique({
+				where: {
+					id: programId
 				},
-				editors: {
-					where: {
-						id: userId
+				select: {
+					admins: {
+						where: {
+							id: userId
+						}
+					},
+					editors: {
+						where: {
+							id: userId
+						}
 					}
 				}
-			}
-		});
+			});
 
-		if (program?.admins.map(admin => admin.id).includes(userId))
-			permissions.add(Permission.ProgramAdmin);
-
-		if (program?.editors.map(editor => editor.id).includes(userId))
-			permissions.add(Permission.ProgramEditor);
+			if (program?.admins.map(admin => admin.id).includes(userId))
+				permissions.add(Permission.ProgramAdmin);
+		}
 	}
 
 	if (courseId) {
