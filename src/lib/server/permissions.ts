@@ -22,15 +22,16 @@ export async function isUserSuperAdmin(userId: string): Promise<boolean> {
 	return user?.role === UserRole.ADMIN;
 }
 
+
 /**
  * Checks the permissions a user has for a given program and course
  *
- * @param userId Required: the user ID to check permissions for
- * @param programId Optional: the program ID to check a user's permissions for
+ * @param session The user's session containing their user ID, may be null. If null, the user has no permissions (not even Viewer)
+ * @param programIds Optional: the program IDs to check a user's permissions for
  * @param courseId Optional: the course ID to check a user's permissions for
  * @returns Set of permissions the user has for the given program and course
  */
-export async function checkPermissions(session?: Session | null, programIds?: number[], courseId?: number): Promise<Set<Permission>> {
+export async function getPermissions(session?: Session | null, programIds?: number[], courseId?: number): Promise<Set<Permission>> {
 	const userId = session?.user?.id;
 	const permissions = new Set<Permission>();
 
@@ -95,4 +96,19 @@ export async function checkPermissions(session?: Session | null, programIds?: nu
 	}
 
 	return permissions;
+}
+
+
+/**
+ * Checks if the user has at least one of the required permissions
+ *
+ * @param session The user's session containing their user ID, may be null
+ * @param programIds Optional: the program IDs to check a user's permissions for
+ * @param courseId Optional: the course ID to check a user's permissions for
+ * @param requiredPermissions list of permissions the user needs to have at least one of
+ * @returns Whether the user is allowed to access the resource
+ */
+export async function checkPermissions(requiredPermissions: Permission[], session: Session | null, programIds?: number[], courseId?: number): Promise<boolean> {
+	const permissions = await getPermissions(session, programIds, courseId);
+	return !permissions.isDisjointFrom(new Set(requiredPermissions));
 }

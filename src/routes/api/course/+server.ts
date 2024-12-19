@@ -9,13 +9,14 @@ import { Permission, checkPermissions } from '$lib/server/permissions.js';
 // --------------------> API Endpoints
 
 export async function POST({ request, locals }) {
+	const requiredPerms = [Permission.SuperAdmin, Permission.ProgramAdmin];
+
 	// Retrieve course code and name
 	const { code, name, program_id } = await request.json()
 	if (!code || !name) return new Response('Missing code or name', { status: 400 })
 
 	// Check permissions
-	const perms = await checkPermissions(await locals.auth(), [program_id]);
-	if (perms.isDisjointFrom(new Set([Permission.SuperAdmin, Permission.CourseAdmin])))
+	if (!await checkPermissions(requiredPerms, await locals.auth(), [program_id]))
 		return new Response('User does not have permission to create courses', { status: 403 });
 
 	// Create course
@@ -27,6 +28,8 @@ export async function POST({ request, locals }) {
 }
 
 export async function PUT({ request, locals }) {
+	const requiredPerms = [Permission.SuperAdmin, Permission.ProgramAdmin, Permission.CourseAdmin];
+
 	// Retrieve data
 	const data = await request.json()
 	if (!validSerializedCourse(data)) {
@@ -35,8 +38,7 @@ export async function PUT({ request, locals }) {
 
 	// Check permissions
 	const { id, program_ids } = data;
-	const perms = await checkPermissions(await locals.auth(), program_ids, id);
-	if (perms.isDisjointFrom(new Set([Permission.SuperAdmin, Permission.ProgramAdmin, Permission.CourseAdmin])))
+	if (!await checkPermissions(requiredPerms, await locals.auth(), program_ids, id))
 		return new Response('User does not have permission to create courses', { status: 403 });
 
 	// Update course
