@@ -79,76 +79,6 @@
 		}
 	}
 
-	class CourseModal extends AbstractFormModal {
-		code: string = ''
-		name: string = ''
-
-		constructor() {
-			super()
-			this.initialize()
-		}
-
-		validate(): Validation {
-			const validation = new Validation()
-
-			// Validate code
-			if (this.hasChanged('code')) {
-				if (this.code.trim() === '') {
-					validation.add({
-						severity: Severity.error,
-						short: 'Course code is required'
-					})
-				} else if (!settings.COURSE_CODE_REGEX.test(this.code.trim())) {
-					validation.add({
-						severity: Severity.error,
-						short: 'Course code is invalid'
-					})
-				} else if (this.code.trim().length > settings.MAX_COURSE_CODE_LENGTH) {
-					validation.add({
-						severity: Severity.error,
-						short: 'Course code is too long'
-					})
-				} else if ($courses.some(course => course.code === this.code.trim())) {
-					validation.add({
-						severity: Severity.error,
-						short: 'Course code isn\'t unique'
-					})
-				}
-			}
-
-			// Validate name
-			if (this.hasChanged('name')) {
-				if (this.name.trim() === '') {
-					validation.add({
-						severity: Severity.error,
-						short: 'Course name is required'
-					})
-				} else if (this.name.trim().length > settings.MAX_COURSE_NAME_LENGTH) {
-					validation.add({
-						severity: Severity.error,
-						short: 'Course name is too long'
-					})
-				} else if ($courses.some(course => course.trimmed_name === this.name.trim())) {
-					validation.add({
-						severity: Severity.warning,
-						short: 'Course name isn\'t unique'
-					})
-				}
-			}
-
-			return validation
-		}
-
-		async submit() {
-			try {
-				const course = await CourseController.create(cache, this.code.trim(), this.name.trim())
-				$courses = [...$courses, course] // Trigger reactivity
-			} catch (error) {
-				handleError(error)
-			}
-		}
-	}
-
 	// Functions
 	async function revive() {
 		
@@ -174,9 +104,8 @@
 	// Main
 	export let data: PageData
 
-	const program_modal = new ProgramModal()
-	const course_modal = new CourseModal()
 	const cache = new ControllerCache()
+	const program_modal = new ProgramModal()
 
 </script>
 
@@ -190,22 +119,6 @@
 	<svelte:fragment slot="form">
 		<label for="name"> Program Name </label>
 		<Textfield id="name" bind:value={program_modal.name} />
-	</svelte:fragment>
-
-	<svelte:fragment slot="submit"> Create </svelte:fragment>
-</FormModal>
-
-<FormModal controller={course_modal}>
-	<h3 slot="header"> Create Course </h3>
-
-	Courses are the building blocks of your program. They have their own unique code and name, and are associated with a program. Looking to try out the Graph editor? Try making a sandbox environment instead!
-
-	<svelte:fragment slot="form">
-		<label for="code"> Course Code </label>
-		<Textfield id="code" bind:value={course_modal.code} />
-
-		<label for="name"> Course Name </label>
-		<Textfield id="name" bind:value={course_modal.name} />
 	</svelte:fragment>
 
 	<svelte:fragment slot="submit"> Create </svelte:fragment>
@@ -227,8 +140,15 @@
 				<img src={plus_icon} alt="" /> New Program
 			</Button>
 
-			<Button on:click={() => course_modal.show()}>
-				<img src={plus_icon} alt="" /> New Course
+			<Button on:click={async () => {
+				try {
+					const course = await CourseController.create(cache, 'SANDBOX', 'username') // TODO - Implement sandbox flag and username
+					$courses = [...$courses, course] // Trigger reactivity
+				} catch (error) {
+					handleError(error)
+				}
+			}}>
+				<img src={plus_icon} alt="" /> New Sandbox
 			</Button>
 
 			<div class="flex-spacer" />
