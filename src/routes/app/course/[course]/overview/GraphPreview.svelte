@@ -16,6 +16,14 @@
 	import Graph from '$components/Graph.svelte'
 
 	// Functions
+	function onkeydown(event: KeyboardEvent) {
+		if (!visible) return
+
+		if (event.key === 'Escape') {
+			hide()
+		}
+	}
+
 	export function show() {
 		graphSVG.view = 'subjects'
 		visible = true
@@ -45,6 +53,8 @@
 </script>
 
 <!-- Markup -->
+
+<svelte:window on:keydown={ onkeydown } />
 
 {#if visible}
 	<div class="background" />
@@ -184,7 +194,6 @@
 
 					min-width: $total-icon-size
 					min-height: $total-icon-size
-					margin-left: $card-thick-padding - $form-small-gap
 					padding: $input-icon-padding
 
 					border-radius: $default-border-radius
