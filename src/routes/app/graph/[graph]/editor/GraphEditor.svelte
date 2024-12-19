@@ -317,7 +317,7 @@
 			.tabs
 				display: flex
 
-				margin-top: $form-small-gap
+				margin-top: $form-small-gap + 2rem - $form-small-gap
 
 				background: $light-gray
 				border: 1px solid $gray

@@ -3,6 +3,7 @@
 
 	// Internal dependencies
 	import { graph, save_status } from './stores'
+	import { handleError } from '$scripts/utility'
 	import type { DomainController } from '$scripts/controllers'
 
 	// Components
@@ -34,8 +35,12 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await domain.delete(true, $save_status)
-				$graph = $graph // Trigger reactivity
+				try {
+					await domain.delete(true, $save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Delete </Button>
 	</svelte:fragment>
@@ -47,8 +52,12 @@
 		description="Delete Domain"
 		on:click={async () => {
 			if (domain.is_empty) {
-				await domain.delete(true, $save_status)
-				$graph = $graph // Trigger reactivity
+				try {
+					await domain.delete(true, $save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			} else {
 				delete_modal.show()
 			}
@@ -60,9 +69,13 @@
 		placeholder="Domain Name"
 		bind:value={domain.name}
 		on:input={async () => {
-			$save_status.setUnsaved()
-			await domain.save($save_status)
-			$graph = $graph /* Trigger reactivity */
+			try {
+				$save_status.setUnsaved()
+				await domain.save($save_status)
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 
@@ -71,9 +84,13 @@
 		options={domain.style_options}
 		bind:value={domain.style}
 		on:change={async () => {
-			$save_status.setUnsaved()
-			await domain.save($save_status)
-			$graph = $graph // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await domain.save($save_status)
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 

@@ -3,6 +3,7 @@
 
 	// Internal dependencies
 	import { course, save_status } from './stores'
+	import { handleError } from '$scripts/utility'
 	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
@@ -33,10 +34,14 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				$course.unassignFromProgram(program)
-				$save_status.setUnsaved()
-				await $course.save($save_status)
-				$course = $course // Trigger reactivity
+				try {
+					$course.unassignFromProgram(program)
+					$save_status.setUnsaved()
+					await $course.save($save_status)
+					$course = $course // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Unassign </Button>
 	</svelte:fragment>

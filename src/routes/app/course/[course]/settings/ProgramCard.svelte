@@ -6,6 +6,7 @@
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
+	import { handleError } from '$scripts/utility'
 
 	import type { ProgramController } from '$scripts/controllers'
 
@@ -46,18 +47,21 @@
 		}
 
 		async submit() {
-			$course.assignToProgram(this.program as ProgramController)
-			$save_status.setUnsaved()
-			await $course.save($save_status)
-			$course = $course // Trigger reactivity
+			try {
+				$course.assignToProgram(this.program as ProgramController)
+				$save_status.setUnsaved()
+				await $course.save($save_status)
+				$course = $course // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}
 	}
 
 	// Variables
 	const program_modal = new AddProgramModal()
-	
 	let query: string = ''
-
+	
 	$: filtered_programs = $course.programs.filter(program => program.matchesQuery(query))
 
 </script>

@@ -150,13 +150,13 @@ abstract class RelationController<T extends DomainController | SubjectController
 	// --------------------> Actions
 
 	async save(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 		await Promise.all([
 			this.parent?.save(),
 			this.child?.save()
 		])
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	abstract delete(): void

@@ -32,31 +32,30 @@ export function customError(name: string, message: string): Error {
 	return error
 }
 
-export async function asyncTry<T>(promise: Promise<T>, save_status?: SaveStatus): Promise<T> {
-	try {
-		return await promise
-	} catch (error) {
-		const name = error instanceof Error ? error.name : 'Error'
-		const message = error instanceof Error ? error.message : 'An error occurred'
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number): (...args: Parameters<T>) => Promise<void> {
+	let timeout: NodeJS.Timeout | undefined
+	let resolvers: (() => void)[] = []
 
-		console.error(`${name}: ${message}`)
-		save_status?.setError(`${name}: ${message}`)
-		return Promise.reject()
+	return function (this: ThisParameterType<T>, ...args: Parameters<T>): Promise<void> {
+		clearTimeout(timeout)
+
+		return new Promise(resolve => {
+			resolvers.push(resolve)
+			timeout = setTimeout(async () => {
+				await callback.apply(this, args)
+				resolvers.forEach(resolve => resolve())
+				timeout = undefined
+				resolvers = []
+			}, delay)
+		})
 	}
 }
 
-export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number) : (...args: Parameters<T>) => void {
-	let timeout: NodeJS.Timeout | undefined
-
-	return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
-		const later = () => {
-			timeout = undefined
-			callback.apply(this, args)
-		}
-
-		clearTimeout(timeout)
-		timeout = setTimeout(later, delay)
-	}
+export function handleError(error: any, save_status?: SaveStatus) {
+	const name = error instanceof Error ? error.name : 'UnknownError'
+	const message = error instanceof Error ? error.message : error
+	console.error(`${name}: ${message}`)
+	save_status?.setError(`${name}: ${message}`)
 }
 
 export async function asyncFlatmap<Input, Output>(input: Input[], callback: (input: Input) => Output | Output[] | Promise<Output | Output[]>): Promise<Output[]> {

@@ -327,7 +327,7 @@ class SubjectController extends NodeController<SubjectController> {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, graph: GraphController, save_status?: SaveStatus): Promise<SubjectController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new subject
 		const response = await fetch('/api/subject', {
@@ -351,7 +351,7 @@ class SubjectController extends NodeController<SubjectController> {
 		subject._name_unchanged = true
 		subject._domain_unchanged = true
 		graph.assignSubject(subject)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 
 		return subject
 	}
@@ -419,7 +419,7 @@ class SubjectController extends NodeController<SubjectController> {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the subject
 		const response = await fetch('/api/subject', {
@@ -433,11 +433,11 @@ class SubjectController extends NodeController<SubjectController> {
 			throw customError('APIError (/api/subject PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign graph, domain, parents, children, and lectures
 		if (this._graph_id !== undefined)
@@ -464,7 +464,7 @@ class SubjectController extends NodeController<SubjectController> {
 
 		// Remove the subject from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async copy(graph: GraphController): Promise<SubjectController> {

@@ -14,6 +14,7 @@
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
+	import { handleError } from '$scripts/utility';
 
     // Main
     $: filtered_lectures = $graph.lectures.filter(lecture => lecture.matchesQuery($lecture_query))
@@ -31,8 +32,12 @@
 		<SortableList
 			list={filtered_lectures} 
 			on:rearrange={async event => {
-				await $graph.reorderLectures(event.detail, $save_status)
-				$graph = $graph // Trigger reactivity
+				try {
+					await $graph.reorderLectures(event.detail, $save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		>
 			<svelte:fragment slot="left" let:item>
@@ -51,9 +56,13 @@
 	<button
 		class="row-button"
 		on:click={async () => {
-			await LectureController.create($graph.cache, $graph, $save_status)
-			$graph = $graph // Trigger reactivity
-			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			try {
+				await LectureController.create($graph.cache, $graph, $save_status)
+				$graph = $graph // Trigger reactivity
+				setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	> <img src={plus_icon} alt="New lecture"> </button>
 

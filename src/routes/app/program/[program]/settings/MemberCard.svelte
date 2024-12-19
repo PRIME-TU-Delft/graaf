@@ -2,11 +2,11 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { program } from './stores'
+	import { program, save_status } from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
-
+	import { handleError } from '$scripts/utility'
 	import type { Permission } from '$scripts/types'
 	import type { UserController } from '$scripts/controllers'
 
@@ -15,7 +15,6 @@
 
 	import FormModal from '$components/FormModal.svelte'
 	import Searchbar from '$components/Searchbar.svelte'
-	import Feedback from '$components/Feedback.svelte'
 	import Dropdown from '$components/Dropdown.svelte'
 	import Button from '$components/Button.svelte'
 	import Card from '$components/Card.svelte'
@@ -58,14 +57,19 @@
 		}
 
 		async submit() {
-			if (this.permission === 'EDITOR') {
-				$program.assignEditor(this.user as UserController)
-			} else {
-				$program.assignAdmin(this.user as UserController)
-			}
+			try {
+				if (this.permission === 'EDITOR') {
+					$program.assignEditor(this.user as UserController)
+				} else {
+					$program.assignAdmin(this.user as UserController)
+				}
 
-			await $program.save()
-			$program = $program // Trigger reactivity
+				$save_status.setUnsaved()
+				await $program.save($save_status)
+				$program = $program // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}
 	}
 

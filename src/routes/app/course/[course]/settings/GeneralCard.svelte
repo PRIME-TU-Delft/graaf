@@ -6,6 +6,7 @@
 
 	// Internal dependencies
 	import { course, save_status } from './stores'
+	import { handleError } from '$scripts/utility'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
@@ -33,10 +34,15 @@
 		<LinkButton
 			on:click={() => archive_modal.hide()}
 		> Cancel </LinkButton>
+		
 		<Button
 			on:click={async () => {
-				await $course.delete() // TODO this should archive, not delete
-				goto('/app/home')
+				try {
+					await $course.delete() // TODO this should archive, not delete
+					goto('/app/home')
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Archive </Button>
 	</svelte:fragment>
@@ -45,30 +51,46 @@
 <Card>
 	<svelte:fragment slot="header">
 		<h3> General </h3>
+
 		<div class="flex-spacer" />
+
 		<Button dangerous on:click={() => archive_modal.show()}>
 			<img src={trash_icon} alt="" /> Archive Course
 		</Button>
 	</svelte:fragment>
+
 	<div class="grid">
 		<label for="code"> Course Code </label>
 		<label for="name"> Course Name </label>
+
 		<Textfield 
 			id="code"
 			bind:value={$course.code}
 			on:input={async () => {
 				$save_status.setUnsaved()
-				await $course.save($save_status)
+
+				try {
+					await $course.save($save_status)
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		/>
+
 		<Textfield 
 			id="name"
 			bind:value={$course.name}
 			on:input={async () => {
 				$save_status.setUnsaved()
-				await $course.save($save_status)
+
+				try {
+					await $course.save($save_status)
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		/>
+
 		<Feedback data={$course.validateCode()} />
 		<Feedback data={$course.validateName()} />
 	</div>

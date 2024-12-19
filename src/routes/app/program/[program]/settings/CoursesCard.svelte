@@ -4,10 +4,9 @@
 	// Internal dependencies
 	import { program, courses, save_status } from './stores'
 	import * as settings from '$scripts/settings'
-
+	import { handleError } from '$scripts/utility'
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
-
 	import { CourseController } from '$scripts/controllers'
 
 	// Components
@@ -50,8 +49,13 @@
 		async submit() {
 			$program.assignCourse(this.course as CourseController)
 			$save_status.setUnsaved()
-			await $program.save($save_status)
-			$program = $program // Trigger reactivity
+
+			try {
+				await $program.save($save_status)
+				$program = $program // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}
 	}
 
@@ -116,9 +120,12 @@
 		}
 
 		async submit() {
-			const course = await CourseController.create($program.cache, this.code.trim(), this.name.trim(), $program, $save_status)
-			$courses = [...$courses, course] // Trigger reactivity
-			$program = $program
+			try {
+				const course = await CourseController.create($program.cache, this.code.trim(), this.name.trim(), $program, $save_status)
+				$courses = [...$courses, course] // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}
 	}
 

@@ -322,7 +322,7 @@ class UserController {
 
 	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the user
 		const response = await fetch('/api/user', {
@@ -337,7 +337,7 @@ class UserController {
 		}
 
 		this._unsaved = false
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	// --------------------> Utility

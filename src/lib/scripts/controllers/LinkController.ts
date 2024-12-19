@@ -211,7 +211,7 @@ class LinkController {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, course: CourseController, save_status?: SaveStatus): Promise<LinkController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new link
 		const response = await fetch('/api/link', {
@@ -235,7 +235,7 @@ class LinkController {
 		link._name_unchanged = true
 		link._graph_unchanged = true
 		course.assignLink(link)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 
 		return link
 	}
@@ -284,7 +284,7 @@ class LinkController {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the link
 		const response = await fetch('/api/link', {
@@ -298,11 +298,11 @@ class LinkController {
 			throw customError('APIError (/api/link PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign course and graph
 		if (this._course_id !== undefined)
@@ -320,7 +320,7 @@ class LinkController {
 
 		// Remove the link from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	// --------------------> Utility

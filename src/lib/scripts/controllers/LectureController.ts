@@ -340,7 +340,7 @@ class LectureController {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, graph: GraphController, save_status?: SaveStatus): Promise<LectureController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new lecture
 		const response = await fetch('/api/lecture', {
@@ -364,7 +364,7 @@ class LectureController {
 		lecture._name_unchanged = true
 		lecture._subjects_unchanged = true
 		graph.assignLecture(lecture)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 
 		return lecture
 	}
@@ -416,7 +416,7 @@ class LectureController {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the lecture
 		const response = await fetch('/api/lecture', {
@@ -430,11 +430,11 @@ class LectureController {
 			throw customError('APIError (/api/lecture PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(reorder_graph: boolean = true, save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign graph and subjects
 		if (this._graph_id !== undefined)
@@ -458,7 +458,7 @@ class LectureController {
 
 		// Remove the graph from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async copy(graph: GraphController): Promise<LectureController> {

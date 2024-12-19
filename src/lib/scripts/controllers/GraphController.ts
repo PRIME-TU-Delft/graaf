@@ -352,7 +352,7 @@ class GraphController {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, course: CourseController, name: string, save_status?: SaveStatus): Promise<GraphController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new graph
 		const response = await fetch('/api/graph', {
@@ -374,7 +374,7 @@ class GraphController {
 
 		const graph = GraphController.revive(cache, data)
 		course.assignGraph(graph)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 
 		return graph
 	}
@@ -439,7 +439,7 @@ class GraphController {
 
 	private async _save(save_status?: SaveStatus) {
 		if (this.validateName().severity === Severity.error) return
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the graph
 		const response = await fetch('/api/graph', {
@@ -453,11 +453,11 @@ class GraphController {
 			throw customError('APIError (/api/graph PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(save_status?: SaveStatus): Promise<void> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign course and links
 		if (this._course_id !== undefined)
@@ -486,11 +486,11 @@ class GraphController {
 
 		// Remove the graph from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async prune(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		const promises: Promise<void>[] = []
 		let reorder_domains = false
@@ -532,12 +532,12 @@ class GraphController {
 		if (reorder_domains) await this.reorderDomains()
 		if (reorder_lectures) await this.reorderLectures()
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	// TODO Rewrite copy to use API endpoint
 	async copy(course: CourseController, save_status?: SaveStatus): Promise<GraphController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Copy graph
 		const copied_graph = await GraphController.create(this.cache, course, `${this.display_name} (Copied from ${this.course.code})`)
@@ -609,12 +609,12 @@ class GraphController {
 			}
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 		return copied_graph
 	}
 
 	async reorderDomains(domains?: DomainController[], save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Update the graph
 		if (domains !== undefined) {
@@ -639,11 +639,11 @@ class GraphController {
 			throw customError('APIError (/api/graph/{this.id}/reorder/domains PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async reorderLectures(lectures?: LectureController[], save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Update the graph
 		if (lectures !== undefined) {
@@ -668,7 +668,7 @@ class GraphController {
 			throw customError('APIError (/api/graph/{this.id}/reorder/lectures PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	sort(...targets: ('subjects' | 'domain-relations' | 'subject-relations')[]) {

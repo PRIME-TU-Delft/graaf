@@ -5,15 +5,16 @@
 	import warning_icon from '$assets/warning-icon.svg'
 	import error_icon from '$assets/error-icon.svg'
 
-	export function setSaving(value: boolean) {
-		saving = value
+	export function setSaving() {
+		if (timer) clearTimeout(timer)
+		timer = setTimeout(() => timer = undefined, MIN_SAVE_TIME)
+		saving = true
+	}
 
-		if (value) {
-			unsaved = false
-			error = undefined
-			if (timer) clearTimeout(timer)
-			timer = setTimeout(() => timer = undefined, MIN_SAVE_TIME)
-		}
+	export function setIdle() {
+		error = undefined
+		unsaved = false
+		saving = false
 	}
 
 	export function setUnsaved() {
@@ -23,8 +24,6 @@
 
 	export function setError(message: string) {
 		error = message
-		saving = false
-		unsaved = true
 	}
 
 	const MIN_SAVE_TIME = 1000

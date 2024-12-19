@@ -19,6 +19,7 @@
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
+	import { handleError } from '$scripts/utility';
 
 	// Exports
 	export let relation: RelationController<DomainController | SubjectController>
@@ -40,8 +41,12 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await relation.delete()
-				$graph = $graph // Trigger reactivity
+				try {
+					await relation.delete()
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Delete </Button>
 	</svelte:fragment>
@@ -53,8 +58,12 @@
 		description="Delete Relation"
 		on:click={async () => {
 			if (relation.is_empty) {
-				await relation.delete()
-				$graph = $graph // Trigger reactivity
+				try {
+					await relation.delete()
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			} else {
 				delete_modal.show()
 			}
@@ -66,9 +75,13 @@
 		options={relation.parent_options}
 		bind:value={relation.parent}
 		on:change={async () => {
-			$save_status.setUnsaved()
-			await relation.save($save_status)
-			$graph = $graph // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await relation.save($save_status)
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 
@@ -79,9 +92,13 @@
 		options={relation.child_options}
 		bind:value={relation.child}
 		on:change={async () => {
-			$save_status.setUnsaved()
-			await relation.save($save_status)
-			$graph = $graph // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await relation.save($save_status)
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 

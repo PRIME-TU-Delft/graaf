@@ -256,7 +256,7 @@ class ProgramController {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, name: string, save_status?: SaveStatus): Promise<ProgramController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new program
 		const response = await fetch('/api/program', {
@@ -276,7 +276,7 @@ class ProgramController {
 			throw customError('ProgramError', `Invalid program data received from API`)
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 		return ProgramController.revive(cache, data)
 	}
 
@@ -330,7 +330,7 @@ class ProgramController {
 
 	private async _save(save_status?: SaveStatus) {
 		if (this.validateName().severity === Severity.error) return
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the program
 		const response = await fetch('/api/program', {
@@ -344,11 +344,11 @@ class ProgramController {
 			throw customError('APIError (/api/program PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign courses, editors, and admins
 		if (this._course_ids !== undefined)
@@ -371,7 +371,7 @@ class ProgramController {
 
 		// Remove the program from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	// --------------------> Utility

@@ -317,7 +317,7 @@ class DomainController extends NodeController<DomainController> {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, graph: GraphController, save_status?: SaveStatus): Promise<DomainController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new domain
 		const response = await fetch('/api/domain', {
@@ -341,7 +341,7 @@ class DomainController extends NodeController<DomainController> {
 		domain._name_unchanged = true
 		domain._style_unchanged = true
 		graph.assignDomain(domain)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 
 		return domain
 	}
@@ -412,7 +412,7 @@ class DomainController extends NodeController<DomainController> {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the domain
 		const response = await fetch('/api/domain', {
@@ -426,11 +426,11 @@ class DomainController extends NodeController<DomainController> {
 			throw customError('APIError (/api/domain PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(reorder_graph: boolean = true, save_status?: SaveStatus): Promise<void> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign graph, parents, children, and subjects
 		if (this._graph_id !== undefined)
@@ -460,7 +460,7 @@ class DomainController extends NodeController<DomainController> {
 
 		// Remove the course from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async copy(graph: GraphController): Promise<DomainController> {

@@ -4,7 +4,7 @@
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
 	import { course, save_status } from './stores'
-
+	import { handleError } from '$scripts/utility'
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
 
@@ -153,8 +153,12 @@
 		description="Delete Link"
 		on:click={async () => {
 			if (link.is_empty) {
-				await link.delete($save_status)
-				$course = $course // Trigger reactivity
+				try {
+					await link.delete($save_status)
+					$course = $course // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			} else {
 				delete_modal.show()
 			}
@@ -166,9 +170,13 @@
 		placeholder="Link Name"
 		bind:value={link.name}
 		on:input={async () => {
-			$save_status.setUnsaved()
-			await link.save($save_status)
-			$course = $course // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await link.save($save_status)
+				$course = $course // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 
@@ -177,9 +185,13 @@
 		options={$course.graph_options}
 		bind:value={link.graph}
 		on:change={async () => {
-			$save_status.setUnsaved()
-			await link.save($save_status)
-			$course = $course // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await link.save($save_status)
+				$course = $course // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 

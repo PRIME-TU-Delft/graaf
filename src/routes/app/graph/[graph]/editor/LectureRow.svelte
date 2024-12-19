@@ -24,6 +24,7 @@
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
 	import plus_icon from '$assets/plus-icon.svg'
+	import { handleError } from '$scripts/utility';
 
 	// Modals
 	class AssignSubjectModal extends AbstractFormModal {
@@ -48,10 +49,14 @@
 		}
 
 		async submit() {
-			lecture.assignSubject(this.subject as SubjectController)
-			$save_status.setUnsaved()
-			await lecture.save($save_status)
-			$graph = $graph
+			try {
+				lecture.assignSubject(this.subject as SubjectController)
+				$save_status.setUnsaved()
+				await lecture.save($save_status)
+				$graph = $graph
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}
 	}
 
@@ -92,8 +97,12 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await lecture.delete(true, $save_status)
-				$graph = $graph // Trigger reactivity
+				try {
+					await lecture.delete(true, $save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Delete </Button>
 	</svelte:fragment>
@@ -105,8 +114,12 @@
 		description="Delete Domain"
 		on:click={async () => {
 			if (lecture.is_empty) {
-				await lecture.delete(true, $save_status)
-				$graph = $graph // Trigger reactivity
+				try {
+					await lecture.delete(true, $save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			} else {
 				delete_modal.show()
 			}
@@ -118,9 +131,13 @@
 		placeholder="Lecture name"
 		bind:value={lecture.name}
 		on:input={async () => {
-			$save_status.setUnsaved()
-			await lecture.save($save_status)
-			$graph = $graph // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await lecture.save($save_status)
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 
@@ -142,10 +159,14 @@
 
 					<LinkButton
 						on:click={async () => {
-							lecture.unassignSubject(subject)
-							$save_status.setUnsaved()
-							await lecture.save($save_status)
-							$graph = $graph
+							try {
+								lecture.unassignSubject(subject)
+								$save_status.setUnsaved()
+								await lecture.save($save_status)
+								$graph = $graph
+							} catch (error) {
+								handleError(error, $save_status)
+							}
 						}}
 					> Unassign from lecture </LinkButton>
 				</div>

@@ -7,7 +7,7 @@
 	// Internal dependencies
 	import * as settings from '$scripts/settings'
 	import { programs, courses, query } from './stores'
-	import { asyncTry } from '$scripts/utility'
+	import { handleError } from '$scripts/utility'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
@@ -70,8 +70,12 @@
 		}
 
 		async submit() {
-			await asyncTry(ProgramController.create(cache, this.name.trim()))
-				.then(program => $programs = [...$programs, program]) // Trigger reactivity
+			try {
+				const program = await ProgramController.create(cache, this.name.trim())
+				$programs = [...$programs, program] // Trigger reactivity
+			} catch (error) {
+				handleError(error)
+			}
 		}
 	}
 
@@ -136,8 +140,12 @@
 		}
 
 		async submit() {
-			await asyncTry(CourseController.create(cache, this.code.trim(), this.name.trim()))
-				.then(course => $courses = [...$courses, course]) // Trigger reactivity
+			try {
+				const course = await CourseController.create(cache, this.code.trim(), this.name.trim())
+				$courses = [...$courses, course] // Trigger reactivity
+			} catch (error) {
+				handleError(error)
+			}
 		}
 	}
 

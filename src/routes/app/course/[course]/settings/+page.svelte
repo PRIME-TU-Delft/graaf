@@ -77,7 +77,6 @@
 					name: 'Home',
 					href: '/app/home'
 				},
-
 				{
 					name: $course.display_name,
 					href: `/app/course/${$course.id}/overview`
@@ -96,6 +95,5 @@
 		<GeneralCard />
 		<MemberCard />
 		<ProgramCard />
-
 	</Layout>
 {/await}

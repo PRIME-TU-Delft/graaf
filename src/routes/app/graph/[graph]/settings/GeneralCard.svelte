@@ -6,11 +6,10 @@
 
 	// Internal dependencies
 	import { graph, save_status } from './stores'
-	import { Severity } from '$scripts/validation'
+	import { handleError } from '$scripts/utility'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
-	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Feedback from '$components/Feedback.svelte'
@@ -38,48 +37,41 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await $graph.delete()
-				goto(`/app/course/${$graph.course_id}/overview`)
+				try {
+					await $graph.delete()
+					goto(`/app/course/${$graph.course_id}/overview`)
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Delete </Button>
 	</svelte:fragment>
 </SimpleModal>
 
-<div class="wrapper">
-	<SaveStatus bind:this={ $save_status } />
+<Card>
+	<svelte:fragment slot="header">
+		<h3> General </h3>
+		
+		<div class="flex-spacer" />
+		
+		<Button dangerous on:click={() => delete_modal.show()}>
+			<img src={trash_icon} alt="" /> Delete Graph
+		</Button>
+	</svelte:fragment>
 
-	<Card>
-		<svelte:fragment slot="header">
-			<h3> General </h3>
-			<div class="flex-spacer" />
-			<Button dangerous on:click={() => delete_modal.show()}>
-				<img src={trash_icon} alt="" /> Delete Graph
-			</Button>
-		</svelte:fragment>
-
-		<label for="name"> Graph Name </label>
-
-		<Textfield 
-			id="name"
-			bind:value={$graph.name}
-			on:input={async () => {
+	<label for="name"> Graph Name </label>
+	<Textfield 
+		id="name"
+		bind:value={$graph.name}
+		on:input={async () => {
+			try {
 				$save_status.setUnsaved()
 				await $graph.save($save_status)
-			}}
-		/>
+			} catch (error) {
+				handleError(error, $save_status)
+			}
+		}}
+	/>
 
-		<Feedback data={$graph.validateName()} />
-	</Card>
-</div>
-
-<style lang="sass">
-
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	.wrapper
-		display: flex
-		flex-flow: column nowrap
-		gap: $form-small-gap
-
-</style>
+	<Feedback data={$graph.validateName()} />
+</Card>

@@ -3,7 +3,7 @@
 
 	// Internal dependencies
 	import { course, save_status } from './stores'
-
+	import { handleError } from '$scripts/utility'
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
 	import { tooltip } from '$scripts/actions/tooltip'
@@ -53,15 +53,19 @@
 		}
 
 		async submit() {
-			const copied_graph = await graph.copy(this.course as CourseController, $save_status)
-			await Promise.all([
-				copied_graph.save(),
-				copied_graph.domains.map(domain => domain.save()),
-				copied_graph.subjects.map(subject => subject.save()),
-				copied_graph.lectures.map(lecture => lecture.save())
-			])
+			try {
+				const copied_graph = await graph.copy(this.course as CourseController, $save_status)
+				await Promise.all([
+					copied_graph.save(),
+					copied_graph.domains.map(domain => domain.save()),
+					copied_graph.subjects.map(subject => subject.save()),
+					copied_graph.lectures.map(lecture => lecture.save())
+				])
 
-			$course = $course // Trigger reactivity
+				$course = $course // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}
 	}
 
@@ -107,8 +111,12 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await graph.delete($save_status)
-				$course = $course // Trigger reactivity
+				try {
+					await graph.delete($save_status)
+					$course = $course // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Delete </Button>
 	</svelte:fragment>

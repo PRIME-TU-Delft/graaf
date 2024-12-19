@@ -5,6 +5,7 @@
 	// Internal dependencies
 	import { program, save_status } from './stores'
 	import type { CourseController } from '$scripts/controllers'
+	import { handleError } from '$scripts/utility'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
@@ -35,8 +36,13 @@
 			on:click={async () => {
 				$program.unassignCourse(course)
 				$save_status.setUnsaved()
-				await $program.save($save_status)
-				$program = $program // Trigger reactivity
+
+				try {
+					await $program.save($save_status)
+					$program = $program // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Unassign </Button>
 	</svelte:fragment>

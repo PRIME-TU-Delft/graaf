@@ -6,6 +6,7 @@
 
 	// Internal dependencies
 	import { program, save_status } from './stores'
+	import { handleError } from '$scripts/utility'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
@@ -35,8 +36,12 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await $program.delete() // TODO this should archive, not delete
-				goto('/app/home')
+				try {
+					await $program.delete() // TODO this should archive, not delete
+					goto('/app/home')
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Archive </Button>
 	</svelte:fragment>

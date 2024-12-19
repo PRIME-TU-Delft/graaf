@@ -376,7 +376,7 @@ class CourseController {
 	// --------------------> Actions
 
 	static async create(cache: ControllerCache, code: string, name: string, program?: ProgramController, save_status?: SaveStatus): Promise<CourseController> {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to create a new program
 		const response = await fetch('/api/course', {
@@ -398,7 +398,7 @@ class CourseController {
 
 		const course = CourseController.revive(cache, data)
 		if (program !== undefined) program.assignCourse(course, false)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 		return course
 	}
 
@@ -469,7 +469,7 @@ class CourseController {
 			this.validateName().severity === Severity.error
 		) return
 
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the course
 		const response = await fetch('/api/course', {
@@ -483,11 +483,11 @@ class CourseController {
 			throw customError('APIError (/api/course PUT)', await response.text())
 		}
 
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	async delete(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Unassign programs, editors, and admins
 		if (this._program_ids !== undefined)
@@ -518,7 +518,7 @@ class CourseController {
 
 		// Remove the course from the cache
 		this.cache.remove(this)
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	// --------------------> Utility
