@@ -30,7 +30,6 @@ import type {
 export async function reduce(lecture: PrismaLecture, ...relations: LectureRelation[]): Promise<SerializedLecture> {
 	const serialized: SerializedLecture = {
 		id: lecture.id,
-		unchanged: lecture.unchanged,
 		name: lecture.name,
 		order: lecture.order
 	}
@@ -65,9 +64,16 @@ export async function reduce(lecture: PrismaLecture, ...relations: LectureRelati
 
 export async function create(graph_id: number): Promise<SerializedLecture> {
 	try {
+		const order = await prisma.lecture.count({
+			where: {
+				graphId: graph_id
+			}
+		})
+
 		var lecture = await prisma.lecture.create({
 			data: {
-				graphId: graph_id
+				graphId: graph_id,
+				order: order
 			}
 		})
 	} catch (error) {
@@ -95,7 +101,6 @@ export async function update(data: SerializedLecture) {
 				id: data.id
 			},
 			data: {
-				unchanged: data.unchanged,
 				name: data.name,
 				order: data.order,
 				graph: graph_delta,

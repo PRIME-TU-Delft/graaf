@@ -2,10 +2,11 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status} from './stores'
 
 	import { Validation, Severity } from '$scripts/validation'
 	import { AbstractFormModal } from '$scripts/modals'
+	import { handleError } from '$scripts/utility'
 
 	import type { Permission } from '$scripts/types'
 	import type { UserController } from '$scripts/controllers'
@@ -57,14 +58,19 @@
 		}
 
 		async submit() {
-			if (this.permission === 'EDITOR') {
-				$course.assignEditor(this.user as UserController)
-			} else {
-				$course.assignAdmin(this.user as UserController)
+			try {
+				if (this.permission === 'EDITOR') {
+					$course.assignEditor(this.user as UserController)
+				} else {
+					$course.assignAdmin(this.user as UserController)
+				}
+
+				$save_status.setUnsaved()
+				await $course.save($save_status)
+				$course = $course // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
 			}
-			
-			await $course.save()
-			$course = $course // Trigger reactivity
 		}
 	}
 

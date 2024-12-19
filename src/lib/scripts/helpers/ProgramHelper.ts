@@ -30,7 +30,6 @@ import type {
 export async function reduce(program: PrismaProgram, ...relations: ProgramRelation[]): Promise<SerializedProgram> {
 	const serialized: SerializedProgram = {
 		id: program.id,
-		unchanged: program.unchanged,
 		name: program.name
 	}
 
@@ -110,7 +109,6 @@ export async function update(data: SerializedProgram) {
 				id: data.id
 			},
 			data: {
-				unchanged: data.unchanged,
 				name: data.name,
 				courses: course_delta,
 				editors: editor_delta,

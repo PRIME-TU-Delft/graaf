@@ -3,7 +3,7 @@
 import type { PageServerLoad } from './$types'
 
 // Internal dependencies
-import { asyncFlatmap } from '$scripts/utility'
+import { asyncFlatmap, customError } from '$scripts/utility'
 import { ProgramHelper, CourseHelper } from '$scripts/helpers'
 
 // Load
@@ -14,9 +14,9 @@ export const load: PageServerLoad = async () => {
 
 	// Start data streams
 	const courses = CourseHelper.getAll()
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 	const admins = asyncFlatmap(programs, program => ProgramHelper.getAdmins(program.id))
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 
 	return { programs, courses, admins }
 }

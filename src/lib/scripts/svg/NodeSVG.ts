@@ -146,7 +146,7 @@ class NodeSVG {
 		// Update node position
 		selection
 			.transition()
-				.duration(animated ? settings.ANIMATION_DURATION : 0)
+				.duration(animated ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.attr('transform', node => `translate(
 				${node.x * settings.GRID_UNIT},

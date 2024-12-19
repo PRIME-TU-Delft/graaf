@@ -4,7 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "$lib/server/prisma";
 import { env } from "$env/dynamic/private";
 import type { OIDCConfig } from "@auth/sveltekit/providers";
-
+import { customError } from "$scripts/utility";
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;
@@ -21,7 +21,7 @@ interface SurfConextProfile extends Record<string, any> {
  * @returns Object containing user information
  */
 async function fetchUserInfo(accessToken: string | undefined) {
-	if (!accessToken) throw new Error("No access token provided");
+	if (!accessToken) throw customError("AuthError", "No access token provided");
 	const res = await fetch(`${env.SURFCONEXT_ISSUER}/oidc/userinfo`, {
 		headers: {
 			"Authorization": `Bearer ${accessToken}`

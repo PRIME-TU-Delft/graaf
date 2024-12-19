@@ -67,7 +67,7 @@ class RelationSVG {
 			// Check for overlap
 			if (Math.abs(dx) < halfWidth && Math.abs(dy) < halfHeight) {
 				line.transition()
-						.duration(animated ? settings.ANIMATION_DURATION : 0)
+						.duration(animated ? settings.GRAPH_ANIMATION_DURATION : 0)
 						.ease(d3.easeSinInOut)
 					.attr('x1', cxStart * settings.GRID_UNIT)
 					.attr('y1', cyStart * settings.GRID_UNIT)
@@ -92,7 +92,7 @@ class RelationSVG {
 			const y2 = cyEnd + sign * (vertQuad ? halfHeight : halfWidth * dy / dx)
 
 			line.transition()
-					.duration(animated ? settings.ANIMATION_DURATION : 0)
+					.duration(animated ? settings.GRAPH_ANIMATION_DURATION : 0)
 					.ease(d3.easeSinInOut)
 				.attr('x1', x1 * settings.GRID_UNIT)
 				.attr('y1', y1 * settings.GRID_UNIT)

@@ -142,6 +142,10 @@
 				top: 0.75rem + $card-thin-padding - math.div($dropdown-icon-size, 4)
 				border-width: 0 1px 1px 0
 
+			&:focus-visible
+				outline: $default-outline
+				border-color: $white				
+
 			.title
 				padding-right: $card-thin-padding + 1rem
 
@@ -172,6 +176,7 @@
 				width: 1.75rem
 				height: 1.75rem
 				padding: $input-icon-padding
+				border-radius: $default-border-radius	
 
 				cursor: pointer
 
@@ -181,6 +186,9 @@
 
 					transform-origin: center
 					pointer-events: none
+
+				&:focus-visible
+					outline: $default-outline	
 
 				&:hover img
 					scale: $scale-on-hover

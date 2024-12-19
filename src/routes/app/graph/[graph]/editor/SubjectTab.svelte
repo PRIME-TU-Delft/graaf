@@ -3,7 +3,7 @@
 	const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
-	import { graph, subject_query } from './stores'
+	import { graph, save_status, subject_query } from './stores'
 
 	import {
 		SubjectController,
@@ -18,6 +18,7 @@
 
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
+	import { handleError } from '$scripts/utility';
 
 	// Variables
 	$: filtered_subjects = $graph.subjects.filter(subject => subject.matchesQuery($subject_query))
@@ -47,9 +48,13 @@
 	<button
 		class="row-button"
 		on:click={async () => {
-			await SubjectController.create($graph.cache, $graph)
-			$graph = $graph // Trigger reactivity
-			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			try {
+				await SubjectController.create($graph.cache, $graph, $save_status)
+				$graph = $graph // Trigger reactivity
+				setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	> <img src={plus_icon} alt="New subject"> </button>
 
@@ -78,9 +83,13 @@
 	<button 
 		class="row-button"
 		on:click={async () => {
-			await SubjectRelationController.create($graph)
-			$graph = $graph // Trigger reactivity
-			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			try {
+				await SubjectRelationController.create($graph)
+				$graph = $graph // Trigger reactivity
+				setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	> <img src={plus_icon} alt="New relation"> </button>
 </div>

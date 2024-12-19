@@ -6,11 +6,10 @@
 
 	// Internal dependencies
 	import { program, save_status } from './stores'
-	import { Severity } from '$scripts/validation'
+	import { handleError } from '$scripts/utility'
 
 	// Components
 	import SimpleModal from '$components/SimpleModal.svelte'
-	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Textfield from '$components/Textfield.svelte'
 	import Feedback from '$components/Feedback.svelte'
@@ -37,50 +36,38 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await $program.delete() // TODO this should archive, not delete
-				goto('/app/home')
+				try {
+					await $program.delete() // TODO this should archive, not delete
+					goto('/app/home')
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Archive </Button>
 	</svelte:fragment>
 </SimpleModal>
 
-<div class="wrapper">
-	<SaveStatus bind:this={ $save_status } />
+<Card>
+	<svelte:fragment slot="header">
+		<h3> General </h3>
 
-	<Card>
-		<svelte:fragment slot="header">
-			<h3> General </h3>
-	
-			<div class="flex-spacer" />
-	
-			<Button dangerous on:click={() => archive_modal.show()}>
-				<img src={trash_icon} alt="" /> Archive Program
-			</Button>
-		</svelte:fragment>
-	
-		<label for="name"> Program Name </label>
-	
-		<Textfield
-			id="name"
-			bind:value={$program.name}
-			on:input={async () => {
-				$save_status.setUnsaved()
-				await $program.save($save_status)
-			}}
-		/>
-	
-		<Feedback data={$program.validateName()} />
-	</Card>
-</div>
+		<div class="flex-spacer" />
 
-<style lang="sass">
+		<Button dangerous on:click={() => archive_modal.show()}>
+			<img src={trash_icon} alt="" /> Archive Program
+		</Button>
+	</svelte:fragment>
 
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
+	<label for="name"> Program Name </label>
 
-	.wrapper
-		display: flex
-		flex-flow: column nowrap
-		gap: $form-small-gap
+	<Textfield
+		id="name"
+		bind:value={$program.name}
+		on:input={async () => {
+			$save_status.setUnsaved()
+			await $program.save($save_status)
+		}}
+	/>
 
-</style>
+	<Feedback data={$program.validateName()} />
+</Card>

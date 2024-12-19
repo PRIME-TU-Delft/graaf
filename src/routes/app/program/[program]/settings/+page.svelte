@@ -5,7 +5,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { courses, program } from './stores'
+	import { courses, program, save_status } from './stores'
 
 	import {
 		ControllerCache,
@@ -22,6 +22,7 @@
 	import Layout from '$components/Layout.svelte'
 	import Navbar from '$components/Navbar.svelte'
 	import Loading from '$components/Loading.svelte'
+	import SaveStatus from '$components/SaveStatus.svelte';
 
 	// Functions
 	async function revive() {
@@ -71,6 +72,7 @@
 			Here you can change your program settings, like its courses and members.
 		</svelte:fragment>
 
+		<SaveStatus bind:this={ $save_status } />
 		<GeneralCard />
 		<MemberCard />
 		<CoursesCard />

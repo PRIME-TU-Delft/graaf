@@ -2,6 +2,8 @@
 // External dependencies
 import type { PageServerLoad } from './$types'
 
+// Internal dependencies
+import { customError } from '$scripts/utility'
 import { 
 	GraphHelper
 } from '$scripts/helpers'
@@ -14,9 +16,9 @@ export const load: PageServerLoad = async ({ params }) => {
 	
 	// Start data streams
 	const graph = GraphHelper.getById(graph_id, 'course')
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 	const course = GraphHelper.getCourse(graph_id)
-		.catch(error => { throw new Error(error) })
+		.catch(error => { throw customError('ServerError', error) })
 
 	return { graph, course }
 }

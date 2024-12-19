@@ -5,7 +5,7 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
 
 	import {
 		ControllerCache,
@@ -21,6 +21,7 @@
 	import GraphCard from './GraphCard.svelte'
 	import LinkCard from './LinkCard.svelte'
 
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Loading from '$components/Loading.svelte'
 	import Layout from '$components/Layout.svelte'
@@ -89,6 +90,7 @@
 			Here you can view the graphs and links associated to this course, and edit their properties.
 		</svelte:fragment>
 
+		<SaveStatus bind:this={ $save_status } />
 		<GraphCard />
 		<LinkCard />
 	</Layout>

@@ -2,7 +2,8 @@
 <script lang="ts">
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
+	import { handleError } from '$scripts/utility'
 	import { LinkController } from '$scripts/controllers'
 
 	// Components
@@ -29,8 +30,12 @@
 		<div class="flex-spacer" />
 		<Searchbar placeholder="Search links" bind:value={link_query} />
 		<Button on:click={async () => {
-			await LinkController.create($course.cache, $course)
-			$course = $course // Trigger reactivity
+			try {
+				await LinkController.create($course.cache, $course, $save_status)
+				$course = $course // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}>
 			<img src={plus_icon} alt="" /> New Link
 		</Button>

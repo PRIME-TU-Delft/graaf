@@ -1,7 +1,7 @@
 
 // Internal dependencies
 import * as settings from '$scripts/settings'
-import { compareArrays, debounce } from '$scripts/utility'
+import { compareArrays, debounce, customError } from '$scripts/utility'
 
 import {
 	ControllerCache,
@@ -91,7 +91,7 @@ class UserController {
 	// Course properties
 	get course_editor_ids(): number[] {
 		if (this._course_editor_ids === undefined)
-			throw new Error('UserError: Course editor data unknown')
+			throw customError('UserError', 'Course editor data unknown')
 		return this._course_editor_ids
 	}
 
@@ -104,7 +104,7 @@ class UserController {
 
 	get course_admin_ids(): number[] {
 		if (this._course_admin_ids === undefined)
-			throw new Error('UserError: Course admin data unknown')
+			throw customError('UserError', 'Course admin data unknown')
 		return this._course_admin_ids
 	}
 
@@ -118,7 +118,7 @@ class UserController {
 	// Program properties
 	get program_editor_ids(): number[] {
 		if (this._program_editor_ids === undefined)
-			throw new Error('UserError: Program editor data unknown')
+			throw customError('UserError', 'Program editor data unknown')
 		return this._program_editor_ids
 	}
 
@@ -131,7 +131,7 @@ class UserController {
 
 	get program_admin_ids(): number[] {
 		if (this._program_admin_ids === undefined)
-			throw new Error('UserError: Program admin data unknown')
+			throw customError('UserError', 'Program admin data unknown')
 		return this._program_admin_ids
 	}
 
@@ -147,7 +147,7 @@ class UserController {
 	becomeCourseEditor(course: CourseController, mirror: boolean = true) {
 		if (this._course_editor_ids !== undefined) {
 			if (this._course_editor_ids.includes(course.id))
-				throw new Error(`UserError: Course editor with ID ${course.id} already assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Course editor with ID ${course.id} already assigned to user with ID ${this.id}`)
 			this._course_editor_ids.push(course.id)
 			this._course_editors?.push(course)
 			this._unsaved = true
@@ -161,7 +161,7 @@ class UserController {
 	becomeCourseAdmin(course: CourseController, mirror: boolean = true) {
 		if (this._course_admin_ids !== undefined) {
 			if (this._course_admin_ids.includes(course.id))
-				throw new Error(`UserError: Course admin with ID ${course.id} already assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Course admin with ID ${course.id} already assigned to user with ID ${this.id}`)
 			this._course_admin_ids.push(course.id)
 			this._course_admins?.push(course)
 			this._unsaved = true
@@ -175,7 +175,7 @@ class UserController {
 	becomeProgramEditor(program: ProgramController, mirror: boolean = true) {
 		if (this._program_editor_ids !== undefined) {
 			if (this._program_editor_ids.includes(program.id))
-				throw new Error(`UserError: Program editor with ID ${program.id} already assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Program editor with ID ${program.id} already assigned to user with ID ${this.id}`)
 			this._program_editor_ids.push(program.id)
 			this._program_editors?.push(program)
 			this._unsaved = true
@@ -189,7 +189,7 @@ class UserController {
 	becomeProgramAdmin(program: ProgramController, mirror: boolean = true) {
 		if (this._program_admin_ids !== undefined) {
 			if (this._program_admin_ids.includes(program.id))
-				throw new Error(`UserError: Program admin with ID ${program.id} already assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Program admin with ID ${program.id} already assigned to user with ID ${this.id}`)
 			this._program_admin_ids.push(program.id)
 			this._program_admins?.push(program)
 			this._unsaved = true
@@ -203,7 +203,7 @@ class UserController {
 	resignAsCourseEditor(course: CourseController, mirror: boolean = true) {
 		if (this._course_editor_ids !== undefined) {
 			if (!this._course_editor_ids.includes(course.id))
-				throw new Error(`UserError: Course editor with ID ${course.id} not assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Course editor with ID ${course.id} not assigned to user with ID ${this.id}`)
 			this._course_editor_ids = this._course_editor_ids.filter(id => id !== course.id)
 			this._course_editors = this._course_editors?.filter(c => c.id !== course.id)
 			this._unsaved = true
@@ -217,7 +217,7 @@ class UserController {
 	resignAsCourseAdmin(course: CourseController, mirror: boolean = true) {
 		if (this._course_admin_ids !== undefined) {
 			if (!this._course_admin_ids.includes(course.id))
-				throw new Error(`UserError: Course admin with ID ${course.id} not assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Course admin with ID ${course.id} not assigned to user with ID ${this.id}`)
 			this._course_admin_ids = this._course_admin_ids.filter(id => id !== course.id)
 			this._course_admins = this._course_admins?.filter(c => c.id !== course.id)
 			this._unsaved = true
@@ -231,7 +231,7 @@ class UserController {
 	resignAsProgramEditor(program: ProgramController, mirror: boolean = true) {
 		if (this._program_editor_ids !== undefined) {
 			if (!this._program_editor_ids.includes(program.id))
-				throw new Error(`UserError: Program editor with ID ${program.id} not assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Program editor with ID ${program.id} not assigned to user with ID ${this.id}`)
 			this._program_editor_ids = this._program_editor_ids.filter(id => id !== program.id)
 			this._program_editors = this._program_editors?.filter(p => p.id !== program.id)
 			this._unsaved = true
@@ -245,7 +245,7 @@ class UserController {
 	resignAsProgramAdmin(program: ProgramController, mirror: boolean = true) {
 		if (this._program_admin_ids !== undefined) {
 			if (!this._program_admin_ids.includes(program.id))
-				throw new Error(`UserError: Program admin with ID ${program.id} not assigned to user with ID ${this.id}`)
+				throw customError('UserError', `Program admin with ID ${program.id} not assigned to user with ID ${this.id}`)
 			this._program_admin_ids = this._program_admin_ids.filter(id => id !== program.id)
 			this._program_admins = this._program_admins?.filter(p => p.id !== program.id)
 			this._unsaved = true
@@ -264,7 +264,7 @@ class UserController {
 
 			// Throw error if user data is inconsistent
 			if (!user.represents(data)) {
-				throw new Error(`UserError: User with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('UserError', `User with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update user where necessary
@@ -322,7 +322,7 @@ class UserController {
 
 	private async _save(save_status?: SaveStatus) {
 		if (!this._unsaved) return
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the user
 		const response = await fetch('/api/user', {
@@ -333,11 +333,11 @@ class UserController {
 
 		// Throw error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/user PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/user PUT)', await response.text())
 		}
 
 		this._unsaved = false
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
 	// --------------------> Utility

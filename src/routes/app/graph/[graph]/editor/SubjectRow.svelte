@@ -15,6 +15,7 @@
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
+	import { handleError } from '$scripts/utility';
 
 	// Exports
 	export let subject: SubjectController
@@ -36,8 +37,12 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				await subject.delete()
-				$graph = $graph // Trigger reactivity
+				try {
+					await subject.delete($save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Delete </Button>
 	</svelte:fragment>
@@ -48,9 +53,13 @@
 		src={trash_icon}
 		description="Delete Subject"
 		on:click={async () => {
-			if (subject.unchanged) {
-				await subject.delete()
-				$graph = $graph // Trigger reactivity
+			if (subject.is_empty) {
+				try {
+					await subject.delete($save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			} else {
 				delete_modal.show()
 			}
@@ -62,9 +71,13 @@
 		placeholder="Subject Name"
 		bind:value={subject.name}
 		on:input={async () => {
-			$save_status.setUnsaved()
-			await subject.save($save_status) 
-			$graph = $graph // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await subject.save($save_status) 
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 
@@ -73,9 +86,13 @@
 		options={subject.domain_options}
 		bind:value={subject.domain}
 		on:change={async () => {
-			$save_status.setUnsaved()
-			await subject.save($save_status)
-			$graph = $graph // Trigger reactivity
+			try {
+				$save_status.setUnsaved()
+				await subject.save($save_status)
+				$graph = $graph // Trigger reactivity
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	/>
 

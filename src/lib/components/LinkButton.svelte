@@ -5,6 +5,7 @@
 	export let href: string | undefined = undefined
 	export let submit: boolean = false
 	export let disabled: boolean = false
+	export let thin: boolean = false
 
 </script>
 
@@ -15,6 +16,7 @@
 	<button
 		class="link-button"
 		class:disabled
+		class:thin
 		disabled={ disabled }
 		type={ submit ? 'submit' : 'button' }
 		on:click
@@ -28,6 +30,7 @@
 		href={ disabled ? '' : href }
 		class="link-button" 
 		class:disabled
+		class:thin
 	>
 		<slot />
 	</a>
@@ -60,6 +63,9 @@
 			pointer-events: none
 
 		// Styling options
+		&.thin
+			padding: $input-thin-padding
+
 		&.disabled
 			color: $gray
 			pointer-events: none

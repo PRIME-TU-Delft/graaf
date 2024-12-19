@@ -13,14 +13,17 @@ export { POST, PUT }
 async function POST({ request }) {
 
 	// Retrieve graph ID and order
-	const { graph_id, order } = await request.json()
+	const { graph_id } = await request.json()
 	if (isNaN(graph_id))
 		return new Response('Missing graph ID', { status: 400 })
-	if (isNaN(order))
-		return new Response('Missing order', { status: 400 })
+
+	// throw an error 50% of the time, for testing purposes
+	if (Math.random() > 0.5) {
+		return new Response('Random error', { status: 400 })
+	}
 
 	// Create graph
-	return await DomainHelper.create(graph_id, order)
+	return await DomainHelper.create(graph_id)
 		.then(
 			data => new Response(JSON.stringify(data), { status: 200 }),
 			error => new Response(error, { status: 400 })

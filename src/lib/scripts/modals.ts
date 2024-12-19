@@ -1,5 +1,6 @@
 
 // Internal dependencies
+import { customError } from '$scripts/utility'
 import type { Validation } from './validation'
 
 // --------------------> Classes
@@ -53,7 +54,7 @@ export abstract class AbstractFormModal {
 
 	protected hasChanged(property: string): boolean {
 		if (!this.isField(property))
-			throw new Error(`Property "${property}" is not a field of the form`)
+			throw customError('FormError', `Property "${property}" is not a field of the form`)
 		if (this._changed[property])
 			return true
 

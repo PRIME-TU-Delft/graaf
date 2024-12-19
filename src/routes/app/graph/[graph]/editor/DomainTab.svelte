@@ -3,7 +3,7 @@
 	const SCROLL_ON_NEW = 60
 
 	// Internal dependencies
-	import { graph, domain_query } from './stores'
+	import { graph, domain_query, save_status } from './stores'
 
 	import {
 		DomainController,
@@ -20,6 +20,7 @@
 	// Assets
 	import plus_icon from '$assets/plus-icon.svg'
 	import Feedback from '$components/Feedback.svelte';
+	import { handleError } from '$scripts/utility';
 
 	// Variables
 	$: filtered_domains = $graph.domains.filter(domain => domain.matchesQuery($domain_query))
@@ -43,8 +44,12 @@
 		<SortableList 
 			list={filtered_domains} 
 			on:rearrange={async event => {
-				await $graph.reorderDomains(event.detail)
-				$graph = $graph // Trigger reactivity
+				try {
+					await $graph.reorderDomains(event.detail, $save_status)
+					$graph = $graph // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		>
 			<svelte:fragment slot="left" let:item>
@@ -61,9 +66,13 @@
 	<button
 		class="row-button"
 		on:click={async () => {
-			await DomainController.create($graph.cache, $graph)
-			$graph = $graph // Trigger reactivity
-			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			try {
+				await DomainController.create($graph.cache, $graph, $save_status)
+				$graph = $graph // Trigger reactivity
+				setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	> <img src={plus_icon} alt="New domain"> </button>
 
@@ -92,9 +101,13 @@
 	<button 
 		class="row-button"	
 		on:click={ async () => {
-			await DomainRelationController.create($graph)
-			$graph = $graph // Trigger reactivity
-			setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			try {
+				await DomainRelationController.create($graph)
+				$graph = $graph // Trigger reactivity
+				setTimeout(() => scrollBy({top: SCROLL_ON_NEW, behavior: 'smooth'}), 0)
+			} catch (error) {
+				handleError(error, $save_status)
+			}
 		}}
 	> <img src={plus_icon} alt="New relation"> </button>
 </div>

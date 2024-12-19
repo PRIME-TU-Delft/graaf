@@ -4,6 +4,7 @@ import * as d3 from 'd3'
 
 // Internal imports
 import * as settings from '$scripts/settings'
+import { customError } from '$scripts/utility'
 import { Severity } from '$scripts/validation'
 
 import {
@@ -145,7 +146,7 @@ class GraphSVG {
 
 		// Check if SVG is properly attached
 		if (this.svg === undefined || this.simulation === undefined) {
-			throw new Error('Failed to set state: GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		}
 
 		// If moving out of broken state:
@@ -235,7 +236,7 @@ class GraphSVG {
 
 		// Check if properly attached
 		if (this.svg === undefined) {
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		}
 
 		this._lecture = lecture // NEW LECTURE
@@ -279,7 +280,7 @@ class GraphSVG {
 
 		// Check if already attached
 		if (this.state !== SVGState.detached) {
-			throw new Error('GraphSVG already attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG already attached to DOM')
 		}
 
 		// SVG setup
@@ -412,12 +413,12 @@ class GraphSVG {
 
 		// Check if already detached
 		if (this.state === SVGState.detached) {
-			throw new Error('GraphSVG already detached from DOM')
+			throw customError('GraphSVGError', 'GraphSVG already detached from DOM')
 		}
 
 		// Check if properly attached
 		if (this.svg === undefined) {
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		}
 
 		// Exit current state
@@ -449,26 +450,26 @@ class GraphSVG {
 
 	zoomIn() {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(settings.ANIMATION_DURATION)
+				.duration(settings.GRAPH_ANIMATION_DURATION)
 				.ease(d3.easeSinInOut)
 			.call(this.zoom.scaleBy, settings.ZOOM_STEP)
 	}
 
 	zoomOut() {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(settings.ANIMATION_DURATION)
+				.duration(settings.GRAPH_ANIMATION_DURATION)
 				.ease(d3.easeSinInOut)
 			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP)
 	}
@@ -485,7 +486,7 @@ class GraphSVG {
 
 	toggleAutolayout() {
 		if (this.simulation === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic)
 			return
 
@@ -504,7 +505,7 @@ class GraphSVG {
 
 	microwaveSimulation() {
 		if (this.simulation === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		this.simulation
 			.alpha(1)
 			.restart()
@@ -533,7 +534,7 @@ class GraphSVG {
 
 	private boundingBox(nodes: NodeController<DomainController | SubjectController>[]) {
 		if (this.svg === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (nodes.length === 0)
 			return { x: 0, y: 0, k: 1 }
 
@@ -573,12 +574,12 @@ class GraphSVG {
 
 	private moveCamera(x: number, y: number, k: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.call(
 				this.zoom.transform,
@@ -594,18 +595,18 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
 	private panCamera(x: number, y: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.call(
 				this.zoom.translateTo,
@@ -617,18 +618,18 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
 	private zoomCamera(k: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
 			.transition()
-				.duration(callback !== undefined ? settings.ANIMATION_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 				.ease(d3.easeSinInOut)
 			.call(this.zoom.scaleTo, k)
 
@@ -636,13 +637,13 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
 	private setBackground(view: EditorView) {
 		if (this.svg === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		const background = d3.select<SVGGElement, unknown>('#background')
 
 		// Remove old background
@@ -726,7 +727,7 @@ class GraphSVG {
 
 	private setContent(nodes: NodeController<DomainController | SubjectController>[], relations: RelationController<DomainController | SubjectController>[], callback?: () => void) {
 		if (this.simulation === undefined)
-			throw new Error('GraphSVG not attached to DOM')
+			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
 		if (nodes.length === 0) {
 			this.clearContent(callback)
 			return
@@ -756,13 +757,13 @@ class GraphSVG {
 				function(exit) {
 					return exit
 						.transition()
-							.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+							.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
 				}
 			)
 			.transition()
-				.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 			.style('opacity', 1)
 
 		// Update relations
@@ -783,13 +784,13 @@ class GraphSVG {
 				function(exit) {
 					return exit
 						.transition()
-							.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+							.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 							.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 						.style('opacity', 0)
 				}
 			)
 			.transition()
-				.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+				.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 			.style('opacity', 1)
 
 		// Update simulation
@@ -802,7 +803,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.UNIVERSAL_FADE_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -829,7 +830,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -844,7 +845,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.ANIMATION_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 
@@ -852,7 +853,7 @@ class GraphSVG {
 		d3.select<SVGGElement, unknown>('#content')
 			.selectAll('*')
 				.transition()
-					.duration(callback !== undefined ? settings.UNIVERSAL_FADE_DURATION : 0)
+					.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
 					.ease(d3.easeSinInOut)
 					.on('end', function() { d3.select(this).remove() }) // Use this instead of .remove() to circumvent pending transitions
 				.style('opacity', 0)
@@ -860,7 +861,7 @@ class GraphSVG {
 		if (callback) {
 			setTimeout(() => {
 				callback()
-			}, settings.UNIVERSAL_FADE_DURATION)
+			}, settings.GRAPH_ANIMATION_DURATION)
 		}
 	}
 

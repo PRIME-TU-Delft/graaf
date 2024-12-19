@@ -2,10 +2,15 @@
 // External dependencies
 import prisma from '$lib/server/prisma'
 
-import type { Graph as PrismaGraph } from '@prisma/client'
+import type { 
+	Graph as PrismaGraph,
+	Domain as PrismaDomain,
+	Subject as PrismaSubject,
+	Lecture as PrismaLecture,
+} from '@prisma/client'
 
 // Internal dependencies
-import { prismaUpdateArray, prismaUpdateRequiredField} from '$scripts/utility'
+import { prismaUpdateArray, prismaUpdateOptionalField, prismaUpdateRequiredField} from '$scripts/utility'
 
 import {
 	CourseHelper,
@@ -40,7 +45,6 @@ import type {
 export async function reduce(graph: PrismaGraph, ...relations: GraphRelation[]): Promise<SerializedGraph> {
 	const serialized: SerializedGraph = {
 		id: graph.id,
-		unchanged: graph.unchanged,
 		name: graph.name
 	}
 
@@ -135,7 +139,6 @@ export async function update(data: SerializedGraph) {
 				id: data.id
 			},
 			data: {
-				unchanged: data.unchanged,
 				name: data.name,
 				course: course_delta,
 				domains: domains_delta,

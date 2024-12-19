@@ -5,7 +5,7 @@ import {
 	validUserRole
 } from '$scripts/types'
 
-import type { 
+import type {
 	DomainStyle,
 	UserRole
 } from '$scripts/types'
@@ -16,7 +16,6 @@ import type {
 
 export type SerializedProgram = {
 	id: number,
-	unchanged: boolean,
 	name: string,
 	course_ids?: number[],
 	editor_ids?: string[],
@@ -25,7 +24,6 @@ export type SerializedProgram = {
 
 export function validSerializedProgram(object: any): object is SerializedProgram {
 	return typeof object.id === 'number'
-		&& typeof object.unchanged === 'boolean'
 		&& typeof object.name === 'string'
 		&& (object.course_ids === undefined || Array.isArray(object.course_ids) && object.course_ids.every((id: any) => typeof id === 'number'))
 		&& (object.editor_ids === undefined || Array.isArray(object.editor_ids) && object.editor_ids.every((id: any) => typeof id === 'string'))
@@ -34,7 +32,6 @@ export function validSerializedProgram(object: any): object is SerializedProgram
 
 export type SerializedCourse = {
 	id: number,
-	unchanged: boolean,
 	code: string,
 	name: string,
 	program_ids?: number[],
@@ -46,7 +43,6 @@ export type SerializedCourse = {
 
 export function validSerializedCourse(object: any): object is SerializedCourse {
 	return typeof object.id === 'number'
-		&& typeof object.unchanged === 'boolean'
 		&& typeof object.code === 'string'
 		&& typeof object.name === 'string'
 		&& (object.program_ids === undefined || Array.isArray(object.program_ids) && object.program_ids.every((id: any) => typeof id === 'number'))
@@ -58,7 +54,6 @@ export function validSerializedCourse(object: any): object is SerializedCourse {
 
 export type SerializedGraph = {
 	id: number,
-	unchanged: boolean,
 	name: string,
 	course_id?: number,
 	domain_ids?: number[],
@@ -69,7 +64,6 @@ export type SerializedGraph = {
 
 export function validSerializedGraph(object: any): object is SerializedGraph {
 	return typeof object.id === 'number'
-		&& typeof object.unchanged === 'boolean'
 		&& typeof object.name === 'string'
 		&& (object.course_id === undefined || typeof object.course_id === 'number')
 		&& (object.domain_ids === undefined || Array.isArray(object.domain_ids) && object.domain_ids.every((id: any) => typeof id === 'number'))
@@ -80,7 +74,6 @@ export function validSerializedGraph(object: any): object is SerializedGraph {
 
 export type SerializedDomain = {
 	id: number,
-	unchanged: boolean,
 	name: string,
 	style: DomainStyle | null,
 	order: number,
@@ -94,7 +87,6 @@ export type SerializedDomain = {
 
 export function validSerializedDomain(object: any): object is SerializedDomain {
 	return typeof object.id === 'number'
-		&& typeof object.unchanged === 'boolean'
 		&& typeof object.name === 'string'
 		&& (object.style === null || validDomainStyle(object.style))
 		&& typeof object.order === 'number'
@@ -108,7 +100,6 @@ export function validSerializedDomain(object: any): object is SerializedDomain {
 
 export type SerializedSubject = {
 	id: number,
-	unchanged: boolean,
 	name: string,
 	x: number,
 	y: number,
@@ -121,7 +112,6 @@ export type SerializedSubject = {
 
 export function validSerializedSubject(object: any): object is SerializedSubject {
 	return typeof object.id === 'number'
-		&& typeof object.unchanged === 'boolean'
 		&& typeof object.name === 'string'
 		&& typeof object.x === 'number'
 		&& typeof object.y === 'number'
@@ -134,7 +124,6 @@ export function validSerializedSubject(object: any): object is SerializedSubject
 
 export type SerializedLecture = {
 	id: number,
-	unchanged: boolean,
 	name: string,
 	order: number,
 	graph_id?: number,
@@ -143,7 +132,6 @@ export type SerializedLecture = {
 
 export function validSerializedLecture(object: any): object is SerializedLecture {
 	return typeof object.id === 'number'
-		&& typeof object.unchanged === 'boolean'
 		&& typeof object.name === 'string'
 		&& typeof object.order === 'number'
 		&& (object.graph_id === undefined || typeof object.graph_id === 'number')
@@ -152,7 +140,6 @@ export function validSerializedLecture(object: any): object is SerializedLecture
 
 export type SerializedLink = {
 	id: number,
-	unchanged: boolean,
 	name: string,
 	course_id?: number,
 	graph_id?: number | null

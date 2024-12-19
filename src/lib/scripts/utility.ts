@@ -1,4 +1,6 @@
 
+import type SaveStatus from "$components/SaveStatus.svelte"
+
 // --------------------> Types
 
 interface IWithID<ID> {
@@ -24,18 +26,36 @@ export function oxfordCommaList(list: string[]): string {
 	}
 }
 
-export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number) : (...args: Parameters<T>) => void {
+export function customError(name: string, message: string): Error {
+	const error = new Error(message)
+	error.name = name
+	return error
+}
+
+export function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(callback: T, delay: number): (...args: Parameters<T>) => Promise<void> {
 	let timeout: NodeJS.Timeout | undefined
+	let resolvers: (() => void)[] = []
 
-	return function (this: ThisParameterType<T>, ...args: Parameters<T>): void {
-		const later = () => {
-			timeout = undefined
-			callback.apply(this, args)
-		}
-
+	return function (this: ThisParameterType<T>, ...args: Parameters<T>): Promise<void> {
 		clearTimeout(timeout)
-		timeout = setTimeout(later, delay)
+
+		return new Promise(resolve => {
+			resolvers.push(resolve)
+			timeout = setTimeout(async () => {
+				await callback.apply(this, args)
+				resolvers.forEach(resolve => resolve())
+				timeout = undefined
+				resolvers = []
+			}, delay)
+		})
 	}
+}
+
+export function handleError(error: any, save_status?: SaveStatus) {
+	const name = error instanceof Error ? error.name : 'UnknownError'
+	const message = error instanceof Error ? error.message : error
+	console.error(`${name}: ${message}`)
+	save_status?.setError(`${name}: ${message}`)
 }
 
 export async function asyncFlatmap<Input, Output>(input: Input[], callback: (input: Input) => Output | Output[] | Promise<Output | Output[]>): Promise<Output[]> {

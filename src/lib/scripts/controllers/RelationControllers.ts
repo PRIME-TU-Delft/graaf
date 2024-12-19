@@ -21,9 +21,9 @@ export { RelationController, DomainRelationController, SubjectRelationController
 
 
 abstract class RelationController<T extends DomainController | SubjectController> {
-	uuid: string = uuid.v4()
+	public uuid: string = uuid.v4()
 
-	protected _unchanged: boolean = true
+	protected _unchanged: boolean = false
 	protected _parent: T | null = null
 	protected _child: T | null = null
 
@@ -33,9 +33,9 @@ abstract class RelationController<T extends DomainController | SubjectController
 
 	// --------------------> Getters & Setters
 
-	// Unchanged properties
-	get unchanged(): boolean {
-		return this._unchanged
+	// Is Empty property
+	get is_empty(): boolean {
+		return this.parent === null && this.child === null
 	}
 
 	// Parent properties
@@ -65,8 +65,6 @@ abstract class RelationController<T extends DomainController | SubjectController
 		return this.parent?.color || 'transparent'
 	}
 
-	abstract parent_options: DropdownOption<T>[]
-
 	// Child properties
 	get child(): T | null {
 		return this._child
@@ -94,6 +92,8 @@ abstract class RelationController<T extends DomainController | SubjectController
 		return this.child?.color || 'transparent'
 	}
 
+	// Abstract properties
+	abstract parent_options: DropdownOption<T>[]
 	abstract child_options: DropdownOption<T>[]
 
 	// --------------------> Validation
@@ -150,17 +150,17 @@ abstract class RelationController<T extends DomainController | SubjectController
 	// --------------------> Actions
 
 	async save(save_status?: SaveStatus) {
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 		await Promise.all([
 			this.parent?.save(),
 			this.child?.save()
 		])
-		
-		save_status?.setSaving(false)
+
+		save_status?.setIdle()
 	}
 
 	abstract delete(): void
-	
+
 	// --------------------> Utility
 
 	matchesQuery(query: string): boolean {
@@ -215,7 +215,7 @@ class DomainRelationController extends RelationController<DomainController> {
 
 			if (visited.includes(subject))
 				continue
-			if (subject.domain_id === child.id) 
+			if (subject.domain_id === child.id)
 				return false
 
 			visited.push(subject)
@@ -282,6 +282,7 @@ class DomainRelationController extends RelationController<DomainController> {
 	static create(graph: GraphController, parent: DomainController | null = null, child: DomainController | null = null): DomainRelationController {
 		const relation = new DomainRelationController(graph)
 		graph.assignDomainRelation(relation)
+		relation._unchanged = parent === null && child === null
 		relation.parent = parent
 		relation.child = child
 		return relation
@@ -297,7 +298,6 @@ class DomainRelationController extends RelationController<DomainController> {
 
 	delete() {
 		this.parent = null
-		this.child = null
 		this.graph.unassignDomainRelation(this)
 	}
 }
@@ -338,7 +338,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 	protected isInconsistent(parent: SubjectController, child: SubjectController): boolean {
 		if (
 			parent.domain_id === child.domain_id ||
-			parent.domain_id === null || 
+			parent.domain_id === null ||
 			child.domain_id === null
 		) return false
 
@@ -368,9 +368,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject relation is not fully defined',
-				long: 'Both the parent and child subjects must be selected',
-				url: `/app/graph/${this.graph.id}/editor?tab=subjects`,
-				uuid: this.uuid
+				long: 'Both the parent and child subjects must be selected'
 			})
 		}
 
@@ -379,9 +377,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject relation is self-referential',
-				long: 'The parent and child subjects are the same',
-				url: `/app/graph/${this.graph.id}/editor?tab=subjects`,
-				uuid: this.uuid
+				long: 'The parent and child subjects are the same'
 			})
 		}
 
@@ -390,9 +386,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject relation is a duplicate',
-				long: 'The relation already exists in the graph',
-				url: `/app/graph/${this.graph.id}/editor?tab=subjects`,
-				uuid: this.uuid
+				long: 'The relation already exists in the graph'
 			})
 		}
 
@@ -401,9 +395,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 			validation.add({
 				severity: Severity.error,
 				short: 'Subject relation is cyclic',
-				long: 'The parent and child subjects are cyclically related',
-				url: `/app/graph/${this.graph.id}/editor?tab=subjects`,
-				uuid: this.uuid
+				long: 'The parent and child subjects are cyclically related'
 			})
 		}
 
@@ -412,9 +404,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 			validation.add({
 				severity: Severity.warning,
 				short: 'Subject relation is inconsistent',
-				long: 'No domain relation exists that connects these subjects',
-				url: `/app/graph/${this.graph.id}/editor?tab=subjects`,
-				uuid: this.uuid
+				long: 'No domain relation exists that connects these subjects'
 			})
 		}
 
@@ -426,6 +416,7 @@ class SubjectRelationController extends RelationController<SubjectController> {
 	static create(graph: GraphController, parent: SubjectController | null = null, child: SubjectController | null = null): SubjectRelationController {
 		const relation = new SubjectRelationController(graph)
 		graph.assignSubjectRelation(relation)
+		relation._unchanged = parent === null && child === null
 		relation.parent = parent
 		relation.child = child
 		return relation
@@ -441,7 +432,6 @@ class SubjectRelationController extends RelationController<SubjectController> {
 
 	delete() {
 		this.parent = null
-		this.child = null
 		this.graph.unassignSubjectRelation(this)
 	}
 }

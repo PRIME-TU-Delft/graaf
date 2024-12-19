@@ -6,20 +6,18 @@
 	import type { PageData } from './$types'
 
 	// Internal dependencies
-	import { graph } from './stores'
+	import { graph, save_status } from './stores'
 
 	import {
 		ControllerCache,
 		GraphController,
-		CourseController,
-		DomainController,
-		SubjectController,
-		LectureController
+		CourseController
 	} from '$scripts/controllers'
 
 	// Components
 	import GeneralCard from '../settings/GeneralCard.svelte'
 
+	import SaveStatus from '$components/SaveStatus.svelte'
 	import LinkButton from '$components/LinkButton.svelte'
 	import Loading from '$components/Loading.svelte'
 	import Layout from '$components/Layout.svelte'
@@ -80,6 +78,7 @@
 			Here you can edit your graph, like its domains, subjects, and lectures.
 		</svelte:fragment>
 
+		<SaveStatus bind:this={ $save_status } />
 		<GeneralCard />		
 	</Layout>
 {/await}

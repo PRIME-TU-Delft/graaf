@@ -24,6 +24,24 @@ export const MAX_LECTURE_NAME_LENGTH: Scalar = 50
 export const DEBOUNCE_DELAY: Milliseconds = 800
 export const UNIVERSAL_HOVER_DELAY: Milliseconds = 750
 export const UNIVERSAL_FADE_DURATION: Milliseconds = 150 // When changing this, also change transition in variables.sass
+export const GRAPH_ANIMATION_DURATION: Milliseconds = 500
+export const SHAKE = {
+	delay: 150,
+	keyframes: [
+		{ transform: 'translate3d(0, 0, 0)'},
+		{ transform: 'translate3d(-10px, 0, 0)'},
+		{ transform: 'translate3d(8px, 0, 0)'},
+		{ transform: 'translate3d(-6px, 0, 0)'},
+		{ transform: 'translate3d(4px, 0, 0)'},
+		{ transform: 'translate3d(-2px, 0, 0)'},
+		{ transform: 'translate3d(0, 0, 0)'}
+	],
+	options: {
+		duration: 400,
+		easeing: 'cubic-bezier(.15,.5,.25,.95)',
+	}
+}
+
 
 // -------------------> Editor settings
 
@@ -68,25 +86,6 @@ export const OVERLAY_LINGER: Milliseconds = 1500
 // Simulation settings
 export const CENTER_FORCE: Scalar = 0.05
 export const CHARGE_FORCE: Scalar = -15
-
-// Animation settings
-export const ANIMATION_DURATION: Milliseconds = 150
-export const SHAKE = {
-	delay: 150,
-	keyframes: [
-		{ transform: 'translate3d(0, 0, 0)'},
-		{ transform: 'translate3d(-10px, 0, 0)'},
-		{ transform: 'translate3d(8px, 0, 0)'},
-		{ transform: 'translate3d(-6px, 0, 0)'},
-		{ transform: 'translate3d(4px, 0, 0)'},
-		{ transform: 'translate3d(-2px, 0, 0)'},
-		{ transform: 'translate3d(0, 0, 0)'}
-	],
-	options: {
-		duration: 400,
-		easeing: 'cubic-bezier(.15,.5,.25,.95)',
-	}
-}
 
 // Node style settings
 const top = STROKE_WIDTH / 2

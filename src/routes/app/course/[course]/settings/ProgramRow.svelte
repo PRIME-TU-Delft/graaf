@@ -1,9 +1,9 @@
 
-
 <script lang="ts">
 
 	// Internal dependencies
-	import { course } from './stores'
+	import { course, save_status } from './stores'
+	import { handleError } from '$scripts/utility'
 	import type { ProgramController } from '$scripts/controllers'
 
 	// Components
@@ -13,6 +13,7 @@
 	import Button from '$components/Button.svelte'
 
 	// Assets
+	import pencil_icon from '$assets/pencil-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Main
@@ -34,15 +35,20 @@
 		> Cancel </LinkButton>
 		<Button
 			on:click={async () => {
-				$course.unassignFromProgram(program)
-				await $course.save()
-				$course = $course // Trigger reactivity
+				try {
+					$course.unassignFromProgram(program)
+					$save_status.setUnsaved()
+					await $course.save($save_status)
+					$course = $course // Trigger reactivity
+				} catch (error) {
+					handleError(error, $save_status)
+				}
 			}}
 		> Unassign </Button>
 	</svelte:fragment>
 </SimpleModal>
 
-<span class="program-row">
+<span class="program-row"> <!-- We use a span here bc we dont want :first-of-type to trigger for modals (as they live between program rows) -->
 	<IconButton 
 		src={trashIcon}
 		description="Unassign from program"
@@ -52,7 +58,7 @@
 	{program.display_name}
 
 	<LinkButton href="/app/program/{program.id}/settings">
-		Program Settings
+		<img src={pencil_icon} alt=""> Program Settings
 	</LinkButton>
 </span>
 

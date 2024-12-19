@@ -2,7 +2,7 @@
 // Internal dependencies
 import * as settings from '$scripts/settings'
 
-import { compareArrays, debounce } from '$scripts/utility'
+import { compareArrays, customError, debounce } from '$scripts/utility'
 import { Validation, Severity } from '$scripts/validation'
 
 import {
@@ -29,7 +29,6 @@ export { GraphController }
 
 
 class GraphController {
-	private _unsaved: boolean = false
 	private _course?: CourseController
 	private _domains?: DomainController[]
 	private _domains_relations?: DomainRelationController[]
@@ -43,8 +42,7 @@ class GraphController {
 	private constructor(
 		public cache: ControllerCache,
 		public id: number,
-		private _unchanged: boolean,
-		private _name: string,
+		public name: string,
 		private _course_id?: number,
 		private _domain_ids?: number[],
 		private _subject_ids?: number[],
@@ -56,24 +54,9 @@ class GraphController {
 
 	// --------------------> Getters & Setters
 
-	// Unchanged properties
-	get unchanged(): boolean {
-		return this._unchanged
-	}
-
 	// Name properties
-	get name(): string {
-		return this._name
-	}
-
-	set name(value: string) {
-		this._name = value
-		this._unchanged = false
-		this._unsaved = true
-	}
-
 	get trimmed_name(): string {
-		return this._name.trim()
+		return this.name.trim()
 	}
 
 	get display_name(): string {
@@ -83,13 +66,13 @@ class GraphController {
 	// Course properties
 	get course_id(): number {
 		if (this._course_id === undefined)
-			throw new Error('GraphError: Course data unknown')
+			throw customError('GraphError', 'Course data unknown')
 		return this._course_id
 	}
 
 	get course(): CourseController {
 		if (this._course_id === undefined)
-			throw new Error('GraphError: Course data unknown')
+			throw customError('GraphError', 'Course data unknown')
 		if (this._course !== undefined)
 			return this._course
 
@@ -98,26 +81,16 @@ class GraphController {
 		return this._course
 	}
 
-	// Copy properties
-	get copy_options(): DropdownOption<CourseController>[] {
-		const courses = this.cache.all(CourseController)
-		return courses.map(course => ({
-			value: course,
-			label: course.code + ' ' + course.display_name,
-			validation: Validation.success()
-		}))
-	}
-
 	// Domain properties
 	get domain_ids(): number[] {
 		if (this._domain_ids === undefined)
-			throw new Error('GraphError: Domain data unknown')
+			throw customError('GraphError', 'Domain data unknown')
 		return Array.from(this._domain_ids)
 	}
 
 	get domains(): DomainController[] {
 		if (this._domain_ids === undefined)
-			throw new Error('GraphError: Domain data unknown')
+			throw customError('GraphError', 'Domain data unknown')
 		if (this._domains !== undefined)
 			return Array.from(this._domains)
 
@@ -140,28 +113,27 @@ class GraphController {
 			}
 		}
 
-		this.sort()
-
+		this.sort('domain-relations')
 		return Array.from(this._domains_relations)
 	}
 
 	// Subject properties
 	get subject_ids(): number[] {
 		if (this._subject_ids === undefined)
-			throw new Error('GraphError: Subject data unknown')
+			throw customError('GraphError', 'Subject data unknown')
 		return Array.from(this._subject_ids)
 	}
 
 	get subjects(): SubjectController[] {
 		if (this._subject_ids === undefined)
-			throw new Error('GraphError: Subject data unknown')
+			throw customError('GraphError', 'Subject data unknown')
 		if (this._subjects !== undefined)
 			return Array.from(this._subjects)
 
 		// Fetch subjects from the cache
 		this._subjects = this._subject_ids.map(id => this.cache.findOrThrow(SubjectController, id))
-		this.sort()
 
+		this.sort('subjects')
 		return Array.from(this._subjects)
 	}
 
@@ -177,21 +149,20 @@ class GraphController {
 			}
 		}
 
-		this.sort()
-
+		this.sort('subject-relations')
 		return Array.from(this._subjects_relations)
 	}
 
 	// Lecture properties
 	get lecture_ids(): number[] {
 		if (this._lecture_ids === undefined)
-			throw new Error('GraphError: Lecture data unknown')
+			throw customError('GraphError', 'Lecture data unknown')
 		return Array.from(this._lecture_ids)
 	}
 
 	get lectures(): LectureController[] {
 		if (this._lecture_ids === undefined)
-			throw new Error('GraphError: Lecture data unknown')
+			throw customError('GraphError', 'Lecture data unknown')
 		if (this._lectures !== undefined)
 			return Array.from(this._lectures)
 
@@ -205,21 +176,20 @@ class GraphController {
 	get lecture_options(): DropdownOption<LectureController>[] {
 		return this.lectures.map(lecture => ({
 			value: lecture,
-			label: lecture.display_name,
-			validation: Validation.success()
+			label: lecture.display_name
 		}))
 	}
 
 	// Link properties
 	get link_ids(): number[] {
 		if (this._link_ids === undefined)
-			throw new Error('GraphError: Link data unknown')
+			throw customError('GraphError', 'Link data unknown')
 		return Array.from(this._link_ids)
 	}
 
 	get links(): LinkController[] {
 		if (this._link_ids === undefined)
-			throw new Error('GraphError: Link data unknown')
+			throw customError('GraphError', 'Link data unknown')
 		if (this._links !== undefined)
 			return Array.from(this._links)
 
@@ -228,69 +198,66 @@ class GraphController {
 		return Array.from(this._links)
 	}
 
+	// Copy properties
+	get copy_options(): DropdownOption<CourseController>[] {
+		const courses = this.cache.all(CourseController)
+		return courses.map(course => ({
+			value: course,
+			label: course.display_name
+		}))
+	}
+
 	// --------------------> Assignments
 
 	assignDomain(domain: DomainController) {
 		if (this._domain_ids !== undefined) {
 			if (this._domain_ids.includes(domain.id))
-				throw new Error(`GraphError: Domain with ID ${domain.id} already assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Domain with ID ${domain.id} already assigned to graph with ID ${this.id}`)
 			this._domain_ids.push(domain.id)
 			this._domains?.push(domain)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	assignDomainRelation(relation: DomainRelationController) {
 		if (this._domains_relations !== undefined) {
 			if (this._domains_relations.includes(relation))
-				throw new Error(`GraphError: Domain relation already assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Domain relation already assigned to graph with ID ${this.id}`)
 			this._domains_relations.push(relation)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	assignSubject(subject: SubjectController) {
 		if (this._subject_ids !== undefined) {
 			if (this._subject_ids.includes(subject.id))
-				throw new Error(`GraphError: Subject with ID ${subject.id} already assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Subject with ID ${subject.id} already assigned to graph with ID ${this.id}`)
 			this._subject_ids.push(subject.id)
 			this._subjects?.push(subject)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	assignSubjectRelation(relation: SubjectRelationController) {
 		if (this._subjects_relations !== undefined) {
 			if (this._subjects_relations.includes(relation))
-				throw new Error(`GraphError: Subject relation already assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Subject relation already assigned to graph with ID ${this.id}`)
 			this._subjects_relations.push(relation)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	assignLecture(lecture: LectureController) {
 		if (this._lecture_ids !== undefined) {
 			if (this._lecture_ids.includes(lecture.id))
-				throw new Error(`GraphError: Lecture with ID ${lecture.id} already assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Lecture with ID ${lecture.id} already assigned to graph with ID ${this.id}`)
 			this._lecture_ids.push(lecture.id)
 			this._lectures?.push(lecture)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	assignToLink(link: LinkController, mirror: boolean = true) {
 		if (this._link_ids !== undefined) {
 			if (this._link_ids.includes(link.id))
-				throw new Error(`GraphError: Link with ID ${link.id} already assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Link with ID ${link.id} already assigned to graph with ID ${this.id}`)
 			this._link_ids.push(link.id)
 			this._links?.push(link)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -301,64 +268,52 @@ class GraphController {
 	unassignDomain(domain: DomainController) {
 		if (this._domain_ids !== undefined) {
 			if (!this._domain_ids.includes(domain.id))
-				throw new Error(`GraphError: Domain with ID ${domain.id} not assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Domain with ID ${domain.id} not assigned to graph with ID ${this.id}`)
 			this._domain_ids = this._domain_ids.filter(id => id !== domain.id)
 			this._domains = this._domains?.filter(d => d.id !== domain.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	unassignDomainRelation(relation: DomainRelationController) {
 		if (this._domains_relations !== undefined) {
 			if (!this._domains_relations.includes(relation))
-				throw new Error(`GraphError: Domain relation not assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Domain relation not assigned to graph with ID ${this.id}`)
 			this._domains_relations = this._domains_relations.filter(r => r !== relation)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	unassignSubject(subject: SubjectController) {
 		if (this._subject_ids !== undefined) {
 			if (!this._subject_ids.includes(subject.id))
-				throw new Error(`GraphError: Subject with ID ${subject.id} not assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Subject with ID ${subject.id} not assigned to graph with ID ${this.id}`)
 			this._subject_ids = this._subject_ids.filter(id => id !== subject.id)
 			this._subjects = this._subjects?.filter(s => s.id !== subject.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	unassignSubjectRelation(relation: SubjectRelationController) {
 		if (this._subjects_relations !== undefined) {
 			if (!this._subjects_relations.includes(relation))
-				throw new Error(`GraphError: Subject relation not assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Subject relation not assigned to graph with ID ${this.id}`)
 			this._subjects_relations = this._subjects_relations.filter(r => r !== relation)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	unassignLecture(lecture: LectureController) {
 		if (this._lecture_ids !== undefined) {
 			if (!this._lecture_ids.includes(lecture.id))
-				throw new Error(`GraphError: Lecture with ID ${lecture.id} not assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Lecture with ID ${lecture.id} not assigned to graph with ID ${this.id}`)
 			this._lecture_ids = this._lecture_ids.filter(id => id !== lecture.id)
 			this._lectures = this._lectures?.filter(l => l.id !== lecture.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 	}
 
 	unassignFromLink(link: LinkController, mirror: boolean = true) {
 		if (this._link_ids !== undefined) {
 			if (!this._link_ids.includes(link.id))
-				throw new Error(`GraphError: Link with ID ${link.id} not assigned to graph with ID ${this.id}`)
+				throw customError('GraphError', `Link with ID ${link.id} not assigned to graph with ID ${this.id}`)
 			this._link_ids = this._link_ids.filter(id => id !== link.id)
 			this._links = this._links?.filter(l => l.id !== link.id)
-			this._unchanged = false
-			this._unsaved = true
 		}
 
 		if (mirror) {
@@ -368,9 +323,8 @@ class GraphController {
 
 	// --------------------> Validation
 
-	validateName(strict: boolean = true) {
+	validateName() {
 		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
 
 		if (this.trimmed_name === '') {
 			validation.add({
@@ -395,79 +349,10 @@ class GraphController {
 		return validation
 	}
 
-	// NOTE Commented out, as it is not currently used
-/*	validateDomains(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.domain_ids.length === 0) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Graph has no domains'
-			})
-		}
-
-		return validation
-	}
-
-	validateSubjects(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.subject_ids.length === 0) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Graph has no subjects'
-			})
-		}
-
-		return validation
-	}
-
-	validateLectures(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.lecture_ids.length === 0) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Graph has no lectures'
-			})
-		}
-
-		return validation
-	}
-	
-	validateLinks(strict: boolean = true) {
-		const validation = new Validation()
-		if (!strict && this._unchanged) return validation
-
-		if (this.link_ids.length === 0) {
-			validation.add({
-				severity: Severity.error,
-				short: 'Graph has no links'
-			})
-		}
-
-		return validation
-	}
-
-	validate(strict: boolean = true): Validation {
-		const validation = new Validation()
-
-		validation.add(this.validateName(strict))
-		validation.add(this.validateDomains(strict))
-		validation.add(this.validateSubjects(strict))
-		validation.add(this.validateLectures(strict))
-		validation.add(this.validateLinks(strict))
-
-		return validation
-	} */
-
-
 	// --------------------> Actions
 
-	static async create(cache: ControllerCache, course: CourseController, name: string): Promise<GraphController> {
+	static async create(cache: ControllerCache, course: CourseController, name: string, save_status?: SaveStatus): Promise<GraphController> {
+		save_status?.setSaving()
 
 		// Call the API to create a new graph
 		const response = await fetch('/api/graph', {
@@ -478,17 +363,19 @@ class GraphController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/graph POST): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/graph POST)', await response.text())
 		}
 
 		// Revive the graph
 		const data = await response.json()
 		if (!validSerializedGraph(data)) {
-			throw new Error(`GraphError: Invalid graph data received from API`)
+			throw customError('GraphError', 'Invalid graph data received from API')
 		}
 
 		const graph = GraphController.revive(cache, data)
 		course.assignGraph(graph)
+		save_status?.setIdle()
+
 		return graph
 	}
 
@@ -498,7 +385,7 @@ class GraphController {
 
 			// Throw an error if the existing graph is inconsistent
 			if (!graph.represents(data)) {
-				throw new Error(`GraphError: Graph with ID ${data.id} already exists, and is inconsistent with new data`)
+				throw customError('GraphError', `Graph with ID ${data.id} already exists, and is inconsistent with new data`)
 			}
 
 			// Update the existing graph where necessary
@@ -519,7 +406,6 @@ class GraphController {
 		return new GraphController(
 			cache,
 			data.id,
-			data.unchanged,
 			data.name,
 			data.course_id,
 			data.domain_ids,
@@ -531,7 +417,6 @@ class GraphController {
 
 	represents(data: SerializedGraph): boolean {
 		return this.id === data.id
-			&& this.unchanged === data.unchanged
 			&& this.trimmed_name === data.name
 			&& (this._course_id === undefined   || data.course_id === undefined    || this._course_id === data.course_id)
 			&& (this._domain_ids === undefined  || data.domain_ids === undefined   || compareArrays(this._domain_ids, data.domain_ids))
@@ -543,7 +428,6 @@ class GraphController {
 	reduce(): SerializedGraph {
 		return {
 			id: this.id,
-			unchanged: this.unchanged,
 			name: this.trimmed_name,
 			course_id: this._course_id,
 			domain_ids: this._domain_ids,
@@ -554,10 +438,8 @@ class GraphController {
 	}
 
 	private async _save(save_status?: SaveStatus) {
-		if (!this._unsaved) return
 		if (this.validateName().severity === Severity.error) return
-
-		save_status?.setSaving(true)
+		save_status?.setSaving()
 
 		// Call the API to save the graph
 		const response = await fetch('/api/graph', {
@@ -568,15 +450,14 @@ class GraphController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/graph PUT): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/graph PUT)', await response.text())
 		}
 
-		this._unsaved = false
-		save_status?.setSaving(false)
+		save_status?.setIdle()
 	}
 
-	async delete() {
-		const promises: Promise<void>[] = []
+	async delete(save_status?: SaveStatus): Promise<void> {
+		save_status?.setSaving()
 
 		// Unassign course and links
 		if (this._course_id !== undefined)
@@ -586,6 +467,7 @@ class GraphController {
 				link.unassignGraph(this, false)
 
 		// Delete domains, subjects and lectures
+		const promises: Promise<void>[] = []
 		if (this._domain_ids !== undefined)
 			promises.push(...this.domains.map(async domain => await domain.delete(false)))
 		if (this._subject_ids !== undefined)
@@ -599,108 +481,63 @@ class GraphController {
 
 		// Throw an error if the API request fails
 		if (!response.ok) {
-			throw new Error(`APIError (/api/graph/${this.id} DELETE): ${response.status} ${response.statusText}`)
+			throw customError('APIError (/api/graph DELETE)', await response.text())
 		}
 
 		// Remove the graph from the cache
 		this.cache.remove(this)
+		save_status?.setIdle()
 	}
 
-	async reorderDomains(domains?: DomainController[]) {
+	async prune(save_status?: SaveStatus) {
+		save_status?.setSaving()
 
-		// Update the graph
-		if (domains !== undefined) {
-			this._domain_ids = domains.map(domain => domain.id)
-			this._domains = domains
-			this._unchanged = false
-			this._unsaved = true
+		const promises: Promise<void>[] = []
+		let reorder_domains = false
+		let reorder_lectures = false
+
+		// Prune empty domains
+		if (this._domain_ids !== undefined) {
+			const empty_domains = this.domains.filter(domain => domain.is_empty)
+			if (empty_domains.length > 0) reorder_domains = true
+			promises.push(...empty_domains.map(domain => domain.delete(false)))
 		}
 
-		// Update domains
-		for (const [index, domain] of this.domains.entries()) {
-			domain.order = index
-		}
-		
-		// Call the API to reorder the graph
-		const response = await fetch(`/api/graph/${this.id}/reorder/domains`, {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ domain_ids: this.domain_ids })
-		})
-
-		// Throw an error if the API request fails
-		if (!response.ok) {
-			throw new Error(`APIError (/api/graph/${this.id}/reorder/domains PUT): ${response.status} ${response.statusText}`)
-		}
-	}
-
-	async reorderLectures(lectures?: LectureController[]) {
-
-		// Update the graph
-		if (lectures !== undefined) {
-			this._lecture_ids = lectures.map(lecture => lecture.id)
-			this._lectures = lectures
-			this._unchanged = false
-			this._unsaved = true
-		}
-
-		// Update lectures
-		for (const [index, lecture] of this.lectures.entries()) {
-			lecture.order = index
-		}
-		
-		// Call the API to reorder the graph
-		const response = await fetch(`/api/graph/${this.id}/reorder/lectures`, {
-			method: 'PUT',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ lecture_ids: this.lecture_ids })
-		})
-
-		// Throw an error if the API request fails
-		if (!response.ok) {
-			throw new Error(`APIError (/api/graph/${this.id}/reorder/lectures PUT): ${response.status} ${response.statusText}`)
-		}
-	}
-
-	sort() {
-
-		// Custom sorting algorithm, as the default sort is unstable
-		function insertionSort<T>(array: T[], key: (item: T) => number) {
-			const n = array.length
-
-			for (let i = 1; i < n; i++) {
-				const x = array[i]
-				
-				let j = i
-				while (j > 0 && key(array[j - 1]) > key(x)) {
-					array[j] = array[j - 1]
-					j--
-				}
-
-				array[j] = x
-			}
-		}
-
-		// Sort domain relations
+		// Prune empty domain relations
 		if (this._domains_relations !== undefined) {
-			insertionSort(this._domains_relations, relation => relation.child?.order ?? Infinity)
-			insertionSort(this._domains_relations, relation => relation.parent?.order ?? Infinity)
+			const empty_domain_relations = this.domain_relations.filter(relation => relation.is_empty)
+			empty_domain_relations.forEach(relation => relation.delete())
 		}
 
-		// Sort subjects
-		if (this._subjects !== undefined) {
-			insertionSort(this._subjects, subject => subject.domain?.order ?? Infinity)
-			this._subject_ids = this._subjects.map(subject => subject.id)
+		// Prune empty subjects
+		if (this._subject_ids !== undefined) {
+			const empty_subjects = this.subjects.filter(subject => subject.is_empty)
+			promises.push(...empty_subjects.map(subject => subject.delete()))
 		}
 
-		// Sort subject relations
+		// Prune empty subject relations
 		if (this._subjects_relations !== undefined) {
-			insertionSort(this._subjects_relations, relation => relation.child?.domain?.order ?? Infinity)
-			insertionSort(this._subjects_relations, relation => relation.parent?.domain?.order ?? Infinity)
+			const empty_subject_relations = this.subject_relations.filter(relation => relation.is_empty)
+			empty_subject_relations.forEach(relation => relation.delete())
 		}
+
+		// Prune empty lectures
+		if (this._lecture_ids !== undefined) {
+			const empty_lectures = this.lectures.filter(lecture => lecture.is_empty)
+			if (empty_lectures.length > 0) reorder_lectures = true
+			promises.push(...empty_lectures.map(lecture => lecture.delete(false)))
+		}
+
+		await Promise.all(promises)
+		if (reorder_domains) await this.reorderDomains()
+		if (reorder_lectures) await this.reorderLectures()
+
+		save_status?.setIdle()
 	}
 
-	async copy(course: CourseController): Promise<GraphController> {
+	// TODO Rewrite copy to use API endpoint
+	async copy(course: CourseController, save_status?: SaveStatus): Promise<GraphController> {
+		save_status?.setSaving()
 
 		// Copy graph
 		const copied_graph = await GraphController.create(this.cache, course, `${this.display_name} (Copied from ${this.course.code})`)
@@ -722,7 +559,7 @@ class GraphController {
 			const copied_parent = domain_map.get(relation.parent.id)
 			const copied_child = domain_map.get(relation.child.id)
 			if (copied_parent === undefined || copied_child === undefined) {
-				throw new Error(`GraphError: Domain incorrectly copied`)
+				throw customError('GraphError', `Domain incorrectly copied`)
 			}
 
 			DomainRelationController.create(copied_graph, copied_parent, copied_child)
@@ -737,7 +574,7 @@ class GraphController {
 			// Assign copied domains
 			if (subject.domain_id === null) continue
 			const copied_domain = domain_map.get(subject.domain_id)
-			if (copied_domain === undefined) throw new Error(`GraphError: Domain incorrectly copied`)
+			if (copied_domain === undefined) throw customError('GraphError', `Domain incorrectly copied`)
 			copied_subject.domain = copied_domain
 		}
 
@@ -751,7 +588,7 @@ class GraphController {
 			const copied_parent = subject_map.get(relation.parent.id)
 			const copied_child = subject_map.get(relation.child.id)
 			if (copied_parent === undefined || copied_child === undefined) {
-				throw new Error(`GraphError: Subject incorrectly copied`)
+				throw customError('GraphError', `Subject incorrectly copied`)
 			}
 
 			SubjectRelationController.create(copied_graph, copied_parent, copied_child)
@@ -765,14 +602,116 @@ class GraphController {
 			for (const subject of lecture.present_subjects) {
 				const copied_subject = subject_map.get(subject.id)
 				if (copied_subject === undefined) {
-					throw new Error(`GraphError: Subject incorrectly copied`)
+					throw customError('GraphError', `Subject incorrectly copied`)
 				}
 
 				copied_lecture.assignSubject(copied_subject)
 			}
 		}
 
+		save_status?.setIdle()
 		return copied_graph
+	}
+
+	async reorderDomains(domains?: DomainController[], save_status?: SaveStatus) {
+		save_status?.setSaving()
+
+		// Update the graph
+		if (domains !== undefined) {
+			this._domain_ids = domains.map(domain => domain.id)
+			this._domains = domains
+		}
+
+		// Update domains
+		for (const [index, domain] of this.domains.entries()) {
+			domain.order = index
+		}
+
+		// Call the API to reorder the graph
+		const response = await fetch(`/api/graph/${this.id}/reorder/domains`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ domain_ids: this.domain_ids })
+		})
+
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw customError('APIError (/api/graph/{this.id}/reorder/domains PUT)', await response.text())
+		}
+
+		save_status?.setIdle()
+	}
+
+	async reorderLectures(lectures?: LectureController[], save_status?: SaveStatus) {
+		save_status?.setSaving()
+
+		// Update the graph
+		if (lectures !== undefined) {
+			this._lecture_ids = lectures.map(lecture => lecture.id)
+			this._lectures = lectures
+		}
+
+		// Update lectures
+		for (const [index, lecture] of this.lectures.entries()) {
+			lecture.order = index
+		}
+
+		// Call the API to reorder the graph
+		const response = await fetch(`/api/graph/${this.id}/reorder/lectures`, {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ lecture_ids: this.lecture_ids })
+		})
+
+		// Throw an error if the API request fails
+		if (!response.ok) {
+			throw customError('APIError (/api/graph/{this.id}/reorder/lectures PUT)', await response.text())
+		}
+
+		save_status?.setIdle()
+	}
+
+	sort(...targets: ('subjects' | 'domain-relations' | 'subject-relations')[]) {
+
+		// Custom sorting algorithm, as the default sort is unstable
+		function insertionSort<T>(array: T[], key: (item: T) => number) {
+			const n = array.length
+
+			for (let i = 1; i < n; i++) {
+				const x = array[i]
+
+				let j = i
+				while (j > 0 && key(array[j - 1]) > key(x)) {
+					array[j] = array[j - 1]
+					j--
+				}
+
+				array[j] = x
+			}
+		}
+
+		// Default to sorting all targets
+		if (targets.length === 0) {
+			targets = ['subjects', 'domain-relations', 'subject-relations']
+		}
+
+		// Sort subjects
+		if (targets.includes('subjects') && this._subjects !== undefined) {
+			insertionSort(this._subjects, subject => subject.domain?.order ?? Infinity)
+			this._subject_ids = this._subjects.map(subject => subject.id)
+		}
+
+		// Sort domain relations
+		if (targets.includes('domain-relations') && this._domains_relations !== undefined) {
+			insertionSort(this._domains_relations, relation => relation.child?.order ?? Infinity)
+			insertionSort(this._domains_relations, relation => relation.parent?.order ?? Infinity)
+		}
+
+		// Sort subject relations
+		if (targets.includes('subject-relations') && this._subjects_relations !== undefined) {
+			insertionSort(this._subjects_relations, relation => relation.child?.domain?.order ?? Infinity)
+			insertionSort(this._subjects_relations, relation => relation.parent?.domain?.order ?? Infinity)
+		}
 	}
 
 	// --------------------> Utility

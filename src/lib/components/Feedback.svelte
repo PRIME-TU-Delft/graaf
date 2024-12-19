@@ -13,7 +13,7 @@
 	// Functions
 	function onMouseEnter() {
 		timeout = setTimeout(() => {
-			show_dropdown = data.errors.length + data.warnings.length > 1 || compact
+			show_dropdown = !disable_dropdown
 		}, settings.UNIVERSAL_HOVER_DELAY)
 	}
 
@@ -23,8 +23,12 @@
 	}
 
 	function setDropdown(value?: boolean) {
-		if (value !== undefined) lock_dropdown = value
-		else lock_dropdown = !lock_dropdown && (data.errors.length + data.warnings.length > 1 || compact)
+		if (value !== undefined) {
+			lock_dropdown = value
+		} else {
+			lock_dropdown = !lock_dropdown
+		}
+
 		show_dropdown = lock_dropdown
 		clearTimeout(timeout)
 	}
@@ -50,10 +54,10 @@
 					   : data.warnings.length > 1 ? `${data.warnings[0].short} (${data.warnings.length - 1} more)`
 					   : data.warnings[0].short
 	
-	$: disable_toggle = !compact && data.errors.length + data.warnings.length < 2
-					  || compact && data.errors.length + data.warnings.length < 1
+	$: disable_dropdown = !compact && data.errors.length + data.warnings.length < 2
+						|| compact && data.errors.length + data.warnings.length < 1
 	
-	$: if (disable_toggle) setDropdown(false)
+	$: if (disable_dropdown) setDropdown(false)
 
 </script>
 
@@ -65,7 +69,7 @@
 		on:mouseenter={ onMouseEnter }
 		on:mouseleave={ onMouseLeave }
 		on:click={ () => setDropdown() }
-		disabled={ disable_toggle }
+		disabled={ disable_dropdown }
 	>
 		{#if show_error_icon}
 			<img 

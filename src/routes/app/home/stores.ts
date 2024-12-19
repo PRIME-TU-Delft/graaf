@@ -3,9 +3,10 @@
 import { writable } from 'svelte/store'
 
 // Internal dependencies
-import type {
-    ProgramController,
-    CourseController
+import {
+    type ProgramController,
+    type CourseController,
+    type ControllerCache
 } from '$scripts/controllers'
 
 // Stores
