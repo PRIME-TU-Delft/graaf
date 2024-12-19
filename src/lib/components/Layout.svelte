@@ -1,71 +1,29 @@
 <script lang="ts">
 	interface Props {
-		title?: import('svelte').Snippet;
+		title: string;
+		header?: import('svelte').Snippet;
 		toolbar?: import('svelte').Snippet;
 		children?: import('svelte').Snippet;
 	}
 
-	let { title, toolbar, children }: Props = $props();
+	let { title, header, toolbar, children }: Props = $props();
 </script>
 
-<main>
-	<section class="title">
-		{@render title?.()}
+<main class="mx-auto flex max-w-4xl flex-col gap-4 p-4">
+	<section class="mx-auto my-4 max-w-2xl">
+		<h2 class="text-2xl font-bold">{title}</h2>
+		{#if header}
+			{@render header()}
+		{/if}
 	</section>
 
 	{#if toolbar}
-		<section class="toolbar">
+		<section class="flex items-center gap-2">
 			{@render toolbar?.()}
 		</section>
 	{/if}
 
-	<section class="content">
+	<section class="grid grid-cols-1 gap-2">
 		{@render children?.()}
 	</section>
 </main>
-
-<!-- Styles -->
-
-<style lang="sass">
-
-	@use "$styles/variables.sass" as *
-	@use "$styles/palette.sass" as *
-
-	main
-		display: flex
-		flex-flow: column nowrap
-		place-items: stretch start
-
-		box-sizing: content-box
-		min-width: $small-column
-		max-width: $big-column
-
-		margin: auto
-		padding: $main-padding $tudelft-logo-width $footer-height
-
-		@media screen and (max-width: $phone-breakpoint)
-			width: $small-column
-			padding: $main-padding
-			padding-bottom: $footer-height
-
-		.title
-			margin-bottom: 2rem
-			color: $dark-gray
-
-		.toolbar
-			display: flex
-			flex-flow: row nowrap
-			place-items: center start
-			gap: $form-small-gap
-
-			margin-bottom: 1rem
-
-		.content
-			display: flex
-			flex-flow: column nowrap
-			place-items: stretch start
-			gap: 2rem
-
-			position: relative
-
-</style>
