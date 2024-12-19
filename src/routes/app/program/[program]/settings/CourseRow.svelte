@@ -15,6 +15,7 @@
 
 	// Assets
 	import trash_icon from '$assets/trash-icon.svg'
+	import pencil_icon from '$assets/pencil-icon.svg'
 
 	// Main
 	export let course: CourseController
@@ -48,7 +49,7 @@
 	</svelte:fragment>
 </SimpleModal>
 
-<div class="row">
+<span class="row"> <!-- We use a span here bc we dont want :first-of-type to trigger for modals (as they live between course rows) -->
 	<IconButton
 		src={trash_icon}
 		description="Unassign course"
@@ -58,9 +59,9 @@
 	{course.display_name}
 
 	<LinkButton href="/app/course/{course.id}/settings">
-		Course Settings
+		<img src={pencil_icon} alt=""> Course Settings
 	</LinkButton>
-</div>
+</span>
 
 <!-- Styles -->
 
@@ -82,10 +83,10 @@
 		color: $dark-gray
 		border-bottom: 1px solid $gray
 
-		&:first-child
+		&:first-of-type
 			margin-top: -$input-thin-padding
 
-		&:first-child
+		&:last-of-type
 			border-bottom: none
 			margin-bottom: -$input-thin-padding
 

@@ -13,6 +13,7 @@
 	import Button from '$components/Button.svelte'
 
 	// Assets
+	import pencil_icon from '$assets/pencil-icon.svg'
 	import trashIcon from '$assets/trash-icon.svg'
 
 	// Main
@@ -47,7 +48,7 @@
 	</svelte:fragment>
 </SimpleModal>
 
-<span class="program-row">
+<span class="program-row"> <!-- We use a span here bc we dont want :first-of-type to trigger for modals (as they live between program rows) -->
 	<IconButton 
 		src={trashIcon}
 		description="Unassign from program"
@@ -57,7 +58,7 @@
 	{program.display_name}
 
 	<LinkButton href="/app/program/{program.id}/settings">
-		Program Settings
+		<img src={pencil_icon} alt=""> Program Settings
 	</LinkButton>
 </span>
 
