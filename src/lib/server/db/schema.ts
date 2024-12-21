@@ -1,17 +1,14 @@
-import { pgTable, serial, text } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const program = pgTable('program', {
-	id: serial('id').primaryKey(),
-	name: text('name').notNull(),
-	description: text('description').notNull()
+	id: uuid('id').defaultRandom().primaryKey(),
+	name: text('name').notNull()
 });
 
 export const course = pgTable('course', {
-	id: serial('id').primaryKey(),
+	code: varchar('code', { length: 255 }).notNull().primaryKey(),
 	name: text('name').notNull(),
-	type: text('type'),
-	description: text('description').notNull(),
-	programId: serial('program_id')
+	programId: uuid('program_id')
 		.notNull()
 		.references(() => program.id)
 });
