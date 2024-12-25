@@ -8,15 +8,27 @@ import type { PageServerLoad, Actions } from './$types.js';
 import { fail } from '@sveltejs/kit';
 
 export const load = (async () => {
-	await new Promise((resolve) => setTimeout(resolve, 300));
+	try {
+		const programs = await db.query.program.findMany({
+			with: {
+				courses: true
+			}
+		});
 
-	const programs = await db.select().from(program);
-
-	return {
-		programs,
-		programForm: await superValidate(zod(programSchema)),
-		courseForm: await superValidate(zod(courseSchema))
-	};
+		return {
+			error: undefined,
+			programs,
+			programForm: await superValidate(zod(programSchema)),
+			courseForm: await superValidate(zod(courseSchema))
+		};
+	} catch (e: unknown) {
+		return {
+			error: e instanceof Error ? e.message : `${e}`,
+			programs: [],
+			programForm: await superValidate(zod(programSchema)),
+			courseForm: await superValidate(zod(courseSchema))
+		};
+	}
 }) satisfies PageServerLoad;
 
 export const actions = {

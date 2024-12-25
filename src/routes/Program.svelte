@@ -1,20 +1,20 @@
 <script lang="ts">
 	import DialogForm from '$lib/components/DialogForm.svelte';
 	import * as Button from '$lib/components/ui/button/index.js';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
 	import { courseSchema, type CourseSchema } from '$lib/utils/zodSchema';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Form from '$lib/components/ui/form/index.js';
+	import type { PageData } from './$types';
 
 	type Props = {
-		id: string;
-		name: string;
+		program: PageData['programs'][0];
 		courseForm: SuperValidated<Infer<CourseSchema>>;
 	};
 
-	const { id, name, courseForm }: Props = $props();
+	const { program, courseForm }: Props = $props();
 
 	let dialogOpen = $state(false);
 
@@ -26,7 +26,7 @@
 	 */
 	const form = superForm(courseForm, {
 		validators: zodClient(courseSchema),
-		id: `new-course-${id}`,
+		id: `new-course-${program.id}`,
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				dialogOpen = false;
@@ -39,7 +39,7 @@
 
 <div class="overflow-hidden rounded-lg border-2">
 	<div class="flex items-center justify-between gap-4 border-b-2 bg-blue-100 p-2">
-		<h3 class="text-lg font-semibold">{name}</h3>
+		<h3 class="text-lg font-semibold">{program.name}</h3>
 
 		<div class="flex gap-2">
 			<DialogForm
@@ -54,19 +54,28 @@
 				{@render courseFormSnippet()}
 			</DialogForm>
 
-			<Button.Root href="./programs/{id}/settings"><Settings /> Settings</Button.Root>
+			<Button.Root href="./programs/{program.id}/settings"><Settings /> Settings</Button.Root>
 		</div>
 	</div>
 
-	<p class="bg-white p-2 text-slate-900/60">This program has no courses yet.</p>
+	{#each program.courses as course}
+		<div class="flex items-center justify-between border-b-2 p-2">
+			<p>{course.code}</p>
+			<p>{course.name}</p>
+		</div>
+	{:else}
+		<p class="bg-white p-2 text-slate-900/60">This program has no courses yet.</p>
+	{/each}
 </div>
 
+<!-- Form for adding a new course to this program.
+ It triggers an action that can be seen in +page.server.ts -->
 {#snippet courseFormSnippet()}
 	<form action="?/new-course" method="POST" use:enhance>
 		<Form.Field {form} name="programId">
 			<Form.Control>
 				{#snippet children({ props })}
-					<Input {...props} value={id} />
+					<Input {...props} value={program.id} />
 				{/snippet}
 			</Form.Control>
 			<Form.Description />

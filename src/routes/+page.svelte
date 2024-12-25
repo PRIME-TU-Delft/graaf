@@ -1,16 +1,15 @@
 <script lang="ts">
-	import DialogForm from '$lib/components/DialogForm.svelte';
 	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { toast } from 'svelte-sonner';
 
+	import DialogForm from '$lib/components/DialogForm.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { programSchema } from '$lib/utils/zodSchema';
-	import { zodClient } from 'sveltekit-superforms/adapters';
 	import Program from './Program.svelte';
 
 	const { data } = $props();
-
-	$inspect({ data });
 
 	let dialogOpen = $state(false);
 
@@ -26,6 +25,21 @@
 	});
 
 	const { form: formData, enhance } = form;
+
+	$effect(() => {
+		if (data.error != undefined && location) {
+			toast.error(data.error, {
+				duration: 5000,
+				description: 'Please try again.',
+				action: {
+					label: 'Retry connection',
+					onClick: () => {
+						location.reload();
+					}
+				}
+			});
+		}
+	});
 </script>
 
 <section class="prose mx-auto text-blue-900">
@@ -48,16 +62,19 @@
 			title="Create Program"
 			description="Programs are collections of Courses, usually pertaining to the same field of study. Looking to try
 	out the Graph editor? Try making a sandbox environment instead!"
+			disabled={data.error != undefined}
 		>
 			{@render courseFormSnippet()}
 		</DialogForm>
 	</div>
 
-	{#each data.programs as programs}
-		<Program {...programs} courseForm={data.courseForm} />
+	{#each data.programs as program}
+		<Program {program} courseForm={data.courseForm} />
 	{/each}
 </section>
 
+<!-- For sumbitting a NEW PROGRAM
+ 	It triggers an action that can be seen in +page.server.ts -->
 {#snippet courseFormSnippet()}
 	<form action="?/new-program" method="POST" use:enhance>
 		<Form.Field {form} name="name">

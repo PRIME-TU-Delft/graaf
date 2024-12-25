@@ -11,19 +11,33 @@
 		button: string;
 		title: string;
 		description: string;
+		disabled?: boolean;
 		children: Snippet;
 	};
 
-	let { open = $bindable(), icon, button, title, description, children }: Props = $props();
+	let {
+		open = $bindable(),
+		icon,
+		button,
+		title,
+		description,
+		disabled,
+		children
+	}: Props = $props();
 </script>
 
 <Dialog.Root bind:open>
 	<Dialog.Trigger
-		class="flex items-center gap-2 rounded bg-primary p-2 text-primary-foreground shadow-none transition-all hover:bg-primary/80 hover:shadow-lg"
+		class="flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm text-primary-foreground shadow-none transition-all hover:bg-primary/80 hover:shadow-lg sm:text-base {disabled
+			? 'opacity-50'
+			: ''}"
+		{disabled}
 	>
-		{#if icon == 'plus'}
-			<Plus class="size-5" />
-		{/if}
+		<div class="hidden sm:block">
+			{#if icon == 'plus'}
+				<Plus class="size-5" />
+			{/if}
+		</div>
 
 		<span>{button}</span>
 	</Dialog.Trigger>
