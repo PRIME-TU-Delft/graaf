@@ -59,10 +59,10 @@
 	</div>
 
 	{#each program.courses as course}
-		<div class="flex items-center justify-between border-b-2 p-2">
+		<a href="./course/{course.code}" class="flex items-center justify-between border-b-2 p-2">
 			<p>{course.code}</p>
 			<p>{course.name}</p>
-		</div>
+		</a>
 	{:else}
 		<p class="bg-white p-2 text-slate-900/60">This program has no courses yet.</p>
 	{/each}

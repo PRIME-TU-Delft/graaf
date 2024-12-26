@@ -27,6 +27,7 @@
 	const { form: formData, enhance } = form;
 
 	$effect(() => {
+		// When the database is not connected, show a toast with a retry button
 		if (data.error != undefined && location) {
 			toast.error(data.error, {
 				duration: 5000,
@@ -42,7 +43,7 @@
 	});
 </script>
 
-<section class="prose mx-auto text-blue-900">
+<section class="prose mx-auto p-4 text-blue-900">
 	<h1 class="my-12 text-4xl font-bold text-blue-950 shadow-blue-500/70">Welcome to the graaf</h1>
 	<p>
 		Here you can find all Programs and associated Courses. Click on any of them to edit or view more
@@ -52,7 +53,7 @@
 	</p>
 </section>
 
-<section class="mx-auto my-12 grid max-w-4xl gap-4">
+<section class="mx-auto my-12 grid max-w-4xl gap-4 p-4">
 	<div class="flex items-center justify-between">
 		<h2 class="text-xl font-bold">Programs</h2>
 		<DialogForm
@@ -91,9 +92,3 @@
 		<Form.Button class="float-right mt-4">Submit</Form.Button>
 	</form>
 {/snippet}
-
-<style>
-	h1 {
-		text-shadow: 2px 2px 10px var(--tw-shadow-color, black);
-	}
-</style>

@@ -7,6 +7,4 @@
 
 <Toaster />
 
-<div class="p-4 lg:p-0">
-	{@render children()}
-</div>
+{@render children()}
