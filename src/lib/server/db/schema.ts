@@ -6,18 +6,30 @@ export const program = pgTable('program', {
 	name: text('name').notNull()
 });
 
+export const course = pgTable('course', {
+	code: varchar('code', { length: 255 }).notNull().unique().primaryKey(),
+	name: text('name').notNull()
+});
+
+export const programsToCourses = pgTable('programsToCourses', {
+	programId: uuid('program_id')
+		.defaultRandom()
+		.references(() => program.id),
+	courseCode: varchar('course_code', { length: 255 })
+		.notNull()
+		.references(() => course.code)
+});
+
+// Relationship definitions
 export const programRelations = relations(program, ({ many }) => ({
 	courses: many(course)
 }));
 
-export const course = pgTable('course', {
-	code: varchar('code', { length: 255 }).unique().notNull().primaryKey(),
-	name: text('name').notNull(),
-	programId: uuid('program_id')
-		.notNull()
-		.references(() => program.id)
-});
+export const courseRelations = relations(course, ({ many }) => ({
+	program: many(program)
+}));
 
-export const courseRelations = relations(course, ({ one }) => ({
-	program: one(program, { fields: [course.programId], references: [program.id] })
+export const programsToCoursesRelations = relations(programsToCourses, ({ one }) => ({
+	program: one(program, { fields: [programsToCourses.programId], references: [program.id] }),
+	course: one(course, { fields: [programsToCourses.courseCode], references: [course.code] })
 }));

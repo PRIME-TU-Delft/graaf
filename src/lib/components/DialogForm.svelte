@@ -12,6 +12,7 @@
 		title: string;
 		description: string;
 		disabled?: boolean;
+		onclick?: () => void;
 		children: Snippet;
 	};
 
@@ -22,6 +23,7 @@
 		title,
 		description,
 		disabled,
+		onclick = () => {},
 		children
 	}: Props = $props();
 </script>
@@ -32,6 +34,7 @@
 			? 'opacity-50'
 			: ''}"
 		{disabled}
+		{onclick}
 	>
 		<div class="hidden sm:block">
 			{#if icon == 'plus'}

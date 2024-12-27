@@ -1,5 +1,5 @@
 import { db } from '$lib/server/db';
-import { course, program } from '$lib/server/db/schema';
+import { program } from '$lib/server/db/schema';
 import { courseSchema, programSchema } from '$lib/utils/zodSchema';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -57,26 +57,28 @@ export const actions = {
 			return fail(400, { form });
 		}
 
-		try {
-			await db
-				.insert(course)
-				.values({ name: form.data.name, code: form.data.code, programId: form.data.programId });
-		} catch (e: unknown) {
-			if (!(e instanceof Object) || !('message' in e)) {
-				return setError(form, 'code', e instanceof Error ? e.message : `${e}`);
-			}
+		// try {
+		// 	const c = await db
+		// 		.insert(course)
+		// 		.values({ name: form.data.name, code: form.data.code }).returning();
 
-			// When the DB throws a unique constraint error
-			if ('duplicate key value violates unique constraint "course_pkey"' === e.message) {
-				return setError(
-					form,
-					'code',
-					'Code id already existes in the database, it needs to be unique'
-				);
-			}
+		// 	await db.query.courseToProgram.create({})
+		// } catch (e: unknown) {
+		// 	if (!(e instanceof Object) || !('message' in e)) {
+		// 		return setError(form, 'code', e instanceof Error ? e.message : `${e}`);
+		// 	}
 
-			return setError(form, 'code', `${e.message}`);
-		}
+		// 	// When the DB throws a unique constraint error
+		// 	if ('duplicate key value violates unique constraint "course_pkey"' === e.message) {
+		// 		return setError(
+		// 			form,
+		// 			'code',
+		// 			'Code id already existes in the database, it needs to be unique'
+		// 		);
+		// 	}
+
+		// 	return setError(form, 'code', `${e.message}`);
+		// }
 
 		return {
 			form
