@@ -12,21 +12,20 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
-		"test": "npm run test:unit -- --run",
-		"db:start": "podman compose up",
-		"db:push": "drizzle-kit push",
-		"db:migrate": "drizzle-kit migrate",
-		"db:studio": "drizzle-kit studio"
+		"test": "npm run test:unit -- --run"
+	},
+	"prisma": {
+		"seed": "ts-node prisma/seed.ts"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.3",
 		"@sveltejs/adapter-vercel": "^5.5.0",
 		"@sveltejs/kit": "^2.9.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.0",
+		"@types/node": "^22.10.2",
 		"autoprefixer": "^10.4.20",
 		"bits-ui": "1.0.0-next.74",
 		"clsx": "^2.1.1",
-		"drizzle-kit": "^0.22.0",
 		"eslint": "^9.7.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.36.0",
@@ -37,6 +36,7 @@
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.6",
 		"prettier-plugin-tailwindcss": "^0.6.5",
+		"prisma": "^6.1.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"svelte-sonner": "^0.3.28",
@@ -52,9 +52,9 @@
 		"zod": "^3.24.1"
 	},
 	"dependencies": {
+		"@prisma/client": "6.1.0",
 		"@tailwindcss/forms": "^0.5.9",
 		"@tailwindcss/typography": "^0.5.15",
-		"drizzle-orm": "^0.33.0",
 		"postgres": "^3.4.4"
 	}
 }

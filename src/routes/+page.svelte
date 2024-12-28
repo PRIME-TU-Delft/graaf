@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { toast } from 'svelte-sonner';
 
 	import DialogForm from '$lib/components/DialogForm.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -21,26 +21,15 @@
 	 */
 	const form = superForm(data.programForm, {
 		validators: zodClient(programSchema),
-		onResult: ({ result }) => (dialogOpen = result.type == 'success')
+		onResult: ({ result }) => {
+			if (result.type == 'success') {
+				toast.success('Program created successfully!');
+				dialogOpen = false;
+			}
+		}
 	});
 
 	const { form: formData, enhance } = form;
-
-	$effect(() => {
-		// When the database is not connected, show a toast with a retry button
-		if (data.error != undefined && location) {
-			toast.error(data.error, {
-				duration: 5000,
-				description: 'Please try again.',
-				action: {
-					label: 'Retry connection',
-					onClick: () => {
-						location.reload();
-					}
-				}
-			});
-		}
-	});
 </script>
 
 <section class="prose mx-auto p-4 text-blue-900">
@@ -57,7 +46,7 @@
 	<div class="flex items-center justify-between">
 		<h2 class="text-xl font-bold">Programs</h2>
 		<DialogForm
-			open={dialogOpen}
+			bind:open={dialogOpen}
 			icon="plus"
 			button="New Program"
 			title="Create Program"
@@ -69,7 +58,7 @@
 		</DialogForm>
 	</div>
 
-	{#each data.programs as program}
+	{#each data.programs as program (program.id)}
 		<Program {program} courseForm={data.courseForm} />
 	{/each}
 </section>

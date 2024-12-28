@@ -69,6 +69,15 @@
 			<Button.Root href="./programs/{program.id}/settings"><Settings /> Settings</Button.Root>
 		</div>
 	</div>
+
+	{#each program.courses as course}
+		<a href="./course/{course.code}" class="flex items-center justify-between border-b-2 p-2">
+			<p>{course.code}</p>
+			<p>{course.name}</p>
+		</a>
+	{:else}
+		<p class="bg-white p-2 text-slate-900/60">This program has no courses yet.</p>
+	{/each}
 </div>
 
 {#snippet newCourseButton()}
@@ -125,7 +134,7 @@
 
 {#snippet createNewCourseModal()}
 	<DialogForm
-		open={dialogOpen}
+		bind:open={dialogOpen}
 		onclick={() => {
 			$formData.name = courseValue;
 			$formData.programId = program.id;

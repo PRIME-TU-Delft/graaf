@@ -1,16 +1,17 @@
-import { db } from '$lib/server/db';
-import { program } from '$lib/server/db/schema';
 import { courseSchema, programSchema } from '$lib/utils/zodSchema';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-
+import prisma from '$lib/server/db/prisma.js';
 import type { Actions, PageServerLoad } from './$types.js';
 
 export const load = (async () => {
 	try {
-		const programs = await db.query.program.findMany({
-			with: {
+		const programs = await prisma.program.findMany({
+			include: {
 				courses: true
+			},
+			orderBy: {
+				updatedAt: 'desc'
 			}
 		});
 
@@ -38,7 +39,11 @@ export const actions = {
 		}
 
 		try {
-			await db.insert(program).values({ ...form.data });
+			await prisma.program.create({
+				data: {
+					name: form.data.name
+				}
+			});
 		} catch (e) {
 			if (!(e instanceof Object) || !('message' in e)) {
 				return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
@@ -57,28 +62,27 @@ export const actions = {
 			return fail(400, { form });
 		}
 
-		// try {
-		// 	const c = await db
-		// 		.insert(course)
-		// 		.values({ name: form.data.name, code: form.data.code }).returning();
+		try {
+			await prisma.program.update({
+				where: {
+					id: form.data.programId
+				},
+				data: {
+					courses: {
+						create: {
+							name: form.data.name,
+							code: form.data.code
+						}
+					}
+				}
+			});
+		} catch (e) {
+			if (!(e instanceof Object) || !('message' in e)) {
+				return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
+			}
 
-		// 	await db.query.courseToProgram.create({})
-		// } catch (e: unknown) {
-		// 	if (!(e instanceof Object) || !('message' in e)) {
-		// 		return setError(form, 'code', e instanceof Error ? e.message : `${e}`);
-		// 	}
-
-		// 	// When the DB throws a unique constraint error
-		// 	if ('duplicate key value violates unique constraint "course_pkey"' === e.message) {
-		// 		return setError(
-		// 			form,
-		// 			'code',
-		// 			'Code id already existes in the database, it needs to be unique'
-		// 		);
-		// 	}
-
-		// 	return setError(form, 'code', `${e.message}`);
-		// }
+			return setError(form, 'name', `${e.message}`);
+		}
 
 		return {
 			form
