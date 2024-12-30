@@ -72,7 +72,7 @@
 		{#if archivedPrograms.length == 0}
 			<p>No archived programs</p>
 		{/if}
-		<div class="block" transition:fade={{ duration: 400 }}>
+		<div class="contents" transition:fade={{ duration: 400 }}>
 			{#each archivedPrograms as program (program.id)}
 				<Program {program} courses={data.courses} courseForm={data.courseForm} />
 			{/each}

@@ -140,7 +140,6 @@
 		onclick={() => {
 			$formData.name = courseValue;
 			$formData.programId = program.id;
-			console.log($formData);
 		}}
 		icon="plus"
 		button="New Course for {program.name}"
