@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
+	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
@@ -8,7 +9,6 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { programSchema } from '$lib/utils/zodSchema';
 	import Program from './Program.svelte';
-	import { fade, fly } from 'svelte/transition';
 
 	const { data } = $props();
 

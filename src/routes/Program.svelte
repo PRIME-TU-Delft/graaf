@@ -16,7 +16,7 @@
 
 	type Props = {
 		program: Program & { courses: Course[] };
-		courses: Course[];
+		courses: Promise<Course[]>;
 		courseForm: SuperValidated<Infer<CourseSchema>>;
 	};
 
@@ -49,7 +49,6 @@
 
 	// Select out the courses that are not in the program yet
 	const programCourseSet = $derived(new Set(program.courses.map((c) => c.code)));
-	const selectableCourses = $derived(courses.filter((c) => !programCourseSet.has(c.code)));
 </script>
 
 <div class="overflow-hidden rounded-lg border-2">
@@ -64,7 +63,7 @@
 	</div>
 
 	{#each program.courses as course}
-		<a href="./course/{course.code}" class="flex items-center justify-between border-b-2 p-2">
+		<a href="./courses/{course.code}" class="flex items-center justify-between border-b-2 p-2">
 			<p>{course.name}</p>
 			<p class="text-sm">{course.code}</p>
 		</a>
@@ -85,43 +84,51 @@
 		</Popover.Trigger>
 		<Popover.Content class="p-2" side="right" align="start">
 			<Command.Root>
-				{#if courses.length == 0}
-					{@render createNewCourseModal()}]
-				{:else}
-					<Command.Input placeholder="Change status..." bind:value={courseValue} />
-					<Command.List>
-						<Command.Empty class="p-2">
-							{@render createNewCourseModal()}
-						</Command.Empty>
-						<Command.Group>
-							{#each selectableCourses as course}
-								<form action="?/add-course-to-program" method="POST" use:enhance>
-									<input type="hidden" name="program-id" value={program.id} />
-									<input type="hidden" name="code" value={course.code} />
-									<input type="hidden" name="name" value={course.name} />
+				{#await courses}
+					<p>Loading...</p>
+				{:then courses}
+					{@const selectableCourses = courses.filter((c) => !programCourseSet.has(c.code))}
+					{#if selectableCourses.length == 0}
+						{@render createNewCourseModal()}
+					{:else}
+						<Command.Input placeholder="Search courses..." bind:value={courseValue} />
+						<Command.List>
+							<Command.Empty class="p-2">
+								{@render createNewCourseModal()}
+							</Command.Empty>
 
-									<Form.Button variant="ghost" class="w-full justify-start p-0">
+							<Command.Group>
+								{#each selectableCourses as course}
+									<form action="?/add-course-to-program" method="POST" use:enhance>
+										<input type="hidden" name="program-id" value={program.id} />
+										<input type="hidden" name="code" value={course.code} />
+										<input type="hidden" name="name" value={course.name} />
+
 										<Command.Item
-											class="h-full w-full"
-											value={course.code}
+											class="h-full w-full p-0"
+											value={course.code + ' ' + course.name}
 											onSelect={() => {
 												dialogOpen = false;
 											}}
 										>
-											<span>
-												{course.name}
-											</span>
+											<Form.Button variant="ghost" class="w-full justify-between px-2 py-0">
+												<span class="max-w-[70%] truncate">
+													{course.name}
+												</span>
 
-											<span>
-												{course.code}
-											</span>
+												<span class="max-w-[30%] truncate text-xs text-slate-800">
+													{course.code}
+												</span>
+											</Form.Button>
 										</Command.Item>
-									</Form.Button>
-								</form>
-							{/each}
-						</Command.Group>
-					</Command.List>
-				{/if}
+									</form>
+								{/each}
+							</Command.Group>
+						</Command.List>
+					{/if}
+				{:catch error}
+					{@render createNewCourseModal()}
+				{/await}
 			</Command.Root>
 		</Popover.Content>
 	</Popover.Root>

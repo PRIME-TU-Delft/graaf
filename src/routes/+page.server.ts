@@ -1,9 +1,10 @@
 import prisma from '$lib/server/db/prisma.js';
+import { emptyPrismaPromise } from '$lib/utils.js';
 import { courseSchema, programSchema } from '$lib/utils/zodSchema';
+import type { Course, Program } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types.js';
-import type { Course, Prisma, Program } from '@prisma/client';
 
 export const load = (async () => {
 	try {
@@ -30,7 +31,7 @@ export const load = (async () => {
 			}
 		});
 
-		const courses = await prisma.course.findMany({
+		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'
 			}
@@ -48,10 +49,8 @@ export const load = (async () => {
 		return {
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
-			courses: [],
-			archivedPrograms: new Promise((resolve) => resolve([])) as Prisma.PrismaPromise<
-				(Program & { courses: Course[] })[]
-			>,
+			courses: emptyPrismaPromise([] as Course[]),
+			archivedPrograms: emptyPrismaPromise([] as (Program & { courses: Course[] })[]),
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
 		};
