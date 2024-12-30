@@ -8,6 +8,7 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { programSchema } from '$lib/utils/zodSchema';
 	import Program from './Program.svelte';
+	import { fade, fly } from 'svelte/transition';
 
 	const { data } = $props();
 
@@ -59,8 +60,24 @@
 	</div>
 
 	{#each data.programs as program (program.id)}
-		<Program {program} courseForm={data.courseForm} />
+		<Program {program} courses={data.courses} courseForm={data.courseForm} />
 	{/each}
+</section>
+
+<section class="mx-auto my-12 grid max-w-4xl gap-4 p-4">
+	<h2 class="text-xl font-bold">Archived programs</h2>
+	{#await data.archivedPrograms}
+		<p class="bg-base w-full rounded p-2 text-slate-800">Loading...</p>
+	{:then archivedPrograms}
+		{#if archivedPrograms.length == 0}
+			<p>No archived programs</p>
+		{/if}
+		<div class="block" transition:fade={{ duration: 400 }}>
+			{#each archivedPrograms as program (program.id)}
+				<Program {program} courses={data.courses} courseForm={data.courseForm} />
+			{/each}
+		</div>
+	{/await}
 </section>
 
 <!-- For sumbitting a NEW PROGRAM

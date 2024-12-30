@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import DialogForm from '$lib/components/DialogForm.svelte';
 	import * as Button from '$lib/components/ui/button/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
@@ -7,19 +8,19 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { courseSchema, type CourseSchema } from '$lib/utils/zodSchema';
+	import type { Course, Program } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Settings from 'lucide-svelte/icons/settings';
-	import { tick } from 'svelte';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
 
 	type Props = {
-		program: PageData['programs'][0];
+		program: Program & { courses: Course[] };
+		courses: Course[];
 		courseForm: SuperValidated<Infer<CourseSchema>>;
 	};
 
-	const { program, courseForm }: Props = $props();
+	let { program, courses, courseForm }: Props = $props();
 
 	let dialogOpen = $state(false);
 
@@ -40,23 +41,15 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance: newCourseEnhance } = form;
 	const triggerId = useId();
 
-	let openNewCourse = $state(false);
-	let courseValue = $state('');
+	let openNewCourse = $state(false); // Popover state
+	let courseValue = $state(''); // Input value
 
-	let courses = [{ name: 'x', code: 'y' }];
-
-	// We want to refocus the trigger button when the user selects
-	// an item from the list so users can continue navigating the
-	// rest of the form with the keyboard.
-	function closeAndFocusTrigger(triggerId: string) {
-		openNewCourse = false;
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus();
-		});
-	}
+	// Select out the courses that are not in the program yet
+	const programCourseSet = $derived(new Set(program.courses.map((c) => c.code)));
+	const selectableCourses = $derived(courses.filter((c) => !programCourseSet.has(c.code)));
 </script>
 
 <div class="overflow-hidden rounded-lg border-2">
@@ -72,8 +65,8 @@
 
 	{#each program.courses as course}
 		<a href="./course/{course.code}" class="flex items-center justify-between border-b-2 p-2">
-			<p>{course.code}</p>
 			<p>{course.name}</p>
+			<p class="text-sm">{course.code}</p>
 		</a>
 	{:else}
 		<p class="bg-white p-2 text-slate-900/60">This program has no courses yet.</p>
@@ -93,7 +86,7 @@
 		<Popover.Content class="p-2" side="right" align="start">
 			<Command.Root>
 				{#if courses.length == 0}
-					{@render createNewCourseModal()}
+					{@render createNewCourseModal()}]
 				{:else}
 					<Command.Input placeholder="Change status..." bind:value={courseValue} />
 					<Command.List>
@@ -101,27 +94,29 @@
 							{@render createNewCourseModal()}
 						</Command.Empty>
 						<Command.Group>
-							{#each courses as course}
+							{#each selectableCourses as course}
 								<form action="?/add-course-to-program" method="POST" use:enhance>
-									<input type="hidden" name="programId" value={program.id} />
+									<input type="hidden" name="program-id" value={program.id} />
 									<input type="hidden" name="code" value={course.code} />
 									<input type="hidden" name="name" value={course.name} />
 
-									<Command.Item
-										value={course.code}
-										onSelect={() => {
-											courseValue = course.code;
-											closeAndFocusTrigger(triggerId);
-										}}
-									>
-										<span>
-											{course.name}
-										</span>
+									<Form.Button variant="ghost" class="w-full justify-start p-0">
+										<Command.Item
+											class="h-full w-full"
+											value={course.code}
+											onSelect={() => {
+												dialogOpen = false;
+											}}
+										>
+											<span>
+												{course.name}
+											</span>
 
-										<span>
-											{course.code}
-										</span>
-									</Command.Item>
+											<span>
+												{course.code}
+											</span>
+										</Command.Item>
+									</Form.Button>
 								</form>
 							{/each}
 						</Command.Group>
@@ -141,17 +136,16 @@
 			console.log($formData);
 		}}
 		icon="plus"
-		button="New Program"
-		title="Create Program"
-		description="Programs are collections of Courses, usually pertaining to the same field of study. Looking to try
-	out the Graph editor? Try making a sandbox environment instead!"
+		button="New Course for {program.name}"
+		title="Create Course"
+		description="TODO"
 	>
 		{@render createNewCourseForm()}
 	</DialogForm>
 {/snippet}
 
 {#snippet createNewCourseForm()}
-	<form action="?/new-course" method="POST" use:enhance>
+	<form action="?/new-course" method="POST" use:newCourseEnhance>
 		<input type="hidden" name="programId" value={program.id} />
 
 		<Form.Field {form} name="code">
