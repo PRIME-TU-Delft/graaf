@@ -77,7 +77,10 @@
 		<Popover.Content class="p-2" side="right" align="start">
 			<Command.Root>
 				{#await coursesArtifical}
-					<p>Loading courses...</p>
+					<p>
+						Loading courses (I have added an artifical wait of 5s to test what would happen if this
+						loads slow)...
+					</p>
 				{:then courses}
 					{@const selectableCourses = courses.filter((c) => !programCourseSet.has(c.code))}
 					{#if selectableCourses.length == 0}
