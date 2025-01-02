@@ -1,10 +1,10 @@
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import { courseSchema, programSchema } from '$lib/utils/zodSchema';
 import type { Course, Program } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types.js';
+import { courseSchema, programSchema } from './zodSchema';
 
 export const load = (async () => {
 	try {
@@ -19,6 +19,9 @@ export const load = (async () => {
 				updatedAt: 'desc'
 			}
 		});
+
+		// We do not need to await these as this data is not needed for the initial
+		// render and we can render the page without it
 		const archivedPrograms = prisma.program.findMany({
 			where: {
 				isArchived: true
@@ -31,6 +34,8 @@ export const load = (async () => {
 			}
 		});
 
+		// Not high priority, so we can render the page without this data
+		// TODO: check if this needs to be limmited (take only the top 50 or so courses)
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'
@@ -58,6 +63,7 @@ export const load = (async () => {
 }) satisfies PageServerLoad;
 
 export const actions = {
+	// Creates a new program with the given name
 	'new-program': async (event) => {
 		const form = await superValidate(event, zod(programSchema));
 		if (!form.valid) {
@@ -82,6 +88,8 @@ export const actions = {
 			form
 		};
 	},
+
+	// Creates a new course with the given NAME and CODE
 	'new-course': async (event) => {
 		const form = await superValidate(event, zod(courseSchema));
 		if (!form.valid) {
@@ -123,10 +131,7 @@ export const actions = {
 		const courseName = form.get('name') as string | null;
 
 		if (!programId || !courseCode || !courseName) {
-			return {
-				status: 400,
-				body: 'Invalid request'
-			};
+			return fail(400, { error: 'Missing required fields' });
 		}
 
 		try {

@@ -1,36 +1,15 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-
-	import DialogForm from '$lib/components/DialogForm.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import { programSchema } from '$lib/utils/zodSchema';
+	import CreateNewProgramButton from './CreateNewProgramButon.svelte';
 	import Program from './Program.svelte';
+	import { toast } from 'svelte-sonner';
 
-	const { data } = $props();
+	const { data, form } = $props();
 
-	let dialogOpen = $state(false);
-
-	/**
-	 * Handle the result of the form submission,
-	 * Server or SPA response: success, error, or warning
-	 * Read more here: https://superforms.rocks/concepts/events
-	 * @param e - ActionResult
-	 */
-	const form = superForm(data.programForm, {
-		validators: zodClient(programSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Program created successfully!');
-				dialogOpen = false;
-			}
-		}
+	$effect(() => {
+		// When add course to program form is submitted with an error
+		if (form?.error) toast.error(form.error);
 	});
-
-	const { form: formData, enhance } = form;
 </script>
 
 <section class="prose mx-auto p-4 text-blue-900">
@@ -46,17 +25,7 @@
 <section class="mx-auto my-12 grid max-w-4xl gap-4 p-4">
 	<div class="flex items-center justify-between">
 		<h2 class="text-xl font-bold">Programs</h2>
-		<DialogForm
-			bind:open={dialogOpen}
-			icon="plus"
-			button="New Program"
-			title="Create Program"
-			description="Programs are collections of Courses, usually pertaining to the same field of study. Looking to try
-	out the Graph editor? Try making a sandbox environment instead!"
-			disabled={data.error != undefined}
-		>
-			{@render courseFormSnippet()}
-		</DialogForm>
+		<CreateNewProgramButton form={data.programForm} />
 	</div>
 
 	{#each data.programs as program (program.id)}
@@ -79,22 +48,3 @@
 		</div>
 	{/await}
 </section>
-
-<!-- For sumbitting a NEW PROGRAM
- 	It triggers an action that can be seen in +page.server.ts -->
-{#snippet courseFormSnippet()}
-	<form action="?/new-program" method="POST" use:enhance>
-		<Form.Field {form} name="name">
-			<Form.Control>
-				{#snippet children({ props })}
-					<Form.Label for="name">Program name</Form.Label>
-					<Input {...props} bind:value={$formData['name']} />
-				{/snippet}
-			</Form.Control>
-			<Form.Description />
-			<Form.FieldErrors />
-		</Form.Field>
-
-		<Form.Button class="float-right mt-4">Submit</Form.Button>
-	</form>
-{/snippet}

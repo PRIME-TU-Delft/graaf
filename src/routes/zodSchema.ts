@@ -17,6 +17,3 @@ export const courseSchema = z.object({
 	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH),
 	programId: z.string()
 });
-
-export type ProgramSchema = typeof programSchema;
-export type CourseSchema = typeof courseSchema;
