@@ -1,18 +1,36 @@
 import { PrismaClient } from '@prisma/client';
-import userData from '../src/lib/server/db/data.json' assert { type: 'json' };
+import { courses, programs } from './init';
 
 const prisma = new PrismaClient();
 
 async function main() {
 	console.log(`Start seeding ...`);
-
-	for (const p of userData) {
-		const user = await prisma.program.create({
+	for (const course of courses) {
+		const c = await prisma.course.create({
 			data: {
-				name: p.name
+				...course
 			}
 		});
-		console.log(`Created user with id: ${user.id}`);
+		console.log(`Created course with id: ${c.code}`);
+	}
+
+	console.log('\n');
+
+	for (const program of programs) {
+		const p = await prisma.program.create({
+			data: {
+				name: program.name,
+				isArchived: program.isArchived,
+				courses: {
+					connect: program.courses.map((c) => {
+						return {
+							code: c.code
+						};
+					})
+				}
+			}
+		});
+		console.log(`Created program with id: ${p.id}`);
 	}
 	console.log(`Seeding finished.`);
 }
