@@ -3,6 +3,7 @@
 	import CreateNewProgramButton from './CreateNewProgramButon.svelte';
 	import Program from './Program.svelte';
 	import { toast } from 'svelte-sonner';
+	import SearchCourses from './SearchCourses.svelte';
 
 	const { data, form } = $props();
 
@@ -25,7 +26,13 @@
 <section class="mx-auto my-12 grid max-w-4xl gap-4 p-4">
 	<div class="flex items-center justify-between">
 		<h2 class="text-xl font-bold">Programs</h2>
-		<CreateNewProgramButton form={data.programForm} />
+
+		<div class="flex gap-2">
+			{#await data.courses then courses}
+				<SearchCourses {courses} />
+			{/await}
+			<CreateNewProgramButton form={data.programForm} />
+		</div>
 	</div>
 
 	{#each data.programs as program (program.id)}

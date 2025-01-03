@@ -6,14 +6,23 @@ import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types.js';
 import { courseSchema, programSchema } from './zodSchema';
 
-export const load = (async () => {
+export const load = (async ({ url }) => {
 	try {
+		const search = url.searchParams.get('c')?.toLocaleLowerCase();
+
 		const programs = await prisma.program.findMany({
 			where: {
 				isArchived: false
 			},
 			include: {
-				courses: true
+				courses: {
+					orderBy: {
+						updatedAt: 'desc'
+					},
+					where: search
+						? { name: { contains: search, mode: 'insensitive' } }
+						: { NOT: { name: '' } }
+				}
 			},
 			orderBy: {
 				updatedAt: 'desc'

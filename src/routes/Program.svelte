@@ -77,6 +77,7 @@
 		<Popover.Content class="p-2" side="right" align="start">
 			<Command.Root>
 				{#await coursesArtifical}
+					<CreateNewCourseButton {courseForm} {courseValue} {program} />
 					<p>
 						Loading courses (I have added an artifical wait of 5s to test what would happen if this
 						loads slow)...
