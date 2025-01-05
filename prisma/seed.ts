@@ -20,7 +20,6 @@ async function main() {
 		const p = await prisma.program.create({
 			data: {
 				name: program.name,
-				isArchived: program.isArchived,
 				courses: {
 					connect: program.courses.map((c) => {
 						return {

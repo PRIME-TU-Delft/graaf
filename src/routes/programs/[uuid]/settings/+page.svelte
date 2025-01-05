@@ -2,21 +2,9 @@
 	import { enhance } from '$app/forms';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import Checkbox from '$lib/components/ui/checkbox/checkbox.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input';
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
-	import { formSchema } from './schema';
 
 	let { data }: { data: PageData } = $props();
-
-	const form = superForm(data.form, {
-		validators: zodClient(formSchema)
-	});
-
-	const { form: formData, enhance: formEnhance } = form;
 </script>
 
 <section class="prose mx-auto p-4 text-blue-900 shadow-blue-500/70">
@@ -31,29 +19,6 @@
 		</p>
 
 		<h2>Settings</h2>
-		<div class="flex items-center gap-2">
-			<p>Archive:</p>
-			<form action="?/archive-program" method="POST" use:formEnhance>
-				<Form.Field {form} name="programId" hidden>
-					<Form.Control>
-						{#snippet children({ props })}
-							<Input {...props} value={$formData.programId} />
-						{/snippet}
-					</Form.Control>
-				</Form.Field>
-				<Form.Field {form} name="isArchived" hidden>
-					<Form.Control>
-						{#snippet children({ props })}
-							<Checkbox {...props} checked={$formData.isArchived} />
-						{/snippet}
-					</Form.Control>
-				</Form.Field>
-				<Form.Button variant="destructive">
-					{data.program.isArchived ? 'Unarchive' : 'Archive'}
-				</Form.Button>
-			</form>
-		</div>
-
 		<div class="flex items-center gap-2">
 			<p>Delete:</p>
 

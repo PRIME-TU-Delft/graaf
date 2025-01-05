@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { toast } from 'svelte-sonner';
 	import CreateNewProgramButton from './CreateNewProgramButon.svelte';
 	import Program from './Program.svelte';
-	import { toast } from 'svelte-sonner';
 	import SearchCourses from './SearchCourses.svelte';
 
 	const { data, form } = $props();
 
 	$effect(() => {
-		// When add course to program form is submitted with an error
+		// When add 'course to program' form is submitted with an error
 		if (form?.error) toast.error(form.error);
 	});
 </script>
@@ -38,20 +37,4 @@
 	{#each data.programs as program (program.id)}
 		<Program {program} courses={data.courses} courseForm={data.courseForm} />
 	{/each}
-</section>
-
-<section class="mx-auto my-12 grid max-w-4xl gap-4 p-4">
-	<h2 class="text-xl font-bold">Archived programs</h2>
-	{#await data.archivedPrograms}
-		<p class="bg-base w-full rounded p-2 text-slate-800">Loading...</p>
-	{:then archivedPrograms}
-		{#if archivedPrograms.length == 0}
-			<p>No archived programs</p>
-		{/if}
-		<div class="contents" transition:fade={{ duration: 400 }}>
-			{#each archivedPrograms as program (program.id)}
-				<Program {program} courses={data.courses} courseForm={data.courseForm} />
-			{/each}
-		</div>
-	{/await}
 </section>

@@ -15,12 +15,11 @@ datasource db {
 
 // Program <*--*> Course
 model Program {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String
-  courses    Course[]
-  isArchived Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  courses   Course[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum CourseType {
@@ -29,11 +28,34 @@ enum CourseType {
 }
 
 // Course <*--*> Program
+// Course <---*> Graph
 model Course {
-  code      String     @id @unique
-  name      String
-  programs  Program[]
-  type      CourseType @default(COURSE)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  code String @id @unique
+  name String
+
+  programs Program[]
+  graphs   Graph[]
+
+  isArchived Boolean    @default(false)
+  type       CourseType @default(COURSE)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+// Graph <*---> Course
+model Graph {
+  id       Int    @id @default(autoincrement())
+  name     String
+  courseId String
+
+  course Course @relation(fields: [courseId], references: [code])
+  // domains			Domain[]
+  // subjects		Subject[]
+  // lectures		Lecture[]
+  // links			Link[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, name])
 }

@@ -1,12 +1,25 @@
 import prisma from '$lib/server/db/prisma';
 import type { ServerLoad } from '@sveltejs/kit';
+import { setError, superValidate, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { graphSchema } from './zodSchema.js';
+import type { Course, Graph } from '@prisma/client';
+import type { OrError } from '$lib/utils.js';
 
 export const load = (async ({ params }) => {
+	const result = {
+		course: undefined,
+		graphForm: await superValidate(zod(graphSchema)),
+		error: ''
+	} as OrError<{
+		course: Course;
+		graphForm: SuperValidated<Infer<typeof graphSchema>>;
+		graphs: Graph[];
+	}>;
+
 	if (!params.code) {
-		return {
-			course: undefined,
-			error: 'Course code is required'
-		};
+		result.error = 'Course code is required';
+		return result;
 	}
 
 	try {
@@ -20,62 +33,46 @@ export const load = (async ({ params }) => {
 		});
 
 		if (!dbCourse) {
-			return {
-				course: undefined,
-				error: 'Course not found'
-			};
+			result.error = 'Course not found';
+			return result;
 		}
 
+		const graphs = await prisma.graph.findMany({
+			where: {
+				courseId: params.code
+			}
+		});
+
+		// Happy path
 		return {
 			error: undefined,
-			course: dbCourse
+			graphSchema: await superValidate(zod(graphSchema)),
+			course: dbCourse,
+			graphs
 		};
 	} catch (e: unknown) {
-		return {
-			course: undefined,
-			error: e instanceof Error ? e.message : `${e}`
-		};
+		result.error = e instanceof Error ? e.message : `${e}`;
+		return result;
 	}
 }) satisfies ServerLoad;
 
 export const actions = {
-	'remove-program-from-course': async ({ request }) => {
-		const form = await request.formData();
+	'add-graph-to-course': async (event) => {
+		const form = await superValidate(event, zod(graphSchema));
 
-		const programId = form.get('program-id') as string | null;
-		const courseCode = form.get('course-id') as string | null;
-
-		if (!programId || !courseCode) {
-			return {
-				status: 400,
-				body: 'Invalid request'
-			};
+		if (!form.valid) {
+			return setError(form, 'name', 'Invalid graph name');
 		}
 
 		try {
-			// Remove program from course
-			await prisma.course.update({
-				where: {
-					code: courseCode
-				},
+			await prisma.graph.create({
 				data: {
-					programs: {
-						disconnect: {
-							id: programId
-						}
-					}
+					name: form.data.name,
+					courseId: form.data.courseCode
 				}
 			});
-
-			return {
-				status: 200,
-				body: 'Program removed from course'
-			};
 		} catch (e: unknown) {
-			return {
-				status: 500,
-				body: e instanceof Error ? e.message : `${e}`
-			};
+			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 };

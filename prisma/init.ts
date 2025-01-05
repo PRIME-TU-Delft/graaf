@@ -37,7 +37,6 @@ export const programs = [
 	},
 	{
 		name: 'ProgramFour',
-		isArchived: true,
 		courses: [courses[3]]
 	}
 ];

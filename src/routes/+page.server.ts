@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import type { Course, Program } from '@prisma/client';
+import type { Course } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types.js';
@@ -11,9 +11,6 @@ export const load = (async ({ url }) => {
 		const search = url.searchParams.get('c')?.toLocaleLowerCase();
 
 		const programs = await prisma.program.findMany({
-			where: {
-				isArchived: false
-			},
 			include: {
 				courses: {
 					orderBy: {
@@ -23,20 +20,6 @@ export const load = (async ({ url }) => {
 						? { name: { contains: search, mode: 'insensitive' } }
 						: { NOT: { name: '' } }
 				}
-			},
-			orderBy: {
-				updatedAt: 'desc'
-			}
-		});
-
-		// We do not need to await these as this data is not needed for the initial
-		// render and we can render the page without it
-		const archivedPrograms = prisma.program.findMany({
-			where: {
-				isArchived: true
-			},
-			include: {
-				courses: true
 			},
 			orderBy: {
 				updatedAt: 'desc'
@@ -54,7 +37,6 @@ export const load = (async ({ url }) => {
 		return {
 			error: undefined,
 			programs,
-			archivedPrograms,
 			courses,
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
@@ -64,7 +46,6 @@ export const load = (async ({ url }) => {
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
 			courses: emptyPrismaPromise([] as Course[]),
-			archivedPrograms: emptyPrismaPromise([] as (Program & { courses: Course[] })[]),
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
 		};
