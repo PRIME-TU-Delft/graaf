@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -26,7 +27,7 @@
 	{/if}
 </section>
 
-<!-- TODO: archive, delete -->
+<!-- TODO: archive, delete, edit permissions for users -->
 
 {#if data.course != undefined && data.graphSchema != undefined}
 	<section
@@ -51,8 +52,21 @@
 					<Button class="transition-colors group-hover:bg-blue-500">
 						View/Edit <ArrowRight />
 					</Button>
-					<Button onclick={preventDefault(() => console.log('Duplicate'))}>Duplicate</Button>
-					<Button onclick={preventDefault(() => console.log('Settings'))}>Settings</Button>
+					<Button
+						onclick={preventDefault(() =>
+							toast.success('WIP: Open duplication popup', {
+								description:
+									'Can be duplicated to any other course that the user has permissions to'
+							})
+						)}>Duplicate</Button
+					>
+					<Button
+						onclick={preventDefault(() =>
+							toast.success('WIP: Open settings modal', {
+								description: "Settings includes: 'delete', 'change name', 'duplicate'"
+							})
+						)}>Settings</Button
+					>
 				</div>
 			</a>
 		{/each}

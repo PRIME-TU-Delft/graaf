@@ -26,9 +26,6 @@ export const load = (async ({ params }) => {
 		const dbCourse = await prisma.course.findFirst({
 			where: {
 				code: params.code
-			},
-			include: {
-				programs: true
 			}
 		});
 

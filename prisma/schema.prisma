@@ -48,8 +48,8 @@ model Graph {
   name     String
   courseId String
 
-  course Course @relation(fields: [courseId], references: [code])
-  // domains			Domain[]
+  course  Course   @relation(fields: [courseId], references: [code])
+  domains Domain[]
   // subjects		Subject[]
   // lectures		Lecture[]
   // links			Link[]
@@ -58,4 +58,35 @@ model Graph {
   updatedAt DateTime @updatedAt
 
   @@unique([courseId, name])
+}
+
+enum DomainStyle {
+  PROSPEROUS_RED
+  ENERGIZING_ORANGE
+  SUNNY_YELLOW
+  ELECTRIC_GREEN
+  CONFIDENT_TURQUOISE
+  MYSTERIOUS_BLUE
+  MAJESTIC_PURPLE
+  POWERFUL_PINK
+  NEUTRAL_GRAY
+  SERIOUS_BROWN
+}
+
+model Domain {
+  id Int @id @default(autoincrement())
+
+  name  String
+  style DomainStyle?
+  order Int // Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+
+  // physical position in the graph
+  x Int @default(0)
+  y Int @default(0)
+
+  graphId          Int
+  graph            Graph    @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  // subjects      Subject[]
+  incommingDomains Domain[] @relation("DomainRelation")
+  outgoingDomains  Domain[] @relation("DomainRelation")
 }

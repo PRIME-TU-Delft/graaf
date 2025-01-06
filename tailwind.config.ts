@@ -18,6 +18,16 @@ const config: Config = {
 		},
 		extend: {
 			colors: {
+				PROSPEROUS_RED: '#E03C31',
+				ENERGIZING_ORANGE: '#EC6842',
+				SUNNY_YELLOW: '#FFB81C',
+				ELECTRIC_GREEN: '#6CC24A',
+				CONFIDENT_TURQUOISE: '#00B8C8',
+				MYSTERIOUS_BLUE: '#0076C2',
+				MAJESTIC_PURPLE: '#6F1D77',
+				POWERFUL_PINK: '#EF60A3',
+				NEUTRAL_GRAY: '#5C5C5C',
+				SERIOUS_BROWN: '#8D6E63',
 				border: 'hsl(var(--border) / <alpha-value>)',
 				input: 'hsl(var(--input) / <alpha-value>)',
 				ring: 'hsl(var(--ring) / <alpha-value>)',
