@@ -31,7 +31,7 @@
 
 	const { form: formData, enhance } = form;
 
-	const domainColors = settings.COLORS;
+	const domainColors = settings.COLOR_KEYS;
 </script>
 
 <DialogButton
@@ -67,15 +67,15 @@
 					{/snippet}
 				</Form.Control>
 
-				<!-- eslint-next-lines cssConflict -->
-				<div
-					class="border-CONFIDENT_TURQUOISE border-ELECTRIC_GREEN border-ENERGIZING_ORANGE border-MAJESTIC_PURPLE border-MYSTERIOUS_BLUE border-NEUTRAL_GRAY border-POWERFUL_PINK border-PROSPEROUS_RED border-SERIOUS_BROWN border-SUNNY_YELLOW"
-				></div>
-
 				{#each domainColors as color}
 					<Form.Control>
 						{#snippet children({ props })}
-							<RadioGroup.Item class="scale-[2] border-{color}" value={color} {...props} />
+							<RadioGroup.Item
+								style="border-color: {settings.COLORS[color]};"
+								class="scale-[2]"
+								value={color}
+								{...props}
+							/>
 							{#if $formData.color === color}
 								<Form.Label class="text-xs text-slate-500">
 									{color.replaceAll('_', ' ').toLowerCase()}

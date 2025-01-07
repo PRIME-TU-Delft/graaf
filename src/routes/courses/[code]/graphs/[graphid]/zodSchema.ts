@@ -7,5 +7,5 @@ import * as settings from '$lib/utils/settings';
 export const domainSchema = z.object({
 	graphId: z.number(),
 	name: z.string().min(1).max(settings.MAX_DOMAIN_NAME_LENGTH),
-	color: z.enum(['', ...settings.COLORS] as [string, ...string[]])
+	color: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
 });
