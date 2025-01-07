@@ -3,7 +3,7 @@ import { expect, test } from 'vitest';
 import { addConnection, dummyDomain, dummyGraph } from './utils';
 import { GraphValidator } from '../graphValidator';
 
-describe('Trivial graph', () => {
+describe('multi roots graph', () => {
 	// A -> B -> D -> F
 	// C -> D
 

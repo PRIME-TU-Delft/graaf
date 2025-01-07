@@ -4,6 +4,7 @@ import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { domainRelSchema, domainSchema } from './zodSchema';
 import type { DomainStyle } from '@prisma/client';
+import { GraphValidator } from '$lib/server/validators/graphValidator';
 
 export const load = (async ({ params }) => {
 	if (!params.code || !params.graphid) {
@@ -41,11 +42,16 @@ export const load = (async ({ params }) => {
 		if (!course) error(404, { message: 'Course not found' });
 		if (course.graphs.length === 0) error(404, { message: 'Graph not found' });
 
+		const graphValidator = new GraphValidator(course.graphs[0]);
+
+		const cycles = graphValidator.hasCycle();
+
 		// Happy path
 		return {
 			course: course,
 			newDomainForm: await superValidate(zod(domainSchema)),
-			newDomainRelForm: await superValidate(zod(domainRelSchema))
+			newDomainRelForm: await superValidate(zod(domainRelSchema)),
+			cycles: cycles
 		};
 	} catch (e: unknown) {
 		error(500, { message: e instanceof Error ? e.message : `${e}` });

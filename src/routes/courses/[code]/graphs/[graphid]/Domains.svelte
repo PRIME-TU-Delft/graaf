@@ -111,7 +111,14 @@
 	</Table.Header>
 	<Table.Body>
 		{#each domainMapping as { domain, outDomain }, index (domain.id.toString() + outDomain.id.toString())}
-			<Table.Row>
+			{@const id = `domain-rel-${domain.id}-${outDomain.id}`}
+			<Table.Row
+				{id}
+				class={[
+					'transition-colors delay-300',
+					page.url.hash == `#${id}` ? 'bg-blue-200' : 'bg-blue-200/0'
+				]}
+			>
 				<Table.Cell>
 					{index + 1}
 				</Table.Cell>
@@ -138,3 +145,5 @@
 		{/each}
 	</Table.Body>
 </Table.Root>
+
+<div class="h-dvh"></div>

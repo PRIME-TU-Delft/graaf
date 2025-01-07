@@ -5,6 +5,8 @@
 	import type { PageData } from './$types';
 	import Domains from './Domains.svelte';
 	import Preview from './Preview.svelte';
+	import { toast } from 'svelte-sonner';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -23,6 +25,19 @@
 	$effect(() => {
 		// Make sure there are never two tabs of preview opened
 		if (medium.current && tabValue === 'Preview') tabValue = 'Domains';
+
+		if (data.cycles) {
+			const from = data.cycles.from;
+			const to = data.cycles.to;
+			toast.warning('This graph contains cycles', {
+				duration: Number.POSITIVE_INFINITY,
+				description: `from ${from.name} to ${to.name}`,
+				action: {
+					label: 'Go to cycle',
+					onClick: () => goto(`#domain-rel-${from.id}-${to.id}`)
+				}
+			});
+		}
 	});
 </script>
 

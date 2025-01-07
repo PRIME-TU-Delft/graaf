@@ -22,11 +22,12 @@ describe('Trivial graph', () => {
 	const graph2 = dummyGraph([d]);
 	const validator2 = new GraphValidator(graph2);
 
+	const validator3 = new GraphValidator(dummyGraph([]));
+
 	test('has cycles is false', () => {
 		expect(validator1.hasCycle(), 'v1').toBe(undefined);
 		expect(validator2.hasCycle(), 'v2').toBe(undefined);
 
-		const validator3 = new GraphValidator(dummyGraph([]));
 		expect(validator3.hasCycle(), 'empty graph').toBe(undefined);
 	});
 
@@ -38,5 +39,11 @@ describe('Trivial graph', () => {
 	test('domain "D" is the only root', () => {
 		expect(validator2.roots.length).toBe(1); // There is only one root
 		expect(validator2.roots).toContain(validator2.getDomain(3)); // The root is domain 'g'
+	});
+
+	test('sub graph sizes', () => {
+		expect(validator1.getSubGraphs().length).toBe(1);
+		expect(validator2.getSubGraphs().length).toBe(1);
+		expect(validator3.getSubGraphs().length).toBe(0);
 	});
 });

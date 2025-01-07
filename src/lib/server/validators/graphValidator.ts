@@ -4,23 +4,45 @@ export type DomainType = Domain & { incommingDomains: Domain[]; outgoingDomains:
 export type GraphType = Graph & { domains: DomainType[] };
 
 export class GraphValidator {
-	roots: DomainType[] = [];
+	roots: DomainType[] = []; // A root is a domain that has no incoming domains
 	#domains: Map<number, DomainType> = new Map();
+	#subGraphs: Set<DomainType>[] = [];
 
 	constructor(g: GraphType) {
 		if (g.domains.length === 0) return; // Guard to prevent empty graphs
 
-		for (const domain of g.domains) {
-			this.#domains.set(domain.id, domain);
+		for (const domain of g.domains) this.#domains.set(domain.id, domain);
 
-			if (domain.incommingDomains.length === 0) {
-				this.roots.push(this.#domains.get(domain.id)!);
-			}
+		// Find all subgraphs
+		const subgraphs: Set<DomainType>[] = [];
+		const visited = new Set<number>();
+
+		for (const domain of this.#domains.values()) {
+			if (visited.has(domain.id)) continue;
+
+			const subgraph: Set<DomainType> = new Set();
+
+			this.dfs(domain.id, visited, subgraph);
+			subgraphs.push(subgraph);
 		}
 
-		// If the graph has no roots, then it has a cycle. Make first domain the root
-		if (this.roots.length === 0) {
-			this.roots.push(this.#domains.get(g.domains[0].id)!);
+		this.#subGraphs = subgraphs;
+
+		// Find roots
+		for (const subgraphSet of subgraphs) {
+			const subgraph = Array.from(subgraphSet);
+
+			if (subgraph.length === 0) continue; // I see no reason why this could happen, but just in case
+
+			// A root is a domain that has no incoming domains
+			const roots = subgraph.filter((domain) => domain.incommingDomains.length === 0);
+			this.roots.push(...roots);
+
+			// If there is no trivial root, then the subgraph is a cycle
+			// the roots will be the first domain in the cycle
+			if (roots.length === 0) {
+				this.roots.push(subgraph[0]);
+			}
 		}
 	}
 
@@ -31,6 +53,22 @@ export class GraphValidator {
 	 */
 	getDomain(id: number): DomainType | undefined {
 		return this.#domains.get(id);
+	}
+
+	getSubGraphs(): Set<DomainType>[] {
+		return this.#subGraphs;
+	}
+
+	private dfs(v: number, visited: Set<number>, subgraph: Set<DomainType>) {
+		if (!visited.has(v)) {
+			visited.add(v);
+
+			for (const neighbour of this.#domains.get(v)!.outgoingDomains) {
+				this.dfs(neighbour.id, visited, subgraph);
+			}
+
+			subgraph.add(this.#domains.get(v)!);
+		}
 	}
 
 	/**
@@ -71,7 +109,10 @@ export class GraphValidator {
 		const recStack = new Set<number>();
 
 		for (const root of this.roots) {
+			if (root.outgoingDomains.length === 0) continue;
+
 			const cycle = this.isCyclicUtil(root.id, visited, recStack);
+
 			if (cycle != undefined) {
 				return cycle;
 			}
