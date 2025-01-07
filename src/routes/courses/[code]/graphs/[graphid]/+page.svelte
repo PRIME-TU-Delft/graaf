@@ -10,6 +10,7 @@
 
 	const medium = new MediaQuery('min-width: 768px');
 
+	// TAB LOGIC
 	const tabs = $derived.by(() => {
 		const tabs = ['Domains', 'Subjects', 'Lectures'];
 		if (!medium.current) tabs.push('Preview');
@@ -41,7 +42,7 @@
 			</Tabs.List>
 			<Tabs.Content value="Domains">
 				{#key data}
-					<Domains course={data.course} newDomainForm={data.newDomainForm} />
+					<Domains {...data} />
 				{/key}
 			</Tabs.Content>
 			<Tabs.Content value="Subjects">Make subjects</Tabs.Content>
@@ -51,8 +52,6 @@
 	</div>
 
 	{#if medium.current}
-		<div class="relative grow" in:fade>
-			<Preview course={data.course} />
-		</div>
+		<Preview course={data.course} />
 	{/if}
 </div>

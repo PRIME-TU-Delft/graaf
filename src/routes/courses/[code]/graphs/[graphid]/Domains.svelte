@@ -8,18 +8,32 @@
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
 	import CreateNewDomain from './CreateNewDomain.svelte';
-	import type { domainSchema } from './zodSchema';
+	import type { domainRelSchema, domainSchema } from './zodSchema';
 	import SortableList from './SortableList.svelte';
+	import CreateNewRelationship from './CreateNewRelationship.svelte';
+	import { page } from '$app/state';
+	import type { Domain } from '@prisma/client';
 
 	type Props = {
 		course: PageData['course'];
 
 		newDomainForm: SuperValidated<Infer<typeof domainSchema>>;
+		newDomainRelForm: SuperValidated<Infer<typeof domainRelSchema>>;
 	};
 
-	let { course, newDomainForm }: Props = $props();
+	let { course, newDomainForm, newDomainRelForm }: Props = $props();
 
-	const graph = course.graphs[0];
+	const graph = $derived(course.graphs[0]);
+
+	const domainMapping = $derived.by(() => {
+		const map: { domain: Domain; outDomain: Domain }[] = [];
+		for (const domain of graph.domains) {
+			for (const outDomain of domain.outgoingDomains) {
+				map.push({ domain, outDomain });
+			}
+		}
+		return map;
+	});
 </script>
 
 <div class="mt-12 flex items-end justify-between">
@@ -30,18 +44,23 @@
 <Table.Root class="mt-2">
 	<Table.Header>
 		<Table.Row>
-			<Table.Head class="w-[100px]"></Table.Head>
+			<Table.Head class="w-12"></Table.Head>
 			<Table.Head>Name</Table.Head>
 			<Table.Head>Color</Table.Head>
 			<Table.Head>Incomming</Table.Head>
 			<Table.Head>Outgoing</Table.Head>
-			<Table.Head class="text-right">Settings</Table.Head>
+			<Table.Head>Settings</Table.Head>
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
 		<SortableList list={graph.domains} id="id">
 			{#snippet sortItems(domain, index, onDragOver, onDragStart, onDragEnd)}
 				<Table.Row
+					id="{domain.id}-{domain.name}"
+					class={[
+						'transition-colors delay-300',
+						page.url.hash == `#${domain.id}-${domain.name}` ? 'bg-blue-200' : 'bg-blue-200/0'
+					]}
 					data-index={index}
 					ondragover={onDragOver}
 					ondragstart={onDragStart}
@@ -67,11 +86,7 @@
 					<Table.Cell>{domain.incommingDomains.length}</Table.Cell>
 					<Table.Cell>{domain.outgoingDomains.length}</Table.Cell>
 					<Table.Cell>
-						<Button
-							variant="outline"
-							class="float-right"
-							onclick={() => toast.warning('Not implemented')}
-						>
+						<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
 							<Ellipsis />
 						</Button>
 					</Table.Cell>
@@ -81,4 +96,45 @@
 	</Table.Body>
 </Table.Root>
 
-<h2>Relationships</h2>
+<div class="mt-12 flex items-end justify-between">
+	<h2 class="m-0">Relationship</h2>
+	<CreateNewRelationship {graph} form={newDomainRelForm} />
+</div>
+<Table.Root class="mt-2">
+	<Table.Header>
+		<Table.Row>
+			<Table.Head></Table.Head>
+			<Table.Head>Name</Table.Head>
+			<Table.Head>Linked to</Table.Head>
+			<Table.Head class="text-right">Settings</Table.Head>
+		</Table.Row>
+	</Table.Header>
+	<Table.Body>
+		{#each domainMapping as { domain, outDomain }, index (domain.id.toString() + outDomain.id.toString())}
+			<Table.Row>
+				<Table.Cell>
+					{index + 1}
+				</Table.Cell>
+				<Table.Cell>
+					<Button variant="secondary" href="#{domain.id}-{domain.name}">
+						{domain.name}
+					</Button>
+				</Table.Cell>
+				<Table.Cell>
+					<Button variant="secondary" href="#{outDomain.id}-{outDomain.name}">
+						{outDomain.name}
+					</Button>
+				</Table.Cell>
+				<Table.Cell>
+					<Button
+						class="float-right"
+						variant="outline"
+						onclick={() => toast.warning('Not implemented', { description: 'includes: delete' })}
+					>
+						<Ellipsis />
+					</Button>
+				</Table.Cell>
+			</Table.Row>
+		{/each}
+	</Table.Body>
+</Table.Root>

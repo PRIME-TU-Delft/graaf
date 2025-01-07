@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { error, type ServerLoad } from '@sveltejs/kit';
 import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { domainSchema } from './zodSchema';
+import { domainRelSchema, domainSchema } from './zodSchema';
 import type { DomainStyle } from '@prisma/client';
 
 export const load = (async ({ params }) => {
@@ -44,13 +44,15 @@ export const load = (async ({ params }) => {
 		// Happy path
 		return {
 			course: course,
-			newDomainForm: await superValidate(zod(domainSchema))
+			newDomainForm: await superValidate(zod(domainSchema)),
+			newDomainRelForm: await superValidate(zod(domainRelSchema))
 		};
 	} catch (e: unknown) {
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
 }) satisfies ServerLoad;
 
+// ACTIONS
 export const actions = {
 	'add-domain-to-graph': async (event) => {
 		const form = await superValidate(event, zod(domainSchema));
@@ -76,6 +78,61 @@ export const actions = {
 			});
 		} catch (e: unknown) {
 			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
+		}
+	},
+	'add-domain-rel': async (event) => {
+		const form = await superValidate(event, zod(domainRelSchema));
+
+		if (!form.valid) {
+			return setError(form, '', 'Invalid domain relationship');
+		}
+
+		try {
+			// Check if the domains are already connected
+			const isConnected = await prisma.domain.findFirst({
+				where: {
+					id: form.data.domainInId,
+					outgoingDomains: {
+						some: {
+							id: form.data.domainOutId
+						}
+					}
+				}
+			});
+
+			if (isConnected) {
+				return setError(form, '', 'Domains are already connected');
+			}
+
+			const addOutToIn = prisma.domain.update({
+				where: {
+					id: form.data.domainInId
+				},
+				data: {
+					outgoingDomains: {
+						connect: {
+							id: form.data.domainOutId
+						}
+					}
+				}
+			});
+
+			const addInToOut = prisma.domain.update({
+				where: {
+					id: form.data.domainOutId
+				},
+				data: {
+					incommingDomains: {
+						connect: {
+							id: form.data.domainInId
+						}
+					}
+				}
+			});
+
+			await prisma.$transaction([addOutToIn, addInToOut]);
+		} catch (e: unknown) {
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 };

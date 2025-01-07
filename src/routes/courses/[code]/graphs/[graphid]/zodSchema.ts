@@ -9,3 +9,14 @@ export const domainSchema = z.object({
 	name: z.string().min(1).max(settings.MAX_DOMAIN_NAME_LENGTH),
 	color: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
 });
+
+export const domainRelSchema = z
+	.object({
+		graphId: z.number(),
+		domainInId: z.number().gt(0, 'Please select an in domain'),
+		domainOutId: z.number().gt(0, 'Please select an out domain')
+	})
+	.refine((data) => data.domainInId !== data.domainOutId, {
+		message: 'domainInId and domainOutId must not be the same',
+		path: ['domainInId', 'domainOutId']
+	});
