@@ -6,6 +6,7 @@ import { GraphValidator } from '../graphValidator';
 describe('Trivial graph', () => {
 	// A -> B -> C
 	// D
+	// [empty graph]
 
 	const a = dummyDomain('a', 0);
 	const b = dummyDomain('b', 1);
@@ -22,8 +23,11 @@ describe('Trivial graph', () => {
 	const validator2 = new GraphValidator(graph2);
 
 	test('has cycles is false', () => {
-		expect(validator1.hasCycle()).toBe(false);
-		expect(validator2.hasCycle()).toBe(false);
+		expect(validator1.hasCycle(), 'v1').toBe(undefined);
+		expect(validator2.hasCycle(), 'v2').toBe(undefined);
+
+		const validator3 = new GraphValidator(dummyGraph([]));
+		expect(validator3.hasCycle(), 'empty graph').toBe(undefined);
 	});
 
 	test('domain "A" is the only root', () => {

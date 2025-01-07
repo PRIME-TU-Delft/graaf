@@ -24,38 +24,59 @@ export class GraphValidator {
 		}
 	}
 
+	/**
+	 * Get a domain by its id
+	 * @param id - The domain id
+	 * @returns The domain if it exists, otherwise undefined
+	 */
 	getDomain(id: number): DomainType | undefined {
 		return this.#domains.get(id);
 	}
 
-	isCyclicUtil(v: number, visited: Set<number>, recStack: Set<number>): boolean {
+	/**
+	 * Check if the graph has a cycle
+	 * @param v - The current domain
+	 * @param visited - Set of visited domains
+	 * @param recStack - Set of domains in the current recursion stack
+	 * @returns The cycle-problem relationship if it exists, otherwise undefined
+	 */
+	private isCyclicUtil(
+		v: number,
+		visited: Set<number>,
+		recStack: Set<number>
+	): { from: Domain; to: Domain } | undefined {
 		if (!visited.has(v)) {
 			visited.add(v);
 			recStack.add(v);
 
 			for (const neighbour of this.#domains.get(v)!.outgoingDomains) {
-				if (!visited.has(neighbour.id) && this.isCyclicUtil(neighbour.id, visited, recStack)) {
-					return true;
+				if (!visited.has(neighbour.id)) {
+					const cycle = this.isCyclicUtil(neighbour.id, visited, recStack);
+
+					if (cycle != undefined) {
+						return cycle;
+					}
 				} else if (recStack.has(neighbour.id)) {
-					return true;
+					return { from: this.#domains.get(v)!, to: neighbour };
 				}
 			}
 		}
 
 		recStack.delete(v);
-		return false;
+		return undefined;
 	}
 
-	hasCycle(): boolean {
+	hasCycle(): { from: Domain; to: Domain } | undefined {
 		const visited = new Set<number>();
 		const recStack = new Set<number>();
 
 		for (const root of this.roots) {
-			if (this.isCyclicUtil(root.id, visited, recStack)) {
-				return true;
+			const cycle = this.isCyclicUtil(root.id, visited, recStack);
+			if (cycle != undefined) {
+				return cycle;
 			}
 		}
 
-		return false;
+		return undefined;
 	}
 }
