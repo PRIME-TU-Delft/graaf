@@ -1,0 +1,149 @@
+<script lang="ts">
+	import { Button } from '$lib/components/ui/button';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import * as settings from '$lib/utils/settings';
+	import Ellipsis from 'lucide-svelte/icons/ellipsis';
+	import MoveVertical from 'lucide-svelte/icons/move-vertical';
+	import { toast } from 'svelte-sonner';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+	import type { PageData } from './$types';
+	import CreateNewDomain from './CreateNewDomain.svelte';
+	import type { domainRelSchema, domainSchema } from './zodSchema';
+	import SortableList from './SortableList.svelte';
+	import CreateNewRelationship from './CreateNewRelationship.svelte';
+	import { page } from '$app/state';
+	import type { Domain } from '@prisma/client';
+
+	type Props = {
+		course: PageData['course'];
+
+		newDomainForm: SuperValidated<Infer<typeof domainSchema>>;
+		newDomainRelForm: SuperValidated<Infer<typeof domainRelSchema>>;
+	};
+
+	let { course, newDomainForm, newDomainRelForm }: Props = $props();
+
+	const graph = $derived(course.graphs[0]);
+
+	const domainMapping = $derived.by(() => {
+		const map: { domain: Domain; outDomain: Domain }[] = [];
+		for (const domain of graph.domains) {
+			for (const outDomain of domain.outgoingDomains) {
+				map.push({ domain, outDomain });
+			}
+		}
+		return map;
+	});
+</script>
+
+<div class="mt-12 flex items-end justify-between">
+	<h2 class="m-0">Domains</h2>
+	<CreateNewDomain {graph} form={newDomainForm} />
+</div>
+
+<Table.Root class="mt-2">
+	<Table.Header>
+		<Table.Row>
+			<Table.Head class="w-12"></Table.Head>
+			<Table.Head>Name</Table.Head>
+			<Table.Head>Color</Table.Head>
+			<Table.Head>Incomming</Table.Head>
+			<Table.Head>Outgoing</Table.Head>
+			<Table.Head>Settings</Table.Head>
+		</Table.Row>
+	</Table.Header>
+	<Table.Body>
+		<SortableList list={graph.domains} id="id">
+			{#snippet sortItems(domain, index, onDragOver, onDragStart, onDragEnd)}
+				<Table.Row
+					id="{domain.id}-{domain.name}"
+					class={[
+						'transition-colors delay-300',
+						page.url.hash == `#${domain.id}-${domain.name}` ? 'bg-blue-200' : 'bg-blue-200/0'
+					]}
+					data-index={index}
+					ondragover={onDragOver}
+					ondragstart={onDragStart}
+					ondragend={onDragEnd}
+					draggable="true"
+				>
+					<Table.Cell>
+						<Button variant="secondary" onclick={() => toast.warning('Not implemented')}>
+							<MoveVertical />
+						</Button>
+					</Table.Cell>
+					<Table.Cell>{domain.name}</Table.Cell>
+					<Table.Cell>
+						{#if domain.style}
+							<div
+								class="h-5 w-5 rounded-full border-2 border-slate-600"
+								style="background-color: {settings.COLORS[domain.style]}f0"
+							></div>
+						{:else}
+							None
+						{/if}
+					</Table.Cell>
+					<Table.Cell>{domain.incommingDomains.length}</Table.Cell>
+					<Table.Cell>{domain.outgoingDomains.length}</Table.Cell>
+					<Table.Cell>
+						<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
+							<Ellipsis />
+						</Button>
+					</Table.Cell>
+				</Table.Row>
+			{/snippet}
+		</SortableList>
+	</Table.Body>
+</Table.Root>
+
+<div class="mt-12 flex items-end justify-between">
+	<h2 class="m-0">Relationship</h2>
+	<CreateNewRelationship {graph} form={newDomainRelForm} />
+</div>
+<Table.Root class="mt-2">
+	<Table.Header>
+		<Table.Row>
+			<Table.Head></Table.Head>
+			<Table.Head>Name</Table.Head>
+			<Table.Head>Linked to</Table.Head>
+			<Table.Head class="text-right">Settings</Table.Head>
+		</Table.Row>
+	</Table.Header>
+	<Table.Body>
+		{#each domainMapping as { domain, outDomain }, index (domain.id.toString() + outDomain.id.toString())}
+			{@const id = `domain-rel-${domain.id}-${outDomain.id}`}
+			<Table.Row
+				{id}
+				class={[
+					'transition-colors delay-300',
+					page.url.hash == `#${id}` ? 'bg-blue-200' : 'bg-blue-200/0'
+				]}
+			>
+				<Table.Cell>
+					{index + 1}
+				</Table.Cell>
+				<Table.Cell>
+					<Button variant="secondary" href="#{domain.id}-{domain.name}">
+						{domain.name}
+					</Button>
+				</Table.Cell>
+				<Table.Cell>
+					<Button variant="secondary" href="#{outDomain.id}-{outDomain.name}">
+						{outDomain.name}
+					</Button>
+				</Table.Cell>
+				<Table.Cell>
+					<Button
+						class="float-right"
+						variant="outline"
+						onclick={() => toast.warning('Not implemented', { description: 'includes: delete' })}
+					>
+						<Ellipsis />
+					</Button>
+				</Table.Cell>
+			</Table.Row>
+		{/each}
+	</Table.Body>
+</Table.Root>
+
+<div class="h-dvh"></div>

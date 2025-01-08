@@ -69,7 +69,10 @@
 	* {
 		@apply border-border;
 	}
+	html,
 	body {
+		scroll-behavior: smooth;
+		scroll-padding: 4rem;
 		@apply bg-blue-50 text-foreground;
 	}
 

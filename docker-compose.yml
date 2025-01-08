@@ -1,5 +1,5 @@
 services:
-  db:
+  db-proposal:
     image: postgres
     restart: always
     ports:

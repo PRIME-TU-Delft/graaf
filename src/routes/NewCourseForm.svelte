@@ -6,15 +6,15 @@
 
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
-	import type { CourseSchema } from '$lib/utils/zodSchema';
 	import { useId } from 'bits-ui';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Check from 'lucide-svelte/icons/check';
+	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import { type Infer, type SuperForm } from 'sveltekit-superforms';
+	import type { courseSchema } from './zodSchema';
 
 	type Props = {
-		form: SuperForm<Infer<CourseSchema>>;
+		form: SuperForm<Infer<typeof courseSchema>>;
 		programId: string;
 	};
 

@@ -28,14 +28,9 @@ export const load = (async ({ params }) => {
 			};
 		}
 
-		const form = await superValidate(zod(formSchema));
-		form.data.programId = dbProgram.id;
-		form.data.isArchived = dbProgram.isArchived;
-
 		return {
 			error: undefined,
-			program: dbProgram,
-			form: form
+			program: dbProgram
 		};
 	} catch (e: unknown) {
 		return {
@@ -47,36 +42,6 @@ export const load = (async ({ params }) => {
 }) satisfies ServerLoad;
 
 export const actions: Actions = {
-	'archive-program': async (event) => {
-		const form = await superValidate(event, zod(formSchema));
-
-		if (!form.valid) {
-			return fail(400, {
-				form
-			});
-		}
-		console.log(form);
-
-		try {
-			await prisma.program.update({
-				where: {
-					id: form.data.programId
-				},
-				data: {
-					isArchived: !form.data.isArchived
-				}
-			});
-		} catch (e: unknown) {
-			return fail(500, {
-				form,
-				error: e instanceof Error ? e.message : `${e}`
-			});
-		}
-
-		return {
-			form
-		};
-	},
 	'delete-program': async ({ request }) => {
 		const form = await request.formData();
 

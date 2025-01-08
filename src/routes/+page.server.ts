@@ -1,36 +1,33 @@
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import { courseSchema, programSchema } from '$lib/utils/zodSchema';
-import type { Course, Program } from '@prisma/client';
+import type { Course } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from './$types.js';
+import { courseSchema, programSchema } from './zodSchema';
 
-export const load = (async () => {
+export const load = (async ({ url }) => {
 	try {
+		const search = url.searchParams.get('c')?.toLocaleLowerCase();
+
 		const programs = await prisma.program.findMany({
-			where: {
-				isArchived: false
-			},
 			include: {
-				courses: true
-			},
-			orderBy: {
-				updatedAt: 'desc'
-			}
-		});
-		const archivedPrograms = prisma.program.findMany({
-			where: {
-				isArchived: true
-			},
-			include: {
-				courses: true
+				courses: {
+					orderBy: {
+						updatedAt: 'desc'
+					},
+					where: search
+						? { name: { contains: search, mode: 'insensitive' } }
+						: { NOT: { name: '' } }
+				}
 			},
 			orderBy: {
 				updatedAt: 'desc'
 			}
 		});
 
+		// Not high priority, so we can render the page without this data
+		// TODO: check if this needs to be limmited (take only the top 50 or so courses)
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'
@@ -40,7 +37,6 @@ export const load = (async () => {
 		return {
 			error: undefined,
 			programs,
-			archivedPrograms,
 			courses,
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
@@ -50,7 +46,6 @@ export const load = (async () => {
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
 			courses: emptyPrismaPromise([] as Course[]),
-			archivedPrograms: emptyPrismaPromise([] as (Program & { courses: Course[] })[]),
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
 		};
@@ -58,6 +53,7 @@ export const load = (async () => {
 }) satisfies PageServerLoad;
 
 export const actions = {
+	// Creates a new program with the given name
 	'new-program': async (event) => {
 		const form = await superValidate(event, zod(programSchema));
 		if (!form.valid) {
@@ -82,6 +78,8 @@ export const actions = {
 			form
 		};
 	},
+
+	// Creates a new course with the given NAME and CODE
 	'new-course': async (event) => {
 		const form = await superValidate(event, zod(courseSchema));
 		if (!form.valid) {
@@ -123,10 +121,7 @@ export const actions = {
 		const courseName = form.get('name') as string | null;
 
 		if (!programId || !courseCode || !courseName) {
-			return {
-				status: 400,
-				body: 'Invalid request'
-			};
+			return fail(400, { error: 'Missing required fields' });
 		}
 
 		try {

@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import Trash2 from 'lucide-svelte/icons/trash-2';
-	import { fly } from 'svelte/transition';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { preventDefault } from 'svelte/legacy';
 	import type { PageData } from './$types';
+	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -19,28 +21,54 @@
 	{:else}
 		<h1 class="shadow-blue-500/70">{data.course.code} - {data.course.name}</h1>
 		<p>
-			Here you can find all Programs and associated Courses. Click on any of them to edit or view
-			more information. You can also create a sandbox environment to experiment with the Graph
-			Editor. Can't find a specific Program or Course? Maybe you don't have access to it. Contact
-			one of its Admins to get access.
+			This is where you can find all the information about the course. You can also create a new
+			graph here.
 		</p>
-
-		{#each data.course.programs as program, i (program.id)}
-			<div class="block" transition:fly={{ x: -300, duration: 400, delay: 200 * i }}>
-				<li
-					class="flex items-center justify-between rounded bg-blue-100 p-2 transition-colors hover:bg-blue-200 hover:shadow-lg"
-				>
-					<span>{program.name}</span>
-					<form method="POST" action="?/remove-program-from-course" use:enhance>
-						<input type="hidden" name="course-id" value={data.course.code} />
-						<input type="hidden" name="program-id" value={program.id} />
-						<button
-							class="rounded-sm bg-blue-100 p-2 transition-colors hover:bg-blue-300"
-							aria-label="Remove program from course"><Trash2 class="size-4" /></button
-						>
-					</form>
-				</li>
-			</div>
-		{/each}
 	{/if}
 </section>
+
+<!-- TODO: archive, delete, edit permissions for users -->
+
+{#if data.course != undefined && data.graphSchema != undefined}
+	<section
+		class="mx-auto my-12 grid max-w-4xl gap-4 p-4 {data.graphs.length > 0 ? 'grid-cols-2' : ''}"
+	>
+		<CreateNewGraphButton form={data.graphSchema} course={data.course} />
+
+		<!-- MARK: GRAPHS -->
+		{#each data.graphs as graph (graph.id)}
+			<a
+				class="group grid grid-cols-2 gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
+				href="/courses/{data.course.code}/graphs/{graph.id}"
+			>
+				<div class="grow">
+					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>
+					<p>Connection: 0</p>
+					<p>Domains: 0</p>
+					<p>Subjects: 0</p>
+				</div>
+
+				<div class="flex grow-0 flex-col gap-1">
+					<Button class="transition-colors group-hover:bg-blue-500">
+						View/Edit <ArrowRight />
+					</Button>
+					<Button
+						onclick={preventDefault(() =>
+							toast.success('WIP: Open duplication popup', {
+								description:
+									'Can be duplicated to any other course that the user has permissions to'
+							})
+						)}>Duplicate</Button
+					>
+					<Button
+						onclick={preventDefault(() =>
+							toast.success('WIP: Open settings modal', {
+								description: "Settings includes: 'delete', 'change name', 'duplicate'"
+							})
+						)}>Settings</Button
+					>
+				</div>
+			</a>
+		{/each}
+	</section>
+{/if}
