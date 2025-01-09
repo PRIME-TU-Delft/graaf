@@ -24,3 +24,6 @@ export const COLORS = {
 	SERIOUS_BROWN: '#8D6E63'
 };
 export const COLOR_KEYS = Object.keys(COLORS) as (keyof typeof COLORS)[];
+
+// SUBJECT
+export const MAX_SUBJECT_NAME_LENGTH = 50;

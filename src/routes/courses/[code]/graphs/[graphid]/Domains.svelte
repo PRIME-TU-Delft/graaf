@@ -36,7 +36,7 @@
 	});
 </script>
 
-<div class="mt-12 flex items-end justify-between">
+<div class="flex items-end justify-between">
 	<h2 class="m-0">Domains</h2>
 	<CreateNewDomain {graph} form={newDomainForm} />
 </div>
@@ -45,10 +45,10 @@
 	<Table.Header>
 		<Table.Row>
 			<Table.Head class="w-12"></Table.Head>
-			<Table.Head>Name</Table.Head>
+			<Table.Head class="max-w-12">Name</Table.Head>
 			<Table.Head>Color</Table.Head>
-			<Table.Head>Incomming</Table.Head>
-			<Table.Head>Outgoing</Table.Head>
+			<Table.Head>#In</Table.Head>
+			<Table.Head>#Out</Table.Head>
 			<Table.Head>Settings</Table.Head>
 		</Table.Row>
 	</Table.Header>
@@ -72,7 +72,9 @@
 							<MoveVertical />
 						</Button>
 					</Table.Cell>
-					<Table.Cell>{domain.name}</Table.Cell>
+					<Table.Cell class="max-w-40 overflow-hidden text-ellipsis text-nowrap">
+						{domain.name}
+					</Table.Cell>
 					<Table.Cell>
 						{#if domain.style}
 							<div

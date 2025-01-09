@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { error, type ServerLoad } from '@sveltejs/kit';
 import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { domainRelSchema, domainSchema } from './zodSchema';
+import { domainRelSchema, domainSchema, subjectSchema } from './zodSchema';
 import type { DomainStyle } from '@prisma/client';
 import { GraphValidator } from '$lib/server/validators/graphValidator';
 
@@ -37,7 +37,8 @@ export const load = (async ({ params }) => {
 						subjects: {
 							include: {
 								incommingSubjects: true,
-								outgoingSubjects: true
+								outgoingSubjects: true,
+								domain: true
 							}
 						},
 						lectures: true
@@ -58,6 +59,7 @@ export const load = (async ({ params }) => {
 			course: course,
 			newDomainForm: await superValidate(zod(domainSchema)),
 			newDomainRelForm: await superValidate(zod(domainRelSchema)),
+			newSubjectForm: await superValidate(zod(subjectSchema)),
 			cycles: cycles
 		};
 	} catch (e: unknown) {
@@ -146,6 +148,34 @@ export const actions = {
 			await prisma.$transaction([addOutToIn, addInToOut]);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
+		}
+	},
+
+	/* MARK: SUBJECTS */
+	'add-subject-to-graph': async (event) => {
+		const form = await superValidate(event, zod(subjectSchema));
+
+		if (!form.valid) {
+			return setError(form, 'name', 'Invalid subject');
+		}
+
+		try {
+			const subjectCount = await prisma.subject.count({
+				where: {
+					graphId: form.data.graphId
+				}
+			});
+
+			await prisma.subject.create({
+				data: {
+					name: form.data.name,
+					order: subjectCount,
+					graphId: form.data.graphId,
+					domainId: form.data.domainId > 0 ? form.data.domainId : null
+				}
+			});
+		} catch (e: unknown) {
+			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 };
