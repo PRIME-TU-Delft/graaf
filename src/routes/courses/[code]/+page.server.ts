@@ -26,6 +26,18 @@ export const load = (async ({ params }) => {
 		const dbCourse = await prisma.course.findFirst({
 			where: {
 				code: params.code
+			},
+			include: {
+				graphs: {
+					include: {
+						_count: {
+							select: {
+								domains: true,
+								subjects: true
+							}
+						}
+					}
+				}
 			}
 		});
 
@@ -34,18 +46,12 @@ export const load = (async ({ params }) => {
 			return result;
 		}
 
-		const graphs = await prisma.graph.findMany({
-			where: {
-				courseId: params.code
-			}
-		});
-
 		// Happy path
 		return {
 			error: undefined,
 			graphSchema: await superValidate(zod(graphSchema)),
 			course: dbCourse,
-			graphs
+			graphs: dbCourse.graphs
 		};
 	} catch (e: unknown) {
 		result.error = e instanceof Error ? e.message : `${e}`;

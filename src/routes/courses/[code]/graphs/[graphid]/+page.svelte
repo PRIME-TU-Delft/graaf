@@ -24,7 +24,7 @@
 		return tabs;
 	});
 
-	let tabValue = $state('Subjects');
+	let tabValue = $state('Domains');
 
 	$effect(() => {
 		// Make sure there are never two tabs of preview opened

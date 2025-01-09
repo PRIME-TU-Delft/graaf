@@ -43,9 +43,8 @@
 			>
 				<div class="grow">
 					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>
-					<p>Connection: 0</p>
-					<p>Domains: 0</p>
-					<p>Subjects: 0</p>
+					<p>Domains: {graph._count.domains}</p>
+					<p>Subjects: {graph._count.subjects}</p>
 				</div>
 
 				<div class="flex grow-0 flex-col gap-1">
