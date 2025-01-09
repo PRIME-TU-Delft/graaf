@@ -33,7 +33,14 @@ export const load = (async ({ params }) => {
 								incommingDomains: true,
 								outgoingDomains: true
 							}
-						}
+						},
+						subjects: {
+							include: {
+								incommingSubjects: true,
+								outgoingSubjects: true
+							}
+						},
+						lectures: true
 					}
 				}
 			}

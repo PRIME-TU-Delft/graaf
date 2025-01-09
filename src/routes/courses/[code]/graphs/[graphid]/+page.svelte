@@ -7,6 +7,9 @@
 	import Preview from './Preview.svelte';
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
+	import Subjects from './Subjects.svelte';
+	import Lectures from './Lectures.svelte';
+	import { cn } from '$lib/utils';
 
 	let { data }: { data: PageData } = $props();
 
@@ -48,7 +51,7 @@
 </nav>
 
 <div class="prose mx-auto flex max-w-[80rem] gap-2 p-4 text-blue-900">
-	<div class="grow rounded-xl bg-blue-100/50 p-4">
+	<div class={cn('w-1/2 rounded-xl bg-blue-100/50 p-4', { 'w-full': !medium.current })}>
 		<Tabs.Root bind:value={tabValue}>
 			<Tabs.List class="w-full">
 				{#each tabs as tab}
@@ -60,13 +63,19 @@
 					<Domains {...data} />
 				{/key}
 			</Tabs.Content>
-			<Tabs.Content value="Subjects">Make subjects</Tabs.Content>
-			<Tabs.Content value="Lectures">Wrap subjects in lectures.</Tabs.Content>
+			<Tabs.Content value="Subjects">
+				<Subjects {...data} />
+			</Tabs.Content>
+			<Tabs.Content value="Lectures">
+				<Lectures {...data} />
+			</Tabs.Content>
 			<Tabs.Content value="Preview"><Preview course={data.course} /></Tabs.Content>
 		</Tabs.Root>
 	</div>
 
-	{#if medium.current}
-		<Preview course={data.course} />
-	{/if}
+	<div class="w-1/2">
+		{#if medium.current}
+			<Preview course={data.course} />
+		{/if}
+	</div>
 </div>

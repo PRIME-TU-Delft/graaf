@@ -2,6 +2,22 @@
 // Run the following command to upload the data:
 // pnpm prisma db seed
 
+export const subjects = [
+	{ name: 'SubjectOne' },
+	{ name: 'SubjectTwo' },
+	{ name: 'SubjectThree' },
+	{ name: 'SubjectFour' }
+];
+
+export const domains = [
+	{ name: 'DomainOne' },
+	{ name: 'DomainTwo' },
+	{ name: 'DomainThree' },
+	{ name: 'DomainFour' }
+];
+
+export const graph = [{ name: 'GraphOne' }];
+
 export const courses = [
 	{
 		code: 'CS1000',
