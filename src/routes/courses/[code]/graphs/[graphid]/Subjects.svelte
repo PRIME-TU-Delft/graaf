@@ -1,17 +1,16 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Link from 'lucide-svelte/icons/link';
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 	import { toast } from 'svelte-sonner';
+	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import SortableList from './SortableList.svelte';
 	import type { subjectSchema } from './zodSchema';
-	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { goto } from '$app/navigation';
+	import type { Domain } from '@prisma/client';
 
 	type Props = {
 		course: PageData['course'];
@@ -22,6 +21,10 @@
 	let { course, tabValue = $bindable(), newSubjectForm }: Props = $props();
 
 	const graph = $derived(course.graphs[0]);
+
+	function handleRearrange<T>(list: T[]) {
+		console.log($state.snapshot(list));
+	}
 </script>
 
 <div class="mt-12 flex items-end justify-between">
@@ -41,51 +44,47 @@
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
-		<SortableList list={graph.subjects} id="id">
-			{#snippet sortItems(subject, index, onDragOver, onDragStart, onDragEnd)}
-				<Table.Row
-					id="{subject.id}-{subject.name}"
-					class={[
-						'transition-colors delay-300',
-						page.url.hash == `#${subject.id}-${subject.name}` ? 'bg-blue-200' : 'bg-blue-200/0'
-					]}
-					data-index={index}
-					ondragover={onDragOver}
-					ondragstart={onDragStart}
-					ondragend={onDragEnd}
-					draggable="true"
-				>
-					<Table.Cell>
-						<Button variant="secondary" onclick={() => toast.warning('Not implemented')}>
-							<MoveVertical />
+		<SortableList
+			list={graph.subjects}
+			onrearrange={(list) => handleRearrange(list)}
+			useId={(subject) => `${subject.id}-${subject.name}`}
+		>
+			{#snippet children(subject)}
+				<Table.Cell class="px-0">
+					<Button variant="secondary" onclick={() => toast.warning('Not implemented')}>
+						<MoveVertical />
+					</Button>
+				</Table.Cell>
+				<Table.Cell>{subject.name}</Table.Cell>
+				<Table.Cell>
+					{#if subject.domain}
+						<Button
+							class="interactive"
+							variant="outline"
+							href="#{subject.domain!.id}-{subject.domain!.name}"
+							onclick={() => {
+								tabValue = 'Domains';
+							}}
+						>
+							{subject.domain.name}
 						</Button>
-					</Table.Cell>
-					<Table.Cell>{subject.name}</Table.Cell>
-					<Table.Cell>
-						{#if subject.domain}
-							<Button
-								variant="outline"
-								href="#{subject.domain!.id}-{subject.domain!.name}"
-								onclick={() => {
-									tabValue = 'Domains';
-								}}
-							>
-								{subject.domain.name}
-							</Button>
-						{:else}
-							<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
-								{'None'}
-							</Button>
-						{/if}
-					</Table.Cell>
-					<Table.Cell>{subject.incommingSubjects.length}</Table.Cell>
-					<Table.Cell>{subject.incommingSubjects.length}</Table.Cell>
-					<Table.Cell>
-						<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
-							<Ellipsis />
+					{:else}
+						<Button
+							class="interactive"
+							variant="outline"
+							onclick={() => toast.warning('Not implemented')}
+						>
+							{'None'}
 						</Button>
-					</Table.Cell>
-				</Table.Row>
+					{/if}
+				</Table.Cell>
+				<Table.Cell>{subject.incommingSubjects.length}</Table.Cell>
+				<Table.Cell>{subject.incommingSubjects.length}</Table.Cell>
+				<Table.Cell>
+					<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
+						<Ellipsis />
+					</Button>
+				</Table.Cell>
 			{/snippet}
 		</SortableList>
 	</Table.Body>

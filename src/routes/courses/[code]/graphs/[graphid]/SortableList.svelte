@@ -1,68 +1,52 @@
-<script lang="ts" generics="T extends object">
+<script lang="ts" generics="T">
+	import { page } from '$app/state';
+	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import type { Snippet } from 'svelte';
-
-	const DROPZONE = 5;
-
-	type DE = (e: DragEvent) => void;
+	import { flip } from 'svelte/animate';
+	import { fade } from 'svelte/transition';
 
 	type Props = {
 		list: T[];
-		id: keyof T;
-		sortItems: Snippet<[T, number, DE, DE, DE]>;
-		onrearange?: (list: T[]) => void;
+		children: Snippet<[T, number]>;
+		onrearrange?: (items: T[]) => void;
+		useId: (item: T) => string;
 	};
 
-	let { list = $bindable(), id, sortItems, onrearange = () => {} }: Props = $props();
+	let { list, children, onrearrange = () => {}, useId }: Props = $props();
 
-	let origin: number | null = $state(null); // Index of the element being dragged
+	const items = $state(list);
 
-	function getDataset(node: any) {
-		if (!node.dataset.index) {
-			return getDataset(node.parentElement);
-		} else {
-			return { ...node.dataset };
+	function handleDrop(state: DragDropState<T>) {
+		const { draggedItem, targetContainer } = state;
+		const dragIndex = items.findIndex((item) => useId(item) === useId(draggedItem));
+		const dropIndex = parseInt(targetContainer ?? '0');
+
+		if (dragIndex !== -1 && !isNaN(dropIndex)) {
+			const [item] = items.splice(dragIndex, 1);
+			items.splice(dropIndex, 0, item);
+			onrearrange(items);
 		}
-	}
-
-	function onDragStart(event: DragEvent) {
-		const target = event.target as HTMLElement;
-		const data = getDataset(target);
-
-		origin = data.index;
-	}
-
-	function onDragOver(event: DragEvent) {
-		event.preventDefault();
-
-		const target = event.target as HTMLElement;
-		const data = getDataset(target);
-
-		if (
-			origin === null || // Not dragging (very strange case)
-			data.index === origin || // Dragging over itself
-			(data.index > origin && event.offsetY < target.clientHeight - DROPZONE) || // Dragging down, but not close enough
-			(data.index < origin && event.offsetY > DROPZONE) // Dragging up, but not close enough
-		)
-			return;
-
-		rearrange(origin, data.index);
-		origin = data.index;
-	}
-
-	function onDragEnd(_: DragEvent) {
-		onrearange(list);
-		// dispatch('rearrange', list)
-		origin = null;
-	}
-
-	function rearrange(from: number, to: number) {
-		const new_list = [...list] as T[];
-		const moved = new_list.splice(from, 1);
-		new_list.splice(to, 0, moved[0]);
-		list = new_list;
 	}
 </script>
 
-{#each list as item, index (item[id])}
-	{@render sortItems(item, index, onDragOver, onDragStart, onDragEnd)}
+{#each items as item, index (useId(item))}
+	{@const id = useId(item)}
+	<tr
+		{id}
+		use:draggable={{ container: index.toString(), dragData: item, interactive: ['.interactive'] }}
+		use:droppable={{
+			container: index.toString(),
+			callbacks: { onDrop: handleDrop }
+		}}
+		class={[
+			'transition-colors delay-300',
+			page.url.hash == `#${id}` ? 'bg-blue-200' : 'bg-blue-200/0'
+		]}
+		animate:flip={{ duration: 300 }}
+		in:fade={{ duration: 150 }}
+		out:fade={{ duration: 150 }}
+		draggable="true"
+	>
+		{@render children(item, index)}
+	</tr>
 {/each}
