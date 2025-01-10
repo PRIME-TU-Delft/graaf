@@ -17,6 +17,7 @@ pnpm install
 
 pnpm prisma generate
 pnpm prisma db push
+pnpm prisma db seed
 ```
 
 ## Usage
