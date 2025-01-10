@@ -48,10 +48,10 @@ model Graph {
   name     String
   courseId String
 
-  course  Course   @relation(fields: [courseId], references: [code])
-  domains Domain[]
-  // subjects		Subject[]
-  // lectures		Lecture[]
+  course   Course    @relation(fields: [courseId], references: [code])
+  domains  Domain[]
+  subjects Subject[]
+  lectures Lecture[]
   // links			Link[]
 
   createdAt DateTime @default(now())
@@ -74,8 +74,7 @@ enum DomainStyle {
 }
 
 model Domain {
-  id Int @id @default(autoincrement())
-
+  id    Int          @id @default(autoincrement())
   name  String
   style DomainStyle?
   order Int // Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
@@ -85,8 +84,43 @@ model Domain {
   y Int @default(0)
 
   graphId          Int
-  graph            Graph    @relation(fields: [graphId], references: [id], onDelete: Cascade)
-  // subjects      Subject[]
-  incommingDomains Domain[] @relation("DomainRelation")
-  outgoingDomains  Domain[] @relation("DomainRelation")
+  graph            Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  subjects         Subject[]
+  incommingDomains Domain[]  @relation("DomainRelation")
+  outgoingDomains  Domain[]  @relation("DomainRelation")
+
+  @@unique([name, graphId])
+}
+
+model Subject {
+  id    Int    @id @default(autoincrement())
+  name  String @default("")
+  order Int // Subjects is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+
+  // Physical position in the graph
+  x Int @default(0)
+  y Int @default(0)
+
+  graphId  Int
+  domainId Int?
+  graph    Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  domain   Domain?   @relation(fields: [domainId], references: [id])
+  lectures Lecture[]
+
+  incommingSubjects Subject[] @relation("SubjectRelation")
+  outgoingSubjects  Subject[] @relation("SubjectRelation")
+
+  @@unique([name, domainId])
+}
+
+model Lecture {
+  id      Int    @id @default(autoincrement())
+  name    String @default("")
+  order   Int
+  graphId Int
+
+  graph    Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  subjects Subject[]
+
+  @@unique([name, graphId])
 }

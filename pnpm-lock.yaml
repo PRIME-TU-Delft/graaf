@@ -17,6 +17,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.15
         version: 0.5.15(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@22.10.2)(typescript@5.7.2)))
+      '@thisux/sveltednd':
+        specifier: ^0.0.19
+        version: 0.0.19(svelte@5.16.0)
       postgres:
         specifier: ^3.4.5
         version: 3.4.5
@@ -903,6 +906,19 @@ packages:
     resolution: {integrity: sha512-AqhlCXl+8grUz8uqExv5OTtgpjuVIwFTSXTrh8y9/pw6q2ek7fJ+Y8ZEVw7EB2DCcuCOtEjf9w3+J3rzts01uA==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20'
+
+  '@thisux/sveltednd@0.0.14':
+    resolution: {integrity: sha512-Vbq69SU3HUomPg6oCXtb89OG89hka0YIkdaErYibn3waK7tYE66IcQxD/Fzg8YNW3EVsXoA9kc7kW5EUBCSQGg==}
+
+  '@thisux/sveltednd@0.0.17':
+    resolution: {integrity: sha512-lRninjw439phhA8xAHqCpMAX0hnwFMdbXW4M0XJgAdnGxeum+QsLiIC4P3HnkNXAygsVKUqxRcbS84CxDZ9hPw==}
+    peerDependencies:
+      svelte: ^5.0.0
+
+  '@thisux/sveltednd@0.0.19':
+    resolution: {integrity: sha512-SqqkmO3EyrdE+hjmy0N7ogYiDVK7qIUoNtS5T+Tx+sMVUFnJYVqDnxUOu8w7EhwCmWxu/C/XIgUb5+ag/PxEKg==}
+    peerDependencies:
+      svelte: ^5.0.0
 
   '@tsconfig/node10@1.0.11':
     resolution: {integrity: sha512-DcRjDCujK/kCk/cUe8Xz8ZSpm8mS3mNNpta+jGCA6USEDfktlNvm1+IuZ9eTcDbNk41BHwpHHeW+N1lKCz4zOw==}
@@ -3121,6 +3137,18 @@ snapshots:
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.17(ts-node@10.9.2(@types/node@22.10.2)(typescript@5.7.2))
+
+  '@thisux/sveltednd@0.0.14': {}
+
+  '@thisux/sveltednd@0.0.17(svelte@5.16.0)':
+    dependencies:
+      '@thisux/sveltednd': 0.0.14
+      svelte: 5.16.0
+
+  '@thisux/sveltednd@0.0.19(svelte@5.16.0)':
+    dependencies:
+      '@thisux/sveltednd': 0.0.17(svelte@5.16.0)
+      svelte: 5.16.0
 
   '@tsconfig/node10@1.0.11':
     optional: true

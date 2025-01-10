@@ -20,3 +20,10 @@ export const domainRelSchema = z
 		message: 'domainInId and domainOutId must not be the same',
 		path: ['domainInId', 'domainOutId']
 	});
+
+// Subjects
+export const subjectSchema = z.object({
+	graphId: z.number(),
+	name: z.string().min(1).max(settings.MAX_SUBJECT_NAME_LENGTH),
+	domainId: z.number()
+});

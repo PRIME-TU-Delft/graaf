@@ -72,7 +72,7 @@
 	html,
 	body {
 		scroll-behavior: smooth;
-		scroll-padding: 4rem;
+		scroll-padding: 8rem;
 		@apply bg-blue-50 text-foreground;
 	}
 

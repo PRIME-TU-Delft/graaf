@@ -20,6 +20,6 @@
 	});
 </script>
 
-<Toaster />
+<Toaster closeButton />
 
 {@render children()}

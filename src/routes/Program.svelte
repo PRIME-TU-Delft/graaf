@@ -27,13 +27,6 @@
 
 	// Select out the courses that are not in the program yet
 	const programCourseSet = $derived(new Set(program.courses.map((c) => c.code)));
-
-	// courses are awaited 10s
-	const coursesArtifical = $derived.by(() => {
-		return new Promise<Course[]>((resolve) => {
-			setTimeout(async () => resolve(await courses), 5000);
-		});
-	});
 </script>
 
 <div
@@ -76,7 +69,7 @@
 		</Popover.Trigger>
 		<Popover.Content class="p-2" side="right" align="start">
 			<Command.Root>
-				{#await coursesArtifical}
+				{#await courses}
 					<CreateNewCourseButton {courseForm} {courseValue} {program} />
 					<p>
 						Loading courses (I have added an artifical wait of 5s to test what would happen if this

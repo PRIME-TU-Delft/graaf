@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { type ClassValue, clsx } from 'clsx';
+import { tick } from 'svelte';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -19,3 +20,10 @@ export type OrError<T extends object> =
 	| (Partial<T> & {
 			error: string;
 	  });
+
+export function closeAndFocusTrigger(triggerId: string, callback: () => void) {
+	callback();
+	tick().then(() => {
+		document.getElementById(triggerId)?.focus();
+	});
+}

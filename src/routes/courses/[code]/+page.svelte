@@ -1,10 +1,9 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { preventDefault } from 'svelte/legacy';
-	import type { PageData } from './$types';
-	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import { toast } from 'svelte-sonner';
+	import type { PageData } from './$types';
+	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -43,30 +42,37 @@
 			>
 				<div class="grow">
 					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>
-					<p>Connection: 0</p>
-					<p>Domains: 0</p>
-					<p>Subjects: 0</p>
+					<p>Domains: {graph._count.domains}</p>
+					<p>Subjects: {graph._count.subjects}</p>
 				</div>
 
 				<div class="flex grow-0 flex-col gap-1">
 					<Button class="transition-colors group-hover:bg-blue-500">
 						View/Edit <ArrowRight />
 					</Button>
-					<Button
-						onclick={preventDefault(() =>
-							toast.success('WIP: Open duplication popup', {
-								description:
-									'Can be duplicated to any other course that the user has permissions to'
-							})
-						)}>Duplicate</Button
-					>
-					<Button
-						onclick={preventDefault(() =>
-							toast.success('WIP: Open settings modal', {
-								description: "Settings includes: 'delete', 'change name', 'duplicate'"
-							})
-						)}>Settings</Button
-					>
+					<div class="flex flex-col gap-1 lg:flex-row">
+						<Button
+							class="w-full"
+							onclick={(e) => {
+								e.preventDefault();
+								toast.success('WIP: Open duplication popup', {
+									description:
+										'Can be duplicated to any other course that the user has permissions to'
+								});
+							}}>Duplicate</Button
+						>
+						<Button
+							class="w-full"
+							onclick={(e) => {
+								e.preventDefault();
+								toast.success('WIP: Open settings modal', {
+									description: "Settings includes: 'delete', 'change name', 'duplicate'"
+								});
+							}}
+						>
+							Settings
+						</Button>
+					</div>
 				</div>
 			</a>
 		{/each}
