@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { error, type ServerLoad } from '@sveltejs/kit';
 import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { domainRelSchema, domainSchema, subjectSchema } from './zodSchema';
+import { domainRelSchema, domainSchema, subjectRelSchema, subjectSchema } from './zodSchema';
 import type { DomainStyle } from '@prisma/client';
 import { GraphValidator } from '$lib/server/validators/graphValidator';
 
@@ -60,6 +60,7 @@ export const load = (async ({ params }) => {
 			newDomainForm: await superValidate(zod(domainSchema)),
 			newDomainRelForm: await superValidate(zod(domainRelSchema)),
 			newSubjectForm: await superValidate(zod(subjectSchema)),
+			newSubjectRelForm: await superValidate(zod(subjectRelSchema)),
 			cycles: cycles
 		};
 	} catch (e: unknown) {
@@ -176,6 +177,64 @@ export const actions = {
 			});
 		} catch (e: unknown) {
 			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
+		}
+	},
+
+	'add-subject-rel': async (event) => {
+		const form = await superValidate(event, zod(subjectRelSchema));
+
+		console.log({ form });
+
+		if (!form.valid) {
+			return setError(form, '', 'Invalid subject relationship');
+		}
+
+		try {
+			// Check if the subjects are already connected
+			const isConnected = await prisma.subject.findFirst({
+				where: {
+					id: form.data.subjectInId,
+					outgoingSubjects: {
+						some: {
+							id: form.data.subjectOutId
+						}
+					}
+				}
+			});
+
+			if (isConnected) {
+				return setError(form, '', 'Subjects are already connected');
+			}
+
+			const addOutToIn = prisma.subject.update({
+				where: {
+					id: form.data.subjectInId
+				},
+				data: {
+					outgoingSubjects: {
+						connect: {
+							id: form.data.subjectOutId
+						}
+					}
+				}
+			});
+
+			const addInToOut = prisma.subject.update({
+				where: {
+					id: form.data.subjectOutId
+				},
+				data: {
+					incommingSubjects: {
+						connect: {
+							id: form.data.subjectInId
+						}
+					}
+				}
+			});
+
+			await prisma.$transaction([addOutToIn, addInToOut]);
+		} catch (e: unknown) {
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 };

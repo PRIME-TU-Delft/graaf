@@ -10,7 +10,7 @@
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
 	import CreateNewDomain from './CreateNewDomain.svelte';
-	import CreateNewRelationship from './CreateNewRelationship.svelte';
+	import CreateNewRelationship from './CreateNewDomainRel.svelte';
 	import SortableList from './SortableList.svelte';
 	import type { domainRelSchema, domainSchema } from './zodSchema';
 
@@ -137,6 +137,14 @@
 					>
 						<Ellipsis />
 					</Button>
+				</Table.Cell>
+			</Table.Row>
+		{:else}
+			<Table.Row>
+				<Table.Cell colspan={2}>Create first domain relationship</Table.Cell>
+
+				<Table.Cell colspan={2}>
+					<CreateNewRelationship {graph} form={newDomainRelForm} />
 				</Table.Cell>
 			</Table.Row>
 		{/each}

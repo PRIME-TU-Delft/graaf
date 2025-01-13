@@ -27,3 +27,9 @@ export const subjectSchema = z.object({
 	name: z.string().min(1).max(settings.MAX_SUBJECT_NAME_LENGTH),
 	domainId: z.number()
 });
+
+export const subjectRelSchema = z.object({
+	graphId: z.number(),
+	subjectInId: z.number().gt(0, 'Please select an in subject'),
+	subjectOutId: z.number().gt(0, 'Please select an out domain')
+});
