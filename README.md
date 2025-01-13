@@ -1,5 +1,8 @@
 # Graaf
 
+## Preview
+https://graaf.netlify.app
+
 ## Installation
 
 Create an .env file in the root of the project with the following content:
