@@ -8,7 +8,7 @@
 	import { toast } from 'svelte-sonner';
 	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { subjectSchema } from './zodSchema';
+	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';

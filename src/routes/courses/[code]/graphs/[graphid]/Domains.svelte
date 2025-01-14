@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
@@ -11,8 +12,8 @@
 	import type { PageData } from './$types';
 	import CreateNewDomain from './CreateNewDomain.svelte';
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
+	import DomainRelSettings from './DomainRelSettings.svelte';
 	import SortableList from './SortableList.svelte';
-	import type { domainRelSchema, domainSchema } from './zodSchema';
 
 	type Props = {
 		course: PageData['course'];
@@ -129,14 +130,8 @@
 						{outDomain.name}
 					</Button>
 				</Table.Cell>
-				<Table.Cell>
-					<Button
-						class="float-right"
-						variant="outline"
-						onclick={() => toast.warning('Not implemented', { description: 'includes: delete' })}
-					>
-						<Ellipsis />
-					</Button>
+				<Table.Cell class="text-right">
+					<DomainRelSettings {domain} {outDomain} {graph} />
 				</Table.Cell>
 			</Table.Row>
 		{:else}

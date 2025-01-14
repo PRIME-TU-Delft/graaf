@@ -10,13 +10,13 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import type { Infer, SuperForm, SuperFormData } from 'sveltekit-superforms/client';
-	import type { domainRelSchema } from './zodSchema';
+	import type { changeDomainRelSchema, domainRelSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		id: 'domainInId' | 'domainOutId';
 		domains: Domain[];
-		form: SuperForm<Infer<typeof domainRelSchema>>;
-		formData: SuperFormData<Infer<typeof domainRelSchema>>;
+		form: SuperForm<Infer<typeof domainRelSchema | typeof changeDomainRelSchema>>;
+		formData: SuperFormData<Infer<typeof domainRelSchema | typeof changeDomainRelSchema>>;
 	};
 
 	const { id, domains, form, formData }: Props = $props();

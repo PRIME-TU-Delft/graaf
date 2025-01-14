@@ -10,7 +10,7 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import type { Infer, SuperForm, SuperFormData } from 'sveltekit-superforms/client';
-	import type { subjectRelSchema } from './zodSchema';
+	import type { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		id: 'subjectInId' | 'subjectOutId';

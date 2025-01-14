@@ -12,7 +12,7 @@
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import SortableList from './SortableList.svelte';
-	import type { subjectRelSchema, subjectSchema } from './zodSchema';
+	import type { subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		course: PageData['course'];

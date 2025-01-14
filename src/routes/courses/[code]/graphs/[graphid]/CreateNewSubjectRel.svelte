@@ -11,7 +11,7 @@
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import SubjectRelField from './SubjectRelField.svelte';
-	import { subjectRelSchema } from './zodSchema';
+	import { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		form: SuperValidated<Infer<typeof subjectRelSchema>>;

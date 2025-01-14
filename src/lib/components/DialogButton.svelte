@@ -4,16 +4,20 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import Plus from 'lucide-svelte/icons/plus';
 	import type { Snippet } from 'svelte';
+	import { Ellipsis } from './ui/breadcrumb';
+	import { cn } from '$lib/utils';
+	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
-		icon: string;
+		icon: 'plus' | 'ellipsis';
 		open: boolean;
-		button: string;
+		button?: string;
 		title: string;
 		description: string;
 		disabled?: boolean;
 		onclick?: () => void;
 		children: Snippet;
+		variant?: ButtonVariant;
 	};
 
 	let {
@@ -24,25 +28,30 @@
 		description,
 		disabled,
 		onclick = () => {},
-		children
+		children,
+		variant = 'default'
 	}: Props = $props();
 </script>
 
 <Dialog.Root bind:open>
 	<Dialog.Trigger
-		class="flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm text-primary-foreground shadow-none transition-all hover:bg-primary/80 hover:shadow-lg sm:text-base {disabled
-			? 'opacity-50'
-			: ''}"
+		class={cn(
+			'flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm  shadow-none transition-all hover:bg-primary/80 hover:shadow-lg',
+			{ 'opacity-50': disabled },
+			buttonVariants({ variant })
+		)}
 		{disabled}
 		{onclick}
 	>
-		<div class="hidden sm:block">
-			{#if icon == 'plus'}
-				<Plus class="size-5" />
-			{/if}
-		</div>
+		{#if icon == 'plus'}
+			<Plus class="size-5" />
+		{:else if icon == 'ellipsis'}
+			<Ellipsis class="size-5" />
+		{/if}
 
-		<span>{button}</span>
+		{#if button}
+			<span>{button}</span>
+		{/if}
 	</Dialog.Trigger>
 
 	<Dialog.Content class="max-w-2xl">

@@ -1,17 +1,16 @@
 <script lang="ts">
+	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
+	import { cn } from '$lib/utils';
 	import type { Domain, Graph } from '@prisma/client';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { domainRelSchema } from './zodSchema';
+	import { domainRelSchema } from '$lib/zod/domainSubjectSchema';
 	import DomainRelField from './DomainRelField.svelte';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import { cn } from '$lib/utils';
-	import { fromStore } from 'svelte/store';
-	import { buttonVariants } from '$lib/components/ui/button';
 
 	type Props = {
 		form: SuperValidated<Infer<typeof domainRelSchema>>;

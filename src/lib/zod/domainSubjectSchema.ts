@@ -21,6 +21,24 @@ export const domainRelSchema = z
 		path: ['domainInId', 'domainOutId']
 	});
 
+export const changeDomainRelSchema = z
+	.object({
+		graphId: z.number(),
+		oldDomainInId: z.number().gt(0, 'Please select an in domain'),
+		oldDomainOutId: z.number().gt(0, 'Please select an out domain'),
+		domainInId: z.number().gt(0, 'Please select a new in domain'),
+		domainOutId: z.number().gt(0, 'Please select a new out domain')
+	})
+	.refine((data) => data.domainInId !== data.domainOutId, {
+		message: 'domainInId and domainOutId must not be the same'
+	})
+	.refine(
+		(data) => data.domainInId !== data.oldDomainInId && data.domainOutId !== data.oldDomainOutId,
+		{
+			message: 'This is the original relationship, change either one'
+		}
+	);
+
 // Subjects
 export const subjectSchema = z.object({
 	graphId: z.number(),

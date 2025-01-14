@@ -42,17 +42,19 @@
 		</div>
 	</div>
 
-	<div class="grid gap-0.5">
+	<div class="grid grid-cols-2 gap-1 p-2 md:grid-cols-2 md:gap-2">
 		{#each program.courses as course}
 			<a
 				href="./courses/{course.code}"
-				class="flex items-center justify-between bg-white p-2 transition-colors hover:bg-blue-50"
+				class="flex items-center justify-between rounded bg-white/90 p-2 transition-colors hover:bg-blue-50"
 			>
 				<p>{course.name}</p>
 				<p class="text-xs text-blue-900">{course.code}</p>
 			</a>
 		{:else}
-			<p class="bg-white p-2 text-slate-900/60">This program has no courses yet.</p>
+			<p class="bg-white/80 p-2 col-span-3 text-slate-900/60 rounded">
+				This program has no courses yet.
+			</p>
 		{/each}
 	</div>
 </div>
