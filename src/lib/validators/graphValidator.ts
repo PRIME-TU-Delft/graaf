@@ -4,14 +4,52 @@ export type DomainType = Domain & { incommingDomains: Domain[]; outgoingDomains:
 export type GraphType = Graph & { domains: DomainType[] };
 
 export class GraphValidator {
-	roots: DomainType[] = []; // A root is a domain that has no incoming domains
 	#domains: Map<number, DomainType> = new Map();
+	roots: DomainType[] = []; // A root is a domain that has no incoming domains
 	#subGraphs: Set<DomainType>[] = [];
 
 	constructor(g: GraphType) {
 		if (g.domains.length === 0) return; // Guard to prevent empty graphs
 
 		for (const domain of g.domains) this.#domains.set(domain.id, domain);
+
+		this.findSubGraphs();
+	}
+
+	hasEdge(from: DomainType, to: DomainType): boolean {
+		return (
+			from.outgoingDomains.some((domain) => domain.id === to.id) &&
+			to.incommingDomains.some((domain) => domain.id === from.id)
+		);
+	}
+
+	removeEdge(from: DomainType, to: DomainType) {
+		const fromLength = from.outgoingDomains.length;
+		const toLength = to.incommingDomains.length;
+		from.outgoingDomains = from.outgoingDomains.filter((domain) => domain.id !== to.id);
+		to.incommingDomains = to.incommingDomains.filter((domain) => domain.id !== from.id);
+
+		if (
+			from.outgoingDomains.length !== fromLength - 1 ||
+			to.incommingDomains.length !== toLength - 1
+		) {
+			throw new Error('The edge was not removed');
+		}
+	}
+
+	addEdge(from: DomainType, to: DomainType) {
+		if (this.hasEdge(from, to)) {
+			throw new Error('The edge already exists');
+		}
+
+		from.outgoingDomains.push(to);
+		to.incommingDomains.push(from);
+	}
+
+	findSubGraphs() {
+		// Reset roots and subgraphs
+		this.roots = [];
+		this.#subGraphs = [];
 
 		// Find all subgraphs
 		const subgraphs: Set<DomainType>[] = [];
@@ -51,7 +89,7 @@ export class GraphValidator {
 	 * @param id - The domain id
 	 * @returns The domain if it exists, otherwise undefined
 	 */
-	getDomain(id: number): DomainType | undefined {
+	getDomainById(id: number): DomainType | undefined {
 		return this.#domains.get(id);
 	}
 
@@ -119,5 +157,44 @@ export class GraphValidator {
 		}
 
 		return undefined;
+	}
+
+	validateNewEdge(fromId: number, toId: number) {
+		const from = this.getDomainById(fromId);
+		const to = this.getDomainById(toId);
+
+		if (from == undefined || to == undefined) {
+			throw new Error('One of the domains does not exist');
+		}
+
+		// Add the new edge
+		this.addEdge(from, to);
+
+		// Check if graph is valid
+		this.findSubGraphs();
+
+		const hasCycle = this.hasCycle();
+
+		this.removeEdge(from, to); // Revert the changes
+
+		return hasCycle;
+	}
+
+	validateEdgeChange(oldInId: number, oldOutId: number, newInId: number, newOutId: number) {
+		const oldIn = this.getDomainById(oldInId);
+		const oldOut = this.getDomainById(oldOutId);
+
+		if (oldIn == undefined || oldOut == undefined) {
+			throw new Error('One of the domains does not exist');
+		}
+
+		// Remove the old edge
+		this.removeEdge(oldIn, oldOut);
+
+		const hasCycle = this.validateNewEdge(newInId, newOutId);
+
+		this.addEdge(oldIn, oldOut); // Revert the changes
+
+		return hasCycle;
 	}
 }

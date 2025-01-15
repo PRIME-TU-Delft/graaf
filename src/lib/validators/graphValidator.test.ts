@@ -1,6 +1,5 @@
 import type { Domain } from '@prisma/client';
-import { describe } from 'node:test';
-import { expect, test } from 'vitest';
+import { beforeEach, describe, expect, it, test } from 'vitest';
 import { GraphValidator, type DomainType, type GraphType } from './graphValidator';
 
 function dummyDomain(name: string, id: number) {
@@ -63,12 +62,12 @@ describe('Trivial graph', () => {
 
 	test('domain "A" is the only root', () => {
 		expect(validator1.roots.length).toBe(1); // There is only one root
-		expect(validator1.roots).toContain(validator1.getDomain(0)); // The root is domain 'a'
+		expect(validator1.roots).toContain(validator1.getDomainById(0)); // The root is domain 'a'
 	});
 
 	test('domain "D" is the only root', () => {
 		expect(validator2.roots.length).toBe(1); // There is only one root
-		expect(validator2.roots).toContain(validator2.getDomain(3)); // The root is domain 'g'
+		expect(validator2.roots).toContain(validator2.getDomainById(3)); // The root is domain 'g'
 	});
 
 	test('sub graph sizes', () => {
@@ -218,6 +217,33 @@ describe('Complex graph', () => {
 
 	test('domain "A" is the only root', () => {
 		expect(validator1.roots.length).toBe(1); // There is only one root
-		expect(validator1.roots).toContain(validator1.getDomain(0)); // The root is domain 'a'
+		expect(validator1.roots).toContain(validator1.getDomainById(0)); // The root is domain 'a'
+	});
+});
+
+describe('Remove edge is sound', () => {
+	let graph: GraphType;
+	let validator: GraphValidator;
+
+	beforeEach(() => {
+		const a = dummyDomain('a', 0);
+		const b = dummyDomain('b', 1);
+
+		addConnection(a, b);
+
+		graph = dummyGraph([a, b]);
+		validator = new GraphValidator(graph);
+	});
+
+	it('remove edge', () => {
+		const a = validator.getDomainById(0)!;
+		const b = validator.getDomainById(1)!;
+
+		expect(validator.hasEdge(a, b)).toBe(true);
+		validator.removeEdge(a, b);
+
+		expect(b.incommingDomains.length).toBe(0);
+		expect(a.outgoingDomains.length).toBe(0);
+		expect(validator.hasEdge(a, b)).toBe(false);
 	});
 });

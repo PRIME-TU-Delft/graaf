@@ -1,22 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { cn } from '$lib/utils';
+	import { GraphValidator, type GraphType } from '$lib/validators/graphValidator';
 	import { domainRelSchema } from '$lib/zod/domainSubjectSchema';
-	import type { Domain, Graph } from '@prisma/client';
+	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Undo2 from 'lucide-svelte/icons/undo-2';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
-	import { fromStore } from 'svelte/store';
-	import { Button } from '$lib/components/ui/button';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
 
 	type Props = {
-		graph: Graph & { domains: Domain[] };
+		graph: GraphType;
 		domain: Domain;
 		outDomain: Domain;
 	};
@@ -28,6 +28,24 @@
 	const form = superForm((page.data as PageData).changeDomainRelForm, {
 		id: 'changeDomainRelForm' + useId(),
 		validators: zodClient(domainRelSchema),
+		onSubmit: ({ cancel }) => {
+			const graphValidator = new GraphValidator(graph);
+
+			try {
+				const hasCycles = graphValidator.validateEdgeChange(
+					$formData.oldDomainInId,
+					$formData.oldDomainOutId,
+					$formData.domainInId,
+					$formData.domainOutId
+				);
+
+				if (hasCycles) throw new Error('Cycle detected');
+			} catch (e) {
+				toast.error('This change would create a cycle in the graph.');
+				cancel();
+				return;
+			}
+		},
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain created successfully!');

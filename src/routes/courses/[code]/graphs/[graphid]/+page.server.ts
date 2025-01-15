@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { Domains, Subjects } from '$lib/server/helpers';
-import { GraphValidator } from '$lib/server/validators/graphValidator';
+import { GraphValidator } from '$lib/validators/graphValidator';
 import {
 	changeDomainRelSchema,
 	domainRelSchema,
