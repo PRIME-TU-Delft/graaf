@@ -1,11 +1,20 @@
-import { domainRelSchema, domainSchema, changeDomainRelSchema } from '$lib/zod/domainSubjectSchema';
+import {
+	domainRelSchema,
+	domainSchema,
+	changeDomainRelSchema,
+	deleteDomainSchema
+} from '$lib/zod/domainSubjectSchema';
 import type { DomainStyle } from '@prisma/client';
 import { fail, type RequestEvent } from '@sveltejs/kit';
 import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import prisma from '../db/prisma';
 
-export class Domains {
+/**
+ * These are the functions that handle the domain related requests
+ * They are used in the graph/+page.server.ts in the action handlers
+ */
+export class DomainActions {
 	// MARK: - Domain
 
 	static async addDomainToGraph(event: RequestEvent) {
@@ -16,10 +25,14 @@ export class Domains {
 		}
 
 		try {
-			// Is needed to get the count of domains in the graph for the order
-			const domainCount = await prisma.domain.count({
+			// Find the last domain added value in the database.
+			// Where creation data is the latest
+			const lastDomains = await prisma.domain.findFirst({
 				where: {
 					graphId: form.data.graphId
+				},
+				orderBy: {
+					order: 'desc'
 				}
 			});
 
@@ -27,8 +40,85 @@ export class Domains {
 				data: {
 					name: form.data.name,
 					style: form.data.color == '' ? null : (form.data.color as DomainStyle),
-					order: domainCount,
+					order: lastDomains ? lastDomains.order + 1 : 0,
 					graphId: form.data.graphId
+				}
+			});
+		} catch (e: unknown) {
+			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	static async deleteDomain(event: RequestEvent) {
+		const form = await superValidate(event, zod(deleteDomainSchema));
+
+		if (!form.valid) {
+			return setError(form, '', 'Invalid form data');
+		}
+
+		const removeOutFromIncommingDomain = form.data.incommingDomains.map((id) => {
+			return prisma.domain.update({
+				where: { id },
+				data: {
+					outgoingDomains: {
+						disconnect: { id: form.data.domainId }
+					}
+				}
+			});
+		});
+
+		const removeInFromOutgoingDomain = form.data.outgoingDomains.map((id) => {
+			return prisma.domain.update({
+				where: { id },
+				data: {
+					incommingDomains: {
+						disconnect: { id: form.data.domainId }
+					}
+				}
+			});
+		});
+
+		const removeDomainFromSubjects = form.data.connectedSubjects.map((id) => {
+			return prisma.subject.update({
+				where: { id },
+				data: {
+					domain: {
+						disconnect: true
+					}
+				}
+			});
+		});
+
+		const deleteDomain = prisma.domain.delete({
+			where: { id: form.data.domainId }
+		});
+
+		try {
+			await prisma.$transaction([
+				...removeOutFromIncommingDomain,
+				...removeInFromOutgoingDomain,
+				...removeDomainFromSubjects,
+				deleteDomain
+			]);
+		} catch (e: unknown) {
+			console.log(e);
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	static async changeDomain(event: RequestEvent) {
+		const form = await superValidate(event, zod(domainSchema));
+
+		if (!form.valid) {
+			return setError(form, 'name', form.message);
+		}
+
+		try {
+			await prisma.domain.update({
+				where: { id: form.data.domainId },
+				data: {
+					name: form.data.name,
+					style: form.data.color == '' ? null : (form.data.color as DomainStyle)
 				}
 			});
 		} catch (e: unknown) {
@@ -83,7 +173,7 @@ export class Domains {
 			const inId = form.data.domainInId;
 			const outId = form.data.domainOutId;
 
-			await Domains.connectDomains(inId, outId);
+			await DomainActions.connectDomains(inId, outId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
@@ -122,7 +212,7 @@ export class Domains {
 		}
 
 		try {
-			await Domains.disconnectDomains(domainInId, domainOutId);
+			await DomainActions.disconnectDomains(domainInId, domainOutId);
 		} catch (e: unknown) {
 			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
 		}
@@ -136,8 +226,8 @@ export class Domains {
 		}
 
 		try {
-			await Domains.disconnectDomains(form.data.oldDomainInId, form.data.oldDomainOutId);
-			await Domains.connectDomains(form.data.domainInId, form.data.domainOutId);
+			await DomainActions.disconnectDomains(form.data.oldDomainInId, form.data.oldDomainOutId);
+			await DomainActions.connectDomains(form.data.domainInId, form.data.domainOutId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}

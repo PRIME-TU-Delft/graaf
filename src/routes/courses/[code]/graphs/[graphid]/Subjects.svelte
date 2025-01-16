@@ -91,7 +91,7 @@
 					{/if}
 				</Table.Cell>
 				<Table.Cell>
-					{subject.incommingSubjects.length}/{subject.incommingSubjects.length}
+					{subject.incommingSubjects.length}/{subject.outgoingSubjects.length}
 				</Table.Cell>
 				<Table.Cell>
 					<Button variant="outline" onclick={() => toast.warning('Not implemented')}>

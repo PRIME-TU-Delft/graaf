@@ -18,7 +18,7 @@
 		onclick?: () => void;
 		children: Snippet;
 		variant?: ButtonVariant;
-		class: string;
+		class?: string;
 	};
 
 	let {

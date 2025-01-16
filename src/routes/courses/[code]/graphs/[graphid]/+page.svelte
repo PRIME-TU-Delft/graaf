@@ -50,7 +50,7 @@
 	});
 </script>
 
-<nav class="fixed z-10 w-full border-b-2 border-blue-300 bg-blue-200/80 p-4 backdrop-blur-sm">
+<nav class="fixed z-20 w-full border-b-2 border-blue-300 bg-blue-200/80 p-4 backdrop-blur-sm">
 	<a href="/">Home</a>
 	<a href="/courses">Courses</a>
 	<a href="/courses/{data.course.code}">{data.course.name}</a>
@@ -67,7 +67,7 @@
 		<div class="w-full rounded-xl bg-blue-100/50 p-4">
 			<Tabs.Content value="Domains">
 				{#key data}
-					<Domains {...data} />
+					<Domains {...data} course={data.course} />
 				{/key}
 			</Tabs.Content>
 			<Tabs.Content value="Subjects">

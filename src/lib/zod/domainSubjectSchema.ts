@@ -5,9 +5,17 @@ import * as settings from '$lib/utils/settings';
 // from the database schema because that is not accessible at from the client
 
 export const domainSchema = z.object({
-	graphId: z.number(),
+	domainId: z.number(), // Optional for new domains
+	graphId: z.number().min(1, 'Invalid graph id'),
 	name: z.string().min(1).max(settings.MAX_DOMAIN_NAME_LENGTH),
 	color: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
+});
+
+export const deleteDomainSchema = z.object({
+	domainId: z.number().min(1, 'Invalid domain id'),
+	incommingDomains: z.array(z.number()),
+	outgoingDomains: z.array(z.number()),
+	connectedSubjects: z.array(z.number())
 });
 
 export const domainRelSchema = z

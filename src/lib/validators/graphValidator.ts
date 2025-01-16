@@ -1,7 +1,8 @@
-import type { Graph, Domain } from '@prisma/client';
+import type { Graph, Domain, Subject } from '@prisma/client';
 
 export type DomainType = Domain & { incommingDomains: Domain[]; outgoingDomains: Domain[] };
-export type GraphType = Graph & { domains: DomainType[] };
+export type SubjectType = Subject & { incommingSubjects: Subject[]; outgoingSubjects: Subject[] };
+export type GraphType = Graph & { domains: DomainType[]; subjects: SubjectType[] };
 
 export class GraphValidator {
 	#domains: Map<number, DomainType> = new Map();

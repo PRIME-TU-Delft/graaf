@@ -1,15 +1,16 @@
 <script lang="ts">
-	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
 	import { page } from '$app/state';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as settings from '$lib/utils/settings';
+	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain } from '@prisma/client';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 	import { toast } from 'svelte-sonner';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
+	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
 	import DomainRelSettings from './DomainRelSettings.svelte';
@@ -25,6 +26,8 @@
 	let { course, newDomainForm, newDomainRelForm }: Props = $props();
 
 	const graph = $derived(course.graphs[0]);
+
+	let changeDomainDialog = $state(false);
 
 	const domainMapping = $derived.by(() => {
 		const map: { domain: Domain; outDomain: Domain }[] = [];
@@ -65,6 +68,7 @@
 					</Button>
 				</Table.Cell>
 				<Table.Cell class="max-w-40 overflow-hidden text-ellipsis text-nowrap">
+					{domain.id}
 					{domain.name}
 				</Table.Cell>
 				<Table.Cell>
@@ -79,13 +83,17 @@
 				</Table.Cell>
 				<Table.Cell>{domain.incommingDomains.length}/{domain.outgoingDomains.length}</Table.Cell>
 				<Table.Cell>
-					<Button
-						class="interactive"
+					<DialogButton
+						button=""
+						title="Domain Relationship Settings"
+						description="Edit the settings of the domain {domain.name}."
+						icon="ellipsis"
+						bind:open={changeDomainDialog}
 						variant="outline"
-						onclick={() => toast.warning('Not implemented')}
+						class="interactive"
 					>
-						<Ellipsis />
-					</Button>
+						<ChangeDomain {graph} {domain} />
+					</DialogButton>
 				</Table.Cell>
 			{/snippet}
 		</SortableList>

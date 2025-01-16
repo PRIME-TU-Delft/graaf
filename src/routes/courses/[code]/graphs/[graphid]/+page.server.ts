@@ -1,8 +1,9 @@
 import prisma from '$lib/server/db/prisma';
-import { Domains, Subjects } from '$lib/server/helpers';
+import { DomainActions, SubjectActions } from '$lib/server/helpers';
 import { GraphValidator } from '$lib/validators/graphValidator';
 import {
 	changeDomainRelSchema,
+	deleteDomainSchema,
 	domainRelSchema,
 	domainSchema,
 	subjectRelSchema,
@@ -38,6 +39,9 @@ export const load = (async ({ params }) => {
 							include: {
 								incommingDomains: true,
 								outgoingDomains: true
+							},
+							orderBy: {
+								order: 'asc'
 							}
 						},
 						subjects: {
@@ -64,6 +68,7 @@ export const load = (async ({ params }) => {
 		return {
 			course: course,
 			newDomainForm: await superValidate(zod(domainSchema)),
+			deleteDomainForm: await superValidate(zod(deleteDomainSchema)),
 			newDomainRelForm: await superValidate(zod(domainRelSchema)),
 			changeDomainRelForm: await superValidate(zod(changeDomainRelSchema)),
 			newSubjectForm: await superValidate(zod(subjectSchema)),
@@ -77,12 +82,15 @@ export const load = (async ({ params }) => {
 
 // ACTIONS
 export const actions = {
-	'add-domain-to-graph': Domains.addDomainToGraph,
-	'add-domain-rel': Domains.addDomainRel,
-	'delete-domain-rel': Domains.deleteDomainRel,
-	'change-domain-rel': Domains.changeDomainRel,
+	'add-domain-to-graph': DomainActions.addDomainToGraph,
+	'change-domain-in-graph': DomainActions.changeDomain,
+	'delete-domain': DomainActions.deleteDomain,
+
+	'add-domain-rel': DomainActions.addDomainRel,
+	'change-domain-rel': DomainActions.changeDomainRel,
+	'delete-domain-rel': DomainActions.deleteDomainRel,
 
 	/* MARK: SUBJECTS */
-	'add-subject-to-graph': Subjects.addSubjectToGraph,
-	'add-subject-rel': Subjects.addSubjectRel
+	'add-subject-to-graph': SubjectActions.addSubjectToGraph,
+	'add-subject-rel': SubjectActions.addSubjectRel
 };

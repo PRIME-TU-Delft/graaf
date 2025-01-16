@@ -4,7 +4,7 @@ import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import prisma from '../db/prisma';
 
-export class Subjects {
+export class SubjectActions {
 	/**
 	 * Adds a subject to the graph based on the provided event.
 	 *
