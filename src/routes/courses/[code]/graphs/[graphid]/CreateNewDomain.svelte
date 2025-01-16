@@ -1,14 +1,18 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
+	import { cn } from '$lib/utils';
 	import * as settings from '$lib/utils/settings';
+	import { domainSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Graph } from '@prisma/client';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
 	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { domainSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		form: SuperValidated<Infer<typeof domainSchema>>;
@@ -53,40 +57,75 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>A common name for the domain</Form.Description>
+			<Form.Description>
+				A common name for the domain, i.e:
+				<span class="font-mono text-xs">"Complex numbers"</span>
+			</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
-		<Form.Fieldset {form} name="color">
-			<Form.Legend>Domain colors</Form.Legend>
-			<RadioGroup.Root name="color" bind:value={$formData.color} class="flex flex-wrap gap-6 py-2">
-				<Form.Control>
-					{#snippet children({ props })}
-						<RadioGroup.Item class="ml-2 scale-[2]" value={''} {...props} />
-						<Form.Label>None</Form.Label>
-					{/snippet}
-				</Form.Control>
+		<Form.Fieldset {form} name="color" class="flex items-center justify-between">
+			<div>
+				<Form.Legend>
+					Domain color
+					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
+				</Form.Legend>
+				<Form.Description>the color the domain is visualised with</Form.Description>
+				<Form.FieldErrors />
+			</div>
 
-				{#each domainColors as color}
-					<Form.Control>
-						{#snippet children({ props })}
-							<RadioGroup.Item
-								style="border-color: {settings.COLORS[color]};"
-								class="scale-[2]"
-								value={color}
-								{...props}
-							/>
-							{#if $formData.color === color}
-								<Form.Label class="text-xs text-slate-500">
-									{color.replaceAll('_', ' ').toLowerCase()}
-								</Form.Label>
-							{/if}
-						{/snippet}
-					</Form.Control>
-				{/each}
+			<RadioGroup.Root name="color" bind:value={$formData.color} class="grid py-2">
+				<Popover.Root>
+					<Popover.Trigger
+						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
+					>
+						<div
+							class="h-6 w-6 rounded-full"
+							style="background: {$formData.color
+								? settings.COLORS[$formData.color as keyof typeof settings.COLORS]
+								: '#ccc'}"
+						></div>
+						{$formData.color.toLowerCase().replaceAll('_', ' ') || 'None'}
+						<ChevronDown />
+					</Popover.Trigger>
+					<Popover.Content>
+						<Form.Control>
+							{#snippet children({ props })}
+								<div class="flex items-center">
+									<RadioGroup.Item
+										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
+										class="h-6 w-6"
+										value={''}
+										{...props}
+									/>
+									<Form.Label class="w-full cursor-pointer p-2">None</Form.Label>
+								</div>
+							{/snippet}
+						</Form.Control>
+
+						{#each domainColors as color}
+							<Form.Control>
+								{#snippet children({ props })}
+									<div class="flex items-center">
+										<RadioGroup.Item
+											style="border-color: {settings.COLORS[color]}; background: {settings.COLORS[
+												color
+											]}50; border-width: 3px"
+											class="h-6 w-6"
+											value={color}
+											{...props}
+										/>
+										<Form.Label class="w-full cursor-pointer p-2">
+											{color.replaceAll('_', ' ').toLowerCase()}
+										</Form.Label>
+									</div>
+									{#if $formData.color === color}{/if}
+								{/snippet}
+							</Form.Control>
+						{/each}
+					</Popover.Content>
+				</Popover.Root>
 			</RadioGroup.Root>
-			<Form.Description>(optional) the color the domain is visualised with</Form.Description>
-			<Form.FieldErrors />
 		</Form.Fieldset>
 
 		<Form.Button class="float-right mt-4">Submit</Form.Button>
