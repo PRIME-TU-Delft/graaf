@@ -86,6 +86,7 @@ export const actions = {
 	'change-domain-in-graph': DomainActions.changeDomain,
 	'delete-domain': DomainActions.deleteDomain,
 
+	// Domain relationships
 	'add-domain-rel': DomainActions.addDomainRel,
 	'change-domain-rel': DomainActions.changeDomainRel,
 	'delete-domain-rel': DomainActions.deleteDomainRel,

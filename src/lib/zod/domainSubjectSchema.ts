@@ -6,7 +6,7 @@ import * as settings from '$lib/utils/settings';
 
 export const domainSchema = z.object({
 	domainId: z.number(), // Optional for new domains
-	graphId: z.number().min(1, 'Invalid graph id'),
+	graphId: z.number().nonnegative('Invalid graph id'),
 	name: z.string().min(1).max(settings.MAX_DOMAIN_NAME_LENGTH),
 	color: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
 });

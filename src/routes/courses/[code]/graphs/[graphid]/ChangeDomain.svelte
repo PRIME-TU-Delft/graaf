@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
@@ -9,8 +10,10 @@
 	import * as settings from '$lib/utils/settings';
 	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
 	import { domainSchema } from '$lib/zod/domainSubjectSchema';
+	import { useId } from 'bits-ui';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 	import { toast } from 'svelte-sonner';
+	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
@@ -23,8 +26,10 @@
 
 	let { domain, graph }: Props = $props();
 
+	let changeDomainDialog = $state(false);
+
 	const form = superForm((page.data as PageData).newDomainForm, {
-		id: 'change-domain-form-' + domain.id,
+		id: 'change-domain-form-' + useId(),
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -55,73 +60,87 @@
   @props { domain: DomainType, graph: GraphType }
 -->
 
-<form action="?/change-domain-in-graph" method="POST" use:enhance>
-	<input type="hidden" name="graphId" value={graph.id} />
-	<input type="hidden" name="domainId" value={domain.id} />
+<DialogButton
+	button=""
+	title="Domain Relationship Settings"
+	description="Edit the settings of the domain {domain.name}."
+	icon="ellipsis"
+	bind:open={changeDomainDialog}
+	variant="outline"
+	class="interactive"
+>
+	{@render changeDomain()}
+</DialogButton>
 
-	<Form.Field {form} name="name">
-		<Form.Control>
-			{#snippet children({ props })}
-				<Form.Label for="name">Domain name</Form.Label>
-				<Input {...props} bind:value={$formData.name} />
-			{/snippet}
-		</Form.Control>
-		<Form.Description>A common name for the domain</Form.Description>
-		<Form.FieldErrors />
-	</Form.Field>
+{#snippet changeDomain()}
+	<form action="?/change-domain-in-graph" method="POST" use:enhance>
+		<input type="hidden" name="graphId" value={graph.id} />
+		<input type="hidden" name="domainId" value={domain.id} />
 
-	<Form.Fieldset {form} name="color">
-		<Form.Legend>Domain colors</Form.Legend>
-		<RadioGroup.Root name="color" bind:value={$formData.color} class="flex flex-wrap gap-6 py-2">
+		<Form.Field {form} name="name">
 			<Form.Control>
 				{#snippet children({ props })}
-					<RadioGroup.Item class="ml-2 scale-[2]" value={''} {...props} />
-					<Form.Label>None</Form.Label>
+					<Form.Label for="name">Domain name</Form.Label>
+					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
+			<Form.Description>A common name for the domain</Form.Description>
+			<Form.FieldErrors />
+		</Form.Field>
 
-			{#each domainColors as color}
+		<Form.Fieldset {form} name="color">
+			<Form.Legend>Domain colors</Form.Legend>
+			<RadioGroup.Root name="color" bind:value={$formData.color} class="flex flex-wrap gap-6 py-2">
 				<Form.Control>
 					{#snippet children({ props })}
-						<RadioGroup.Item
-							style="border-color: {settings.COLORS[color]};"
-							class="scale-[2]"
-							value={color}
-							{...props}
-						/>
-						{#if $formData.color === color}
-							<Form.Label class="text-xs text-slate-500">
-								{color.replaceAll('_', ' ').toLowerCase()}
-							</Form.Label>
-						{/if}
+						<RadioGroup.Item class="ml-2 scale-[2]" value={''} {...props} />
+						<Form.Label>None</Form.Label>
 					{/snippet}
 				</Form.Control>
-			{/each}
-		</RadioGroup.Root>
-		<Form.Description>(optional) the color the domain is visualised with</Form.Description>
-		<Form.FieldErrors />
-	</Form.Fieldset>
 
-	<div class="flex justify-end gap-1">
-		<Popover.Root>
-			<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-				Delete domain
-			</Popover.Trigger>
-			<Popover.Content>
-				<DeleteDomain {domain} {graph} />
-			</Popover.Content>
-		</Popover.Root>
+				{#each domainColors as color}
+					<Form.Control>
+						{#snippet children({ props })}
+							<RadioGroup.Item
+								style="border-color: {settings.COLORS[color]};"
+								class="scale-[2]"
+								value={color}
+								{...props}
+							/>
+							{#if $formData.color === color}
+								<Form.Label class="text-xs text-slate-500">
+									{color.replaceAll('_', ' ').toLowerCase()}
+								</Form.Label>
+							{/if}
+						{/snippet}
+					</Form.Control>
+				{/each}
+			</RadioGroup.Root>
+			<Form.Description>(optional) the color the domain is visualised with</Form.Description>
+			<Form.FieldErrors />
+		</Form.Fieldset>
 
-		<Button
-			variant="outline"
-			disabled={!isTainted($tainted)}
-			onclick={() => {
-				$formData.name = domain.name;
-				$formData.color = domain.style ?? '';
-			}}
-		>
-			<Undo2 /> Reset
-		</Button>
-		<Form.Button>Change</Form.Button>
-	</div>
-</form>
+		<div class="flex justify-end gap-1">
+			<Popover.Root>
+				<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
+					Delete domain
+				</Popover.Trigger>
+				<Popover.Content>
+					<DeleteDomain {domain} {graph} />
+				</Popover.Content>
+			</Popover.Root>
+
+			<Button
+				variant="outline"
+				disabled={!isTainted($tainted)}
+				onclick={() => {
+					$formData.name = domain.name;
+					$formData.color = domain.style ?? '';
+				}}
+			>
+				<Undo2 /> Reset
+			</Button>
+			<Form.Button>Change</Form.Button>
+		</div>
+	</form>
+{/snippet}

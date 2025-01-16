@@ -27,8 +27,6 @@
 
 	const graph = $derived(course.graphs[0]);
 
-	let changeDomainDialog = $state(false);
-
 	const domainMapping = $derived.by(() => {
 		const map: { domain: Domain; outDomain: Domain }[] = [];
 		for (const domain of graph.domains) {
@@ -38,6 +36,8 @@
 		}
 		return map;
 	});
+
+	// TODO: check if there are no dangling in/out domains
 </script>
 
 <div class="flex items-end justify-between">
@@ -83,17 +83,7 @@
 				</Table.Cell>
 				<Table.Cell>{domain.incommingDomains.length}/{domain.outgoingDomains.length}</Table.Cell>
 				<Table.Cell>
-					<DialogButton
-						button=""
-						title="Domain Relationship Settings"
-						description="Edit the settings of the domain {domain.name}."
-						icon="ellipsis"
-						bind:open={changeDomainDialog}
-						variant="outline"
-						class="interactive"
-					>
-						<ChangeDomain {graph} {domain} />
-					</DialogButton>
+					<ChangeDomain {graph} {domain} />
 				</Table.Cell>
 			{/snippet}
 		</SortableList>
