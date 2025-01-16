@@ -51,8 +51,7 @@
 			<Table.Head class="w-12"></Table.Head>
 			<Table.Head>Name</Table.Head>
 			<Table.Head class="flex items-center gap-1"><Link class="size-4" />Domain</Table.Head>
-			<Table.Head># In</Table.Head>
-			<Table.Head># Out</Table.Head>
+			<Table.Head># In/Out</Table.Head>
 			<Table.Head>Edit</Table.Head>
 		</Table.Row>
 	</Table.Header>
@@ -91,8 +90,9 @@
 						</Button>
 					{/if}
 				</Table.Cell>
-				<Table.Cell>{subject.incommingSubjects.length}</Table.Cell>
-				<Table.Cell>{subject.incommingSubjects.length}</Table.Cell>
+				<Table.Cell>
+					{subject.incommingSubjects.length}/{subject.incommingSubjects.length}
+				</Table.Cell>
 				<Table.Cell>
 					<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
 						<Ellipsis />

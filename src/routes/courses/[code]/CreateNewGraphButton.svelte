@@ -36,6 +36,7 @@
 	button="New Graph"
 	title="Create Graph"
 	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study. Create this new graph in the {course.name}"
+	class="col-span-2"
 >
 	<!-- For sumbitting a NEW PROGRAM
  	It triggers an action that can be seen in +page.server.ts -->

@@ -18,6 +18,7 @@
 		onclick?: () => void;
 		children: Snippet;
 		variant?: ButtonVariant;
+		class: string;
 	};
 
 	let {
@@ -29,7 +30,8 @@
 		disabled,
 		onclick = () => {},
 		children,
-		variant = 'default'
+		variant = 'default',
+		class: classes
 	}: Props = $props();
 </script>
 
@@ -38,7 +40,8 @@
 		class={cn(
 			'flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm  shadow-none transition-all hover:bg-primary/80 hover:shadow-lg',
 			{ 'opacity-50': disabled },
-			buttonVariants({ variant })
+			buttonVariants({ variant }),
+			classes
 		)}
 		{disabled}
 		{onclick}

@@ -66,12 +66,12 @@
 
 		<div class="w-full rounded-xl bg-blue-100/50 p-4">
 			<Tabs.Content value="Domains">
-				{#key data.course}
+				{#key data}
 					<Domains {...data} />
 				{/key}
 			</Tabs.Content>
 			<Tabs.Content value="Subjects">
-				{#key data.course}
+				{#key data}
 					<Subjects bind:tabValue {...data} />
 				{/key}
 			</Tabs.Content>

@@ -48,8 +48,7 @@
 			<Table.Head class="w-12"></Table.Head>
 			<Table.Head class="max-w-12">Name</Table.Head>
 			<Table.Head>Color</Table.Head>
-			<Table.Head>#In</Table.Head>
-			<Table.Head>#Out</Table.Head>
+			<Table.Head>#In/Out</Table.Head>
 			<Table.Head>Settings</Table.Head>
 		</Table.Row>
 	</Table.Header>
@@ -78,8 +77,7 @@
 						None
 					{/if}
 				</Table.Cell>
-				<Table.Cell>{domain.incommingDomains.length}</Table.Cell>
-				<Table.Cell>{domain.outgoingDomains.length}</Table.Cell>
+				<Table.Cell>{domain.incommingDomains.length}/{domain.outgoingDomains.length}</Table.Cell>
 				<Table.Cell>
 					<Button
 						class="interactive"
