@@ -13,6 +13,7 @@
 	import { onMount } from 'svelte';
 
 	let { data }: { data: PageData } = $props();
+	let course = $state(data.course);
 
 	const medium = new MediaQuery('min-width: 768px');
 
@@ -53,7 +54,7 @@
 <nav class="fixed z-20 w-full border-b-2 border-blue-300 bg-blue-200/80 p-4 backdrop-blur-sm">
 	<a href="/">Home</a>
 	<a href="/courses">Courses</a>
-	<a href="/courses/{data.course.code}">{data.course.name}</a>
+	<a href="/courses/{course.code}">{course.name}</a>
 </nav>
 
 <div class="prose mx-auto flex max-w-[80rem] gap-2 p-4 pt-20 text-blue-900">
@@ -67,24 +68,24 @@
 		<div class="w-full rounded-xl bg-blue-100/50 p-4">
 			<Tabs.Content value="Domains">
 				{#key data}
-					<Domains {...data} course={data.course} />
+					<Domains {...data} bind:course />
 				{/key}
 			</Tabs.Content>
 			<Tabs.Content value="Subjects">
 				{#key data}
-					<Subjects bind:tabValue {...data} />
+					<Subjects bind:tabValue {...data} {course} />
 				{/key}
 			</Tabs.Content>
 			<Tabs.Content value="Lectures">
 				<Lectures {...data} />
 			</Tabs.Content>
-			<Tabs.Content value="Preview"><Preview course={data.course} /></Tabs.Content>
+			<Tabs.Content value="Preview"><Preview {course} /></Tabs.Content>
 		</div>
 	</Tabs.Root>
 
 	{#if medium.current}
 		<div class="w-1/2">
-			<Preview course={data.course} />
+			<Preview {course} />
 		</div>
 	{/if}
 </div>
