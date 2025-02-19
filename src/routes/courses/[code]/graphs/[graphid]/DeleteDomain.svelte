@@ -22,9 +22,6 @@
 	const form = superForm((page.data as PageData).deleteDomainForm, {
 		id: 'delete-domain-form-' + domain.id,
 		validators: zodClient(deleteDomainSchema),
-		onSubmit: (e) => {
-			console.log(e);
-		},
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain successfully deleted!');
@@ -64,7 +61,7 @@
 @props { domain: DomainType, graph: GraphType }
  -->
 
-<form action="?/delete-domain" method="POST" use:enhance>
+<form class="text-sm" action="?/delete-domain" method="POST" use:enhance>
 	<input type="hidden" name="domainId" value={$formData.domainId} />
 
 	{@render formArray('incommingDomains')}
@@ -76,7 +73,7 @@
 	{#if relationCount > 0 || connectedSubjects.length > 0}
 		{@const domainMessage = `delete ${relationCount} domain relationship${relationCount != 1 ? 's' : ''}`}
 		{@const subjectMessage = `remove domain from ${connectedSubjects.length} subject${connectedSubjects.length != 1 ? 's' : ''}`}
-		<p class="max-w-64 p-2">
+		<p class="max-w-64 p-1">
 			<!-- Will add either or both messages concatinatted if the set is larger than 0 -->
 			This will also {[
 				relationCount ? domainMessage : undefined,
@@ -86,7 +83,7 @@
 				.join(' and ')}.
 		</p>
 	{:else}
-		<p class="max-w-64 p-2">
+		<p class="max-w-64 p-1">
 			This domain is not part of any domain relationship and has no subject dependencies, so it can
 			be safely deleted.
 		</p>

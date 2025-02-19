@@ -109,8 +109,9 @@ export class DomainActions {
 	static async changeDomain(event: RequestEvent) {
 		const form = await superValidate(event, zod(domainSchema));
 
-		if (!form.valid) {
-			return setError(form, 'name', form.message);
+		if (!form.valid) return setError(form, 'name', form.message);
+		if (form.data.domainId === 0) {
+			return setError(form, 'name', 'Invalid domain id, cannot be 0');
 		}
 
 		try {

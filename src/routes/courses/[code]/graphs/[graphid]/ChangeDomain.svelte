@@ -36,9 +36,9 @@
 		id: 'change-domain-form-' + useId(),
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Domain changed successfully!');
-			}
+			if (result.type != 'success') return;
+
+			toast.success('Domain changed successfully!');
 		}
 	});
 

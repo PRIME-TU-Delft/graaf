@@ -13,6 +13,7 @@
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import SortableList from './SortableList.svelte';
+	import ChangeSubject from './ChangeSubject.svelte';
 
 	type Props = {
 		course: PageData['course'];
@@ -77,7 +78,6 @@
 			<Table.Head class="w-12"></Table.Head>
 			<Table.Head>Name</Table.Head>
 			<Table.Head class="flex items-center gap-1"><Link class="size-4" />Domain</Table.Head>
-			<Table.Head># In/Out</Table.Head>
 			<Table.Head>Edit</Table.Head>
 		</Table.Row>
 	</Table.Header>
@@ -117,12 +117,7 @@
 					{/if}
 				</Table.Cell>
 				<Table.Cell>
-					{subject.incommingSubjects.length}/{subject.outgoingSubjects.length}
-				</Table.Cell>
-				<Table.Cell>
-					<Button variant="outline" onclick={() => toast.warning('Not implemented')}>
-						<Ellipsis />
-					</Button>
+					<ChangeSubject {subject} {graph} />
 				</Table.Cell>
 			{/snippet}
 		</SortableList>

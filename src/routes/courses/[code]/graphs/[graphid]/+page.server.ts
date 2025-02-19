@@ -4,6 +4,7 @@ import { GraphValidator } from '$lib/validators/graphValidator';
 import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
+	deleteSubjectSchema,
 	domainRelSchema,
 	domainSchema,
 	subjectRelSchema,
@@ -71,8 +72,11 @@ export const load = (async ({ params }) => {
 			deleteDomainForm: await superValidate(zod(deleteDomainSchema)),
 			newDomainRelForm: await superValidate(zod(domainRelSchema)),
 			changeDomainRelForm: await superValidate(zod(changeDomainRelSchema)),
+
 			newSubjectForm: await superValidate(zod(subjectSchema)),
+			deleteSubjectForm: await superValidate(zod(deleteSubjectSchema)),
 			newSubjectRelForm: await superValidate(zod(subjectRelSchema)),
+
 			cycles: cycles
 		};
 	} catch (e: unknown) {
@@ -93,5 +97,8 @@ export const actions = {
 
 	/* MARK: SUBJECTS */
 	'add-subject-to-graph': SubjectActions.addSubjectToGraph,
+	'change-subject-in-graph': SubjectActions.changeSubject,
+	'delete-subject': SubjectActions.deleteSubject,
+
 	'add-subject-rel': SubjectActions.addSubjectRel
 };

@@ -5,6 +5,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
 	import * as settings from '$lib/utils/settings';
+	import type { DomainType } from '$lib/validators/graphValidator';
 	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -17,7 +18,6 @@
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
 	import DomainRelSettings from './DomainRelSettings.svelte';
 	import SortableList from './SortableList.svelte';
-	import type { DomainType } from '$lib/validators/graphValidator';
 
 	type Props = {
 		course: PageData['course'];

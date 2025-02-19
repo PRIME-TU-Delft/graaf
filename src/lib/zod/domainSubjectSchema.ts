@@ -49,9 +49,16 @@ export const changeDomainRelSchema = z
 
 // Subjects
 export const subjectSchema = z.object({
+	subjectId: z.number(), // Optional for new domains
 	graphId: z.number(),
 	name: z.string().min(1).max(settings.MAX_SUBJECT_NAME_LENGTH),
 	domainId: z.number()
+});
+
+export const deleteSubjectSchema = z.object({
+	subjectId: z.number().min(1, 'Invalid subject id'),
+	incommingSubjects: z.array(z.number()),
+	outgoingSubjects: z.array(z.number())
 });
 
 export const subjectRelSchema = z.object({
