@@ -71,10 +71,12 @@
 	{@render formArray('outgoingDomains')}
 	{@render formArray('connectedSubjects')}
 
+	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
+
 	{#if relationCount > 0 || connectedSubjects.length > 0}
 		{@const domainMessage = `delete ${relationCount} domain relationship${relationCount != 1 ? 's' : ''}`}
 		{@const subjectMessage = `remove domain from ${connectedSubjects.length} subject${connectedSubjects.length != 1 ? 's' : ''}`}
-		<p>
+		<p class="max-w-64 p-2">
 			<!-- Will add either or both messages concatinatted if the set is larger than 0 -->
 			This will also {[
 				relationCount ? domainMessage : undefined,
@@ -84,13 +86,13 @@
 				.join(' and ')}.
 		</p>
 	{:else}
-		<p>
+		<p class="max-w-64 p-2">
 			This domain is not part of any domain relationship and has no subject dependencies, so it can
 			be safely deleted.
 		</p>
 	{/if}
 
-	<Form.Button variant="destructive" class="mt-1 w-full">Are you sure?</Form.Button>
+	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
 {#snippet formArray(name: 'incommingDomains' | 'outgoingDomains' | 'connectedSubjects')}

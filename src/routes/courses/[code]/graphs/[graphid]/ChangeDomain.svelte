@@ -4,14 +4,18 @@
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
+	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { cn } from '$lib/utils';
 	import * as settings from '$lib/utils/settings';
 	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
 	import { domainSchema } from '$lib/zod/domainSubjectSchema';
+	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
@@ -60,17 +64,72 @@
   @props { domain: DomainType, graph: GraphType }
 -->
 
-<DialogButton
-	button=""
-	title="Domain Relationship Settings"
-	description="Edit the settings of the domain {domain.name}."
-	icon="ellipsis"
-	bind:open={changeDomainDialog}
-	variant="outline"
-	class="interactive"
->
-	{@render changeDomain()}
-</DialogButton>
+<Menubar.Root class="interactive ml-auto max-w-10 p-0">
+	<Menubar.Menu value="menu">
+		<Menubar.Trigger class="h-full w-full">
+			<Ellipsis class="size-4 w-full" />
+		</Menubar.Trigger>
+		<Menubar.Content>
+			<Menubar.Item class="p-0">
+				<DialogButton
+					button="Edit"
+					title="Domain Relationship Settings"
+					description="Edit the settings of the domain {domain.name}."
+					bind:open={changeDomainDialog}
+					variant="outline"
+					class="h-auto w-full justify-start rounded-sm border-0 px-2 py-1.5 hover:shadow-none"
+				>
+					{@render changeDomain()}
+				</DialogButton>
+			</Menubar.Item>
+
+			<Menubar.Sub>
+				<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
+					Delete
+				</Menubar.SubTrigger>
+				<Menubar.SubContent class="ml-1 w-32">
+					<DeleteDomain {domain} {graph} />
+				</Menubar.SubContent>
+			</Menubar.Sub>
+
+			<Menubar.Separator />
+			<Menubar.Item class="justify-between">
+				<span>Highlight in preview</span>
+				<ArrowRight class="size-4" />
+			</Menubar.Item>
+			<Menubar.Separator />
+
+			{@render relations(domain.incommingDomains, 'In')}
+			{@render relations(domain.outgoingDomains, 'Out')}
+		</Menubar.Content>
+	</Menubar.Menu>
+</Menubar.Root>
+
+{#snippet relations(domains: Domain[], title: 'In' | 'Out')}
+	{#if domains.length > 0}
+		<Menubar.Sub>
+			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>
+			<Menubar.SubContent class="ml-1 w-32 p-1">
+				{#each domains as domain}
+					<div class="flex flex-col items-center gap-1">
+						<Button
+							class="w-full font-mono text-xs"
+							href="#{domain.id}-{domain.name}"
+							variant="ghost"
+						>
+							{domain.name}
+						</Button>
+					</div>
+				{/each}
+			</Menubar.SubContent>
+		</Menubar.Sub>
+	{:else}
+		<Menubar.Item class="justify-between">
+			<span>{title} relations: </span>
+			<span class="text-gray-400">None</span>
+		</Menubar.Item>
+	{/if}
+{/snippet}
 
 {#snippet changeDomain()}
 	<form action="?/change-domain-in-graph" method="POST" use:enhance>
