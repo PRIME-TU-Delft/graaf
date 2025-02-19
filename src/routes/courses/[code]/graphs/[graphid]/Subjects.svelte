@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import type { subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Subject } from '@prisma/client';
 	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Link from 'lucide-svelte/icons/link';
@@ -12,7 +13,6 @@
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import SortableList from './SortableList.svelte';
-	import type { subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		course: PageData['course'];
@@ -21,7 +21,12 @@
 		newSubjectRelForm: SuperValidated<Infer<typeof subjectRelSchema>>;
 	};
 
-	let { course, tabValue = $bindable(), newSubjectForm, newSubjectRelForm }: Props = $props();
+	let {
+		course = $bindable(),
+		tabValue = $bindable(),
+		newSubjectForm,
+		newSubjectRelForm
+	}: Props = $props();
 
 	const graph = $derived(course.graphs[0]);
 
@@ -35,8 +40,29 @@
 		return map;
 	});
 
-	function handleRearrange<T>(list: T[]) {
-		console.log($state.snapshot(list));
+	async function handleRearrange(newSubjectList: typeof graph.subjects) {
+		let needRearrange = newSubjectList
+			.filter((subject, index) => subject.order != index)
+			.map((d, index) => {
+				return {
+					subjectId: d.id,
+					oldOrder: d.order,
+					newOrder: index
+				};
+			});
+
+		const response = await fetch(`${graph.id}/subjects/reorder`, {
+			method: 'PATCH',
+			body: JSON.stringify(needRearrange),
+			headers: { 'content-type': 'application/json' }
+		});
+
+		if (!response.ok) {
+			toast.error('Failed to update subject color, try again later!');
+			return;
+		}
+
+		course.graphs[0].subjects = newSubjectList;
 	}
 </script>
 
@@ -57,7 +83,7 @@
 	</Table.Header>
 	<Table.Body>
 		<SortableList
-			list={graph.subjects}
+			list={course.graphs[0].subjects}
 			onrearrange={(list) => handleRearrange(list)}
 			useId={(subject) => `${subject.id}-${subject.name}`}
 		>

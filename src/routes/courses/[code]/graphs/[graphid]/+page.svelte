@@ -73,7 +73,7 @@
 			</Tabs.Content>
 			<Tabs.Content value="Subjects">
 				{#key data}
-					<Subjects bind:tabValue {...data} {course} />
+					<Subjects bind:tabValue {...data} bind:course />
 				{/key}
 			</Tabs.Content>
 			<Tabs.Content value="Lectures">

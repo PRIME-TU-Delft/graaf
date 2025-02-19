@@ -115,7 +115,6 @@
 					</Button>
 				</Table.Cell>
 				<Table.Cell class="max-w-40 overflow-hidden text-ellipsis text-nowrap pr-0">
-					<span class="font-mono text-xs">id: {domain.id} -</span>
 					{domain.name}
 				</Table.Cell>
 				<Table.Cell>
