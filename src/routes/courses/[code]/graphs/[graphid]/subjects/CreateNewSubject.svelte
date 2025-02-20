@@ -1,33 +1,34 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover';
+	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain, Graph } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
-	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
-	import * as Command from '$lib/components/ui/command/index.js';
 	import Check from 'lucide-svelte/icons/check';
+	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
+	import { toast } from 'svelte-sonner';
+	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { PageData } from './$types';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
-		form: SuperValidated<Infer<typeof subjectSchema>>;
 	};
 
-	const { form: graphForm, graph }: Props = $props();
+	const { graph }: Props = $props();
 
 	const triggerId = useId();
 
 	let dialogOpen = $state(false);
 	let domainIdOpen = $state(false);
 
-	const form = superForm(graphForm, {
+	const form = superForm((page.data as PageData).newSubjectForm, {
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {

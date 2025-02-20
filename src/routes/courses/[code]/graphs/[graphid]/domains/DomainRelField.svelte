@@ -4,13 +4,13 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
+	import type { changeDomainRelSchema, domainRelSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import type { Infer, SuperForm, SuperFormData } from 'sveltekit-superforms/client';
-	import type { changeDomainRelSchema, domainRelSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
 		id: 'domainInId' | 'domainOutId';

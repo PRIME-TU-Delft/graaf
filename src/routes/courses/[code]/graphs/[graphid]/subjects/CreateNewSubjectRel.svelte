@@ -1,30 +1,31 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
+	import { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Graph, Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
-	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { PageData } from './$types';
 	import SubjectRelField from './SubjectRelField.svelte';
-	import { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
 
 	type Props = {
-		form: SuperValidated<Infer<typeof subjectRelSchema>>;
 		graph: Graph & { subjects: Subject[] };
 	};
 
-	const { form: graphForm, graph }: Props = $props();
+	const { graph }: Props = $props();
 
 	const subjects = $derived(graph.subjects);
 
 	let popupOpen = $state(false);
 
-	const form = superForm(graphForm, {
+	const form = superForm((page.data as PageData).newSubjectRelForm, {
 		id: 'subjectRelForm' + useId(),
 		validators: zodClient(subjectRelSchema),
 		onResult: ({ result }) => {

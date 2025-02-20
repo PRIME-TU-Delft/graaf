@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -11,19 +12,19 @@
 	import type { Graph } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
-	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { PageData } from './$types';
 
 	type Props = {
-		form: SuperValidated<Infer<typeof domainSchema>>;
 		graph: Graph;
 	};
 
-	const { form: graphForm, graph }: Props = $props();
+	const { graph }: Props = $props();
 
 	let dialogOpen = $state(false);
 
-	const form = superForm(graphForm, {
+	const form = superForm((page.data as PageData).newDomainForm, {
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {

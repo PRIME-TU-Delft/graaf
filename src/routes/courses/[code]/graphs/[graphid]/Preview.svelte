@@ -1,6 +1,4 @@
 <script lang="ts">
-	import type { Course, Domain, Graph } from '@prisma/client';
-
 	let { course } = $props();
 </script>
 
