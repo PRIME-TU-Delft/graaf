@@ -1,2 +1,2 @@
-export { Domains } from './Domains';
-export { Subjects } from './Subjects';
+export { DomainActions } from './Domains';
+export { SubjectActions } from './Subjects';

@@ -12,24 +12,24 @@
 		useId: (item: T) => string;
 	};
 
-	let { list, children, onrearrange = () => {}, useId }: Props = $props();
-
-	const items = $state(list);
+	let { list = $bindable(), children, onrearrange = () => {}, useId }: Props = $props();
 
 	function handleDrop(state: DragDropState<T>) {
 		const { draggedItem, targetContainer } = state;
-		const dragIndex = items.findIndex((item) => useId(item) === useId(draggedItem));
+		const dragIndex = list.findIndex((item) => useId(item) === useId(draggedItem));
 		const dropIndex = parseInt(targetContainer ?? '0');
 
 		if (dragIndex !== -1 && !isNaN(dropIndex)) {
-			const [item] = items.splice(dragIndex, 1);
-			items.splice(dropIndex, 0, item);
-			onrearrange(items);
+			const newList = [...list];
+			const [item] = newList.splice(dragIndex, 1);
+			newList.splice(dropIndex, 0, item);
+			list = newList;
+			onrearrange(list);
 		}
 	}
 </script>
 
-{#each items as item, index (useId(item))}
+{#each list as item, index (useId(item))}
 	{@const id = useId(item)}
 	<tr
 		{id}
@@ -47,6 +47,6 @@
 		out:fade={{ duration: 150 }}
 		draggable="true"
 	>
-		{@render children(item, index)}
+		{@render children({ ...item }, index)}
 	</tr>
 {/each}

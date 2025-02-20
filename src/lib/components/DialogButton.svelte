@@ -1,15 +1,16 @@
 <script lang="ts" generics="T extends Schema">
-	import { type Schema } from 'sveltekit-superforms';
-
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
-	import Plus from 'lucide-svelte/icons/plus';
-	import type { Snippet } from 'svelte';
-	import { Ellipsis } from './ui/breadcrumb';
 	import { cn } from '$lib/utils';
+	import type { Snippet } from 'svelte';
+	import { type Schema } from 'sveltekit-superforms';
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 
+	import Pencil from 'lucide-svelte/icons/pencil';
+	import Plus from 'lucide-svelte/icons/plus';
+	import { Ellipsis } from './ui/breadcrumb';
+
 	type Props = {
-		icon: 'plus' | 'ellipsis';
+		icon?: 'plus' | 'ellipsis' | 'edit';
 		open: boolean;
 		button?: string;
 		title: string;
@@ -18,7 +19,7 @@
 		onclick?: () => void;
 		children: Snippet;
 		variant?: ButtonVariant;
-		class: string;
+		class?: string;
 	};
 
 	let {
@@ -44,12 +45,18 @@
 			classes
 		)}
 		{disabled}
-		{onclick}
+		onclick={(e) => {
+			e.stopPropagation();
+			console.log('clicked');
+			onclick();
+		}}
 	>
 		{#if icon == 'plus'}
 			<Plus class="size-5" />
 		{:else if icon == 'ellipsis'}
 			<Ellipsis class="size-5" />
+		{:else if icon == 'edit'}
+			<Pencil class="size-5" />
 		{/if}
 
 		{#if button}

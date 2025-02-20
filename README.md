@@ -1,6 +1,7 @@
 # Graaf
 
 ## Preview
+
 https://graaf.netlify.app
 
 ## Installation
@@ -18,9 +19,9 @@ podman compose up # Or docker compose up
 # Terminal 2
 pnpm install
 
-pnpm prisma generate
-pnpm prisma db push
-pnpm prisma db seed
+pnpm prisma generate # will generate the prisma client
+pnpm prisma db push # will setup the database schema
+pnpm prisma db seed # will setup the database with some initial data
 ```
 
 ## Usage

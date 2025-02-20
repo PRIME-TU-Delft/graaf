@@ -1,15 +1,19 @@
 <script lang="ts">
-	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import { cn } from '$lib/utils';
 	import * as settings from '$lib/utils/settings';
-	import type { Domain } from '@prisma/client';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
+	import type { DomainType } from '$lib/validators/graphValidator';
+	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
+	import type { Domain, DomainStyle } from '@prisma/client';
+	import { useId } from 'bits-ui';
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 	import { toast } from 'svelte-sonner';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
+	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
 	import DomainRelSettings from './DomainRelSettings.svelte';
@@ -22,7 +26,7 @@
 		newDomainRelForm: SuperValidated<Infer<typeof domainRelSchema>>;
 	};
 
-	let { course, newDomainForm, newDomainRelForm }: Props = $props();
+	let { course = $bindable(), newDomainForm, newDomainRelForm }: Props = $props();
 
 	const graph = $derived(course.graphs[0]);
 
@@ -35,6 +39,53 @@
 		}
 		return map;
 	});
+
+	/**
+	 * Handles the color change of a domain in domainColor snippet
+	 * @param key - The color key
+	 * @param domainIndex - The index of the domain
+	 */
+	async function handleChangeColor(key: DomainStyle | null, domainIndex: number) {
+		const domain = course.graphs[0].domains[domainIndex];
+		domain.style = key;
+
+		const response = await fetch(`${graph.id}/domains/change-color`, {
+			method: 'PATCH',
+			body: JSON.stringify({ domainId: domain.id, color: key }),
+			headers: { 'content-type': 'application/json' }
+		});
+
+		if (!response.ok) {
+			toast.error('Failed to update domain color, try again later');
+			return;
+		}
+	}
+
+	// Send a list of domains to the server to rearrange them
+	async function handleRearrange(list: DomainType[]) {
+		let needRearrange = list
+			.filter((domain, index) => domain.order != index)
+			.map((d, index) => {
+				return {
+					domainId: d.id,
+					oldOrder: d.order,
+					newOrder: index
+				};
+			});
+
+		const response = await fetch(`${graph.id}/domains/reorder`, {
+			method: 'PATCH',
+			body: JSON.stringify(needRearrange),
+			headers: { 'content-type': 'application/json' }
+		});
+
+		if (!response.ok) {
+			toast.error('Failed to update domain color, try again later!');
+			return;
+		}
+
+		course.graphs[0].domains = list;
+	}
 </script>
 
 <div class="flex items-end justify-between">
@@ -46,16 +97,15 @@
 	<Table.Header>
 		<Table.Row>
 			<Table.Head class="w-12"></Table.Head>
-			<Table.Head class="max-w-12">Name</Table.Head>
+			<Table.Head class="max-w-12 px-0">Name</Table.Head>
 			<Table.Head>Color</Table.Head>
-			<Table.Head>#In/Out</Table.Head>
-			<Table.Head>Settings</Table.Head>
+			<Table.Head class="text-right">Settings</Table.Head>
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
 		<SortableList
-			list={graph.domains}
-			onrearrange={(list) => console.log($state.snapshot(list))}
+			list={course.graphs[0].domains}
+			onrearrange={(list) => handleRearrange(list)}
 			useId={(domain) => `${domain.id}-${domain.name}`}
 		>
 			{#snippet children(domain, index)}
@@ -64,28 +114,14 @@
 						<MoveVertical />
 					</Button>
 				</Table.Cell>
-				<Table.Cell class="max-w-40 overflow-hidden text-ellipsis text-nowrap">
+				<Table.Cell class="max-w-40 overflow-hidden text-ellipsis text-nowrap pr-0">
 					{domain.name}
 				</Table.Cell>
 				<Table.Cell>
-					{#if domain.style}
-						<div
-							class="h-5 w-5 rounded-full border-2 border-slate-600"
-							style="background-color: {settings.COLORS[domain.style]}f0"
-						></div>
-					{:else}
-						None
-					{/if}
+					{@render domainColor(domain.style, index)}
 				</Table.Cell>
-				<Table.Cell>{domain.incommingDomains.length}/{domain.outgoingDomains.length}</Table.Cell>
 				<Table.Cell>
-					<Button
-						class="interactive"
-						variant="outline"
-						onclick={() => toast.warning('Not implemented')}
-					>
-						<Ellipsis />
-					</Button>
+					<ChangeDomain {graph} {domain} />
 				</Table.Cell>
 			{/snippet}
 		</SortableList>
@@ -145,6 +181,68 @@
 </Table.Root>
 
 <div class="h-dvh"></div>
+
+<!-- This snippet defines the color button in the Domains table. 
+ ONCHANGE, it updates the UI locally, then updates the server -->
+{#snippet domainColor(colorKey: string | null, domainIndex: number)}
+	{@const color = colorKey ? settings.COLORS[colorKey as keyof typeof settings.COLORS] : '#cccccc'}
+	{@const triggerId = `color-trigger-${useId()}`}
+
+	<Popover.Root>
+		<Popover.Trigger class="interactive" id={triggerId}>
+			<div
+				class="relative h-6 w-6 scale-100 rounded-full shadow-none transition-all duration-300 hover:scale-110 hover:shadow-lg"
+				style="background: {color}90; border: 2px solid {color};"
+			>
+				{#if colorKey == null}
+					<div
+						class="absolute left-1/2 top-1/2 h-1 w-3 -translate-x-1/2 -translate-y-1/2 -rotate-[60deg] rounded-full bg-gray-500/30"
+					></div>
+				{/if}
+			</div>
+		</Popover.Trigger>
+		<Popover.Content side="right" class="space-y-1">
+			<p class="font-bold">Change color</p>
+			<p class="pb-4 text-xs text-gray-700">For domain: {graph.domains[domainIndex].name}</p>
+			<Button
+				variant="outline"
+				class={cn(
+					'flex w-full items-center border-0 border-blue-900 p-1 transition-all hover:bg-blue-200/50 focus:bg-blue-200/50',
+					{
+						'border-2 bg-blue-200/30': colorKey == null
+					}
+				)}
+				onclick={() => handleChangeColor(null, domainIndex)}
+			>
+				<div
+					style="border-color: {color}50; background: {color}30; border-width: 3px"
+					class="h-6 w-6 rounded-full"
+				></div>
+				<p class="grow cursor-pointer p-2">None</p>
+			</Button>
+
+			{#each settings.COLOR_KEYS as key}
+				{@const color = settings.COLORS[key]}
+				<Button
+					variant="outline"
+					class={cn(
+						'flex w-full items-center border-0 border-blue-900 p-1 transition-all hover:bg-blue-200/50 focus:bg-blue-200/50',
+						{
+							'border-2 bg-blue-200/30': colorKey == key
+						}
+					)}
+					onclick={() => handleChangeColor(key, domainIndex)}
+				>
+					<div
+						style="border-color: {color}; background: {color}50; border-width: 3px"
+						class="h-6 w-6 rounded-full"
+					></div>
+					<p class="grow cursor-pointer p-2">{key.replaceAll('_', ' ').toLowerCase()}</p>
+				</Button>
+			{/each}
+		</Popover.Content>
+	</Popover.Root>
+{/snippet}
 
 <style>
 	:global(.dragging) {

@@ -1,10 +1,10 @@
-import { subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
+import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
 import type { RequestEvent } from '@sveltejs/kit';
 import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import prisma from '../db/prisma';
 
-export class Subjects {
+export class SubjectActions {
 	/**
 	 * Adds a subject to the graph based on the provided event.
 	 *
@@ -47,6 +47,69 @@ export class Subjects {
 		}
 	}
 
+	static async deleteSubject(event: RequestEvent) {
+		const form = await superValidate(event, zod(deleteSubjectSchema));
+
+		if (!form.valid) return setError(form, '', 'Invalid subject');
+
+		const removeOutFromIncommingSubjects = form.data.incommingSubjects.map((id) => {
+			return prisma.subject.update({
+				where: { id },
+				data: {
+					outgoingSubjects: {
+						disconnect: { id: form.data.subjectId }
+					}
+				}
+			});
+		});
+
+		const removeInFromOutgoingSubjects = form.data.outgoingSubjects.map((id) => {
+			return prisma.subject.update({
+				where: { id },
+				data: {
+					incommingSubjects: {
+						disconnect: { id: form.data.subjectId }
+					}
+				}
+			});
+		});
+
+		const deleteSubject = prisma.subject.delete({
+			where: { id: form.data.subjectId }
+		});
+
+		try {
+			await prisma.$transaction([
+				...removeOutFromIncommingSubjects,
+				...removeInFromOutgoingSubjects,
+				deleteSubject
+			]);
+		} catch (e: unknown) {
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	static async changeSubject(event: RequestEvent) {
+		const form = await superValidate(event, zod(subjectSchema));
+
+		if (!form.valid) return setError(form, 'name', 'Invalid subject');
+		if (form.data.subjectId === 0) {
+			return setError(form, 'name', 'Invalid subject id, cannot be 0');
+		}
+
+		try {
+			await prisma.subject.update({
+				where: { id: form.data.subjectId },
+				data: {
+					name: form.data.name,
+					domainId: form.data.domainId > 0 ? form.data.domainId : null
+				}
+			});
+		} catch (e: unknown) {
+			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
 	/**
 	 * Adds a relationship between two subjects based on the provided event.
 	 *
@@ -62,8 +125,6 @@ export class Subjects {
 	 */
 	static async addSubjectRel(event: RequestEvent) {
 		const form = await superValidate(event, zod(subjectRelSchema));
-
-		console.log({ form });
 
 		if (!form.valid) {
 			return setError(form, '', 'Invalid subject relationship');
