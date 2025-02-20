@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Popover from '$lib/components/ui/popover/index.js';
@@ -6,29 +7,21 @@
 	import { cn } from '$lib/utils';
 	import * as settings from '$lib/utils/settings';
 	import type { DomainType } from '$lib/validators/graphValidator';
-	import type { domainRelSchema, domainSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
+	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+	import SortableList from '../SortableList.svelte';
 	import type { PageData } from './$types';
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
 	import DomainRelSettings from './DomainRelSettings.svelte';
-	import SortableList from './SortableList.svelte';
 
-	type Props = {
-		course: PageData['course'];
-
-		newDomainForm: SuperValidated<Infer<typeof domainSchema>>;
-		newDomainRelForm: SuperValidated<Infer<typeof domainRelSchema>>;
-	};
-
-	let { course = $bindable(), newDomainForm, newDomainRelForm }: Props = $props();
-
-	const graph = $derived(course.graphs[0]);
+	let { data }: { data: PageData } = $props();
+	let course = $state(data.course);
+	let graph = $derived(data.course.graphs[0]);
 
 	const domainMapping = $derived.by(() => {
 		const map: { domain: Domain; outDomain: Domain }[] = [];
@@ -40,6 +33,27 @@
 		return map;
 	});
 
+	$effect(() => {
+		if (data) course = data.course;
+	});
+
+	onMount(() => {
+		if (data.cycles) {
+			const from = data.cycles.from;
+			const to = data.cycles.to;
+			toast.warning('Graph contains a domain cycle', {
+				duration: Number.POSITIVE_INFINITY,
+				description: `from ${from.name} to ${to.name}`,
+				action: {
+					label: 'Go to cycle',
+					onClick: () => {
+						goto(`#rel-${from.id}-${to.id}`);
+					}
+				}
+			});
+		}
+	});
+
 	/**
 	 * Handles the color change of a domain in domainColor snippet
 	 * @param key - The color key
@@ -49,7 +63,7 @@
 		const domain = course.graphs[0].domains[domainIndex];
 		domain.style = key;
 
-		const response = await fetch(`${graph.id}/domains/change-color`, {
+		const response = await fetch(`./domains/change-color`, {
 			method: 'PATCH',
 			body: JSON.stringify({ domainId: domain.id, color: key }),
 			headers: { 'content-type': 'application/json' }
@@ -73,7 +87,7 @@
 				};
 			});
 
-		const response = await fetch(`${graph.id}/domains/reorder`, {
+		const response = await fetch(`./domains/reorder`, {
 			method: 'PATCH',
 			body: JSON.stringify(needRearrange),
 			headers: { 'content-type': 'application/json' }
@@ -90,7 +104,7 @@
 
 <div class="flex items-end justify-between">
 	<h2 class="m-0">Domains</h2>
-	<CreateNewDomain {graph} form={newDomainForm} />
+	<CreateNewDomain {graph} />
 </div>
 
 <Table.Root class="mt-2">
@@ -130,7 +144,7 @@
 
 <div class="mt-12 flex items-end justify-between">
 	<h2 class="m-0">Relationship</h2>
-	<CreateNewRelationship {graph} form={newDomainRelForm} />
+	<CreateNewRelationship {graph} />
 </div>
 <Table.Root class="mt-2">
 	<Table.Header>
@@ -173,7 +187,7 @@
 				<Table.Cell colspan={2}>Create first domain relationship</Table.Cell>
 
 				<Table.Cell colspan={2}>
-					<CreateNewRelationship {graph} form={newDomainRelForm} />
+					<CreateNewRelationship {graph} />
 				</Table.Cell>
 			</Table.Row>
 		{/each}

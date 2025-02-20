@@ -1,29 +1,30 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
+	import { domainRelSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain, Graph } from '@prisma/client';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
-	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { domainRelSchema } from '$lib/zod/domainSubjectSchema';
+	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
 
 	type Props = {
-		form: SuperValidated<Infer<typeof domainRelSchema>>;
 		graph: Graph & { domains: Domain[] };
 	};
 
-	const { form: graphForm, graph }: Props = $props();
+	const { graph }: Props = $props();
 
 	const domains = graph.domains;
 
 	let popupOpen = $state(false);
 
-	const form = superForm(graphForm, {
+	const form = superForm((page.data as PageData).newDomainRelForm, {
 		validators: zodClient(domainRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {

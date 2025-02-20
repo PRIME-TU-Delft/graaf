@@ -2,34 +2,20 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import type { subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Subject } from '@prisma/client';
 	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Link from 'lucide-svelte/icons/link';
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 	import { toast } from 'svelte-sonner';
-	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
+	import SortableList from '../SortableList.svelte';
 	import type { PageData } from './$types';
+	import ChangeSubject from './ChangeSubject.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
-	import SortableList from './SortableList.svelte';
-	import ChangeSubject from './ChangeSubject.svelte';
 
-	type Props = {
-		course: PageData['course'];
-		tabValue: string;
-		newSubjectForm: SuperValidated<Infer<typeof subjectSchema>>;
-		newSubjectRelForm: SuperValidated<Infer<typeof subjectRelSchema>>;
-	};
-
-	let {
-		course = $bindable(),
-		tabValue = $bindable(),
-		newSubjectForm,
-		newSubjectRelForm
-	}: Props = $props();
-
-	const graph = $derived(course.graphs[0]);
+	let { data }: { data: PageData } = $props();
+	let course = $state(data.course);
+	const graph = $derived(data.course.graphs[0]);
 
 	const subjectMapping = $derived.by(() => {
 		const map: { subject: Subject; outSubject: Subject }[] = [];
@@ -67,9 +53,9 @@
 	}
 </script>
 
-<div class="mt-12 flex items-end justify-between">
-	<h2 class="m-0">Subjects</h2>
-	<CreateNewSubject {graph} form={newSubjectForm} />
+<div class="flex items-end justify-between">
+	<h2 class="m-0">Subject</h2>
+	<CreateNewSubject {graph} />
 </div>
 
 <Table.Root class="mt-2">
@@ -99,10 +85,7 @@
 						<Button
 							class="interactive"
 							variant="outline"
-							href="#{subject.domain!.id}-{subject.domain!.name}"
-							onclick={() => {
-								tabValue = 'Domains';
-							}}
+							href="./domains#{subject.domain!.id}-{subject.domain!.name}"
 						>
 							{subject.domain.name}
 						</Button>
@@ -126,7 +109,7 @@
 
 <div class="mt-12 flex items-end justify-between">
 	<h2 class="m-0">Relationships</h2>
-	<CreateNewSubjectRel {graph} form={newSubjectRelForm} />
+	<CreateNewSubjectRel {graph} />
 </div>
 <Table.Root class="mt-2">
 	<Table.Header>
@@ -175,7 +158,7 @@
 				<Table.Cell colspan={2}>Create first subject relationship</Table.Cell>
 
 				<Table.Cell colspan={2}>
-					<CreateNewSubjectRel {graph} form={newSubjectRelForm} />
+					<CreateNewSubjectRel {graph} />
 				</Table.Cell>
 			</Table.Row>
 		{/each}
