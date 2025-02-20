@@ -13,13 +13,87 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// START AUTH STUFF
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  role          UserRole  @default(USER)
+  nickname      String?
+  firstName     String?
+  lastName      String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+
+  accounts Account[]
+  sessions Session[]
+
+  program_editors Program[] @relation("EditorRelation")
+  program_admins  Program[] @relation("AdminRelation")
+  course_editors  Course[]  @relation("EditorRelation")
+  course_admins   Course[]  @relation("AdminRelation")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// END AUTH STUFF
+
 // Program <*--*> Course
 model Program {
   id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String
-  courses   Course[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Relations
+  courses Course[]
+  editors User[]   @relation("EditorRelation")
+  admins  User[]   @relation("AdminRelation")
 }
 
 enum CourseType {
@@ -33,13 +107,15 @@ model Course {
   code String @id @unique
   name String
 
-  programs Program[]
-  graphs   Graph[]
-
   isArchived Boolean    @default(false)
   type       CourseType @default(COURSE)
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
+
+  programs Program[]
+  graphs   Graph[]
+  editors  User[]    @relation("EditorRelation")
+  admins   User[]    @relation("AdminRelation")
 }
 
 // Graph <*---> Course
