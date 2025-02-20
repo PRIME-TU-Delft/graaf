@@ -126,8 +126,6 @@ export class SubjectActions {
 	static async addSubjectRel(event: RequestEvent) {
 		const form = await superValidate(event, zod(subjectRelSchema));
 
-		console.log({ form });
-
 		if (!form.valid) {
 			return setError(form, '', 'Invalid subject relationship');
 		}

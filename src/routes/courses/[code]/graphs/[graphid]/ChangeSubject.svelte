@@ -2,23 +2,27 @@
 	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { cn } from '$lib/utils';
+	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import type { GraphType } from '$lib/validators/graphValidator';
 	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DeleteSubject from './DeleteSubject.svelte';
+
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import Check from 'lucide-svelte/icons/check';
+	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
+	import Ellipsis from 'lucide-svelte/icons/ellipsis';
+	import Undo2 from 'lucide-svelte/icons/undo-2';
 
 	type Props = {
 		subject: PageData['course']['graphs'][0]['subjects'][0];
@@ -28,6 +32,9 @@
 	let { subject, graph }: Props = $props();
 
 	let changeSubjectDialog = $state(false);
+	let domainIdOpen = $state(false);
+
+	const triggerId = useId();
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'change-domain-form-' + useId(),
@@ -45,6 +52,7 @@
 	$effect(() => {
 		if (subject) {
 			$formData.name = subject.name;
+			$formData.domainId = subject.domainId ?? 0;
 
 			// Set the form as untainted
 			tainted.set({ name: false, domainId: false, graphId: false });
@@ -122,7 +130,6 @@
 {#snippet changeDomain()}
 	<form action="?/change-subject-in-graph" method="POST" use:enhance>
 		<input type="hidden" name="graphId" value={graph.id} />
-		<input type="hidden" name="domainId" value={subject.domain?.id} />
 		<input type="hidden" name="subjectId" value={subject.id} />
 
 		<Form.Field {form} name="name">
@@ -137,6 +144,49 @@
 				<span class="font-mono text-xs">"Complex numbers"</span>
 			</Form.Description>
 			<Form.FieldErrors />
+		</Form.Field>
+
+		<Form.Field {form} name="domainId">
+			<Popover.Root bind:open={domainIdOpen}>
+				<Form.Control id={triggerId}>
+					{#snippet children({ props })}
+						<div class="mt-2 flex w-full items-center justify-between">
+							<Form.Label>Link to domain (optional)</Form.Label>
+							<Popover.Trigger
+								class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
+								role="combobox"
+								{...props}
+							>
+								{graph.domains.find((f) => f.id === $formData.domainId)?.name ?? 'Select domain'}
+								<ChevronsUpDown class="opacity-50" />
+							</Popover.Trigger>
+							<input hidden value={$formData.domainId} name={props.name} />
+						</div>
+					{/snippet}
+				</Form.Control>
+				<Popover.Content>
+					<Command.Root>
+						<Command.Input autofocus placeholder="Search domain..." class="h-9" />
+						<Command.Empty>No domain found.</Command.Empty>
+						<Command.Group>
+							{#each graph.domains as domain}
+								<Command.Item
+									value={domain.id.toString()}
+									onSelect={() => {
+										$formData.domainId = domain.id;
+										closeAndFocusTrigger(triggerId, () => (domainIdOpen = false));
+									}}
+								>
+									{domain.name}
+									<Check
+										class={cn('ml-auto', domain.id !== $formData.domainId && 'text-transparent')}
+									/>
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.Root>
+				</Popover.Content>
+			</Popover.Root>
 		</Form.Field>
 
 		<div class="mt-4 flex justify-end gap-1">
@@ -154,6 +204,9 @@
 				disabled={!isTainted($tainted)}
 				onclick={() => {
 					$formData.name = subject.name;
+					$formData.domainId = subject.domainId ?? 0;
+
+					tainted.set({ name: false, domainId: false, graphId: false });
 				}}
 			>
 				<Undo2 /> Reset
