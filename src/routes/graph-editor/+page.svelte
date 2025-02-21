@@ -3,6 +3,7 @@
 	import SearchCourses from './SearchCourses.svelte';
 	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
 	import Program from './Program.svelte';
+	import type { User } from '@prisma/client';
 
 	const { data, form } = $props();
 
@@ -30,7 +31,10 @@
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
 			{/await}
-			<CreateNewProgramButton form={data.programForm} />
+
+			{#if (data.session?.user as User)?.role === 'ADMIN'}
+				<CreateNewProgramButton form={data.programForm} />
+			{/if}
 		</div>
 	</div>
 

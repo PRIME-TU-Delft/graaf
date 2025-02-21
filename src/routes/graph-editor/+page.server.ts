@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import type { Course } from '@prisma/client';
+import type { Course, User } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
@@ -56,6 +56,13 @@ export const actions = {
 	// Creates a new program with the given name
 	'new-program': async (event) => {
 		const form = await superValidate(event, zod(programSchema));
+
+		// Check if user is a super admin
+		const session = await event.locals.auth();
+
+		if ((session?.user as User)?.role !== 'ADMIN') {
+			return fail(403, { form, error: 'You do not have permission to perform this action' });
+		}
 		if (!form.valid) {
 			return fail(400, { form });
 		}

@@ -38,7 +38,9 @@
 		<div class="flex gap-2">
 			{@render newCourseButton()}
 
-			<Button.Root href="./programs/{program.id}/settings"><Settings /> Settings</Button.Root>
+			<Button.Root href="graph-editor/programs/{program.id}/settings"
+				><Settings /> Settings</Button.Root
+			>
 		</div>
 	</div>
 
