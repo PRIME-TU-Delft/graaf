@@ -6,7 +6,9 @@ import { redirect } from '@sveltejs/kit';
 export const load = async ({ locals, url }) => {
 	const session = await locals.auth();
 
-	if (!session?.user) throw redirect(303, '/auth');
+	console.log(url.pathname);
+
+	if (!session?.user && url.pathname != '/auth') throw redirect(303, '/auth');
 
 	return {
 		session

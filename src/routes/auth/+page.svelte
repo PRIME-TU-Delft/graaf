@@ -15,12 +15,15 @@
 		<span>Graph</span>
 	</h1>
 
-	{#if data.session.user}
-		{@const x = console.log(data.session.user)}
+	{#if data.session?.user}
 		<!-- TODO: make fancy dropdown -->
-		<Button>Log-out</Button>
+		<form action="auth/signout" method="POST">
+			<Button type="submit">Log-out</Button>
+		</form>
 	{:else}
-		<Button>Log-in</Button>
+		<form action="auth/signin" method="POST">
+			<Button type="submit">Sign-in</Button>
+		</form>
 	{/if}
 </nav>
 
@@ -36,12 +39,14 @@
 	(PRogramme for Inovation and Math Education) and is a tool for teachers to create and share course
 	graphs.
 
-	{#if data.session.user}
+	{#if data.session?.user}
 		<p>Click on the button below to get started!</p>
 		<Button href="/graph-editor">Start editing</Button>
 	{:else}
 		<p>Sign-in to get started!</p>
-		<Button href="/auth/login">Sign-in</Button>
+		<form action="auth/signin" method="POST">
+			<Button type="submit">Sign-in</Button>
+		</form>
 	{/if}
 </section>
 
