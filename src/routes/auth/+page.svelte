@@ -39,7 +39,7 @@
 	(PRogramme for Inovation and Math Education) and is a tool for teachers to create and share course
 	graphs.
 
-	{#if data.session?.user}
+	{#if data?.session?.user}
 		<p>Click on the button below to get started!</p>
 		<Button href="/graph-editor">Start editing</Button>
 	{:else}

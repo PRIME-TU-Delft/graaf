@@ -45,7 +45,7 @@
 	<div class="grid grid-cols-2 gap-1 p-2 md:grid-cols-2 md:gap-2">
 		{#each program.courses as course}
 			<a
-				href="./courses/{course.code}"
+				href="graph-editor/courses/{course.code}"
 				class="flex items-center justify-between rounded bg-white/90 p-2 transition-colors hover:bg-blue-50"
 			>
 				<p>{course.name}</p>

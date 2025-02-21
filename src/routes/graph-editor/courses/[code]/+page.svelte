@@ -8,11 +8,6 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<nav class="border-b-2 border-blue-300 bg-blue-200 p-4">
-	<a href="/">Home</a>
-	<a href="/courses">Courses</a>
-</nav>
-
 <section class="prose mx-auto p-4 text-blue-900">
 	{#if data.error != undefined}
 		<h1>Oops! Something went wrong</h1>
@@ -38,7 +33,7 @@
 		{#each data.graphs as graph (graph.id)}
 			<a
 				class="group grid grid-cols-2 gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
-				href="/courses/{data.course.code}/graphs/{graph.id}"
+				href="{data.course.code}/graphs/{graph.id}"
 			>
 				<div class="grow">
 					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>

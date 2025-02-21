@@ -7,10 +7,6 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<nav class="border-b-2 border-blue-300 bg-blue-200 p-4">
-	<a href="/">Home</a>
-</nav>
-
 <section class="prose mx-auto p-4 text-blue-900">
 	<h1 class="shadow-blue-500/70">Courses</h1>
 	<p>Here you can find all courses</p>
@@ -25,7 +21,7 @@
 				<div class="flex items-center gap-2">
 					<span>{course.code}</span>
 
-					<Button href="/courses/{course.code}" variant="secondary">
+					<Button href="graph-editor/courses/{course.code}" variant="secondary">
 						View <ArrowRight />
 					</Button>
 				</div>
