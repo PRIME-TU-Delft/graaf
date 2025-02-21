@@ -169,7 +169,12 @@ export const actions = {
 					courses: {
 						create: {
 							name: form.data.name,
-							code: form.data.code
+							code: form.data.code,
+							pinnedBy: {
+								connect: {
+									id: user.id
+								}
+							}
 						}
 					}
 				}
