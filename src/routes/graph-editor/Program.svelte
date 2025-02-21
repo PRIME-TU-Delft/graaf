@@ -10,7 +10,7 @@
 	import Settings from 'lucide-svelte/icons/settings';
 	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
-	import { courseSchema } from './zodSchema';
+	import { courseSchema } from '$lib/zod/programCourseSchema';
 
 	type Props = {
 		program: Program & { courses: Course[] };
@@ -45,7 +45,7 @@
 	<div class="grid grid-cols-2 gap-1 p-2 md:grid-cols-2 md:gap-2">
 		{#each program.courses as course}
 			<a
-				href="./courses/{course.code}"
+				href="graph-editor/courses/{course.code}"
 				class="flex items-center justify-between rounded bg-white/90 p-2 transition-colors hover:bg-blue-50"
 			>
 				<p>{course.name}</p>

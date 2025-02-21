@@ -75,8 +75,4 @@
 		scroll-padding: 8rem;
 		@apply bg-blue-50 text-foreground;
 	}
-
-	h1 {
-		text-shadow: 2px 2px 10px var(--tw-shadow-color, black);
-	}
 }

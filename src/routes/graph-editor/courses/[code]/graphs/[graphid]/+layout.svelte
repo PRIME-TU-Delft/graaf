@@ -12,12 +12,6 @@
 	const currentTab = $derived(page.url.href.split('/').pop()?.toLowerCase());
 </script>
 
-<nav class="fixed z-20 w-full border-b-2 border-blue-300 bg-blue-200/80 p-4 backdrop-blur-sm">
-	<a href="/">Home</a>
-	<a href="/courses">Courses</a>
-	<a href="/courses/{data.course.code}">{data.course.name}</a>
-</nav>
-
 <div class="layout prose mx-auto grid max-w-[80rem] gap-2 p-4 pt-20 text-blue-900">
 	<div>
 		<div class="header sticky top-16 z-10 mb-2 flex w-full gap-1 bg-blue-100 p-1 shadow-md">

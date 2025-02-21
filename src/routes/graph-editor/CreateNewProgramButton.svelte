@@ -5,23 +5,21 @@
 	import { toast } from 'svelte-sonner';
 	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { graphSchema } from './zodSchema';
-	import type { Course } from '@prisma/client';
+	import { programSchema } from '$lib/zod/programCourseSchema';
 
 	type Props = {
-		form: SuperValidated<Infer<typeof graphSchema>>;
-		course: Course;
+		form: SuperValidated<Infer<typeof programSchema>>;
 	};
 
-	const { form: graphForm, course }: Props = $props();
+	const { form: programForm }: Props = $props();
 
 	let dialogOpen = $state(false);
 
-	const form = superForm(graphForm, {
-		validators: zodClient(graphSchema),
+	const form = superForm(programForm, {
+		validators: zodClient(programSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
-				toast.success('Graph created successfully!');
+				toast.success('Program created successfully!');
 				dialogOpen = false;
 			}
 		}
@@ -33,24 +31,22 @@
 <DialogButton
 	bind:open={dialogOpen}
 	icon="plus"
-	button="New Graph"
-	title="Create Graph"
-	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study. Create this new graph in the {course.name}"
-	class="col-span-2"
+	button="New Program"
+	title="Create Program"
+	description="Programs are collections of Courses, usually pertaining to the same field of study. Looking to try
+	out the Graph editor? Try making a sandbox environment instead!"
 >
 	<!-- For sumbitting a NEW PROGRAM
  	It triggers an action that can be seen in +page.server.ts -->
-	<form action="?/add-graph-to-course" method="POST" use:enhance>
-		<input type="hidden" name="courseCode" value={course.code} />
-
+	<form action="?/new-program" method="POST" use:enhance>
 		<Form.Field {form} name="name">
 			<Form.Control>
 				{#snippet children({ props })}
-					<Form.Label for="name">Graph name</Form.Label>
+					<Form.Label for="name">Program name</Form.Label>
 					<Input {...props} bind:value={$formData['name']} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>A common name for the graph</Form.Description>
+			<Form.Description />
 			<Form.FieldErrors />
 		</Form.Field>
 
