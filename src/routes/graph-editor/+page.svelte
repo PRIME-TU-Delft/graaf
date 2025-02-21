@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import CreateNewProgramButton from './CreateNewProgramButon.svelte';
-	import Program from './Program.svelte';
 	import SearchCourses from './SearchCourses.svelte';
+	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
+	import Program from './Program.svelte';
 
 	const { data, form } = $props();
 

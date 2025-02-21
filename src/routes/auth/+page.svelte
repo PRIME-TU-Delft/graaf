@@ -1,30 +1,54 @@
-<script>
-	import { page } from '$app/state';
-	import { SignIn, SignOut } from '@auth/sveltekit/components';
+<script lang="ts">
+	import { Button } from '$lib/components/ui/button';
+	import ChevronRight from 'lucide-svelte/icons/chevron-right';
+	import type { PageData } from './$types';
+
+	const { data }: { data: PageData } = $props();
 </script>
 
-<div class="prose">
-	<h1>SvelteKit Auth Example</h1>
-	<div>
-		{#if page.data.session}
-			{#if page.data.session.user?.image}
-				<img src={page.data.session.user.image} class="avatar" alt="User Avatar" />
-			{/if}
-			<span class="signedInText">
-				<small>Signed in as</small><br />
+<nav
+	class="fixed top-0 flex w-full items-center justify-between bg-blue-100 px-4 py-2 text-2xl text-blue-900"
+>
+	<h1 class="flex items-center gap-2 p-2">
+		<span class="font-bold">PRIME</span>
+		<ChevronRight class="size-4" />
+		<span>Graph</span>
+	</h1>
 
-				<pre>{JSON.stringify(page.data.session, null, 2)}</pre>
+	{#if data.session.user}
+		{@const x = console.log(data.session.user)}
+		<!-- TODO: make fancy dropdown -->
+		<Button>Log-out</Button>
+	{:else}
+		<Button>Log-in</Button>
+	{/if}
+</nav>
 
-				<strong>{page.data.session.user?.name ?? 'User'}</strong>
-			</span>
-			<SignOut>
-				<div slot="submitButton" class="buttonPrimary">Sign out</div>
-			</SignOut>
-		{:else}
-			<span class="notSignedInText">You are not signed in</span>
-			<SignIn>
-				<div slot="submitButton" class="buttonPrimary">Sign in</div>
-			</SignIn>
-		{/if}
-	</div>
-</div>
+<section class="prose prose-lg mx-auto mt-24">
+	<h2>What is the course graph?</h2>
+	Welcome to the graph editor, here you can assemble your own course graph! Sign-in to get started. The
+	graph is produced by
+	<a
+		href="https://www.tudelft.nl/ewi/over-de-faculteit/afdelingen/applied-mathematics/studeren/prime"
+	>
+		PRIME
+	</a>
+	(PRogramme for Inovation and Math Education) and is a tool for teachers to create and share course
+	graphs.
+
+	{#if data.session.user}
+		<p>Click on the button below to get started!</p>
+		<Button href="/graph-editor">Start editing</Button>
+	{:else}
+		<p>Sign-in to get started!</p>
+		<Button href="/auth/login">Sign-in</Button>
+	{/if}
+</section>
+
+<section class="prose mx-auto mt-2">
+	<h2>Credits</h2>
+</section>
+
+<section class="prose mx-auto mt-2">
+	<h2>Licence</h2>
+</section>

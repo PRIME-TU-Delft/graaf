@@ -10,7 +10,7 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import { type Infer, type SuperForm } from 'sveltekit-superforms';
-	import type { courseSchema } from './zodSchema';
+	import type { courseSchema } from '$lib/zod/programCourseSchema';
 
 	type Props = {
 		form: SuperForm<Infer<typeof courseSchema>>;

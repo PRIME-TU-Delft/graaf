@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import type { ServerLoad } from '@sveltejs/kit';
 import { setError, superValidate, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { graphSchema } from './zodSchema.js';
+import { graphSchema } from '$lib/zod/graphSchema.js';
 import type { Course, Graph } from '@prisma/client';
 import type { OrError } from '$lib/utils.js';
 

@@ -38,6 +38,7 @@ function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
 		wellKnown: `${env.SURFCONEXT_ISSUER}/.well-known/openid-configuration`,
 		clientId: env.SURFCONEXT_CLIENT_ID,
 		clientSecret: env.SURFCONEXT_CLIENT_SECRET,
+		allowDangerousEmailAccountLinking: true, // Not sure if this is safe @juliavdkris
 
 		async profile(profile, tokens): Promise<SurfConextProfile> {
 			const userInfo = await fetchUserInfo(tokens.access_token);
