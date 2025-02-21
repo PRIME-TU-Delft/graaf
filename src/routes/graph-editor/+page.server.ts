@@ -10,6 +10,11 @@ export const load = (async ({ url, locals }) => {
 	try {
 		const search = url.searchParams.get('c')?.toLocaleLowerCase();
 
+		const session = await locals.auth();
+		const user = session?.user as User | undefined;
+
+		if (!user) throw new Error('No user found');
+
 		const programs = await prisma.program.findMany({
 			include: {
 				courses: {
@@ -18,7 +23,14 @@ export const load = (async ({ url, locals }) => {
 					},
 					where: search
 						? { name: { contains: search, mode: 'insensitive' } }
-						: { NOT: { name: '' } }
+						: { NOT: { name: '' } },
+					include: {
+						pinnedBy: {
+							select: {
+								id: true
+							}
+						}
+					}
 				},
 				editors: {
 					select: {
@@ -36,6 +48,23 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
+		const pinnedCourses = await prisma.course.findMany({
+			where: {
+				pinnedBy: {
+					some: {
+						id: user.id
+					}
+				}
+			},
+			include: {
+				pinnedBy: {
+					select: {
+						id: true
+					}
+				}
+			}
+		});
+
 		// Check if we need pagination here
 		const courses = prisma.course.findMany({
 			orderBy: {
@@ -43,12 +72,8 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		const session = await locals.auth();
-		const user = session?.user as User | undefined;
-
-		if (!user) throw new Error('No user found');
-
 		return {
+			pinnedCourses,
 			error: undefined,
 			programs,
 			courses,
@@ -58,6 +83,7 @@ export const load = (async ({ url, locals }) => {
 		};
 	} catch (e: unknown) {
 		return {
+			pinnedCourses: [],
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
 			user: undefined,
@@ -212,6 +238,67 @@ export const actions = {
 			});
 		} catch (e) {
 			return fail(500, { error: e instanceof Error ? e.message : `${e}` });
+		}
+	},
+
+	'pin-course': async ({ locals, request }) => {
+		const data = await request.formData();
+		const courseCode = data.get('courseCode') as string | undefined;
+
+		if (!courseCode) return { error: 'missing course code' };
+
+		const session = await locals.auth();
+		if (!session) return { error: 'no session found' };
+
+		const user = session.user as User;
+
+		try {
+			await prisma.user.update({
+				where: {
+					id: user.id
+				},
+				data: {
+					my_courses: {
+						connect: {
+							code: courseCode
+						}
+					}
+				}
+			});
+		} catch (e) {
+			return {
+				error: e instanceof Error ? e.message : `${e}`
+			};
+		}
+	},
+	'unpin-course': async ({ request, locals }) => {
+		const data = await request.formData();
+		const courseCode = data.get('courseCode') as string | undefined;
+
+		if (!courseCode) return { error: 'missing course code' };
+
+		const session = await locals.auth();
+		if (!session) return { error: 'no session found' };
+
+		const user = session.user as User;
+
+		try {
+			await prisma.user.update({
+				where: {
+					id: user.id
+				},
+				data: {
+					my_courses: {
+						disconnect: {
+							code: courseCode
+						}
+					}
+				}
+			});
+		} catch (e) {
+			return {
+				error: e instanceof Error ? e.message : `${e}`
+			};
 		}
 	}
 } satisfies Actions;

@@ -11,10 +11,11 @@
 	import Settings from 'lucide-svelte/icons/settings';
 	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
+	import CourseGrid from './CourseGrid.svelte';
 
 	type Props = {
 		user?: User;
-		program: Program & { courses: Course[] } & {
+		program: Program & { courses: (Course & { pinnedBy: Pick<User, 'id'>[] })[] } & {
 			editors: Pick<User, 'id'>[];
 			admins: Pick<User, 'id'>[];
 		};
@@ -50,21 +51,7 @@
 		</div>
 	</div>
 
-	<div class="grid grid-cols-2 gap-1 p-2 md:grid-cols-2 md:gap-2">
-		{#each program.courses as course}
-			<a
-				href="graph-editor/courses/{course.code}"
-				class="flex items-center justify-between rounded bg-white/90 p-2 transition-colors hover:bg-blue-50"
-			>
-				<p>{course.name}</p>
-				<p class="text-xs text-blue-900">{course.code}</p>
-			</a>
-		{:else}
-			<p class="bg-white/80 p-2 col-span-3 text-slate-900/60 rounded">
-				This program has no courses yet.
-			</p>
-		{/each}
-	</div>
+	<CourseGrid courses={program.courses} {user} />
 </div>
 
 {#snippet newCourseButton()}
