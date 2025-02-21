@@ -14,7 +14,10 @@
 
 	type Props = {
 		user?: User;
-		program: Program & { courses: Course[] } & { editors: User[]; admins: User[] };
+		program: Program & { courses: Course[] } & {
+			editors: Pick<User, 'id'>[];
+			admins: Pick<User, 'id'>[];
+		};
 		courses: Promise<Course[]>;
 		courseForm: SuperValidated<Infer<typeof courseSchema>>;
 	};

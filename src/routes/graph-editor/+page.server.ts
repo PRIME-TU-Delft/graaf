@@ -20,8 +20,16 @@ export const load = (async ({ url, locals }) => {
 						? { name: { contains: search, mode: 'insensitive' } }
 						: { NOT: { name: '' } }
 				},
-				editors: true,
-				admins: true
+				editors: {
+					select: {
+						id: true
+					}
+				},
+				admins: {
+					select: {
+						id: true
+					}
+				}
 			},
 			orderBy: {
 				updatedAt: 'desc'
