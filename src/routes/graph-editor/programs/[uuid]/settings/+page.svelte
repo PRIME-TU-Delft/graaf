@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
-	import { PageData } from './$types';
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
