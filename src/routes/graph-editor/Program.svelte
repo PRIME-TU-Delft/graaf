@@ -5,20 +5,21 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import type { Course, Program } from '@prisma/client';
+	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import type { Course, Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
 
 	type Props = {
-		program: Program & { courses: Course[] };
+		user?: User;
+		program: Program & { courses: Course[] } & { editors: User[]; admins: User[] };
 		courses: Promise<Course[]>;
 		courseForm: SuperValidated<Infer<typeof courseSchema>>;
 	};
 
-	let { program, courses, courseForm }: Props = $props();
+	let { user, program, courses, courseForm }: Props = $props();
 
 	const triggerId = useId();
 
@@ -36,7 +37,9 @@
 		<h3 class="text-lg font-semibold text-blue-950">{program.name}</h3>
 
 		<div class="flex gap-2">
-			{@render newCourseButton()}
+			{#if user?.role === 'ADMIN' || program.editors.find((u) => u.id == user?.id) || program.admins?.find((u) => u.id == user?.id)}
+				{@render newCourseButton()}
+			{/if}
 
 			<Button.Root href="graph-editor/programs/{program.id}/settings"
 				><Settings /> Settings</Button.Root

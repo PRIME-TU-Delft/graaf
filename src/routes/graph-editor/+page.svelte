@@ -39,6 +39,6 @@
 	</div>
 
 	{#each data.programs as program (program.id)}
-		<Program {program} courses={data.courses} courseForm={data.courseForm} />
+		<Program user={data.user} {program} courses={data.courses} courseForm={data.courseForm} />
 	{/each}
 </section>

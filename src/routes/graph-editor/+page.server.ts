@@ -6,7 +6,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
 import { courseSchema, programSchema } from '../../lib/zod/programCourseSchema.js';
 
-export const load = (async ({ url }) => {
+export const load = (async ({ url, locals }) => {
 	try {
 		const search = url.searchParams.get('c')?.toLocaleLowerCase();
 
@@ -19,25 +19,32 @@ export const load = (async ({ url }) => {
 					where: search
 						? { name: { contains: search, mode: 'insensitive' } }
 						: { NOT: { name: '' } }
-				}
+				},
+				editors: true,
+				admins: true
 			},
 			orderBy: {
 				updatedAt: 'desc'
 			}
 		});
 
-		// Not high priority, so we can render the page without this data
-		// TODO: check if this needs to be limmited (take only the top 50 or so courses)
+		// Check if we need pagination here
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'
 			}
 		});
 
+		const session = await locals.auth();
+		const user = session?.user as User | undefined;
+
+		if (!user) throw new Error('No user found');
+
 		return {
 			error: undefined,
 			programs,
 			courses,
+			user,
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
 		};
@@ -45,6 +52,7 @@ export const load = (async ({ url }) => {
 		return {
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
+			user: undefined,
 			courses: emptyPrismaPromise([] as Course[]),
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))
@@ -93,10 +101,34 @@ export const actions = {
 			return fail(400, { form });
 		}
 
+		// Check permissions
+		const session = await event.locals.auth();
+		if (!session) return fail(500, { error: 'no session found' });
+
+		const user = session.user as User;
+
+		const hasPermission = [
+			{
+				editors: {
+					some: {
+						id: user.id
+					}
+				}
+			},
+			{
+				admins: {
+					some: {
+						id: user.id
+					}
+				}
+			}
+		];
+
 		try {
 			await prisma.program.update({
 				where: {
-					id: form.data.programId
+					id: form.data.programId,
+					OR: user.role === 'ADMIN' ? [] : hasPermission
 				},
 				data: {
 					updatedAt: new Date(),
@@ -120,8 +152,9 @@ export const actions = {
 			form
 		};
 	},
-	'add-course-to-program': async ({ request }) => {
-		const form = await request.formData();
+
+	'add-course-to-program': async (event) => {
+		const form = await event.request.formData();
 
 		const programId = form.get('program-id') as string | null;
 		const courseCode = form.get('code') as string | null;
@@ -131,10 +164,34 @@ export const actions = {
 			return fail(400, { error: 'Missing required fields' });
 		}
 
+		// Check permissions
+		const session = await event.locals.auth();
+		if (!session) return fail(500, { error: 'no session found' });
+
+		const user = session.user as User;
+
+		const hasPermission = [
+			{
+				editors: {
+					some: {
+						id: user.id
+					}
+				}
+			},
+			{
+				admins: {
+					some: {
+						id: user.id
+					}
+				}
+			}
+		];
+
 		try {
 			await prisma.program.update({
 				where: {
-					id: programId
+					id: programId,
+					OR: user.role === 'ADMIN' ? [] : hasPermission
 				},
 				data: {
 					updatedAt: new Date(),
