@@ -121,35 +121,8 @@ export const actions = {
 
 	// Creates a new program with the given name
 	'new-program': async (event) => {
-		const form = await superValidate(event, zod(programSchema));
-
-		// Check if user is a super admin
-		const session = await event.locals.auth();
-
-		if ((session?.user as User)?.role !== 'ADMIN') {
-			return fail(403, { form, error: 'You do not have permission to perform this action' });
-		}
-		if (!form.valid) {
-			return fail(400, { form });
-		}
-
-		try {
-			await prisma.program.create({
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch (e) {
-			if (!(e instanceof Object) || !('message' in e)) {
-				return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-			}
-
-			return setError(form, 'name', `${e.message}`);
-		}
-
-		return {
-			form
-		};
+		const formData = await superValidate(event, zod(programSchema));
+		return ProgramActions.newProgram(event, formData);
 	},
 
 	// Creates a new course with the given NAME and CODE

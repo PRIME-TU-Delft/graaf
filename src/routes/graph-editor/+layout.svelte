@@ -51,13 +51,15 @@
 	<!-- When in Dev mode,  -->
 	<Accordion.Root
 		type="single"
-		class="fixed bottom-4 right-4 z-50 rounded-lg bg-blue-900 p-4 opacity-5 transition-opacity hover:opacity-100"
+		class="fixed bottom-4 right-4 z-50 rounded-lg bg-blue-900/20 p-2 opacity-5 transition-opacity hover:opacity-100"
 	>
-		<Accordion.Item value="item-1">
-			<Accordion.Trigger>
-				<form action="?/toggle-admin" method="post">
+		<Accordion.Item value="item-1" class="border-b-0">
+			<Accordion.Trigger class="p-0">
+				<form class="mr-4" action="?/toggle-admin" method="post">
 					<input type="text" name="currentRole" value={(data.session.user as User)?.role} hidden />
-					<Button onclick={(e) => e.stopPropagation()} type="submit">Toggle admin</Button>
+					<Button class="m-0" onclick={(e) => e.stopPropagation()} type="submit"
+						>Toggle admin</Button
+					>
 				</form>
 			</Accordion.Trigger>
 			<Accordion.Content>

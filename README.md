@@ -14,7 +14,7 @@ DATABASE_URL="postgres://root:mysecretpassword@localhost:5432/local"
 
 ```bash
 # Terminal 1
-podman compose up # Or docker compose up
+podman compose up db # Or docker compose up db
 
 # Terminal 2
 pnpm install
@@ -32,4 +32,10 @@ podman compose up # Or docker compose up
 
 # Terminal 2
 pnpm dev
+```
+
+## Testing
+
+```bash
+pnpm test:integration
 ```
