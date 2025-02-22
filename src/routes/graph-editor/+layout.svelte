@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
+	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import type { User } from '@prisma/client';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { toast } from 'svelte-sonner';
 
@@ -43,3 +46,23 @@
 <main class="pt-12">
 	{@render children()}
 </main>
+
+{#if dev}
+	<!-- When in Dev mode,  -->
+	<Accordion.Root
+		type="single"
+		class="fixed bottom-4 right-4 z-50 rounded-lg bg-blue-900 p-4 opacity-5 transition-opacity hover:opacity-100"
+	>
+		<Accordion.Item value="item-1">
+			<Accordion.Trigger>
+				<form action="?/toggle-admin" method="post">
+					<input type="text" name="currentRole" value={(data.session.user as User)?.role} hidden />
+					<Button onclick={(e) => e.stopPropagation()} type="submit">Toggle admin</Button>
+				</form>
+			</Accordion.Trigger>
+			<Accordion.Content>
+				<pre>{JSON.stringify(data.session.user, null, 2)}</pre>
+			</Accordion.Content>
+		</Accordion.Item>
+	</Accordion.Root>
+{/if}

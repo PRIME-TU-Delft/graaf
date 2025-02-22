@@ -5,6 +5,8 @@ import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
 import { courseSchema, programSchema } from '../../lib/zod/programCourseSchema.js';
+import { ProgramActions } from '$lib/server/actions/Programs.js';
+import { dev } from '$app/environment';
 
 export const load = (async ({ url, locals }) => {
 	try {
@@ -95,6 +97,28 @@ export const load = (async ({ url, locals }) => {
 }) satisfies PageServerLoad;
 
 export const actions = {
+	'toggle-admin': async ({ request, locals }) => {
+		const formData = await request.formData();
+		const currentRole = formData.get('currentRole') as string | undefined;
+
+		if (!currentRole) return fail(400, { error: 'missing current role' });
+
+		const session = await locals.auth();
+		const user = session?.user as User | undefined;
+
+		if (!user) return fail(500, { error: 'no user found' });
+		if (!dev) return fail(500, { error: 'Only allowed in dev mode' });
+
+		await prisma.user.update({
+			where: {
+				id: user.id
+			},
+			data: {
+				role: currentRole === 'ADMIN' ? 'USER' : 'ADMIN'
+			}
+		});
+	},
+
 	// Creates a new program with the given name
 	'new-program': async (event) => {
 		const form = await superValidate(event, zod(programSchema));
