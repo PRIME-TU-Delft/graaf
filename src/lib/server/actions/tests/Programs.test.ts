@@ -43,18 +43,14 @@ describe('New Program', () => {
 	test('admin user is allowed to add new program', async () => {
 		expect(1).toBe(1);
 	});
-
-	test('regular user is not allowed to add new program', async () => {
-		expect(1).toBe(1);
-	});
-
+	// test('regular user is not allowed to add new program', async () => {
+	// 	expect(1).toBe(1);
+	// });
 	// test('new program works', async () => {
 	// 	const locals = mockLocals(regularUser);
 	// 	const event = { locals } as RequestEvent;
 	// 	const form = await mockForm({ name: 'new-program' }, programSchema);
-
 	// 	const response = await ProgramActions.newProgram(event, form);
-
 	// 	console.log(response);
 	// });
 });
