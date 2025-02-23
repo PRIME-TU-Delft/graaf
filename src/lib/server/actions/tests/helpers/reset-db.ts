@@ -1,8 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 
 export default async () => {
-	console.log('DELETE DATA');
-
 	await prisma.$transaction([
 		prisma.graph.deleteMany(),
 		prisma.course.deleteMany(),

@@ -128,7 +128,7 @@ model Graph {
 
   course   Course    @relation("CourseGraph", fields: [courseId], references: [code])
   domains  Domain[]
-  subjects Subject[]
+  subjects Subject[] @relation("SubjectGraph")
   lectures Lecture[]
   // links			Link[]
 
@@ -181,7 +181,7 @@ model Subject {
 
   graphId  Int
   domainId Int?
-  graph    Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
+  graph    Graph     @relation("SubjectGraph", fields: [graphId], references: [id], onDelete: Cascade)
   domain   Domain?   @relation(fields: [domainId], references: [id])
   lectures Lecture[]
 
