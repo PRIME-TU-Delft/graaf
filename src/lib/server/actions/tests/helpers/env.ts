@@ -1,1 +1,1 @@
-export const env = { DEBUG: false };
+export const env = { DEBUG: false, TESTING: true };

@@ -16,21 +16,25 @@ async function createUsers() {
 	return await prisma.$transaction(createUsers);
 }
 
+export const PROGRAM_IDS = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
 async function createPrograms(users: User[]): Promise<Program[]> {
 	const p1 = prisma.program.create({
 		data: {
+			id: PROGRAM_IDS[0],
 			name: 'ProgramOne'
 		}
 	});
 
 	const p2 = prisma.program.create({
 		data: {
+			id: PROGRAM_IDS[1],
 			name: 'ProgramTwo',
 			admins: { connect: { id: users[1].id } } // add the program admin user
 		}
 	});
 	const p3 = prisma.program.create({
 		data: {
+			id: PROGRAM_IDS[2],
 			name: 'ProgramThree',
 			editors: { connect: { id: users[2].id } } // add the program editor user
 		}

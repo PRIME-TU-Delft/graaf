@@ -1,4 +1,6 @@
 import type { User } from '@prisma/client';
+import type { Session } from '@auth/sveltekit';
+import type { RequestEvent } from '@sveltejs/kit';
 
 // @see ./setup.ts to see how the users are linked in the database
 
@@ -88,3 +90,43 @@ export const users = [
 	courseEditorUser,
 	regularUser
 ];
+
+export type UserType =
+	| 'superAdmin'
+	| 'programAdmin'
+	| 'programEditor'
+	| 'courseAdmin'
+	| 'courseEditor'
+	| 'regular';
+export function mockLocals(userType: UserType) {
+	let user = regularUser;
+
+	switch (userType) {
+		case 'superAdmin':
+			user = superAdminUser;
+			break;
+		case 'programAdmin':
+			user = programAdminUser;
+			break;
+		case 'programEditor':
+			user = programEditorUser;
+			break;
+		case 'courseAdmin':
+			user = courseAdminUser;
+			break;
+		case 'courseEditor':
+			user = courseEditorUser;
+			break;
+		case 'regular':
+			user = regularUser;
+			break;
+	}
+
+	const session: Session = { user, expires: new Date().toDateString() };
+
+	async function auth() {
+		return session;
+	}
+
+	return { auth } as RequestEvent['locals'];
+}
