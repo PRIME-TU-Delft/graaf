@@ -1,56 +1,90 @@
-import type { Session } from '@auth/sveltekit';
-import type { User } from '@prisma/client';
+import prisma from '$lib/server/db/prisma';
+import { courseSchema, programSchema } from '$lib/zod/programCourseSchema';
 import type { RequestEvent } from '@sveltejs/kit';
-import type { SuperValidated } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
 import { describe, expect, test } from 'vitest';
-import type { ZodObject, ZodRawShape } from 'zod';
-import { regularUser } from './helpers/test-users';
-
-function mockLocals(user: User) {
-	const session: Session = { user: regularUser, expires: new Date().toDateString() };
-
-	async function auth() {
-		return session;
-	}
-
-	return { auth } as RequestEvent['locals'];
-}
-
-async function mockForm<T extends Record<string, unknown>, S extends ZodRawShape>(
-	data: T,
-	schema: ZodObject<S>
-) {
-	const z = await zod(schema).validate(data);
-
-	const form: SuperValidated<T> = {
-		id: 'mock',
-		valid: z.success,
-		data,
-		posted: true,
-		errors: { _errors: [] }
-	};
-
-	if (!z.success) {
-		const errors = (form.errors._errors = z.issues.map((i) => i.message));
-		form.errors._errors = errors;
-	}
-
-	return form;
-}
+import { ProgramActions } from '../Programs';
+import mockForm from './helpers/mockForm';
+import { mockLocals, type UserType } from './helpers/test-users';
+import { PROGRAM_IDS } from './helpers/setup';
 
 describe('New Program', () => {
 	test('admin user is allowed to add new program', async () => {
-		expect(1).toBe(1);
+		const event = { locals: mockLocals('superAdmin') } as RequestEvent;
+		const form = await mockForm({ name: 'new-program' }, programSchema);
+		expect(form.valid).toBe(true);
+
+		const response = await ProgramActions.newProgram(event, form);
+
+		// Retreive the program from the database
+		const program = await prisma.program.findFirst({
+			where: { name: form.data.name }
+		});
+
+		expect(program).not.toBe(null);
+		expect(program?.name).toBe(form.data.name);
 	});
-	// test('regular user is not allowed to add new program', async () => {
-	// 	expect(1).toBe(1);
-	// });
-	// test('new program works', async () => {
-	// 	const locals = mockLocals(regularUser);
-	// 	const event = { locals } as RequestEvent;
-	// 	const form = await mockForm({ name: 'new-program' }, programSchema);
-	// 	const response = await ProgramActions.newProgram(event, form);
-	// 	console.log(response);
-	// });
+
+	test.for(['programAdmin', 'programEditor', 'courseAdmin', 'courseEditor'] as UserType[])(
+		`%s user is not allowed to add new program`,
+		async (role) => {
+			const event = { locals: mockLocals(role) } as RequestEvent;
+			const form = await mockForm({ name: 'new-program' }, programSchema);
+			expect(form.valid).toBe(true);
+
+			const response = await ProgramActions.newProgram(event, form);
+
+			if (!('status' in response)) throw new Error('Response is not an action failure');
+
+			expect(response.status).toBe(400);
+			expect(response.data.form.errors._errors).toContain(
+				'You do not have permission to perform this action'
+			);
+		}
+	);
+});
+
+describe('New Course', () => {
+	test.for(['superAdmin', 'programAdmin'] as UserType[])(
+		'%s is allowed to add a new course to a programTwo',
+		async (role) => {
+			const event = { locals: mockLocals(role) } as RequestEvent;
+			const form = await mockForm(
+				{ code: 'A100', name: 'new-course', programId: PROGRAM_IDS[1] },
+				courseSchema
+			);
+			expect(form.valid).toBe(true);
+
+			const response = await ProgramActions.newCourse(event, form);
+
+			const program = await prisma.program.findFirst({
+				where: { name: 'ProgramTwo' },
+				include: {
+					courses: { orderBy: { code: 'asc' } }
+				}
+			});
+
+			expect(program).not.toBe(null);
+			expect(program?.courses).toHaveLength(4);
+			expect(program?.courses[0].name).toBe(form.data.name);
+		}
+	);
+
+	test.for(['regular', 'programEditor'] as UserType[])(
+		'%s is not allowed to add a new course to a programTwo',
+		async (role) => {
+			const event = { locals: mockLocals(role) } as RequestEvent;
+			const form = await mockForm(
+				{ code: 'A100', name: 'new-course', programId: PROGRAM_IDS[1] },
+				courseSchema
+			);
+			expect(form.valid).toBe(true);
+
+			const response = await ProgramActions.newCourse(event, form);
+
+			if (!('status' in response)) throw new Error('Response is not an action failure');
+
+			expect(response.status).toBe(400);
+			expect(response.data.form.errors.name?.[0]).toBe('Unauthorized');
+		}
+	);
 });
