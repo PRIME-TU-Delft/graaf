@@ -108,15 +108,14 @@ export class ProgramActions {
 	}
 
 	/**
-	 * TODO: needs testing
 	 * PERMISSIONS:
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#p5
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
-	static async addCourseToProgram(event: RequestEvent, form: FormData) {
-		const programId = form.get('program-id') as string | null;
-		const courseCode = form.get('code') as string | null;
-		const courseName = form.get('name') as string | null;
+	static async addCourseToProgram(event: RequestEvent, formData: FormData) {
+		const programId = formData.get('program-id') as string | null;
+		const courseCode = formData.get('code') as string | null;
+		const courseName = formData.get('name') as string | null;
 
 		if (!programId || !courseCode || !courseName)
 			return fail(400, { error: 'Missing required fields' });

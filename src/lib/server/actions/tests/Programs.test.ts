@@ -4,8 +4,9 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { describe, expect, test } from 'vitest';
 import { ProgramActions } from '../Programs';
 import mockForm from './helpers/mockForm';
-import { mockLocals, type UserType } from './helpers/test-users';
+import mockFormData from './helpers/mockFormData';
 import { PROGRAM_IDS } from './helpers/setup';
+import { mockLocals, type UserType } from './helpers/test-users';
 
 describe('New Program', () => {
 	test('admin user is allowed to add new program', async () => {
@@ -87,4 +88,37 @@ describe('New Course', () => {
 			expect(response.data.form.errors.name?.[0]).toBe('Unauthorized');
 		}
 	);
+});
+
+describe('Link Course to Program', () => {
+	test.for(['superAdmin', 'programAdmin'])('%s is allowed to link course to program', async () => {
+		const event = { locals: mockLocals('superAdmin') } as RequestEvent;
+
+		const newCourse = await prisma.course.create({
+			data: {
+				code: 'A100',
+				name: 'new-course'
+			}
+		});
+
+		const formData = await mockFormData({
+			'program-id': PROGRAM_IDS[1],
+			code: newCourse.code,
+			name: newCourse.name
+		});
+
+		const response = await ProgramActions.addCourseToProgram(event, formData);
+
+		// Retreive the program from the database
+		const program = await prisma.program.findFirst({
+			where: { name: 'ProgramTwo' },
+			include: {
+				courses: { orderBy: { code: 'asc' } }
+			}
+		});
+
+		expect(program).not.toBe(null);
+		expect(program?.courses).toHaveLength(4);
+		expect(program?.courses[0].name).toBe(formData.get('name'));
+	});
 });
