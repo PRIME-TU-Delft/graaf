@@ -1,10 +1,13 @@
-import { SvelteKitAuth } from '@auth/sveltekit';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-
 import { env } from '$env/dynamic/private';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { SvelteKitAuth } from '@auth/sveltekit';
 import type { OIDCConfig } from '@auth/sveltekit/providers';
-import prisma from './db/prisma';
 import { error } from '@sveltejs/kit';
+import prisma from './db/prisma';
+import Credentials from '@auth/sveltekit/providers/credentials';
+import { createUserSchema } from '$lib/zod/userSchema';
+import { ZodError } from 'zod';
+import GitHub from '@auth/sveltekit/providers/github';
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;
@@ -53,8 +56,48 @@ function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
 	};
 }
 
+function emailPasswordProvider() {
+	return Credentials({
+		credentials: {
+			email: {},
+			password: {}
+		},
+		authorize: async (credentials) => {
+			try {
+				const { email, password } = await createUserSchema.parseAsync(credentials);
+
+				const user = await prisma.user.findUnique({
+					where: {
+						email,
+						password
+					}
+				});
+
+				console.log({ user });
+
+				// return JSON object with the user data
+				return user;
+			} catch (error) {
+				if (error instanceof ZodError) {
+					// Return `null` to indicate that the credentials are invalid
+					return null;
+				}
+			}
+
+			return null;
+		}
+	});
+}
+
 export const { handle, signIn, signOut } = SvelteKitAuth({
-	providers: [SurfConextProvider],
+	providers: [
+		SurfConextProvider,
+		GitHub({
+			clientId: 'Ov23liywA0ANizFYrWts',
+			clientSecret: '242baac61f10c8ed4bfffec22f5a9f28fe95c68b'
+		}),
+		...(env.NETLIFY_CONTEXT != 'PROD' ? [emailPasswordProvider] : [])
+	],
 	adapter: PrismaAdapter(prisma),
 	secret: env.AUTH_SECRET,
 	debug: Boolean(env.DEBUG),
@@ -62,8 +105,9 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 
 	callbacks: {
 		// ¯\_(ツ)_/¯
-		session({ session }) {
-			return session;
+		session(params) {
+			console.log('session cb', params);
+			return params.session;
 		}
 	}
 });
