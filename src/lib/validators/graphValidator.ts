@@ -1,7 +1,7 @@
 import type { Graph, Domain, Subject } from '@prisma/client';
 
-export type DomainType = Domain & { incommingDomains: Domain[]; outgoingDomains: Domain[] };
-export type SubjectType = Subject & { incommingSubjects: Subject[]; outgoingSubjects: Subject[] };
+export type DomainType = Domain & { incoming: Domain[]; outgoing: Domain[] };
+export type SubjectType = Subject & { incoming: Subject[]; outgoing: Subject[] };
 export type GraphType = Graph & { domains: DomainType[]; subjects: SubjectType[] };
 
 export class GraphValidator {
@@ -19,20 +19,20 @@ export class GraphValidator {
 
 	hasEdge(from: DomainType, to: DomainType): boolean {
 		return (
-			from.outgoingDomains.some((domain) => domain.id === to.id) &&
-			to.incommingDomains.some((domain) => domain.id === from.id)
+			from.outgoing.some((domain) => domain.id === to.id) &&
+			to.incoming.some((domain) => domain.id === from.id)
 		);
 	}
 
 	removeEdge(from: DomainType, to: DomainType) {
-		const fromLength = from.outgoingDomains.length;
-		const toLength = to.incommingDomains.length;
-		from.outgoingDomains = from.outgoingDomains.filter((domain) => domain.id !== to.id);
-		to.incommingDomains = to.incommingDomains.filter((domain) => domain.id !== from.id);
+		const fromLength = from.outgoing.length;
+		const toLength = to.incoming.length;
+		from.outgoing = from.outgoing.filter((domain) => domain.id !== to.id);
+		to.incoming = to.incoming.filter((domain) => domain.id !== from.id);
 
 		if (
-			from.outgoingDomains.length !== fromLength - 1 ||
-			to.incommingDomains.length !== toLength - 1
+			from.outgoing.length !== fromLength - 1 ||
+			to.incoming.length !== toLength - 1
 		) {
 			throw new Error('The edge was not removed');
 		}
@@ -43,8 +43,8 @@ export class GraphValidator {
 			throw new Error('The edge already exists');
 		}
 
-		from.outgoingDomains.push(to);
-		to.incommingDomains.push(from);
+		from.outgoing.push(to);
+		to.incoming.push(from);
 	}
 
 	findSubGraphs() {
@@ -74,7 +74,7 @@ export class GraphValidator {
 			if (subgraph.length === 0) continue; // I see no reason why this could happen, but just in case
 
 			// A root is a domain that has no incoming domains
-			const roots = subgraph.filter((domain) => domain.incommingDomains.length === 0);
+			const roots = subgraph.filter((domain) => domain.incoming.length === 0);
 			this.roots.push(...roots);
 
 			// If there is no trivial root, then the subgraph is a cycle
@@ -102,7 +102,7 @@ export class GraphValidator {
 		if (!visited.has(v)) {
 			visited.add(v);
 
-			for (const neighbour of this.#domains.get(v)!.outgoingDomains) {
+			for (const neighbour of this.#domains.get(v)!.outgoing) {
 				this.dfs(neighbour.id, visited, subgraph);
 			}
 
@@ -126,7 +126,7 @@ export class GraphValidator {
 			visited.add(v);
 			recStack.add(v);
 
-			for (const neighbour of this.#domains.get(v)!.outgoingDomains) {
+			for (const neighbour of this.#domains.get(v)!.outgoing) {
 				if (!visited.has(neighbour.id)) {
 					const cycle = this.isCyclicUtil(neighbour.id, visited, recStack);
 
@@ -148,7 +148,7 @@ export class GraphValidator {
 		const recStack = new Set<number>();
 
 		for (const root of this.roots) {
-			if (root.outgoingDomains.length === 0) continue;
+			if (root.outgoing.length === 0) continue;
 
 			const cycle = this.isCyclicUtil(root.id, visited, recStack);
 

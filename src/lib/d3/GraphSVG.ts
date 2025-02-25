@@ -1,39 +1,54 @@
 
 // External imports
 import * as d3 from 'd3'
+import { Prisma } from '@prisma/client'
 
 // Internal imports
-import * as settings from '$scripts/settings'
-import { customError } from '$scripts/utility'
-import { Severity } from '$scripts/validation'
+import * as settings from '$lib/settings'
 
-import {
-	NodeSVG,
-	RelationSVG,
-	OverlaySVG
-} from '$scripts/svg'
-
-import {
-	GraphController,
-	DomainController,
-	SubjectController,
-	RelationController,
-	LectureController,
-	NodeController
-} from '$scripts/controllers'
-
-import type {
-	EditorView
-} from '$scripts/types'
+import { NodeSVG } from './NodeSVG'
+import { RelationSVG } from './RelationSVG'
+import { OverlaySVG } from './OverlaySVG'
 
 // Exports
 export { GraphSVG, SVGState }
 
-
-// --------------------> Classes
-
-
+// Constants
 const ANIMATE = () => {}
+
+// --------------------> Types
+
+type GraphType = Prisma.GraphGetPayload<{
+	include: {
+		domains: {
+			include: {
+				incoming: true,
+				outgoing: true
+			},
+			orderBy: {
+				order: 'asc'
+			}
+		},
+		subjects: {
+			include: {
+				incoming: true,
+				outgoing: true,
+				domain: true
+			}
+		},
+		lectures: {
+			include: {
+				subjects: true
+			}
+		}
+	}
+}>
+
+type DomainType = Prisma.DomainGetPayload<{}>
+type SubjectType = Prisma.SubjectGetPayload<{}>
+type LectureType = Prisma.LectureGetPayload<{}>
+
+type EditorView = 'domains' | 'subjects' | 'lectures'
 
 enum SVGState {
 	detached,			// When the graph is detached from the DOM
@@ -45,12 +60,14 @@ enum SVGState {
 	broken				// When the current view is broken
 }
 
+// --------------------> GraphSVG
+
 class GraphSVG {
-	private _graph: GraphController
+	private _graph: GraphType
 	private _interactive: boolean
 	private _view: EditorView = 'domains'
 	private _state: SVGState = SVGState.detached
-	private _lecture: LectureController | null = null
+	private _lecture: LectureType | null = null
 	private _subscribers: (() => void)[] = []
  
 	private svg?: SVGSVGElement
@@ -58,10 +75,9 @@ class GraphSVG {
 	private simulation?: d3.Simulation<d3.SimulationNodeDatum, undefined>
 
 	private keys: { [key: string]: boolean } = {}
+	public lock_zoom: boolean = true
 
-	public shift_zoom: boolean = true
-
-	constructor(graph: GraphController, interactive: boolean = true) {
+	constructor(graph: GraphType, interactive: boolean = true) {
 		this._interactive = interactive
 		this._graph = graph
 	}
@@ -146,7 +162,7 @@ class GraphSVG {
 
 		// Check if SVG is properly attached
 		if (this.svg === undefined || this.simulation === undefined) {
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		}
 
 		// If moving out of broken state:
@@ -172,9 +188,9 @@ class GraphSVG {
 			d3.select(this.svg)
 				.style('pointer-events', 'none')
 				.select('#content')
-					.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
+					.selectAll<SVGGElement, DomainType | SubjectType>('.node')
 						.call(NodeSVG.setFixed, true)
-						.each(async node => await node.save())
+						.call(NodeSVG.save) // TODO no idea how to trigger form actions, this is not implemented rn
 
 			this.simulation.stop()
 		}
@@ -224,7 +240,9 @@ class GraphSVG {
 		return this._lecture
 	}
 
-	set lecture(lecture: LectureController | null) {
+	set lecture(lecture: LectureType | null) {
+
+		// Ignore if lecture is the same, or if animating
 		if (this.lecture === lecture || this.state === SVGState.animating)
 			return
 
@@ -236,7 +254,7 @@ class GraphSVG {
 
 		// Check if properly attached
 		if (this.svg === undefined) {
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		}
 
 		this._lecture = lecture // NEW LECTURE
@@ -255,7 +273,7 @@ class GraphSVG {
 		// Update highlights
 		d3.select(this.svg)
 			.select('#content')
-				.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
+				.selectAll<SVGGElement, DomainType | SubjectType>('.node')
 					.call(NodeSVG.updateHighlight, this.lecture)
 		
 		// Notify subscribers
@@ -270,7 +288,7 @@ class GraphSVG {
 
 		// Check if any nodes are not fixed
 		return d3.select('#content')
-			.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node:not(.fixed)')
+			.selectAll<SVGGElement, DomainType | SubjectType>('.node:not(.fixed)')
 				.size() > 0
 	}
 
@@ -280,7 +298,7 @@ class GraphSVG {
 
 		// Check if already attached
 		if (this.state !== SVGState.detached) {
-			throw customError('GraphSVGError', 'GraphSVG already attached to DOM')
+			throw new Error('GraphSVG already attached to DOM')
 		}
 
 		// SVG setup
@@ -340,7 +358,7 @@ class GraphSVG {
 
 		// Zoom warning
 		svg.on('wheel', () => {
-			if (!this.shift_zoom || this.keys.Shift) return
+			if (!this.lock_zoom || this.keys.Shift) return
 			d3.select<SVGGElement, unknown>('#overlay')
 				.call(OverlaySVG.shiftWarning, this)
 		})
@@ -357,7 +375,7 @@ class GraphSVG {
 		// Zoom & pan
 		this.zoom = d3.zoom<SVGSVGElement, unknown>()
 			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
-			.filter((event) => !this.shift_zoom || this.keys.Shift || event.type === 'mousedown')
+			.filter((event) => !this.lock_zoom || this.keys.Shift || event.type === 'mousedown')
 			.on('zoom', event => {
 
 				// Update content
@@ -385,7 +403,7 @@ class GraphSVG {
 			.force('charge', d3.forceManyBody().strength(settings.CHARGE_FORCE))
 			.on('tick', () => {
 				d3.select('#content')
-					.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
+					.selectAll<SVGGElement, DomainType | SubjectType>('.node')
 						.call(NodeSVG.updatePosition)
 			})
 
@@ -413,12 +431,12 @@ class GraphSVG {
 
 		// Check if already detached
 		if (this.state === SVGState.detached) {
-			throw customError('GraphSVGError', 'GraphSVG already detached from DOM')
+			throw new Error('GraphSVG already detached from DOM')
 		}
 
 		// Check if properly attached
 		if (this.svg === undefined) {
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		}
 
 		// Exit current state
@@ -450,7 +468,7 @@ class GraphSVG {
 
 	zoomIn() {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
@@ -463,7 +481,7 @@ class GraphSVG {
 
 	zoomOut() {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic && this.state !== SVGState.static)
 			return
 
@@ -486,15 +504,18 @@ class GraphSVG {
 
 	toggleAutolayout() {
 		if (this.simulation === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		if (this.state !== SVGState.dynamic)
 			return
 
 		const autolayout_enabled = this.autolayout_enabled
-		d3.select('#content')
-			.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
+		const nodes = d3.select('#content')
+			.selectAll<SVGGElement, DomainType | SubjectType>('.node')
 				.call(NodeSVG.setFixed, autolayout_enabled)
-				.each(async node => { if (autolayout_enabled) await node.save() })
+
+		if (autolayout_enabled) {
+			nodes.call(NodeSVG.save) // TODO no idea how to trigger form actions, this is not implemented rn
+		}
 
 		if (autolayout_enabled) {
 			this.simulation.stop()
@@ -505,7 +526,7 @@ class GraphSVG {
 
 	microwaveSimulation() {
 		if (this.simulation === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		this.simulation
 			.alpha(1)
 			.restart()
@@ -514,27 +535,12 @@ class GraphSVG {
 	// -----------------> Toolbox
 
 	private validateView(view: EditorView) {
-		switch (view) {
-			case 'domains':
-				return this.graph.domains.every(domain => domain.validate().severity !== Severity.error)
-					&& this.graph.domain_relations.every(relation => relation.validate().severity !== Severity.error)
-
-			case 'subjects':
-				return this.graph.subjects.every(subject => subject.validate().severity !== Severity.error)
-					&& this.graph.subject_relations.every(relation => relation.validate().severity !== Severity.error)
-
-			case 'lectures':
-				return (
-					this.lecture === null ||
-					this.lecture.validate().severity !== Severity.error &&
-					this.lecture.present_subjects.every(subject => subject.validate().severity !== Severity.error)
-				)
-		}
+		return true // TODO ask abel about graph validation
 	}
 
-	private boundingBox(nodes: NodeController<DomainController | SubjectController>[]) {
+	private boundingBox(nodes: (DomainType | SubjectType)[]) {
 		if (this.svg === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		if (nodes.length === 0)
 			return { x: 0, y: 0, k: 1 }
 
@@ -574,7 +580,7 @@ class GraphSVG {
 
 	private moveCamera(x: number, y: number, k: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -601,7 +607,7 @@ class GraphSVG {
 
 	private panCamera(x: number, y: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -624,7 +630,7 @@ class GraphSVG {
 
 	private zoomCamera(k: number, callback?: () => void) {
 		if (this.svg === undefined || this.zoom === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 
 		// Call zoom with custom transform
 		d3.select<SVGSVGElement, unknown>(this.svg)
@@ -643,7 +649,7 @@ class GraphSVG {
 
 	private setBackground(view: EditorView) {
 		if (this.svg === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		const background = d3.select<SVGGElement, unknown>('#background')
 
 		// Remove old background
@@ -651,11 +657,51 @@ class GraphSVG {
 
 		// Lecture background
 		if (view === 'lectures') {
-			const size = this.lecture?.max_height || 0
+		
+			// TODO i now have to manually calculate lecture height, bc controllers are no more. This is ass
+			// START CONTROLLER CODE
+
+			let size = 0
+			const subjects: SubjectType[] = []
+			const incoming: SubjectType[] = []
+			const outgoing: SubjectType[] = []
+
+			if (this.lecture !== null) {
+				subjects.push(
+					...this.graph.lectures
+						.find(l => l.id == this.lecture!.id)!
+						.subjects
+				)
+
+				for (const subject of subjects) {
+					const data = this.graph.subjects
+						.find(s => s.id === subject.id)						// Find subject in graph
+						?.incoming											// Iterate over incoming subjects
+							.filter(s => incoming.every(i => i.id != s.id))	// Filter out duplicates
+
+					if (!data) throw new Error('Bad graph data')
+					incoming.push(...data)
+				}
+
+				for (const subject of subjects) {
+					const data = this.graph.subjects
+						.find(s => s.id === subject.id)						// Find subject in graph
+						?.outgoing											// Iterate over outgoing subjects
+							.filter(s => incoming.every(i => i.id != s.id))	// Filter out duplicates
+							
+					if (!data) throw new Error('Bad graph data')
+					outgoing.push(...data)
+				}
+
+				size = Math.max(incoming.length, subjects.length, outgoing.length)
+			}
+
+			// END CONTROLLER CODE
+
 			const dx = (this.svg.clientWidth - 3 * settings.LECTURE_COLUMN_WIDTH * settings.GRID_UNIT) / 2
 			const dy = (this.svg.clientHeight - (size * settings.NODE_HEIGHT + (size + 1) * settings.LECTURE_PADDING + settings.LECTURE_HEADER_HEIGHT) * settings.GRID_UNIT) / 2
 
-			// Past subject colunm
+			// Incoming subject colunm
 			background.append('rect')
 				.attr('x', dx + settings.STROKE_WIDTH / 2)
 				.attr('y', dy + settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT)
@@ -725,9 +771,9 @@ class GraphSVG {
 				.remove()
 	}
 
-	private setContent(nodes: NodeController<DomainController | SubjectController>[], relations: RelationController<DomainController | SubjectController>[], callback?: () => void) {
+	private setContent(nodes: (DomainType | SubjectType)[], callback?: () => void) {
 		if (this.simulation === undefined)
-			throw customError('GraphSVGError', 'GraphSVG not attached to DOM')
+			throw new Error('GraphSVG not attached to DOM')
 		if (nodes.length === 0) {
 			this.clearContent(callback)
 			return
@@ -737,9 +783,35 @@ class GraphSVG {
 		const lecture = this.lecture
 		const graphSVG = this
 
+		// TODO since relation controllers are no more, we need to infer relations manually. This is ass
+		// START CONTROLLER CODE
+
+		type RelationType<T> = {
+			id: string,
+			incoming: T,
+			outgoing: T
+		}
+
+		const relations: RelationType<DomainType | SubjectType>[] = []
+		for (const incoming of nodes) {
+
+			// Find node in graph. As nodes use uuid's, we will find it either in domains or subjects
+			const node: any = this.graph.domains.find(n => n.id === node.id) ||
+							  this.graph.subjects.find(n => n.id === node.id)
+
+			for (const outgoing of node.outgoing) {
+				relations.push({
+					id: incoming.id + outgoing.id,
+					incoming, outgoing
+				})
+			}
+		}
+
+		// END CONTROLLER CODE
+
 		// Update Nodes
-		content.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
-			.data(nodes, node => node.uuid)
+		content.selectAll<SVGGElement, DomainType | SubjectType>('.node')
+			.data(nodes, node => node.id)
 			.join(
 				function(enter) {
 					return enter
@@ -767,8 +839,8 @@ class GraphSVG {
 			.style('opacity', 1)
 
 		// Update relations
-		content.selectAll<SVGLineElement, RelationController<DomainController | SubjectController>>('.relation')
-			.data(relations, relation => relation.uuid)
+		content.selectAll<SVGLineElement, RelationType<DomainType | SubjectType>>('.relation')
+			.data(relations, relation => relation.id)
 			.join(
 				function(enter) {
 					return enter
@@ -794,7 +866,7 @@ class GraphSVG {
 			.style('opacity', 1)
 
 		// Update simulation
-		const links = relations.map(relation => ({ source: relation.parent!, target: relation.child!  }))
+		const links = relations.map(relation => ({ source: relation.incoming, target: relation.outgoing  }))
 		this.simulation
 			.nodes(nodes)
 			.force('link', d3.forceLink(links))
@@ -807,7 +879,7 @@ class GraphSVG {
 		}
 	}
 
-	private moveContent(nodes: SubjectController[], transform: (node: SubjectController) => void, callback?: () => void) {
+	private moveContent(nodes: SubjectType[], transform: (node: SubjectType) => void, callback?: () => void) {
 
 		// Buffer node positions
 		const buffers = nodes.map(node => ({ node, x: node.x, y: node.y }))
@@ -817,7 +889,7 @@ class GraphSVG {
 
 		// Update nodes
 		d3.select<SVGGElement, unknown>('#content')
-			.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
+			.selectAll<SVGGElement, DomainType | SubjectType>('.node')
 				.call(NodeSVG.updatePosition, callback !== undefined)
 
 		// Restore node positions
@@ -838,7 +910,7 @@ class GraphSVG {
 
 		// Update nodes
 		d3.select<SVGGElement, unknown>('#content')
-			.selectAll<SVGGElement, NodeController<DomainController | SubjectController>>('.node')
+			.selectAll<SVGGElement, DomainType | SubjectType>('.node')
 				.call(NodeSVG.updatePosition, callback !== undefined)
 
 		// Post-transition
@@ -871,7 +943,7 @@ class GraphSVG {
 		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground('domains')
-		this.setContent(this.graph.domains, this.graph.domain_relations)
+		this.setContent(this.graph.domains)
 		this.restoreContent()
 
 		this.state = this.interactive ? SVGState.dynamic : SVGState.static
@@ -881,7 +953,7 @@ class GraphSVG {
 		const bbx = this.boundingBox(this.graph.subjects)
 		this.moveCamera(bbx.x, bbx.y, bbx.k)
 		this.setBackground('subjects')
-		this.setContent(this.graph.subjects, this.graph.subject_relations)
+		this.setContent(this.graph.subjects)
 		this.restoreContent()
 
 		this.state = this.interactive ? SVGState.dynamic : SVGState.static
@@ -895,10 +967,15 @@ class GraphSVG {
 			return
 		}
 
+		// TODO since controllers are no more, we need to find lectuer subject manually
+		// START CONTROLLER CODE
+		const subjects = this.graph.lectures.find(l => l.id === this.lecture!.id)!.subjects
+		// END CONTROLLER CODE
+
 		this.moveCamera(0, 0, 1)
 		this.setBackground('lectures')
-		this.setContent(this.lecture.subjects, this.lecture.relations)
-		this.moveContent(this.lecture.subjects, this.lectureTransform(0, 0))
+		this.setContent(subjects)
+		this.moveContent(subjects, this.lectureTransform(0, 0))
 
 		this.state = SVGState.lecture
 	}
@@ -915,7 +992,7 @@ class GraphSVG {
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.subjects)
-		this.setContent(this.graph.subjects, this.graph.subject_relations)
+		this.setContent(this.graph.subjects)
 		this.moveContent(this.graph.subjects, this.domainTransform)
 
 		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
@@ -938,14 +1015,19 @@ class GraphSVG {
 			return
 		}
 
+		// TODO since controllers are no more, we need to find lectuer subject manually
+		// START CONTROLLER CODE
+		const subjects = this.graph.lectures.find(l => l.id === this.lecture!.id)!.subjects
+		// END CONTROLLER CODE
+
 		// Animate from domains to lectures
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
-		this.setContent(this.lecture.subjects, this.lecture.relations)
-		this.moveContent(this.lecture.subjects, this.domainTransform)
-		this.moveContent(this.lecture.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
+		this.setContent(subjects)
+		this.moveContent(subjects, this.domainTransform)
+		this.moveContent(subjects, this.lectureTransform(bbx.x, bbx.y), () => {
 			this.setBackground('lectures')
 			this.state = SVGState.lecture
 		})
@@ -965,7 +1047,7 @@ class GraphSVG {
 		const bbx = this.boundingBox(this.graph.domains)
 		this.moveCamera(bbx.x, bbx.y, bbx.k, ANIMATE)
 		this.moveContent(this.graph.subjects, this.domainTransform, () => {
-			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
+			this.setContent(this.graph.domains, () => {
 				this.state = this.interactive ? SVGState.dynamic : SVGState.static
 			})
 		})
@@ -985,13 +1067,18 @@ class GraphSVG {
 			return
 		}
 
+		// TODO since controllers are no more, we need to find lectuer subject manually
+		// START CONTROLLER CODE
+		const subjects = this.graph.lectures.find(l => l.id === this.lecture!.id)!.subjects
+		// END CONTROLLER CODE
+
 		// Animate from subjects to lectures
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.subjects)
 		this.moveCamera(bbx.x, bbx.y, 1, ANIMATE)
-		this.setContent(this.lecture.subjects, this.lecture.relations, () => {
-			this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y), () => {
+		this.setContent(subjects, () => {
+			this.moveContent(subjects, this.lectureTransform(bbx.x, bbx.y), () => {
 				this.setBackground('lectures')
 				this.state = SVGState.lecture
 			})
@@ -1006,17 +1093,22 @@ class GraphSVG {
 			return
 		}
 
+		// TODO since controllers are no more, we need to find lectuer subject manually
+		// START CONTROLLER CODE
+		const subjects = this.graph.lectures.find(l => l.id === this.lecture!.id)!.subjects
+		// END CONTROLLER CODE
+
 		// Animate from lectures to domains
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.domains)
 		this.panCamera(bbx.x, bbx.y)
 		this.setBackground('domains')
-		this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y))
+		this.moveContent(subjects, this.lectureTransform(bbx.x, bbx.y))
 
 		this.zoomCamera(bbx.k, ANIMATE)
-		this.moveContent(this.lecture!.subjects, this.domainTransform, () => {
-			this.setContent(this.graph.domains, this.graph.domain_relations, () => {
+		this.moveContent(subjects, this.domainTransform, () => {
+			this.setContent(this.graph.domains, () => {
 				this.state = this.interactive ? SVGState.dynamic : SVGState.static
 			})
 		})
@@ -1030,17 +1122,22 @@ class GraphSVG {
 			return
 		}
 
+		// TODO since controllers are no more, we need to find lectuer subject manually
+		// START CONTROLLER CODE
+		const subjects = this.graph.lectures.find(l => l.id === this.lecture!.id)!.subjects
+		// END CONTROLLER CODE
+
 		// Animate from lectures to subjects
 		this.state = SVGState.animating
 
 		const bbx = this.boundingBox(this.graph.subjects)
 		this.panCamera(bbx.x, bbx.y)
 		this.setBackground('subjects')
-		this.moveContent(this.lecture!.subjects, this.lectureTransform(bbx.x, bbx.y))
+		this.moveContent(subjects, this.lectureTransform(bbx.x, bbx.y))
 
 		this.zoomCamera(bbx.k, ANIMATE)
 		this.restoreContent(() => {
-			this.setContent(this.graph.subjects, this.graph.subject_relations, () => {
+			this.setContent(this.graph.subjects, () => {
 				this.state = this.interactive ? SVGState.dynamic : SVGState.static
 			})
 		})
@@ -1048,41 +1145,83 @@ class GraphSVG {
 
 	// -----------------> Transforms
 
-	private domainTransform(subject: SubjectController) {
-		subject.x = subject.domain!.x
-		subject.y = subject.domain!.y
+	private domainTransform(subject: SubjectType) {
+
+		// TODO since controllers are no more, we need to find lectuer subject manually
+		// START CONTROLLER CODE
+		const domain = this.graph.domains.find(d => d.id === subject.domainId)!
+		// END CONTROLLER CODE
+
+		subject.x = domain.x
+		subject.y = domain.y
 	}
 
 	private lectureTransform(x: number, y: number) {
-		const height = this.lecture?.max_height || 0
-		const past = this.lecture?.past_subjects
-		const present = this.lecture?.present_subjects
-		const future = this.lecture?.future_subjects
+
+		// TODO i now have to manually calculate lecture height, bc controllers are no more. This is ass
+		// START CONTROLLER CODE
+
+		let height = 0
+		const subjects: SubjectType[] = []
+		const incoming: SubjectType[] = []
+		const outgoing: SubjectType[] = []
+
+		if (this.lecture !== null) {
+			subjects.push(
+				...this.graph.lectures
+					.find(l => l.id == this.lecture!.id)!
+					.subjects
+			)
+
+			for (const subject of subjects) {
+				const data = this.graph.subjects
+					.find(s => s.id === subject.id)						// Find subject in graph
+					?.incoming											// Iterate over incoming subjects
+						.filter(s => incoming.every(i => i.id != s.id))	// Filter out duplicates
+
+				if (!data) throw new Error('Bad graph data')
+				incoming.push(...data)
+			}
+
+			for (const subject of subjects) {
+				const data = this.graph.subjects
+					.find(s => s.id === subject.id)						// Find subject in graph
+					?.outgoing											// Iterate over outgoing subjects
+						.filter(s => incoming.every(i => i.id != s.id))	// Filter out duplicates
+							
+				if (!data) throw new Error('Bad graph data')
+				outgoing.push(...data)
+			}
+
+			height = Math.max(incoming.length, subjects.length, outgoing.length)
+		}
+
+		// END CONTROLLER CODE
 
 		const dx = x - 3 * settings.LECTURE_COLUMN_WIDTH / 2
 		const dy = y - (settings.LECTURE_HEADER_HEIGHT + height * settings.NODE_HEIGHT + (height + 1) * settings.LECTURE_PADDING) / 2
 
-		return (subject: SubjectController) => {
+		return (subject: SubjectType) => {
 
-			// Set past subject positions to the right column
-			if (past?.includes(subject)) {
-				const index = past.indexOf(subject)
+			// Set incoming subject positions to the right column
+			if (incoming?.includes(subject)) {
+				const index = incoming.indexOf(subject)
 				subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING
 				subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.NODE_HEIGHT
 				return
 			}
 
 			// Set present subject positions to the middle column
-			if (present?.includes(subject)) {
-				const index = present.indexOf(subject)
+			if (subjects?.includes(subject)) {
+				const index = subjects.indexOf(subject)
 				subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
 				subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.NODE_HEIGHT
 				return
 			}
 
-			// Set future subject positions to the left column
-			if (future?.includes(subject)) {
-				const index = future.indexOf(subject)
+			// Set outgoing subject positions to the left column
+			if (outgoing?.includes(subject)) {
+				const index = outgoing.indexOf(subject)
 				subject.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + 2 * settings.LECTURE_COLUMN_WIDTH + settings.LECTURE_PADDING
 				subject.y = dy + settings.LECTURE_HEADER_HEIGHT + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + (index + 1) * settings.LECTURE_PADDING + index * settings.NODE_HEIGHT
 				return

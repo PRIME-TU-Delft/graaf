@@ -52,22 +52,22 @@ export class SubjectActions {
 
 		if (!form.valid) return setError(form, '', 'Invalid subject');
 
-		const removeOutFromIncommingSubjects = form.data.incommingSubjects.map((id) => {
+		const removeOutFromincoming = form.data.incoming.map((id) => {
 			return prisma.subject.update({
 				where: { id },
 				data: {
-					outgoingSubjects: {
+					outgoing: {
 						disconnect: { id: form.data.subjectId }
 					}
 				}
 			});
 		});
 
-		const removeInFromOutgoingSubjects = form.data.outgoingSubjects.map((id) => {
+		const removeInFromoutgoing = form.data.outgoing.map((id) => {
 			return prisma.subject.update({
 				where: { id },
 				data: {
-					incommingSubjects: {
+					incoming: {
 						disconnect: { id: form.data.subjectId }
 					}
 				}
@@ -80,8 +80,8 @@ export class SubjectActions {
 
 		try {
 			await prisma.$transaction([
-				...removeOutFromIncommingSubjects,
-				...removeInFromOutgoingSubjects,
+				...removeOutFromincoming,
+				...removeInFromoutgoing,
 				deleteSubject
 			]);
 		} catch (e: unknown) {
@@ -135,7 +135,7 @@ export class SubjectActions {
 			const isConnected = await prisma.subject.findFirst({
 				where: {
 					id: form.data.subjectInId,
-					outgoingSubjects: {
+					outgoing: {
 						some: {
 							id: form.data.subjectOutId
 						}
@@ -152,7 +152,7 @@ export class SubjectActions {
 					id: form.data.subjectInId
 				},
 				data: {
-					outgoingSubjects: {
+					outgoing: {
 						connect: {
 							id: form.data.subjectOutId
 						}
@@ -165,7 +165,7 @@ export class SubjectActions {
 					id: form.data.subjectOutId
 				},
 				data: {
-					incommingSubjects: {
+					incoming: {
 						connect: {
 							id: form.data.subjectInId
 						}

@@ -17,7 +17,7 @@
 	let { subject, graph }: Props = $props();
 
 	const relationCount = $derived(
-		subject.incommingSubjects.length + subject.outgoingSubjects.length
+		subject.incoming.length + subject.outgoing.length
 	);
 
 	const form = superForm((page.data as PageData).deleteSubjectForm, {
@@ -37,8 +37,8 @@
 		// When the subject changes, update the form data
 		if (subject) {
 			$formData.subjectId = subject.id;
-			$formData.incommingSubjects = subject.incommingSubjects.map((d) => d.id);
-			$formData.outgoingSubjects = subject.outgoingSubjects.map((d) => d.id);
+			$formData.incoming = subject.incoming.map((d) => d.id);
+			$formData.outgoing = subject.outgoing.map((d) => d.id);
 		}
 	});
 
@@ -65,8 +65,8 @@
 <form class="text-xs" action="?/delete-subject" method="POST" use:enhance>
 	<input type="hidden" name="subjectId" value={$formData.subjectId} />
 
-	{@render formArray('incommingSubjects')}
-	{@render formArray('outgoingSubjects')}
+	{@render formArray('incoming')}
+	{@render formArray('outgoing')}
 
 	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
 
@@ -83,7 +83,7 @@
 	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
-{#snippet formArray(name: 'incommingSubjects' | 'outgoingSubjects')}
+{#snippet formArray(name: 'incoming' | 'outgoing')}
 	<Form.Fieldset {form} {name} class="h-0">
 		{#each $formData[name] as _, i}
 			<Form.ElementField {form} name="{name}[{i}]">

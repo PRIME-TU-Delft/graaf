@@ -150,7 +150,7 @@ enum DomainStyle {
 }
 
 model Domain {
-  id    Int          @id @default(autoincrement())
+  id    String          @id @default(uuid())
   name  String
   style DomainStyle?
   order Int // Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
@@ -162,14 +162,14 @@ model Domain {
   graphId          Int
   graph            Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
   subjects         Subject[]
-  incommingDomains Domain[]  @relation("DomainRelation")
-  outgoingDomains  Domain[]  @relation("DomainRelation")
+  incoming  Domain[]  @relation("DomainRelation")
+  outgoing  Domain[]  @relation("DomainRelation")
 
   @@unique([name, graphId])
 }
 
 model Subject {
-  id    Int    @id @default(autoincrement())
+  id    String @id @default(uuid())
   name  String @default("")
   order Int // Subjects is a SORTABLE ARRAY this order makes sure this order is perserved on reload
 
@@ -178,13 +178,13 @@ model Subject {
   y Int @default(0)
 
   graphId  Int
-  domainId Int?
+  domainId String?
   graph    Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
   domain   Domain?   @relation(fields: [domainId], references: [id])
   lectures Lecture[]
 
-  incommingSubjects Subject[] @relation("SubjectRelation")
-  outgoingSubjects  Subject[] @relation("SubjectRelation")
+  incoming Subject[] @relation("SubjectRelation")
+  outgoing  Subject[] @relation("SubjectRelation")
 
   @@unique([name, domainId])
 }

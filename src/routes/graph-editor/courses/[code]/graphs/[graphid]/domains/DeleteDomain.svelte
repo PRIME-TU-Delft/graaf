@@ -17,7 +17,7 @@
 	let { domain, graph }: Props = $props();
 
 	const connectedSubjects = $derived(graph.subjects.filter((s) => s.domainId == domain.id));
-	const relationCount = $derived(domain.incommingDomains.length + domain.outgoingDomains.length);
+	const relationCount = $derived(domain.incoming.length + domain.outgoing.length);
 
 	const form = superForm((page.data as PageData).deleteDomainForm, {
 		id: 'delete-domain-form-' + domain.id,
@@ -35,8 +35,8 @@
 		// When the domain changes, update the form data
 		if (domain) {
 			$formData.domainId = domain.id;
-			$formData.incommingDomains = domain.incommingDomains.map((d) => d.id);
-			$formData.outgoingDomains = domain.outgoingDomains.map((d) => d.id);
+			$formData.incoming = domain.incoming.map((d) => d.id);
+			$formData.outgoing = domain.outgoing.map((d) => d.id);
 			$formData.connectedSubjects = connectedSubjects.map((s) => s.id);
 		}
 	});
@@ -64,8 +64,8 @@
 <form class="text-sm" action="?/delete-domain" method="POST" use:enhance>
 	<input type="hidden" name="domainId" value={$formData.domainId} />
 
-	{@render formArray('incommingDomains')}
-	{@render formArray('outgoingDomains')}
+	{@render formArray('incoming')}
+	{@render formArray('outgoing')}
 	{@render formArray('connectedSubjects')}
 
 	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
@@ -92,7 +92,7 @@
 	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
-{#snippet formArray(name: 'incommingDomains' | 'outgoingDomains' | 'connectedSubjects')}
+{#snippet formArray(name: 'incoming' | 'outgoing' | 'connectedSubjects')}
 	<Form.Fieldset {form} {name} class="h-0">
 		{#each $formData[name] as _, i}
 			<Form.ElementField {form} name="{name}[{i}]">

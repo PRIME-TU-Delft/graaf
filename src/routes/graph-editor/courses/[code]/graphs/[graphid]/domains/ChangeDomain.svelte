@@ -8,7 +8,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { cn } from '$lib/utils';
-	import * as settings from '$lib/utils/settings';
+	import * as settings from '$lib/settings';
 	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
 	import { domainSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Domain } from '@prisma/client';
@@ -99,8 +99,8 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(domain.incommingDomains, 'In')}
-			{@render relations(domain.outgoingDomains, 'Out')}
+			{@render relations(domain.incoming, 'In')}
+			{@render relations(domain.outgoing, 'Out')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>

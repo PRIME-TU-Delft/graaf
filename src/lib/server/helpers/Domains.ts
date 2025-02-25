@@ -56,22 +56,22 @@ export class DomainActions {
 			return setError(form, '', 'Invalid form data');
 		}
 
-		const removeOutFromIncommingDomain = form.data.incommingDomains.map((id) => {
+		const removeOutFromincomingDomain = form.data.incoming.map((id) => {
 			return prisma.domain.update({
 				where: { id },
 				data: {
-					outgoingDomains: {
+					outgoing: {
 						disconnect: { id: form.data.domainId }
 					}
 				}
 			});
 		});
 
-		const removeInFromOutgoingDomain = form.data.outgoingDomains.map((id) => {
+		const removeInFromOutgoingDomain = form.data.outgoing.map((id) => {
 			return prisma.domain.update({
 				where: { id },
 				data: {
-					incommingDomains: {
+					incoming: {
 						disconnect: { id: form.data.domainId }
 					}
 				}
@@ -95,7 +95,7 @@ export class DomainActions {
 
 		try {
 			await prisma.$transaction([
-				...removeOutFromIncommingDomain,
+				...removeOutFromincomingDomain,
 				...removeInFromOutgoingDomain,
 				...removeDomainFromSubjects,
 				deleteDomain
@@ -134,7 +134,7 @@ export class DomainActions {
 		const isConnected = await prisma.domain.findFirst({
 			where: {
 				id: inId,
-				outgoingDomains: { some: { id: outId } }
+				outgoing: { some: { id: outId } }
 			}
 		});
 
@@ -147,7 +147,7 @@ export class DomainActions {
 				id: inId
 			},
 			data: {
-				outgoingDomains: { connect: { id: outId } }
+				outgoing: { connect: { id: outId } }
 			}
 		});
 
@@ -156,7 +156,7 @@ export class DomainActions {
 				id: outId
 			},
 			data: {
-				incommingDomains: { connect: { id: inId } }
+				incoming: { connect: { id: inId } }
 			}
 		});
 
@@ -184,7 +184,7 @@ export class DomainActions {
 		const removeOutToIn = prisma.domain.update({
 			where: { id: inId },
 			data: {
-				outgoingDomains: {
+				outgoing: {
 					disconnect: { id: outId }
 				}
 			}
@@ -193,7 +193,7 @@ export class DomainActions {
 		const removeInToOut = prisma.domain.update({
 			where: { id: outId },
 			data: {
-				incommingDomains: {
+				incoming: {
 					disconnect: { id: inId }
 				}
 			}

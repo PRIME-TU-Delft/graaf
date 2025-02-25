@@ -95,8 +95,8 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(subject.incommingSubjects, 'In')}
-			{@render relations(subject.outgoingSubjects, 'Out')}
+			{@render relations(subject.incoming, 'In')}
+			{@render relations(subject.outgoing, 'Out')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>

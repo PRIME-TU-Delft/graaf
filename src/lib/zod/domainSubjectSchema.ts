@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import * as settings from '$lib/utils/settings';
+import * as settings from '$lib/settings';
 
 // This is a Zod schema for validating forms this cannot be automatically generated
 // from the database schema because that is not accessible at from the client
@@ -13,8 +13,8 @@ export const domainSchema = z.object({
 
 export const deleteDomainSchema = z.object({
 	domainId: z.number().min(1, 'Invalid domain id'),
-	incommingDomains: z.array(z.number()),
-	outgoingDomains: z.array(z.number()),
+	incoming: z.array(z.number()),
+	outgoing: z.array(z.number()),
 	connectedSubjects: z.array(z.number())
 });
 
@@ -57,8 +57,8 @@ export const subjectSchema = z.object({
 
 export const deleteSubjectSchema = z.object({
 	subjectId: z.number().min(1, 'Invalid subject id'),
-	incommingSubjects: z.array(z.number()),
-	outgoingSubjects: z.array(z.number())
+	incoming: z.array(z.number()),
+	outgoing: z.array(z.number())
 });
 
 export const subjectRelSchema = z.object({

@@ -7,7 +7,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { cn } from '$lib/utils';
-	import * as settings from '$lib/utils/settings';
+	import * as settings from '$lib/settings';
 	import { domainSchema } from '$lib/zod/domainSubjectSchema';
 	import type { Graph } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';

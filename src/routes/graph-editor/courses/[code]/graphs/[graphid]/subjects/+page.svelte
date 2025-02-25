@@ -20,7 +20,7 @@
 	const subjectMapping = $derived.by(() => {
 		const map: { subject: Subject; outSubject: Subject }[] = [];
 		for (const subject of graph.subjects) {
-			for (const outSubject of subject.outgoingSubjects) {
+			for (const outSubject of subject.outgoing) {
 				map.push({ subject, outSubject });
 			}
 		}

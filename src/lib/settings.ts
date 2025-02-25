@@ -70,6 +70,9 @@ export const OVERLAY_LINGER: Milliseconds = 1500
 export const CENTER_FORCE = 0.05
 export const CHARGE_FORCE = -15
 
+// Animation settings
+export const GRAPH_ANIMATION_DURATION: Milliseconds = 500
+
 // Node style settings
 const top = STROKE_WIDTH / 2
 const right = NODE_WIDTH * GRID_UNIT - STROKE_WIDTH / 2

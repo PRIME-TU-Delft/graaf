@@ -10,8 +10,8 @@ function dummyDomain(name: string, id: number) {
 		x: 0,
 		y: 0,
 		order: 0,
-		incommingDomains: [],
-		outgoingDomains: [],
+		incoming: [],
+		outgoing: [],
 		graphId: 0
 	} as DomainType;
 }
@@ -28,8 +28,8 @@ function dummyGraph(domains: DomainType[]) {
 }
 
 function addConnection(from: DomainType, to: DomainType) {
-	from.outgoingDomains.push(to);
-	to.incommingDomains.push(from);
+	from.outgoing.push(to);
+	to.incoming.push(from);
 }
 
 describe('Trivial graph', () => {
@@ -242,8 +242,8 @@ describe('Remove edge is sound', () => {
 		expect(validator.hasEdge(a, b)).toBe(true);
 		validator.removeEdge(a, b);
 
-		expect(b.incommingDomains.length).toBe(0);
-		expect(a.outgoingDomains.length).toBe(0);
+		expect(b.incoming.length).toBe(0);
+		expect(a.outgoing.length).toBe(0);
 		expect(validator.hasEdge(a, b)).toBe(false);
 	});
 });

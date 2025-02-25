@@ -5,7 +5,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
-	import * as settings from '$lib/utils/settings';
+	import * as settings from '$lib/settings';
 	import type { DomainType } from '$lib/validators/graphValidator';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -26,7 +26,7 @@
 	const domainMapping = $derived.by(() => {
 		const map: { domain: Domain; outDomain: Domain }[] = [];
 		for (const domain of graph.domains) {
-			for (const outDomain of domain.outgoingDomains) {
+			for (const outDomain of domain.outgoing) {
 				map.push({ domain, outDomain });
 			}
 		}
