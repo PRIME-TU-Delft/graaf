@@ -1,10 +1,9 @@
-import { SvelteKitAuth } from '@auth/sveltekit';
-import { PrismaAdapter } from '@auth/prisma-adapter';
-
 import { env } from '$env/dynamic/private';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { SvelteKitAuth } from '@auth/sveltekit';
 import type { OIDCConfig } from '@auth/sveltekit/providers';
-import prisma from './db/prisma';
 import { error } from '@sveltejs/kit';
+import prisma from './db/prisma';
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;

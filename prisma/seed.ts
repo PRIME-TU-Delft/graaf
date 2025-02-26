@@ -1,10 +1,28 @@
 import { Course, Subject, PrismaClient } from '@prisma/client';
 import { courses, domains, programs, subjects } from './init';
+import { env } from 'process';
 
 const prisma = new PrismaClient();
 
 async function main() {
 	console.log(`Start seeding ...`);
+
+	if (env.NETLIFY_CONTEXT != 'PROD') {
+		const user = await prisma.user.create({
+			data: {
+				role: 'ADMIN',
+				email: 'testuser@tudelft.nl',
+				password: 'password',
+				nickname: 'Test User',
+				firstName: 'Test',
+				lastName: 'User',
+				emailVerified: new Date(),
+				createdAt: new Date(),
+				updatedAt: new Date()
+			}
+		});
+	}
+
 	const cs: Course[] = [];
 	for (const course of courses) {
 		const c = await prisma.course.create({
