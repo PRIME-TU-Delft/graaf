@@ -12,7 +12,9 @@
 	const { courses, user }: CourseGridProps = $props();
 </script>
 
-<div class="grid grid-cols-2 gap-1 p-2 md:grid-cols-2 md:gap-2">
+<div
+	class="grid max-h-96 grid-cols-1 gap-1 overflow-auto p-2 sm:grid-cols-2 md:grid-cols-2 md:gap-2"
+>
 	{#each courses as course}
 		<a
 			href="graph-editor/courses/{course.code}"
