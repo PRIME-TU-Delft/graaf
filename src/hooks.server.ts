@@ -8,7 +8,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Disable all forms of authentication in deploy previews
 	if (env.NETLIFY_CONTEXT == 'DEPLOY_PREVIEW') {
 		event.locals.auth = async () => {
-			const user = await prisma.user.findFirst();
+			const user = await prisma.user.findFirst({
+				where: {
+					email: 'testuser@tudelft.nl'
+				}
+			});
 
 			if (!user) throw new Error('User not found');
 
