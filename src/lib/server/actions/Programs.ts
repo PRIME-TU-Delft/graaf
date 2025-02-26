@@ -69,13 +69,8 @@ export class ProgramActions {
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#c1
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
-	static async newCourse(event: RequestEvent, form: SuperValidated<Infer<typeof courseSchema>>) {
+	static async newCourse(user: User, form: SuperValidated<Infer<typeof courseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
-
-		// Check permissions
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return setError(form, '', 'Unauthorized');
 
 		try {
 			await prisma.program.update({
@@ -112,18 +107,13 @@ export class ProgramActions {
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#p5
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
-	static async addCourseToProgram(event: RequestEvent, formData: FormData) {
+	static async addCourseToProgram(user: User, formData: FormData) {
 		const programId = formData.get('program-id') as string | null;
 		const courseCode = formData.get('code') as string | null;
 		const courseName = formData.get('name') as string | null;
 
 		if (!programId || !courseCode || !courseName)
 			return fail(400, { error: 'Missing required fields' });
-
-		// Check permissions
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
 
 		try {
 			await prisma.program.update({

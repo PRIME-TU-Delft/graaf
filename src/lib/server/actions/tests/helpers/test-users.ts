@@ -98,29 +98,28 @@ export type UserType =
 	| 'courseAdmin'
 	| 'courseEditor'
 	| 'regular';
-export function mockLocals(userType: UserType) {
-	let user = regularUser;
 
+export function mockUser(userType: UserType) {
 	switch (userType) {
 		case 'superAdmin':
-			user = superAdminUser;
-			break;
+			return superAdminUser;
 		case 'programAdmin':
-			user = programAdminUser;
-			break;
+			return programAdminUser;
 		case 'programEditor':
-			user = programEditorUser;
-			break;
+			return programEditorUser;
 		case 'courseAdmin':
-			user = courseAdminUser;
-			break;
+			return courseAdminUser;
 		case 'courseEditor':
-			user = courseEditorUser;
-			break;
+			return courseEditorUser;
 		case 'regular':
-			user = regularUser;
-			break;
+			return regularUser;
+		default:
+			return regularUser;
 	}
+}
+
+export function mockLocals(userType: UserType) {
+	let user = mockUser(userType);
 
 	const session: Session = { user, expires: new Date().toDateString() };
 

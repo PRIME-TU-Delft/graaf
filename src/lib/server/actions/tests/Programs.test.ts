@@ -6,7 +6,7 @@ import { ProgramActions } from '../Programs';
 import mockForm from './helpers/mockForm';
 import mockFormData from './helpers/mockFormData';
 import { PROGRAM_IDS } from './helpers/setup';
-import { mockLocals, type UserType } from './helpers/test-users';
+import { mockLocals, mockUser, type UserType } from './helpers/test-users';
 
 describe('New Program', () => {
 	test('admin user is allowed to add new program', async () => {
@@ -48,14 +48,14 @@ describe('New Course', () => {
 	test.for(['superAdmin', 'programAdmin'] as UserType[])(
 		'%s is allowed to add a new course to a programTwo',
 		async (role) => {
-			const event = { locals: mockLocals(role) } as RequestEvent;
+			const user = mockUser(role);
 			const form = await mockForm(
 				{ code: 'A100', name: 'new-course', programId: PROGRAM_IDS[1] },
 				courseSchema
 			);
 			expect(form.valid).toBe(true);
 
-			const response = await ProgramActions.newCourse(event, form);
+			const response = await ProgramActions.newCourse(user, form);
 
 			const program = await prisma.program.findFirst({
 				where: { name: 'ProgramTwo' },
@@ -73,14 +73,14 @@ describe('New Course', () => {
 	test.for(['regular', 'programEditor'] as UserType[])(
 		'%s is not allowed to add a new course to a programTwo',
 		async (role) => {
-			const event = { locals: mockLocals(role) } as RequestEvent;
+			const user = mockUser(role);
 			const form = await mockForm(
 				{ code: 'A100', name: 'new-course', programId: PROGRAM_IDS[1] },
 				courseSchema
 			);
 			expect(form.valid).toBe(true);
 
-			const response = await ProgramActions.newCourse(event, form);
+			const response = await ProgramActions.newCourse(user, form);
 
 			if (!('status' in response)) throw new Error('Response is not an action failure');
 
@@ -92,7 +92,7 @@ describe('New Course', () => {
 
 describe('Link Course to Program', () => {
 	test.for(['superAdmin', 'programAdmin'])('%s is allowed to link course to program', async () => {
-		const event = { locals: mockLocals('superAdmin') } as RequestEvent;
+		const user = mockUser('superAdmin');
 
 		const newCourse = await prisma.course.create({
 			data: {
@@ -107,7 +107,7 @@ describe('Link Course to Program', () => {
 			name: newCourse.name
 		});
 
-		const response = await ProgramActions.addCourseToProgram(event, formData);
+		const response = await ProgramActions.addCourseToProgram(user, formData);
 
 		// Retreive the program from the database
 		const program = await prisma.program.findFirst({
