@@ -7,12 +7,21 @@ const prisma = new PrismaClient();
 async function main() {
 	console.log(`Start seeding ...`);
 
+	await prisma.$transaction([
+		prisma.graph.deleteMany(),
+		prisma.course.deleteMany(),
+		prisma.user.deleteMany(),
+		prisma.program.deleteMany(),
+		prisma.domain.deleteMany(),
+		prisma.subject.deleteMany(),
+		prisma.lecture.deleteMany()
+	]);
+
 	if (env.NETLIFY_CONTEXT != 'PROD') {
 		const user = await prisma.user.create({
 			data: {
 				role: 'ADMIN',
 				email: 'testuser@tudelft.nl',
-				password: 'password',
 				nickname: 'Test User',
 				firstName: 'Test',
 				lastName: 'User',
