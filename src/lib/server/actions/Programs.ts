@@ -5,7 +5,29 @@ import { fail, type RequestEvent } from '@sveltejs/kit';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from '../db/prisma';
 
-export function hasProgramPermissions(user: User, editor = true, admin = true, superAdmin = true) {
+type PermissionsOptions = {
+	admin: boolean;
+	editor: boolean;
+	superAdmin: boolean;
+};
+
+/**
+ * Check if the user has permissions to edit the program
+ * @param user - User
+ * @param options - PermissionsOptions
+ * @returns A json object that can be used in a Prisma where query
+ * @example
+ * const user = { id: 1, role: 'ADMIN' };
+ * const permissions = hasProgramPermissions(user, { admin: true, editor: true, superAdmin: true });
+ * const program = await prisma.program.findFirst({ where: { id: 1, ...permissions } });
+ */
+export function hasProgramPermissions(
+	user: User,
+	options: PermissionsOptions = { admin: true, editor: true, superAdmin: true }
+) {
+	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
+	if (options.superAdmin && user.role == 'ADMIN') return {};
+
 	const hasEditorPermission = {
 		editors: {
 			some: {
@@ -22,13 +44,9 @@ export function hasProgramPermissions(user: User, editor = true, admin = true, s
 		}
 	};
 
-	if (user.role == 'ADMIN') {
-		return {};
-	}
-
 	const hasPermission: (typeof hasEditorPermission | typeof hasAdminPermission)[] = [];
-	if (editor) hasPermission.push(hasEditorPermission);
-	if (admin) hasPermission.push(hasAdminPermission);
+	if (options.editor) hasPermission.push(hasEditorPermission);
+	if (options.admin) hasPermission.push(hasAdminPermission);
 
 	return { OR: hasPermission };
 }
