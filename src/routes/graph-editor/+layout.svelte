@@ -3,7 +3,6 @@
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import type { User } from '@prisma/client';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { toast } from 'svelte-sonner';
 
@@ -22,6 +21,15 @@
 			}
 		});
 	});
+
+	async function handleToggleAdmin() {
+		const res = await fetch('/auth/toggle-admin', {
+			method: 'PATCH'
+		}).then((res) => res.json());
+
+		if (res.error) toast.error(res.error);
+		else location.reload();
+	}
 </script>
 
 <Toaster closeButton />
@@ -48,7 +56,7 @@
 </main>
 
 {#if dev}
-	<!-- When in Dev mode,  -->
+	<!-- When in Dev mode, allow the user to toggle between ADMIN/USER role  -->
 	<Accordion.Root
 		type="single"
 		class="fixed bottom-4 right-4 z-50 rounded-lg bg-blue-900/20 p-2 opacity-5 transition-opacity hover:opacity-100"
@@ -56,12 +64,8 @@
 		<Accordion.Item value="item-1" class="border-b-0">
 			<Accordion.Trigger class="p-0">Toggle Admin</Accordion.Trigger>
 			<Accordion.Content class="z-50">
-				<form class="mr-4" action="?/toggle-admin" method="post">
-					<input type="text" name="currentRole" value={(data.session.user as User)?.role} hidden />
-					<Button class="m-0" onclick={(e) => e.stopPropagation()} type="submit"
-						>Toggle admin</Button
-					>
-				</form>
+				<Button class="m-0" onclick={handleToggleAdmin}>Toggle admin</Button>
+
 				<pre>{JSON.stringify(data.session.user, null, 2)}</pre>
 			</Accordion.Content>
 		</Accordion.Item>
