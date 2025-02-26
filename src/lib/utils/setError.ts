@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { FormPathLeavesWithErrors, SuperValidated } from 'sveltekit-superforms';
 
 /**
- * This code is directly copied from the repo
+ * This code is directly copied from the sveltekit-superforms repo
  * The orignal imported code is not compatible with vitest,
  * in the future (when sveltekit-superform has a stable release for svelte-5)
  * we will replace this with the original code
