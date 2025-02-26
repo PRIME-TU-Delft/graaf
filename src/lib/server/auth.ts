@@ -4,10 +4,6 @@ import { SvelteKitAuth } from '@auth/sveltekit';
 import type { OIDCConfig } from '@auth/sveltekit/providers';
 import { error } from '@sveltejs/kit';
 import prisma from './db/prisma';
-import Credentials from '@auth/sveltekit/providers/credentials';
-import { createUserSchema } from '$lib/zod/userSchema';
-import { ZodError } from 'zod';
-import Sendgrid from '@auth/sveltekit/providers/sendgrid';
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;
@@ -56,48 +52,8 @@ function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
 	};
 }
 
-function emailPasswordProvider() {
-	return Credentials({
-		credentials: {
-			email: {},
-			password: {}
-		},
-		authorize: async (credentials) => {
-			try {
-				const { email, password } = await createUserSchema.parseAsync(credentials);
-
-				const user = await prisma.user.findUnique({
-					where: {
-						email,
-						password
-					}
-				});
-
-				console.log({ user });
-
-				// return JSON object with the user data
-				return user;
-			} catch (error) {
-				if (error instanceof ZodError) {
-					// Return `null` to indicate that the credentials are invalid
-					return null;
-				}
-			}
-
-			return null;
-		}
-	});
-}
-
-function sendGridProvider() {
-	return Sendgrid({
-		apiKey: env.SEND_GRID_API_KEY,
-		from: 'a.debruijn-3@student.tudelft.nl'
-	});
-}
-
 export const { handle, signIn, signOut } = SvelteKitAuth({
-	providers: [SurfConextProvider, ...(env.NETLIFY_CONTEXT != 'PROD' ? [sendGridProvider] : [])],
+	providers: [SurfConextProvider],
 	adapter: PrismaAdapter(prisma),
 	secret: env.AUTH_SECRET,
 	debug: Boolean(env.DEBUG),
