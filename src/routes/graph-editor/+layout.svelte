@@ -54,15 +54,14 @@
 		class="fixed bottom-4 right-4 z-50 rounded-lg bg-blue-900/20 p-2 opacity-5 transition-opacity hover:opacity-100"
 	>
 		<Accordion.Item value="item-1" class="border-b-0">
-			<Accordion.Trigger class="p-0">
+			<Accordion.Trigger class="p-0">Toggle Admin</Accordion.Trigger>
+			<Accordion.Content class="z-50">
 				<form class="mr-4" action="?/toggle-admin" method="post">
 					<input type="text" name="currentRole" value={(data.session.user as User)?.role} hidden />
 					<Button class="m-0" onclick={(e) => e.stopPropagation()} type="submit"
 						>Toggle admin</Button
 					>
 				</form>
-			</Accordion.Trigger>
-			<Accordion.Content>
 				<pre>{JSON.stringify(data.session.user, null, 2)}</pre>
 			</Accordion.Content>
 		</Accordion.Item>

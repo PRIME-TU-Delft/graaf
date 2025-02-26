@@ -130,12 +130,22 @@ export const actions = {
 	'new-course': async (event) => {
 		const formData = await superValidate(event, zod(courseSchema));
 
-		return ProgramActions.newCourse(event, formData);
+		const session = await event.locals.auth();
+		const user = session?.user as User | undefined;
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		return ProgramActions.newCourse(user, formData);
 	},
 
 	'add-course-to-program': async (event) => {
 		const formData = await event.request.formData();
-		ProgramActions.addCourseToProgram(event, formData);
+
+		// console.log(await event.locals.auth());
+		const session = await event.locals.auth();
+		const user = session?.user as User | undefined;
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		ProgramActions.addCourseToProgram(user, formData);
 	},
 
 	'pin-course': async ({ locals, request }) => {
