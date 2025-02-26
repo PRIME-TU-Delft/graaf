@@ -7,7 +7,7 @@ import prisma from './db/prisma';
 import Credentials from '@auth/sveltekit/providers/credentials';
 import { createUserSchema } from '$lib/zod/userSchema';
 import { ZodError } from 'zod';
-import GitHub from '@auth/sveltekit/providers/github';
+import Sendgrid from '@auth/sveltekit/providers/sendgrid';
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;
@@ -89,15 +89,15 @@ function emailPasswordProvider() {
 	});
 }
 
+function sendGridProvider() {
+	return Sendgrid({
+		apiKey: env.SEND_GRID_API_KEY,
+		from: 'a.debruijn-3@student.tudelft.nl'
+	});
+}
+
 export const { handle, signIn, signOut } = SvelteKitAuth({
-	providers: [
-		SurfConextProvider,
-		GitHub({
-			clientId: 'Ov23liywA0ANizFYrWts',
-			clientSecret: '242baac61f10c8ed4bfffec22f5a9f28fe95c68b'
-		}),
-		...(env.NETLIFY_CONTEXT != 'PROD' ? [emailPasswordProvider] : [])
-	],
+	providers: [SurfConextProvider, ...(env.NETLIFY_CONTEXT != 'PROD' ? [sendGridProvider] : [])],
 	adapter: PrismaAdapter(prisma),
 	secret: env.AUTH_SECRET,
 	debug: Boolean(env.DEBUG),
