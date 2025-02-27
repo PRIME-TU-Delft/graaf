@@ -1,12 +1,22 @@
 <script lang="ts">
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import { hasCoursePermissions } from '$lib/utils/permissions';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import { hasCoursePermissions } from '$lib/utils/permissions';
+	import GraphSettings from './GraphSettings.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	let isGraphSettingsOpen = $state(data.graphs.map(() => false));
+
+	function handleOpenGraphSettings(e: MouseEvent, i: number) {
+		e.preventDefault();
+		data.graphs.map(() => false);
+		isGraphSettingsOpen[i] = true;
+	}
 </script>
 
 <section class="prose mx-auto p-4 text-blue-900">
@@ -22,9 +32,7 @@
 	{/if}
 </section>
 
-<!-- TODO: archive, delete, edit permissions for users -->
-
-{#if data.course != undefined && data.graphSchema != undefined}
+{#if data.graphSchema != undefined && data.course != null && 'graphs' in data.course}
 	{@const hasAtLeastCourseEditPermissions = hasCoursePermissions(data.user, data.course)}
 	<section
 		class="mx-auto my-12 grid max-w-4xl gap-4 p-4 {data.graphs.length > 0 ? 'grid-cols-2' : ''}"
@@ -34,7 +42,7 @@
 		{/if}
 
 		<!-- MARK: GRAPHS -->
-		{#each data.graphs as graph (graph.id)}
+		{#each data.graphs as graph, i (graph.id)}
 			<a
 				class="group grid grid-cols-2 items-center gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
 				href="{data.course.code}/graphs/{graph.id}"
@@ -62,17 +70,19 @@
 									});
 								}}>Duplicate</Button
 							>
-							<Button
-								class="w-full"
-								onclick={(e) => {
-									e.preventDefault();
-									toast.success('WIP: Open settings modal', {
-										description: "Settings includes: 'delete', 'change name', 'duplicate'"
-									});
-								}}
+
+							<DialogButton
+								onclick={(e) => handleOpenGraphSettings(e, i)}
+								button="Settings"
+								title="Edit Graph"
+								description="TODO"
+								bind:open={isGraphSettingsOpen[i]}
 							>
-								Settings
-							</Button>
+								<GraphSettings
+									graph={data.course.graphs[i]}
+									bind:isGraphSettingsOpen={isGraphSettingsOpen[i]}
+								/>
+							</DialogButton>
 						</div>
 					{/if}
 				</div>

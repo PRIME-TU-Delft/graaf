@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/private';
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import type { graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
-import type { Prisma, User } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
 
@@ -64,7 +64,7 @@ export class GraphActions {
 	 * @returns form with error or form
 	 */
 	private static async updateCourse<T, S extends Record<string, unknown>>(
-		query: Prisma.Prisma__CourseClient<T>,
+		query: T,
 		form: SuperValidated<S>,
 		path: FormPathLeavesWithErrors<S>
 	) {
@@ -76,6 +76,8 @@ export class GraphActions {
 			if (
 				e instanceof PrismaClientKnownRequestError &&
 				e.meta &&
+				'cause' in e.meta &&
+				e.meta.cause instanceof String &&
 				(e.meta.cause as string).includes("No 'Course' record")
 			) {
 				return setError(
@@ -111,6 +113,26 @@ export class GraphActions {
 
 	/**
 	 * Permissions:
+	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
+	 */
+	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
+		const query = prisma.course.update({
+			where: { code: form.data.courseCode, ...hasCourseGraphPermissions(user) },
+			data: {
+				graphs: {
+					update: {
+						where: { id: form.data.graphId },
+						data: { name: form.data.name }
+					}
+				}
+			}
+		});
+
+		return await this.updateCourse(query, form, 'name');
+	}
+
+	/**
+	 * Permissions:
 	 * https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#C6
 	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
 	 * @returns
@@ -130,6 +152,8 @@ export class GraphActions {
 				}
 			}
 		});
+
+		// This also deletes the graph's domains, subjects, and relations
 
 		return await this.updateCourse(query, form, 'name');
 	}

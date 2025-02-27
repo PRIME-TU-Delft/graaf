@@ -10,5 +10,5 @@ export const graphSchema = z.object({
 });
 
 export const graphSchemaWithId = graphSchema.extend({
-	graphId: z.number()
+	graphId: z.number().min(1)
 });

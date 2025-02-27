@@ -16,7 +16,11 @@
 		title: string;
 		description: string;
 		disabled?: boolean;
-		onclick?: () => void;
+		onclick?: (
+			e: MouseEvent & {
+				currentTarget: EventTarget & HTMLButtonElement;
+			}
+		) => void;
 		children: Snippet;
 		variant?: ButtonVariant;
 		class?: string;
@@ -48,7 +52,7 @@
 		onclick={(e) => {
 			e.stopPropagation();
 			console.log('clicked');
-			onclick();
+			onclick(e);
 		}}
 	>
 		{#if icon == 'plus'}
