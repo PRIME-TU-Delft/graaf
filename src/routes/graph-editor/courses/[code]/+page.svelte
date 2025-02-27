@@ -1,22 +1,12 @@
 <script lang="ts">
-	import DialogButton from '$lib/components/DialogButton.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import GraphSettings from './GraphSettings.svelte';
+	import EditGraph from './EditGraph.svelte';
 
 	let { data }: { data: PageData } = $props();
-
-	let isGraphSettingsOpen = $state(data.graphs.map(() => false));
-
-	function handleOpenGraphSettings(e: MouseEvent, i: number) {
-		e.preventDefault();
-		data.graphs.map(() => false);
-		isGraphSettingsOpen[i] = true;
-	}
 </script>
 
 <section class="prose mx-auto p-4 text-blue-900">
@@ -32,7 +22,7 @@
 	{/if}
 </section>
 
-{#if data.graphSchema != undefined && data.course != null && 'graphs' in data.course}
+{#if data.graphSchema != undefined && data.course != null}
 	{@const hasAtLeastCourseEditPermissions = hasCoursePermissions(data.user, data.course)}
 	<section
 		class="mx-auto my-12 grid max-w-4xl gap-4 p-4 {data.graphs.length > 0 ? 'grid-cols-2' : ''}"
@@ -59,31 +49,7 @@
 						<ArrowRight />
 					</Button>
 					{#if hasAtLeastCourseEditPermissions}
-						<div class="flex flex-col gap-1 lg:flex-row">
-							<Button
-								class="w-full"
-								onclick={(e) => {
-									e.preventDefault();
-									toast.success('WIP: Open duplication popup', {
-										description:
-											'Can be duplicated to any other course that the user has permissions to'
-									});
-								}}>Duplicate</Button
-							>
-
-							<DialogButton
-								onclick={(e) => handleOpenGraphSettings(e, i)}
-								button="Settings"
-								title="Edit Graph"
-								description="TODO"
-								bind:open={isGraphSettingsOpen[i]}
-							>
-								<GraphSettings
-									graph={data.course.graphs[i]}
-									bind:isGraphSettingsOpen={isGraphSettingsOpen[i]}
-								/>
-							</DialogButton>
-						</div>
+						<EditGraph {graph} course={data.course} coursesAccessible={data.coursesAccessible} />
 					{/if}
 				</div>
 			</a>

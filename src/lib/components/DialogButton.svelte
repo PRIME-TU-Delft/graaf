@@ -1,13 +1,12 @@
 <script lang="ts" generics="T extends Schema">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { cn } from '$lib/utils';
-	import type { Snippet } from 'svelte';
-	import { type Schema } from 'sveltekit-superforms';
-	import { buttonVariants, type ButtonVariant } from './ui/button';
-
 	import Pencil from 'lucide-svelte/icons/pencil';
 	import Plus from 'lucide-svelte/icons/plus';
+	import type { Snippet } from 'svelte';
+	import { type Schema } from 'sveltekit-superforms';
 	import { Ellipsis } from './ui/breadcrumb';
+	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
 		icon?: 'plus' | 'ellipsis' | 'edit';

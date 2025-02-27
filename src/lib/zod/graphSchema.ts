@@ -12,3 +12,9 @@ export const graphSchema = z.object({
 export const graphSchemaWithId = graphSchema.extend({
 	graphId: z.number().min(1)
 });
+
+export const duplicateGraphSchema = z.object({
+	destinationCourseCode: z.string(),
+	newName: z.string().min(1).max(settings.MAX_GRAPH_NAME_LENGTH),
+	graphId: z.number().min(1)
+});
