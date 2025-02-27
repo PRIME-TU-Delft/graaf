@@ -1,12 +1,14 @@
+import { GraphActions } from '$lib/server/actions/Graphs.js';
+import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma';
-import type { ServerLoad } from '@sveltejs/kit';
-import { setError, superValidate, type Infer, type SuperValidated } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { graphSchema } from '$lib/zod/graphSchema.js';
-import type { Course, Graph } from '@prisma/client';
 import type { OrError } from '$lib/utils.js';
+import { graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema.js';
+import type { Course, Graph } from '@prisma/client';
+import { type ServerLoad } from '@sveltejs/kit';
+import { superValidate, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
 
-export const load = (async ({ params }) => {
+export const load = (async ({ params, locals }) => {
 	const result = {
 		course: undefined,
 		graphForm: await superValidate(zod(graphSchema)),
@@ -21,6 +23,8 @@ export const load = (async ({ params }) => {
 		result.error = 'Course code is required';
 		return result;
 	}
+
+	const user = await getUser({ locals });
 
 	try {
 		const dbCourse = await prisma.course.findFirst({
@@ -37,6 +41,14 @@ export const load = (async ({ params }) => {
 							}
 						}
 					}
+				},
+				admins: { select: { id: true } },
+				editors: { select: { id: true } },
+				programs: {
+					include: {
+						admins: { select: { id: true } },
+						editors: { select: { id: true } }
+					}
 				}
 			}
 		});
@@ -51,7 +63,8 @@ export const load = (async ({ params }) => {
 			error: undefined,
 			graphSchema: await superValidate(zod(graphSchema)),
 			course: dbCourse,
-			graphs: dbCourse.graphs
+			graphs: dbCourse.graphs,
+			user
 		};
 	} catch (e: unknown) {
 		result.error = e instanceof Error ? e.message : `${e}`;
@@ -63,19 +76,11 @@ export const actions = {
 	'add-graph-to-course': async (event) => {
 		const form = await superValidate(event, zod(graphSchema));
 
-		if (!form.valid) {
-			return setError(form, 'name', 'Invalid graph name');
-		}
+		return GraphActions.addGraphToCourse(await getUser(event), form);
+	},
+	'delete-graph': async (event) => {
+		const form = await superValidate(event, zod(graphSchemaWithId));
 
-		try {
-			await prisma.graph.create({
-				data: {
-					name: form.data.name,
-					courseId: form.data.courseCode
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+		return GraphActions.deleteGraphFromCourse(await getUser(event), form);
 	}
 };

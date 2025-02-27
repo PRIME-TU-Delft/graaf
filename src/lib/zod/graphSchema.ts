@@ -8,3 +8,7 @@ export const graphSchema = z.object({
 	courseCode: z.string(),
 	name: z.string().min(1).max(settings.MAX_GRAPH_NAME_LENGTH)
 });
+
+export const graphSchemaWithId = graphSchema.extend({
+	graphId: z.number()
+});
