@@ -14,7 +14,7 @@ export const graphSchemaWithId = graphSchema.extend({
 });
 
 export const duplicateGraphSchema = z.object({
-	destinationCourseCode: z.string(),
+	destinationCourseCode: z.string().min(1).max(settings.MAX_COURSE_CODE_LENGTH),
 	newName: z.string().min(1).max(settings.MAX_GRAPH_NAME_LENGTH),
 	graphId: z.number().min(1)
 });

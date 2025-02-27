@@ -101,6 +101,6 @@ export const actions = {
 	'duplicate-graph': async (event) => {
 		const form = await superValidate(event, zod(duplicateGraphSchema));
 
-		console.log({ form });
+		return GraphActions.duplicateGraph(await getUser(event), form, event.params.code);
 	}
 };

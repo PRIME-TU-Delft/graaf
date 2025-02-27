@@ -13,9 +13,17 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 	import { toast } from 'svelte-sonner';
+	import { fromStore } from 'svelte/store';
+	import { fly } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
+
+	type CourseType = Course & {
+		graphs: {
+			name: string;
+		}[];
+	};
 
 	let {
 		graph,
@@ -24,13 +32,13 @@
 		coursesAccessible
 	}: {
 		graph: Graph;
-		course: Course;
+		course: CourseType;
 		isDuplicateOpen: boolean;
-		coursesAccessible: Promise<Course[]>;
+		coursesAccessible: Promise<CourseType[]>;
 	} = $props();
 
 	let isDestinationCourseOpen = $state(false);
-	let selectableCourses = $state<Course[]>([]);
+	let selectableCourses = $state<CourseType[]>([]);
 	const triggerId = useId();
 
 	const form = superForm((page.data as PageData).duplicateGraphForm, {
@@ -38,25 +46,36 @@
 		validators: zodClient(duplicateGraphSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
-				toast.success('Graph successfully changed!');
+				toast.success('Graph successfully copied!');
 				isDuplicateOpen = false;
 			}
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
+
+	let graphHasSameNameAsOriginal = $derived.by(() => {
+		const { destinationCourseCode, newName } = fromStore(formData).current;
+
+		const graphsInSelectedCourse = selectableCourses.find(
+			(f) => f.code === destinationCourseCode
+		)?.graphs;
+
+		if (!graphsInSelectedCourse) return false;
+
+		return graphsInSelectedCourse.some((g) => g.name === newName);
+	});
 
 	$effect(() => {
 		if (graph.id) {
 			$formData.newName = graph.name;
 			$formData.graphId = graph.id;
-			$formData.destinationCourseCode = graph.courseId;
+			$formData.destinationCourseCode = course.code;
 		}
 	});
 
 	$effect(() => {
 		selectableCourses = [course];
-		console.log({ course });
 
 		coursesAccessible.then((courses) => {
 			selectableCourses = [...selectableCourses, ...courses];
@@ -80,20 +99,38 @@
 
 	{@render selectCourse()}
 
-	<div class="flex items-center justify-between gap-1">
+	{#if graphHasSameNameAsOriginal}
+		<p
+			in:fly={{ y: -10, duration: 200, delay: 200 }}
+			class="mt-2 rounded border-2 border-amber-900 bg-amber-50 p-2 text-sm text-amber-700"
+		>
+			Warning: The destination course already has a graph with the same name. This may cause
+			confusion.
+		</p>
+	{/if}
+
+	<div class="mt-2 flex items-center justify-between gap-1">
 		<Form.FormError class="w-full text-right" {form} />
 
 		<Button
 			variant="outline"
-			disabled={$formData.newName == graph.name}
-			onclick={() => form.reset()}
+			disabled={$formData.newName == graph.name && $formData.destinationCourseCode == course.code}
+			onclick={() =>
+				form.reset({
+					newState: {
+						graphId: graph.id,
+						newName: graph.name,
+						destinationCourseCode: course.code
+					}
+				})}
 		>
 			<Undo2 /> Reset
 		</Button>
-		<Form.FormButton
-			disabled={$formData.newName == graph.name && $formData.destinationCourseCode == course.code}
-		>
+		<Form.FormButton disabled={$submitting} loading={$delayed}>
 			Duplicate
+			{#snippet loadingMessage()}
+				<span>Copying graph elements...</span>
+			{/snippet}
 		</Form.FormButton>
 	</div>
 </form>
@@ -113,7 +150,12 @@
 							{selectableCourses.find((f) => f.code === $formData.destinationCourseCode)?.name}
 							<ChevronsUpDown class="opacity-50" />
 						</Popover.Trigger>
-						<input hidden value={$formData.destinationCourseCode} name={props.name} />
+						<input
+							hidden
+							value={$formData.destinationCourseCode}
+							defaultValue={course.code}
+							name={props.name}
+						/>
 					</div>
 				{/snippet}
 			</Form.Control>
@@ -143,5 +185,6 @@
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
+		<Form.FieldErrors />
 	</Form.Field>
 {/snippet}
