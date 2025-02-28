@@ -2,7 +2,6 @@
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import type { User } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
-	import { scrollY } from 'svelte/reactivity/window';
 	import CourseGrid from './CourseGrid.svelte';
 	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
 	import Program from './Program.svelte';
@@ -10,21 +9,11 @@
 
 	const { data, form } = $props();
 
-	let accordionOpen = $state('item-1');
+	let accordionOpen = $state('');
 
 	$effect(() => {
 		// When add 'course to program' form is submitted with an error
 		if (form?.error) toast.error(form.error);
-	});
-
-	$effect(() => {
-		if (scrollY.current && scrollY.current < 100) {
-			accordionOpen = 'accordion';
-		}
-
-		if (scrollY.current && scrollY.current > 100) {
-			accordionOpen = 'none';
-		}
 	});
 </script>
 
