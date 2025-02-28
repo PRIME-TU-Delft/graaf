@@ -1,12 +1,15 @@
 <script lang="ts">
+	import * as Accordion from '$lib/components/ui/accordion/index.js';
+	import type { User } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
-	import SearchCourses from './SearchCourses.svelte';
+	import CourseGrid from './CourseGrid.svelte';
 	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
 	import Program from './Program.svelte';
-	import type { User } from '@prisma/client';
-	import CourseGrid from './CourseGrid.svelte';
+	import SearchCourses from './SearchCourses.svelte';
 
 	const { data, form } = $props();
+
+	let accordionOpen = $state('');
 
 	$effect(() => {
 		// When add 'course to program' form is submitted with an error
@@ -25,14 +28,21 @@
 		</p>
 	</section>
 
-	{#if data.pinnedCourses.length > 0}
-		<section
-			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-blue-100 p-4 shadow-none shadow-blue-200/70 md:sticky md:border-2 md:border-blue-200 md:shadow-lg"
+	{#if data.pinnedCourses && data.pinnedCourses.length > 0}
+		<Accordion.Root
+			type="single"
+			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-blue-100 px-4 py-2 shadow-none shadow-blue-200/70 md:sticky md:border-2 md:border-blue-200 md:shadow-lg"
+			bind:value={accordionOpen}
 		>
-			<h2 class="text-xl font-bold">My pinned courses</h2>
-
-			<CourseGrid courses={data.pinnedCourses} user={data.user} />
-		</section>
+			<Accordion.Item value="accordion">
+				<Accordion.Trigger class="text-xl font-bold hover:no-underline"
+					>My pinned courses</Accordion.Trigger
+				>
+				<Accordion.Content>
+					<CourseGrid courses={data.pinnedCourses} user={data.user} />
+				</Accordion.Content>
+			</Accordion.Item>
+		</Accordion.Root>
 	{/if}
 
 	<section class="mx-auto grid max-w-4xl gap-4 p-4">
