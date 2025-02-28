@@ -31,21 +31,8 @@ export function hasProgramPermissions(
 	// If no permissions are set, return empty permissions
 	if (!options.admin && !options.editor) return {};
 
-	const hasEditorPermission = {
-		editors: {
-			some: {
-				id: user.id
-			}
-		}
-	};
-
-	const hasAdminPermission = {
-		admins: {
-			some: {
-				id: user.id
-			}
-		}
-	};
+	const hasEditorPermission = { editors: { some: { id: user.id } } };
+	const hasAdminPermission = { admins: { some: { id: user.id } } };
 
 	const hasPermission: (typeof hasEditorPermission | typeof hasAdminPermission)[] = [];
 	if (options.editor) hasPermission.push(hasEditorPermission);
