@@ -68,7 +68,7 @@
 
 	$effect(() => {
 		if (graph.id) {
-			$formData.newName = graph.name;
+			$formData.newName = graph.name + ' copy';
 			$formData.graphId = graph.id;
 			$formData.destinationCourseCode = course.code;
 		}
