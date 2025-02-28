@@ -45,9 +45,11 @@
 				{@render newCourseButton()}
 			{/if}
 
-			<Button.Root href="graph-editor/programs/{program.id}/settings"
-				><Settings /> Settings</Button.Root
-			>
+			{#if user?.role === 'ADMIN'}
+				<Button.Root href="graph-editor/programs/{program.id}/settings">
+					<Settings /> Settings
+				</Button.Root>
+			{/if}
 		</div>
 	</div>
 
