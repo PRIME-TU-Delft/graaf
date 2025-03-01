@@ -73,18 +73,6 @@ class NodeToolbox {
                 .on('start', function() {
                     const selection = d3.select<SVGGElement, NodeData>(this)
                     selection.call(NodeToolbox.setFixed, graph, true)
-
-                    // If this was the last free node, stop simulation
-                    if (graph.state === GraphState.simulating) {
-                        if (
-                            graph.content
-                                .selectAll('.node.fixed')
-                                    .empty()
-                        ) {
-                            graph.simulation.stop()
-                            graph.state = GraphState.idle
-                        }
-                    }
                 })
 
                 .on('drag', function(event, node) {

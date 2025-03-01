@@ -46,13 +46,13 @@ enum GraphView {
 class GraphD3 {
     public graph_data: GraphData
     public editable: boolean
-
-    public state: GraphState = GraphState.detached
-    public view: GraphView = GraphView.domains
-    public lecture: LectureData | null = null
-
-    public keys: { [key: string]: boolean } = {}
     public zoom_lock: boolean = true
+
+    // Internal state
+    private _state: GraphState = GraphState.detached
+    private _view: GraphView = GraphView.domains
+    private _lecture: LectureData | null = null
+    private _keys: { [key: string]: boolean } = {}
 
     // D3
     private _svg?: SVGSelection
@@ -70,6 +70,18 @@ class GraphD3 {
     }
 
     // -----------------------------> Getters & Setters
+
+    get state() { return this._state }
+    private set state(value) { this._state = value }
+
+    get view() { return this._view }
+    private set view(value) { this._view = value }
+
+    get lecture() { return this._lecture }
+    private set lecture(value) { this._lecture = value }
+
+    get keys() { return this._keys }
+    private set keys(value) { this._keys = value }
 
     get svg() {
         if (this._svg === undefined)
@@ -236,6 +248,61 @@ class GraphD3 {
         this.state = GraphState.detached
     }
 
+    setView(view: GraphView) {
+        switch (this.state) {
+            case GraphState.idle:
+                break
+
+            case GraphState.simulating:
+                this.stopSimulation()
+                break
+
+            case GraphState.transitioning:
+                return
+            
+            case GraphState.detached:
+                this.view = view
+                return
+        }
+
+        switch (this.view) {
+            case GraphView.domains:
+                if (view === GraphView.subjects) {
+                    this.domainsToSubjects()
+                } else if (view === GraphView.lectures) {
+                    this.domainsToLectures()
+                } break
+
+            case GraphView.subjects:
+                if (view === GraphView.domains) {
+                    this.subjectsToDomains()
+                } else if (view === GraphView.lectures) {
+                    this.subjectsToLectures()
+                } break
+
+            case GraphView.lectures:
+                if (view === GraphView.domains) {
+                    this.lecturesToDomains()
+                } else if (view === GraphView.subjects) {
+                    this.lecturesToSubjects()
+                } break
+        }
+    }
+
+    setLecture(lecture: LectureData | null) {
+        this.lecture = lecture
+
+        // Update lecture view
+        if (this.view === GraphView.lectures) {
+            this.snapToLectures()
+        }
+
+        // Update highlights
+        this.content
+            .selectAll<SVGGElement, NodeData>('.node')
+                .call(NodeToolbox.updateHighlight, this)
+    }
+
     zoomIn() {
         if (!CameraToolbox.allowZoomAndPan(this)) {
             return
@@ -302,10 +369,20 @@ class GraphD3 {
         this.simulation.stop()
         this.state = GraphState.idle
     }
- 
+
+    hasFreeNodes() {
+        return this.content
+            .selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
+                .size() > 0
+    }
+
     // -----------------------------> Private methods
 
     private formatPayload(data: PrismaGraphPayload): GraphData {
+
+        // NOTE: This function is a bit of a mess, but it's the best way I could think of to format the data.
+        //       It would be wonderful if the prisma schema would more closely match the required format.
+
         const graph: GraphData = {
             domain_nodes: [],
             domain_edges: [],
@@ -649,14 +726,6 @@ class GraphD3 {
     // -----------------------------> Transitions
 
     private snapToDomains() {
-
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
         this.state = GraphState.transitioning
 
         // Set camera pov and background
@@ -674,14 +743,6 @@ class GraphD3 {
     }
 
     private snapToSubjects() {
-
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
         this.state = GraphState.transitioning
 
         // Set camera pov and background
@@ -699,14 +760,6 @@ class GraphD3 {
     }
 
     private snapToLectures() {
-
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
         this.state = GraphState.transitioning
 
         // Set camera pov and background
@@ -725,22 +778,6 @@ class GraphD3 {
     }
 
     private domainsToSubjects() {
-
-        // Validate view
-        if (this.view === GraphView.subjects) {
-            return
-        } else if (this.view === GraphView.lectures) {
-            this.lecturesToSubjects()
-            return
-        }
-        
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
         this.state = GraphState.transitioning
 
         // Transition camera to new pov
@@ -762,28 +799,13 @@ class GraphD3 {
 
     private domainsToLectures() {
 
-        // Validate view
-        if (this.view === GraphView.lectures) {
-            return
-        } else if (this.view === GraphView.subjects) {
-            this.subjectsToLectures()
-            return
-        }
-        
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
-        this.state = GraphState.transitioning
-
         // Validate lecture
         if (this.lecture === null) {
             this.snapToLectures()
             return
         }
+
+        this.state = GraphState.transitioning
 
         // Transition to new camera pov - centered on the current graph for minimal movement
         const transform = CameraToolbox.centralTransform(this, this.graph_data.domain_nodes)
@@ -804,22 +826,6 @@ class GraphD3 {
     }
 
     private subjectsToDomains() {
-        
-        // Validate view
-        if (this.view === GraphView.domains) {
-            return
-        } else if (this.view === GraphView.lectures) {
-            this.lecturesToDomains()
-            return
-        }
-        
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
         this.state = GraphState.transitioning
 
         // Transition to new camera pov
@@ -839,29 +845,13 @@ class GraphD3 {
 
     private subjectsToLectures() {
 
-        // Validate view
-        if (this.view === GraphView.lectures) {
-            return
-        } else if (this.view === GraphView.domains) {
-            this.domainsToLectures()
-            return
-        }
-        
-        // Validate state
-        if (this.state === GraphState.simulating) {
-            this.stopSimulation()
-        } else if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
-
-        this.state = GraphState.transitioning
-
         // Validate lecture
         if (this.lecture === null) {
             this.snapToLectures()
             return
         }
 
+        this.state = GraphState.transitioning
         const lecture = this.lecture // Ref to lecture for future callbacks
 
         // Transition to new camera pov - centered on the current graph for minimal movement
@@ -881,19 +871,6 @@ class GraphD3 {
     }
 
     private lecturesToDomains() {
-
-        // Validate view
-        if (this.view === GraphView.domains) {
-            return
-        } else if (this.view === GraphView.subjects) {
-            this.subjectsToDomains()
-            return
-        }
-        
-        // Validate state - cannot be in simulation state
-        if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
 
         // Validate lecture
         if (this.lecture === null) {
@@ -924,19 +901,6 @@ class GraphD3 {
     }
 
     private lecturesToSubjects() {
-
-        // Validate view
-        if (this.view === GraphView.subjects) {
-            return
-        } else if (this.view === GraphView.domains) {
-            this.domainsToSubjects()
-            return
-        }
-        
-        // Validate state - cannot be in simulation state
-        if (this.state === GraphState.detached || this.state === GraphState.transitioning) {
-            return
-        }
 
         // Validate lecture
         if (this.lecture === null) {
