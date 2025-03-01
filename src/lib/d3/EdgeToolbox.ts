@@ -54,15 +54,6 @@ class EdgeToolbox {
         selection.each(function(edge) {
             const line = d3.select(this)
     
-            /* We are calculating the line connecting two nodes.
-             * It should start at the center of the start node and end at the BOUNDS of the end node.
-             * We first find some properties of the nodes: their size, center, and the difference between them.
-             * As the calculation of the line depends on the placement of the start node relative to the end node,
-             * we split the plane in 4 quadrants, originating from the start node, following its diagonals.
-             * We then use simple geometry, based on the quadrant the end node resides in, to calculate the bounds of the end node.
-             * The final line is a line from the center of the start node to the calculated bounds of the end node.
-             */
-    
             // Half the width and height of the nodes
             const halfWidth  = settings.NODE_WIDTH / 2 + settings.NODE_MARGIN
             const halfHeight = settings.NODE_HEIGHT / 2 + settings.NODE_MARGIN
@@ -89,13 +80,20 @@ class EdgeToolbox {
     
                 return
             }
+
+            /* We are calculating the line connecting two nodes.
+             * It should start at the center of the start node and end at the BOUNDS of the end node.
+             * Said differently, we need to find the intersection of a line with a rectangle centered at the target node.
+             * To do this, we split the plane in four using the two diagonals of the rectangle. We find in which quadrant
+             * the source node is, then find the intersection with the corresponding side of the rectangle.
+             */
     
             // Bounds of our four quadrants
             const ratio = halfHeight / halfWidth
-            const posBound =  ratio * dx + cySource
-            const negBound = -ratio * dx + cySource
+            const posBound =  ratio * dx + cySource // positively angled diagonal
+            const negBound = -ratio * dx + cySource // negatively angled diagonal
     
-            const sign = cyTarget > negBound ? -1 : 1						// Check if target is in top or right quadrant
+            const sign =  cyTarget > negBound ? -1 : 1						// Check if target is in top or right quadrant
             const vertQuad = (cyTarget > posBound) == (cyTarget > negBound) // Check if target is in top or bottom quadrant
     
             // Final line
