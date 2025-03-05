@@ -41,7 +41,11 @@ export const load: LayoutServerLoad = async ({ params }) => {
 								domain: true
 							}
 						},
-						lectures: true
+						lectures: {
+							include: {
+								subjects: true
+							}
+						}
 					}
 				}
 			}

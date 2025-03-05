@@ -2,6 +2,8 @@
 import * as d3 from 'd3'
 import { Prisma } from '@prisma/client'
 
+import * as settings from '$lib/settings'
+
 export type {
     PrismaGraphPayload,
     PrismaSubjectPayload,
@@ -64,7 +66,7 @@ type GraphData = {
 // Abstraction for domains and subjects
 type NodeData = {
     id: string
-    style: string
+    style: keyof typeof settings.COLORS
     text: string
     x: number
     y: number
