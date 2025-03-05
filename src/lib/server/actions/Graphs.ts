@@ -323,7 +323,12 @@ export class GraphActions {
 			});
 		});
 
-		await prisma.$transaction([...domainRelations, ...subjectRelations, ...lectureRelations]);
+		try {
+			await prisma.$transaction([...domainRelations, ...subjectRelations, ...lectureRelations]);
+		} catch (e) {
+			if (env.DEBUG) console.error(e);
+			return setError(form, '', 'Failed to duplicate relations');
+		}
 
 		if (destinationCourse.code !== sourseCourseCode) {
 			// Redirect to the destination course
