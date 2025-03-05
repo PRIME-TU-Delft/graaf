@@ -59,3 +59,22 @@ describe('CreateGraph', () => {
 		expect(newCourse?.graphs.map((g) => g.name)).toContain(form.data.name);
 	});
 });
+
+describe('connect to undefined', () => {
+	test('it throws an error', async () => {
+		const domain = await prisma.domain.findFirst();
+
+		const query = prisma.domain.update({
+			where: {
+				id: domain!.id
+			},
+			data: {
+				incommingDomains: {
+					connect: [{ id: undefined }]
+				}
+			}
+		});
+
+		await expect(query).rejects.toThrowError();
+	});
+});
