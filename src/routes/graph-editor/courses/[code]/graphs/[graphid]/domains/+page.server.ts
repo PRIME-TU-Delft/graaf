@@ -1,15 +1,17 @@
 import { DomainActions } from '$lib/server/helpers';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+
 import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
 	domainRelSchema,
 	domainSchema
-} from '$lib/zod/subjectSchema';
-import type { ServerLoad } from '@sveltejs/kit';
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+} from '$lib/zod/domainSchema.js';
 
-export const load: ServerLoad = async ({ params }) => {
+import type { ServerLoad } from '@sveltejs/kit';
+
+export const load: ServerLoad = async () => {
 	return {
 		newDomainForm: await superValidate(zod(domainSchema)),
 		deleteDomainForm: await superValidate(zod(deleteDomainSchema)),

@@ -27,8 +27,8 @@ export const load: LayoutServerLoad = async ({ params }) => {
 					include: {
 						domains: {
 							include: {
-								incoming: true,
-								outgoing: true
+								sourceDomains: true,
+								targetDomains: true
 							},
 							orderBy: {
 								order: 'asc'
@@ -36,8 +36,8 @@ export const load: LayoutServerLoad = async ({ params }) => {
 						},
 						subjects: {
 							include: {
-								incoming: true,
-								outgoing: true,
+								sourceSubjects: true,
+								targetSubjects: true,
 								domain: true
 							}
 						},

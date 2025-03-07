@@ -1,19 +1,18 @@
-
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 
-	import { fade } from "svelte/transition";
+	import * as settings from '$lib/settings';
+	import { GraphD3, GraphView } from '$lib/d3/GraphD3';
+	import type { PrismaGraphPayload } from '$lib/d3/types';
 
-	import * as settings from "$lib/settings";
-	import { GraphD3, GraphView } from "$lib/d3/GraphD3";
-	import type { PrismaGraphPayload } from "$lib/d3/types";
-
-	let { data, editable }: { data: PrismaGraphPayload, editable: boolean } = $props();
+	let { data, editable }: { data: PrismaGraphPayload; editable: boolean } = $props();
 
 	const graphD3 = new GraphD3(data, editable);
 	let expand_legend = $state(false);
-	let show_legend = $derived.by(() => graphD3.view !== GraphView.domains && graphD3.graph_data.domain_nodes.length > 0);
+	let show_legend = $derived.by(
+		() => graphD3.view !== GraphView.domains && graphD3.graph_data.domain_nodes.length > 0
+	);
 	let show_zoom = $derived.by(() => graphD3.view !== GraphView.lectures);
-
 </script>
 
 <!-- Markup -->
@@ -22,38 +21,38 @@
 	<svg use:graphD3.attach />
 
 	{#if show_legend}
-		<button 
-			class="legend" 
-			class:expand={ expand_legend } 
-			onclick={ () => expand_legend = !expand_legend }
+		<button
+			class="legend"
+			class:expand={expand_legend}
+			onclick={() => (expand_legend = !expand_legend)}
 			transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }}
 		>
-			<h4 class="title"> Domain Legend </h4>
+			<h4 class="title">Domain Legend</h4>
 			<div class="caret"></div>
 
 			{#if expand_legend}
 				{#each graphD3.graph_data.domain_nodes as domain}
-					<span> { domain.text } </span> <div class="preview" style:background={ settings.COLORS[domain.style] }></div>
+					<span> {domain.text} </span>
+					<div class="preview" style:background={settings.COLORS[domain.style]}></div>
 				{/each}
 			{/if}
 		</button>
 	{/if}
 
 	{#if show_zoom}
-		<div class="zoom" transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }} >
-			<button onclick={() => graphD3.zoomIn()}> <img src="" alt="Zoom in"> </button> <!-- TODO Missing icon -->
-			<button onclick={() => graphD3.zoomOut()}> <img src="" alt="Zoom out"> </button> <!-- TODO Missing icon -->
+		<div class="zoom" transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }}>
+			<button onclick={() => graphD3.zoomIn()}> <img src="" alt="Zoom in" /> </button>
+			<!-- TODO Missing icon -->
+			<button onclick={() => graphD3.zoomOut()}> <img src="" alt="Zoom out" /> </button>
+			<!-- TODO Missing icon -->
 		</div>
 	{/if}
 </div>
 
-
 <!-- Styles -->
-
 
 <!-- Styling with plain css, discuss how to do this in the future -->
 <style>
-
 	.graph {
 		position: relative;
 		width: 100%;
@@ -157,5 +156,4 @@
 	.zoom button:hover img {
 		transform: scale(1.1);
 	}
-
 </style>

@@ -1,27 +1,31 @@
 <script lang="ts">
+	import * as settings from '$lib/settings';
+	import { domainSchema } from '$lib/zod/domainSchema';
 	import { page } from '$app/state';
-	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { cn } from '$lib/utils';
+	import { useId } from 'bits-ui';
+	import { toast } from 'svelte-sonner';
+	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+
+	import DeleteDomain from './DeleteDomain.svelte';
+
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
-	import { cn } from '$lib/utils';
-	import * as settings from '$lib/settings';
-	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
-	import { domainSchema } from '$lib/zod/domainSubjectSchema';
-	import type { Domain } from '@prisma/client';
-	import { useId } from 'bits-ui';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
-	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+
 	import type { PageData } from './$types';
-	import DeleteDomain from './DeleteDomain.svelte';
+	import type { Domain } from '@prisma/client';
+	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
 
 	type Props = {
 		domain: DomainType;
@@ -99,13 +103,13 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(domain.sourceDomains, 'In')}
-			{@render relations(domain.targetDomains, 'Out')}
+			{@render relations(domain.sourceDomains, 'Source')}
+			{@render relations(domain.targetDomains, 'Target')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>
 
-{#snippet relations(domains: Domain[], title: 'In' | 'Out')}
+{#snippet relations(domains: Domain[], title: 'Source' | 'Target')}
 	{#if domains.length > 0}
 		<Menubar.Sub>
 			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>

@@ -1,10 +1,11 @@
-Wimport prisma from '$lib/server/db/prisma.js';
+import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
 import type { Course } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
-import { courseSchema, programSchema } from '../../lib/zod/courseSchema.js';
+import { courseSchema } from '$lib/zod/courseSchema.js';
+import { programSchema } from '$lib/zod/programSchema.js';
 
 export const load = (async ({ url }) => {
 	try {
@@ -116,7 +117,7 @@ export const actions = {
 	'add-course-to-program': async ({ request }) => {
 		const form = await request.formData();
 
-		const programId = form.get('program-id') as string | null;
+		const programId = form.get('program-id') as number | null;
 		const courseCode = form.get('code') as string | null;
 		const courseName = form.get('name') as string | null;
 

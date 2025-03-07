@@ -10,7 +10,7 @@
 	import Settings from 'lucide-svelte/icons/settings';
 	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import { courseSchema } from '$lib/zod/courseSchema';
 
 	type Props = {
 		program: Program & { courses: Course[] };

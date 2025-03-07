@@ -1,4 +1,3 @@
-
 import { Course, Subject, PrismaClient } from '@prisma/client';
 import { courses, domains, programs, subjects } from './init';
 
@@ -25,7 +24,7 @@ async function main() {
 			data: {
 				name: program.name,
 				courses: {
-					connect: program.courses.map(course => {
+					connect: program.courses.map((course) => {
 						return {
 							code: course.code
 						};

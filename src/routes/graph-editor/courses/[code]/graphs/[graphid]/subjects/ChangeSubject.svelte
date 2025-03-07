@@ -9,7 +9,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import type { GraphType } from '$lib/validators/graphValidator';
-	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
+	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
@@ -95,13 +95,13 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(subject.incoming, 'In')}
-			{@render relations(subject.outgoing, 'Out')}
+			{@render relations(subject.sourceSubjects, 'Source')}
+			{@render relations(subject.targetSubjects, 'Target')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>
 
-{#snippet relations(subjects: Subject[], title: 'In' | 'Out')}
+{#snippet relations(subjects: Subject[], title: 'Source' | 'Target')}
 	{#if subjects.length > 0}
 		<Menubar.Sub>
 			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>

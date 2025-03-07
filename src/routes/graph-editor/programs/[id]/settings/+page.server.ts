@@ -5,7 +5,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { formSchema } from './schema';
 
 export const load = (async ({ params }) => {
-	if (!params.uuid) {
+	if (!params.id) {
 		return {
 			course: undefined,
 			error: 'Program is required',
@@ -16,7 +16,7 @@ export const load = (async ({ params }) => {
 	try {
 		const dbProgram = await prisma.program.findFirst({
 			where: {
-				id: params.uuid
+				id: params.id
 			}
 		});
 

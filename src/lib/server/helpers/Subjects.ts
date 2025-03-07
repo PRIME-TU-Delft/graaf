@@ -1,4 +1,3 @@
-
 import prisma from '$lib/server/db/prisma';
 import { zod } from 'sveltekit-superforms/adapters';
 import { setError, superValidate } from 'sveltekit-superforms';
@@ -7,7 +6,6 @@ import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/s
 import type { RequestEvent } from '@sveltejs/kit';
 
 export class SubjectActions {
-
 	/**
 	 * Adds a subject to the graph based on the provided event.
 	 *

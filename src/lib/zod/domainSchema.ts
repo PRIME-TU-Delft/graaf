@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import * as settings from '$lib/settings';
 
@@ -42,7 +41,9 @@ export const changeDomainRelSchema = z
 		message: 'sourceDomainId and targetDomainId must not be the same'
 	})
 	.refine(
-		(data) => data.sourceDomainId !== data.oldSourceDomainId && data.targetDomainId !== data.oldTargetDomainId,
+		(data) =>
+			data.sourceDomainId !== data.oldSourceDomainId &&
+			data.targetDomainId !== data.oldTargetDomainId,
 		{
 			message: 'This is the original relationship, change either one'
 		}

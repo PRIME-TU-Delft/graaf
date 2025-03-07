@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
-	import { deleteDomainSchema } from '$lib/zod/domainSubjectSchema';
+	import { deleteDomainSchema } from '$lib/zod/domainSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
@@ -35,8 +35,8 @@
 		// When the domain changes, update the form data
 		if (domain) {
 			$formData.domainId = domain.id;
-			$formData.incoming = domain.sourceDomains.map((d) => d.id);
-			$formData.outgoing = domain.targetDomains.map((d) => d.id);
+			$formData.sourceDomains = domain.sourceDomains.map((d) => d.id);
+			$formData.targetDomains = domain.targetDomains.map((d) => d.id);
 			$formData.connectedSubjects = connectedSubjects.map((s) => s.id);
 		}
 	});
@@ -64,8 +64,8 @@
 <form class="text-sm" action="?/delete-domain" method="POST" use:enhance>
 	<input type="hidden" name="domainId" value={$formData.domainId} />
 
-	{@render formArray('incoming')}
-	{@render formArray('outgoing')}
+	{@render formArray('domainSources')}
+	{@render formArray('domainTargets')}
 	{@render formArray('connectedSubjects')}
 
 	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
@@ -92,7 +92,7 @@
 	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
-{#snippet formArray(name: 'incoming' | 'outgoing' | 'connectedSubjects')}
+{#snippet formArray(name: 'domainSources' | 'domainTargets' | 'connectedSubjects')}
 	<Form.Fieldset {form} {name} class="h-0">
 		{#each $formData[name] as _, i}
 			<Form.ElementField {form} name="{name}[{i}]">

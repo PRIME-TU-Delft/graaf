@@ -10,7 +10,7 @@
 	class="fixed top-0 flex w-full items-center justify-between bg-blue-100 px-4 py-2 text-2xl text-blue-900"
 >
 	<h1 class="flex items-center gap-2 p-2">
-		<span class="font-bold">PRIME</span>
+		<span class="font-bold"> PRIME </span>
 		<ChevronRight class="size-4" />
 		<span>Graph</span>
 	</h1>
@@ -36,7 +36,7 @@
 	>
 		PRIME
 	</a>
-	(PRogramme for Inovation and Math Education) and is a tool for teachers to create and share course
+	(Programme for Inovation and Math Education) and is a tool for teachers to create and share course
 	graphs.
 
 	{#if data?.session?.user}

@@ -4,7 +4,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
-	import { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
+	import { subjectRelSchema } from '$lib/zod/subjectSchema';
 	import type { Graph, Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
@@ -53,8 +53,8 @@
 
 			<input type="hidden" name="graphId" value={graph.id} />
 
-			<SubjectRelField id="subjectInId" {subjects} {form} {formData} />
-			<SubjectRelField id="subjectOutId" {subjects} {form} {formData} />
+			<SubjectRelField id="sourceSubjectId" {subjects} {form} {formData} />
+			<SubjectRelField id="targetSubjectId" {subjects} {form} {formData} />
 
 			<Form.FormError {form} />
 

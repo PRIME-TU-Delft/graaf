@@ -7,7 +7,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
+	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Domain, Graph } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Check from 'lucide-svelte/icons/check';

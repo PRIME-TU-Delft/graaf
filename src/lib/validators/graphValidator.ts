@@ -1,4 +1,3 @@
-
 import type { Graph, Domain, Subject } from '@prisma/client';
 
 export type DomainType = Domain & { sourceDomains: Domain[]; targetDomains: Domain[] };
@@ -49,7 +48,6 @@ export class GraphValidator {
 	}
 
 	findSubGraphs() {
-
 		// Reset roots and subgraphs
 		this.roots = [];
 		this.subgraphs = [];
@@ -75,7 +73,7 @@ export class GraphValidator {
 
 			if (subgraph.length === 0) continue; // I see no reason why this could happen, but just in case
 
-			// A root is a domain that has no incoming domains
+			// A root is a domain that has no source domains
 			const roots = subgraph.filter((domain) => domain.sourceDomains.length === 0);
 			this.roots.push(...roots);
 
@@ -185,7 +183,12 @@ export class GraphValidator {
 		return hasCycle;
 	}
 
-	validateEdgeChange(oldSourceId: number, oldTargetId: number, newSourceId: number, newTargetId: number) {
+	validateEdgeChange(
+		oldSourceId: number,
+		oldTargetId: number,
+		newSourceId: number,
+		newTargetId: number
+	) {
 		const oldSource = this.getDomainById(oldSourceId);
 		const oldTarget = this.getDomainById(oldTargetId);
 

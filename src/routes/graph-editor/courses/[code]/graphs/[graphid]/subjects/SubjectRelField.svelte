@@ -10,10 +10,10 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import type { Infer, SuperForm, SuperFormData } from 'sveltekit-superforms/client';
-	import type { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
+	import type { subjectRelSchema } from '$lib/zod/subjectSchema';
 
 	type Props = {
-		id: 'subjectInId' | 'subjectOutId';
+		id: 'sourceSubjectId' | 'targetSubjectId';
 		subjects: Subject[];
 		form: SuperForm<Infer<typeof subjectRelSchema>>;
 		formData: SuperFormData<Infer<typeof subjectRelSchema>>;
@@ -22,7 +22,7 @@
 	const { id, subjects, form, formData }: Props = $props();
 
 	const triggerId = useId();
-	const shortName = $derived(id == 'subjectInId' ? 'in' : 'out');
+	const shortName = $derived(id == 'sourceSubjectId' ? 'in' : 'out');
 	let popupOpen = $state(false);
 
 	function closeAndFocusTrigger(triggerId: string) {

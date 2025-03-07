@@ -4,7 +4,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { cn } from '$lib/utils';
 	import { GraphValidator, type GraphType } from '$lib/validators/graphValidator';
-	import { domainRelSchema } from '$lib/zod/domainSubjectSchema';
+	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
@@ -33,10 +33,10 @@
 
 			try {
 				const hasCycles = graphValidator.validateEdgeChange(
-					$formData.oldDomainInId,
-					$formData.oldDomainOutId,
-					$formData.domainInId,
-					$formData.domainOutId
+					$formData.oldSourceDomainId,
+					$formData.oldTargetDomainId,
+					$formData.sourceDomainId,
+					$formData.targetDomainId
 				);
 
 				if (hasCycles) throw new Error('Cycle detected');
@@ -57,17 +57,17 @@
 	const { form: formData, enhance } = form;
 
 	const isTheSameDomain = $derived(
-		$formData.domainInId == $formData.domainOutId && $formData.domainInId != 0
+		$formData.sourceDomainId == $formData.targetDomainId && $formData.sourceDomainId != 0
 	);
 
 	$effect(() => {
 		if (domain.id) {
-			$formData.oldDomainInId = domain.id;
-			$formData.domainInId = domain.id;
+			$formData.oldSourceDomainId = domain.id;
+			$formData.sourceDomainId = domain.id;
 		}
 		if (outDomain.id) {
-			$formData.oldDomainOutId = outDomain.id;
-			$formData.domainOutId = outDomain.id;
+			$formData.oldTargetDomainId = outDomain.id;
+			$formData.targetDomainId = outDomain.id;
 		}
 	});
 </script>
@@ -82,11 +82,11 @@
 
 	<input type="hidden" name="graphId" value={graph.id} />
 
-	<input type="hidden" name="oldDomainInId" value={domain.id} />
-	<input type="hidden" name="oldDomainOutId" value={outDomain.id} />
+	<input type="hidden" name="oldSourceDomainId" value={domain.id} />
+	<input type="hidden" name="oldtargetDomainId" value={outDomain.id} />
 
-	<DomainRelField id="domainInId" domains={graph.domains} {form} {formData} />
-	<DomainRelField id="domainOutId" domains={graph.domains} {form} {formData} />
+	<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
+	<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
 
 	<div class="flex items-center justify-between gap-1">
 		{@render relVisualizer()}
@@ -95,16 +95,18 @@
 
 		<Button
 			variant="outline"
-			disabled={$formData.oldDomainInId == $formData.domainInId &&
-				$formData.oldDomainOutId == $formData.oldDomainOutId}
+			disabled={$formData.oldSourceDomainId == $formData.sourceDomainId &&
+				$formData.oldTargetDomainId == $formData.oldTargetDomainId}
 			onclick={() => {
-				$formData.domainInId = domain.id;
-				$formData.domainOutId = outDomain.id;
+				$formData.sourceDomainId = domain.id;
+				$formData.targetDomainId = outDomain.id;
 			}}
 		>
 			<Undo2 /> Reset
 		</Button>
-		<Form.FormButton disabled={isTheSameDomain || !$formData.domainInId || !$formData.domainOutId}>
+		<Form.FormButton
+			disabled={isTheSameDomain || !$formData.sourceDomainId || !$formData.targetDomainId}
+		>
 			Change
 		</Form.FormButton>
 	</div>
@@ -116,18 +118,18 @@
 			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
 				'border-red-500': isTheSameDomain
 			})}
-			class:opacity-50={$formData.domainInId == 0}
+			class:opacity-50={$formData.sourceDomainId == 0}
 		>
-			{$formData.domainInId || 'select in'}
+			{$formData.sourceDomainId || 'select in'}
 		</div>
 		<ArrowRight class="size-4" />
 		<div
 			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
 				'border-red-500': isTheSameDomain
 			})}
-			class:opacity-50={$formData.domainOutId == 0}
+			class:opacity-50={$formData.targetDomainId == 0}
 		>
-			{$formData.domainOutId || 'select out'}
+			{$formData.targetDomainId || 'select out'}
 		</div>
 		{#if isTheSameDomain}
 			<p class="ml-1 text-xs text-red-500">Domains can't be the same.</p>

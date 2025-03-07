@@ -16,9 +16,7 @@ export const domains = [
 	{ name: 'DomainFour' }
 ];
 
-export const graph = [
-	{ name: 'GraphOne' }
-];
+export const graph = [{ name: 'GraphOne' }];
 
 export const courses = [
 	{

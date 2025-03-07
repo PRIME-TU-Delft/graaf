@@ -8,7 +8,7 @@
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { cn } from '$lib/utils';
 	import * as settings from '$lib/settings';
-	import { domainSchema } from '$lib/zod/domainSubjectSchema';
+	import { domainSchema } from '$lib/zod/domainSchema';
 	import type { Graph } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';

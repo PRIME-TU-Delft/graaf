@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import type { GraphType, SubjectType } from '$lib/validators/graphValidator';
-	import { deleteSubjectSchema } from '$lib/zod/domainSubjectSchema';
+	import { deleteSubjectSchema } from '$lib/zod/subjectSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
@@ -16,9 +16,7 @@
 
 	let { subject, graph }: Props = $props();
 
-	const relationCount = $derived(
-		subject.sourceSubjects.length + subject.targetSubjects.length
-	);
+	const relationCount = $derived(subject.sourceSubjects.length + subject.targetSubjects.length);
 
 	const form = superForm((page.data as PageData).deleteSubjectForm, {
 		id: 'delete-subject-form-' + subject.id,
@@ -65,8 +63,8 @@
 <form class="text-xs" action="?/delete-subject" method="POST" use:enhance>
 	<input type="hidden" name="subjectId" value={$formData.subjectId} />
 
-	{@render formArray('incoming')}
-	{@render formArray('outgoing')}
+	{@render formArray('subjectSources')}
+	{@render formArray('subjectTargets')}
 
 	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
 
@@ -83,7 +81,7 @@
 	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
-{#snippet formArray(name: 'incoming' | 'outgoing')}
+{#snippet formArray(name: 'subjectSources' | 'subjectTargets')}
 	<Form.Fieldset {form} {name} class="h-0">
 		{#each $formData[name] as _, i}
 			<Form.ElementField {form} name="{name}[{i}]">

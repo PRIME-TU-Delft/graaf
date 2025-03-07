@@ -1,23 +1,27 @@
 <script lang="ts">
+	import * as settings from '$lib/settings';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
-	import * as settings from '$lib/settings';
-	import type { DomainType } from '$lib/validators/graphValidator';
-	import type { Domain, DomainStyle } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import SortableList from '../SortableList.svelte';
-	import type { PageData } from './$types';
+
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
 	import DomainRelSettings from './DomainRelSettings.svelte';
+
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import { Button } from '$lib/components/ui/button';
+	import SortableList from '../SortableList.svelte';
+
+	import MoveVertical from 'lucide-svelte/icons/move-vertical';
+
+	import type { PageData } from './$types';
+	import type { Domain, DomainStyle } from '@prisma/client';
+	import type { DomainType } from '$lib/validators/graphValidator';
 
 	let { data }: { data: PageData } = $props();
 	let course = $state(data.course);
@@ -26,8 +30,8 @@
 	const domainMapping = $derived.by(() => {
 		const map: { domain: Domain; outDomain: Domain }[] = [];
 		for (const domain of graph.domains) {
-			for (const outDomain of domain.outgoing) {
-				map.push({ domain, outDomain });
+			for (const targetDomain of domain.targetDomains) {
+				map.push({ domain, outDomain: targetDomain });
 			}
 		}
 		return map;
@@ -59,6 +63,7 @@
 	 * @param key - The color key
 	 * @param domainIndex - The index of the domain
 	 */
+
 	async function handleChangeColor(key: DomainStyle | null, domainIndex: number) {
 		const domain = course.graphs[0].domains[domainIndex];
 		domain.style = key;

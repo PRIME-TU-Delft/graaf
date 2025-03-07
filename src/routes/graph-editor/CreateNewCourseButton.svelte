@@ -6,7 +6,7 @@
 	import { useId } from 'bits-ui';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import { courseSchema } from '$lib/zod/courseSchema';
 
 	type Props = {
 		courseForm: SuperValidated<Infer<typeof courseSchema>>;

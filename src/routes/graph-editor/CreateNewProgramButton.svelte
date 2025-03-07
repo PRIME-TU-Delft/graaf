@@ -5,7 +5,7 @@
 	import { toast } from 'svelte-sonner';
 	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { programSchema } from '$lib/zod/programCourseSchema';
+	import { programSchema } from '$lib/zod/programSchema';
 
 	type Props = {
 		form: SuperValidated<Infer<typeof programSchema>>;

@@ -4,7 +4,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
-	import type { changeDomainRelSchema, domainRelSchema } from '$lib/zod/domainSubjectSchema';
+	import type { changeDomainRelSchema, domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Check from 'lucide-svelte/icons/check';
@@ -13,7 +13,7 @@
 	import type { Infer, SuperForm, SuperFormData } from 'sveltekit-superforms/client';
 
 	type Props = {
-		id: 'domainInId' | 'domainOutId';
+		id: 'sourceDomainId' | 'targetDomainId';
 		domains: Domain[];
 		form: SuperForm<Infer<typeof domainRelSchema | typeof changeDomainRelSchema>>;
 		formData: SuperFormData<Infer<typeof domainRelSchema | typeof changeDomainRelSchema>>;
@@ -22,7 +22,7 @@
 	const { id, domains, form, formData }: Props = $props();
 
 	const triggerId = useId();
-	const shortName = $derived(id == 'domainInId' ? 'in' : 'out');
+	const shortName = $derived(id == 'sourceDomainId' ? 'in' : 'out');
 	let popupOpen = $state(false);
 
 	function closeAndFocusTrigger(triggerId: string) {

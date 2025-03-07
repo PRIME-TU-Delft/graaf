@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import * as settings from '$lib/settings';
 
@@ -6,5 +5,5 @@ import * as settings from '$lib/settings';
 // from the database schema because that is not accessible at from the client
 
 export const programSchema = z.object({
-    name: z.string().min(1).max(settings.MAX_PROGRAM_NAME_LENGTH)
+	name: z.string().min(1).max(settings.MAX_PROGRAM_NAME_LENGTH)
 });

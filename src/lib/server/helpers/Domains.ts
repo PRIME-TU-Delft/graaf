@@ -1,4 +1,3 @@
-
 import prisma from '$lib/server/db/prisma';
 import { setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -56,7 +55,7 @@ export class DomainActions {
 			return setError(form, '', 'Invalid form data');
 		}
 
-		const removeTargetFromSourceDomain = form.data.sourceDomains.map(id => {
+		const removeTargetFromSourceDomain = form.data.sourceDomains.map((id) => {
 			return prisma.domain.update({
 				where: { id },
 				data: {
@@ -67,7 +66,7 @@ export class DomainActions {
 			});
 		});
 
-		const removeSourceFromTargetDomain = form.data.targetDomains.map(id => {
+		const removeSourceFromTargetDomain = form.data.targetDomains.map((id) => {
 			return prisma.domain.update({
 				where: { id },
 				data: {
@@ -78,7 +77,7 @@ export class DomainActions {
 			});
 		});
 
-		const removeDomainFromSubjects = form.data.connectedSubjects.map(id => {
+		const removeDomainFromSubjects = form.data.connectedSubjects.map((id) => {
 			return prisma.subject.update({
 				where: { id },
 				data: {
@@ -130,7 +129,6 @@ export class DomainActions {
 	// MARK: - Domain Relationships
 
 	private static async connectDomains(inId: number, outId: number) {
-
 		// Check if the domains are already connected
 		const isConnected = await prisma.domain.findFirst({
 			where: {
@@ -208,7 +206,11 @@ export class DomainActions {
 		const targetDomainId = parseInt(form.get('targetDomainId') as string);
 
 		if (isNaN(sourceDomainId) || isNaN(targetDomainId)) {
-			return fail(400, { domainInId: sourceDomainId, domainOutId: targetDomainId, errorMessage: 'Invalid relationship id' });
+			return fail(400, {
+				inputDomainId: sourceDomainId,
+				targetDomainId: targetDomainId,
+				errorMessage: 'Invalid relationship id'
+			});
 		}
 
 		try {
@@ -226,7 +228,10 @@ export class DomainActions {
 		}
 
 		try {
-			await DomainActions.disconnectDomains(form.data.oldSourceDomainId, form.data.oldTargetDomainId);
+			await DomainActions.disconnectDomains(
+				form.data.oldSourceDomainId,
+				form.data.oldTargetDomainId
+			);
 			await DomainActions.connectDomains(form.data.sourceDomainId, form.data.targetDomainId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
