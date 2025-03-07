@@ -2,28 +2,31 @@
 	import { enhance } from '$app/forms';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
+	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
+	import ProgramAdmins from './ProgramAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
-<section class="prose mx-auto p-4 text-blue-900 shadow-blue-500/70">
-	{#if data.error != undefined}
-		<h1>Oops! Something went wrong</h1>
-		<a href="/">Back to Home</a>
-		<p>{data.error}</p>
-	{:else}
-		<h1>{data.program.name}</h1>
-		<p>
-			Settings for the Program {data.program.name}.
-		</p>
+<section class="prose mx-auto p-4">
+	<h1>{data.program.name}</h1>
+	<p>
+		Manage program settings with program name: <span class="font-mono">{data.program.name}</span>.
+	</p>
+</section>
 
-		<h2>Settings</h2>
+<ProgramAdmins program={data.program} />
+
+<!-- Only a program admin or super admin is able to delete a program -->
+{#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+	<section class="prose mx-auto mt-12 rounded-lg border-2 bg-red-50 p-4 text-red-900">
+		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">
-			<p>Delete:</p>
+			<p>Delete program:</p>
 
 			<AlertDialog.Root>
-				<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
+				<AlertDialog.Trigger class={'ml-auto ' + buttonVariants({ variant: 'destructive' })}>
 					Delete
 				</AlertDialog.Trigger>
 				<AlertDialog.Content>
@@ -44,5 +47,5 @@
 				</AlertDialog.Content>
 			</AlertDialog.Root>
 		</div>
-	{/if}
-</section>
+	</section>
+{/if}
