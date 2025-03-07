@@ -16,7 +16,9 @@ export const domains = [
 	{ name: 'DomainFour' }
 ];
 
-export const graph = [{ name: 'GraphOne' }];
+export const graph = [
+	{ name: 'GraphOne' }
+];
 
 export const courses = [
 	{
@@ -44,7 +46,6 @@ export const programs = [
 	},
 	{
 		name: 'ProgramTwo',
-
 		courses: [courses[1], courses[2]]
 	},
 	{
