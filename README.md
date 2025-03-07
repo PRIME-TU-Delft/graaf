@@ -1,4 +1,4 @@
-# Graaf
+# PRIME Grpah Editor
 
 ## Preview
 
