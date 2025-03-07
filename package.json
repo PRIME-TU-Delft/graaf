@@ -7,7 +7,7 @@
 		"setup": "./scripts/setup.sh",
 		"dev": "vite dev",
 		"build": "vite build",
-		"build:netlify": "prisma generate && prisma db push --accept-data-loss --force-reset && vite build",
+		"build:netlify": "prisma generate && prisma db push --accept-data-loss --force-reset && prisma db seed && vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
