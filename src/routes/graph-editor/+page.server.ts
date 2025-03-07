@@ -1,10 +1,10 @@
-import prisma from '$lib/server/db/prisma.js';
+Wimport prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
 import type { Course } from '@prisma/client';
 import { fail, setError, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
-import { courseSchema, programSchema } from '../../lib/zod/programCourseSchema.js';
+import { courseSchema, programSchema } from '../../lib/zod/courseSchema.js';
 
 export const load = (async ({ url }) => {
 	try {

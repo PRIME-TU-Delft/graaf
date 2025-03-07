@@ -17,7 +17,7 @@
 	let { subject, graph }: Props = $props();
 
 	const relationCount = $derived(
-		subject.incoming.length + subject.outgoing.length
+		subject.sourceSubjects.length + subject.targetSubjects.length
 	);
 
 	const form = superForm((page.data as PageData).deleteSubjectForm, {
@@ -37,8 +37,8 @@
 		// When the subject changes, update the form data
 		if (subject) {
 			$formData.subjectId = subject.id;
-			$formData.incoming = subject.incoming.map((d) => d.id);
-			$formData.outgoing = subject.outgoing.map((d) => d.id);
+			$formData.sourceSubjects = subject.sourceSubjects.map((d) => d.id);
+			$formData.targetSubjects = subject.targetSubjects.map((d) => d.id);
 		}
 	});
 

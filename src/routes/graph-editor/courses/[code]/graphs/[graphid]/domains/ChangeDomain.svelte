@@ -99,8 +99,8 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(domain.incoming, 'In')}
-			{@render relations(domain.outgoing, 'Out')}
+			{@render relations(domain.sourceDomains, 'In')}
+			{@render relations(domain.targetDomains, 'Out')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>

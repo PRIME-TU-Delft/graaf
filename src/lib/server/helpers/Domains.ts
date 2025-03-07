@@ -1,19 +1,19 @@
+
+import prisma from '$lib/server/db/prisma';
+import { setError, superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import { fail } from '@sveltejs/kit';
+
 import {
 	domainRelSchema,
 	domainSchema,
 	changeDomainRelSchema,
 	deleteDomainSchema
-} from '$lib/zod/domainSubjectSchema';
-import type { DomainStyle } from '@prisma/client';
-import { fail, type RequestEvent } from '@sveltejs/kit';
-import { setError, superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import prisma from '../db/prisma';
+} from '$lib/zod/domainSchema';
 
-/**
- * These are the functions that handle the domain related requests
- * They are used in the graph/+page.server.ts in the action handlers
- */
+import type { DomainStyle } from '@prisma/client';
+import type { RequestEvent } from '@sveltejs/kit';
+
 export class DomainActions {
 	// MARK: - Domain
 
@@ -56,29 +56,29 @@ export class DomainActions {
 			return setError(form, '', 'Invalid form data');
 		}
 
-		const removeOutFromincomingDomain = form.data.incoming.map((id) => {
+		const removeTargetFromSourceDomain = form.data.sourceDomains.map(id => {
 			return prisma.domain.update({
 				where: { id },
 				data: {
-					outgoing: {
+					sourceDomains: {
 						disconnect: { id: form.data.domainId }
 					}
 				}
 			});
 		});
 
-		const removeInFromOutgoingDomain = form.data.outgoing.map((id) => {
+		const removeSourceFromTargetDomain = form.data.targetDomains.map(id => {
 			return prisma.domain.update({
 				where: { id },
 				data: {
-					incoming: {
+					sourceDomains: {
 						disconnect: { id: form.data.domainId }
 					}
 				}
 			});
 		});
 
-		const removeDomainFromSubjects = form.data.connectedSubjects.map((id) => {
+		const removeDomainFromSubjects = form.data.connectedSubjects.map(id => {
 			return prisma.subject.update({
 				where: { id },
 				data: {
@@ -95,8 +95,8 @@ export class DomainActions {
 
 		try {
 			await prisma.$transaction([
-				...removeOutFromincomingDomain,
-				...removeInFromOutgoingDomain,
+				...removeTargetFromSourceDomain,
+				...removeSourceFromTargetDomain,
 				...removeDomainFromSubjects,
 				deleteDomain
 			]);
@@ -130,11 +130,12 @@ export class DomainActions {
 	// MARK: - Domain Relationships
 
 	private static async connectDomains(inId: number, outId: number) {
+
 		// Check if the domains are already connected
 		const isConnected = await prisma.domain.findFirst({
 			where: {
 				id: inId,
-				outgoing: { some: { id: outId } }
+				targetDomains: { some: { id: outId } }
 			}
 		});
 
@@ -142,25 +143,25 @@ export class DomainActions {
 			throw new Error('Domains are already connected');
 		}
 
-		const addOutToIn = prisma.domain.update({
+		const addTargetToSource = prisma.domain.update({
 			where: {
 				id: inId
 			},
 			data: {
-				outgoing: { connect: { id: outId } }
+				targetDomains: { connect: { id: outId } }
 			}
 		});
 
-		const addInToOut = prisma.domain.update({
+		const addSourceToTarget = prisma.domain.update({
 			where: {
 				id: outId
 			},
 			data: {
-				incoming: { connect: { id: inId } }
+				sourceDomains: { connect: { id: inId } }
 			}
 		});
 
-		await prisma.$transaction([addOutToIn, addInToOut]);
+		await prisma.$transaction([addTargetToSource, addSourceToTarget]);
 	}
 
 	static async addDomainRel(event: RequestEvent) {
@@ -171,49 +172,47 @@ export class DomainActions {
 		}
 
 		try {
-			const inId = form.data.domainInId;
-			const outId = form.data.domainOutId;
-
-			await DomainActions.connectDomains(inId, outId);
+			const sourceId = form.data.sourceDomainId;
+			const targetId = form.data.targetDomainId;
+			await DomainActions.connectDomains(sourceId, targetId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 
-	private static async disconnectDomains(inId: number, outId: number) {
-		const removeOutToIn = prisma.domain.update({
-			where: { id: inId },
+	private static async disconnectDomains(sourceId: number, targetId: number) {
+		const removeTargetFromSource = prisma.domain.update({
+			where: { id: sourceId },
 			data: {
-				outgoing: {
-					disconnect: { id: outId }
+				targetDomains: {
+					disconnect: { id: targetId }
 				}
 			}
 		});
 
-		const removeInToOut = prisma.domain.update({
-			where: { id: outId },
+		const removeSourceFromTarget = prisma.domain.update({
+			where: { id: targetId },
 			data: {
-				incoming: {
-					disconnect: { id: inId }
+				sourceDomains: {
+					disconnect: { id: sourceId }
 				}
 			}
 		});
 
-		await prisma.$transaction([removeOutToIn, removeInToOut]);
+		await prisma.$transaction([removeTargetFromSource, removeSourceFromTarget]);
 	}
 
 	static async deleteDomainRel(event: RequestEvent) {
 		const form = await event.request.formData();
+		const sourceDomainId = parseInt(form.get('sourceDomainId') as string);
+		const targetDomainId = parseInt(form.get('targetDomainId') as string);
 
-		const domainInId = parseInt(form.get('domainInId') as string);
-		const domainOutId = parseInt(form.get('domainOutId') as string);
-
-		if (isNaN(domainInId) || isNaN(domainOutId)) {
-			return fail(400, { domainInId, domainOutId, errorMessage: 'Invalid relationship id' });
+		if (isNaN(sourceDomainId) || isNaN(targetDomainId)) {
+			return fail(400, { domainInId: sourceDomainId, domainOutId: targetDomainId, errorMessage: 'Invalid relationship id' });
 		}
 
 		try {
-			await DomainActions.disconnectDomains(domainInId, domainOutId);
+			await DomainActions.disconnectDomains(sourceDomainId, targetDomainId);
 		} catch (e: unknown) {
 			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
 		}
@@ -227,8 +226,8 @@ export class DomainActions {
 		}
 
 		try {
-			await DomainActions.disconnectDomains(form.data.oldDomainInId, form.data.oldDomainOutId);
-			await DomainActions.connectDomains(form.data.domainInId, form.data.domainOutId);
+			await DomainActions.disconnectDomains(form.data.oldSourceDomainId, form.data.oldTargetDomainId);
+			await DomainActions.connectDomains(form.data.sourceDomainId, form.data.targetDomainId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}

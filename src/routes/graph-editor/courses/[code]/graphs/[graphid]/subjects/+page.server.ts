@@ -1,5 +1,5 @@
 import { SubjectActions } from '$lib/server/helpers';
-import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
+import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/subjectSchema';
 import type { ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';

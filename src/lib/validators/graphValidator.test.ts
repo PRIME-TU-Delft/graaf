@@ -1,6 +1,9 @@
-import type { Domain } from '@prisma/client';
+
 import { beforeEach, describe, expect, it, test } from 'vitest';
-import { GraphValidator, type DomainType, type GraphType } from './graphValidator';
+import { GraphValidator } from '$lib/validators/graphValidator';
+
+import type { DomainType, GraphType } from '$lib/validators/graphValidator';
+import type { Domain } from '@prisma/client';
 
 function dummyDomain(name: string, id: number) {
 	return {
@@ -10,8 +13,8 @@ function dummyDomain(name: string, id: number) {
 		x: 0,
 		y: 0,
 		order: 0,
-		incoming: [],
-		outgoing: [],
+		sourceDomains: [] as Domain[],
+		targetDomains: [] as Domain[],
 		graphId: 0
 	} as DomainType;
 }
@@ -28,8 +31,8 @@ function dummyGraph(domains: DomainType[]) {
 }
 
 function addConnection(from: DomainType, to: DomainType) {
-	from.outgoing.push(to);
-	to.incoming.push(from);
+	from.targetDomains.push(to);
+	to.sourceDomains.push(from);
 }
 
 describe('Trivial graph', () => {
@@ -104,10 +107,10 @@ describe('Cycle graph', () => {
 
 	test('has cycles is true', () => {
 		const c1 = validator1.hasCycle();
-		expect(c1?.from.id).toBe((c1!.to.id - 1) % 4);
+		expect(c1?.source.id).toBe((c1!.target.id - 1) % 4);
 
 		const c2 = validator2.hasCycle();
-		expect(c2?.from.id).toBe((c2!.to.id - 1) % 2);
+		expect(c2?.source.id).toBe((c2!.target.id - 1) % 2);
 	});
 
 	test('graph1 has one root', () => {
@@ -166,8 +169,8 @@ describe('Multi roots cycles graph', () => {
 
 	test('has cycles is true', () => {
 		const cycle = validator1.hasCycle();
-		expect(cycle?.from.id).toBe(a.id);
-		expect(cycle?.to.id).toBe(b.id);
+		expect(cycle?.source.id).toBe(a.id);
+		expect(cycle?.target.id).toBe(b.id);
 	});
 
 	test('roots are a, c and d', () => {
@@ -211,8 +214,8 @@ describe('Complex graph', () => {
 
 	test('has cycles is true', () => {
 		const cycle = validator1.hasCycle();
-		expect(cycle?.from.id).toBe(e.id);
-		expect(cycle?.to.id).toBe(b.id);
+		expect(cycle?.source.id).toBe(e.id);
+		expect(cycle?.target.id).toBe(b.id);
 	});
 
 	test('domain "A" is the only root', () => {
@@ -242,8 +245,8 @@ describe('Remove edge is sound', () => {
 		expect(validator.hasEdge(a, b)).toBe(true);
 		validator.removeEdge(a, b);
 
-		expect(b.incoming.length).toBe(0);
-		expect(a.outgoing.length).toBe(0);
+		expect(b.sourceDomains.length).toBe(0);
+		expect(a.targetDomains.length).toBe(0);
 		expect(validator.hasEdge(a, b)).toBe(false);
 	});
 });

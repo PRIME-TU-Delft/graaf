@@ -17,7 +17,7 @@
 	let { domain, graph }: Props = $props();
 
 	const connectedSubjects = $derived(graph.subjects.filter((s) => s.domainId == domain.id));
-	const relationCount = $derived(domain.incoming.length + domain.outgoing.length);
+	const relationCount = $derived(domain.sourceDomains.length + domain.targetDomains.length);
 
 	const form = superForm((page.data as PageData).deleteDomainForm, {
 		id: 'delete-domain-form-' + domain.id,
@@ -35,8 +35,8 @@
 		// When the domain changes, update the form data
 		if (domain) {
 			$formData.domainId = domain.id;
-			$formData.incoming = domain.incoming.map((d) => d.id);
-			$formData.outgoing = domain.outgoing.map((d) => d.id);
+			$formData.incoming = domain.sourceDomains.map((d) => d.id);
+			$formData.outgoing = domain.targetDomains.map((d) => d.id);
 			$formData.connectedSubjects = connectedSubjects.map((s) => s.id);
 		}
 	});

@@ -4,7 +4,7 @@ import {
 	deleteDomainSchema,
 	domainRelSchema,
 	domainSchema
-} from '$lib/zod/domainSubjectSchema';
+} from '$lib/zod/subjectSchema';
 import type { ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';

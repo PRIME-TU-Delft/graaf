@@ -39,8 +39,8 @@
 
 	onMount(() => {
 		if (data.cycles) {
-			const from = data.cycles.from;
-			const to = data.cycles.to;
+			const from = data.cycles.source;
+			const to = data.cycles.target;
 			toast.warning('Graph contains a domain cycle', {
 				duration: Number.POSITIVE_INFINITY,
 				description: `from ${from.name} to ${to.name}`,

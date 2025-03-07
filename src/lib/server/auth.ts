@@ -1,10 +1,11 @@
-import { SvelteKitAuth } from '@auth/sveltekit';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { SvelteKitAuth } from '@auth/sveltekit';
 import { env } from '$env/dynamic/private';
-import type { OIDCConfig } from '@auth/sveltekit/providers';
-import prisma from './db/prisma';
+import prisma from '$lib/server/db/prisma';
 import { error } from '@sveltejs/kit';
+
+import type { OIDCConfig } from '@auth/sveltekit/providers';
 
 interface SurfConextProfile extends Record<string, any> {
 	nickname: string;
@@ -19,6 +20,7 @@ interface SurfConextProfile extends Record<string, any> {
  * @param accessToken JWT access token
  * @returns Object containing user information
  */
+
 async function fetchUserInfo(accessToken: string | undefined) {
 	if (!accessToken) throw error(505, 'No access token provided');
 	const res = await fetch(`${env.SURFCONEXT_ISSUER}/oidc/userinfo`, {
@@ -62,6 +64,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 
 	callbacks: {
 		// ¯\_(ツ)_/¯
+		// ¯\_(ツ)_/¯ - bram
 		session({ session }) {
 			return session;
 		}
