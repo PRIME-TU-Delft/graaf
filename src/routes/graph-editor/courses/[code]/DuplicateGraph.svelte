@@ -19,7 +19,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 
-	type CourseType = Course & {
+	export type CourseType = Course & {
 		graphs: {
 			name: string;
 		}[];

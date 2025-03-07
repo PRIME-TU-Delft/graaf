@@ -1,13 +1,13 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import type { Course, Graph } from '@prisma/client';
-	import DuplicateGraph from './DuplicateGraph.svelte';
+	import type { Graph } from '@prisma/client';
+	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
 	import GraphSettings from './GraphSettings.svelte';
 
 	type EditGraphProps = {
 		graph: Graph;
-		course: Course;
-		coursesAccessible: Promise<Course[]>;
+		course: CourseType;
+		coursesAccessible: Promise<CourseType[]>;
 	};
 
 	let { graph, course, coursesAccessible }: EditGraphProps = $props();
