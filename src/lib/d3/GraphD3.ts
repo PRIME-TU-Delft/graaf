@@ -392,12 +392,12 @@ class GraphD3 {
         }
 
         // Extract domain data
-        const domain_map = new Map<string, NodeData>()
+        const domain_map = new Map<number, NodeData>()
         for (const domain of data.domains) {
             if (domain.style === null) continue // Do not display domains without style
 
             const node_data = {
-                id: domain.id,
+                id: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
                 style: domain.style,
                 text: domain.name,
                 x: domain.x,
@@ -412,7 +412,7 @@ class GraphD3 {
 
         // Extract domain edge data
         for (const source of data.domains) {
-            for (const target of source.outgoing) {
+            for (const target of source.targetDomains) {
 
                 // Get source and target nodes
                 const source_node = domain_map.get(source.id)
@@ -422,7 +422,7 @@ class GraphD3 {
                 }
 
                 graph.domain_edges.push({
-                    id: `${source.id}-${target.id}`,
+                    id: `domain-${source.id}-${target.id}`, // Unique edge id from source and target ids
                     source: source_node,
                     target: target_node
                 })
@@ -430,15 +430,15 @@ class GraphD3 {
         }
 
         // Extract subject data
-        const detail_map = new Map<string, PrismaSubjectPayload>()
-        const subject_map = new Map<string, NodeData>()
+        const detail_map = new Map<number, PrismaSubjectPayload>()
+        const subject_map = new Map<number, NodeData>()
         for (const subject of data.subjects) {
             if (subject.domainId === null) continue // Do not display subjects without a parent domain
             const domain = domain_map.get(subject.domainId)
             if (domain === undefined) throw new Error('Invalid graph data')
 
             const node_data = {
-                id: subject.id,
+                id: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
                 style: domain.style,
                 text: subject.name,
                 x: subject.x,
@@ -455,7 +455,7 @@ class GraphD3 {
 
         // Extract subject edge data
         for (const source of data.subjects) {
-            for (const target of source.outgoing) {
+            for (const target of source.targetSubjects) {
 
                 // Get source and target nodes
                 const source_node = subject_map.get(source.id)
@@ -465,7 +465,7 @@ class GraphD3 {
                 }
 
                 graph.subject_edges.push({
-                    id: `${source.id}-${target.id}`,
+                    id: `subject-${source.id}-${target.id}`, // Unique edge id from source and target ids
                     source: source_node,
                     target: target_node
                 })
@@ -502,8 +502,8 @@ class GraphD3 {
                 const details = detail_map.get(subject.id)
                 if (details === undefined) throw new Error('Invalid graph data')
 
-                // Gather incoming nodes and edges
-                for (const source of details.incoming) {
+                // Gather past nodes and edges
+                for (const source of details.sourceSubjects) {
                     const source_node = subject_map.get(source.id)
                     if (source_node === undefined) throw new Error('Invalid graph data')
                     if (lecture_data.past_nodes.includes(source_node)) continue // Skip duplicate subjects
@@ -517,8 +517,8 @@ class GraphD3 {
                     })
                 }
 
-                // Gather outgoing nodes and edges
-                for (const target of details.outgoing) {
+                // Gather future nodes and edges
+                for (const target of details.targetSubjects) {
                     const target_node = subject_map.get(target.id)
                     if (target_node === undefined) throw new Error('Invalid graph data')
                     if (lecture_data.past_nodes.includes(target_node)) continue // Skip duplicate subjects

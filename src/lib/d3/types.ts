@@ -28,14 +28,14 @@ type PrismaGraphPayload = Prisma.GraphGetPayload<{
     include: {
         domains: {
             include: {
-                incoming: true,
-                outgoing: true
+                sourceDomains: true,
+                targetDomains: true
             }
         },
         subjects: {
             include: {
-                incoming: true,
-                outgoing: true
+                sourceSubjects: true,
+                targetSubjects: true
             }
         },
         lectures: {
@@ -49,8 +49,8 @@ type PrismaGraphPayload = Prisma.GraphGetPayload<{
 // Minimal subject payload for injection
 type PrismaSubjectPayload = Prisma.SubjectGetPayload<{
     include: {
-        incoming: true,
-        outgoing: true
+        sourceSubjects: true,
+        targetSubjects: true
     }
 }>
 
