@@ -19,7 +19,9 @@
 
 <main class="my-6 mb-12 space-y-6">
 	<section class="prose mx-auto p-4 text-blue-900">
-		<h1 class="my-12 text-4xl font-bold text-blue-950 shadow-blue-500/70">Welcome to the graaf</h1>
+		<h1 class="my-12 text-balance text-4xl font-bold text-blue-950 shadow-blue-500/70">
+			Welcome to the PRIME Graph Editor
+		</h1>
 		<p>
 			Here you can find all Programs and associated Courses. Click on any of them to edit or view
 			more information. You can also create a sandbox environment to experiment with the Graph
