@@ -1,9 +1,10 @@
 import { setError } from '$lib/utils/setError';
 import { courseSchema, programSchema } from '$lib/zod/programCourseSchema';
 import type { User } from '@prisma/client';
-import { fail, type RequestEvent } from '@sveltejs/kit';
+import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from '../db/prisma';
+import type { deleteProgramSchema, editSuperUserSchema } from '$lib/zod/superUserProgramSchema';
 
 type PermissionsOptions = {
 	admin: boolean;
@@ -140,6 +141,74 @@ export class ProgramActions {
 			});
 		} catch (e) {
 			return fail(500, { error: e instanceof Error ? e.message : `${e}` });
+		}
+	}
+
+	static async deleteProgram(
+		user: User,
+		formData: SuperValidated<Infer<typeof deleteProgramSchema>>
+	) {
+		try {
+			await prisma.program.delete({
+				where: {
+					id: formData.data.programId,
+					...hasProgramPermissions(user, { superAdmin: true, admin: false, editor: false })
+				}
+			});
+		} catch (e: unknown) {
+			return {
+				error: e instanceof Error ? e.message : `${e}`
+			};
+		}
+
+		throw redirect(303, '/');
+	}
+
+	static async editSuperUser(
+		user: User,
+		formData: SuperValidated<Infer<typeof editSuperUserSchema>>
+	) {
+		const newRole = formData.data.role;
+		const userId = formData.data.userId;
+
+		function getData() {
+			switch (newRole) {
+				case 'admin':
+					return {
+						admins: { connect: { id: userId } },
+						editors: { disconnect: { id: userId } }
+					};
+				case 'editor':
+					return {
+						editors: { connect: { id: userId } },
+						admins: { disconnect: { id: userId } }
+					};
+				case 'revoke':
+					return {
+						admins: { disconnect: { id: userId } },
+						editors: { disconnect: { id: userId } }
+					};
+			}
+		}
+
+		try {
+			if (newRole == 'admin') {
+				await prisma.program.update({
+					where: {
+						id: formData.data.programId,
+						// When we want to add a new admin, we need to check if the user is an admin or super admin
+						// When we want to revoke admin rights, the user needs to be a super admin or program admin
+						...hasProgramPermissions(user, {
+							superAdmin: true,
+							admin: newRole == 'admin' || newRole == 'revoke',
+							editor: false
+						})
+					},
+					data: getData()
+				});
+			}
+		} catch (e: unknown) {
+			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 }

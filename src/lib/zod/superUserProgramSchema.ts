@@ -11,8 +11,8 @@ export const editUsersSchema = z.object({
 	admins: z.array(z.string().nonempty()) // user ids
 });
 
-export const addUser = z.object({
+export const editSuperUserSchema = z.object({
 	programId: z.string().nonempty(),
 	userId: z.string(),
-	isAdmin: z.boolean()
+	role: z.enum(['admin', 'editor', 'revoke'])
 });

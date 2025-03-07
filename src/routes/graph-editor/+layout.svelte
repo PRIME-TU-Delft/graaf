@@ -3,6 +3,7 @@
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import { displayName } from '$lib/utils/displayUserName.js';
 	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { toast } from 'svelte-sonner';
 
@@ -46,7 +47,7 @@
 	{#if data.session?.user}
 		<!-- TODO: make fancy dropdown -->
 		<form action="/auth/signout" method="POST">
-			<Button type="submit">Log-out</Button>
+			<Button type="submit">{displayName(data.user)} | Log-out</Button>
 		</form>
 	{/if}
 </nav>

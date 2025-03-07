@@ -56,16 +56,18 @@
 							<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
 						</Table.Cell>
 					{/each}
-
-					{@render addNewUserButton('You do not have permission to add a super user.')}
 				</Table.Row>
-			{:else}
-				<Table.Row>
+			{/each}
+
+			<Table.Row>
+				{#if table.getRowModel().rows.length > 0}
 					{@render addNewUserButton(
 						'There are no super users, contact a super admin to add you as a super user.'
 					)}
-				</Table.Row>
-			{/each}
+				{:else}
+					{@render addNewUserButton('You do not have permission to add a super user.')}
+				{/if}
+			</Table.Row>
 		</Table.Body>
 	</Table.Root>
 </div>
@@ -82,7 +84,7 @@
 				bind:open={dialogOpen}
 				class="w-full"
 			>
-				<AddNewUser {program} />
+				<AddNewUser {program} bind:dialogOpen />
 			</DialogButton>
 		</Table.Cell>
 	{:else}
