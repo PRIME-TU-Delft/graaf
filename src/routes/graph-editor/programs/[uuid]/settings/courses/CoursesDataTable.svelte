@@ -65,7 +65,7 @@
 	<h2 class="my-2">Courses</h2>
 
 	{#if Object.keys(rowSelection).length > 0}
-		<UnlinkCourses {rowSelection} {program} />
+		<UnlinkCourses bind:rowSelection {program} />
 	{/if}
 </div>
 

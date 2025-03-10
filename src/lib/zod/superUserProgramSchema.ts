@@ -19,5 +19,5 @@ export const editSuperUserSchema = z.object({
 
 export const unlinkCoursesSchema = z.object({
 	programId: z.string().nonempty(),
-	courseIds: z.array(z.string().nonempty())
+	courseCodes: z.array(z.string().nonempty()).nonempty()
 });

@@ -4,7 +4,11 @@ import type { User } from '@prisma/client';
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from '../db/prisma';
-import type { deleteProgramSchema, editSuperUserSchema } from '$lib/zod/superUserProgramSchema';
+import type {
+	deleteProgramSchema,
+	editSuperUserSchema,
+	unlinkCoursesSchema
+} from '$lib/zod/superUserProgramSchema';
 
 type PermissionsOptions = {
 	admin: boolean;
@@ -204,6 +208,27 @@ export class ProgramActions {
 					})
 				},
 				data: getData()
+			});
+		} catch (e: unknown) {
+			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	static async unlinkCourses(
+		user: User,
+		formData: SuperValidated<Infer<typeof unlinkCoursesSchema>>
+	) {
+		try {
+			await prisma.program.update({
+				where: {
+					id: formData.data.programId,
+					...hasProgramPermissions(user) // all super admins can unlink courses
+				},
+				data: {
+					courses: {
+						disconnect: formData.data.courseCodes.map((code) => ({ code }))
+					}
+				}
 			});
 		} catch (e: unknown) {
 			return setError(formData, '', e instanceof Error ? e.message : `${e}`);

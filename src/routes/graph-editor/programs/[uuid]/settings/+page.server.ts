@@ -74,6 +74,6 @@ export const actions: Actions = {
 	},
 	'unlink-courses': async (event) => {
 		const form = await superValidate(event, zod(unlinkCoursesSchema));
-		// return ProgramActions.unlinkCourses(await getUser(event), form);
+		return ProgramActions.unlinkCourses(await getUser(event), form);
 	}
 };
