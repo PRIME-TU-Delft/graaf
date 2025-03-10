@@ -22,7 +22,7 @@
 
 <section class="container prose mx-auto p-4">
 	<CoursesDataTable
-		data={data.program.courses}
+		data={data.program?.courses}
 		program={data.program}
 		{columns}
 		courses={data.allCourses}

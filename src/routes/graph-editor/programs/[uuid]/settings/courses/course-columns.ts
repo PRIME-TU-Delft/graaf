@@ -2,6 +2,7 @@ import { renderComponent } from '$lib/components/ui/data-table';
 import type { Course } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/table-core';
 import DataTableCheckbox from './DataTableCheckbox.svelte';
+import VisitCourse from './VisitCourse.svelte';
 
 export const columns: ColumnDef<Course>[] = [
 	{
@@ -29,5 +30,10 @@ export const columns: ColumnDef<Course>[] = [
 	{
 		accessorKey: 'code',
 		header: 'Code'
+	},
+	{
+		id: 'visit',
+		cell: ({ row }) =>
+			renderComponent(VisitCourse, { href: `/graph-editor/courses/${row.original.code}` })
 	}
 ];
