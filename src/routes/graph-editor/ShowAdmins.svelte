@@ -29,7 +29,7 @@
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each new Array(100).fill(0).flatMap((_) => program.admins) as admin}
+			{#each program.admins as admin}
 				<Table.Row>
 					<Table.Cell>{displayName(admin)}</Table.Cell>
 					<Table.Cell class="text-right">Admin</Table.Cell>

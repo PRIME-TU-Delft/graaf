@@ -43,7 +43,7 @@
 		<h3 class="text-lg font-semibold text-blue-950">{program.name}</h3>
 
 		<div class="flex gap-2">
-			{#if user?.role === 'ADMIN' || program.editors.find((u) => u.id == user?.id) || program.admins?.find((u) => u.id == user?.id)}
+			{#if hasProgramPermissions(user, program)}
 				{@render newCourseButton()}
 			{/if}
 
@@ -73,7 +73,7 @@
 		<Popover.Content class="p-2" side="right" align="start">
 			<Command.Root>
 				{#await courses}
-					<CreateNewCourseButton {courseForm} {courseValue} {program} />
+					<CreateNewCourseButton {courseForm} {courseValue} {program} {user} />
 					<p>
 						Loading courses (I have added an artifical wait of 5s to test what would happen if this
 						loads slow)...
@@ -81,12 +81,24 @@
 				{:then courses}
 					{@const selectableCourses = courses.filter((c) => !programCourseSet.has(c.code))}
 					{#if selectableCourses.length == 0}
-						<CreateNewCourseButton {courseForm} {courseValue} {program} />
+						<CreateNewCourseButton
+							{courseForm}
+							{courseValue}
+							{program}
+							{user}
+							errorMessage="There are no more courses to link, and you do not have the permission to create a new course"
+						/>
 					{:else}
 						<Command.Input placeholder="Search courses..." bind:value={courseValue} />
 						<Command.List>
 							<Command.Empty class="p-2">
-								<CreateNewCourseButton {courseForm} {courseValue} {program} />
+								<CreateNewCourseButton
+									{courseForm}
+									{courseValue}
+									{program}
+									{user}
+									errorMessage="There are no more courses to link, and you do not have the permission to create a new course"
+								/>
 							</Command.Empty>
 
 							<Command.Group>
@@ -113,7 +125,7 @@
 						</Command.List>
 					{/if}
 				{:catch error}
-					<CreateNewCourseButton {courseForm} {courseValue} {program} />
+					<CreateNewCourseButton {courseForm} {courseValue} {program} {user} />
 				{/await}
 			</Command.Root>
 		</Popover.Content>
