@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { unlinkCoursesSchema } from '$lib/zod/superUserProgramSchema';
+	import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
 	import type { Course, Program } from '@prisma/client';
 	import type { RowSelectionState } from '@tanstack/table-core';
 	import { toast } from 'svelte-sonner';
@@ -23,9 +23,9 @@
 			.map((i) => program.courses[i])
 	);
 
-	const form = superForm((page.data as PageData).unlinkCoursesForm, {
+	const form = superForm((page.data as PageData).linkCoursesForm, {
 		id: 'unlink-courses-form',
-		validators: zodClient(unlinkCoursesSchema),
+		validators: zodClient(linkingCoursesSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully unlinked courses!');

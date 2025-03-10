@@ -6,7 +6,7 @@ import { courseSchema } from '$lib/zod/programCourseSchema';
 import {
 	deleteProgramSchema,
 	editSuperUserSchema,
-	unlinkCoursesSchema
+	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
 import type { User } from '@prisma/client';
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
@@ -50,7 +50,7 @@ export const load = (async ({ params, locals }) => {
 			allCourses,
 			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
-			unlinkCoursesForm: await superValidate(zod(unlinkCoursesSchema)),
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
 			courseForm: await superValidate(zod(courseSchema))
 		};
 	} catch (e) {
@@ -73,7 +73,7 @@ export const actions: Actions = {
 		ProgramActions.addCourseToProgram(await getUser({ locals }), formData);
 	},
 	'unlink-courses': async (event) => {
-		const form = await superValidate(event, zod(unlinkCoursesSchema));
+		const form = await superValidate(event, zod(linkingCoursesSchema));
 		return ProgramActions.unlinkCourses(await getUser(event), form);
 	}
 };

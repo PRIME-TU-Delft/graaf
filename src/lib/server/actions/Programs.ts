@@ -7,7 +7,7 @@ import prisma from '../db/prisma';
 import type {
 	deleteProgramSchema,
 	editSuperUserSchema,
-	unlinkCoursesSchema
+	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
 
 type PermissionsOptions = {
@@ -216,7 +216,7 @@ export class ProgramActions {
 
 	static async unlinkCourses(
 		user: User,
-		formData: SuperValidated<Infer<typeof unlinkCoursesSchema>>
+		formData: SuperValidated<Infer<typeof linkingCoursesSchema>>
 	) {
 		try {
 			await prisma.program.update({

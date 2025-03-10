@@ -12,7 +12,7 @@
 		type RowSelectionState
 	} from '@tanstack/table-core';
 	import type { PageData } from '../$types';
-	import NewCourseForm from '../../../../NewCourseForm.svelte';
+	import AddCourse from '../../../addCourse/AddCourse.svelte';
 	import UnlinkCourses from './UnlinkCourses.svelte';
 
 	type DataTableProps = {
@@ -24,7 +24,7 @@
 
 	let { data, program, columns, courses }: DataTableProps = $props();
 
-	const { user, courseForm } = page.data as PageData;
+	const { user, linkCoursesForm } = page.data as PageData;
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let rowSelection = $state<RowSelectionState>({});
@@ -101,7 +101,7 @@
 	</Table.Root>
 
 	<div class="flex items-center justify-end space-x-2 border-t px-4 py-2">
-		<NewCourseForm {program} {user} {courses} {courseForm} />
+		<AddCourse {program} {user} {courses} {linkCoursesForm} />
 
 		{#if table.getPageCount() > 1}
 			<Button

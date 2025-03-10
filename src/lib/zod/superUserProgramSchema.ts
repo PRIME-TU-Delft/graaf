@@ -17,7 +17,7 @@ export const editSuperUserSchema = z.object({
 	role: z.enum(['admin', 'editor', 'revoke'])
 });
 
-export const unlinkCoursesSchema = z.object({
+export const linkingCoursesSchema = z.object({
 	programId: z.string().nonempty(),
 	courseCodes: z.array(z.string().nonempty()).nonempty()
 });
