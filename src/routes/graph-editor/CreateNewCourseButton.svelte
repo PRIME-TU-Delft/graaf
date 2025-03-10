@@ -38,7 +38,7 @@
 		}
 	});
 
-	const { form: formData, enhance: newCourseEnhance } = form;
+	const { form: formData, enhance: newCourseEnhance, submitting, delayed } = form;
 </script>
 
 {#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
@@ -51,7 +51,6 @@
 		icon="plus"
 		button="New Course for {program.name}"
 		title="Create Course"
-		description="TODO"
 	>
 		<form action="?/new-course" method="POST" use:newCourseEnhance>
 			<input type="hidden" name="programId" value={program.id} />
@@ -65,7 +64,7 @@
 				</Form.Control>
 				<Form.FieldErrors />
 				<Form.Description>
-					This is the course code from for instance Brightspace (i.e. CS1000)
+					This is the course code from Brightspace or similar (i.e. CS1000)
 				</Form.Description>
 			</Form.Field>
 
@@ -80,7 +79,12 @@
 				<Form.FieldErrors />
 			</Form.Field>
 
-			<Form.Button class="float-right mt-4">Submit</Form.Button>
+			<Form.FormButton class="float-right" disabled={$submitting} loading={$delayed}>
+				Add course
+				{#snippet loadingMessage()}
+					<span>Adding course...</span>
+				{/snippet}
+			</Form.FormButton>
 		</form>
 	</DialogButton>
 {:else}

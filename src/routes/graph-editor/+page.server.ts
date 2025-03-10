@@ -56,7 +56,7 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		// Check if we need pagination here
+		// TODO: Check if we need pagination here
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'

@@ -4,7 +4,8 @@
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
-	import ProgramCourses from './courses/ProgramCourses.svelte';
+	import { columns } from './courses/course-columns';
+	import CoursesDataTable from './courses/CoursesDataTable.svelte';
 	import ProgramAdmins from './superUsers/ProgramAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -19,11 +20,18 @@
 
 <ProgramAdmins program={data.program} user={data.user} />
 
-<ProgramCourses />
+<section class="container prose mx-auto p-4">
+	<CoursesDataTable
+		data={data.program.courses}
+		program={data.program}
+		{columns}
+		courses={data.allCourses}
+	/>
+</section>
 
 <!-- Only a program admin or super admin is able to delete a program -->
 {#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}
-	<section class="prose mx-auto mt-12 rounded-lg border-2 bg-red-50 p-4 text-red-900">
+	<section class="prose mx-auto my-12 rounded-lg border-2 bg-red-50 p-4 text-red-900">
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">
 			<p>Delete program:</p>
