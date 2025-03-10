@@ -9,7 +9,7 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
+	import type { PageData } from '../$types';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';

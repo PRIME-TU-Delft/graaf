@@ -11,7 +11,7 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
+	import type { PageData } from '../$types';
 
 	type ChangeRoleProps = {
 		userId: string;

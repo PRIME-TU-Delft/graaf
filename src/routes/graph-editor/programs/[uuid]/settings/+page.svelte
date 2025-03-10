@@ -4,7 +4,8 @@
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
-	import ProgramAdmins from './ProgramAdmins.svelte';
+	import ProgramCourses from './courses/ProgramCourses.svelte';
+	import ProgramAdmins from './superUsers/ProgramAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -17,6 +18,8 @@
 </section>
 
 <ProgramAdmins program={data.program} user={data.user} />
+
+<ProgramCourses />
 
 <!-- Only a program admin or super admin is able to delete a program -->
 {#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}

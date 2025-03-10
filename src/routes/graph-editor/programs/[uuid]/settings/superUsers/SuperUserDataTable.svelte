@@ -7,7 +7,7 @@
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import type { Program, User } from '@prisma/client';
 	import { type ColumnDef, getCoreRowModel } from '@tanstack/table-core';
-	import type { PageData } from './$types';
+	import type { PageData } from '../$types';
 	import AddNewUser from './AddNewUser.svelte';
 	import type { ProgramUser } from './program-admin-columns';
 
