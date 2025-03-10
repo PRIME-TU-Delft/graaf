@@ -16,7 +16,7 @@
 	</p>
 </section>
 
-<ProgramAdmins program={data.program} />
+<ProgramAdmins program={data.program} user={data.user} />
 
 <!-- Only a program admin or super admin is able to delete a program -->
 {#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}

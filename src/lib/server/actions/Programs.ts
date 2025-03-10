@@ -192,21 +192,19 @@ export class ProgramActions {
 		}
 
 		try {
-			if (newRole == 'admin') {
-				await prisma.program.update({
-					where: {
-						id: formData.data.programId,
-						// When we want to add a new admin, we need to check if the user is an admin or super admin
-						// When we want to revoke admin rights, the user needs to be a super admin or program admin
-						...hasProgramPermissions(user, {
-							superAdmin: true,
-							admin: newRole == 'admin' || newRole == 'revoke',
-							editor: false
-						})
-					},
-					data: getData()
-				});
-			}
+			await prisma.program.update({
+				where: {
+					id: formData.data.programId,
+					// When we want to add a new admin, we need to check if the user is an program admin or super admin
+					// When we want to revoke admin rights, the user needs to be a program admin or super admin
+					...hasProgramPermissions(user, {
+						superAdmin: true,
+						admin: newRole == 'admin' || newRole == 'revoke',
+						editor: false
+					})
+				},
+				data: getData()
+			});
 		} catch (e: unknown) {
 			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
 		}

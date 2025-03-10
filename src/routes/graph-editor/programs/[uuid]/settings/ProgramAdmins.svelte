@@ -4,10 +4,11 @@
 	import { columns, type ProgramUser } from './program-admin-columns';
 
 	type ProgramAdminProps = {
+		user: User;
 		program: Program & { admins: User[]; editors: User[] };
 	};
 
-	let { program }: ProgramAdminProps = $props();
+	let { user, program }: ProgramAdminProps = $props();
 
 	let users = $derived.by(() => {
 		const admins: ProgramUser[] = program.admins.map((user) => {
@@ -28,7 +29,13 @@
 		}
 
 		const u = admins.concat(editors);
-		const sortedUsers = u.toSorted((a, b) => getName(a).localeCompare(getName(b)));
+		const sortedUsers = u.toSorted((a, b) => {
+			// When `a` is the current user, it should be at the top
+			if (a.id == user.id) return -1;
+
+			// Otherwise sort on name alphabetically
+			return getName(a).localeCompare(getName(b));
+		});
 
 		return sortedUsers;
 	});
