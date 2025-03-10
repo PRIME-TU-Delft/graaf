@@ -1,20 +1,18 @@
 import { ProgramActions } from '$lib/server/actions/Programs.js';
+import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
+import { courseSchema, programSchema } from '$lib/zod/programCourseSchema.js';
 import type { Course, User } from '@prisma/client';
 import { fail, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
-import { courseSchema, programSchema } from '../../lib/zod/programCourseSchema.js';
 
 export const load = (async ({ url, locals }) => {
+	const user = await getUser({ locals });
+
 	try {
 		const search = url.searchParams.get('c')?.toLocaleLowerCase();
-
-		const session = await locals.auth();
-		const user = session?.user as User | undefined;
-
-		if (!user) throw new Error('No user found');
 
 		const programs = await prisma.program.findMany({
 			include: {
@@ -33,16 +31,8 @@ export const load = (async ({ url, locals }) => {
 						}
 					}
 				},
-				editors: {
-					select: {
-						id: true
-					}
-				},
-				admins: {
-					select: {
-						id: true
-					}
-				}
+				editors: true,
+				admins: true
 			},
 			orderBy: {
 				updatedAt: 'desc'
@@ -75,7 +65,7 @@ export const load = (async ({ url, locals }) => {
 
 		return {
 			pinnedCourses,
-			error: undefined,
+			error: url.searchParams.get('error'),
 			programs,
 			courses,
 			user,
@@ -87,7 +77,7 @@ export const load = (async ({ url, locals }) => {
 			pinnedCourses: [],
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
-			user: undefined,
+			user,
 			courses: emptyPrismaPromise([] as Course[]),
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))

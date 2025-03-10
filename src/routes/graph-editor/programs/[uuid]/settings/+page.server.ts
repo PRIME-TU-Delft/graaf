@@ -29,7 +29,7 @@ export const load = (async ({ params, locals }) => {
 
 		const allUsers = await prisma.user.findMany();
 
-		if (!dbProgram) throw Error('You do not have permissions to access this program');
+		if (!dbProgram) throw Error('You do not have permissions to access this program setting page');
 
 		return {
 			program: dbProgram,

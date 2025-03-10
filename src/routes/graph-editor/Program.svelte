@@ -12,12 +12,14 @@
 	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
 	import CourseGrid from './CourseGrid.svelte';
+	import { hasProgramPermissions } from '$lib/utils/permissions';
+	import ShowAdmins from './ShowAdmins.svelte';
 
 	type Props = {
-		user?: User;
+		user: User;
 		program: Program & { courses: (Course & { pinnedBy: Pick<User, 'id'>[] })[] } & {
-			editors: Pick<User, 'id'>[];
-			admins: Pick<User, 'id'>[];
+			editors: User[];
+			admins: User[];
 		};
 		courses: Promise<Course[]>;
 		courseForm: SuperValidated<Infer<typeof courseSchema>>;
@@ -45,10 +47,12 @@
 				{@render newCourseButton()}
 			{/if}
 
-			{#if user?.role === 'ADMIN'}
+			{#if hasProgramPermissions(user, program)}
 				<Button.Root href="graph-editor/programs/{program.id}/settings">
 					<Settings /> Settings
 				</Button.Root>
+			{:else if program.admins.length + program.editors.length > 0}
+				<ShowAdmins {program} />
 			{/if}
 		</div>
 	</div>
