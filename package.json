@@ -1,17 +1,20 @@
 {
-	"name": "graaf-proposal",
+	"name": "graph-editor-proposal",
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"setup": "./scripts/setup.sh",
 		"dev": "vite dev",
 		"build": "vite build",
+		"build:netlify": "prisma generate && prisma db push --accept-data-loss --force-reset && prisma db seed && vite build",
 		"preview": "vite preview",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"test:unit": "vitest",
+		"test:integration": "./scripts/run-integration.sh",
 		"test": "pnpm run test:unit -- --run",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
@@ -27,6 +30,7 @@
 		"@sveltejs/kit": "^2.17.2",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@types/node": "^22.13.4",
+		"@vitest/ui": "3.0.6",
 		"autoprefixer": "^10.4.20",
 		"bits-ui": "1.3.0",
 		"clsx": "^2.1.1",
@@ -52,7 +56,7 @@
 		"typescript": "^5.7.3",
 		"typescript-eslint": "^8.24.1",
 		"vite": "^6.1.0",
-		"vitest": "^2.1.9",
+		"vitest": "^3.0.6",
 		"zod": "^3.24.2"
 	},
 	"dependencies": {

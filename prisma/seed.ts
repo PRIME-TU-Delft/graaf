@@ -1,10 +1,39 @@
 import { Course, Subject, PrismaClient } from '@prisma/client';
 import { courses, domains, programs, subjects } from './init';
+import { env } from 'process';
 
 const prisma = new PrismaClient();
 
 async function main() {
 	console.log(`Start seeding ...`);
+
+	await prisma.$transaction([
+		prisma.graph.deleteMany(),
+		prisma.course.deleteMany(),
+		prisma.user.deleteMany(),
+		prisma.program.deleteMany(),
+		prisma.domain.deleteMany(),
+		prisma.subject.deleteMany(),
+		prisma.lecture.deleteMany()
+	]);
+
+	if (env.NETLIFY_CONTEXT != 'PROD') {
+
+		// TODO This generated user is unused @yustarandomname
+		const user = await prisma.user.create({
+			data: {
+				role: 'ADMIN',
+				email: 'testuser@tudelft.nl',
+				nickname: 'Test User',
+				firstName: 'Test',
+				lastName: 'User',
+				emailVerified: new Date(),
+				createdAt: new Date(),
+				updatedAt: new Date()
+			}
+		});
+	}
+
 	const prisma_courses: Course[] = [];
 	for (const course of courses) {
 		const prisma_course = await prisma.course.create({

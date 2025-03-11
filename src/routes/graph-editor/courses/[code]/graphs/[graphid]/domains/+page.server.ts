@@ -1,4 +1,4 @@
-import { DomainActions } from '$lib/server/helpers';
+import { DomainActions } from '$lib/server/actions';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 

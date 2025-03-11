@@ -1,4 +1,4 @@
-import { SubjectActions } from '$lib/server/helpers';
+import { SubjectActions } from '$lib/server/actions';
 import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/subjectSchema';
 import type { ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';

@@ -2,6 +2,7 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
+	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -16,6 +17,7 @@
 	let dialogOpen = $state(false);
 
 	const form = superForm(programForm, {
+		id: useId(),
 		validators: zodClient(programSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {

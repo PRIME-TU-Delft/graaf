@@ -26,10 +26,11 @@ model User {
 	accounts			Account[]
 	sessions			Session[]
 
-	program_editors		Program[]	@relation("EditorRelation")
-	program_admins		Program[]	@relation("AdminRelation")
-	course_editors		Course[]	@relation("EditorRelation")
-	course_admins		Course[]	@relation("AdminRelation")
+	program_editors		Program[]	@relation("ProgramEditorRelation")
+	program_admins		Program[]	@relation("ProgramAdminRelation")
+	course_editors		Course[]	@relation("CourseEditorRelation")
+	course_admins		Course[]	@relation("CourseAdminRelation")
+	pinned_courses		Course[]	@relation("PinnedCourse")
 
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
@@ -47,11 +48,11 @@ model Account {
 	scope				String?
 	id_token			String?
 	session_state		String?
+	
+	user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
 
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
-
-	user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
 
 	@@id([provider, providerAccountId])
 }
@@ -78,14 +79,12 @@ model Program {
 	id					Int			@id @default(autoincrement())
 	name				String
 
+	courses				Course[]	@relation("ProgramCourse")
+	editors				User[]		@relation("ProgramEditorRelation")
+	admins				User[]		@relation("ProgramAdminRelation")
+
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
-
-	// Relations
-	// Program <*--*> Course
-	courses				Course[]
-	editors				User[]		@relation("EditorRelation")
-	admins				User[]		@relation("AdminRelation")
 }
 
 enum CourseType {
@@ -99,16 +98,14 @@ model Course {
 	name				String
 	isArchived			Boolean		@default(false)
 
+	programs			Program[]	@relation("ProgramCourse")
+	graphs				Graph[]		@relation("CourseGraph")
+	editors				User[]		@relation("CourseEditorRelation")
+	admins				User[]		@relation("CourseAdminRelation")
+	pinnedBy			User[]		@relation("PinnedCourse")
+
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
-
-	// Relations
-	// Course <*--*> Program
-	// Course <---*> Graph
-	programs			Program[]
-	graphs				Graph[]
-	editors				User[]		@relation("EditorRelation")
-	admins				User[]		@relation("AdminRelation")
 }
 
 model Graph {
@@ -116,15 +113,13 @@ model Graph {
 	name				String
 	courseId			String
 
+	course				Course		@relation("CourseGraph", fields: [courseId], references: [code])
+	domains				Domain[]	@relation("GraphDomain")
+	subjects			Subject[]	@relation("GraphSubject")
+	lectures			Lecture[]	@relation("GraphLecture")
+
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
-
-	// Relations
-	// Graph <*---> Course
-	course				Course		@relation(fields: [courseId], references: [code])
-	domains				Domain[]
-	subjects			Subject[]
-	lectures			Lecture[]
 
 	@@unique([courseId, name])
 }
@@ -151,16 +146,13 @@ model Domain {
 	y 					Int			@default(0)
 	graphId				Int
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
-
-	// Relations
-	// Domain <*---> Graph
-	// Domain <---*> Subject
-	graph				Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
-	subjects			Subject[]
+	graph				Graph		@relation("GraphDomain", fields: [graphId], references: [id], onDelete: Cascade)
+	subjects			Subject[]	@relation("DomainSubject")
 	sourceDomains		Domain[]	@relation("DomainRelation")
 	targetDomains		Domain[]	@relation("DomainRelation")
+
+	createdAt			DateTime	@default(now())
+	updatedAt			DateTime	@updatedAt
 
 	@@unique([name, graphId])
 }
@@ -174,18 +166,14 @@ model Subject {
 	graphId				Int
 	domainId			Int?
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
-
-	// Relations
-	// Subject <*---> Graph
-	// Subject <*---> Domain
-	// Subject <*--*> Lecture
-	graph				Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
-	domain				Domain?		@relation(fields: [domainId], references: [id])
-	lectures			Lecture[]
+	graph				Graph		@relation("GraphSubject", fields: [graphId], references: [id], onDelete: Cascade)
+	domain				Domain?		@relation("DomainSubject", fields: [domainId], references: [id])
+	lectures			Lecture[]	@relation("LectureSubject")
 	sourceSubjects		Subject[]	@relation("SubjectRelation")
 	targetSubjects		Subject[]	@relation("SubjectRelation")
+
+	createdAt			DateTime	@default(now())
+	updatedAt			DateTime	@updatedAt
 
 	@@unique([name, domainId])
 }
@@ -196,14 +184,11 @@ model Lecture {
 	order				Int
 	graphId				Int
 
+	graph				Graph		@relation("GraphLecture", fields: [graphId], references: [id], onDelete: Cascade)
+	subjects			Subject[]	@relation("LectureSubject")
+
 	createdAt			DateTime	@default(now())
 	updatedAt			DateTime	@updatedAt
-
-	// Relations
-	// Lecture <*---> Graph
-	// Lecture <*--*> Subject
-	graph				Graph		@relation(fields: [graphId], references: [id], onDelete: Cascade)
-	subjects			Subject[]
 
 	@@unique([name, graphId])
 }

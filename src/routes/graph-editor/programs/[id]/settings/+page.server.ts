@@ -1,10 +1,12 @@
+import { hasProgramPermissions } from '$lib/server/actions/Programs';
 import prisma from '$lib/server/db/prisma';
+import type { User } from '@prisma/client';
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
-import { fail, superValidate } from 'sveltekit-superforms';
+import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import { formSchema } from './schema';
 
-export const load = (async ({ params }) => {
+export const load = (async ({ params, locals }) => {
 	if (!params.id) {
 		return {
 			course: undefined,
@@ -13,10 +15,15 @@ export const load = (async ({ params }) => {
 		};
 	}
 
+	const session = await locals.auth();
+	const user = session?.user as User | undefined;
+	if (!user) redirect(303, '/auth');
+
 	try {
 		const dbProgram = await prisma.program.findFirst({
 			where: {
-				id: params.id
+				id: params.id,
+				...hasProgramPermissions(user, { superAdmin: true, admin: false, editor: false })
 			}
 		});
 
@@ -35,27 +42,32 @@ export const load = (async ({ params }) => {
 	} catch (e: unknown) {
 		return {
 			course: undefined,
-			error: e instanceof Error ? e.message : `${e}`,
-			form: await superValidate(zod(formSchema))
+			error: e instanceof Error ? e.message : `${e}`
 		};
 	}
 }) satisfies ServerLoad;
 
 export const actions: Actions = {
-	'delete-program': async ({ request }) => {
+	'delete-program': async ({ request, locals }) => {
 		const form = await request.formData();
 
 		const id = form.get('programId') as string;
 
+		const session = await locals.auth();
+		const user = session?.user as User | undefined;
+		if (!user) redirect(303, '/auth');
+
 		try {
 			await prisma.program.delete({
-				where: { id }
+				where: {
+					id,
+					...hasProgramPermissions(user, { superAdmin: true, admin: false, editor: false })
+				}
 			});
 		} catch (e: unknown) {
-			return fail(500, {
-				form,
+			return {
 				error: e instanceof Error ? e.message : `${e}`
-			});
+			};
 		}
 
 		throw redirect(303, '/');
