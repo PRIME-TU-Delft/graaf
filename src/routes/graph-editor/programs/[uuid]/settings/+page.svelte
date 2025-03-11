@@ -1,18 +1,44 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
 	import { columns } from './courses/course-columns';
 	import CoursesDataTable from './courses/CoursesDataTable.svelte';
+	import EditProgramName from './EditProgramName.svelte';
 	import ProgramAdmins from './superUsers/ProgramAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	let editProgramDialogOpen = $state(true);
 </script>
 
+<section
+	class="prose sticky top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-blue-50/80 p-4 shadow-none shadow-blue-200/70 backdrop-blur md:sticky md:border md:border-blue-200 md:shadow-lg"
+>
+	<h1 class="m-0">{data.program.name}</h1>
+
+	{#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+		<DialogButton
+			bind:open={editProgramDialogOpen}
+			button="Edit program name"
+			icon="edit"
+			title="Edit the name of the program"
+		>
+			<EditProgramName
+				program={data.program}
+				editProgramForm={data.editProgramForm}
+				onSuccess={() => {
+					editProgramDialogOpen = false;
+				}}
+			/>
+		</DialogButton>
+	{/if}
+</section>
+
 <section class="prose mx-auto p-4">
-	<h1>{data.program.name}</h1>
 	<p>
 		Manage program settings with program name: <span class="font-mono">{data.program.name}</span>.
 	</p>

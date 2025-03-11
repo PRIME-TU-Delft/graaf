@@ -20,7 +20,6 @@
 		validators: zodClient(courseSchema),
 		id: `new-course-${id}`,
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				dialogOpen = false;
 			}

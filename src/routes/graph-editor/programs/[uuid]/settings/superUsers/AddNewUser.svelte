@@ -34,7 +34,6 @@
 		id: 'add-program-form-' + id,
 		validators: zodClient(editSuperUserSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Successfully add user!');
 				dialogOpen = false;

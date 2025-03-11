@@ -4,11 +4,9 @@ export const deleteProgramSchema = z.object({
 	programId: z.string().nonempty()
 });
 
-export const editUsersSchema = z.object({
+export const editProgramSchema = z.object({
 	programId: z.string().nonempty(),
-	name: z.string().nonempty(),
-	editors: z.array(z.string().nonempty()), // user ids
-	admins: z.array(z.string().nonempty()) // user ids
+	name: z.string().nonempty()
 });
 
 export const editSuperUserSchema = z.object({

@@ -5,6 +5,7 @@ import prisma from '$lib/server/db/prisma';
 import { courseSchema } from '$lib/zod/programCourseSchema';
 import {
 	deleteProgramSchema,
+	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
@@ -49,6 +50,7 @@ export const load = (async ({ params, locals }) => {
 			allUsers,
 			allCourses,
 			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
+			editProgramForm: await superValidate(zod(editProgramSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
 			createNewCourseForm: await superValidate(zod(courseSchema))
@@ -60,6 +62,10 @@ export const load = (async ({ params, locals }) => {
 }) satisfies ServerLoad;
 
 export const actions: Actions = {
+	'edit-program': async (event) => {
+		const form = await superValidate(event, zod(editProgramSchema));
+		return ProgramActions.editProgram(await getUser(event), form);
+	},
 	'delete-program': async (event) => {
 		const form = await superValidate(event, zod(deleteProgramSchema));
 		return ProgramActions.deleteProgram(await getUser(event), form);

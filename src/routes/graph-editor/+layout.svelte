@@ -52,7 +52,7 @@
 	{/if}
 </nav>
 
-<main class="pt-12">
+<main class="pt-16">
 	{@render children()}
 </main>
 

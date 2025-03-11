@@ -6,6 +6,7 @@ import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from '../db/prisma';
 import type {
 	deleteProgramSchema,
+	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
@@ -72,6 +73,30 @@ export class ProgramActions {
 				return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
 			}
 			return setError(form, 'name', `${e.message}`);
+		}
+
+		return { form };
+	}
+
+	/**
+	 * PERMISSIONS:
+	 * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
+	 */
+	static async editProgram(user: User, form: SuperValidated<Infer<typeof editProgramSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.program.update({
+				where: {
+					id: form.data.programId,
+					...hasProgramPermissions(user, { superAdmin: true, admin: true, editor: false })
+				},
+				data: {
+					name: form.data.name
+				}
+			});
+		} catch (e) {
+			return setError(form, '', 'Unauthorized');
 		}
 
 		return { form };

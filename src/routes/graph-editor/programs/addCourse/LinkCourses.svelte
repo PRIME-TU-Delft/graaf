@@ -34,7 +34,6 @@
 		id: 'link-courses-form',
 		validators: zodClient(linkingCoursesSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully linked courses!');
 
