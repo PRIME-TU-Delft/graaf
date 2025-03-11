@@ -21,8 +21,6 @@
 
 	const { graph }: Props = $props();
 
-	const subjects = $derived(graph.subjects);
-
 	let popupOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newSubjectRelForm, {
@@ -53,8 +51,8 @@
 
 			<input type="hidden" name="graphId" value={graph.id} />
 
-			<SubjectRelField id="subjectInId" {subjects} {form} {formData} />
-			<SubjectRelField id="subjectOutId" {subjects} {form} {formData} />
+			<SubjectRelField id="subjectInId" subjects={graph.subjects} {form} {formData} />
+			<SubjectRelField id="subjectOutId" subjects={graph.subjects} {form} {formData} />
 
 			<Form.FormError {form} />
 

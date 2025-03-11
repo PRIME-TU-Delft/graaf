@@ -20,8 +20,6 @@
 
 	const { graph }: Props = $props();
 
-	const domains = graph.domains;
-
 	let popupOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainRelForm, {
@@ -51,8 +49,8 @@
 
 			<input type="hidden" name="graphId" value={graph.id} />
 
-			<DomainRelField id="domainInId" {domains} {form} {formData} />
-			<DomainRelField id="domainOutId" {domains} {form} {formData} />
+			<DomainRelField id="domainInId" domains={graph.domains} {form} {formData} />
+			<DomainRelField id="domainOutId" domains={graph.domains} {form} {formData} />
 
 			<Form.FormError {form} />
 
