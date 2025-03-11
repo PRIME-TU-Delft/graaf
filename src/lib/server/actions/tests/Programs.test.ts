@@ -1,5 +1,6 @@
 import prisma from '$lib/server/db/prisma';
-import { courseSchema, programSchema } from '$lib/zod/programCourseSchema';
+import { programSchema } from '$lib/zod/programSchema';
+import { courseSchema } from '$lib/zod/courseSchema';
 import type { RequestEvent } from '@sveltejs/kit';
 import { describe, expect, test } from 'vitest';
 import { ProgramActions } from '../Programs';

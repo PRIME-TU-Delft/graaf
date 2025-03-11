@@ -7,6 +7,10 @@ import { zod } from 'sveltekit-superforms/adapters';
 import { formSchema } from './schema';
 
 export const load = (async ({ params, locals }) => {
+	const session = await locals.auth();
+	const user = session?.user as User | undefined;
+	if (!user) redirect(303, '/auth');
+	
 	if (!params.id) {
 		return {
 			course: undefined,
@@ -15,14 +19,11 @@ export const load = (async ({ params, locals }) => {
 		};
 	}
 
-	const session = await locals.auth();
-	const user = session?.user as User | undefined;
-	if (!user) redirect(303, '/auth');
-
 	try {
+		const programId = parseInt(params.id, 10); // ID slug is already confirmed to be an integer
 		const dbProgram = await prisma.program.findFirst({
 			where: {
-				id: params.id,
+				id: programId,
 				...hasProgramPermissions(user, { superAdmin: true, admin: false, editor: false })
 			}
 		});
@@ -49,13 +50,12 @@ export const load = (async ({ params, locals }) => {
 
 export const actions: Actions = {
 	'delete-program': async ({ request, locals }) => {
-		const form = await request.formData();
-
-		const id = form.get('programId') as string;
-
 		const session = await locals.auth();
 		const user = session?.user as User | undefined;
 		if (!user) redirect(303, '/auth');
+
+		const form = await request.formData();
+		const id = form.get('programId') as unknown as number; // TODO strongly dislike casting to unknown, but I don't know how to do it safely
 
 		try {
 			await prisma.program.delete({

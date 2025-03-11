@@ -1,5 +1,6 @@
 import { setError } from '$lib/utils/setError';
-import { courseSchema, programSchema } from '$lib/zod/programCourseSchema';
+import { programSchema } from '$lib/zod/programSchema';
+import { courseSchema } from '$lib/zod/courseSchema';
 import type { User } from '@prisma/client';
 import { fail, type RequestEvent } from '@sveltejs/kit';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -116,7 +117,7 @@ export class ProgramActions {
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
 	static async addCourseToProgram(user: User, formData: FormData) {
-		const programId = formData.get('program-id') as string | null;
+		const programId = formData.get('program-id') as number | null;
 		const courseCode = formData.get('code') as string | null;
 		const courseName = formData.get('name') as string | null;
 

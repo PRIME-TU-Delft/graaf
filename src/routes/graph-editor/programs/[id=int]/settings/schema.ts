@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const formSchema = z.object({
-	programId: z.string().nonempty(),
+	programId: z.number().min(1),
 	isArchived: z.boolean()
 });
 

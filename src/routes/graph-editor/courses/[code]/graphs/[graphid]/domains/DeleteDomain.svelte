@@ -64,8 +64,8 @@
 <form class="text-sm" action="?/delete-domain" method="POST" use:enhance>
 	<input type="hidden" name="domainId" value={$formData.domainId} />
 
-	{@render formArray('domainSources')}
-	{@render formArray('domainTargets')}
+	{@render formArray('sourceDomains')}
+	{@render formArray('targetDomains')}
 	{@render formArray('connectedSubjects')}
 
 	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
@@ -92,7 +92,7 @@
 	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
-{#snippet formArray(name: 'domainSources' | 'domainTargets' | 'connectedSubjects')}
+{#snippet formArray(name: 'sourceDomains' | 'targetDomains' | 'connectedSubjects')}
 	<Form.Fieldset {form} {name} class="h-0">
 		{#each $formData[name] as _, i}
 			<Form.ElementField {form} name="{name}[{i}]">

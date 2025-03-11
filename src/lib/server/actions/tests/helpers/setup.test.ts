@@ -104,7 +104,7 @@ describe('Test setup', () => {
 		const graph = await prisma.graph.findFirst({
 			where: { name: 'GraphOne' },
 			include: {
-				domains: { include: { outgoingDomains: true, incommingDomains: true, subjects: true } }
+				domains: { include: { targetDomains: true, sourceDomains: true, subjects: true } }
 			}
 		});
 		expect(graph).toBeDefined();
@@ -118,22 +118,22 @@ describe('Test setup', () => {
 		expect(domains[2].name).toBe('DomainThree');
 
 		// DOMAIN ONE
-		expect(domains[0].outgoingDomains).toHaveLength(1);
-		expect(domains[0].outgoingDomains[0].name).toBe('DomainTwo');
-		expect(domains[0].incommingDomains).toHaveLength(0);
+		expect(domains[0].targetDomains).toHaveLength(1);
+		expect(domains[0].targetDomains[0].name).toBe('DomainTwo');
+		expect(domains[0].sourceDomains).toHaveLength(0);
 		expect(domains[0].subjects).toHaveLength(2);
 
 		// DOMAIN TWO
-		expect(domains[1].outgoingDomains).toHaveLength(1);
-		expect(domains[1].outgoingDomains[0].name).toBe('DomainThree');
-		expect(domains[1].incommingDomains).toHaveLength(1);
-		expect(domains[1].incommingDomains[0].name).toBe('DomainOne');
+		expect(domains[1].targetDomains).toHaveLength(1);
+		expect(domains[1].targetDomains[0].name).toBe('DomainThree');
+		expect(domains[1].sourceDomains).toHaveLength(1);
+		expect(domains[1].sourceDomains[0].name).toBe('DomainOne');
 		expect(domains[1].subjects).toHaveLength(1);
 
 		// DOMAIN THREE
-		expect(domains[2].outgoingDomains).toHaveLength(0);
-		expect(domains[2].incommingDomains).toHaveLength(1);
-		expect(domains[2].incommingDomains[0].name).toBe('DomainTwo');
+		expect(domains[2].targetDomains).toHaveLength(0);
+		expect(domains[2].sourceDomains).toHaveLength(1);
+		expect(domains[2].sourceDomains[0].name).toBe('DomainTwo');
 	});
 
 	test('Subject setup', async () => {
@@ -141,7 +141,7 @@ describe('Test setup', () => {
 			where: { name: 'GraphOne' },
 			include: {
 				subjects: {
-					include: { incommingSubjects: true, outgoingSubjects: true },
+					include: { sourceSubjects: true, targetSubjects: true },
 					orderBy: { name: 'asc' }
 				}
 			}
@@ -156,19 +156,19 @@ describe('Test setup', () => {
 		expect(subjects[2].name).toBe('SubjectTwo');
 
 		// SUBJECT One
-		expect(subjects[0].incommingSubjects).toHaveLength(1);
-		expect(subjects[0].incommingSubjects[0].name).toBe('SubjectTwo');
-		expect(subjects[0].outgoingSubjects).toHaveLength(0);
+		expect(subjects[0].sourceSubjects).toHaveLength(1);
+		expect(subjects[0].sourceSubjects[0].name).toBe('SubjectTwo');
+		expect(subjects[0].targetSubjects).toHaveLength(0);
 
 		// SUBJECT Two
-		expect(subjects[2].incommingSubjects).toHaveLength(1);
-		expect(subjects[2].incommingSubjects[0].name).toBe('SubjectThree');
-		expect(subjects[2].outgoingSubjects).toHaveLength(1);
-		expect(subjects[2].outgoingSubjects[0].name).toBe('SubjectOne');
+		expect(subjects[2].sourceSubjects).toHaveLength(1);
+		expect(subjects[2].sourceSubjects[0].name).toBe('SubjectThree');
+		expect(subjects[2].targetSubjects).toHaveLength(1);
+		expect(subjects[2].targetSubjects[0].name).toBe('SubjectOne');
 
 		// SUBJECT Three
-		expect(subjects[1].outgoingSubjects).toHaveLength(1);
-		expect(subjects[1].outgoingSubjects[0].name).toBe('SubjectTwo');
-		expect(subjects[1].incommingSubjects).toHaveLength(0);
+		expect(subjects[1].targetSubjects).toHaveLength(1);
+		expect(subjects[1].targetSubjects[0].name).toBe('SubjectTwo');
+		expect(subjects[1].sourceSubjects).toHaveLength(0);
 	});
 });
