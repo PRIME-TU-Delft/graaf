@@ -12,7 +12,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let editProgramDialogOpen = $state(true);
+	let editProgramDialogOpen = $state(false);
 </script>
 
 <section

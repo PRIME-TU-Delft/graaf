@@ -197,6 +197,8 @@ export class ProgramActions {
 		user: User,
 		formData: SuperValidated<Infer<typeof editSuperUserSchema>>
 	) {
+		if (!formData.valid) return setError(formData, '', 'Form is not valid');
+
 		const newRole = formData.data.role;
 		const userId = formData.data.userId;
 
