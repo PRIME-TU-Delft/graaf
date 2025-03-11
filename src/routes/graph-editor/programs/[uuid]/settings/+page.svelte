@@ -16,7 +16,7 @@
 </script>
 
 <section
-	class="prose sticky top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-blue-50/80 p-4 shadow-none shadow-blue-200/70 backdrop-blur md:sticky md:border md:border-blue-200 md:shadow-lg"
+	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-blue-50/80 p-4 shadow-none shadow-blue-200/70 backdrop-blur sm:sticky sm:border sm:border-blue-200 sm:shadow-lg"
 >
 	<h1 class="m-0">{data.program.name}</h1>
 
@@ -57,7 +57,9 @@
 
 <!-- Only a program admin or super admin is able to delete a program -->
 {#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}
-	<section class="prose mx-auto my-12 rounded-lg border-2 bg-red-50 p-4 text-red-900">
+	<section
+		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+	>
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">
 			<p>Delete program:</p>
