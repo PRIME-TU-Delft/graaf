@@ -1,4 +1,3 @@
-
 export function match(param: string) {
-    return /^\d+$/.test(param); // Ensures the param is an integer
+	return /^\d+$/.test(param); // Ensures the param is an integer
 }

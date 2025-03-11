@@ -10,7 +10,7 @@ export const load = (async ({ params, locals }) => {
 	const session = await locals.auth();
 	const user = session?.user as User | undefined;
 	if (!user) redirect(303, '/auth');
-	
+
 	if (!params.id) {
 		return {
 			course: undefined,
