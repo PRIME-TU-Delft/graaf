@@ -22,9 +22,17 @@
 		program: Program & { courses: Course[]; admins: User[]; editors: User[] };
 		data: Course[];
 		loading: boolean;
+		dialogOpen: boolean;
 	};
 
-	let { linkCoursesForm, data, program, columns, loading }: DataTableProps = $props();
+	let {
+		linkCoursesForm,
+		data,
+		program,
+		columns,
+		loading,
+		dialogOpen = $bindable()
+	}: DataTableProps = $props();
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 4 });
 	let rowSelection = $state<RowSelectionState>({});
@@ -134,7 +142,13 @@
 				>
 					<Undo_2 /> Reset
 				</Button>
-				<LinkCourses {program} bind:rowSelection {linkCoursesForm} />
+				<LinkCourses
+					onSuccess={() => (dialogOpen = false)}
+					courses={data}
+					{program}
+					bind:rowSelection
+					{linkCoursesForm}
+				/>
 			</div>
 		</div>
 	{/if}

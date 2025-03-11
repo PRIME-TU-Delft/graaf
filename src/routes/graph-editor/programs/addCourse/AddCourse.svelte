@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
+	import { courseSchema } from '$lib/zod/programCourseSchema';
 	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { onMount } from 'svelte';
@@ -15,12 +16,14 @@
 		program: Program & { courses: Course[]; admins: User[]; editors: User[] };
 		courses: Promise<Course[]>;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
+		createNewCourseForm: SuperValidated<Infer<typeof courseSchema>>;
 	};
 
-	let { user, program, courses, linkCoursesForm }: AddCourseProps = $props();
+	let { user, program, courses, linkCoursesForm, createNewCourseForm }: AddCourseProps = $props();
 
 	let loading = $state(true);
 	let data: Course[] = $state([]);
+	let dialogOpen = $state(false);
 
 	onMount(() => {
 		courses
@@ -37,12 +40,10 @@
 				toast.error('Failed to load courses');
 			});
 	});
-
-	$inspect(program.courses);
 </script>
 
-<DialogButton open={true} button="Add course" title="Link or create a new course" icon="plus">
-	<LinkCourseDataTable {columns} {data} {loading} {program} {linkCoursesForm} />
+<DialogButton open={dialogOpen} button="Add course" title="Link or create a new course" icon="plus">
+	<LinkCourseDataTable bind:dialogOpen {columns} {data} {loading} {program} {linkCoursesForm} />
 
 	{#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
 		<div class="flex items-center gap-2 p-4">
@@ -50,6 +51,6 @@
 			<p class="text-nowrap font-medium text-slate-600">Or create new</p>
 			<div class="h-1 w-full rounded-r bg-slate-300"></div>
 		</div>
-		<NewCourseForm />
+		<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
 	{/if}
 </DialogButton>

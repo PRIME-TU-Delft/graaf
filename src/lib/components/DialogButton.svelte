@@ -68,8 +68,8 @@
 		{/if}
 	</Dialog.Trigger>
 
-	<Dialog.Content class="max-h-[80dvh] max-w-2xl overflow-y-auto">
-		<Dialog.Header class="sticky top-0 z-10 bg-white">
+	<Dialog.Content class="max-h-[80dvh] max-w-2xl overflow-y-auto p-0">
+		<Dialog.Header class="sticky top-0 z-10 bg-white/50 p-4 backdrop-blur-lg">
 			<Dialog.Title class="text-lg">{title}</Dialog.Title>
 			{#if description}
 				<Dialog.Description class="text-md">
@@ -78,6 +78,8 @@
 			{/if}
 		</Dialog.Header>
 
-		{@render children()}
+		<div class="p-4">
+			{@render children()}
+		</div>
 	</Dialog.Content>
 </Dialog.Root>

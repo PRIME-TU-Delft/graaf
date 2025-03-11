@@ -24,7 +24,7 @@
 
 	let { data, program, columns, courses }: DataTableProps = $props();
 
-	const { user, linkCoursesForm } = page.data as PageData;
+	const { user, linkCoursesForm, createNewCourseForm } = page.data as PageData;
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let rowSelection = $state<RowSelectionState>({});
@@ -101,7 +101,9 @@
 	</Table.Root>
 
 	<div class="flex items-center justify-end space-x-2 border-t px-4 py-2">
-		<AddCourse {program} {user} {courses} {linkCoursesForm} />
+		{#key table.getRowModel().rows}
+			<AddCourse {program} {user} {courses} {linkCoursesForm} {createNewCourseForm} />
+		{/key}
 
 		{#if table.getPageCount() > 1}
 			<Button

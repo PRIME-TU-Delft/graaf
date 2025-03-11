@@ -9,26 +9,36 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
 	type DataTableProps = {
-		program: Program & { courses: Course[] };
+		program: Program;
+		courses: Course[];
 		rowSelection: RowSelectionState;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
+		onSuccess?: () => void;
 	};
 
-	let { program, rowSelection = $bindable(), linkCoursesForm }: DataTableProps = $props();
+	let {
+		program,
+		courses,
+		rowSelection = $bindable(),
+		linkCoursesForm,
+		onSuccess = () => {}
+	}: DataTableProps = $props();
 
 	const selectedCourses = $derived(
 		Object.keys(rowSelection)
 			.map(Number)
-			.map((i) => program.courses[i])
+			.map((i) => courses[i])
 	);
 
 	const form = superForm(linkCoursesForm, {
 		id: 'link-courses-form',
 		validators: zodClient(linkingCoursesSchema),
 		onResult: ({ result }) => {
+			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully linked courses!');
 
+				onSuccess();
 				rowSelection = {};
 			}
 		}
@@ -38,7 +48,7 @@
 
 	$effect(() => {
 		$formData.programId = program.id;
-		$formData.courseCodes = selectedCourses.map((c) => c.code) as [string, ...string[]];
+		$formData.courseCodes = selectedCourses.map((c) => c?.code) as [string, ...string[]];
 	});
 </script>
 

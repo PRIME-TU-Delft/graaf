@@ -51,7 +51,7 @@ export const load = (async ({ params, locals }) => {
 			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			courseForm: await superValidate(zod(courseSchema))
+			createNewCourseForm: await superValidate(zod(courseSchema))
 		};
 	} catch (e) {
 		if (e instanceof Error) throw redirect(303, `/graph-editor/?error=${e.message}`);
@@ -72,8 +72,16 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		ProgramActions.addCourseToProgram(await getUser({ locals }), formData);
 	},
+	'link-courses': async (event) => {
+		const form = await superValidate(event, zod(linkingCoursesSchema));
+		return ProgramActions.linkCourses(await getUser(event), form, { link: true });
+	},
 	'unlink-courses': async (event) => {
 		const form = await superValidate(event, zod(linkingCoursesSchema));
-		return ProgramActions.unlinkCourses(await getUser(event), form);
+		return ProgramActions.linkCourses(await getUser(event), form, { link: false });
+	},
+	'new-course': async (event) => {
+		const form = await superValidate(event, zod(courseSchema));
+		return ProgramActions.newCourse(await getUser(event), form);
 	}
 };

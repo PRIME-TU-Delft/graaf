@@ -214,10 +214,19 @@ export class ProgramActions {
 		}
 	}
 
-	static async unlinkCourses(
+	static async linkCourses(
 		user: User,
-		formData: SuperValidated<Infer<typeof linkingCoursesSchema>>
+		formData: SuperValidated<Infer<typeof linkingCoursesSchema>>,
+		options: { link: boolean } = { link: true }
 	) {
+		if (!formData.valid) return setError(formData, '', 'form not valid');
+
+		function linkMode() {
+			const codes = formData.data.courseCodes.map((code) => ({ code }));
+			if (options.link) return { connect: codes };
+			else return { disconnect: codes };
+		}
+
 		try {
 			await prisma.program.update({
 				where: {
@@ -226,7 +235,7 @@ export class ProgramActions {
 				},
 				data: {
 					courses: {
-						disconnect: formData.data.courseCodes.map((code) => ({ code }))
+						...linkMode()
 					}
 				}
 			});
