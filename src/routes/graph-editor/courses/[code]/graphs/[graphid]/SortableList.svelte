@@ -5,14 +5,14 @@
 	import { flip } from 'svelte/animate';
 	import { fade } from 'svelte/transition';
 
-	type Props = {
+	type Props<T> = {
 		list: T[];
 		children: Snippet<[T, number]>;
 		onrearrange?: (items: T[]) => void;
 		useId: (item: T) => string;
 	};
 
-	let { list = $bindable(), children, onrearrange = () => {}, useId }: Props = $props();
+	let { list = $bindable(), children, onrearrange = () => {}, useId }: Props<T> = $props();
 
 	function handleDrop(state: DragDropState<T>) {
 		const { draggedItem, targetContainer } = state;

@@ -110,7 +110,7 @@
 		<Menubar.Sub>
 			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>
 			<Menubar.SubContent class="ml-1 w-32 p-1">
-				{#each domains as domain}
+				{#each domains as domain (domain.id)}
 					<div class="flex flex-col items-center gap-1">
 						<Button
 							class="w-full font-mono text-xs"
@@ -181,7 +181,7 @@
 									<RadioGroup.Item
 										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
 										class="h-6 w-6"
-										value={''}
+										value=""
 										{...props}
 									/>
 									<Form.Label class="w-full cursor-pointer p-2">None</Form.Label>
@@ -189,7 +189,7 @@
 							{/snippet}
 						</Form.Control>
 
-						{#each domainColors as color}
+						{#each domainColors as color (color)}
 							<Form.Control>
 								{#snippet children({ props })}
 									<div class="flex items-center">

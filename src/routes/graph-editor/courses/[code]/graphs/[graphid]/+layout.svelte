@@ -15,7 +15,7 @@
 <div class="layout prose mx-auto grid max-w-[80rem] gap-2 p-4 pt-20 text-blue-900">
 	<div>
 		<div class="header sticky top-16 z-10 mb-2 flex w-full gap-1 bg-blue-100 p-1 shadow-md">
-			{#each tabs as tab}
+			{#each tabs as tab (tab)}
 				{@const active = tab.toLowerCase() === currentTab ? 'active' : ''}
 				<Button
 					class="tab-item {active ? 'bg-white' : ''} w-full no-underline"

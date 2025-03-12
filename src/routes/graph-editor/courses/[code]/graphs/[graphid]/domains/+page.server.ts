@@ -9,7 +9,7 @@ import type { ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
-export const load: ServerLoad = async ({ params }) => {
+export const load: ServerLoad = async () => {
 	return {
 		newDomainForm: await superValidate(zod(domainSchema)),
 		deleteDomainForm: await superValidate(zod(deleteDomainSchema)),
