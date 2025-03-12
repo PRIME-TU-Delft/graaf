@@ -25,7 +25,9 @@
 	}: DataTableProps = $props();
 
 	const selectedCourses = $derived(
-		Object.keys(rowSelection)
+		Object.entries(rowSelection)
+			.filter(([_, selected]) => selected)
+			.map(([i]) => i)
 			.map(Number)
 			.map((i) => courses[i])
 	);

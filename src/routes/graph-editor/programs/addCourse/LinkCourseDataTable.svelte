@@ -67,6 +67,8 @@
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel()
 	});
+
+	$inspect(rowSelection);
 </script>
 
 <div class="rounded-md border">
@@ -96,7 +98,16 @@
 				</Table.Row>
 			{:else}
 				{#each table.getRowModel().rows as row (row.id)}
-					<Table.Row data-state={row.getIsSelected() && 'selected'}>
+					<Table.Row
+						data-state={row.getIsSelected() && 'selected'}
+						onclick={() => {
+							const isSelected = rowSelection[row.id];
+							rowSelection = {
+								...rowSelection,
+								[row.id]: !isSelected
+							};
+						}}
+					>
 						{#each row.getVisibleCells() as cell (cell.id)}
 							<Table.Cell>
 								<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />

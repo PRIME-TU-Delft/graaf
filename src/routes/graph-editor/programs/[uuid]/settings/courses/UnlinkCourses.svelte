@@ -18,7 +18,9 @@
 	let { program, rowSelection = $bindable() }: DataTableProps = $props();
 
 	const selectedCourses = $derived(
-		Object.keys(rowSelection)
+		Object.entries(rowSelection)
+			.filter(([, selected]) => selected)
+			.map(([i, _]) => i)
 			.map(Number)
 			.map((i) => program.courses[i])
 	);

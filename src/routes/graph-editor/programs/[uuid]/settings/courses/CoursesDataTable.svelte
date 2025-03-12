@@ -61,13 +61,18 @@
 	});
 </script>
 
-<div class="my-2 flex items-center justify-between">
+<div class="mt-2 flex items-center justify-between">
 	<h2 class="my-2">Courses</h2>
 
 	{#if Object.keys(rowSelection).length > 0}
 		<UnlinkCourses bind:rowSelection {program} />
 	{/if}
 </div>
+
+<p class="my-1">
+	These are all the courses that are linked to this program. Click on the checkboxes to select a
+	course you would like to unlink.
+</p>
 
 <div class="rounded-md border">
 	<Table.Root class="m-0">
@@ -89,7 +94,16 @@
 		</Table.Header>
 		<Table.Body>
 			{#each table.getRowModel().rows as row (row.id)}
-				<Table.Row data-state={row.getIsSelected() && 'selected'}>
+				<Table.Row
+					data-state={row.getIsSelected() && 'selected'}
+					onclick={() => {
+						const isSelected = rowSelection[row.id];
+						rowSelection = {
+							...rowSelection,
+							[row.id]: !isSelected
+						};
+					}}
+				>
 					{#each row.getVisibleCells() as cell (cell.id)}
 						<Table.Cell>
 							<FlexRender content={cell.column.columnDef.cell} context={cell.getContext()} />
