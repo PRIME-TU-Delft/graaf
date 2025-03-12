@@ -1,48 +1,60 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Popover from '$lib/components/ui/popover';
-	import { cn } from '$lib/utils';
+	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import type { PageData } from '../$types';
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
+	import type { Program, User } from '@prisma/client';
 
 	type ChangeRoleProps = {
 		userId: string;
-		role: 'Admin' | 'Editor';
-		name: string;
+		currentRole: 'Admin' | 'Editor';
+		superUserCount: number;
+		program: Program & { admins: User[]; editors: User[] };
+		user: User;
 	};
 
-	let { userId, role, name }: ChangeRoleProps = $props();
-
-	let popupOpen = $state(false);
-
-	const { program, user } = page.data as PageData;
+	let { userId, currentRole, superUserCount, program, user }: ChangeRoleProps = $props();
 </script>
 
 <!-- Only programAdmins and superUsers are allowed to cahnge roles, otherwise just show the role name -->
 {#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
-	<Popover.Root bind:open={popupOpen}>
-		<Popover.Trigger class={cn([buttonVariants({ variant: 'outline' }), 'float-right'])}>
-			{role}
-			<ChevronDown />
-		</Popover.Trigger>
-		<Popover.Content>
-			<p class="text-lg font-bold">Change role</p>
-			<p>Of user: <span class="font-mono">{name}</span></p>
-			<p>From: <span class="font-mono">{role}</span></p>
+	<Menubar.Root class="float-right w-fit p-0">
+		<Menubar.Menu value="menu">
+			<Menubar.Trigger>
+				{currentRole}
+				<ChevronDown />
+			</Menubar.Trigger>
+			<Menubar.Content>
+				<Menubar.Item class="p-0"></Menubar.Item>
 
-			<div class="mt-2 flex gap-2">
-				{#if role === 'Admin'}
-					<ChangeRoleForm {userId} newRole="Editor" />
-				{:else}
-					<ChangeRoleForm {userId} newRole="Admin" />
+				<Menubar.Sub>
+					<Menubar.SubTrigger>Change role</Menubar.SubTrigger>
+					<Menubar.SubContent class="ml-1 flex w-32 flex-col gap-2">
+						<ChangeRoleForm {userId} newRole="Editor" selected={currentRole == 'Editor'} />
+						<ChangeRoleForm {userId} newRole="Admin" selected={currentRole == 'Admin'} />
+					</Menubar.SubContent>
+				</Menubar.Sub>
+
+				{#if superUserCount > 1}
+					<Menubar.Separator />
+
+					<!-- You are not the last user -->
+					<Menubar.Sub>
+						<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
+							Remove user privilages
+						</Menubar.SubTrigger>
+						<Menubar.SubContent class="ml-1 w-32">
+							<ChangeRoleForm {userId} newRole="Revoke" />
+						</Menubar.SubContent>
+					</Menubar.Sub>
 				{/if}
-				<ChangeRoleForm {userId} newRole="Revoke" />
-			</div>
-		</Popover.Content>
-	</Popover.Root>
+			</Menubar.Content>
+		</Menubar.Menu>
+	</Menubar.Root>
 {:else}
-	{role}
+	<p class="m-0 text-right">
+		{currentRole}
+	</p>
 {/if}

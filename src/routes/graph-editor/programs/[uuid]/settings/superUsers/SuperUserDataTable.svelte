@@ -9,8 +9,8 @@
 	import { type ColumnDef, getCoreRowModel } from '@tanstack/table-core';
 	import type { PageData } from '../$types';
 	import AddNewUser from './AddNewUser.svelte';
-	import type { ProgramUser } from './program-admin-columns';
 
+	type ProgramUser = User & { programRole: 'Admin' | 'Editor' };
 	type DataTableProps = {
 		columns: ColumnDef<ProgramUser, ProgramUser>[];
 		program: Program & { admins: User[]; editors: User[] };

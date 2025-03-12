@@ -1,12 +1,16 @@
 <script lang="ts">
 	import type { Program, User } from '@prisma/client';
 	import DataTable from './SuperUserDataTable.svelte';
-	import { columns, type ProgramUser } from './program-admin-columns';
+	import type { ColumnDef } from '@tanstack/table-core';
+	import { renderComponent } from '$lib/components/ui/data-table';
+	import { displayName } from '$lib/utils/displayUserName';
+	import ChangeRole from './ChangeRole.svelte';
 
 	type ProgramAdminProps = {
 		user: User;
 		program: Program & { admins: User[]; editors: User[] };
 	};
+	type ProgramUser = User & { programRole: 'Admin' | 'Editor' };
 
 	let { user, program }: ProgramAdminProps = $props();
 
@@ -39,6 +43,26 @@
 
 		return sortedUsers;
 	});
+
+	const columns: ColumnDef<ProgramUser>[] = $derived([
+		{
+			accessorKey: 'nickname',
+			header: 'Name'
+		},
+		{
+			accessorKey: 'programRole',
+			header: 'Role',
+			cell: ({ row }) =>
+				renderComponent(ChangeRole, {
+					userId: row.original.id,
+					currentRole: row.original.programRole,
+					name: displayName(row.original),
+					superUserCount: users.length,
+					program,
+					user
+				})
+		}
+	]);
 </script>
 
 <section class="container prose mx-auto p-4">

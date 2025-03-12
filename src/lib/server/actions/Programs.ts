@@ -226,11 +226,9 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: formData.data.programId,
-					// When we want to add a new admin, we need to check if the user is an program admin or super admin
-					// When we want to revoke admin rights, the user needs to be a program admin or super admin
 					...hasProgramPermissions(user, {
 						superAdmin: true,
-						admin: newRole == 'admin' || newRole == 'revoke',
+						admin: true,
 						editor: false
 					})
 				},

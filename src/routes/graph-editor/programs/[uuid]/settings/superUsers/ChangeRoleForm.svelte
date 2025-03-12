@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { editSuperUserSchema } from '$lib/zod/superUserProgramSchema';
+	import Check from 'lucide-svelte/icons/check';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -10,9 +12,10 @@
 	type ChangeRoleProps = {
 		userId: string;
 		newRole: 'Admin' | 'Editor' | 'Revoke';
+		selected?: boolean;
 	};
 
-	let { userId, newRole }: ChangeRoleProps = $props();
+	let { userId, newRole, selected = false }: ChangeRoleProps = $props();
 
 	let popupOpen = $state(true);
 
@@ -20,7 +23,6 @@
 		id: 'editSuperUserForm' + userId + '-' + newRole,
 		validators: zodClient(editSuperUserSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Role successfully changed!');
 				popupOpen = false;
@@ -29,7 +31,7 @@
 	});
 	const { form: formData, enhance, submitting, delayed } = form;
 
-	const { program, user } = page.data as PageData;
+	const { program } = page.data as PageData;
 	$effect(() => {
 		// When program.id or userId changes, update the form data
 		$formData.programId = program.id;
@@ -38,21 +40,32 @@
 	});
 </script>
 
-<form action="?/edit-super-user" method="POST" class="grow" use:enhance>
-	<input type="hidden" name="userId" value={userId} />
-	<input type="hidden" name="programId" value={program.id} />
-	<input type="hidden" name="role" value={newRole} />
+{#if selected}
+	<Button variant="outline" class="justify-between">
+		{newRole}
+		<Check />
+	</Button>
+{:else}
+	<form action="?/edit-super-user" method="POST" class="grow" use:enhance>
+		<input type="hidden" name="userId" value={userId} />
+		<input type="hidden" name="programId" value={program.id} />
+		<input type="hidden" name="role" value={newRole.toLowerCase()} />
 
-	<Form.FormError {form} />
-	<Form.FormButton
-		disabled={$submitting}
-		loading={$delayed}
-		variant={newRole == 'Revoke' ? 'destructive' : 'default'}
-		class="w-full"
-	>
-		To {newRole}
-		{#snippet loadingMessage()}
-			<span>Changing role...</span>
-		{/snippet}
-	</Form.FormButton>
-</form>
+		{#if newRole == 'Revoke'}
+			<p>Are you sure?</p>
+		{/if}
+
+		<Form.FormError {form} />
+		<Form.FormButton
+			disabled={$submitting}
+			loading={$delayed}
+			variant={newRole == 'Revoke' ? 'destructive' : 'outline'}
+			class="w-full justify-start"
+		>
+			{newRole == 'Revoke' ? 'Yes, sure!' : newRole}
+			{#snippet loadingMessage()}
+				<span>Changing role...</span>
+			{/snippet}
+		</Form.FormButton>
+	</form>
+{/if}
