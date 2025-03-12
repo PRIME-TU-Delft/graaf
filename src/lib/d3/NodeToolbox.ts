@@ -2,11 +2,11 @@ import * as settings from '$lib/settings';
 import { EdgeToolbox } from './EdgeToolbox';
 import { GraphD3 } from './GraphD3';
 
-import type { EdgeData, NodeData, NodeSelection } from './types';
-import { graphView } from './GraphD3View.svelte';
-import { graphState } from './GraphD3State.svelte';
+import { drag, select } from 'd3';
 import type { D3 } from './D3';
-import { drag, easeSinInOut, select } from 'd3';
+import { graphState } from './GraphD3State.svelte';
+import { graphView } from './GraphD3View.svelte';
+import type { EdgeData, NodeData, NodeSelection } from './types';
 
 export { NodeToolbox };
 
@@ -109,9 +109,9 @@ class NodeToolbox {
 
 		// Update node position
 		selection
-			.transition()
-			.duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(easeSinInOut)
+			// .transition()
+			// .duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
+			// .ease(easeSinInOut)
 			.attr(
 				'transform',
 				(node) => `translate(
