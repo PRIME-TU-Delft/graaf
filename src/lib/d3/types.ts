@@ -5,7 +5,9 @@ import * as settings from '$lib/settings';
 
 export type {
 	PrismaGraphPayload,
+	PrismaDomainPayload,
 	PrismaSubjectPayload,
+	PrismaLecturePayload,
 	GraphData,
 	NodeData,
 	EdgeData,
@@ -43,11 +45,26 @@ type PrismaGraphPayload = Prisma.GraphGetPayload<{
 	};
 }>;
 
+// Minimal domain payload for injection
+type PrismaDomainPayload = Prisma.DomainGetPayload<{
+	include: {
+		sourceDomains: true;
+		targetDomains: true;
+	};
+}>;
+
 // Minimal subject payload for injection
 type PrismaSubjectPayload = Prisma.SubjectGetPayload<{
 	include: {
 		sourceSubjects: true;
 		targetSubjects: true;
+	};
+}>;
+
+// Minimal lecture payload for injection
+type PrismaLecturePayload = Prisma.LectureGetPayload<{
+	include: {
+		subjects: true;
 	};
 }>;
 

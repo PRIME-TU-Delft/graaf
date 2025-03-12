@@ -421,10 +421,9 @@ class GraphD3 {
 				// Get source and target nodes
 				const source_node = domain_map.get(source.id);
 				const target_node = domain_map.get(target.id);
-				if (source_node === undefined || target_node === undefined) {
-					throw new Error('Invalid graph data');
-				}
+				if (source_node === undefined || target_node === undefined) continue; // Skip edges with invalid domains
 
+				// Add edge to graph
 				graph.domain_edges.push({
 					id: `domain-${source.id}-${target.id}`, // Unique edge id from source and target ids
 					source: source_node,
@@ -437,9 +436,9 @@ class GraphD3 {
 		const detail_map = new Map<number, PrismaSubjectPayload>();
 		const subject_map = new Map<number, NodeData>();
 		for (const subject of data.subjects) {
-			if (subject.domainId === null) continue; // Do not display subjects without a parent domain
+			if (subject.domainId === null) continue; // Skip subjects without a parent domain
 			const domain = domain_map.get(subject.domainId);
-			if (domain === undefined) throw new Error('Invalid graph data');
+			if (domain === undefined) continue; // Skip subjects with invalid parent domains
 
 			const node_data = {
 				id: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
@@ -458,20 +457,32 @@ class GraphD3 {
 		}
 
 		// Extract subject edge data
+		const subject_edge_map = new Map<number, Map<number, EdgeData>>();
 		for (const source of data.subjects) {
 			for (const target of source.targetSubjects) {
+
 				// Get source and target nodes
 				const source_node = subject_map.get(source.id);
 				const target_node = subject_map.get(target.id);
-				if (source_node === undefined || target_node === undefined) {
-					throw new Error('Invalid graph data');
-				}
+				if (source_node === undefined || target_node === undefined) continue; // Skip edges with invalid subjects
 
-				graph.subject_edges.push({
+				// Create edge data
+				const edge = {
 					id: `subject-${source.id}-${target.id}`, // Unique edge id from source and target ids
 					source: source_node,
 					target: target_node
-				});
+				}
+
+				// Update subject edge map
+				let nested_map = subject_edge_map.get(source.id);
+				if (nested_map === undefined) {
+					nested_map = new Map<number, EdgeData>();
+					subject_edge_map.set(source.id, nested_map);
+				}
+
+				// Add edge to graph and edge map
+				graph.subject_edges.push(edge);
+				nested_map.set(target.id, edge);
 			}
 		}
 
@@ -487,14 +498,15 @@ class GraphD3 {
 			};
 
 			for (const subject of lecture.subjects) {
+
 				// Get subject node
 				const subject_node = subject_map.get(subject.id);
-				if (subject_node === undefined) throw new Error('Invalid graph data');
+				if (subject_node === undefined) continue; // Skip invalid subjects
 
 				// Get parent domain
 				if (subject.domainId === null) continue; // Skip subjects without parent domain
 				const domain_node = domain_map.get(subject.domainId);
-				if (domain_node === undefined) throw new Error('Invalid graph data');
+				if (domain_node === undefined) continue; // Skip subjects with invalid parent domain
 
 				lecture_data.present_nodes.push(subject_node);
 				lecture_data.domains.push(domain_node);
@@ -507,31 +519,33 @@ class GraphD3 {
 				// Gather past nodes and edges
 				for (const source of details.sourceSubjects) {
 					const source_node = subject_map.get(source.id);
-					if (source_node === undefined) throw new Error('Invalid graph data');
-					if (lecture_data.past_nodes.includes(source_node)) continue; // Skip duplicate subjects
+					if (source_node === undefined || lecture_data.past_nodes.includes(source_node)) {
+						continue; // Skip invalid or duplicate subjects
+					}
+
+					// Find edge data
+					const edge = subject_edge_map.get(source.id)?.get(subject.id);
+					if (edge === undefined) continue; // Skip edges with invalid subjects
 
 					lecture_data.past_nodes.push(source_node);
 					lecture_data.nodes.push(source_node);
-					lecture_data.edges.push({
-						id: `${source.id}-${subject.id}`,
-						source: source_node,
-						target: subject_node
-					});
+					lecture_data.edges.push(edge);
 				}
 
 				// Gather future nodes and edges
 				for (const target of details.targetSubjects) {
 					const target_node = subject_map.get(target.id);
-					if (target_node === undefined) throw new Error('Invalid graph data');
-					if (lecture_data.past_nodes.includes(target_node)) continue; // Skip duplicate subjects
+					if (target_node === undefined || lecture_data.past_nodes.includes(target_node)) {
+						continue; // Skip invalid or duplicate subjects
+					}
 
-					lecture_data.past_nodes.push(target_node);
+					// Find edge data
+					const edge = subject_edge_map.get(subject.id)?.get(target.id);
+					if (edge === undefined) continue; // Skip edges with invalid subjects
+
+					lecture_data.future_nodes.push(target_node);
 					lecture_data.nodes.push(target_node);
-					lecture_data.edges.push({
-						id: `${target.id}-${subject.id}`,
-						source: subject_node,
-						target: target_node
-					});
+					lecture_data.edges.push(edge);
 				}
 			}
 
