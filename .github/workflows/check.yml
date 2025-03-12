@@ -50,6 +50,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Generate prisma schema
+        run: pnpm prisma generate
+
       - name: Run svelte-check
         run: pnpm check
 
