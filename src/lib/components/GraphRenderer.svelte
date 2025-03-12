@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-
 	import * as settings from '$lib/settings';
 	import { GraphD3, GraphView } from '$lib/d3/GraphD3';
+
+	import ZoomIn from 'lucide-svelte/icons/zoom-in';
+	import ZoomOut from 'lucide-svelte/icons/zoom-out';
+
 	import type { PrismaGraphPayload } from '$lib/d3/types';
 
 	let { data, editable }: { data: PrismaGraphPayload; editable: boolean } = $props();
@@ -42,10 +45,8 @@
 
 	{#if show_zoom}
 		<div class="zoom" transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }}>
-			<button onclick={() => graphD3.zoomIn()}> <img src="" alt="Zoom in" /> </button>
-			<!-- TODO Missing icon -->
-			<button onclick={() => graphD3.zoomOut()}> <img src="" alt="Zoom out" /> </button>
-			<!-- TODO Missing icon -->
+			<button onclick={() => graphD3.zoomIn()}> <ZoomIn /> </button>
+			<button onclick={() => graphD3.zoomOut()}> <ZoomOut /> </button>
 		</div>
 	{/if}
 </div>

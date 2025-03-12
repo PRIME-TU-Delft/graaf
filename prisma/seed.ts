@@ -18,8 +18,7 @@ async function main() {
 	]);
 
 	if (env.NETLIFY_CONTEXT != 'PROD') {
-		// TODO This generated user is unused @yustarandomname
-		const user = await prisma.user.create({
+		await prisma.user.create({
 			data: {
 				role: 'ADMIN',
 				email: 'testuser@tudelft.nl',

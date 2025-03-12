@@ -41,7 +41,7 @@ enum GraphView {
 class GraphD3 {
 	public graph_data: GraphData;
 	public editable: boolean;
-	public zoom_lock: boolean = true;
+	public zoom_lock: boolean = true;	
 
 	// Internal state
 	private _state: GraphState = GraphState.detached;
@@ -206,12 +206,14 @@ class GraphD3 {
 				BackgroundToolbox.transformGrid(this, event.transform);
 			});
 
-		// Attach event listeners - NOTE not sure if the keyloggers should be attached to body, or the svg
+		// Attach event listeners
+		d3.select(document)
+			.on('keydown', (event) => (this.keys[event.key] = true))
+			.on('keyup', (event) => (this.keys[event.key] = false))
+
 		this.svg
 			.call(this.zoom)
 			.on('dblclick.zoom', null)
-			.on('keydown', (event) => (this.keys[event.key] = true))
-			.on('keyup', (event) => (this.keys[event.key] = false))
 			.on('wheel', () => {
 				if (
 					(this.view === GraphView.domains || this.view === GraphView.subjects) &&

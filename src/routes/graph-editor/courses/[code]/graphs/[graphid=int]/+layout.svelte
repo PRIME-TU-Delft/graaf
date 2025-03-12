@@ -33,7 +33,7 @@
 	</div>
 
 	<div>
-		<Preview course={data.course} />
+		<Preview graph={data.course.graphs[0]} />
 	</div>
 </div>
 
