@@ -235,7 +235,7 @@
 				<p class="grow cursor-pointer p-2">None</p>
 			</Button>
 
-			{#each settings.COLOR_KEYS as key}
+			{#each settings.COLOR_KEYS as key (key)}
 				{@const color = settings.COLORS[key]}
 				<Button
 					variant="outline"

@@ -2,7 +2,7 @@ import { GraphActions, hasCourseGraphPermissions } from '$lib/server/actions/Gra
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma';
 import { duplicateGraphSchema, graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema.js';
-import type { Course, Graph, Prisma } from '@prisma/client';
+import type { Course, Prisma } from '@prisma/client';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
