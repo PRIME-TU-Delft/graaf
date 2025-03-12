@@ -68,5 +68,13 @@
 		"@thisux/sveltednd": "^0.0.19",
 		"postgres": "^3.4.5",
 		"tsx": "^4.19.2"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@prisma/client",
+			"@prisma/engines",
+			"esbuild",
+			"prisma"
+		]
 	}
 }
