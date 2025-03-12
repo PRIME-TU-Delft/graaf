@@ -12,6 +12,7 @@
 	let show_legend = $derived.by(
 		() => graphD3.view !== GraphView.domains && graphD3.graph_data.domain_nodes.length > 0
 	);
+	
 	let show_zoom = $derived.by(() => graphD3.view !== GraphView.lectures);
 </script>
 
