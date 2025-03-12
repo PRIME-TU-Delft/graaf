@@ -51,15 +51,17 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>This is a common name for the course</Form.Description>
 			<Form.FieldErrors class="!mb-2" />
+			<Form.Description>This is a common name for the course</Form.Description>
 		</Form.Field>
 	</div>
 
-	<Form.FormButton class="float-right" disabled={$submitting} loading={$delayed}>
-		Create new course
-		{#snippet loadingMessage()}
-			<span>Adding course...</span>
-		{/snippet}
-	</Form.FormButton>
+	<div class="mt-4 flex w-full justify-end">
+		<Form.FormButton disabled={$submitting} loading={$delayed}>
+			Create new course
+			{#snippet loadingMessage()}
+				<span>Adding course...</span>
+			{/snippet}
+		</Form.FormButton>
+	</div>
 </form>

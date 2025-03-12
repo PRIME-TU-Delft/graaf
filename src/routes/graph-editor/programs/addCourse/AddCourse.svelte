@@ -25,6 +25,14 @@
 	let data: Course[] = $state([]);
 	let dialogOpen = $state(false);
 
+	const hasAdminRights = $derived(
+		hasProgramPermissions(user, program, {
+			programAdmin: true,
+			programEditor: false,
+			superAdmin: true
+		})
+	);
+
 	onMount(() => {
 		courses
 			.then((courses) => {
@@ -42,15 +50,21 @@
 	});
 </script>
 
-<DialogButton open={dialogOpen} button="Add course" title="Link or create a new course" icon="plus">
-	<LinkCourseDataTable bind:dialogOpen {columns} {data} {loading} {program} {linkCoursesForm} />
+<DialogButton
+	open={dialogOpen}
+	button="Add course"
+	title="Link {hasAdminRights ? 'or create a new' : 'a'} course"
+	icon="plus"
+>
+	{#if hasAdminRights}
+		<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
 
-	{#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
 		<div class="flex items-center gap-2 p-4">
 			<div class="h-1 w-full rounded-l bg-slate-300"></div>
-			<p class="text-nowrap font-medium text-slate-600">Or create new</p>
+			<p class="text-nowrap font-medium text-slate-600">Or link existing</p>
 			<div class="h-1 w-full rounded-r bg-slate-300"></div>
 		</div>
-		<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
 	{/if}
+
+	<LinkCourseDataTable bind:dialogOpen {columns} {data} {loading} {program} {linkCoursesForm} />
 </DialogButton>
