@@ -18,7 +18,7 @@ async function main() {
 	]);
 
 	if (env.NETLIFY_CONTEXT != 'PROD') {
-		const user = await prisma.user.create({
+		await prisma.user.create({
 			data: {
 				role: 'ADMIN',
 				email: 'testuser@tudelft.nl',

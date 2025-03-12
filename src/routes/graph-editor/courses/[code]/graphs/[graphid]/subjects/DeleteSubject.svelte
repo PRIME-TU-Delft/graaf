@@ -85,7 +85,7 @@
 
 {#snippet formArray(name: 'incommingSubjects' | 'outgoingSubjects')}
 	<Form.Fieldset {form} {name} class="h-0">
-		{#each $formData[name] as _, i}
+		{#each $formData[name], i}
 			<Form.ElementField {form} name="{name}[{i}]">
 				<Form.Control>
 					{#snippet children({ props })}

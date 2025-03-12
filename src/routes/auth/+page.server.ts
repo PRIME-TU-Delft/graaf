@@ -1,4 +1,4 @@
-export const load = async ({ locals, url }) => {
+export const load = async ({ locals }) => {
 	const session = await locals.auth();
 
 	return {

@@ -86,7 +86,7 @@
 							</Command.Empty>
 
 							<Command.Group>
-								{#each selectableCourses as course}
+								{#each selectableCourses as course (course.code)}
 									<form action="?/add-course-to-program" method="POST" use:enhance>
 										<input type="hidden" name="program-id" value={program.id} />
 										<input type="hidden" name="code" value={course.code} />
@@ -108,7 +108,7 @@
 							</Command.Group>
 						</Command.List>
 					{/if}
-				{:catch error}
+				{:catch}
 					<CreateNewCourseButton {courseForm} {courseValue} {program} />
 				{/await}
 			</Command.Root>
