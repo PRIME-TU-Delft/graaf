@@ -73,7 +73,7 @@
 						<span class="sr-only">Toggle menu</span>
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content align="start">
-						{#each urls.slice(1, urls.length - 2) as { name, url }, i}
+						{#each urls.slice(1, urls.length - 2) as { name, url } (url)}
 							<a href={url}>
 								<DropdownMenu.Item>
 									{name}

@@ -4,7 +4,6 @@
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { toast } from 'svelte-sonner';
 
 	let { data, children } = $props();
