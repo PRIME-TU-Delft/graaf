@@ -119,8 +119,8 @@ type CameraTransform = {
 };
 
 // D3 selection types
-type SVGSelection = d3.Selection<SVGSVGElement, unknown, null, any>;
-type DefsSelection = d3.Selection<SVGDefsElement, unknown, null, any>;
-type GroupSelection = d3.Selection<SVGGElement, unknown, null, any>;
+type SVGSelection = d3.Selection<SVGSVGElement, unknown, null, unknown>;
+type DefsSelection = d3.Selection<SVGDefsElement, unknown, null, unknown>;
+type GroupSelection = d3.Selection<SVGGElement, unknown, null, unknown>;
 type NodeSelection = d3.Selection<SVGGElement, NodeData, d3.BaseType, unknown>;
 type EdgeSelection = d3.Selection<SVGLineElement, EdgeData, d3.BaseType, unknown>;

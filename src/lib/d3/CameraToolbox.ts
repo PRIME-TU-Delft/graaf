@@ -1,24 +1,21 @@
-import * as d3 from 'd3';
-
 import * as settings from '$lib/settings';
-import { GraphD3, GraphState, GraphView } from './GraphD3';
+import { easeSinInOut, zoomIdentity } from 'd3';
+import type { D3 } from './D3';
+import { GraphD3 } from './GraphD3';
+import { graphState } from './GraphD3State.svelte';
+import { graphView } from './GraphD3View.svelte';
+import type { CameraTransform, NodeData } from './types';
 
-import type { NodeData, CameraTransform } from './types';
-
-export { CameraToolbox };
-
-// -----------------------------> Classes
-
-class CameraToolbox {
+export class CameraToolbox {
 	static allowZoomAndPan(graph: GraphD3, event?: d3.D3ZoomEvent<SVGSVGElement, unknown>): boolean {
 		return (
-			(graph.view === GraphView.domains || graph.view === GraphView.subjects) &&
-			(graph.state === GraphState.idle || graph.state === GraphState.simulating) &&
-			(event === undefined || event.type !== 'wheel' || !graph.zoom_lock || graph.keys.Shift)
+			(graphView.isDomains() || graphView.isSubjects()) &&
+			(graphState.isIdle() || graphState.isSimulating()) &&
+			(event === undefined || event.type !== 'wheel' || !graph.d3.zoom_lock || graph.keys.Shift)
 		);
 	}
 
-	static centralTransform(graph: GraphD3, nodes: NodeData[]): CameraTransform {
+	static centralTransform(d3: D3, nodes: NodeData[]): CameraTransform {
 		if (nodes.length === 0) {
 			return { x: 0, y: 0, k: 1 };
 		}
@@ -47,24 +44,24 @@ class CameraToolbox {
 				settings.MIN_ZOOM,
 				Math.min(
 					settings.MAX_ZOOM,
-					graph.svg.node()!.clientWidth / ((max_x - min_x) * settings.GRID_UNIT),
-					graph.svg.node()!.clientHeight / ((max_y - min_y) * settings.GRID_UNIT)
+					d3.svg.node()!.clientWidth / ((max_x - min_x) * settings.GRID_UNIT),
+					d3.svg.node()!.clientHeight / ((max_y - min_y) * settings.GRID_UNIT)
 				)
 			)
 		};
 	}
 
-	static moveCamera(graph: GraphD3, transform: CameraTransform, callback?: () => void) {
-		graph.svg
+	static moveCamera(d3: D3, transform: CameraTransform, callback?: () => void) {
+		d3.svg
 			.transition()
 			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
+			.ease(easeSinInOut)
 			.call(
-				graph.zoom.transform,
-				d3.zoomIdentity
+				d3.zoom.transform,
+				zoomIdentity
 					.translate(
-						graph.svg.node()!.clientWidth / 2 - transform.k * transform.x * settings.GRID_UNIT,
-						graph.svg.node()!.clientHeight / 2 - transform.k * transform.y * settings.GRID_UNIT
+						d3.svg.node()!.clientWidth / 2 - transform.k * transform.x * settings.GRID_UNIT,
+						d3.svg.node()!.clientHeight / 2 - transform.k * transform.y * settings.GRID_UNIT
 					)
 					.scale(transform.k)
 			);
@@ -76,12 +73,12 @@ class CameraToolbox {
 		}
 	}
 
-	static panCamera(graph: GraphD3, x: number, y: number, callback?: () => void) {
-		graph.svg
+	static panCamera(d3: D3, x: number, y: number, callback?: () => void) {
+		d3.svg
 			.transition()
 			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-			.call(graph.zoom.translateTo, x * settings.GRID_UNIT, y * settings.GRID_UNIT);
+			.ease(easeSinInOut)
+			.call(d3.zoom.translateTo, x * settings.GRID_UNIT, y * settings.GRID_UNIT);
 
 		if (callback) {
 			setTimeout(() => {
@@ -90,12 +87,12 @@ class CameraToolbox {
 		}
 	}
 
-	static zoomCamera(graph: GraphD3, k: number, callback?: () => void) {
-		graph.svg
+	static zoomCamera(d3: D3, k: number, callback?: () => void) {
+		d3.svg
 			.transition()
 			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-			.call(graph.zoom.scaleTo, k);
+			.ease(easeSinInOut)
+			.call(d3.zoom.scaleTo, k);
 
 		if (callback) {
 			setTimeout(() => {

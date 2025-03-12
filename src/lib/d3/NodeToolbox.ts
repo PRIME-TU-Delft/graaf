@@ -1,23 +1,25 @@
-import * as d3 from 'd3';
-
 import * as settings from '$lib/settings';
 import { EdgeToolbox } from './EdgeToolbox';
-import { GraphD3, GraphState, GraphView } from './GraphD3';
+import { GraphD3 } from './GraphD3';
 
 import type { EdgeData, NodeData, NodeSelection } from './types';
+import { graphView } from './GraphD3View.svelte';
+import { graphState } from './GraphD3State.svelte';
+import type { D3 } from './D3';
+import { drag, easeSinInOut, select } from 'd3';
 
 export { NodeToolbox };
 
 // -----------------------------> Classes
 
 class NodeToolbox {
-	static init(graph: GraphD3) {
-		const filter = graph.definitions.select('filter#highlight');
+	static init(d3: D3) {
+		const filter = d3.definitions.select('filter#highlight');
 		if (!filter.empty()) {
 			return;
 		}
 
-		graph.definitions
+		d3.definitions
 			.append('filter')
 			.attr('id', 'highlight')
 			.append('feDropShadow')
@@ -28,7 +30,7 @@ class NodeToolbox {
 			.attr('flood-color', settings.NODE_HIGHLIGHT_COLOR);
 	}
 
-	static create(selection: NodeSelection, graph: GraphD3) {
+	static create(selection: NodeSelection, d3: D3) {
 		// Node attributes
 		selection
 			.attr('id', (node) => node.id)
@@ -60,54 +62,56 @@ class NodeToolbox {
 
 		// Drag behaviour
 		selection.call(
-			d3
-				.drag<SVGGElement, NodeData>()
-				.filter(() => NodeToolbox.allowNodeDrag(graph))
+			drag<SVGGElement, NodeData>()
+				.filter(() => NodeToolbox.allowNodeDrag(d3))
 				.on('start', function () {
-					const selection = d3.select<SVGGElement, NodeData>(this);
-					selection.call(NodeToolbox.setFixed, graph, true);
+					const selection = select<SVGGElement, NodeData>(this);
+					selection.call(NodeToolbox.setFixed, d3, true);
 				})
 
 				.on('drag', function (event, node) {
-					const selection = d3.select<SVGGElement, NodeData>(this);
+					const selection = select<SVGGElement, NodeData>(this);
 					node.x = node.x + event.dx / settings.GRID_UNIT;
 					node.y = node.y + event.dy / settings.GRID_UNIT;
 					node.fx = node.x;
 					node.fy = node.y;
 
-					NodeToolbox.updatePosition(selection, graph);
+					NodeToolbox.updatePosition(selection, d3);
 
-					if (graph.state === GraphState.simulating) {
-						graph.simulation.alpha(1).restart();
+					if (graphState.isSimulating()) {
+						d3.simulation.alpha(1).restart();
 					}
 				})
 
 				.on('end', async function (_, node) {
-					const selection = d3.select<SVGGElement, NodeData>(this);
+					const selection = select<SVGGElement, NodeData>(this);
 					node.x = Math.round(node.x);
 					node.y = Math.round(node.y);
 					node.fx = node.x;
 					node.fy = node.y;
 
-					NodeToolbox.updatePosition(selection, graph);
+					NodeToolbox.updatePosition(selection, d3);
 					NodeToolbox.save(selection);
 				})
 		);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	static save(selection: NodeSelection) {
 		// TODO NOT IMPLEMENTED
 	}
 
-	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = true) {
+	static updatePosition(selection: NodeSelection, d3: D3, transition: boolean = true) {
 		// Raise nodes
 		selection.raise();
+
+		// TODO: check why this is called so
 
 		// Update node position
 		selection
 			.transition()
 			.duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
+			.ease(easeSinInOut)
 			.attr(
 				'transform',
 				(node) => `translate(
@@ -118,7 +122,7 @@ class NodeToolbox {
 
 		// Update edges
 		selection.each(function (node) {
-			graph.content
+			d3.content
 				.selectAll<SVGLineElement, EdgeData>('.edge')
 				.filter((edge) => edge.source === node || edge.target === node)
 				.call(EdgeToolbox.updatePosition, transition);
@@ -130,11 +134,11 @@ class NodeToolbox {
 			const highlight =
 				graph.lecture?.domains.includes(node) || graph.lecture?.present_nodes.includes(node);
 
-			d3.select(this).attr('filter', highlight ? 'url(#highlight)' : null);
+			select(this).attr('filter', highlight ? 'url(#highlight)' : null);
 		});
 	}
 
-	static setFixed(selection: NodeSelection, graph: GraphD3, fixed: boolean) {
+	static setFixed(selection: NodeSelection, d3: D3, fixed: boolean) {
 		selection
 			.classed('fixed', fixed)
 			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
@@ -145,7 +149,7 @@ class NodeToolbox {
 				node.fy = fixed ? node.y : undefined;
 			});
 
-		NodeToolbox.updatePosition(selection, graph);
+		NodeToolbox.updatePosition(selection, d3);
 	}
 
 	static wrapText(selection: d3.Selection<SVGTextElement, NodeData, d3.BaseType, unknown>) {
@@ -155,7 +159,7 @@ class NodeToolbox {
 			const horz_center = (settings.NODE_WIDTH / 2) * settings.GRID_UNIT;
 
 			// Select elements
-			const element = d3.select(this);
+			const element = select(this);
 			const text = element.text();
 			const words = text.split(/\s+/);
 			element.text(null);
@@ -202,11 +206,11 @@ class NodeToolbox {
 		});
 	}
 
-	static allowNodeDrag(graph: GraphD3): boolean {
+	static allowNodeDrag(d3: D3): boolean {
 		return (
-			graph.editable &&
-			(graph.view === GraphView.domains || graph.view === GraphView.subjects) &&
-			(graph.state === GraphState.idle || graph.state === GraphState.simulating)
+			d3.graph.editable &&
+			(graphView.isDomains() || graphView.isSubjects()) &&
+			(graphState.isIdle() || graphState.isSimulating())
 		);
 	}
 }
