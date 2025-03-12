@@ -50,8 +50,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run ESLint
-        run: pnpm eslint .
-
       - name: Run svelte-check
         run: pnpm check
+
+      - name: Run ESLint
+        run: pnpm eslint .
