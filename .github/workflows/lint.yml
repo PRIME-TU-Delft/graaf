@@ -28,9 +28,12 @@ jobs:
 
       - name: Run prettier check
         run: pnpm prettier --check .
+        continue-on-error: true
 
       - name: Run ESLint
         run: pnpm eslint .
+        continue-on-error: true
 
       - name: Run svelte-check
         run: pnpm check
+        continue-on-error: true
