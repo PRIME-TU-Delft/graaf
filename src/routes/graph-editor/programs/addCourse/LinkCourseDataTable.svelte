@@ -67,8 +67,6 @@
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel()
 	});
-
-	$inspect(rowSelection);
 </script>
 
 <div class="rounded-md border">
