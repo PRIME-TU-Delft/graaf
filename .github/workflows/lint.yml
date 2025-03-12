@@ -8,6 +8,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
