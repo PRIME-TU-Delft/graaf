@@ -237,11 +237,9 @@ export class GraphD3 {
 		// Extract domain data
 		const domain_map = new Map<number, NodeData>();
 		for (const domain of data.domains) {
-			if (domain.style === null) continue; // Do not display domains without style
-
 			const node_data = {
 				id: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
-				style: domain.style,
+				style: (domain.style ?? 'DEFAULT') as keyof typeof settings.NODE_STYLES,
 				text: domain.name,
 				x: domain.x,
 				y: domain.y,
@@ -256,10 +254,13 @@ export class GraphD3 {
 		// Extract domain edge data
 		for (const source of data.domains) {
 			for (const target of source.targetDomains) {
+
 				// Get source and target nodes
 				const source_node = domain_map.get(source.id);
 				const target_node = domain_map.get(target.id);
-				if (source_node === undefined || target_node === undefined) continue; // Skip edges with invalid domains
+				if (source_node === undefined || target_node === undefined) {
+					throw new Error('Invalid graph data'); // Occurs when a domain has non-existent source/target domains
+				}
 
 				// Add edge to graph
 				graph.domain_edges.push({
@@ -271,37 +272,43 @@ export class GraphD3 {
 		}
 
 		// Extract subject data
-		const detail_map = new Map<number, PrismaSubjectPayload>();
 		const subject_map = new Map<number, NodeData>();
 		for (const subject of data.subjects) {
-			if (subject.domainId === null) continue; // Skip subjects without a parent domain
-			const domain = domain_map.get(subject.domainId);
-			if (domain === undefined) continue; // Skip subjects with invalid parent domains
+			let domain_node = undefined
+			if (subject.domainId) {
+				domain_node = domain_map.get(subject.domainId);
+				if (domain_node === undefined) {
+					throw new Error('Invalid graph data'); // Occurs when a subject has a non-existent domain
+				}
+			}
 
 			const node_data = {
 				id: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
-				style: domain.style,
+				style: domain_node?.style ?? 'DEFAULT',
 				text: subject.name,
+				parent: domain_node,
 				x: subject.x,
 				y: subject.y,
 				fx: subject.x,
-				fy: subject.y,
-				parent: domain
+				fy: subject.y
 			};
 
-			detail_map.set(subject.id, subject);
 			subject_map.set(subject.id, node_data);
 			graph.subject_nodes.push(node_data);
 		}
 
 		// Extract subject edge data
-		const subject_edge_map = new Map<number, Map<number, EdgeData>>();
+		const forward_edge_map = new Map<number, EdgeData[]>();
+		const reverse_edge_map = new Map<number, EdgeData[]>();
 		for (const source of data.subjects) {
 			for (const target of source.targetSubjects) {
+
 				// Get source and target nodes
 				const source_node = subject_map.get(source.id);
 				const target_node = subject_map.get(target.id);
-				if (source_node === undefined || target_node === undefined) continue; // Skip edges with invalid subjects
+				if (source_node === undefined || target_node === undefined) {
+					throw new Error('Invalid graph data'); // Occurs when a subject has non-existent source/target subjects
+				}
 
 				// Create edge data
 				const edge = {
@@ -311,15 +318,26 @@ export class GraphD3 {
 				};
 
 				// Update subject edge map
-				let nested_map = subject_edge_map.get(source.id);
-				if (nested_map === undefined) {
-					nested_map = new Map<number, EdgeData>();
-					subject_edge_map.set(source.id, nested_map);
+				let forward_edges = forward_edge_map.get(source.id);
+				if (!forward_edges) {
+					forward_edges = [];
+					forward_edge_map.set(source.id, forward_edges);
 				}
+
+				forward_edges.push(edge);
+
+				// Update reverse subject edge map
+				let reverse_edges = reverse_edge_map.get(target.id);
+				if (!reverse_edges) {
+					reverse_edges = [];
+					reverse_edge_map.set(target.id, reverse_edges);
+				}
+
+				reverse_edges.push(edge);
 
 				// Add edge to graph and edge map
 				graph.subject_edges.push(edge);
-				nested_map.set(target.id, edge);
+
 			}
 		}
 
@@ -335,53 +353,37 @@ export class GraphD3 {
 			};
 
 			for (const subject of lecture.subjects) {
+
 				// Get subject node
 				const subject_node = subject_map.get(subject.id);
-				if (subject_node === undefined) continue; // Skip invalid subjects
-
-				// Get parent domain
-				if (subject.domainId === null) continue; // Skip subjects without parent domain
-				const domain_node = domain_map.get(subject.domainId);
-				if (domain_node === undefined) continue; // Skip subjects with invalid parent domain
-
+				if (subject_node === undefined)
+					throw new Error('Invalid graph data'); // Occurs when a lecture has non-existent subjects
 				lecture_data.present_nodes.push(subject_node);
-				lecture_data.domains.push(domain_node);
 				lecture_data.nodes.push(subject_node);
 
-				// Get subject details
-				const details = detail_map.get(subject.id);
-				if (details === undefined) throw new Error('Invalid graph data');
+				// Get parent domain
+				if (subject_node.parent) {
+					lecture_data.domains.push(subject_node.parent);
+				}
 
 				// Gather past nodes and edges
-				for (const source of details.sourceSubjects) {
-					const source_node = subject_map.get(source.id);
-					if (source_node === undefined || lecture_data.past_nodes.includes(source_node)) {
-						continue; // Skip invalid or duplicate subjects
+				const source_edges = reverse_edge_map.get(subject.id);
+				if (source_edges) {
+					for (const edge of source_edges.values()) {
+						lecture_data.past_nodes.push(edge.source);
+						lecture_data.nodes.push(edge.source);
+						lecture_data.edges.push(edge);
 					}
-
-					// Find edge data
-					const edge = subject_edge_map.get(source.id)?.get(subject.id);
-					if (edge === undefined) continue; // Skip edges with invalid subjects
-
-					lecture_data.past_nodes.push(source_node);
-					lecture_data.nodes.push(source_node);
-					lecture_data.edges.push(edge);
 				}
 
 				// Gather future nodes and edges
-				for (const target of details.targetSubjects) {
-					const target_node = subject_map.get(target.id);
-					if (target_node === undefined || lecture_data.past_nodes.includes(target_node)) {
-						continue; // Skip invalid or duplicate subjects
+				const target_edges = forward_edge_map.get(subject.id);
+				if (target_edges) {
+					for (const edge of target_edges.values()) {
+						lecture_data.future_nodes.push(edge.target);
+						lecture_data.nodes.push(edge.target);
+						lecture_data.edges.push(edge);
 					}
-
-					// Find edge data
-					const edge = subject_edge_map.get(subject.id)?.get(target.id);
-					if (edge === undefined) continue; // Skip edges with invalid subjects
-
-					lecture_data.future_nodes.push(target_node);
-					lecture_data.nodes.push(target_node);
-					lecture_data.edges.push(edge);
 				}
 			}
 
