@@ -1,8 +1,9 @@
-import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
-import type { RequestEvent } from '@sveltejs/kit';
-import { setError, superValidate } from 'sveltekit-superforms';
+import prisma from '$lib/server/db/prisma';
 import { zod } from 'sveltekit-superforms/adapters';
-import prisma from '../db/prisma';
+import { setError, superValidate } from 'sveltekit-superforms';
+import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/subjectSchema';
+
+import type { RequestEvent } from '@sveltejs/kit';
 
 export class SubjectActions {
 	/**
@@ -20,6 +21,7 @@ export class SubjectActions {
 	 * 4. If there is an error, returns the error message.
 	 * 5. If successful, returns the subject.
 	 **/
+
 	static async addSubjectToGraph(event: RequestEvent) {
 		const form = await superValidate(event, zod(subjectSchema));
 
@@ -52,22 +54,22 @@ export class SubjectActions {
 
 		if (!form.valid) return setError(form, '', 'Invalid subject');
 
-		const removeOutFromIncommingSubjects = form.data.incommingSubjects.map((id) => {
+		const removeTargetFromSource = form.data.sourceSubjects.map((id) => {
 			return prisma.subject.update({
 				where: { id },
 				data: {
-					outgoingSubjects: {
+					targetSubjects: {
 						disconnect: { id: form.data.subjectId }
 					}
 				}
 			});
 		});
 
-		const removeInFromOutgoingSubjects = form.data.outgoingSubjects.map((id) => {
+		const removeSourceFromTarget = form.data.targetSubjects.map((id) => {
 			return prisma.subject.update({
 				where: { id },
 				data: {
-					incommingSubjects: {
+					sourceSubjects: {
 						disconnect: { id: form.data.subjectId }
 					}
 				}
@@ -80,8 +82,8 @@ export class SubjectActions {
 
 		try {
 			await prisma.$transaction([
-				...removeOutFromIncommingSubjects,
-				...removeInFromOutgoingSubjects,
+				...removeTargetFromSource,
+				...removeSourceFromTarget,
 				deleteSubject
 			]);
 		} catch (e: unknown) {
@@ -123,6 +125,7 @@ export class SubjectActions {
 	 * 3. If not connected, updates the subjects to connect them in both directions.
 	 * 4. Executes the updates within a database transaction.
 	 */
+
 	static async addSubjectRel(event: RequestEvent) {
 		const form = await superValidate(event, zod(subjectRelSchema));
 
@@ -134,10 +137,10 @@ export class SubjectActions {
 			// Check if the subjects are already connected
 			const isConnected = await prisma.subject.findFirst({
 				where: {
-					id: form.data.subjectInId,
-					outgoingSubjects: {
+					id: form.data.sourceSubjectId,
+					targetSubjects: {
 						some: {
-							id: form.data.subjectOutId
+							id: form.data.targetSubjectId
 						}
 					}
 				}
@@ -147,33 +150,33 @@ export class SubjectActions {
 				return setError(form, '', 'Subjects are already connected');
 			}
 
-			const addOutToIn = prisma.subject.update({
+			const addTargetToSource = prisma.subject.update({
 				where: {
-					id: form.data.subjectInId
+					id: form.data.sourceSubjectId
 				},
 				data: {
-					outgoingSubjects: {
+					targetSubjects: {
 						connect: {
-							id: form.data.subjectOutId
+							id: form.data.targetSubjectId
 						}
 					}
 				}
 			});
 
-			const addInToOut = prisma.subject.update({
+			const addSourceToTarget = prisma.subject.update({
 				where: {
-					id: form.data.subjectOutId
+					id: form.data.targetSubjectId
 				},
 				data: {
-					incommingSubjects: {
+					sourceSubjects: {
 						connect: {
-							id: form.data.subjectInId
+							id: form.data.sourceSubjectId
 						}
 					}
 				}
 			});
 
-			await prisma.$transaction([addOutToIn, addInToOut]);
+			await prisma.$transaction([addTargetToSource, addSourceToTarget]);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}

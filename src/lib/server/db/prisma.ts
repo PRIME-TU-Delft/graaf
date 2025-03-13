@@ -12,4 +12,5 @@ function debugLevel(): PrismaClientOptions['log'] {
 const prisma = new PrismaClient({
 	log: debugLevel()
 });
+
 export default prisma;

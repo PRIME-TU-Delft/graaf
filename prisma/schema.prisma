@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,8 +6,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-// START AUTH STUFF
 
 enum UserRole {
   USER
@@ -33,11 +25,11 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  program_editors Program[] @relation("EditorProgramRelation")
-  program_admins  Program[] @relation("AdminProgramRelation")
-  course_editors  Course[]  @relation("EditorRelation")
-  course_admins   Course[]  @relation("AdminRelation")
-  my_courses      Course[]  @relation("PinnedCourse")
+  program_editors Program[] @relation("ProgramEditorRelation")
+  program_admins  Program[] @relation("ProgramAdminRelation")
+  course_editors  Course[]  @relation("CourseEditorRelation")
+  course_admins   Course[]  @relation("CourseAdminRelation")
+  pinned_courses  Course[]  @relation("PinnedCourse")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,10 +48,10 @@ model Account {
   id_token          String?
   session_state     String?
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }
@@ -82,19 +74,16 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-// END AUTH STUFF
-
-// Program <*--*> Course
 model Program {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String
+  id   Int    @id @default(autoincrement())
+  name String
+
+  courses Course[] @relation("ProgramCourse")
+  editors User[]   @relation("ProgramEditorRelation")
+  admins  User[]   @relation("ProgramAdminRelation")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  // Relations
-  courses Course[] @relation("ProgramCourse")
-  editors User[]   @relation("EditorProgramRelation")
-  admins  User[]   @relation("AdminProgramRelation")
 }
 
 enum CourseType {
@@ -102,35 +91,31 @@ enum CourseType {
   SANDBOX
 }
 
-// Course <*--*> Program
-// Course <---*> Graph
 model Course {
-  code String @id @unique
-  name String
-
-  isArchived Boolean    @default(false)
+  code       String     @id @unique
   type       CourseType @default(COURSE)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  name       String
+  isArchived Boolean    @default(false)
 
   programs Program[] @relation("ProgramCourse")
   graphs   Graph[]   @relation("CourseGraph")
-  editors  User[]    @relation("EditorRelation")
-  admins   User[]    @relation("AdminRelation")
+  editors  User[]    @relation("CourseEditorRelation")
+  admins   User[]    @relation("CourseAdminRelation")
   pinnedBy User[]    @relation("PinnedCourse")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// Graph <*---> Course
 model Graph {
   id       Int    @id @default(autoincrement())
   name     String
   courseId String
 
   course   Course    @relation("CourseGraph", fields: [courseId], references: [code])
-  domains  Domain[]
-  subjects Subject[] @relation("SubjectGraph")
-  lectures Lecture[]
-  // links			Link[]
+  domains  Domain[]  @relation("GraphDomain")
+  subjects Subject[] @relation("GraphSubject")
+  lectures Lecture[] @relation("GraphLecture")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,41 +137,42 @@ enum DomainStyle {
 }
 
 model Domain {
-  id    Int          @id @default(autoincrement())
-  name  String
-  style DomainStyle?
-  order Int // Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+  id      Int          @id @default(autoincrement())
+  name    String
+  style   DomainStyle?
+  order   Int // Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+  x       Int          @default(0)
+  y       Int          @default(0)
+  graphId Int
 
-  // physical position in the graph
-  x Int @default(0)
-  y Int @default(0)
+  graph         Graph     @relation("GraphDomain", fields: [graphId], references: [id], onDelete: Cascade)
+  subjects      Subject[] @relation("DomainSubject")
+  sourceDomains Domain[]  @relation("DomainRelation")
+  targetDomains Domain[]  @relation("DomainRelation")
 
-  graphId          Int
-  graph            Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
-  subjects         Subject[]
-  incommingDomains Domain[]  @relation("DomainRelation")
-  outgoingDomains  Domain[]  @relation("DomainRelation")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([name, graphId])
 }
 
 model Subject {
-  id    Int    @id @default(autoincrement())
-  name  String @default("")
-  order Int // Subjects is a SORTABLE ARRAY this order makes sure this order is perserved on reload
-
-  // Physical position in the graph
-  x Int @default(0)
-  y Int @default(0)
-
+  id       Int    @id @default(autoincrement())
+  name     String @default("")
+  order    Int // Subjects is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+  x        Int    @default(0)
+  y        Int    @default(0)
   graphId  Int
   domainId Int?
-  graph    Graph     @relation("SubjectGraph", fields: [graphId], references: [id], onDelete: Cascade)
-  domain   Domain?   @relation(fields: [domainId], references: [id])
-  lectures Lecture[]
 
-  incommingSubjects Subject[] @relation("SubjectRelation")
-  outgoingSubjects  Subject[] @relation("SubjectRelation")
+  graph          Graph     @relation("GraphSubject", fields: [graphId], references: [id], onDelete: Cascade)
+  domain         Domain?   @relation("DomainSubject", fields: [domainId], references: [id])
+  lectures       Lecture[] @relation("LectureSubject")
+  sourceSubjects Subject[] @relation("SubjectRelation")
+  targetSubjects Subject[] @relation("SubjectRelation")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([name, domainId])
 }
@@ -197,8 +183,11 @@ model Lecture {
   order   Int
   graphId Int
 
-  graph    Graph     @relation(fields: [graphId], references: [id], onDelete: Cascade)
-  subjects Subject[]
+  graph    Graph     @relation("GraphLecture", fields: [graphId], references: [id], onDelete: Cascade)
+  subjects Subject[] @relation("LectureSubject")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([name, graphId])
 }

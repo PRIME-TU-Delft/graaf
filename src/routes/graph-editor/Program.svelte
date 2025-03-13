@@ -5,7 +5,7 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import { courseSchema } from '$lib/zod/courseSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Settings from 'lucide-svelte/icons/settings';
