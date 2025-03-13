@@ -1,13 +1,12 @@
 import * as settings from '$lib/settings';
-import type { D3 } from './D3';
 import type { GraphD3 } from './GraphD3';
 
 export class BackgroundToolbox {
-	static init(d3: D3) {
-		const pattern = d3.definitions.select('pattern#grid');
+	static init(graph: GraphD3) {
+		const pattern = graph.definitions.select('pattern#grid');
 		if (!pattern.empty()) return;
 
-		const grid = d3.definitions
+		const grid = graph.definitions
 			.append('pattern')
 			.attr('id', 'grid')
 			.attr('width', settings.GRID_UNIT)
@@ -31,14 +30,14 @@ export class BackgroundToolbox {
 			.attr('stroke', settings.GRID_COLOR);
 	}
 
-	static clear(d3: D3) {
-		d3.background.attr('class', null).selectAll('*').remove();
+	static clear(graph: GraphD3) {
+		graph.background.attr('class', null).selectAll('*').remove();
 	}
 
-	static lecture(d3: D3, graph: GraphD3) {
-		BackgroundToolbox.clear(d3);
+	static lecture(graph: GraphD3) {
+		BackgroundToolbox.clear(graph);
 
-		d3.background.attr('class', 'lecture');
+		graph.background.attr('class', 'lecture');
 
 		// Calculate table dimensions
 		const size = graph.lecture
@@ -66,11 +65,11 @@ export class BackgroundToolbox {
 
 		// Note: if the background is bigger than the client, this will overflow
 		// TODO scale the background/content when overflowing
-		const dx = (d3.svg.node()!.clientWidth - outer_width) / 2;
-		const dy = (d3.svg.node()!.clientHeight - outer_height) / 2;
+		const dx = (graph.svg.node()!.clientWidth - outer_width) / 2;
+		const dy = (graph.svg.node()!.clientHeight - outer_height) / 2;
 
 		// Past subject colunm
-		d3.background
+		graph.background
 			.append('text')
 			.attr('x', dx + (settings.STROKE_WIDTH + column_width) / 2)
 			.attr('y', dy)
@@ -79,7 +78,7 @@ export class BackgroundToolbox {
 			.attr('dominant-baseline', 'hanging')
 			.style('font-size', settings.LECTURE_FONT_SIZE);
 
-		d3.background
+		graph.background
 			.append('rect')
 			.attr('x', dx + column_left)
 			.attr('y', dy + column_top)
@@ -90,7 +89,7 @@ export class BackgroundToolbox {
 			.attr('stroke', 'black');
 
 		// Present subject column
-		d3.background
+		graph.background
 			.append('text')
 			.attr('x', dx + (settings.STROKE_WIDTH + 3 * column_width) / 2)
 			.attr('y', dy)
@@ -99,7 +98,7 @@ export class BackgroundToolbox {
 			.attr('dominant-baseline', 'hanging')
 			.style('font-size', settings.LECTURE_FONT_SIZE);
 
-		d3.background
+		graph.background
 			.append('rect')
 			.attr('x', dx + column_left + column_width)
 			.attr('y', dy + column_top)
@@ -110,7 +109,7 @@ export class BackgroundToolbox {
 			.attr('stroke', 'black');
 
 		// Future subject column
-		d3.background
+		graph.background
 			.append('text')
 			.attr('x', dx + (settings.STROKE_WIDTH + 5 * column_width) / 2)
 			.attr('y', dy)
@@ -119,7 +118,7 @@ export class BackgroundToolbox {
 			.attr('dominant-baseline', 'hanging')
 			.style('font-size', settings.LECTURE_FONT_SIZE);
 
-		d3.background
+		graph.background
 			.append('rect')
 			.attr('x', dx + column_left + 2 * column_width)
 			.attr('y', dy + column_top)
@@ -130,10 +129,10 @@ export class BackgroundToolbox {
 			.attr('stroke', 'black');
 	}
 
-	static grid(d3: D3) {
-		BackgroundToolbox.clear(d3);
+	static grid(graph: GraphD3) {
+		BackgroundToolbox.clear(graph);
 
-		d3.background
+		graph.background
 			.attr('class', 'grid')
 			.append('rect')
 			.attr('fill', 'url(#grid)')
@@ -141,8 +140,8 @@ export class BackgroundToolbox {
 			.attr('height', '100%');
 	}
 
-	static transformGrid(d3: D3, transform: { x: number; y: number; k: number }) {
-		d3.svg
+	static transformGrid(graph: GraphD3, transform: { x: number; y: number; k: number }) {
+		graph.svg
 			.select('#grid')
 			.attr('x', transform.x)
 			.attr('y', transform.y)

@@ -1,9 +1,8 @@
+import * as d3 from 'd3';
 import * as settings from '$lib/settings';
 import { EdgeToolbox } from './EdgeToolbox';
-import { GraphD3 } from './GraphD3';
 
-import { drag, select } from 'd3';
-import type { D3 } from './D3';
+import type { GraphD3 } from './GraphD3';
 import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
 import type { EdgeData, NodeData, NodeSelection } from './types';
@@ -13,13 +12,13 @@ export { NodeToolbox };
 // -----------------------------> Classes
 
 class NodeToolbox {
-	static init(d3: D3) {
-		const filter = d3.definitions.select('filter#highlight');
+	static init(graph: GraphD3) {
+		const filter = graph.definitions.select('filter#highlight');
 		if (!filter.empty()) {
 			return;
 		}
 
-		d3.definitions
+		graph.definitions
 			.append('filter')
 			.attr('id', 'highlight')
 			.append('feDropShadow')
@@ -30,7 +29,8 @@ class NodeToolbox {
 			.attr('flood-color', settings.NODE_HIGHLIGHT_COLOR);
 	}
 
-	static create(selection: NodeSelection, d3: D3) {
+	static create(selection: NodeSelection, graph: GraphD3) {
+
 		// Node attributes
 		selection
 			.attr('id', (node) => node.id)
@@ -62,35 +62,35 @@ class NodeToolbox {
 
 		// Drag behaviour
 		selection.call(
-			drag<SVGGElement, NodeData>()
-				.filter(() => NodeToolbox.allowNodeDrag(d3))
+			d3.drag<SVGGElement, NodeData>()
+				.filter(() => NodeToolbox.allowNodeDrag(graph))
 				.on('start', function () {
-					const selection = select<SVGGElement, NodeData>(this);
-					selection.call(NodeToolbox.setFixed, d3, true);
+					const selection = d3.select<SVGGElement, NodeData>(this);
+					selection.call(NodeToolbox.setFixed, graph, true);
 				})
 
 				.on('drag', function (event, node) {
-					const selection = select<SVGGElement, NodeData>(this);
+					const selection = d3.select<SVGGElement, NodeData>(this);
 					node.x = node.x + event.dx / settings.GRID_UNIT;
 					node.y = node.y + event.dy / settings.GRID_UNIT;
 					node.fx = node.x;
 					node.fy = node.y;
 
-					NodeToolbox.updatePosition(selection, d3);
+					NodeToolbox.updatePosition(selection, graph);
 
 					if (graphState.isSimulating()) {
-						d3.simulation.alpha(1).restart();
+						graph.simulation.alpha(1).restart();
 					}
 				})
 
 				.on('end', async function (_, node) {
-					const selection = select<SVGGElement, NodeData>(this);
+					const selection = d3.select<SVGGElement, NodeData>(this);
 					node.x = Math.round(node.x);
 					node.y = Math.round(node.y);
 					node.fx = node.x;
 					node.fy = node.y;
 
-					NodeToolbox.updatePosition(selection, d3);
+					NodeToolbox.updatePosition(selection, graph);
 					NodeToolbox.save(selection);
 				})
 		);
@@ -101,28 +101,27 @@ class NodeToolbox {
 		// TODO NOT IMPLEMENTED
 	}
 
-	static updatePosition(selection: NodeSelection, d3: D3, transition: boolean = true) {
+	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = false) {
+		
 		// Raise nodes
 		selection.raise();
 
-		// TODO: check why this is called so
-
 		// Update node position
 		selection
-			// .transition()
-			// .duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
-			// .ease(easeSinInOut)
+			.transition()
+			.duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
+			.ease(d3.easeSinInOut)
 			.attr(
 				'transform',
 				(node) => `translate(
-                ${node.x * settings.GRID_UNIT},
-                ${node.y * settings.GRID_UNIT}
-            )`
+					${node.x * settings.GRID_UNIT},
+					${node.y * settings.GRID_UNIT}
+				)`
 			);
 
 		// Update edges
 		selection.each(function (node) {
-			d3.content
+			graph.content
 				.selectAll<SVGLineElement, EdgeData>('.edge')
 				.filter((edge) => edge.source === node || edge.target === node)
 				.call(EdgeToolbox.updatePosition, transition);
@@ -131,14 +130,16 @@ class NodeToolbox {
 
 	static updateHighlight(selection: NodeSelection, graph: GraphD3) {
 		selection.each(function (node) {
-			const highlight =
-				graph.lecture?.domains.includes(node) || graph.lecture?.present_nodes.includes(node);
+			const highlight = graph.lecture?.domains.includes(node) || 
+							  graph.lecture?.present_nodes.includes(node);
 
-			select(this).attr('filter', highlight ? 'url(#highlight)' : null);
+			d3.select(this).attr('filter', highlight ? 'url(#highlight)' : null);
 		});
 	}
 
-	static setFixed(selection: NodeSelection, d3: D3, fixed: boolean) {
+	static setFixed(selection: NodeSelection, graph: GraphD3, fixed: boolean) {
+		if (selection.classed('fixed') === fixed) return;
+
 		selection
 			.classed('fixed', fixed)
 			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
@@ -149,17 +150,21 @@ class NodeToolbox {
 				node.fy = fixed ? node.y : undefined;
 			});
 
-		NodeToolbox.updatePosition(selection, d3);
+		NodeToolbox.updatePosition(selection, graph);
 	}
 
 	static wrapText(selection: d3.Selection<SVGTextElement, NodeData, d3.BaseType, unknown>) {
+		// WARNING this function does not limit vertical text overflow.
+		// It will keep adding lines until all text is displayed.
+		// Currently this problem is mitigated by a character limit on the node text
+
 		selection.each(function () {
 			const max_width = (settings.NODE_WIDTH - 2 * settings.NODE_PADDING) * settings.GRID_UNIT;
 			const vert_center = (settings.NODE_HEIGHT / 2) * settings.GRID_UNIT;
 			const horz_center = (settings.NODE_WIDTH / 2) * settings.GRID_UNIT;
 
 			// Select elements
-			const element = select(this);
+			const element = d3.select(this);
 			const text = element.text();
 			const words = text.split(/\s+/);
 			element.text(null);
@@ -198,17 +203,13 @@ class NodeToolbox {
 			}
 
 			// Center vertically
-			element.selectAll('tspan').attr('y', vert_center - (font_size * line_count * 1.1) / 2); // NOTE assumes line height is 1.1em
-
-			// WARNING this function does not limit vertical text overflow.
-			// It will keep adding lines until all text is displayed.
-			// Currently this problem is mitigated by a character limit on the node text
+			element.selectAll('tspan').attr('y', vert_center - (font_size * line_count * 1.1) / 2); // NOTE assumes line height is 1.1emt
 		});
 	}
 
-	static allowNodeDrag(d3: D3): boolean {
+	static allowNodeDrag(graph: GraphD3): boolean {
 		return (
-			d3.graph.editable &&
+			graph.editable &&
 			(graphView.isDomains() || graphView.isSubjects()) &&
 			(graphState.isIdle() || graphState.isSimulating())
 		);

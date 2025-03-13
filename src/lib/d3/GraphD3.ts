@@ -1,95 +1,144 @@
+
+import * as d3 from 'd3';
 import * as settings from '$lib/settings';
+
 import { BackgroundToolbox } from './BackgroundToolbox';
 import { CameraToolbox } from './CameraToolbox';
-import { D3 } from './D3';
 import { EdgeToolbox } from './EdgeToolbox';
 import { NodeToolbox } from './NodeToolbox';
 import { OverlayToolbox } from './OverlayToolbox';
+import { TransitionToolbox } from './TransitionToolbox';
 
 import { graphState } from './GraphD3State.svelte';
-import { GraphView, graphView } from './GraphD3View.svelte';
-import type {
-	EdgeData,
-	GraphData,
-	LectureData,
-	NodeData,
-	PrismaGraphPayload,
-	PrismaSubjectPayload
-} from './types';
-import { forceLink, select } from 'd3';
+import { graphView, GraphView } from './GraphD3View.svelte';
 
-// -----------------------------> Classes
+import type { 
+	PrismaSubjectPayload, 
+	GraphData, 
+	LectureData, 
+	DefsSelection, 
+	EdgeData, 
+	GroupSelection, 
+	NodeData, 
+	PrismaGraphPayload, 
+	SVGSelection 
+} from './types';
 
 export class GraphD3 {
-	public graph_data: GraphData;
-	public editable: boolean;
+	data: GraphData;
+	editable: boolean;
 
-	// Internal state
+	svg: SVGSelection;
+	background: GroupSelection;
+	content: GroupSelection;
+	overlay: GroupSelection;
+	definitions: DefsSelection;
+
+	simulation: d3.Simulation<NodeData, EdgeData>;
+	zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
+
+	zoom_lock = true;
 	lecture: LectureData | null = null;
 	keys: Record<string, boolean> = {};
 
-	// D3
-	readonly d3: D3;
-
-	constructor(data: PrismaGraphPayload, editable: boolean, element: SVGSVGElement) {
-		this.graph_data = this.formatPayload(data);
+	constructor(element: SVGSVGElement, payload: PrismaGraphPayload, editable: boolean) {
 		this.editable = editable;
 
-		this.d3 = new D3(element, this);
+		// Format data
+		this.data = this.formatPayload(payload);
+
+		// SVG setup
+		this.svg = d3.select<SVGSVGElement, unknown>(element).attr('display', 'block');
+		this.svg.selectAll('*').remove(); // Clear SVG
+
+		// Set up SVG components - order is important!
+		this.definitions = this.svg.append('defs');
+		this.background = this.svg.append('g').attr('id', 'background');
+		this.content = this.svg.append('g').attr('id', 'content');
+		this.overlay = this.svg.append('g').attr('id', 'overlay');
+
+		// Simulation setup
+		this.simulation = d3
+			.forceSimulation<NodeData>()
+			.force('x', d3.forceX(0).strength(settings.CENTER_FORCE))
+			.force('y', d3.forceY(0).strength(settings.CENTER_FORCE))
+			.force('charge', d3.forceManyBody().strength(settings.CHARGE_FORCE))
+			.on('tick', () => {
+				d3.select('#content')
+					.selectAll<SVGGElement, NodeData>('.node')
+					.call(NodeToolbox.updatePosition, this);
+			});
+
+		this.simulation.stop();
+
+		// Zoom & pan setup
+		this.zoom = d3
+			.zoom<SVGSVGElement, unknown>()
+			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
+			.filter((event) => CameraToolbox.allowZoomAndPan(this, event))
+			.on('zoom', (event) => {
+				this.content.attr('transform', event.transform);
+				BackgroundToolbox.transformGrid(this, event.transform);
+			});
+
+		// Toolbox setup - mainly adds definitions
+		BackgroundToolbox.init(this);
+		NodeToolbox.init(this);
+		EdgeToolbox.init(this);
 
 		// Attach event listeners
-		select(this.d3.svg.node()!)
+		d3.select(document) // This has to be document, otherwise shiftscroll will not work
 			.on('keydown', (event) => (this.keys[event.key] = true))
 			.on('keyup', (event) => (this.keys[event.key] = false));
 
-		this.d3.svg
-			.call(this.d3.zoom)
+		this.svg
+			.call(this.zoom)
 			.on('dblclick.zoom', null)
 			.on('wheel', () => {
 				if (
 					(graphView.isDomains() || graphView.isSubjects()) &&
 					(graphState.isIdle() || graphState.isSimulating()) &&
-					this.d3.zoom_lock &&
+					this.zoom_lock &&
 					!this.keys.Shift
 				) {
-					OverlayToolbox.zoom(this.d3);
+					OverlayToolbox.zoom(this);
 				}
 			});
 
 		// Enter initial view
-		if (graphView.isDomains()) this.snapToDomains();
-		else if (graphView.isSubjects()) this.snapToSubjects();
-		else if (graphView.isLectures()) this.snapToLectures();
+		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this);
+		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this);
+		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 	}
 
 	// -----------------------------> Public methods
 
-	setView(toView: GraphView) {
+	setView(targetView: GraphView) {
 		if (graphState.isTransitioning()) return;
-		if (graphState.isSimulating()) this.d3.stopSimulation();
+		if (graphState.isSimulating()) this.stopSimulation();
 
 		switch (graphView.state) {
 			case GraphView.domains:
-				if (toView === GraphView.subjects) {
-					this.domainsToSubjects();
-				} else if (toView === GraphView.lectures) {
-					this.domainsToLectures();
+				if (targetView === GraphView.subjects) {
+					TransitionToolbox.domainsToSubjects(this);
+				} else if (targetView === GraphView.lectures) {
+					TransitionToolbox.domainsToLectures(this);
 				}
 				break;
 
 			case GraphView.subjects:
-				if (toView === GraphView.domains) {
-					this.subjectsToDomains();
-				} else if (toView === GraphView.lectures) {
-					this.subjectsToLectures();
+				if (targetView === GraphView.domains) {
+					TransitionToolbox.subjectsToDomains(this);
+				} else if (targetView === GraphView.lectures) {
+					TransitionToolbox.subjectsToLectures(this);
 				}
 				break;
 
 			case GraphView.lectures:
-				if (toView === GraphView.domains) {
-					this.lecturesToDomains();
-				} else if (toView === GraphView.subjects) {
-					this.lecturesToSubjects();
+				if (targetView === GraphView.domains) {
+					TransitionToolbox.lecturesToDomains(this);
+				} else if (targetView === GraphView.subjects) {
+					TransitionToolbox.lecturesToSubjects(this);
 				}
 				break;
 		}
@@ -99,12 +148,76 @@ export class GraphD3 {
 		this.lecture = lecture;
 
 		// Update lecture view
-		if (graphView.isLectures()) this.snapToLectures();
+		if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 
 		// Update highlights
-		this.d3.content
+		this.content
 			.selectAll<SVGGElement, NodeData>('.node')
 			.call(NodeToolbox.updateHighlight, this);
+	}
+
+	zoomIn() {
+		if (!CameraToolbox.allowZoomAndPan(this)) {
+			return;
+		}
+
+		this.svg
+			.transition()
+			.duration(settings.GRAPH_ANIMATION_DURATION)
+			.ease(d3.easeSinInOut)
+			.call(this.zoom.scaleBy, settings.ZOOM_STEP);
+	}
+
+	zoomOut() {
+		if (!CameraToolbox.allowZoomAndPan(this)) {
+			return;
+		}
+
+		this.svg
+			.transition()
+			.duration(settings.GRAPH_ANIMATION_DURATION)
+			.ease(d3.easeSinInOut)
+			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP);
+	}
+
+	startSimulation() {
+		if (graphState.isIdle()) return;
+
+		this.content
+			.selectAll<SVGGElement, NodeData>('.node.fixed')
+			.call(NodeToolbox.setFixed, this, false);
+
+		this.simulation.alpha(1).restart();
+
+		graphState.toSimulating();
+	}
+
+	stopSimulation() {
+		if (graphState.isSimulating()) return;
+
+		this.content
+			.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
+			.call(NodeToolbox.setFixed, this, true)
+			.call(NodeToolbox.save);
+
+		this.simulation.stop();
+
+		graphState.toIdle();
+	}
+
+	hasFreeNodes() {
+		return this.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)').size() > 0;
+	}
+
+	centerOnGraph() {
+		if (!CameraToolbox.allowZoomAndPan(this)) {
+			return;
+		}
+
+		const nodes = this.content.selectAll<SVGGElement, NodeData>('.node').data();
+
+		const transform = CameraToolbox.centralTransform(this, nodes);
+		CameraToolbox.moveCamera(this, transform, () => {});
 	}
 
 	// -----------------------------> Private methods
@@ -278,393 +391,4 @@ export class GraphD3 {
 		return graph;
 	}
 
-	private setContent(nodes: NodeData[], edges: EdgeData[], callback?: () => void) {
-		if (nodes.length + edges.length === 0) return this.d3.clearContent(callback);
-
-		// eslint-disable-next-line @typescript-eslint/no-this-alias
-		const graphD3 = this;
-
-		// Update Nodes
-		this.d3.content
-			.selectAll<SVGGElement, NodeData>('.node')
-			.data(nodes, (node) => node.id)
-			.join(
-				function (enter) {
-					return enter
-						.append('g')
-						.call(NodeToolbox.create, graphD3.d3)
-						.call(NodeToolbox.updateHighlight, graphD3)
-						.style('opacity', 0);
-				},
-
-				function (update) {
-					return update.call(NodeToolbox.updateHighlight, graphD3);
-				},
-
-				function (exit) {
-					return exit
-						.transition()
-						.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-						.on('end', function () {
-							select(this).remove();
-						}) // Use this instead of .remove() to circumvent pending transitions
-						.style('opacity', 0);
-				}
-			)
-			.transition()
-			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.style('opacity', 1);
-
-		// Update relations
-		this.d3.content
-			.selectAll<SVGGElement, EdgeData>('.edge')
-			.data(edges, (edge) => edge.id)
-			.join(
-				function (enter) {
-					return enter.append('line').call(EdgeToolbox.create).style('opacity', 0);
-				},
-
-				function (update) {
-					return update;
-				},
-
-				function (exit) {
-					return exit
-						.transition()
-						.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-						.on('end', function () {
-							select(this).remove();
-						}) // Use this instead of .remove() to circumvent pending transitions
-						.style('opacity', 0);
-				}
-			)
-			.transition()
-			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.style('opacity', 1);
-
-		// Update simulation
-		this.d3.simulation.nodes(nodes).force('link', forceLink(edges));
-
-		// Post-transition
-		if (callback) {
-			setTimeout(() => {
-				callback();
-			}, settings.GRAPH_ANIMATION_DURATION);
-		}
-	}
-
-	private moveContent(
-		nodes: NodeData[],
-		transform: (node: NodeData) => void,
-		callback?: () => void
-	) {
-		// Buffer node positions
-		const buffers = nodes.map((node) => ({ node, x: node.x, y: node.y }));
-
-		// Set node positions
-		nodes.forEach(transform);
-
-		// Update nodes
-		this.d3.content
-			.selectAll<SVGGElement, NodeData>('.node')
-			.call(NodeToolbox.updatePosition, this.d3, callback !== undefined);
-
-		// Restore node positions
-		for (const buffer of buffers) {
-			buffer.node.x = buffer.x;
-			buffer.node.y = buffer.y;
-		}
-
-		// Post-transition
-		if (callback) {
-			setTimeout(() => {
-				callback();
-			}, settings.GRAPH_ANIMATION_DURATION);
-		}
-	}
-
-	private restoreContentPosition(callback?: () => void) {
-		// Update nodes
-		this.d3.content
-			.selectAll<SVGGElement, NodeData>('.node')
-			.call(NodeToolbox.updatePosition, this.d3, callback !== undefined);
-
-		// Post-transition
-		if (callback) {
-			setTimeout(() => {
-				callback();
-			}, settings.GRAPH_ANIMATION_DURATION);
-		}
-	}
-
-	// -----------------------------> Transformations
-
-	private domainTransform(node: NodeData): void {
-		node.x = node.parent ? node.parent.x : node.x;
-		node.y = node.parent ? node.parent.y : node.y;
-	}
-
-	private lectureTransform(x: number, y: number): (node: NodeData) => void {
-		const past = this.lecture ? this.lecture.past_nodes : [];
-		const present = this.lecture ? this.lecture.present_nodes : [];
-		const future = this.lecture ? this.lecture.future_nodes : [];
-
-		const height = Math.max(past.length, present.length, future.length);
-
-		const dx = x - (3 * settings.LECTURE_COLUMN_WIDTH) / 2;
-		const dy =
-			y -
-			(settings.LECTURE_HEADER_HEIGHT +
-				height * settings.NODE_HEIGHT +
-				(height + 1) * settings.LECTURE_PADDING) /
-				2;
-
-		return (node: NodeData) => {
-			// Set past node positions to the right column
-			if (past?.includes(node)) {
-				const index = past.indexOf(node);
-				node.x = dx + settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) + settings.LECTURE_PADDING;
-				node.y =
-					dy +
-					settings.LECTURE_HEADER_HEIGHT +
-					settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) +
-					(index + 1) * settings.LECTURE_PADDING +
-					index * settings.NODE_HEIGHT;
-				return;
-			}
-
-			// Set present node positions to the middle column
-			if (present?.includes(node)) {
-				const index = present.indexOf(node);
-				node.x =
-					dx +
-					settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) +
-					settings.LECTURE_COLUMN_WIDTH +
-					settings.LECTURE_PADDING;
-				node.y =
-					dy +
-					settings.LECTURE_HEADER_HEIGHT +
-					settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) +
-					(index + 1) * settings.LECTURE_PADDING +
-					index * settings.NODE_HEIGHT;
-				return;
-			}
-
-			// Set future node positions to the left column
-			if (future?.includes(node)) {
-				const index = future.indexOf(node);
-				node.x =
-					dx +
-					settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) +
-					2 * settings.LECTURE_COLUMN_WIDTH +
-					settings.LECTURE_PADDING;
-				node.y =
-					dy +
-					settings.LECTURE_HEADER_HEIGHT +
-					settings.STROKE_WIDTH / (2 * settings.GRID_UNIT) +
-					(index + 1) * settings.LECTURE_PADDING +
-					index * settings.NODE_HEIGHT;
-				return;
-			}
-		};
-	}
-
-	// -----------------------------> Transitions
-
-	private snapToDomains() {
-		graphState.toTransitioning();
-
-		// Set camera pov and background
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.domain_nodes);
-		CameraToolbox.moveCamera(this.d3, transform);
-		BackgroundToolbox.grid(this.d3);
-
-		// Set content
-		this.setContent(this.graph_data.domain_nodes, this.graph_data.domain_edges);
-		this.restoreContentPosition();
-
-		// Cleanup
-		graphState.toIdle();
-		graphView.toDomains();
-	}
-
-	private snapToSubjects() {
-		graphState.toTransitioning();
-
-		// Set camera pov and background
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.subject_nodes);
-		CameraToolbox.moveCamera(this.d3, transform);
-		BackgroundToolbox.grid(this.d3);
-
-		// Set content
-		this.setContent(this.graph_data.subject_nodes, this.graph_data.subject_edges);
-		this.restoreContentPosition();
-
-		// Cleanup
-		graphState.toIdle();
-		graphView.toSubjects();
-	}
-
-	private snapToLectures() {
-		graphState.toTransitioning();
-
-		// Set camera pov and background
-		CameraToolbox.moveCamera(this.d3, { x: 0, y: 0, k: 1 });
-		BackgroundToolbox.lecture(this.d3, this);
-
-		// Set content
-		const nodes = this.lecture ? this.lecture.nodes : [];
-		const edges = this.lecture ? this.lecture.edges : [];
-		this.setContent(nodes, edges);
-		this.moveContent(nodes, this.lectureTransform(0, 0));
-
-		// Cleanup
-		graphState.toIdle();
-		graphView.toLectures();
-	}
-
-	private domainsToSubjects() {
-		graphState.toTransitioning();
-
-		// Transition camera to new pov
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.subject_nodes);
-		CameraToolbox.moveCamera(this.d3, transform, () => {});
-
-		// Set new content to domain positions
-		this.setContent(this.graph_data.subject_nodes, this.graph_data.subject_edges);
-		this.moveContent(this.graph_data.subject_nodes, this.domainTransform);
-
-		// Transition content to original positions
-		this.restoreContentPosition(() => {
-			// Cleanup
-			graphState.toIdle();
-			graphView.toSubjects();
-		});
-	}
-
-	private domainsToLectures() {
-		// Validate lecture
-		if (this.lecture === null) {
-			this.snapToLectures();
-			return;
-		}
-
-		graphState.toTransitioning();
-
-		// Transition to new camera pov - centered on the current graph for minimal movement
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.domain_nodes);
-		CameraToolbox.moveCamera(this.d3, { ...transform, k: 1 }, () => {});
-
-		// Set new content in domain positions
-		this.setContent(this.lecture.nodes, this.lecture.edges);
-		this.moveContent(this.lecture.nodes, this.domainTransform);
-
-		// Transition content to lecture positions, then update background
-		this.moveContent(this.lecture.nodes, this.lectureTransform(transform.x, transform.y), () => {
-			BackgroundToolbox.lecture(this.d3, this);
-
-			// Cleanup
-			graphState.toIdle();
-			graphView.toLectures();
-		});
-	}
-
-	private subjectsToDomains() {
-		graphState.toTransitioning();
-
-		// Transition to new camera pov
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.domain_nodes);
-		CameraToolbox.moveCamera(this.d3, transform);
-
-		// Move content to domain positions, then fade in new content
-		this.moveContent(this.graph_data.subject_nodes, this.domainTransform, () => {
-			this.setContent(this.graph_data.domain_nodes, this.graph_data.domain_edges, () => {
-				// Cleanup
-				graphState.toIdle();
-				graphView.toDomains();
-			});
-		});
-	}
-
-	private subjectsToLectures() {
-		// Validate lecture
-		if (this.lecture === null) {
-			this.snapToLectures();
-			return;
-		}
-
-		graphState.toTransitioning();
-		const lecture = this.lecture; // Ref to lecture for future callbacks
-
-		// Transition to new camera pov - centered on the current graph for minimal movement
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.subject_nodes);
-		CameraToolbox.moveCamera(this.d3, { ...transform, k: 1 }, () => {});
-
-		// Fade in new content, then move to lecture positions, then update background
-		this.setContent(lecture.nodes, lecture.edges, () => {
-			this.moveContent(lecture.nodes, this.lectureTransform(transform.x, transform.y), () => {
-				BackgroundToolbox.lecture(this.d3, this);
-
-				// Cleanup
-				graphState.toIdle();
-				graphView.toLectures();
-			});
-		});
-	}
-
-	private lecturesToDomains() {
-		// Validate lecture
-		if (this.lecture === null) {
-			this.snapToDomains();
-			return;
-		}
-
-		graphState.toTransitioning();
-
-		// Snap camera and content to new pov - as the camera might be at (0, 0) at this time
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.domain_nodes);
-		CameraToolbox.panCamera(this.d3, transform.x, transform.y);
-		this.moveContent(this.lecture.nodes, this.lectureTransform(transform.x, transform.y));
-
-		// Update background and zoom out to new pov
-		BackgroundToolbox.grid(this.d3);
-		CameraToolbox.zoomCamera(this.d3, transform.k, () => {});
-
-		// Transition content to domain positions, then fade in new content
-		this.moveContent(this.lecture.nodes, this.domainTransform, () => {
-			this.setContent(this.graph_data.domain_nodes, this.graph_data.domain_edges, () => {
-				// Cleanup
-				graphState.toIdle();
-				graphView.toDomains();
-			});
-		});
-	}
-
-	private lecturesToSubjects() {
-		// Validate lecture
-		if (this.lecture === null) {
-			this.snapToSubjects();
-			return;
-		}
-
-		graphState.toTransitioning();
-
-		// Snap camera and content to new pov - as the camera might be at (0, 0) at this time
-		const transform = CameraToolbox.centralTransform(this.d3, this.graph_data.subject_nodes);
-		CameraToolbox.panCamera(this.d3, transform.x, transform.y);
-		this.moveContent(this.lecture.nodes, this.lectureTransform(transform.x, transform.y));
-
-		// Set new background and zoom out to new pov
-		BackgroundToolbox.grid(this.d3);
-		CameraToolbox.zoomCamera(this.d3, transform.k, () => {});
-
-		// Transition content to original positions, then fade in new content
-		this.restoreContentPosition(() => {
-			this.setContent(this.graph_data.subject_nodes, this.graph_data.subject_edges, () => {
-				// Cleanup
-				graphState.toIdle();
-				graphView.toSubjects();
-			});
-		});
-	}
 }

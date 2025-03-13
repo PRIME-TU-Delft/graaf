@@ -1,16 +1,16 @@
+import * as d3 from 'd3';
 import * as settings from '$lib/settings';
-import { easeSinInOut, select } from 'd3';
-import type { D3 } from './D3';
+import type { GraphD3 } from './GraphD3';
 import type { EdgeSelection } from './types';
 
 export class EdgeToolbox {
-	static init(d3: D3) {
-		const marker = d3.definitions.select('marker#arrowhead');
+	static init(graph: GraphD3) {
+		const marker = graph.definitions.select('marker#arrowhead');
 		if (!marker.empty()) {
 			return;
 		}
 
-		d3.definitions
+		graph.definitions
 			.append('marker')
 			.attr('id', 'arrowhead')
 			.attr('viewBox', '0 0 10 10')
@@ -41,7 +41,7 @@ export class EdgeToolbox {
 
 		// Update edges
 		selection.each(function (edge) {
-			const line = select(this);
+			const line = d3.select(this);
 
 			// Half the width and height of the nodes
 			const halfWidth = settings.NODE_WIDTH / 2 + settings.NODE_MARGIN;
@@ -62,7 +62,7 @@ export class EdgeToolbox {
 				line
 					.transition()
 					.duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
-					.ease(easeSinInOut)
+					.ease(d3.easeSinInOut)
 					.attr('x1', cxSource * settings.GRID_UNIT)
 					.attr('y1', cySource * settings.GRID_UNIT)
 					.attr('x2', cxTarget * settings.GRID_UNIT)
@@ -95,7 +95,7 @@ export class EdgeToolbox {
 			line
 				.transition()
 				.duration(transition ? settings.GRAPH_ANIMATION_DURATION : 0)
-				.ease(easeSinInOut)
+				.ease(d3.easeSinInOut)
 				.attr('x1', x1 * settings.GRID_UNIT)
 				.attr('y1', y1 * settings.GRID_UNIT)
 				.attr('x2', x2 * settings.GRID_UNIT)

@@ -1,13 +1,13 @@
 import * as settings from '$lib/settings';
-import type { D3 } from './D3';
+import type { GraphD3 } from './GraphD3';
 
 export { OverlayToolbox };
 
 // -----------------------------> Classes
 
 class OverlayToolbox {
-	static clear(d3: D3) {
-		d3.overlay
+	static clear(graph: GraphD3) {
+		graph.overlay
 			.interrupt()
 			.attr('class', null)
 			.style('opacity', 1)
@@ -16,17 +16,17 @@ class OverlayToolbox {
 			.remove();
 	}
 
-	static error(d3: D3) {
-		OverlayToolbox.clear(d3);
+	static error(graph: GraphD3) {
+		OverlayToolbox.clear(graph);
 
-		d3.overlay
+		graph.overlay
 			.attr('class', 'error')
 			.append('rect')
 			.attr('width', '100%')
 			.attr('height', '100%')
 			.attr('fill', 'white');
 
-		const text = d3.overlay.append('text');
+		const text = graph.overlay.append('text');
 		text
 			.append('tspan')
 			.text('Oops!')
@@ -50,11 +50,11 @@ class OverlayToolbox {
 			.attr('fill', 'white');
 	}
 
-	static zoom(d3: D3) {
-		if (!d3.overlay.classed('zoom')) {
-			OverlayToolbox.clear(d3);
+	static zoom(graph: GraphD3) {
+		if (!graph.overlay.classed('zoom')) {
+			OverlayToolbox.clear(graph);
 
-			d3.overlay
+			graph.overlay
 				.attr('class', 'zoom')
 				.append('rect')
 				.attr('width', '100%')
@@ -62,7 +62,7 @@ class OverlayToolbox {
 				.attr('background-color', 'black')
 				.style('opacity', settings.OVERLAY_OPACITY);
 
-			const text = d3.overlay.append('text');
+			const text = graph.overlay.append('text');
 			text
 				.append('tspan')
 				.text('Shift + Scroll to zoom')
@@ -86,12 +86,12 @@ class OverlayToolbox {
 				.style('cursor', 'pointer')
 				.attr('fill', 'white')
 				.on('click', () => {
-					d3.zoom_lock = false;
-					OverlayToolbox.clear(d3);
+					graph.zoom_lock = false;
+					OverlayToolbox.clear(graph);
 				});
 		}
 
-		d3.overlay
+		graph.overlay
 			.interrupt()
 			.style('opacity', 1)
 			.transition()
@@ -99,7 +99,7 @@ class OverlayToolbox {
 			.delay(settings.OVERLAY_LINGER)
 			.style('opacity', 0)
 			.on('end', () => {
-				OverlayToolbox.clear(d3);
+				OverlayToolbox.clear(graph);
 			});
 	}
 }

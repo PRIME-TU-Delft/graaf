@@ -4,15 +4,14 @@
 	import { onMount } from 'svelte';
 	import GraphDecorators from './GraphDecorators.svelte';
 
-	let { data, editable }: { data: PrismaGraphPayload; editable: boolean } = $props();
+	let { data: payload, editable }: { data: PrismaGraphPayload; editable: boolean } = $props();
 
 	let graphD3 = $state<GraphD3>();
 	let d3Canvas = $state<SVGSVGElement>();
 
 	onMount(() => {
 		if (d3Canvas == null) return;
-
-		graphD3 = new GraphD3(data, editable, d3Canvas);
+		graphD3 = new GraphD3(d3Canvas, payload, editable);
 	});
 </script>
 
