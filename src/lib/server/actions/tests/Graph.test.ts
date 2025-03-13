@@ -69,7 +69,7 @@ describe('connect to undefined', () => {
 				id: domain!.id
 			},
 			data: {
-				incommingDomains: {
+				sourceDomains: {
 					connect: [{ id: undefined }]
 				}
 			}

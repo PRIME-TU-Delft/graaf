@@ -37,7 +37,7 @@ async function setupSympleDB() {
 	await prisma.domain.update({
 		where: { id: 101 },
 		data: {
-			outgoingDomains: {
+			targetDomains: {
 				connect: { id: 111 }
 			}
 		}
@@ -46,7 +46,7 @@ async function setupSympleDB() {
 	await prisma.domain.update({
 		where: { id: 111 },
 		data: {
-			incommingDomains: {
+			sourceDomains: {
 				connect: { id: 101 }
 			}
 		}
@@ -72,8 +72,8 @@ describe('Relations are perserved', () => {
 			include: {
 				domains: {
 					include: {
-						incommingDomains: { select: { name: true } },
-						outgoingDomains: { select: { name: true } }
+						sourceDomains: { select: { name: true } },
+						targetDomains: { select: { name: true } }
 					}
 				}
 			}
@@ -83,10 +83,10 @@ describe('Relations are perserved', () => {
 		expect(destinationGraph?.domains[0].name).toBe('testDomainOne');
 		expect(destinationGraph?.domains[1].name).toBe('testDomainTwo');
 
-		expect(destinationGraph?.domains[0].outgoingDomains).toHaveLength(1);
-		expect(destinationGraph?.domains[0].outgoingDomains[0].name).toBe('testDomainTwo');
+		expect(destinationGraph?.domains[0].targetDomains).toHaveLength(1);
+		expect(destinationGraph?.domains[0].targetDomains[0].name).toBe('testDomainTwo');
 
-		expect(destinationGraph?.domains[1].incommingDomains).toHaveLength(1);
-		expect(destinationGraph?.domains[1].incommingDomains[0].name).toBe('testDomainOne');
+		expect(destinationGraph?.domains[1].sourceDomains).toHaveLength(1);
+		expect(destinationGraph?.domains[1].sourceDomains[0].name).toBe('testDomainOne');
 	});
 });

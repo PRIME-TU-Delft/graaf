@@ -5,7 +5,8 @@ import type { Course, User } from '@prisma/client';
 import { fail, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
-import { courseSchema, programSchema } from '../../lib/zod/programCourseSchema.js';
+import { courseSchema } from '$lib/zod/courseSchema.js';
+import { programSchema } from '$lib/zod/programSchema.js';
 
 export const load = (async ({ url, locals }) => {
 	try {
@@ -142,7 +143,7 @@ export const actions = {
 					id: user.id
 				},
 				data: {
-					my_courses: {
+					pinned_courses: {
 						connect: {
 							code: courseCode
 						}
@@ -172,7 +173,7 @@ export const actions = {
 					id: user.id
 				},
 				data: {
-					my_courses: {
+					pinned_courses: {
 						disconnect: {
 							code: courseCode
 						}
