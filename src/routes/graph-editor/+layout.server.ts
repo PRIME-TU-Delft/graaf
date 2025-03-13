@@ -1,4 +1,5 @@
 import prisma from '$lib/server/db/prisma.js';
+import type { User } from '@prisma/client';
 import { redirect } from '@sveltejs/kit';
 
 // This is to test the connection to the database
@@ -11,6 +12,7 @@ export const load = async ({ locals }) => {
 
 	return {
 		session,
+		user: session.user as User,
 		testConnection: prisma.program.findFirst()
 	};
 };

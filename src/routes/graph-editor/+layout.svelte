@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
+	import NavigationBar from '$lib/components/NavigationBar.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import ChevronRight from 'lucide-svelte/icons/chevron-right';
 	import { toast } from 'svelte-sonner';
 
 	let { data, children } = $props();
@@ -34,24 +34,9 @@
 
 <Toaster closeButton />
 
-<nav
-	class="fixed top-0 z-10 flex w-full items-center justify-between bg-blue-100/80 px-4 py-2 text-2xl text-blue-900 backdrop-blur-sm backdrop-saturate-200"
->
-	<h1 class="flex items-center gap-2 p-2">
-		<span class="font-bold">PRIME</span>
-		<ChevronRight class="size-4" />
-		<span>Graph</span>
-	</h1>
+<NavigationBar user={data.user} />
 
-	{#if data.session?.user}
-		<!-- TODO: make fancy dropdown -->
-		<form action="/auth/signout" method="POST">
-			<Button type="submit">Log-out</Button>
-		</form>
-	{/if}
-</nav>
-
-<main class="pt-12">
+<main class="pt-4">
 	{@render children()}
 </main>
 
