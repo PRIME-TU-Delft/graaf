@@ -30,7 +30,6 @@ class NodeToolbox {
 	}
 
 	static create(selection: NodeSelection, graph: GraphD3) {
-
 		// Node attributes
 		selection
 			.attr('id', (node) => node.id)
@@ -62,7 +61,8 @@ class NodeToolbox {
 
 		// Drag behaviour
 		selection.call(
-			d3.drag<SVGGElement, NodeData>()
+			d3
+				.drag<SVGGElement, NodeData>()
 				.filter(() => NodeToolbox.allowNodeDrag(graph))
 				.on('start', function () {
 					const selection = d3.select<SVGGElement, NodeData>(this);
@@ -102,7 +102,6 @@ class NodeToolbox {
 	}
 
 	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = false) {
-		
 		// Raise nodes
 		selection.raise();
 
@@ -130,8 +129,8 @@ class NodeToolbox {
 
 	static updateHighlight(selection: NodeSelection, graph: GraphD3) {
 		selection.each(function (node) {
-			const highlight = graph.lecture?.domains.includes(node) || 
-							  graph.lecture?.present_nodes.includes(node);
+			const highlight =
+				graph.lecture?.domains.includes(node) || graph.lecture?.present_nodes.includes(node);
 
 			d3.select(this).attr('filter', highlight ? 'url(#highlight)' : null);
 		});

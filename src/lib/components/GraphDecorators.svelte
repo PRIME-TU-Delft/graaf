@@ -20,7 +20,12 @@
 			<Accordion.Content>
 				{#each graphD3.data.domain_nodes as domain}
 					<div class="flex w-full items-center justify-between gap-1">
-						<div class="size-4" style:background={settings.COLORS[domain.style]}></div>
+						<div
+							class="size-4"
+							style:background={domain.style == 'DEFAULT'
+								? '#ffffff'
+								: settings.COLORS[domain.style]}
+						></div>
 						<span> {domain.text} </span>
 					</div>
 				{/each}

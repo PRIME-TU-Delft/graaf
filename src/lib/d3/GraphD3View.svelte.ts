@@ -29,7 +29,7 @@ class GraphViewState {
 	isLectures() {
 		return this.view === GraphView.lectures;
 	}
-	
+
 	toLectures() {
 		this.view = GraphView.lectures;
 	}

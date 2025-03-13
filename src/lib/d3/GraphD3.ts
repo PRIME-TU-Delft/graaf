@@ -1,4 +1,3 @@
-
 import * as d3 from 'd3';
 import * as settings from '$lib/settings';
 
@@ -12,16 +11,16 @@ import { TransitionToolbox } from './TransitionToolbox';
 import { graphState } from './GraphD3State.svelte';
 import { graphView, GraphView } from './GraphD3View.svelte';
 
-import type { 
-	PrismaSubjectPayload, 
-	GraphData, 
-	LectureData, 
-	DefsSelection, 
-	EdgeData, 
-	GroupSelection, 
-	NodeData, 
-	PrismaGraphPayload, 
-	SVGSelection 
+import type {
+	PrismaSubjectPayload,
+	GraphData,
+	LectureData,
+	DefsSelection,
+	EdgeData,
+	GroupSelection,
+	NodeData,
+	PrismaGraphPayload,
+	SVGSelection
 } from './types';
 
 export class GraphD3 {
@@ -151,9 +150,7 @@ export class GraphD3 {
 		if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 
 		// Update highlights
-		this.content
-			.selectAll<SVGGElement, NodeData>('.node')
-			.call(NodeToolbox.updateHighlight, this);
+		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.updateHighlight, this);
 	}
 
 	zoomIn() {
@@ -254,7 +251,6 @@ export class GraphD3 {
 		// Extract domain edge data
 		for (const source of data.domains) {
 			for (const target of source.targetDomains) {
-
 				// Get source and target nodes
 				const source_node = domain_map.get(source.id);
 				const target_node = domain_map.get(target.id);
@@ -274,7 +270,7 @@ export class GraphD3 {
 		// Extract subject data
 		const subject_map = new Map<number, NodeData>();
 		for (const subject of data.subjects) {
-			let domain_node = undefined
+			let domain_node = undefined;
 			if (subject.domainId) {
 				domain_node = domain_map.get(subject.domainId);
 				if (domain_node === undefined) {
@@ -302,7 +298,6 @@ export class GraphD3 {
 		const reverse_edge_map = new Map<number, EdgeData[]>();
 		for (const source of data.subjects) {
 			for (const target of source.targetSubjects) {
-
 				// Get source and target nodes
 				const source_node = subject_map.get(source.id);
 				const target_node = subject_map.get(target.id);
@@ -337,7 +332,6 @@ export class GraphD3 {
 
 				// Add edge to graph and edge map
 				graph.subject_edges.push(edge);
-
 			}
 		}
 
@@ -353,11 +347,9 @@ export class GraphD3 {
 			};
 
 			for (const subject of lecture.subjects) {
-
 				// Get subject node
 				const subject_node = subject_map.get(subject.id);
-				if (subject_node === undefined)
-					throw new Error('Invalid graph data'); // Occurs when a lecture has non-existent subjects
+				if (subject_node === undefined) throw new Error('Invalid graph data'); // Occurs when a lecture has non-existent subjects
 				lecture_data.present_nodes.push(subject_node);
 				lecture_data.nodes.push(subject_node);
 
@@ -392,5 +384,4 @@ export class GraphD3 {
 
 		return graph;
 	}
-
 }

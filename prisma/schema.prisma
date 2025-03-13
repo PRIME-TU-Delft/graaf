@@ -1,194 +1,193 @@
-
 generator client {
-	provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-	provider = "postgresql"
-	url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
-	USER
-	ADMIN
+  USER
+  ADMIN
 }
 
 model User {
-	id					String		@id @default(cuid())
-	role				UserRole	@default(USER)
-	nickname			String?
-	firstName			String?
-	lastName			String?
-	email				String		@unique
-	emailVerified		DateTime?
-	image				String?
+  id            String    @id @default(cuid())
+  role          UserRole  @default(USER)
+  nickname      String?
+  firstName     String?
+  lastName      String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
 
-	accounts			Account[]
-	sessions			Session[]
+  accounts Account[]
+  sessions Session[]
 
-	program_editors		Program[]	@relation("ProgramEditorRelation")
-	program_admins		Program[]	@relation("ProgramAdminRelation")
-	course_editors		Course[]	@relation("CourseEditorRelation")
-	course_admins		Course[]	@relation("CourseAdminRelation")
-	pinned_courses		Course[]	@relation("PinnedCourse")
+  program_editors Program[] @relation("ProgramEditorRelation")
+  program_admins  Program[] @relation("ProgramAdminRelation")
+  course_editors  Course[]  @relation("CourseEditorRelation")
+  course_admins   Course[]  @relation("CourseAdminRelation")
+  pinned_courses  Course[]  @relation("PinnedCourse")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
-	userId				String
-	type				String
-	provider			String
-	providerAccountId	String
-	refresh_token		String?
-	access_token		String?
-	expires_at			Int?
-	token_type			String?
-	scope				String?
-	id_token			String?
-	session_state		String?
-	
-	user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-	@@id([provider, providerAccountId])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([provider, providerAccountId])
 }
 
 model Session {
-	sessionToken		String		@unique
-	userId				String
-	expires				DateTime
-	user				User		@relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationToken {
-	identifier			String
-	token				String
-	expires				DateTime
+  identifier String
+  token      String
+  expires    DateTime
 
-	@@id([identifier, token])
+  @@id([identifier, token])
 }
 
 model Program {
-	id					Int			@id @default(autoincrement())
-	name				String
+  id   Int    @id @default(autoincrement())
+  name String
 
-	courses				Course[]	@relation("ProgramCourse")
-	editors				User[]		@relation("ProgramEditorRelation")
-	admins				User[]		@relation("ProgramAdminRelation")
+  courses Course[] @relation("ProgramCourse")
+  editors User[]   @relation("ProgramEditorRelation")
+  admins  User[]   @relation("ProgramAdminRelation")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum CourseType {
-	COURSE
-	SANDBOX
+  COURSE
+  SANDBOX
 }
 
 model Course {
-	code				String		@id @unique
-	type				CourseType	@default(COURSE)
-	name				String
-	isArchived			Boolean		@default(false)
+  code       String     @id @unique
+  type       CourseType @default(COURSE)
+  name       String
+  isArchived Boolean    @default(false)
 
-	programs			Program[]	@relation("ProgramCourse")
-	graphs				Graph[]		@relation("CourseGraph")
-	editors				User[]		@relation("CourseEditorRelation")
-	admins				User[]		@relation("CourseAdminRelation")
-	pinnedBy			User[]		@relation("PinnedCourse")
+  programs Program[] @relation("ProgramCourse")
+  graphs   Graph[]   @relation("CourseGraph")
+  editors  User[]    @relation("CourseEditorRelation")
+  admins   User[]    @relation("CourseAdminRelation")
+  pinnedBy User[]    @relation("PinnedCourse")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Graph {
-	id					Int			@id @default(autoincrement())
-	name				String
-	courseId			String
+  id       Int    @id @default(autoincrement())
+  name     String
+  courseId String
 
-	course				Course		@relation("CourseGraph", fields: [courseId], references: [code])
-	domains				Domain[]	@relation("GraphDomain")
-	subjects			Subject[]	@relation("GraphSubject")
-	lectures			Lecture[]	@relation("GraphLecture")
+  course   Course    @relation("CourseGraph", fields: [courseId], references: [code])
+  domains  Domain[]  @relation("GraphDomain")
+  subjects Subject[] @relation("GraphSubject")
+  lectures Lecture[] @relation("GraphLecture")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-	@@unique([courseId, name])
+  @@unique([courseId, name])
 }
 
 enum DomainStyle {
-	PROSPEROUS_RED
-	ENERGIZING_ORANGE
-	SUNNY_YELLOW
-	ELECTRIC_GREEN
-	CONFIDENT_TURQUOISE
-	MYSTERIOUS_BLUE
-	MAJESTIC_PURPLE
-	POWERFUL_PINK
-	NEUTRAL_GRAY
-	SERIOUS_BROWN
+  PROSPEROUS_RED
+  ENERGIZING_ORANGE
+  SUNNY_YELLOW
+  ELECTRIC_GREEN
+  CONFIDENT_TURQUOISE
+  MYSTERIOUS_BLUE
+  MAJESTIC_PURPLE
+  POWERFUL_PINK
+  NEUTRAL_GRAY
+  SERIOUS_BROWN
 }
 
 model Domain {
-	id					Int			@id @default(autoincrement())
-	name				String
-	style				DomainStyle?
-	order 				Int	// Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
-	x 					Int			@default(0)
-	y 					Int			@default(0)
-	graphId				Int
+  id      Int          @id @default(autoincrement())
+  name    String
+  style   DomainStyle?
+  order   Int // Domains is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+  x       Int          @default(0)
+  y       Int          @default(0)
+  graphId Int
 
-	graph				Graph		@relation("GraphDomain", fields: [graphId], references: [id], onDelete: Cascade)
-	subjects			Subject[]	@relation("DomainSubject")
-	sourceDomains		Domain[]	@relation("DomainRelation")
-	targetDomains		Domain[]	@relation("DomainRelation")
+  graph         Graph     @relation("GraphDomain", fields: [graphId], references: [id], onDelete: Cascade)
+  subjects      Subject[] @relation("DomainSubject")
+  sourceDomains Domain[]  @relation("DomainRelation")
+  targetDomains Domain[]  @relation("DomainRelation")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-	@@unique([name, graphId])
+  @@unique([name, graphId])
 }
 
 model Subject {
-	id					Int			@id @default(autoincrement())
-	name				String		@default("")
-	order				Int // Subjects is a SORTABLE ARRAY this order makes sure this order is perserved on reload
-	x					Int			@default(0)
-	y					Int			@default(0)
-	graphId				Int
-	domainId			Int?
+  id       Int    @id @default(autoincrement())
+  name     String @default("")
+  order    Int // Subjects is a SORTABLE ARRAY this order makes sure this order is perserved on reload
+  x        Int    @default(0)
+  y        Int    @default(0)
+  graphId  Int
+  domainId Int?
 
-	graph				Graph		@relation("GraphSubject", fields: [graphId], references: [id], onDelete: Cascade)
-	domain				Domain?		@relation("DomainSubject", fields: [domainId], references: [id])
-	lectures			Lecture[]	@relation("LectureSubject")
-	sourceSubjects		Subject[]	@relation("SubjectRelation")
-	targetSubjects		Subject[]	@relation("SubjectRelation")
+  graph          Graph     @relation("GraphSubject", fields: [graphId], references: [id], onDelete: Cascade)
+  domain         Domain?   @relation("DomainSubject", fields: [domainId], references: [id])
+  lectures       Lecture[] @relation("LectureSubject")
+  sourceSubjects Subject[] @relation("SubjectRelation")
+  targetSubjects Subject[] @relation("SubjectRelation")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-	@@unique([name, domainId])
+  @@unique([name, domainId])
 }
 
 model Lecture {
-	id					Int			@id @default(autoincrement())
-	name				String		@default("")
-	order				Int
-	graphId				Int
+  id      Int    @id @default(autoincrement())
+  name    String @default("")
+  order   Int
+  graphId Int
 
-	graph				Graph		@relation("GraphLecture", fields: [graphId], references: [id], onDelete: Cascade)
-	subjects			Subject[]	@relation("LectureSubject")
+  graph    Graph     @relation("GraphLecture", fields: [graphId], references: [id], onDelete: Cascade)
+  subjects Subject[] @relation("LectureSubject")
 
-	createdAt			DateTime	@default(now())
-	updatedAt			DateTime	@updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-	@@unique([name, graphId])
+  @@unique([name, graphId])
 }

@@ -18,7 +18,7 @@ class GraphState {
 	isTransitioning() {
 		return this.state === 'TRANSITIONING';
 	}
-	
+
 	toTransitioning() {
 		this.state = 'TRANSITIONING';
 	}

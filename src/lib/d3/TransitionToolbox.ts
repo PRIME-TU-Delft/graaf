@@ -1,4 +1,3 @@
-
 import * as d3 from 'd3';
 import * as settings from '$lib/settings';
 import { BackgroundToolbox } from './BackgroundToolbox';
@@ -9,10 +8,7 @@ import { NodeToolbox } from './NodeToolbox';
 import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
 
-import type {
-	EdgeData,
-	NodeData,
-} from './types';
+import type { EdgeData, NodeData } from './types';
 
 // -----------------------------> Classes
 
@@ -35,7 +31,12 @@ export class TransitionToolbox {
 		}
 	}
 
-	private static setContent(graph: GraphD3, nodes: NodeData[], edges: EdgeData[], callback?: () => void) {
+	private static setContent(
+		graph: GraphD3,
+		nodes: NodeData[],
+		edges: EdgeData[],
+		callback?: () => void
+	) {
 		if (nodes.length + edges.length === 0) return this.clearContent(graph, callback);
 
 		// Update Nodes
@@ -75,10 +76,7 @@ export class TransitionToolbox {
 			.data(edges, (edge) => edge.id)
 			.join(
 				function (enter) {
-					return enter
-						.append('line')
-						.call(EdgeToolbox.create)
-							.style('opacity', 0);
+					return enter.append('line').call(EdgeToolbox.create).style('opacity', 0);
 				},
 
 				function (update) {
@@ -100,9 +98,7 @@ export class TransitionToolbox {
 			.style('opacity', 1);
 
 		// Update simulation
-		graph.simulation
-			.nodes(nodes)
-			.force('link', d3.forceLink(edges));
+		graph.simulation.nodes(nodes).force('link', d3.forceLink(edges));
 
 		// Post-transition
 		if (callback) {
@@ -112,8 +108,12 @@ export class TransitionToolbox {
 		}
 	}
 
-	private static moveContent(graph: GraphD3, nodes: NodeData[], transform: (node: NodeData) => void, callback?: () => void) {
-
+	private static moveContent(
+		graph: GraphD3,
+		nodes: NodeData[],
+		transform: (node: NodeData) => void,
+		callback?: () => void
+	) {
 		// Buffer node positions
 		const buffers = nodes.map((node) => ({ node, x: node.x, y: node.y }));
 
@@ -167,14 +167,14 @@ export class TransitionToolbox {
 
 		const height = Math.max(past.length, present.length, future.length);
 		const dx = x - (3 * settings.LECTURE_COLUMN_WIDTH) / 2;
-		const dy = y - (
-				settings.LECTURE_HEADER_HEIGHT +
+		const dy =
+			y -
+			(settings.LECTURE_HEADER_HEIGHT +
 				height * settings.NODE_HEIGHT +
-				(height + 1) * settings.LECTURE_PADDING
-			) / 2;
+				(height + 1) * settings.LECTURE_PADDING) /
+				2;
 
 		return (node: NodeData) => {
-
 			// Set past node positions to the right column
 			if (past?.includes(node)) {
 				const index = past.indexOf(node);
@@ -315,13 +315,18 @@ export class TransitionToolbox {
 		this.moveContent(graph, graph.lecture.nodes, this.domainTransform);
 
 		// Transition content to lecture positions, then update background
-		this.moveContent(graph, graph.lecture.nodes, this.lectureTransform(graph, transform.x, transform.y), () => {
-			BackgroundToolbox.lecture(graph);
+		this.moveContent(
+			graph,
+			graph.lecture.nodes,
+			this.lectureTransform(graph, transform.x, transform.y),
+			() => {
+				BackgroundToolbox.lecture(graph);
 
-			// Cleanup
-			graphState.toIdle();
-			graphView.toLectures();
-		});
+				// Cleanup
+				graphState.toIdle();
+				graphView.toLectures();
+			}
+		);
 	}
 
 	static subjectsToDomains(graph: GraphD3) {
@@ -357,13 +362,18 @@ export class TransitionToolbox {
 
 		// Fade in new content, then move to lecture positions, then update background
 		this.setContent(graph, lecture.nodes, lecture.edges, () => {
-			this.moveContent(graph, lecture.nodes, this.lectureTransform(graph, transform.x, transform.y), () => {
-				BackgroundToolbox.lecture(graph);
+			this.moveContent(
+				graph,
+				lecture.nodes,
+				this.lectureTransform(graph, transform.x, transform.y),
+				() => {
+					BackgroundToolbox.lecture(graph);
 
-				// Cleanup
-				graphState.toIdle();
-				graphView.toLectures();
-			});
+					// Cleanup
+					graphState.toIdle();
+					graphView.toLectures();
+				}
+			);
 		});
 	}
 
@@ -379,7 +389,11 @@ export class TransitionToolbox {
 		// Snap camera and content to new pov - as the camera might be at (0, 0) at this time
 		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
 		CameraToolbox.panCamera(graph, transform.x, transform.y);
-		this.moveContent(graph, graph.lecture.nodes, this.lectureTransform(graph, transform.x, transform.y));
+		this.moveContent(
+			graph,
+			graph.lecture.nodes,
+			this.lectureTransform(graph, transform.x, transform.y)
+		);
 
 		// Update background and zoom out to new pov
 		BackgroundToolbox.grid(graph);
@@ -407,7 +421,11 @@ export class TransitionToolbox {
 		// Snap camera and content to new pov - as the camera might be at (0, 0) at this time
 		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
 		CameraToolbox.panCamera(graph, transform.x, transform.y);
-		this.moveContent(graph, graph.lecture.nodes, this.lectureTransform(graph, transform.x, transform.y));
+		this.moveContent(
+			graph,
+			graph.lecture.nodes,
+			this.lectureTransform(graph, transform.x, transform.y)
+		);
 
 		// Set new background and zoom out to new pov
 		BackgroundToolbox.grid(graph);

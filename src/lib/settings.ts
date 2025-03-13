@@ -90,8 +90,7 @@ export const COLORS = {
 	MAJESTIC_PURPLE: '#ae5171',
 	POWERFUL_PINK: '#f87089',
 	NEUTRAL_GRAY: '#91999f',
-	SERIOUS_BROWN: '#563d29',
-	DEFAULT: '#ffffff'
+	SERIOUS_BROWN: '#563d29'
 };
 
 export const COLOR_KEYS = Object.keys(COLORS) as (keyof typeof COLORS)[];

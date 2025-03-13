@@ -80,7 +80,7 @@ type GraphData = {
 // Abstraction for domains and subjects
 type NodeData = {
 	id: string;
-	style: (keyof typeof settings.NODE_STYLES);
+	style: keyof typeof settings.NODE_STYLES;
 	text: string;
 	x: number;
 	y: number;
