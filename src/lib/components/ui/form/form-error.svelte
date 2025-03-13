@@ -1,10 +1,8 @@
-<script lang="ts" generics="T extends Record<string, unknown>, M = any">
-	import * as FormPrimitive from 'formsnap';
-	import type { WithoutChild } from 'bits-ui';
+<script lang="ts" generics="T extends Record<string, unknown>, M = unknown">
 	import { cn } from '$lib/utils.js';
-	import type { SuperForm } from 'sveltekit-superforms';
-	import { fromStore } from 'svelte/store';
 	import type { Snippet } from 'svelte';
+	import { fromStore } from 'svelte/store';
+	import type { SuperForm } from 'sveltekit-superforms';
 
 	let {
 		class: className,
@@ -23,7 +21,7 @@
 </script>
 
 <div class={cn('text-sm font-medium text-destructive', className)} {...restProps}>
-	{#each errors as error}
+	{#each errors as error (error.path)}
 		{#if error.path == '_errors' || error.path == ''}
 			{#if children}
 				{@render children()}

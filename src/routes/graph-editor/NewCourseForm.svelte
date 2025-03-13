@@ -58,7 +58,7 @@
 				<Command.Input autofocus placeholder="Search code..." class="h-9" />
 				<Command.Empty>No code found.</Command.Empty>
 				<Command.Group>
-					{#each courseCodes as code}
+					{#each courseCodes as code (code)}
 						<Command.Item
 							value={code}
 							onSelect={() => {

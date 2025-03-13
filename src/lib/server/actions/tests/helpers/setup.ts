@@ -116,7 +116,7 @@ async function linkDomains(domainIn: Domain, domainOut: Domain) {
 }
 
 async function linkSubjectToDomain(subject: Subject, domain: Domain) {
-	const addSubjectToDomain = await prisma.subject.update({
+	await prisma.subject.update({
 		where: { id: subject.id },
 		data: {
 			domain: { connect: { id: domain.id } }
@@ -175,8 +175,8 @@ beforeEach(async () => {
 
 	const users = await createUsers();
 	const programs = await createPrograms(users);
-	const _ = await createCourses(programs);
 
+	await createCourses(programs);
 	await createGraph('GraphOne', 'CS101');
 	await createGraph('GraphTwo', 'CS201');
 	await createGraph('GraphThree', 'CS301');

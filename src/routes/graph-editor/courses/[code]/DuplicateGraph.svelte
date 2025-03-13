@@ -164,7 +164,7 @@
 					<Command.Input autofocus placeholder="Search course..." class="h-9" />
 					<Command.Empty>No course found.</Command.Empty>
 					<Command.Group>
-						{#each selectableCourses as course}
+						{#each selectableCourses as course (course.code)}
 							<Command.Item
 								value={course.code + ' ' + course.name}
 								onSelect={() => {

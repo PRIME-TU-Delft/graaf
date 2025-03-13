@@ -62,7 +62,7 @@
 				<Command.Input autofocus placeholder="Search subjects..." class="h-9" />
 				<Command.Empty>No subject found.</Command.Empty>
 				<Command.Group>
-					{#each subjects as subject}
+					{#each subjects as subject (subject.id)}
 						<Command.Item
 							value={subject.id.toString()}
 							onSelect={() => {

@@ -12,10 +12,8 @@
 	const { courses }: Props = $props();
 
 	let open = $state(false);
-	let value = $state('');
+	let value = $state(''); // eslint-disable-line @typescript-eslint/no-unused-vars
 	let triggerRef = $state<HTMLButtonElement>(null!);
-
-	const selectedValue = $derived(courses.find((f) => f.name === value));
 
 	// MARK: - Enhance
 	// We want to refocus the trigger button when the user selects
@@ -45,7 +43,7 @@
 			<Command.List>
 				<Command.Empty>No course found.</Command.Empty>
 				<Command.Group>
-					{#each courses as course}
+					{#each courses as course (course.code)}
 						<Command.Item
 							value={course.name}
 							onSelect={() => {

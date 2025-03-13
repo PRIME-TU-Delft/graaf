@@ -1,5 +1,9 @@
 import { fail } from '@sveltejs/kit';
-import type { FormPathLeavesWithErrors, SuperValidated } from 'sveltekit-superforms';
+import type {
+	FormPathLeavesWithErrors,
+	SuperValidated,
+	ValidationErrors
+} from 'sveltekit-superforms';
 
 /**
  * This code is directly copied from the sveltekit-superforms repo
@@ -8,13 +12,13 @@ import type { FormPathLeavesWithErrors, SuperValidated } from 'sveltekit-superfo
  * we will replace this with the original code
  */
 
-type PathData = {
-	parent: any;
-	key: string;
-	value: any;
+type PathData<T extends object> = {
+	parent: T;
+	key: keyof T;
+	value: T[keyof T];
 	path: (string | number | symbol)[];
 	isLeaf: boolean;
-	set: (value: any) => 'skip';
+	set: (value: T[keyof T]) => 'skip';
 };
 
 function setPath<T extends object>(parent: T, key: keyof T, value: T[keyof T]): 'skip' {
@@ -25,8 +29,8 @@ function setPath<T extends object>(parent: T, key: keyof T, value: T[keyof T]): 
 function traversePath<T extends object>(
 	obj: T,
 	realPath: (string | number | symbol)[],
-	modifier?: (data: PathData) => undefined | unknown | void
-): PathData | undefined {
+	modifier?: (data: PathData<T>) => undefined | unknown | void
+): PathData<T> | undefined {
 	if (!realPath.length) return undefined;
 	const path = [realPath[0]];
 	let parent = obj;
@@ -35,7 +39,7 @@ function traversePath<T extends object>(
 		const value = modifier
 			? modifier({
 					parent,
-					key: String(key),
+					key: String(key) as keyof T,
 					value: parent[key],
 					path: path.map((p) => String(p)),
 					isLeaf: false,
@@ -50,7 +54,7 @@ function traversePath<T extends object>(
 	const key = realPath[realPath.length - 1];
 	return {
 		parent,
-		key: String(key),
+		key: String(key) as keyof T,
 		value: parent[key as keyof T],
 		path: realPath.map((p) => String(p)),
 		isLeaf: true,
@@ -88,12 +92,15 @@ export function setError<
 		.filter((p) => p);
 
 	const leaf = traversePath(form.errors, realPath, ({ parent, key, value }) => {
-		if (value === undefined) parent[key] = {};
+		if (value === undefined) return undefined;
 		return parent[key];
 	});
+
 	if (leaf) {
-		leaf.parent[leaf.key] =
+		const errors =
 			Array.isArray(leaf.value) && !options.overwrite ? leaf.value.concat(errArr) : errArr;
+
+		leaf.parent[leaf.key] = errors as ValidationErrors<T>['_errors' | typeof leaf.key];
 	}
 
 	return fail(options.status ?? 400, { form });

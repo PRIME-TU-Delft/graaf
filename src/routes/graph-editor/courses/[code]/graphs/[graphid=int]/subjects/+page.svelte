@@ -95,7 +95,7 @@
 							variant="outline"
 							onclick={() => toast.warning('Not implemented')}
 						>
-							{'None'}
+							None
 						</Button>
 					{/if}
 				</Table.Cell>

@@ -15,7 +15,7 @@ describe('New Program', () => {
 		const form = await mockForm({ name: 'new-program' }, programSchema);
 		expect(form.valid).toBe(true);
 
-		const response = await ProgramActions.newProgram(event, form);
+		await ProgramActions.newProgram(event, form);
 
 		// Retreive the program from the database
 		const program = await prisma.program.findFirst({
@@ -56,7 +56,7 @@ describe('New Course', () => {
 			);
 			expect(form.valid).toBe(true);
 
-			const response = await ProgramActions.newCourse(user, form);
+			await ProgramActions.newCourse(user, form);
 
 			const program = await prisma.program.findFirst({
 				where: { name: 'ProgramTwo' },
@@ -108,7 +108,7 @@ describe('Link Course to Program', () => {
 			name: newCourse.name
 		});
 
-		const response = await ProgramActions.addCourseToProgram(user, formData);
+		await ProgramActions.addCourseToProgram(user, formData);
 
 		// Retreive the program from the database
 		const program = await prisma.program.findFirst({

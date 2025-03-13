@@ -62,7 +62,7 @@
 				<Command.Input autofocus placeholder="Search domains..." class="h-9" />
 				<Command.Empty>No domain found.</Command.Empty>
 				<Command.Group>
-					{#each domains as domain}
+					{#each domains as domain (domain.id)}
 						<Command.Item
 							value={domain.id.toString()}
 							onSelect={() => {

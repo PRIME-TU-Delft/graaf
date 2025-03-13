@@ -23,7 +23,7 @@ describe('CreateGraph', () => {
 			);
 			expect(form.valid).toBe(true);
 
-			const response = await GraphActions.addGraphToCourse(user, form);
+			await GraphActions.addGraphToCourse(user, form);
 
 			const newCourse = await prisma.course.findFirst({
 				where: { code: courseAdminCourse!.code },
@@ -49,7 +49,7 @@ describe('CreateGraph', () => {
 		);
 		expect(form.valid).toBe(true);
 
-		const response = await GraphActions.addGraphToCourse(courseEditorUser, form);
+		await GraphActions.addGraphToCourse(courseEditorUser, form);
 
 		const newCourse = await prisma.course.findFirst({
 			where: { code: courseEditorCourse!.code },

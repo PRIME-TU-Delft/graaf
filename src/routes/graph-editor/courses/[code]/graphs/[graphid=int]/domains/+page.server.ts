@@ -12,6 +12,7 @@ import {
 import type { ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = async () => {
+export const load: ServerLoad = async () => {
 	return {
 		newDomainForm: await superValidate(zod(domainSchema)),
 		deleteDomainForm: await superValidate(zod(deleteDomainSchema)),

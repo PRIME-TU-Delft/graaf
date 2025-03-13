@@ -6,7 +6,7 @@ import { error } from '@sveltejs/kit';
 
 import type { OIDCConfig } from '@auth/sveltekit/providers';
 
-interface SurfConextProfile extends Record<string, any> {
+interface SurfConextProfile extends Record<string, string> {
 	nickname: string;
 	firstName: string;
 	lastName: string;

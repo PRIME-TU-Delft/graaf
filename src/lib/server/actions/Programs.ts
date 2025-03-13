@@ -102,7 +102,7 @@ export class ProgramActions {
 					}
 				}
 			});
-		} catch (e) {
+		} catch {
 			return setError(form, 'name', 'Unauthorized');
 		}
 

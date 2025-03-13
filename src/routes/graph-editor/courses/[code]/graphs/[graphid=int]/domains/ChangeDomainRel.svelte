@@ -23,7 +23,7 @@
 
 	const { graph, domain, outDomain }: Props = $props();
 
-	let popupOpen = $state(false);
+	let popupOpen = $state(false); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 	const form = superForm((page.data as PageData).changeDomainRelForm, {
 		id: 'changeDomainRelForm' + useId(),
@@ -40,7 +40,7 @@
 				);
 
 				if (hasCycles) throw new Error('Cycle detected');
-			} catch (e) {
+			} catch {
 				toast.error('This change would create a cycle in the graph.');
 				cancel();
 				return;
