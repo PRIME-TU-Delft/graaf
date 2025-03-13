@@ -1,5 +1,5 @@
-import * as d3 from 'd3';
 import * as settings from '$lib/settings';
+import * as d3 from 'd3';
 
 import { BackgroundToolbox } from './BackgroundToolbox';
 import { CameraToolbox } from './CameraToolbox';
@@ -12,12 +12,11 @@ import { graphState } from './GraphD3State.svelte';
 import { graphView, GraphView } from './GraphD3View.svelte';
 
 import type {
-	PrismaSubjectPayload,
-	GraphData,
-	LectureData,
 	DefsSelection,
 	EdgeData,
+	GraphData,
 	GroupSelection,
+	LectureData,
 	NodeData,
 	PrismaGraphPayload,
 	SVGSelection

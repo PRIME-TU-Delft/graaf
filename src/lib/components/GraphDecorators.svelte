@@ -18,7 +18,7 @@
 		<Accordion.Item class="border-none" value="item-1">
 			<Accordion.Trigger class="p-0">Domain Legend</Accordion.Trigger>
 			<Accordion.Content>
-				{#each graphD3.data.domain_nodes as domain}
+				{#each graphD3.data.domain_nodes as domain (domain.id)}
 					<div class="flex w-full items-center justify-between gap-1">
 						<div
 							class="size-4"
