@@ -4,11 +4,11 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
+	import type { courseSchema } from '$lib/zod/courseSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
-	import type { courseSchema } from '$lib/zod/programCourseSchema';
+	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
 
 	type NewCourseFormProps = {
 		program: Program & { courses: Course[] } & {

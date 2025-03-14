@@ -2,11 +2,12 @@ import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import { courseSchema, programSchema } from '$lib/zod/programCourseSchema.js';
 import type { Course, User } from '@prisma/client';
 import { fail, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
+import { courseSchema } from '$lib/zod/courseSchema.js';
+import { programSchema } from '$lib/zod/programSchema.js';
 
 export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });

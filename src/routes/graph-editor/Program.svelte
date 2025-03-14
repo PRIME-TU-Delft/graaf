@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Button from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import type { courseSchema } from '$lib/zod/courseSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import Settings from 'lucide-svelte/icons/settings';
 	import { type Infer, type SuperValidated } from 'sveltekit-superforms';

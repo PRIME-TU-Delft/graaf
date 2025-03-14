@@ -2,7 +2,7 @@ import { ProgramActions } from '$lib/server/actions';
 import { hasProgramPermissions } from '$lib/server/actions/Programs';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
-import { courseSchema } from '$lib/zod/programCourseSchema';
+import { courseSchema } from '$lib/zod/courseSchema';
 import {
 	deleteProgramSchema,
 	editProgramSchema,

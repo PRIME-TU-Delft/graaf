@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import { courseSchema } from '$lib/zod/courseSchema';
 	import type { Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';

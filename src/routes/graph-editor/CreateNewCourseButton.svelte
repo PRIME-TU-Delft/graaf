@@ -2,12 +2,12 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
+	import { hasProgramPermissions } from '$lib/utils/permissions';
+	import { courseSchema } from '$lib/zod/courseSchema';
 	import type { Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
-	import { hasProgramPermissions } from '$lib/utils/permissions';
 
 	type Props = {
 		courseForm: SuperValidated<Infer<typeof courseSchema>>;

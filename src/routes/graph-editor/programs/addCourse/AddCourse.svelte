@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import { courseSchema } from '$lib/zod/programCourseSchema';
+	import type { courseSchema } from '$lib/zod/courseSchema';
 	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { onMount } from 'svelte';
