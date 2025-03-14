@@ -5,6 +5,7 @@
 	import type { PageData } from './$types';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 	import EditGraph from './EditGraph.svelte';
+	import { cn } from '$lib/utils';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -25,7 +26,10 @@
 {#if data.graphSchema != undefined && data.course != null}
 	{@const hasAtLeastCourseEditPermissions = hasCoursePermissions(data.user, data.course)}
 	<section
-		class="mx-auto my-12 grid max-w-4xl gap-4 p-4 {data.graphs.length > 0 ? 'grid-cols-2' : ''}"
+		class={cn([
+			'mx-auto my-12 grid max-w-4xl gap-4 p-4',
+			data.graphs.length > 0 ? 'grid-cols-1 sm:grid-cols-2' : ''
+		])}
 	>
 		{#if hasAtLeastCourseEditPermissions}
 			<CreateNewGraphButton form={data.graphSchema} course={data.course} />
@@ -34,7 +38,7 @@
 		<!-- MARK: GRAPHS -->
 		{#each data.graphs as graph (graph.id)}
 			<a
-				class="group grid grid-cols-2 items-center gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
+				class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
 				href="{data.course.code}/graphs/{graph.id}"
 			>
 				<div class="grow">

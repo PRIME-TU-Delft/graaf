@@ -248,4 +248,34 @@ describe('Remove edge is sound', () => {
 		expect(a.targetDomains.length).toBe(0);
 		expect(validator.hasEdge(a, b)).toBe(false);
 	});
+
+	describe('Teun graph insane', () => {
+		const a = dummyDomain('a', 0);
+		const b = dummyDomain('b', 1);
+		const c = dummyDomain('c', 2);
+		const d = dummyDomain('d', 3);
+		const e = dummyDomain('e', 4);
+		const f = dummyDomain('f', 5);
+		const g = dummyDomain('g', 6);
+
+		addConnection(a, c);
+		addConnection(c, b);
+		addConnection(c, e);
+		addConnection(e, d);
+		addConnection(d, b);
+		addConnection(e, g);
+		addConnection(g, f);
+		addConnection(f, d);
+		addConnection(b, a);
+
+		const graph1 = dummyGraph([a, b, c, d, e, f, g]);
+		const validator1 = new GraphValidator(graph1);
+
+		test('has cycles is true', () => {
+			const cycle = validator1.hasCycle();
+
+			expect(cycle?.source.id).toBe(c.id);
+			expect(cycle?.target.id).toBe(b.id);
+		});
+	});
 });

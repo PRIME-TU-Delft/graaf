@@ -6,6 +6,7 @@
 	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
 	import Program from './Program.svelte';
 	import SearchCourses from './SearchCourses.svelte';
+	import { goto } from '$app/navigation';
 
 	const { data, form } = $props();
 
@@ -14,6 +15,10 @@
 	$effect(() => {
 		// When add 'course to program' form is submitted with an error
 		if (form?.error) toast.error(form.error);
+
+		// When you acces a page you don't have access to, you get redirected to the home page with an error message
+		// onDismiss is used to redirect to the home page when the toast is dismissed
+		if (data?.error) toast.error(data.error, { onDismiss: () => goto('/') });
 	});
 </script>
 
@@ -37,9 +42,9 @@
 			bind:value={accordionOpen}
 		>
 			<Accordion.Item value="accordion">
-				<Accordion.Trigger class="text-xl font-bold hover:no-underline"
-					>My pinned courses</Accordion.Trigger
-				>
+				<Accordion.Trigger class="text-xl font-bold hover:no-underline">
+					My pinned courses
+				</Accordion.Trigger>
 				<Accordion.Content>
 					<CourseGrid courses={data.pinnedCourses} user={data.user} />
 				</Accordion.Content>

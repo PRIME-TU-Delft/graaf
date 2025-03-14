@@ -1,120 +1,102 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Popover from '$lib/components/ui/popover';
-	import { cn } from '$lib/utils';
-	import { useId } from 'bits-ui';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
-	import { tick } from 'svelte';
-	import { type Infer, type SuperForm } from 'sveltekit-superforms';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import type { courseSchema } from '$lib/zod/courseSchema';
+	import type { Course, Program, User } from '@prisma/client';
+	import { useId } from 'bits-ui';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+	import CreateNewCourseButton from './CreateNewCourseButton.svelte';
 
-	type Props = {
-		form: SuperForm<Infer<typeof courseSchema>>;
-		programId: string;
+	type NewCourseFormProps = {
+		program: Program & { courses: Course[] } & {
+			editors: User[];
+			admins: User[];
+		};
+		user: User;
+		courses: Promise<Course[]>;
+		courseForm: SuperValidated<Infer<typeof courseSchema>>;
 	};
 
-	const { form, programId }: Props = $props();
-	const { form: formData, enhance } = form;
-
-	let courseCodes: string[] = [];
+	const { program, user, courses, courseForm }: NewCourseFormProps = $props();
 
 	const triggerId = useId();
 
-	// We want to refocus the trigger button when the user selects
-	// an item from the list so users can continue navigating the
-	// rest of the form with the keyboard.
-	function closeAndFocusTrigger(triggerId: string) {
-		open = false;
-		tick().then(() => {
-			document.getElementById(triggerId)?.focus();
-		});
-	}
+	let openNewCourse = $state(false); // Popover state
+	let courseValue = $state(''); // Input value
 
-	let open = $state(false);
+	// Select out the courses that are not in the program yet
+	const programCourseSet = $derived(new Set(program.courses.map((c) => c.code)));
 </script>
 
-<Form.Field {form} name="code" class="flex flex-col">
-	<Popover.Root bind:open>
-		<Form.Control id={triggerId}>
-			{#snippet children({ props })}
-				<Form.Label>Code</Form.Label>
-				<Popover.Trigger
-					class={cn(buttonVariants({ variant: 'outline' }), 'justify-between')}
-					role="combobox"
-					{...props}
-				>
-					{courseCodes.find((f) => f === $formData.code) ?? 'Select code'}
-					<ChevronsUpDown class="opacity-50" />
-				</Popover.Trigger>
-				<input hidden value={$formData.code} name={props.name} />
-			{/snippet}
-		</Form.Control>
-		<Popover.Content>
-			<Command.Root>
-				<Command.Input autofocus placeholder="Search code..." class="h-9" />
-				<Command.Empty>No code found.</Command.Empty>
-				<Command.Group>
-					{#each courseCodes as code (code)}
-						<Command.Item
-							value={code}
-							onSelect={() => {
-								$formData.code = code;
-								closeAndFocusTrigger(triggerId);
-							}}
-						>
-							{code}
-							<Check class={cn('ml-auto', code !== $formData.code && 'text-transparent')} />
-						</Command.Item>
-					{/each}
-				</Command.Group>
-			</Command.Root>
-		</Popover.Content>
-	</Popover.Root>
-	<Form.Description>Select an existing course code or create a new one.</Form.Description>
-	<Form.FieldErrors />
-</Form.Field>
+<Popover.Root bind:open={openNewCourse}>
+	<Popover.Trigger
+		id={triggerId}
+		class={buttonVariants({
+			variant: 'default'
+		})}
+	>
+		+ Add course
+	</Popover.Trigger>
+	<Popover.Content class="p-2" side="right" align="start">
+		<Command.Root>
+			{#await courses}
+				<CreateNewCourseButton {courseForm} {courseValue} {program} {user} />
+				<p>
+					Loading courses (I have added an artifical wait of 5s to test what would happen if this
+					loads slow)...
+				</p>
+			{:then courses}
+				{@const selectableCourses = courses.filter((c) => !programCourseSet.has(c.code))}
+				{#if selectableCourses.length == 0}
+					<CreateNewCourseButton
+						{courseForm}
+						{courseValue}
+						{program}
+						{user}
+						errorMessage="There are no more courses to link, and you do not have the permission to create a new course"
+					/>
+				{:else}
+					<Command.Input placeholder="Search courses..." bind:value={courseValue} />
+					<Command.List>
+						<Command.Empty class="p-2">
+							<CreateNewCourseButton
+								{courseForm}
+								{courseValue}
+								{program}
+								{user}
+								errorMessage="There are no more courses to link, and you do not have the permission to create a new course"
+							/>
+						</Command.Empty>
 
-<!-- @component
- Form for adding a new course to this program.
- It triggers an action that can be seen in +page.server.ts -->
+						<Command.Group>
+							{#each selectableCourses as course (course.code)}
+								<form action="?/add-course-to-program" method="POST" use:enhance>
+									<input type="hidden" name="program-id" value={program.id} />
+									<input type="hidden" name="code" value={course.code} />
+									<input type="hidden" name="name" value={course.name} />
 
-<form action="?/new-course" method="POST" use:enhance>
-	<Form.Field {form} name="programId" hidden>
-		<Form.Control>
-			{#snippet children({ props })}
-				<Input {...props} value={programId} />
-			{/snippet}
-		</Form.Control>
-		<Form.Description />
-		<Form.FieldErrors />
-	</Form.Field>
+									<Command.Item class="h-full w-full p-0" value={course.code + ' ' + course.name}>
+										<Form.Button variant="ghost" class="w-full justify-between px-2 py-0">
+											<span class="max-w-[70%] truncate">
+												{course.name}
+											</span>
 
-	<Form.Field {form} name="code">
-		<Form.Control>
-			{#snippet children({ props })}
-				<Form.Label for="code">Course code</Form.Label>
-
-				<Input {...props} bind:value={$formData['code']} />
-			{/snippet}
-		</Form.Control>
-		<Form.Description />
-		<Form.FieldErrors />
-	</Form.Field>
-
-	<Form.Field {form} name="name">
-		<Form.Control>
-			{#snippet children({ props })}
-				<Form.Label for="name">Course name</Form.Label>
-				<Input {...props} bind:value={$formData['name']} />
-			{/snippet}
-		</Form.Control>
-		<Form.Description />
-		<Form.FieldErrors />
-	</Form.Field>
-
-	<Form.Button class="float-right mt-4">Submit</Form.Button>
-</form>
+											<span class="max-w-[30%] truncate text-xs text-slate-800">
+												{course.code}
+											</span>
+										</Form.Button>
+									</Command.Item>
+								</form>
+							{/each}
+						</Command.Group>
+					</Command.List>
+				{/if}
+			{:catch}
+				<CreateNewCourseButton {courseForm} {courseValue} {program} {user} />
+			{/await}
+		</Command.Root>
+	</Popover.Content>
+</Popover.Root>

@@ -22,7 +22,7 @@
 	const { id, domains, form, formData }: Props = $props();
 
 	const triggerId = useId();
-	const shortName = $derived(id == 'sourceDomainId' ? 'in' : 'out');
+	const shortName = $derived(id == 'sourceDomainId' ? 'source' : 'target');
 	let popupOpen = $state(false);
 
 	function closeAndFocusTrigger(triggerId: string) {
@@ -42,7 +42,7 @@
 	<Popover.Root bind:open={popupOpen}>
 		<Form.Control id={triggerId}>
 			{#snippet children({ props })}
-				<div class="my-2 flex w-full items-center justify-between">
+				<div class="my-2 flex w-full flex-col justify-between gap-1">
 					<Form.Label for="name">Domain {shortName}:</Form.Label>
 
 					<Popover.Trigger

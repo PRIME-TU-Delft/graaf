@@ -1,4 +1,5 @@
 import { ProgramActions } from '$lib/server/actions/Programs.js';
+import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
 import type { Course, User } from '@prisma/client';
@@ -9,13 +10,10 @@ import { courseSchema } from '$lib/zod/courseSchema.js';
 import { programSchema } from '$lib/zod/programSchema.js';
 
 export const load = (async ({ url, locals }) => {
+	const user = await getUser({ locals });
+
 	try {
 		const search = url.searchParams.get('c')?.toLocaleLowerCase();
-
-		const session = await locals.auth();
-		const user = session?.user as User | undefined;
-
-		if (!user) throw new Error('No user found');
 
 		const programs = await prisma.program.findMany({
 			include: {
@@ -34,16 +32,8 @@ export const load = (async ({ url, locals }) => {
 						}
 					}
 				},
-				editors: {
-					select: {
-						id: true
-					}
-				},
-				admins: {
-					select: {
-						id: true
-					}
-				}
+				editors: true,
+				admins: true
 			},
 			orderBy: {
 				updatedAt: 'desc'
@@ -67,7 +57,7 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		// Check if we need pagination here
+		// TODO: Check if we need pagination here
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'
@@ -76,7 +66,7 @@ export const load = (async ({ url, locals }) => {
 
 		return {
 			pinnedCourses,
-			error: undefined,
+			error: url.searchParams.get('error'),
 			programs,
 			courses,
 			user,
@@ -88,7 +78,7 @@ export const load = (async ({ url, locals }) => {
 			pinnedCourses: [],
 			error: e instanceof Error ? e.message : `${e}`,
 			programs: [],
-			user: undefined,
+			user,
 			courses: emptyPrismaPromise([] as Course[]),
 			programForm: await superValidate(zod(programSchema)),
 			courseForm: await superValidate(zod(courseSchema))

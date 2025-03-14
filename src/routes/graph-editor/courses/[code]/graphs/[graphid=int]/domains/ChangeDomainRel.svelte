@@ -2,7 +2,6 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { cn } from '$lib/utils';
 	import { GraphValidator, type GraphType } from '$lib/validators/graphValidator';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain } from '@prisma/client';
@@ -85,12 +84,15 @@
 	<input type="hidden" name="oldSourceDomainId" value={domain.id} />
 	<input type="hidden" name="oldtargetDomainId" value={outDomain.id} />
 
-	<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
-	<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
+	<div class="flex items-center gap-4">
+		<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
+
+		<ArrowRight class="size-4" />
+
+		<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
+	</div>
 
 	<div class="flex items-center justify-between gap-1">
-		{@render relVisualizer()}
-
 		<Form.FormError class="w-full text-right" {form} />
 
 		<Button
@@ -111,28 +113,3 @@
 		</Form.FormButton>
 	</div>
 </form>
-
-{#snippet relVisualizer()}
-	<div class="flex items-center gap-1">
-		<div
-			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-				'border-red-500': isTheSameDomain
-			})}
-			class:opacity-50={$formData.sourceDomainId == 0}
-		>
-			{$formData.sourceDomainId || 'select in'}
-		</div>
-		<ArrowRight class="size-4" />
-		<div
-			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-				'border-red-500': isTheSameDomain
-			})}
-			class:opacity-50={$formData.targetDomainId == 0}
-		>
-			{$formData.targetDomainId || 'select out'}
-		</div>
-		{#if isTheSameDomain}
-			<p class="ml-1 text-xs text-red-500">Domains can't be the same.</p>
-		{/if}
-	</div>
-{/snippet}

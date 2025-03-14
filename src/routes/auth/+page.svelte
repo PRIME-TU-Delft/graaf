@@ -36,8 +36,7 @@
 	>
 		PRIME
 	</a>
-	(Programme for Inovation and Math Education) and is a tool for teachers to create and share course
-	graphs.
+	(PRogramme for Inovation in Math Education) and is a tool for teachers to create and share course graphs.
 
 	{#if data?.session?.user}
 		<p>Click on the button below to get started!</p>
