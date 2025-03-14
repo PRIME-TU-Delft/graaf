@@ -1,19 +1,24 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import {
+		getCoreRowModel,
+		getPaginationRowModel,
+		type ColumnDef,
+		type PaginationState,
+		type RowSelectionState,
+		type VisibilityState
+	} from '@tanstack/table-core';
+
 	import { Button } from '$lib/components/ui/button';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import type { Course, Program, User } from '@prisma/client';
-	import {
-		type ColumnDef,
-		getCoreRowModel,
-		getPaginationRowModel,
-		type PaginationState,
-		type RowSelectionState
-	} from '@tanstack/table-core';
-	import type { PageData } from '../$types';
+
 	import AddCourse from '../../../addCourse/AddCourse.svelte';
 	import UnlinkCourses from './UnlinkCourses.svelte';
+
+	import { hasProgramPermissions } from '$lib/utils/permissions';
+	import type { Course, Program, User } from '@prisma/client';
+	import type { PageData } from '../$types';
 
 	type DataTableProps = {
 		columns: ColumnDef<Course, Course>[];
@@ -29,6 +34,17 @@
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let rowSelection = $state<RowSelectionState>({});
 
+	const isAdmin = $derived(
+		hasProgramPermissions(user, program, {
+			programAdmin: true,
+			programEditor: false,
+			superAdmin: true
+		})
+	);
+
+	// Hide the "select" column if the user is not an admin, otherwise show all columns
+	const columnVisibility = $derived<VisibilityState>(isAdmin ? {} : { select: false });
+
 	const table = createSvelteTable({
 		get data() {
 			return data;
@@ -40,6 +56,9 @@
 			},
 			get rowSelection() {
 				return rowSelection;
+			},
+			get columnVisibility() {
+				return columnVisibility;
 			}
 		},
 		onPaginationChange: (updater) => {
@@ -64,7 +83,7 @@
 <div class="mt-2 flex items-center justify-between">
 	<h2 class="my-2">Courses</h2>
 
-	{#if Object.keys(rowSelection).length > 0}
+	{#if Object.entries(rowSelection).filter(([, selected]) => selected == true).length > 0}
 		<UnlinkCourses bind:rowSelection {program} />
 	{/if}
 </div>
