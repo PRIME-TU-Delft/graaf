@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import type { GraphType, SubjectType } from '$lib/validators/graphValidator';
-	import { deleteSubjectSchema } from '$lib/zod/domainSubjectSchema';
+	import { deleteSubjectSchema } from '$lib/zod/subjectSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
@@ -16,9 +16,7 @@
 
 	let { subject, graph }: Props = $props();
 
-	const relationCount = $derived(
-		subject.incommingSubjects.length + subject.outgoingSubjects.length
-	);
+	const relationCount = $derived(subject.sourceSubjects.length + subject.targetSubjects.length);
 
 	const form = superForm((page.data as PageData).deleteSubjectForm, {
 		id: 'delete-subject-form-' + subject.id,
@@ -37,8 +35,8 @@
 		// When the subject changes, update the form data
 		if (subject) {
 			$formData.subjectId = subject.id;
-			$formData.incommingSubjects = subject.incommingSubjects.map((d) => d.id);
-			$formData.outgoingSubjects = subject.outgoingSubjects.map((d) => d.id);
+			$formData.sourceSubjects = subject.sourceSubjects.map((d) => d.id);
+			$formData.targetSubjects = subject.targetSubjects.map((d) => d.id);
 		}
 	});
 
@@ -65,8 +63,8 @@
 <form class="text-xs" action="?/delete-subject" method="POST" use:enhance>
 	<input type="hidden" name="subjectId" value={$formData.subjectId} />
 
-	{@render formArray('incommingSubjects')}
-	{@render formArray('outgoingSubjects')}
+	{@render formArray('sourceSubjects')}
+	{@render formArray('targetSubjects')}
 
 	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
 
@@ -83,9 +81,9 @@
 	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
 </form>
 
-{#snippet formArray(name: 'incommingSubjects' | 'outgoingSubjects')}
+{#snippet formArray(name: 'sourceSubjects' | 'targetSubjects')}
 	<Form.Fieldset {form} {name} class="h-0">
-		{#each $formData[name] as _, i}
+		{#each $formData[name], i}
 			<Form.ElementField {form} name="{name}[{i}]">
 				<Form.Control>
 					{#snippet children({ props })}

@@ -1,10 +1,13 @@
 import prisma from '$lib/server/db/prisma';
-import { json, type RequestHandler } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
+
+import type { RequestHandler } from '@sveltejs/kit';
 
 /*
  * Reorder the domains in a graph
  * This can be a on a server call because it is not critical
  **/
+
 export const PATCH: RequestHandler = async ({ request }) => {
 	const needRearrange = (await request.json()) as {
 		domainId: number;

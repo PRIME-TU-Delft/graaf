@@ -132,7 +132,7 @@ export const actions = {
 					id: user.id
 				},
 				data: {
-					my_courses: {
+					pinned_courses: {
 						connect: {
 							code: courseCode
 						}
@@ -162,7 +162,7 @@ export const actions = {
 					id: user.id
 				},
 				data: {
-					my_courses: {
+					pinned_courses: {
 						disconnect: {
 							code: courseCode
 						}

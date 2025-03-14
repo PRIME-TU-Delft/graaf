@@ -44,7 +44,6 @@ export const programs = [
 	},
 	{
 		name: 'ProgramTwo',
-
 		courses: [courses[1], courses[2]]
 	},
 	{

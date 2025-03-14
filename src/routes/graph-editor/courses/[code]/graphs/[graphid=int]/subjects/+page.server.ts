@@ -1,10 +1,10 @@
 import { SubjectActions } from '$lib/server/actions';
-import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/domainSubjectSchema';
+import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/subjectSchema';
 import type { ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 
-export const load: ServerLoad = async ({ params }) => {
+export const load: ServerLoad = async () => {
 	return {
 		newSubjectForm: await superValidate(zod(subjectSchema)),
 		deleteSubjectForm: await superValidate(zod(deleteSubjectSchema)),

@@ -36,8 +36,8 @@
 	<ChangeDomainRel {graph} {domain} {outDomain} />
 
 	<form action="?/delete-domain-rel" method="POST" use:enhance>
-		<input type="hidden" name="domainInId" value={domain.id} />
-		<input type="hidden" name="domainOutId" value={outDomain.id} />
+		<input type="hidden" name="sourceDomainId" value={domain.id} />
+		<input type="hidden" name="targetDomainId" value={outDomain.id} />
 
 		<Form.Button variant="destructive" type="submit">Delete relationship</Form.Button>
 	</form>

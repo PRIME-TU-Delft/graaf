@@ -20,8 +20,8 @@
 	const subjectMapping = $derived.by(() => {
 		const map: { subject: Subject; outSubject: Subject }[] = [];
 		for (const subject of graph.subjects) {
-			for (const outSubject of subject.outgoingSubjects) {
-				map.push({ subject, outSubject });
+			for (const targetSubject of subject.targetSubjects) {
+				map.push({ subject, outSubject: targetSubject });
 			}
 		}
 		return map;
@@ -95,7 +95,7 @@
 							variant="outline"
 							onclick={() => toast.warning('Not implemented')}
 						>
-							{'None'}
+							None
 						</Button>
 					{/if}
 				</Table.Cell>

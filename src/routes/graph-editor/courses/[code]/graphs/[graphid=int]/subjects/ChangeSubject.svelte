@@ -9,7 +9,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import type { GraphType } from '$lib/validators/graphValidator';
-	import { subjectSchema } from '$lib/zod/domainSubjectSchema';
+	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
@@ -95,18 +95,18 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(subject.incommingSubjects, 'In')}
-			{@render relations(subject.outgoingSubjects, 'Out')}
+			{@render relations(subject.sourceSubjects, 'Source')}
+			{@render relations(subject.targetSubjects, 'Target')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>
 
-{#snippet relations(subjects: Subject[], title: 'In' | 'Out')}
+{#snippet relations(subjects: Subject[], title: 'Source' | 'Target')}
 	{#if subjects.length > 0}
 		<Menubar.Sub>
 			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>
 			<Menubar.SubContent class="ml-1 w-32 p-1">
-				{#each subjects as subject}
+				{#each subjects as subject (subject.id)}
 					<div class="flex flex-col items-center gap-1">
 						<Button
 							class="w-full font-mono text-xs"
@@ -169,7 +169,7 @@
 						<Command.Input autofocus placeholder="Search domain..." class="h-9" />
 						<Command.Empty>No domain found.</Command.Empty>
 						<Command.Group>
-							{#each graph.domains as domain}
+							{#each graph.domains as domain (domain.id)}
 								<Command.Item
 									value={domain.id.toString()}
 									onSelect={() => {

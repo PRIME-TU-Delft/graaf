@@ -1,6 +1,6 @@
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 
-export const load: ServerLoad = async ({ locals, url }) => {
+export const load: ServerLoad = async ({ locals }) => {
 	const session = await locals.auth();
 
 	if (!session?.user) {

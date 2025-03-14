@@ -119,7 +119,7 @@ export function mockUser(userType: UserType) {
 }
 
 export function mockLocals(userType: UserType) {
-	let user = mockUser(userType);
+	const user = mockUser(userType);
 
 	const session: Session = { user, expires: new Date().toDateString() };
 

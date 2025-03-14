@@ -182,14 +182,14 @@ export class GraphActions {
 			include: {
 				domains: {
 					include: {
-						incommingDomains: { select: { id: true } },
-						outgoingDomains: { select: { id: true } }
+						sourceDomains: { select: { id: true } },
+						targetDomains: { select: { id: true } }
 					}
 				},
 				subjects: {
 					include: {
-						incommingSubjects: { select: { id: true } },
-						outgoingSubjects: { select: { id: true } },
+						sourceSubjects: { select: { id: true } },
+						targetSubjects: { select: { id: true } },
 						domain: { select: { id: true } }
 					}
 				},
@@ -267,14 +267,14 @@ export class GraphActions {
 			return prisma.domain.update({
 				where: { id: newDomainId },
 				data: {
-					incommingDomains: {
-						connect: domain.incommingDomains.map((incommingDomain) => ({
-							id: domainMapping.get(incommingDomain.id)
+					sourceDomains: {
+						connect: domain.sourceDomains.map((sourceDomain) => ({
+							id: domainMapping.get(sourceDomain.id)
 						}))
 					},
-					outgoingDomains: {
-						connect: domain.outgoingDomains.map((outgoingDomain) => ({
-							id: domainMapping.get(outgoingDomain.id)
+					targetDomains: {
+						connect: domain.targetDomains.map((targetDomain) => ({
+							id: domainMapping.get(targetDomain.id)
 						}))
 					}
 				}
@@ -288,14 +288,14 @@ export class GraphActions {
 			return prisma.subject.update({
 				where: { id: newSubjectId },
 				data: {
-					incommingSubjects: {
-						connect: subject.incommingSubjects.map((incommingSubject) => ({
-							id: subjectMapping.get(incommingSubject.id)
+					sourceSubjects: {
+						connect: subject.sourceSubjects.map((sourceSubject) => ({
+							id: subjectMapping.get(sourceSubject.id)
 						}))
 					},
-					outgoingSubjects: {
-						connect: subject.outgoingSubjects.map((outgoingSubject) => ({
-							id: subjectMapping.get(outgoingSubject.id)
+					targetSubjects: {
+						connect: subject.targetSubjects.map((targetSubject) => ({
+							id: subjectMapping.get(targetSubject.id)
 						}))
 					},
 					domain: subject.domain

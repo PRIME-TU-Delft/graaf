@@ -16,7 +16,7 @@ async function createUsers() {
 	return await prisma.$transaction(createUsers);
 }
 
-export const PROGRAM_IDS = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()];
+export const PROGRAM_IDS = [1, 2, 3];
 async function createPrograms(users: User[]): Promise<Program[]> {
 	const p1 = prisma.program.create({
 		data: {
@@ -83,14 +83,14 @@ async function linkSubjects(subjectIn: Subject, subjectOut: Subject) {
 	const addOutToIn = prisma.subject.update({
 		where: { id: subjectIn.id },
 		data: {
-			outgoingSubjects: { connect: { id: subjectOut.id } }
+			targetSubjects: { connect: { id: subjectOut.id } }
 		}
 	});
 
 	const addInToOut = prisma.subject.update({
 		where: { id: subjectOut.id },
 		data: {
-			incommingSubjects: { connect: { id: subjectIn.id } }
+			sourceSubjects: { connect: { id: subjectIn.id } }
 		}
 	});
 
@@ -101,14 +101,14 @@ async function linkDomains(domainIn: Domain, domainOut: Domain) {
 	const addOutToIn = prisma.domain.update({
 		where: { id: domainIn.id },
 		data: {
-			outgoingDomains: { connect: { id: domainOut.id } }
+			targetDomains: { connect: { id: domainOut.id } }
 		}
 	});
 
 	const addInToOut = prisma.domain.update({
 		where: { id: domainOut.id },
 		data: {
-			incommingDomains: { connect: { id: domainIn.id } }
+			sourceDomains: { connect: { id: domainIn.id } }
 		}
 	});
 
@@ -116,7 +116,7 @@ async function linkDomains(domainIn: Domain, domainOut: Domain) {
 }
 
 async function linkSubjectToDomain(subject: Subject, domain: Domain) {
-	const addSubjectToDomain = await prisma.subject.update({
+	await prisma.subject.update({
 		where: { id: subject.id },
 		data: {
 			domain: { connect: { id: domain.id } }
@@ -175,8 +175,8 @@ beforeEach(async () => {
 
 	const users = await createUsers();
 	const programs = await createPrograms(users);
-	const _ = await createCourses(programs);
 
+	await createCourses(programs);
 	await createGraph('GraphOne', 'CS101');
 	await createGraph('GraphTwo', 'CS201');
 	await createGraph('GraphThree', 'CS301');

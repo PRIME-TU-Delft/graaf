@@ -7,8 +7,8 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { cn } from '$lib/utils';
-	import * as settings from '$lib/utils/settings';
-	import { domainSchema } from '$lib/zod/domainSubjectSchema';
+	import * as settings from '$lib/settings';
+	import { domainSchema } from '$lib/zod/domainSchema';
 	import type { Graph } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
@@ -96,7 +96,7 @@
 									<RadioGroup.Item
 										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
 										class="h-6 w-6"
-										value={''}
+										value=""
 										{...props}
 									/>
 									<Form.Label class="w-full cursor-pointer p-2">None</Form.Label>
@@ -104,7 +104,7 @@
 							{/snippet}
 						</Form.Control>
 
-						{#each domainColors as color}
+						{#each domainColors as color (color)}
 							<Form.Control>
 								{#snippet children({ props })}
 									<div class="flex items-center">

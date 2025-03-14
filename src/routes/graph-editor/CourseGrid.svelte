@@ -16,7 +16,7 @@
 <div
 	class="grid max-h-96 grid-cols-1 gap-1 overflow-auto p-2 sm:grid-cols-2 md:grid-cols-2 md:gap-2"
 >
-	{#each courses as course}
+	{#each courses as course (course.code)}
 		<a
 			href="graph-editor/courses/{course.code}"
 			class="flex w-full items-center justify-between rounded border-2 bg-white/90 p-2 transition-colors hover:border-blue-200 hover:bg-blue-50"

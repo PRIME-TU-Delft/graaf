@@ -4,7 +4,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover';
 	import { cn } from '$lib/utils';
-	import { subjectRelSchema } from '$lib/zod/domainSubjectSchema';
+	import { subjectRelSchema } from '$lib/zod/subjectSchema';
 	import type { Graph, Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
@@ -37,7 +37,7 @@
 	const { form: formData, enhance } = form;
 
 	const isTheSameSubject = $derived(
-		$formData.subjectInId == $formData.subjectOutId && $formData.subjectInId != 0
+		$formData.sourceSubjectId == $formData.targetSubjectId && $formData.sourceSubjectId != 0
 	);
 </script>
 
@@ -51,15 +51,15 @@
 
 			<input type="hidden" name="graphId" value={graph.id} />
 
-			<SubjectRelField id="subjectInId" subjects={graph.subjects} {form} {formData} />
-			<SubjectRelField id="subjectOutId" subjects={graph.subjects} {form} {formData} />
+			<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} {form} {formData} />
+			<SubjectRelField id="targetSubjectId" subjects={graph.subjects} {form} {formData} />
 
 			<Form.FormError {form} />
 
 			<div class="flex justify-between gap-1">
 				{@render relVisualizer()}
 				<Form.FormButton
-					disabled={isTheSameSubject || !$formData.subjectInId || !$formData.subjectOutId}
+					disabled={isTheSameSubject || !$formData.sourceSubjectId || !$formData.targetSubjectId}
 				>
 					Submit
 				</Form.FormButton>
@@ -74,18 +74,18 @@
 			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
 				'border-red-500': isTheSameSubject
 			})}
-			class:opacity-50={$formData.subjectInId == 0}
+			class:opacity-50={$formData.sourceSubjectId == 0}
 		>
-			{$formData.subjectInId || 'select in'}
+			{$formData.sourceSubjectId || 'select in'}
 		</div>
 		<ArrowRight class="size-4" />
 		<div
 			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
 				'border-red-500': isTheSameSubject
 			})}
-			class:opacity-50={$formData.subjectOutId == 0}
+			class:opacity-50={$formData.targetSubjectId == 0}
 		>
-			{$formData.subjectOutId || 'select out'}
+			{$formData.targetSubjectId || 'select out'}
 		</div>
 		{#if isTheSameSubject}
 			<p class="ml-1 text-xs text-red-500">Subjects can't be the same.</p>

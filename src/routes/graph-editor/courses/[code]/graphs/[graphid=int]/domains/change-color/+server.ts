@@ -1,11 +1,14 @@
 import prisma from '$lib/server/db/prisma';
+import { json } from '@sveltejs/kit';
+
 import type { DomainStyle } from '@prisma/client';
-import { json, type RequestHandler } from '@sveltejs/kit';
+import type { RequestHandler } from '@sveltejs/kit';
 
 /*
  * Add a color to a domain
  * This can be a on a server call because it is not critical
  **/
+
 export const PATCH: RequestHandler = async ({ request }) => {
 	const { domainId, color } = (await request.json()) as {
 		domainId: number;

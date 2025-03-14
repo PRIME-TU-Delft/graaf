@@ -2,11 +2,11 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import { programSchema } from '$lib/zod/programCourseSchema';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { programSchema } from '$lib/zod/programSchema';
 
 	type Props = {
 		form: SuperValidated<Infer<typeof programSchema>>;
