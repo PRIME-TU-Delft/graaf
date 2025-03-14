@@ -95,7 +95,7 @@ export class ProgramActions {
 					name: form.data.name
 				}
 			});
-		} catch (e) {
+		} catch {
 			return setError(form, '', 'Unauthorized');
 		}
 
@@ -131,7 +131,7 @@ export class ProgramActions {
 					}
 				}
 			});
-		} catch (e) {
+		} catch {
 			return setError(form, 'name', 'Unauthorized');
 		}
 
@@ -177,6 +177,8 @@ export class ProgramActions {
 		user: User,
 		formData: SuperValidated<Infer<typeof deleteProgramSchema>>
 	) {
+		if (!formData.valid) return setError(formData, '', 'Form is not valid');
+
 		try {
 			await prisma.program.delete({
 				where: {
