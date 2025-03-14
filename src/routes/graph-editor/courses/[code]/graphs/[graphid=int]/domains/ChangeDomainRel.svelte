@@ -2,7 +2,6 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { cn } from '$lib/utils';
 	import { GraphValidator, type GraphType } from '$lib/validators/graphValidator';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain } from '@prisma/client';
