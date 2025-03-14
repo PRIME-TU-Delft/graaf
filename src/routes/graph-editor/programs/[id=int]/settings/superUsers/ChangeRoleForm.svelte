@@ -17,7 +17,7 @@
 
 	let { userId, newRole, selected = false }: ChangeRoleProps = $props();
 
-	let popupOpen = $state(true);
+	let popupOpen = $state(true); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 	const form = superForm((page.data as PageData).editSuperUserForm, {
 		id: 'editSuperUserForm' + userId + '-' + newRole,

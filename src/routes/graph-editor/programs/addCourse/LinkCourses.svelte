@@ -26,7 +26,7 @@
 
 	const selectedCourses = $derived(
 		Object.entries(rowSelection)
-			.filter(([_, selected]) => selected)
+			.filter(([_, selected]) => selected) // eslint-disable-line @typescript-eslint/no-unused-vars
 			.map(([i]) => i)
 			.map(Number)
 			.map((i) => courses[i])
@@ -59,7 +59,7 @@
 			<input type="text" name="programId" value={program.id} hidden />
 
 			<Form.Fieldset {form} name="courseCodes" class="h-0">
-				{#each $formData.courseCodes as _, i}
+				{#each $formData.courseCodes, i}
 					<Form.ElementField {form} name="courseCodes[{i}]">
 						<Form.Control>
 							{#snippet children({ props })}

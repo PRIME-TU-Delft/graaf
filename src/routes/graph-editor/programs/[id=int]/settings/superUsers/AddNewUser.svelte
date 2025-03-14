@@ -131,7 +131,7 @@
 					<Command.Input autofocus placeholder="Search users..." class="h-9" />
 					<Command.Empty>No user found.</Command.Empty>
 					<Command.Group>
-						{#each nonSuperUser as user}
+						{#each nonSuperUser as user (user.id)}
 							<Command.Item
 								value={user.email + ' ' + user.nickname ||
 									user.firstName + ' ' + user.lastName ||

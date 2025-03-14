@@ -29,13 +29,13 @@
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each program.admins as admin}
+			{#each program.admins as admin (admin.id)}
 				<Table.Row>
 					<Table.Cell>{displayName(admin)}</Table.Cell>
 					<Table.Cell class="text-right">Admin</Table.Cell>
 				</Table.Row>
 			{/each}
-			{#each program.editors as editor}
+			{#each program.editors as editor (editor.id)}
 				<Table.Row>
 					<Table.Cell>{displayName(editor)}</Table.Cell>
 					<Table.Cell class="text-right">Editor</Table.Cell>

@@ -43,7 +43,7 @@
 		<Command.List
 			class="absolute left-0 top-12 max-h-96 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
 		>
-			{#each courses as course}
+			{#each courses as course (course.code)}
 				<Command.Item
 					class="h-full w-full p-2"
 					value={course.code + ' ' + course.name}

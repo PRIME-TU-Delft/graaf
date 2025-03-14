@@ -1,11 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
-	import type { PageData } from '../$types';
-	import ChangeRoleForm from './ChangeRoleForm.svelte';
 	import type { Program, User } from '@prisma/client';
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ChangeRoleForm from './ChangeRoleForm.svelte';
 
 	type ChangeRoleProps = {
 		userId: string;
