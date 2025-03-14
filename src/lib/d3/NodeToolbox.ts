@@ -96,9 +96,8 @@ class NodeToolbox {
 		);
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	static save(selection: NodeSelection) {
-		// TODO NOT IMPLEMENTED
+		console.log('Saving node,', selection.data());
 	}
 
 	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = false) {
