@@ -13,9 +13,10 @@
 		userId: string;
 		newRole: 'Admin' | 'Editor' | 'Revoke';
 		selected?: boolean;
+		disabled?: boolean;
 	};
 
-	let { userId, newRole, selected = false }: ChangeRoleProps = $props();
+	let { userId, newRole, selected = false, disabled = false }: ChangeRoleProps = $props();
 
 	let popupOpen = $state(true); // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -57,7 +58,7 @@
 
 		<Form.FormError {form} />
 		<Form.FormButton
-			disabled={$submitting}
+			disabled={$submitting || disabled}
 			loading={$delayed}
 			variant={newRole == 'Revoke' ? 'destructive' : 'outline'}
 			class="w-full justify-start"

@@ -206,6 +206,29 @@ export class ProgramActions {
 		const newRole = formData.data.role;
 		const userId = formData.data.userId;
 
+		const program = await prisma.program.findFirst({
+			where: {
+				id: formData.data.programId,
+				...hasProgramPermissions(user, { superAdmin: true, admin: true, editor: false })
+			},
+			include: {
+				admins: true
+			}
+		});
+
+		const currentRole = program?.admins.find((admin) => admin.id === userId) ? 'admin' : 'editor';
+
+		// If a users is changed to an editor, or revoked, we need to check there is more than one admin
+		if (newRole === 'editor' || (currentRole == 'admin' && newRole === 'revoke')) {
+			if (!program) return setError(formData, '', 'Unauthorized');
+
+			if (program.admins.length <= 1) {
+				if (newRole == 'revoke') return setError(formData, '', 'You cannot revoke the last admin');
+				if (newRole == 'editor')
+					return setError(formData, '', 'You cannot change the last admin to an editor');
+			}
+		}
+
 		function getData() {
 			switch (newRole) {
 				case 'admin':

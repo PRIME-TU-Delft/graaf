@@ -8,12 +8,12 @@
 	type ChangeRoleProps = {
 		userId: string;
 		currentRole: 'Admin' | 'Editor';
-		superUserCount: number;
+		superAdminCount: number;
 		program: Program & { admins: User[]; editors: User[] };
 		user: User;
 	};
 
-	let { userId, currentRole, superUserCount, program, user }: ChangeRoleProps = $props();
+	let { userId, currentRole, superAdminCount, program, user }: ChangeRoleProps = $props();
 </script>
 
 <!-- Only programAdmins and superUsers are allowed to cahnge roles, otherwise just show the role name -->
@@ -30,12 +30,17 @@
 				<Menubar.Sub>
 					<Menubar.SubTrigger>Change role</Menubar.SubTrigger>
 					<Menubar.SubContent class="ml-1 flex w-32 flex-col gap-2">
-						<ChangeRoleForm {userId} newRole="Editor" selected={currentRole == 'Editor'} />
+						<ChangeRoleForm
+							{userId}
+							newRole="Editor"
+							selected={currentRole == 'Editor'}
+							disabled={superAdminCount <= 1}
+						/>
 						<ChangeRoleForm {userId} newRole="Admin" selected={currentRole == 'Admin'} />
 					</Menubar.SubContent>
 				</Menubar.Sub>
 
-				{#if superUserCount > 1}
+				{#if superAdminCount > 1 || currentRole == 'Editor'}
 					<Menubar.Separator />
 
 					<!-- You are not the last user -->

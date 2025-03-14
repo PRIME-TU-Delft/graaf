@@ -56,8 +56,7 @@
 				renderComponent(ChangeRole, {
 					userId: row.original.id,
 					currentRole: row.original.programRole,
-					name: displayName(row.original),
-					superUserCount: users.length,
+					superAdminCount: program.admins.length,
 					program,
 					user
 				})
