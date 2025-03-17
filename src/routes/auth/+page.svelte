@@ -1,31 +1,26 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
-	import ChevronRight from 'lucide-svelte/icons/chevron-right';
+	import type { User } from '@prisma/client';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import TestUser from './TestUser.svelte';
 
 	const { data }: { data: PageData } = $props();
+
+	let testUsers: User[] = $state([]);
+
+	onMount(() => {
+		// If in netlify environment, fetch all test users
+		if (data.isInNetlify) {
+			fetch('./auth/get-all-testusers')
+				.then((res) => res.json())
+				.then((data) => {
+					testUsers = data;
+				});
+		}
+	});
 </script>
-
-<nav
-	class="fixed top-0 z-10 flex w-full items-center justify-between bg-blue-100 px-4 py-2 text-2xl text-blue-900"
->
-	<h1 class="flex items-center gap-2 p-2">
-		<span class="font-bold"> PRIME </span>
-		<ChevronRight class="size-4" />
-		<span>Graph</span>
-	</h1>
-
-	{#if data.session?.user}
-		<!-- TODO: make fancy dropdown -->
-		<form action="auth/signout" method="POST">
-			<Button type="submit">Log-out</Button>
-		</form>
-	{:else}
-		<form action="auth/signin" method="POST">
-			<Button type="submit">Sign-in</Button>
-		</form>
-	{/if}
-</nav>
 
 <section class="prose prose-lg mx-auto mt-24">
 	<h2>What is the course graph?</h2>
@@ -43,7 +38,16 @@
 		<Button href="/graph-editor">Start editing</Button>
 	{:else}
 		<p>Sign-in to get started!</p>
-		<form action="auth/signin" method="POST">
+
+		{#if data.isInNetlify}
+			<div class="space-y-2 p-2">
+				{#each testUsers as user}
+					<TestUser {user} />
+				{/each}
+			</div>
+		{/if}
+
+		<form action="auth/signin" method="POST" use:enhance>
 			<Button type="submit">Sign-in</Button>
 		</form>
 	{/if}
