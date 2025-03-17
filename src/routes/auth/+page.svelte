@@ -41,7 +41,7 @@
 
 		{#if data.isInNetlify}
 			<div class="space-y-2 p-2">
-				{#each testUsers as user}
+				{#each testUsers as user (user.id)}
 					<TestUser {user} />
 				{/each}
 			</div>
