@@ -35,7 +35,7 @@
 >
 	<ChangeDomainRel {graph} {domain} {outDomain} />
 
-	<form action="?/delete-domain-rel" method="POST" use:enhance onsubmit={console.log}>
+	<form action="?/delete-domain-rel" method="POST" use:enhance>
 		<input type="hidden" name="sourceDomainId" value={domain.id} />
 		<input type="hidden" name="targetDomainId" value={outDomain.id} />
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import type { Course, User } from '@prisma/client';
 	import Pin from 'lucide-svelte/icons/pin';
@@ -22,7 +23,7 @@
 		>
 			<div class="flex items-center gap-1">
 				{#if course.pinnedBy.some((u) => u.id == user?.id)}
-					<form action="?/unpin-course" method="post">
+					<form action="?/unpin-course" method="post" use:enhance>
 						<input type="text" name="courseCode" value={course.code} hidden />
 						<Button
 							onclick={(e) => e.stopPropagation()}
@@ -34,7 +35,7 @@
 						</Button>
 					</form>
 				{:else}
-					<form action="?/pin-course" method="post">
+					<form action="?/pin-course" method="post" use:enhance>
 						<input type="text" name="courseCode" value={course.code} hidden />
 						<Button
 							onclick={(e) => e.stopPropagation()}

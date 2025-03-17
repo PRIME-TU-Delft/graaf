@@ -2,9 +2,15 @@ import { setError } from '$lib/utils/setError';
 import { programSchema } from '$lib/zod/programSchema';
 import { courseSchema } from '$lib/zod/courseSchema';
 import type { User } from '@prisma/client';
-import { fail, type RequestEvent } from '@sveltejs/kit';
+import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from '../db/prisma';
+import type {
+	deleteProgramSchema,
+	editProgramSchema,
+	editSuperUserSchema,
+	linkingCoursesSchema
+} from '$lib/zod/superUserProgramSchema';
 
 type PermissionsOptions = {
 	admin: boolean;
@@ -75,6 +81,30 @@ export class ProgramActions {
 
 	/**
 	 * PERMISSIONS:
+	 * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
+	 */
+	static async editProgram(user: User, form: SuperValidated<Infer<typeof editProgramSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.program.update({
+				where: {
+					id: form.data.programId,
+					...hasProgramPermissions(user, { superAdmin: true, admin: true, editor: false })
+				},
+				data: {
+					name: form.data.name
+				}
+			});
+		} catch {
+			return setError(form, '', 'Unauthorized');
+		}
+
+		return { form };
+	}
+
+	/**
+	 * PERMISSIONS:
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#c1
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
@@ -85,7 +115,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: form.data.programId,
-					...hasProgramPermissions(user) // User is either an admin or editor or SUPER_ADMIN
+					...hasProgramPermissions(user) // All super users can create a new course
 				},
 				data: {
 					updatedAt: new Date(),
@@ -117,6 +147,7 @@ export class ProgramActions {
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
 	static async addCourseToProgram(user: User, formData: FormData) {
+		// TODO: maket this into a superform
 		const programId = formData.get('program-id') as number | null;
 		const courseCode = formData.get('code') as string | null;
 		const courseName = formData.get('name') as string | null;
@@ -141,6 +172,127 @@ export class ProgramActions {
 			});
 		} catch (e) {
 			return fail(500, { error: e instanceof Error ? e.message : `${e}` });
+		}
+	}
+
+	static async deleteProgram(
+		user: User,
+		formData: SuperValidated<Infer<typeof deleteProgramSchema>>
+	) {
+		if (!formData.valid) return setError(formData, '', 'Form is not valid');
+
+		try {
+			await prisma.program.delete({
+				where: {
+					id: formData.data.programId,
+					...hasProgramPermissions(user, { superAdmin: true, admin: false, editor: false })
+				}
+			});
+		} catch (e: unknown) {
+			return {
+				error: e instanceof Error ? e.message : `${e}`
+			};
+		}
+
+		throw redirect(303, '/');
+	}
+
+	static async editSuperUser(
+		user: User,
+		formData: SuperValidated<Infer<typeof editSuperUserSchema>>
+	) {
+		if (!formData.valid) return setError(formData, '', 'Form is not valid');
+
+		const newRole = formData.data.role;
+		const userId = formData.data.userId;
+
+		const program = await prisma.program.findFirst({
+			where: {
+				id: formData.data.programId,
+				...hasProgramPermissions(user, { superAdmin: true, admin: true, editor: false })
+			},
+			include: {
+				admins: true
+			}
+		});
+
+		const currentRole = program?.admins.find((admin) => admin.id === userId) ? 'admin' : 'editor';
+
+		// If a users is changed to an editor, or revoked, we need to check there is more than one admin
+		if (newRole === 'editor' || (currentRole == 'admin' && newRole === 'revoke')) {
+			if (!program) return setError(formData, '', 'Unauthorized');
+
+			if (program.admins.length <= 1) {
+				if (newRole == 'revoke') return setError(formData, '', 'You cannot revoke the last admin');
+				if (newRole == 'editor')
+					return setError(formData, '', 'You cannot change the last admin to an editor');
+			}
+		}
+
+		function getData() {
+			switch (newRole) {
+				case 'admin':
+					return {
+						admins: { connect: { id: userId } },
+						editors: { disconnect: { id: userId } }
+					};
+				case 'editor':
+					return {
+						editors: { connect: { id: userId } },
+						admins: { disconnect: { id: userId } }
+					};
+				case 'revoke':
+					return {
+						admins: { disconnect: { id: userId } },
+						editors: { disconnect: { id: userId } }
+					};
+			}
+		}
+
+		try {
+			await prisma.program.update({
+				where: {
+					id: formData.data.programId,
+					...hasProgramPermissions(user, {
+						superAdmin: true,
+						admin: true,
+						editor: false
+					})
+				},
+				data: getData()
+			});
+		} catch (e: unknown) {
+			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	static async linkCourses(
+		user: User,
+		formData: SuperValidated<Infer<typeof linkingCoursesSchema>>,
+		options: { link: boolean } = { link: true }
+	) {
+		if (!formData.valid) return setError(formData, '', 'form not valid');
+
+		function linkMode() {
+			const codes = formData.data.courseCodes.map((code) => ({ code }));
+			if (options.link) return { connect: codes };
+			else return { disconnect: codes };
+		}
+
+		try {
+			await prisma.program.update({
+				where: {
+					id: formData.data.programId,
+					...hasProgramPermissions(user, { admin: true, editor: false, superAdmin: true }) // Only admins can link/unlink courses
+				},
+				data: {
+					courses: {
+						...linkMode()
+					}
+				}
+			});
+		} catch {
+			return setError(formData, '', "You don't have permission to link/unlink courses");
 		}
 	}
 }
