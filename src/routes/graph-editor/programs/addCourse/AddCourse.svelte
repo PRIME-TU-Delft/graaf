@@ -53,18 +53,18 @@
 <DialogButton
 	open={dialogOpen}
 	button="Add course"
-	title="Link {hasAdminRights ? 'or create a new' : 'a'} course"
+	title="Create new course {hasAdminRights ? 'or link one' : ''}"
 	icon="plus"
 >
-	{#if hasAdminRights}
-		<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
+	<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
 
+	{#if hasAdminRights}
 		<div class="flex items-center gap-2 p-4">
 			<div class="h-1 w-full rounded-l bg-slate-300"></div>
 			<p class="text-nowrap font-medium text-slate-600">Or link existing</p>
 			<div class="h-1 w-full rounded-r bg-slate-300"></div>
 		</div>
-	{/if}
 
-	<LinkCourseDataTable bind:dialogOpen {columns} {data} {loading} {program} {linkCoursesForm} />
+		<LinkCourseDataTable bind:dialogOpen {columns} {data} {loading} {program} {linkCoursesForm} />
+	{/if}
 </DialogButton>

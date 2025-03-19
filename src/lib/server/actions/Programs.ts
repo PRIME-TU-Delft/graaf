@@ -115,7 +115,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: form.data.programId,
-					...hasProgramPermissions(user) // User is either an admin or editor or SUPER_ADMIN
+					...hasProgramPermissions(user) // All super users can create a new course
 				},
 				data: {
 					updatedAt: new Date(),
@@ -283,7 +283,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: formData.data.programId,
-					...hasProgramPermissions(user) // all super admins can unlink courses
+					...hasProgramPermissions(user, { admin: true, editor: false, superAdmin: true }) // Only admins can link/unlink courses
 				},
 				data: {
 					courses: {
@@ -291,8 +291,8 @@ export class ProgramActions {
 					}
 				}
 			});
-		} catch (e: unknown) {
-			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
+		} catch {
+			return setError(formData, '', "You don't have permission to link/unlink courses");
 		}
 	}
 }

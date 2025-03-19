@@ -1,10 +1,9 @@
 <script lang="ts">
-	import type { Program, User } from '@prisma/client';
-	import DataTable from './SuperUserDataTable.svelte';
-	import type { ColumnDef } from '@tanstack/table-core';
 	import { renderComponent } from '$lib/components/ui/data-table';
-	import { displayName } from '$lib/utils/displayUserName';
+	import type { Program, User } from '@prisma/client';
+	import type { ColumnDef } from '@tanstack/table-core';
 	import ChangeRole from './ChangeRole.svelte';
+	import DataTable from './SuperUserDataTable.svelte';
 
 	type ProgramAdminProps = {
 		user: User;

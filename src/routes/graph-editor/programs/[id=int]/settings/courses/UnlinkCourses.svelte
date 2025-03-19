@@ -67,5 +67,7 @@
 				<span>Unlinking courses...</span>
 			{/snippet}
 		</Form.FormButton>
+
+		<Form.FormError {form} />
 	</form>
 </div>
