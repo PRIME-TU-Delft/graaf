@@ -20,7 +20,7 @@
 >
 	<h1 class="m-0">{data.program.name}</h1>
 
-	{#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+	{#if hasProgramPermissions(data.user, data.program, 'ProgramAdmin')}
 		<DialogButton
 			bind:open={editProgramDialogOpen}
 			button="Edit program name"
@@ -56,7 +56,7 @@
 </section>
 
 <!-- Only a program admin or super admin is able to delete a program -->
-{#if hasProgramPermissions( data.user, data.program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+{#if hasProgramPermissions(data.user, data.program, 'OnlySuperAdmin')}
 	<section
 		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 	>

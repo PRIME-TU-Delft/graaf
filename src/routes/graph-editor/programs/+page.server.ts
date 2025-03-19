@@ -1,6 +1,5 @@
-import { redirect } from '@sveltejs/kit';
-import type { LayoutServerLoad } from '../$types';
+import { redirect, type ServerLoad } from '@sveltejs/kit';
 
-export const load: LayoutServerLoad = async () => {
+export const load: ServerLoad = async () => {
 	redirect(303, `/graph-editor`);
 };

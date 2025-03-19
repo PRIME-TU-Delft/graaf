@@ -25,13 +25,7 @@
 	let data: Course[] = $state([]);
 	let dialogOpen = $state(false);
 
-	const hasAdminRights = $derived(
-		hasProgramPermissions(user, program, {
-			programAdmin: true,
-			programEditor: false,
-			superAdmin: true
-		})
-	);
+	const hasAdminRights = $derived(hasProgramPermissions(user, program, 'ProgramAdmin'));
 
 	onMount(() => {
 		courses

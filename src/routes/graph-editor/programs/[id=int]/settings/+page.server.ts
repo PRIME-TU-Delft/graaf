@@ -1,5 +1,5 @@
 import { ProgramActions } from '$lib/server/actions';
-import { hasProgramPermissions } from '$lib/server/actions/Programs';
+import { whereHasProgramPermission } from '$lib/server/actions/Programs';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { courseSchema } from '$lib/zod/courseSchema';
@@ -23,7 +23,7 @@ export const load = (async ({ params, locals }) => {
 		const dbProgram = await prisma.program.findFirst({
 			where: {
 				id: programId,
-				...hasProgramPermissions(user) // is either a program editor, admin, or super user
+				...whereHasProgramPermission(user, 'ProgramAdminEditor') // is either a program editor, admin, or super user
 			},
 			include: {
 				courses: true,

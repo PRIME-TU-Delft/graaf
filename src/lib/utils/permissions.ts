@@ -11,57 +11,55 @@ type CoursePermissions = {
 	programs: ProgramsPermission[];
 };
 
-type CoursePermissionsOptions = {
-	courseAdmin: boolean;
-	courseEditor: boolean;
-	superAdmin: boolean;
-};
+export type ProgramPermissionsOptions = 'OnlySuperAdmin' | 'ProgramAdmin' | 'ProgramAdminEditor';
 
-type ProgramPermissionsOptions = {
-	programAdmin: boolean;
-	programEditor: boolean;
-	superAdmin: boolean;
-};
-
-export function hasCoursePermissions(
-	user: User,
-	course: CoursePermissions,
-	options: CoursePermissionsOptions = { courseAdmin: true, courseEditor: true, superAdmin: true }
-) {
-	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
-	if (options.superAdmin && user.role == 'ADMIN') return true;
-
-	// If no permissions are required, return true
-	if (!options.courseAdmin && !options.courseEditor) return true;
-
-	// Check if user is an editor/admin if that is required
-	if (options.courseEditor && course.editors?.some((editor) => editor.id === user.id)) return true;
-	if (options.courseAdmin && course.admins?.some((admin) => admin.id === user.id)) return true;
-
-	// Check if user is an editor/admin of a program that is linked to the course
-	for (const program of course.programs) {
-		if (program.editors?.some((editor) => editor.id === user.id)) return true;
-		if (program.admins?.some((admin) => admin.id === user.id)) return true;
-	}
-
-	return false;
-}
+export type CoursePermissionsOptions =
+	| ProgramPermissionsOptions
+	| 'CourseAdminORProgramAdminEditor'
+	| 'CourseAdminEditorORProgramAdminEditor';
 
 export function hasProgramPermissions(
 	user: User,
 	program: ProgramsPermission,
-	options: ProgramPermissionsOptions = { programAdmin: true, programEditor: true, superAdmin: true }
+	has: ProgramPermissionsOptions
 ) {
-	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
-	if (options.superAdmin && user.role == 'ADMIN') return true;
+	// If the user is a super-admin, they can edit any course. Thus no special where permission is required
+	if (user.role == 'ADMIN') return true;
+	else if (has === 'OnlySuperAdmin') return false;
 
-	// If no permissions are required, return true
-	if (!options.programAdmin && !options.programAdmin) return true;
+	const isProgramAdmin = program.admins?.some((admin) => admin.id === user.id) ?? false;
+	const isProgramEditor = program.editors?.some((editor) => editor.id === user.id) ?? false;
 
-	// Check if user is an editor/admin if that is required
-	if (options.programEditor && program.editors?.some((editor) => editor.id === user.id))
-		return true;
-	if (options.programAdmin && program.admins?.some((admin) => admin.id === user.id)) return true;
+	if (has == 'ProgramAdmin') return isProgramAdmin;
+	if (has == 'ProgramAdminEditor') return isProgramAdmin || isProgramEditor;
+}
+
+export function hasCoursePermissions(
+	user: User,
+	course: CoursePermissions,
+	has: CoursePermissionsOptions
+) {
+	// If the user is a super-admin, they can edit any course. Thus no special where permission is required
+	if (user.role == 'ADMIN') return true;
+	else if (has === 'OnlySuperAdmin') return false;
+
+	const isProgramAdmin = course.programs.some(
+		(program) => program.admins?.some((admin) => admin.id === user.id) ?? false
+	);
+	const isProgramEditor = course.programs.some(
+		(program) => program.editors?.some((editor) => editor.id === user.id) ?? false
+	);
+	const isCourseAdmin = course.admins?.some((admin) => admin.id === user.id) ?? false;
+	const isCourseEditor = course.editors?.some((editor) => editor.id === user.id) ?? false;
+
+	if (has == 'ProgramAdmin') return isProgramAdmin;
+	if (has == 'ProgramAdminEditor') return isProgramAdmin || isProgramEditor;
+
+	if (has == 'CourseAdminORProgramAdminEditor')
+		return isCourseAdmin || isProgramAdmin || isProgramEditor;
+
+	if (has == 'CourseAdminEditorORProgramAdminEditor')
+		return isCourseAdmin || isCourseEditor || isProgramAdmin || isProgramEditor;
 
 	return false;
 }
