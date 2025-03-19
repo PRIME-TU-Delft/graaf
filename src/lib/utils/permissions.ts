@@ -56,7 +56,7 @@ export function hasProgramPermissions(
 	if (options.superAdmin && user.role == 'ADMIN') return true;
 
 	// If no permissions are required, return true
-	if (!options.programAdmin && !options.programAdmin) return true;
+	if (!options.programAdmin && !options.programEditor) return true;
 
 	// Check if user is an editor/admin if that is required
 	if (options.programEditor && program.editors?.some((editor) => editor.id === user.id))

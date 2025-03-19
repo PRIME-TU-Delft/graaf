@@ -7,15 +7,17 @@
 	import type { User } from '@prisma/client';
 	import { Button } from './ui/button';
 	import LogOut from 'lucide-svelte/icons/log-out';
+	import { enhance } from '$app/forms';
 
 	type NavigationBarProps = {
-		user: User;
+		user?: User;
 	};
 
 	let { user }: NavigationBarProps = $props();
 
 	let urls = $derived.by(() => {
 		const allowedParts = [
+			'auth',
 			'graph-editor',
 			'courses',
 			'programs',
@@ -95,24 +97,26 @@
 		</Breadcrumb.List>
 	</Breadcrumb.Root>
 
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger>
-			<Avatar.Root
-				class="ring-0 ring-blue-500 transition-all focus-within:ring-2 hover:ring-2 focus:ring-2"
-			>
-				<Avatar.Image src={user.image} alt={displayName(user)} />
-				<Avatar.Fallback>
-					{displayName(user)
-						.split(' ')
-						.map((name) => name[0])
-						.join('')}
-				</Avatar.Fallback>
-			</Avatar.Root>
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Content align="end">
-			<form action="/auth/signout" method="POST">
-				<Button type="submit" variant="outline" class="w-full">Log-out <LogOut /></Button>
-			</form>
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
+	{#if user}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				<Avatar.Root
+					class="ring-0 ring-blue-500 transition-all focus-within:ring-2 hover:ring-2 focus:ring-2"
+				>
+					<Avatar.Image src={user.image} alt={displayName(user)} />
+					<Avatar.Fallback>
+						{displayName(user)
+							.split(' ')
+							.map((name) => name[0])
+							.join('')}
+					</Avatar.Fallback>
+				</Avatar.Root>
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end">
+				<form action="/auth/signout" method="POST" use:enhance>
+					<Button type="submit" variant="outline" class="w-full">Log-out <LogOut /></Button>
+				</form>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+	{/if}
 </nav>
