@@ -5,6 +5,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
  * Reorder the subjects in a graph
  * This can be a on a server call because it is not critical
  **/
+
 export const PATCH: RequestHandler = async ({ request }) => {
 	const needRearrange = (await request.json()) as {
 		subjectId: number;

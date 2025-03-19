@@ -55,7 +55,7 @@ export const load = (async ({ params, locals }) => {
 		};
 	} catch (e) {
 		if (e instanceof Error) throw redirect(303, `/graph-editor/?error=${e.message}`);
-		throw redirect(303, `/graph-editor`);
+		throw redirect(303, '/graph-editor');
 	}
 }) satisfies ServerLoad;
 
