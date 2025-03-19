@@ -38,7 +38,7 @@
 				};
 			});
 
-		const response = await fetch(`${graph.id}/subjects/reorder`, {
+		const response = await fetch('/api/subjects/reorder', {
 			method: 'PATCH',
 			body: JSON.stringify(needRearrange),
 			headers: { 'content-type': 'application/json' }

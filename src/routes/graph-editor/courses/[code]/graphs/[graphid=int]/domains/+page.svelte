@@ -68,7 +68,7 @@
 		const domain = course.graphs[0].domains[domainIndex];
 		domain.style = key;
 
-		const response = await fetch(`./domains/change-color`, {
+		const response = await fetch('/api/domains/change-color', {
 			method: 'PATCH',
 			body: JSON.stringify({ domainId: domain.id, color: key }),
 			headers: { 'content-type': 'application/json' }
@@ -92,7 +92,7 @@
 				};
 			});
 
-		const response = await fetch(`./domains/reorder`, {
+		const response = await fetch('/api/domains/reorder', {
 			method: 'PATCH',
 			body: JSON.stringify(needRearrange),
 			headers: { 'content-type': 'application/json' }

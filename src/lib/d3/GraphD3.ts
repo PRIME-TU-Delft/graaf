@@ -1,6 +1,7 @@
 import * as settings from '$lib/settings';
 import * as d3 from 'd3';
 
+import { NodeType } from './types';
 import { BackgroundToolbox } from './BackgroundToolbox';
 import { CameraToolbox } from './CameraToolbox';
 import { EdgeToolbox } from './EdgeToolbox';
@@ -235,6 +236,7 @@ export class GraphD3 {
 		for (const domain of data.domains) {
 			const node_data = {
 				id: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
+				type: NodeType.DOMAIN,
 				style: (domain.style ?? 'DEFAULT') as keyof typeof settings.NODE_STYLES,
 				text: domain.name,
 				x: domain.x,
@@ -259,7 +261,7 @@ export class GraphD3 {
 
 				// Add edge to graph
 				graph.domain_edges.push({
-					id: `domain-${source.id}-${target.id}`, // Unique edge id from source and target ids
+					id: 'domain-${source.id}-${target.id}', // Unique edge id from source and target ids
 					source: source_node,
 					target: target_node
 				});
@@ -279,6 +281,7 @@ export class GraphD3 {
 
 			const node_data = {
 				id: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
+				type: NodeType.SUBJECT,
 				style: domain_node?.style ?? 'DEFAULT',
 				text: subject.name,
 				parent: domain_node,
@@ -293,8 +296,8 @@ export class GraphD3 {
 		}
 
 		// Extract subject edge data
-		const forward_edge_map = new Map<number, EdgeData[]>();
-		const reverse_edge_map = new Map<number, EdgeData[]>();
+		const forward_edge_map = new Map<number, EdgeData[]>(); // Forward and reverse edges are mapped so lectures can find…
+		const reverse_edge_map = new Map<number, EdgeData[]>(); // …past and future subjects more easily
 		for (const source of data.subjects) {
 			for (const target of source.targetSubjects) {
 				// Get source and target nodes

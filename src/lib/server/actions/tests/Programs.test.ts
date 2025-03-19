@@ -27,7 +27,7 @@ describe('New Program', () => {
 	});
 
 	test.for(['programAdmin', 'programEditor', 'courseAdmin', 'courseEditor'] as UserType[])(
-		`%s user is not allowed to add new program`,
+		'%s user is not allowed to add new program',
 		async (role) => {
 			const event = { locals: mockLocals(role) } as RequestEvent;
 			const form = await mockForm({ name: 'new-program' }, programSchema);
