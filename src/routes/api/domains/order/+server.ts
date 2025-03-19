@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import prisma from '$lib/server/db/prisma';
 import { patchOrderSchema } from '../schemas';
-import { hasCoursePermissions } from '$lib/utils/permissions';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import { whereHasCoursePermission } from '$lib/server/actions/Courses';
