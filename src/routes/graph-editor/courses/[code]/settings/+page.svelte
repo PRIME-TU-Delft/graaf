@@ -2,10 +2,11 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
+	import EditCourseName from './EditCourseName.svelte';
 
 	let { data }: { data: PageData } = $props();
 
-	let editProgramDialogOpen = $state(false);
+	let editCourseDialogOpen = $state(false);
 </script>
 
 <section
@@ -15,19 +16,18 @@
 
 	{#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 		<DialogButton
-			bind:open={editProgramDialogOpen}
+			bind:open={editCourseDialogOpen}
 			button="Edit course name"
 			icon="edit"
 			title="Edit the name of the course"
 		>
-			Edit course name
-			<!-- <EditCourseName
-				program={data.program}
-				editProgramForm={data.editProgramForm}
+			<EditCourseName
+				course={data.course}
+				editCourseForm={data.editCourseForm}
 				onSuccess={() => {
-					editProgramDialogOpen = false;
+					editCourseDialogOpen = false;
 				}}
-			/> -->
+			/>
 		</DialogButton>
 	{/if}
 </section>

@@ -1,11 +1,15 @@
-import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import { CourseActions, whereHasCoursePermission } from '$lib/server/actions/Courses';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
+import { courseSchema } from '$lib/zod/courseSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import type { Actions } from './$types';
 
 export const load = (async ({ params, locals }) => {
 	try {
-		if (!params.code) throw Error('a program id is required');
+		if (!params.code) throw Error('a cousre code is required');
 		const courseCode = params.code;
 
 		const user = await getUser({ locals });
@@ -35,7 +39,8 @@ export const load = (async ({ params, locals }) => {
 		return {
 			course: dbCourse,
 			user,
-			allUsers
+			allUsers,
+			editCourseForm: await superValidate(zod(courseSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page
@@ -43,3 +48,10 @@ export const load = (async ({ params, locals }) => {
 		throw redirect(303, `/graph-editor`);
 	}
 }) satisfies ServerLoad;
+
+export const actions: Actions = {
+	'edit-course': async (event) => {
+		const form = await superValidate(event, zod(courseSchema));
+		return CourseActions.editProgram(await getUser(event), form);
+	}
+};

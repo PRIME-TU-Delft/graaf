@@ -1,5 +1,9 @@
 import type { CoursePermissionsOptions } from '$lib/utils/permissions';
+import { setError } from '$lib/utils/setError';
+import type { courseSchema } from '$lib/zod/courseSchema';
 import type { User } from '@prisma/client';
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
+import prisma from '../db/prisma';
 
 /**
  * Check if the user has permissions to edit the program
@@ -38,4 +42,30 @@ export function whereHasCoursePermission(user: User, has: CoursePermissionsOptio
 
 	hasPermission.push(hasCourseEditorPermission);
 	return { OR: hasPermission };
+}
+
+export class CourseActions {
+	/**
+	 * PERMISSIONS:
+	 * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
+	 */
+	static async editProgram(user: User, form: SuperValidated<Infer<typeof courseSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.course.update({
+				where: {
+					code: form.data.code,
+					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+				},
+				data: {
+					name: form.data.name
+				}
+			});
+		} catch {
+			return setError(form, '', 'Unauthorized');
+		}
+
+		return { form };
+	}
 }

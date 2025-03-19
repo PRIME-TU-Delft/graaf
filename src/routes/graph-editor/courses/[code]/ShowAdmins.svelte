@@ -19,7 +19,6 @@
 </script>
 
 <DialogButton
-	open={true}
 	title="Super Users for {course.name}"
 	description=""
 	icon="admins"
