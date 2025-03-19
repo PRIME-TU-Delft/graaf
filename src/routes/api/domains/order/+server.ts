@@ -14,7 +14,6 @@ import type { User } from '@prisma/client';
  **/
 
 export const PATCH: RequestHandler = async ({ request, locals }) => {
-
 	// Validate the request body
 	const body = await request.json();
 	const parsed = patchOrderSchema.safeParse(body);
@@ -27,18 +26,17 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
 	// Update the order of the domains
 	try {
-		const changes = parsed.data.changes.map(({ domainId, newOrder }) => {
+		const changes = parsed.data.map(({ domainId, newOrder }) => {
 			return prisma.domain.update({
 				where: {
 					id: domainId,
 					graph: {
 						course: {
-							code: parsed.data.courseCode,
-							...whereHasCoursePermission(user, "CourseAdminEditorORProgramAdminEditor")
+							...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 						}
 					}
 				},
-				data: { 
+				data: {
 					order: newOrder
 				}
 			});

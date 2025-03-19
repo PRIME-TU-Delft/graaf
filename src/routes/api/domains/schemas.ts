@@ -1,17 +1,13 @@
-
 import { z } from 'zod';
 import * as settings from '$lib/settings';
 
-export const patchOrderSchema = z.object({
-	courseCode: z.string(),
-	changes: z.array(
-		z.object({
-			domainId: z.number(),
-			oldOrder: z.number(),
-			newOrder: z.number()
-		})
-	)
-});
+export const patchOrderSchema = z.array(
+	z.object({
+		domainId: z.number(),
+		oldOrder: z.number(),
+		newOrder: z.number()
+	})
+);
 
 export const patchPositionSchema = z.array(
 	z.object({
@@ -23,6 +19,5 @@ export const patchPositionSchema = z.array(
 
 export const patchStyleSchema = z.object({
 	domainId: z.number(),
-	style: z.enum(settings.COLOR_KEYS as [string, ...string[]])
-			.nullable()
+	style: z.enum(settings.COLOR_KEYS as [string, ...string[]]).nullable()
 });

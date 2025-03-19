@@ -99,7 +99,7 @@
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update domain color, try again later!');
+			toast.error('Failed to update domain order, try again later!');
 			return;
 		}
 

@@ -99,7 +99,6 @@ class NodeToolbox {
 	}
 
 	static async save(selection: NodeSelection) {
-
 		// We are not guaranteed to select either all domains or all subjects, so we have two options:
 		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
 		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
@@ -107,12 +106,12 @@ class NodeToolbox {
 		// and this offloads some work from the server
 
 		// Group nodes by type
-		const domains = selection.filter(node => node.type === NodeType.DOMAIN).data();
-		const subjects = selection.filter(node => node.type === NodeType.SUBJECT).data();
+		const domains = selection.filter((node) => node.type === NodeType.DOMAIN).data();
+		const subjects = selection.filter((node) => node.type === NodeType.SUBJECT).data();
 
 		// Send API calls
-		const domainBody = domains.map(node => ({ domainId: node.id, x: node.x, y: node.y }));
-		const subjectBody = subjects.map(node => ({ subjectId: node.id, x: node.x, y: node.y }));
+		const domainBody = domains.map((node) => ({ domainId: node.id, x: node.x, y: node.y }));
+		const subjectBody = subjects.map((node) => ({ subjectId: node.id, x: node.x, y: node.y }));
 
 		const requests = [
 			fetch('/api/domains/position', {
@@ -126,10 +125,10 @@ class NodeToolbox {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(subjectBody)
 			})
-		]
+		];
 
 		const responses = await Promise.all(requests);
-		if (responses.some(response => !response.ok)) {
+		if (responses.some((response) => !response.ok)) {
 			toast.error('Failed to save node positions', { duration: 2000 });
 		}
 	}
