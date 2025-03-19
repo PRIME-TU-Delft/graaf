@@ -1,11 +1,13 @@
 import * as d3 from 'd3';
 import * as settings from '$lib/settings';
-import { EdgeToolbox } from './EdgeToolbox';
 
-import type { GraphD3 } from './GraphD3';
+import { EdgeToolbox } from './EdgeToolbox';
 import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
-import type { EdgeData, NodeData, NodeSelection } from './types';
+
+import type { GraphD3 } from './GraphD3';
+import { NodeType, type EdgeData, type NodeData, type NodeSelection } from './types';
+import { toast } from 'svelte-sonner';
 
 export { NodeToolbox };
 
@@ -97,7 +99,23 @@ class NodeToolbox {
 	}
 
 	static save(selection: NodeSelection) {
-		console.log('Saving node,', selection.data());
+		
+		let errors = 0;
+		selection.each(async function (node) {
+			const endpoint = node.type === NodeType.DOMAIN ? '/api/domains/position' : '/api/subjects/position';
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				body: JSON.stringify({ id: node.id, x: node.x, y: node.y }),
+				headers: { 'Content-Type': 'application/json' }
+			});
+
+			if (!response.ok) {
+				errors++;
+			}
+		});
+
+		const error = `Failed to save ${errors} node position${errors === 1 ? '' : 's'}`;
+		toast.error(error, { duration: 2000 });
 	}
 
 	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = false) {
