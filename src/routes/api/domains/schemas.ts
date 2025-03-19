@@ -2,13 +2,16 @@
 import { z } from 'zod';
 import * as settings from '$lib/settings';
 
-export const patchOrderSchema = z.array(
-	z.object({
-		domainId: z.number(),
-		oldOrder: z.number(),
-		newOrder: z.number()
-	})
-);
+export const patchOrderSchema = z.object({
+	courseCode: z.string(),
+	changes: z.array(
+		z.object({
+			domainId: z.number(),
+			oldOrder: z.number(),
+			newOrder: z.number()
+		})
+	)
+});
 
 export const patchPositionSchema = z.array(
 	z.object({

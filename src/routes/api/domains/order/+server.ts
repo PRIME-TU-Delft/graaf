@@ -1,8 +1,11 @@
 import { json } from '@sveltejs/kit';
 import prisma from '$lib/server/db/prisma';
 import { patchOrderSchema } from '../schemas';
+import { hasCoursePermissions } from '$lib/utils/permissions';
 
 import type { RequestHandler } from '@sveltejs/kit';
+import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import type { User } from '@prisma/client';
 
 /*
  * Reorder the domains in a graph
@@ -10,19 +13,34 @@ import type { RequestHandler } from '@sveltejs/kit';
  * and thus will never be critical
  **/
 
-export const PATCH: RequestHandler = async ({ request }) => {
+export const PATCH: RequestHandler = async ({ request, locals }) => {
 
 	// Validate the request body
 	const body = await request.json();
 	const parsed = patchOrderSchema.safeParse(body);
 	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
 
+	// Authenticate the request
+	const session = await locals.auth();
+	const user = session?.user as User | undefined;
+	if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+
 	// Update the order of the domains
 	try {
-		const changes = parsed.data.map(({ domainId, newOrder }) => {
+		const changes = parsed.data.changes.map(({ domainId, newOrder }) => {
 			return prisma.domain.update({
-				where: { id: domainId },
-				data: { order: newOrder }
+				where: {
+					id: domainId,
+					graph: {
+						course: {
+							code: parsed.data.courseCode,
+							...whereHasCoursePermission(user, "CourseAdminEditorORProgramAdminEditor")
+						}
+					}
+				},
+				data: { 
+					order: newOrder
+				}
 			});
 		});
 
