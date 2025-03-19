@@ -28,12 +28,12 @@ export const load = (async ({ params, locals }) => {
 						}
 					}
 				},
-				admins: { select: { id: true } },
-				editors: { select: { id: true } },
+				admins: true,
+				editors: true,
 				programs: {
 					include: {
-						admins: { select: { id: true } },
-						editors: { select: { id: true } }
+						admins: true,
+						editors: true
 					}
 				}
 			}

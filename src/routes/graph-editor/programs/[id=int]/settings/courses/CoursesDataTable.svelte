@@ -34,13 +34,7 @@
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let rowSelection = $state<RowSelectionState>({});
 
-	const isAdmin = $derived(
-		hasProgramPermissions(user, program, {
-			programAdmin: true,
-			programEditor: false,
-			superAdmin: true
-		})
-	);
+	const isAdmin = $derived(hasProgramPermissions(user, program, 'ProgramAdmin'));
 
 	// Hide the "select" column if the user is not an admin, otherwise show all columns
 	const columnVisibility = $derived<VisibilityState>(isAdmin ? {} : { select: false });

@@ -29,11 +29,12 @@
 		<h3 class="text-lg font-semibold text-blue-950">{program.name}</h3>
 
 		<div class="flex gap-2">
-			{#if hasProgramPermissions(user, program)}
+			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}
+				<!-- TODO: turn this into the new form -->
 				<NewCourseForm {program} {user} {courses} {courseForm} />
 			{/if}
 
-			{#if hasProgramPermissions(user, program)}
+			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}
 				<Button.Root href="graph-editor/programs/{program.id}/settings">
 					<Settings /> Settings
 				</Button.Root>
