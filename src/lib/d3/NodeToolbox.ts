@@ -98,24 +98,40 @@ class NodeToolbox {
 		);
 	}
 
-	static save(selection: NodeSelection) {
-		
-		let errors = 0;
-		selection.each(async function (node) {
-			const endpoint = node.type === NodeType.DOMAIN ? '/api/domains/position' : '/api/subjects/position';
-			const response = await fetch(endpoint, {
-				method: 'POST',
-				body: JSON.stringify({ id: node.id, x: node.x, y: node.y }),
-				headers: { 'Content-Type': 'application/json' }
-			});
+	static async save(selection: NodeSelection) {
 
-			if (!response.ok) {
-				errors++;
-			}
-		});
+		// We are not guaranteed to select either all domains or all subjects, so we have two options:
+		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
+		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
+		// We will go with option 2 for now, as save isnt called often (only on drag-end and simulation-end)
+		// and this offloads some work from the server
 
-		const error = `Failed to save ${errors} node position${errors === 1 ? '' : 's'}`;
-		toast.error(error, { duration: 2000 });
+		// Group nodes by type
+		const domains = selection.filter(node => node.type === NodeType.DOMAIN).data();
+		const subjects = selection.filter(node => node.type === NodeType.SUBJECT).data();
+
+		// Send API calls
+		const domainBody = domains.map(node => ({ domainId: node.id, x: node.x, y: node.y }));
+		const subjectBody = subjects.map(node => ({ subjectId: node.id, x: node.x, y: node.y }));
+
+		const requests = [
+			fetch('/api/domains/position', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(domainBody)
+			}),
+
+			fetch('/api/subjects/position', {
+				method: 'PATCH',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(subjectBody)
+			})
+		]
+
+		const responses = await Promise.all(requests);
+		if (responses.some(response => !response.ok)) {
+			toast.error('Failed to save node positions', { duration: 2000 });
+		}
 	}
 
 	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = false) {

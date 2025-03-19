@@ -6,7 +6,7 @@ import type { DomainStyle } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
 
 /*
- * Reorder the domains in a graph
+ * Restyle a domain
  * This can be a on a server call because it doesn't affect graph topography
  * and thus will never be critical
  **/
