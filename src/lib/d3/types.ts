@@ -88,7 +88,8 @@ type GraphData = {
 
 // Abstraction for domains and subjects
 type NodeData = {
-	id: string;
+	id: number;
+	uuid: string;
 	type: NodeType;
 	style: keyof typeof settings.NODE_STYLES;
 	text: string;
@@ -105,7 +106,7 @@ type NodeData = {
 
 // Abstraction for relations
 type EdgeData = {
-	id: string;
+	uuid: string;
 	source: NodeData;
 	target: NodeData;
 };

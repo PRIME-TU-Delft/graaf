@@ -108,7 +108,6 @@ export const actions = {
 	'add-course-to-program': async (event) => {
 		const formData = await event.request.formData();
 
-		// console.log(await event.locals.auth());
 		const session = await event.locals.auth();
 		const user = session?.user as User | undefined;
 		if (!user) return fail(401, { error: 'Unauthorized' });

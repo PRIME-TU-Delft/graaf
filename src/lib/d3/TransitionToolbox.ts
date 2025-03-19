@@ -42,7 +42,7 @@ export class TransitionToolbox {
 		// Update Nodes
 		graph.content
 			.selectAll<SVGGElement, NodeData>('.node')
-			.data(nodes, (node) => node.id)
+			.data(nodes, (node) => node.uuid)
 			.join(
 				function (enter) {
 					return enter
@@ -73,7 +73,7 @@ export class TransitionToolbox {
 		// Update relations
 		graph.content
 			.selectAll<SVGGElement, EdgeData>('.edge')
-			.data(edges, (edge) => edge.id)
+			.data(edges, (edge) => edge.uuid)
 			.join(
 				function (enter) {
 					return enter.append('line').call(EdgeToolbox.create).style('opacity', 0);

@@ -100,7 +100,6 @@ export class DomainActions {
 				deleteDomain
 			]);
 		} catch (e: unknown) {
-			console.log(e);
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
