@@ -5,7 +5,7 @@ import { patchPositionSchema } from '../schemas';
 import type { RequestHandler } from '@sveltejs/kit';
 
 /*
- * Reorder the domains in a graph
+ * Reposition the domains in a graph
  * This can be a on a server call because it doesn't affect graph topography
  * and thus will never be critical
  **/
@@ -17,17 +17,17 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	const parsed = patchPositionSchema.safeParse(body);
 	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
 
-	// Update the position of the domain
+	// Update the position of the domains
 	try {
-		const newDomain = await prisma.domain.update({
-            where: { id: parsed.data.domainId },
-            data: {
-                x: parsed.data.x,
-                y: parsed.data.y
-            }
-        });
+		const changes = parsed.data.map(({ domainId, x, y }) => {
+			return prisma.domain.update({
+				where: { id: domainId },
+				data: { x, y }
+			});
+		});
 
-		return json(newDomain);
+		const newDomains = await prisma.$transaction(changes);
+		return json(newDomains);
 	} catch (e: unknown) {
 		return json({ error: e instanceof Error ? e.message : `${e}` }, { status: 400 });
 	}

@@ -9,8 +9,10 @@ export const patchOrderSchema = z.array(
     })
 );
 
-export const patchPositionSchema = z.object({
-    subjectId: z.number(),
-    x: z.number(),
-    y: z.number()
-});
+export const patchPositionSchema = z.array(
+	z.object({
+		subjectId: z.number(),
+		x: z.number(),
+		y: z.number()
+	})
+);

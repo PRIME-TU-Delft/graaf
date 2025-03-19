@@ -21,7 +21,7 @@ export class EdgeToolbox {
 			.attr('orient', 'auto-start-reverse')
 			.append('path')
 			.attr('fill', 'context-fill')
-			.attr('d', `M 0 0 L 10 5 L 0 10 Z');
+			.attr('d', 'M 0 0 L 10 5 L 0 10 Z');
 	}
 
 	static create(selection: EdgeSelection) {
