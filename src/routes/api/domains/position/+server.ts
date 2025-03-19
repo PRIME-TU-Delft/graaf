@@ -15,7 +15,9 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	// Validate the request body
 	const body = await request.json();
 	const parsed = patchPositionSchema.safeParse(body);
-	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
+	if (!parsed.success) {
+		return json({ error: parsed.error }, { status: 400 });
+	}
 
 	// Update the position of the domains
 	try {

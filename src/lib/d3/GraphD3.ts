@@ -235,7 +235,8 @@ export class GraphD3 {
 		const domain_map = new Map<number, NodeData>();
 		for (const domain of data.domains) {
 			const node_data = {
-				id: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
+				id: domain.id,
+				uuid: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
 				type: NodeType.DOMAIN,
 				style: (domain.style ?? 'DEFAULT') as keyof typeof settings.NODE_STYLES,
 				text: domain.name,
@@ -261,7 +262,7 @@ export class GraphD3 {
 
 				// Add edge to graph
 				graph.domain_edges.push({
-					id: 'domain-${source.id}-${target.id}', // Unique edge id from source and target ids
+					uuid: 'domain-${source.id}-${target.id}', // Unique edge id from source and target ids
 					source: source_node,
 					target: target_node
 				});
@@ -280,7 +281,8 @@ export class GraphD3 {
 			}
 
 			const node_data = {
-				id: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
+				id: subject.id,
+				uuid: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
 				type: NodeType.SUBJECT,
 				style: domain_node?.style ?? 'DEFAULT',
 				text: subject.name,
@@ -309,7 +311,7 @@ export class GraphD3 {
 
 				// Create edge data
 				const edge = {
-					id: `subject-${source.id}-${target.id}`, // Unique edge id from source and target ids
+					uuid: `subject-${source.id}-${target.id}`, // Unique edge id from source and target ids
 					source: source_node,
 					target: target_node
 				};

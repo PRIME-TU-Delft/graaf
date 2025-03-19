@@ -26,7 +26,7 @@ export class EdgeToolbox {
 
 	static create(selection: EdgeSelection) {
 		selection
-			.attr('id', (edge) => edge.id)
+			.attr('id', (edge) => edge.uuid)
 			.attr('class', 'edge')
 			.attr('stroke-width', settings.STROKE_WIDTH)
 			.attr('stroke', (edge) => settings.NODE_STYLES[edge.source.style].stroke)
