@@ -1,8 +1,12 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import type { Graph } from '@prisma/client';
 	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
 	import GraphSettings from './GraphSettings.svelte';
+	import { page } from '$app/state';
 
 	type EditGraphProps = {
 		graph: Graph;
@@ -14,6 +18,7 @@
 
 	let isGraphSettingsOpen = $state(false);
 	let isDuplicateOpen = $state(false);
+	let graphIsVisisble = $state(false);
 
 	function handleOpenGraphSettings(e: MouseEvent) {
 		e.preventDefault();
@@ -45,6 +50,18 @@
 		description="TODO"
 		bind:open={isGraphSettingsOpen}
 	>
+		<h3 class="text-xl">Graph links</h3>
+		<div class="mb-2 flex items-center space-x-2 p-2">
+			<Checkbox id="is-visible" bind:checked={graphIsVisisble} />
+			<Label for="is-visible" class="text-sm font-medium leading-none">
+				Graph is {graphIsVisisble ? '' : 'not'} visible to students
+			</Label>
+
+			{#if graphIsVisisble}
+				<Input disabled value="{page.url.host}/graphs/{course.code}/{graph.id}" />
+			{/if}
+		</div>
+
 		<GraphSettings {graph} bind:isGraphSettingsOpen />
 	</DialogButton>
 </div>
