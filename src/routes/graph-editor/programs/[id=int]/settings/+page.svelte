@@ -55,7 +55,7 @@
 	/>
 </section>
 
-<!-- Only a program admin or super admin is able to delete a program -->
+<!-- Only a super admin is able to delete a program -->
 {#if hasProgramPermissions(data.user, data.program, 'OnlySuperAdmin')}
 	<section
 		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"

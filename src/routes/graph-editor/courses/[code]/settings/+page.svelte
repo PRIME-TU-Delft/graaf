@@ -1,13 +1,19 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import { hasCoursePermissions } from '$lib/utils/permissions';
+	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
+	import ArchiveCourse from './ArchiveCourse.svelte';
 	import EditCourseName from './EditCourseName.svelte';
 	import CourseAdmins from './superUsers/CourseAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
 
 	let editCourseDialogOpen = $state(false);
+
+	let programsYouCanEdit = data.course.programs.filter((program) =>
+		hasProgramPermissions(data.user, program, 'ProgramAdminEditor')
+	);
 </script>
 
 <section
@@ -38,3 +44,38 @@
 </section>
 
 <CourseAdmins course={data.course} user={data.user} />
+
+{#if hasCoursePermissions(data.user, data.course, 'ProgramAdminEditor')}
+	<section class="prose mx-auto p-4">
+		<h2>Linked programs</h2>
+		<p>
+			This course is linked to {data.course.programs.length} program(s), {programsYouCanEdit.length}
+			you are allowed to edit.
+		</p>
+		<ul>
+			{#each data.course.programs as program}
+				<li>
+					{#if hasProgramPermissions(data.user, program, 'ProgramAdminEditor')}
+						<a href={`/graph-editor/programs/${program.id}/settings`}>{program.name}</a>
+					{:else}
+						<p>{program.name}</p>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	</section>
+{/if}
+
+<!-- Only a program admin or super admin is able to archive/de-archive a  -->
+{#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
+	<section
+		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+	>
+		<h2 class="text-red-950">Danger zone</h2>
+		<div class="flex items-center gap-2">
+			<p>Archive program:</p>
+
+			<ArchiveCourse course={data.course} />
+		</div>
+	</section>
+{/if}

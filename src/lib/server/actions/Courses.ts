@@ -1,6 +1,6 @@
 import type { CoursePermissionsOptions } from '$lib/utils/permissions';
 import { setError } from '$lib/utils/setError';
-import type { courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
+import type { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from '../db/prisma';
@@ -105,6 +105,24 @@ export class CourseActions {
 					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
 				},
 				data: getData()
+			});
+		} catch {
+			return setError(formData, '', 'Unauthorized');
+		}
+	}
+
+	static async changeArchive(user: User, formData: SuperValidated<Infer<typeof changeArchive>>) {
+		if (!formData.valid) return setError(formData, '', 'Form is not valid');
+
+		try {
+			await prisma.course.update({
+				where: {
+					code: formData.data.code,
+					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+				},
+				data: {
+					isArchived: formData.data.archive
+				}
 			});
 		} catch {
 			return setError(formData, '', 'Unauthorized');

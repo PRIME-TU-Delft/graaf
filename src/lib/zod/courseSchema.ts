@@ -23,3 +23,12 @@ export const editSuperUserSchema = z.object({
 	userId: z.string(),
 	role: z.enum(['admin', 'editor', 'revoke'])
 });
+
+export const changeArchive = z.object({
+	code: z
+		.string()
+		.nonempty()
+		.max(settings.MAX_COURSE_CODE_LENGTH)
+		.regex(settings.COURSE_CODE_REGEX, 'Course code must be alphanumeric without any spaces'),
+	archive: z.boolean()
+});
