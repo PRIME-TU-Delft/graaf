@@ -3,6 +3,7 @@
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
 	import EditCourseName from './EditCourseName.svelte';
+	import CourseAdmins from './superUsers/CourseAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -31,3 +32,9 @@
 		</DialogButton>
 	{/if}
 </section>
+
+<section class="prose mx-auto p-4">
+	<p>Manage course settings with course name: {data.course.name}.</p>
+</section>
+
+<CourseAdmins course={data.course} user={data.user} />

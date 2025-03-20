@@ -2,6 +2,14 @@ import { Course, Subject, PrismaClient } from '@prisma/client';
 import { courses, domains, programs, subjects } from './init';
 import { env } from 'process';
 
+const testUsers = [
+	{ fn: 'Abel', ln: 'de Bruijn', admin: true },
+	{ fn: 'Bram', ln: 'Kreulen', admin: true },
+	{ fn: 'Julia', ln: 'van der Kris', admin: true },
+	{ fn: 'Beryl', ln: 'van Gelderen', admin: true },
+	{ fn: 'Beryl', ln: 'van Gelderen', admin: true }
+];
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -18,18 +26,22 @@ async function main() {
 	]);
 
 	if (env.NETLIFY_CONTEXT != 'PROD') {
-		await prisma.user.create({
-			data: {
-				role: 'ADMIN',
-				email: 'testuser@tudelft.nl',
-				nickname: 'Test User',
-				firstName: 'Test',
-				lastName: 'User',
-				emailVerified: new Date(),
-				createdAt: new Date(),
-				updatedAt: new Date()
-			}
+		const users = testUsers.map((user) => {
+			return prisma.user.create({
+				data: {
+					role: user.admin ? 'ADMIN' : 'USER',
+					email: `${user.fn.toLowerCase() + user.ln.toLowerCase()}@tudelft.nl`,
+					nickname: user.fn + ' ' + user.ln,
+					firstName: user.fn,
+					lastName: user.ln,
+					emailVerified: new Date(),
+					createdAt: new Date(),
+					updatedAt: new Date()
+				}
+			});
 		});
+
+		await prisma.$transaction(users);
 	}
 
 	const prisma_courses: Course[] = [];
