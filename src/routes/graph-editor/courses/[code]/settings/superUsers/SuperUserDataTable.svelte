@@ -21,7 +21,7 @@
 			editors: User[];
 			programs: (Program & { admins: User[]; editors: User[] })[];
 		};
-		data: Map<string, SuperUser>;
+		data: SuperUser[];
 	};
 
 	let { data, course, columns }: DataTableProps = $props();
@@ -32,7 +32,7 @@
 
 	const table = createSvelteTable({
 		get data() {
-			return data.values().toArray();
+			return data;
 		},
 		columns,
 		getCoreRowModel: getCoreRowModel()
@@ -62,6 +62,7 @@
 				<Table.Row
 					data-state={row.getIsSelected() && 'selected'}
 					class={row.original.id == user.id ? 'bg-blue-100 hover:bg-blue-200' : ''}
+					fadeDuration={200}
 				>
 					{#each row.getVisibleCells() as cell (cell.id)}
 						<Table.Cell>

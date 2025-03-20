@@ -1,25 +1,28 @@
 <script lang="ts">
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
-	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { Program, User } from '@prisma/client';
+	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
+	import type { Course, Program, User } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
 
-	type ChangeRoleProps = {
-		userId: string;
-		currentRole: 'Admin' | 'Editor';
-		superAdminCount: number;
-		program: Program & { admins: User[]; editors: User[] };
+	type CourseAdminProps = {
 		user: User;
+		course: Course & {
+			admins: User[];
+			editors: User[];
+			programs: (Program & { admins: User[]; editors: User[] })[];
+		};
+		courseRole?: 'Course Admin' | 'Course Editor';
+		userId: string;
 	};
 
-	let { userId, currentRole, superAdminCount, program, user }: ChangeRoleProps = $props();
+	let { user, course, courseRole, userId }: CourseAdminProps = $props();
 
 	let menuIsFocusOn = $state('');
 </script>
 
 <!-- Only programAdmins and superUsers are allowed to change roles, otherwise just show the role name -->
-{#if hasProgramPermissions(user, program, 'ProgramAdmin')}
+{#if hasCoursePermissions(user, course, 'CourseAdminORProgramAdminEditor')}
 	<Menubar.Root
 		class="float-right w-fit p-0"
 		value={menuIsFocusOn}
@@ -27,7 +30,7 @@
 	>
 		<Menubar.Menu value="menu">
 			<Menubar.Trigger>
-				{currentRole}
+				{courseRole}
 				<ChevronDown />
 			</Menubar.Trigger>
 			<Menubar.Content>
@@ -39,37 +42,33 @@
 						<ChangeRoleForm
 							{userId}
 							newRole="Editor"
-							selected={currentRole == 'Editor'}
-							disabled={superAdminCount <= 1}
+							selected={courseRole == 'Course Editor'}
 							onSuccess={() => (menuIsFocusOn = '')}
 						/>
 						<ChangeRoleForm
 							{userId}
 							newRole="Admin"
-							selected={currentRole == 'Admin'}
+							selected={courseRole == 'Course Admin'}
 							onSuccess={() => (menuIsFocusOn = '')}
 						/>
 					</Menubar.SubContent>
 				</Menubar.Sub>
 
-				{#if superAdminCount > 1 || currentRole == 'Editor'}
-					<Menubar.Separator />
+				<Menubar.Separator />
 
-					<!-- You are not the last user -->
-					<Menubar.Sub>
-						<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
-							Remove user privilages
-						</Menubar.SubTrigger>
-						<Menubar.SubContent class="ml-1 w-32">
-							<ChangeRoleForm {userId} newRole="Revoke" onSuccess={() => (menuIsFocusOn = '')} />
-						</Menubar.SubContent>
-					</Menubar.Sub>
-				{/if}
+				<Menubar.Sub>
+					<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
+						Remove user privilages
+					</Menubar.SubTrigger>
+					<Menubar.SubContent class="ml-1 w-32">
+						<ChangeRoleForm {userId} newRole="Revoke" onSuccess={() => (menuIsFocusOn = '')} />
+					</Menubar.SubContent>
+				</Menubar.Sub>
 			</Menubar.Content>
 		</Menubar.Menu>
 	</Menubar.Root>
 {:else}
 	<p class="m-0 text-right">
-		{currentRole}
+		{courseRole}
 	</p>
 {/if}

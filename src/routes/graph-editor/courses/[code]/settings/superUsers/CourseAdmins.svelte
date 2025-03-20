@@ -4,6 +4,8 @@
 	import type { ColumnDef } from '@tanstack/table-core';
 	import ChangeRole from './ChangeRole.svelte';
 	import SuperUserDataTable from './SuperUserDataTable.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { FunnelX, Funnel } from '@lucide/svelte';
 
 	type CourseAdminProps = {
 		user: User;
@@ -19,6 +21,7 @@
 	};
 
 	let { user, course }: CourseAdminProps = $props();
+	let onlyCourseSuperUsers = $state(false);
 
 	let users = $derived.by(() => {
 		const courseAdmins: SuperUser[] = course.admins.map((user) => {
@@ -64,6 +67,18 @@
 		return userMap;
 	});
 
+	let filteredUsers = $derived.by(() => {
+		if (onlyCourseSuperUsers) {
+			return (
+				users
+					.values()
+					.filter((user) => user.courseRole)
+					.toArray?.() || []
+			);
+		}
+		return users.values().toArray?.() || [];
+	});
+
 	const columns: ColumnDef<SuperUser>[] = $derived([
 		{
 			accessorKey: 'nickname',
@@ -87,12 +102,25 @@
 	]);
 </script>
 
-<section class="container prose mx-auto p-4">
-	<h2 class="mb-2">Course super users</h2>
+<section class="container prose mx-auto mt-8 p-4">
+	<div class="flex items-center justify-between gap-4">
+		<h2 class="m-0">Course super users</h2>
+
+		<Button variant="outline" onclick={() => (onlyCourseSuperUsers = !onlyCourseSuperUsers)}>
+			{#if onlyCourseSuperUsers}
+				<FunnelX />
+				Show all super users
+			{:else}
+				<Funnel />
+				Show only course super users
+			{/if}
+		</Button>
+	</div>
+
 	<p>
 		A course editor is allowed to change graphs. An admin is also allowed to create links and
 		(De)Archive courses.
 	</p>
 
-	<SuperUserDataTable data={users} {course} {columns} />
+	<SuperUserDataTable data={filteredUsers} {course} {columns} />
 </section>
