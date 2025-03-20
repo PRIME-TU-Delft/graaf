@@ -27,7 +27,8 @@ export const load = (async ({ params, locals }) => {
 						admins: true,
 						editors: true
 					}
-				}
+				},
+				graphs: true
 			}
 		});
 
