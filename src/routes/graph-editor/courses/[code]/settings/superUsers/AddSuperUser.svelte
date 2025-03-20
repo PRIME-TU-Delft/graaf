@@ -1,25 +1,19 @@
 <script lang="ts">
-	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 
 	import { page } from '$app/state';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import SelectUsers from '$lib/components/SelectUsers.svelte';
+	import { Button } from '$lib/components/ui/button';
 	import { Checkbox } from '$lib/components/ui/checkbox';
 	import { Label } from '$lib/components/ui/label';
-	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { displayName } from '$lib/utils/displayUserName';
+	import { editSuperUserSchema } from '$lib/zod/courseSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo_2 from 'lucide-svelte/icons/undo-2';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
-	import { editSuperUserSchema } from '$lib/zod/courseSchema';
-	import SelectUsers from '$lib/components/SelectUsers.svelte';
 
 	type AddNewUserProps = {
 		course: Course & {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
-	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
+	import { hasCoursePermissions } from '$lib/utils/permissions';
 	import type { Course, Program, User } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
