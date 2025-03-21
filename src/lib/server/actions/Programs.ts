@@ -1,41 +1,19 @@
 import prisma from '$lib/server/db/prisma';
-import type { ProgramPermissionsOptions } from '$lib/utils/permissions';
 import { setError } from '$lib/utils/setError';
 import { courseSchema } from '$lib/zod/courseSchema';
 import { programSchema } from '$lib/zod/programSchema';
+import { whereHasProgramPermission } from '../permissions';
+import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
+import type { User } from '@prisma/client';
+
 import type {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
-import type { User } from '@prisma/client';
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-import type { Infer, SuperValidated } from 'sveltekit-superforms';
-
-/**
- * Check if the user has permissions to edit the program
- * @param user - User
- * @param isEither - PermissionsOptions
- * @returns A json object that can be used in a Prisma where query
- * @example
- * const user = { id: 1, role: 'ADMIN' };
- * const permissions = whereHasProgramPermission(user, "ProgramAdminEditor");
- * const program = await prisma.program.findFirst({ where: { id: 1, ...permissions } });
- */
-export function whereHasProgramPermission(user: User, has: ProgramPermissionsOptions) {
-	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
-	if (user.role == 'ADMIN') return {};
-	else if (has === 'OnlySuperAdmin') throw new Error('Only super admins can do this action');
-
-	const hasEditorPermission = { editors: { some: { id: user.id } } };
-	const hasAdminPermission = { admins: { some: { id: user.id } } };
-
-	if (has == 'ProgramAdmin') return { OR: [hasAdminPermission] };
-	if (has == 'ProgramAdminEditor') return { OR: [hasAdminPermission, hasEditorPermission] };
-
-	throw new Error('Invalid permission');
-}
 
 export class ProgramActions {
 	/**

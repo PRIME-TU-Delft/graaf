@@ -91,7 +91,7 @@ type NodeData = {
 	id: number;
 	uuid: string;
 	type: NodeType;
-	style: keyof typeof settings.NODE_STYLES;
+	style: keyof typeof settings.STYLES | null;
 	text: string;
 	x: number;
 	y: number;

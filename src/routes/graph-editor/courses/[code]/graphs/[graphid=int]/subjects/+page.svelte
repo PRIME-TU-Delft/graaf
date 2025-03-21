@@ -45,7 +45,7 @@
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update subject color, try again later!');
+			toast.error('Failed to update subject style, try again later!');
 			return;
 		}
 

@@ -4,7 +4,7 @@ import { patchPositionSchema } from '../schemas';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import type { User } from '@prisma/client';
-import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 
 /*
  * Reposition the domains in a graph

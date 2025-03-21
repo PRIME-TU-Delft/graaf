@@ -32,9 +32,12 @@ class NodeToolbox {
 	}
 
 	static create(selection: NodeSelection, graph: GraphD3) {
+		const styleOf = (node: NodeData) =>
+			node.style ? settings.STYLES[node.style] : settings.DEFAULT_STYLE;
+
 		// Node attributes
 		selection
-			.attr('id', (node) => node.id)
+			.attr('id', (node) => node.uuid)
 			.attr('class', 'node fixed')
 			.attr(
 				'transform',
@@ -48,9 +51,9 @@ class NodeToolbox {
 		selection
 			.append('path')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', (node) => settings.NODE_STYLES[node.style].stroke)
-			.attr('fill', (node) => settings.NODE_STYLES[node.style].fill)
-			.attr('d', (node) => settings.NODE_STYLES[node.style].path);
+			.attr('stroke', (node) => styleOf(node).stroke)
+			.attr('fill', (node) => styleOf(node).fill)
+			.attr('d', (node) => styleOf(node).path);
 
 		// Node text
 		selection
@@ -166,6 +169,30 @@ class NodeToolbox {
 
 			d3.select(this).attr('filter', highlight ? 'url(#highlight)' : null);
 		});
+	}
+
+	static updateStyle(selection: NodeSelection) {
+		const styleOf = (node: NodeData) =>
+			node.style ? settings.STYLES[node.style] : settings.DEFAULT_STYLE;
+
+		selection
+			.select('path')
+			.attr('stroke-width', settings.STROKE_WIDTH)
+			.attr('stroke', (node) => styleOf(node).stroke)
+			.attr('fill', (node) => styleOf(node).fill)
+			.attr('d', (node) => styleOf(node).path);
+	}
+
+	static updateText(selection: NodeSelection) {
+		selection.select('text').remove();
+
+		selection
+			.append('text')
+			.text((node) => node.text)
+			.style('text-anchor', 'middle')
+			.style('dominant-baseline', 'middle')
+			.style('font-size', settings.NODE_FONT_SIZE)
+			.call(NodeToolbox.wrapText);
 	}
 
 	static setFixed(selection: NodeSelection, graph: GraphD3, fixed: boolean) {

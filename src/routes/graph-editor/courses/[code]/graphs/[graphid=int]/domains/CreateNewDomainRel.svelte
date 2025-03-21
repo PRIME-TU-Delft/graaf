@@ -13,6 +13,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
+	import { useId } from 'bits-ui';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
@@ -23,6 +24,7 @@
 	let popupOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainRelForm, {
+		id: 'newDomainRel' + useId(),
 		validators: zodClient(domainRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {

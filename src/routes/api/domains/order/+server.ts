@@ -3,7 +3,7 @@ import prisma from '$lib/server/db/prisma';
 import { patchOrderSchema } from '../schemas';
 
 import type { RequestHandler } from '@sveltejs/kit';
-import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 import type { User } from '@prisma/client';
 
 /*

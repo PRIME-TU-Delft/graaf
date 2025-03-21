@@ -112,6 +112,20 @@ export class GraphD3 {
 
 	// -----------------------------> Public methods
 
+	setData(payload: PrismaGraphPayload) {
+		this.data = this.formatPayload(payload);
+
+		// Update view
+		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this);
+		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this);
+		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
+
+		// Update Lecture
+		if (!this.data.lectures.find((lecture) => lecture === this.lecture)) {
+			this.setLecture(null);
+		}
+	}
+
 	setView(targetView: GraphView) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
@@ -151,6 +165,30 @@ export class GraphD3 {
 
 		// Update highlights
 		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.updateHighlight, this);
+	}
+
+	updateDomain(id: number) {
+		console.log({ id });
+
+		const selection = this.content.selectAll<SVGGElement, NodeData>(`#domain-${id}`);
+
+		console.log(selection, id);
+
+		selection
+			.call(NodeToolbox.updateHighlight, this)
+			.call(NodeToolbox.updatePosition, this)
+			.call(NodeToolbox.updateStyle)
+			.call(NodeToolbox.updateText);
+	}
+
+	updateSubject(id: number) {
+		this.content
+			.selectAll<SVGGElement, NodeData>('.node')
+			.filter((node) => node.id === id && node.type === NodeType.SUBJECT)
+			.call(NodeToolbox.updateHighlight, this)
+			.call(NodeToolbox.updatePosition, this)
+			.call(NodeToolbox.updateStyle)
+			.call(NodeToolbox.updateText);
 	}
 
 	zoomIn() {
@@ -238,7 +276,7 @@ export class GraphD3 {
 				id: domain.id,
 				uuid: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
 				type: NodeType.DOMAIN,
-				style: (domain.style ?? 'DEFAULT') as keyof typeof settings.NODE_STYLES,
+				style: domain.style,
 				text: domain.name,
 				x: domain.x,
 				y: domain.y,
@@ -284,7 +322,7 @@ export class GraphD3 {
 				id: subject.id,
 				uuid: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
 				type: NodeType.SUBJECT,
-				style: domain_node?.style ?? 'DEFAULT',
+				style: domain_node?.style ?? null,
 				text: subject.name,
 				parent: domain_node,
 				x: subject.x,
