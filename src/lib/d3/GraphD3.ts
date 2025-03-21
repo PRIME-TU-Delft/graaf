@@ -112,6 +112,20 @@ export class GraphD3 {
 
 	// -----------------------------> Public methods
 
+	setData(payload: PrismaGraphPayload) {
+		this.data = this.formatPayload(payload);
+
+		// Update view
+		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this);
+		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this);
+		else if (graphView.isLectures()) TransitionToolbox.snapToLectures
+
+		// Update Lecture
+		if (!this.data.lectures.find((lecture) => lecture === this.lecture)) {
+			this.setLecture(null);
+		}
+	}
+
 	setView(targetView: GraphView) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
