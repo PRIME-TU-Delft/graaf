@@ -68,9 +68,9 @@
 		const domain = course.graphs[0].domains[domainIndex];
 		domain.style = key;
 
-		const response = await fetch(`./domains/change-color`, {
+		const response = await fetch('/api/domains/style', {
 			method: 'PATCH',
-			body: JSON.stringify({ domainId: domain.id, color: key }),
+			body: JSON.stringify({ domainId: domain.id, style: key }),
 			headers: { 'content-type': 'application/json' }
 		});
 
@@ -82,7 +82,7 @@
 
 	// Send a list of domains to the server to rearrange them
 	async function handleRearrange(list: DomainType[]) {
-		let needRearrange = list
+		let body = list
 			.filter((domain, index) => domain.order != index)
 			.map((d, index) => {
 				return {
@@ -92,14 +92,14 @@
 				};
 			});
 
-		const response = await fetch(`./domains/reorder`, {
+		const response = await fetch('/api/domains/order', {
 			method: 'PATCH',
-			body: JSON.stringify(needRearrange),
+			body: JSON.stringify(body),
 			headers: { 'content-type': 'application/json' }
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update domain color, try again later!');
+			toast.error('Failed to update domain order, try again later!');
 			return;
 		}
 

@@ -1,51 +1,40 @@
+import prisma from '$lib/server/db/prisma';
+import type { ProgramPermissionsOptions } from '$lib/utils/permissions';
 import { setError } from '$lib/utils/setError';
-import { programSchema } from '$lib/zod/programSchema';
 import { courseSchema } from '$lib/zod/courseSchema';
-import type { User } from '@prisma/client';
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-import type { Infer, SuperValidated } from 'sveltekit-superforms';
-import prisma from '../db/prisma';
+import { programSchema } from '$lib/zod/programSchema';
 import type {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
-
-type PermissionsOptions = {
-	admin: boolean;
-	editor: boolean;
-	superAdmin: boolean;
-};
+import type { User } from '@prisma/client';
+import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 /**
  * Check if the user has permissions to edit the program
  * @param user - User
- * @param options - PermissionsOptions
+ * @param isEither - PermissionsOptions
  * @returns A json object that can be used in a Prisma where query
  * @example
  * const user = { id: 1, role: 'ADMIN' };
- * const permissions = hasProgramPermissions(user, { admin: true, editor: true, superAdmin: true });
+ * const permissions = whereHasProgramPermission(user, "ProgramAdminEditor");
  * const program = await prisma.program.findFirst({ where: { id: 1, ...permissions } });
  */
-export function hasProgramPermissions(
-	user: User,
-	options: PermissionsOptions = { admin: true, editor: true, superAdmin: true }
-) {
+export function whereHasProgramPermission(user: User, has: ProgramPermissionsOptions) {
 	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
-	if (options.superAdmin && user.role == 'ADMIN') return {};
-
-	// If no permissions are set, return empty permissions
-	if (!options.admin && !options.editor) return {};
+	if (user.role == 'ADMIN') return {};
+	else if (has === 'OnlySuperAdmin') throw new Error('Only super admins can do this action');
 
 	const hasEditorPermission = { editors: { some: { id: user.id } } };
 	const hasAdminPermission = { admins: { some: { id: user.id } } };
 
-	const hasPermission: (typeof hasEditorPermission | typeof hasAdminPermission)[] = [];
-	if (options.editor) hasPermission.push(hasEditorPermission);
-	if (options.admin) hasPermission.push(hasAdminPermission);
+	if (has == 'ProgramAdmin') return { OR: [hasAdminPermission] };
+	if (has == 'ProgramAdminEditor') return { OR: [hasAdminPermission, hasEditorPermission] };
 
-	return { OR: hasPermission };
+	throw new Error('Invalid permission');
 }
 
 export class ProgramActions {
@@ -90,7 +79,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: form.data.programId,
-					...hasProgramPermissions(user, { superAdmin: true, admin: true, editor: false })
+					...whereHasProgramPermission(user, 'ProgramAdmin')
 				},
 				data: {
 					name: form.data.name
@@ -115,7 +104,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: form.data.programId,
-					...hasProgramPermissions(user) // All super users can create a new course
+					...whereHasProgramPermission(user, 'ProgramAdminEditor') // All super users can create a new course
 				},
 				data: {
 					updatedAt: new Date(),
@@ -147,7 +136,7 @@ export class ProgramActions {
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
 	static async addCourseToProgram(user: User, formData: FormData) {
-		// TODO: maket this into a superform
+		// TODO: make this into a superform
 		const programId = formData.get('program-id') as number | null;
 		const courseCode = formData.get('code') as string | null;
 		const courseName = formData.get('name') as string | null;
@@ -159,7 +148,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: programId,
-					...hasProgramPermissions(user) // User is either an admin or editor or SUPER_ADMIN
+					...whereHasProgramPermission(user, 'ProgramAdminEditor') // User is either an admin or editor or SUPER_ADMIN
 				},
 				data: {
 					updatedAt: new Date(),
@@ -185,7 +174,7 @@ export class ProgramActions {
 			await prisma.program.delete({
 				where: {
 					id: formData.data.programId,
-					...hasProgramPermissions(user, { superAdmin: true, admin: false, editor: false })
+					...whereHasProgramPermission(user, 'OnlySuperAdmin')
 				}
 			});
 		} catch (e: unknown) {
@@ -209,7 +198,7 @@ export class ProgramActions {
 		const program = await prisma.program.findFirst({
 			where: {
 				id: formData.data.programId,
-				...hasProgramPermissions(user, { superAdmin: true, admin: true, editor: false })
+				...whereHasProgramPermission(user, 'ProgramAdmin')
 			},
 			include: {
 				admins: true
@@ -253,11 +242,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: formData.data.programId,
-					...hasProgramPermissions(user, {
-						superAdmin: true,
-						admin: true,
-						editor: false
-					})
+					...whereHasProgramPermission(user, 'ProgramAdmin')
 				},
 				data: getData()
 			});
@@ -283,7 +268,7 @@ export class ProgramActions {
 			await prisma.program.update({
 				where: {
 					id: formData.data.programId,
-					...hasProgramPermissions(user, { admin: true, editor: false, superAdmin: true }) // Only admins can link/unlink courses
+					...whereHasProgramPermission(user, 'ProgramAdmin') // Only admins can link/unlink courses
 				},
 				data: {
 					courses: {

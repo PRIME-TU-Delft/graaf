@@ -79,7 +79,7 @@
 
 {#snippet addNewUserButton(error?: string)}
 	<!-- Is the user is either a programAdmin or superAdmin -->
-	{#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+	{#if hasProgramPermissions(user, program, 'ProgramAdmin')}
 		<Table.Cell colspan={columns.length}>
 			<DialogButton
 				button="Add a super user"

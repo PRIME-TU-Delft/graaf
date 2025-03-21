@@ -28,8 +28,6 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (env.NETLIFY_CONTEXT == 'DEPLOY_PREVIEW') {
 		const user_id = event.cookies.get('user_id');
 
-		console.log(event.url.pathname.startsWith('/auth'));
-
 		if (!user_id && event.url.pathname.startsWith('/auth')) {
 			event.locals.auth = () => authFunction(event, user_id);
 			return await resolve(event);

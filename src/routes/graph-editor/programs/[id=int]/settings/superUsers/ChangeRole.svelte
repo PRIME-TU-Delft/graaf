@@ -16,8 +16,8 @@
 	let { userId, currentRole, superAdminCount, program, user }: ChangeRoleProps = $props();
 </script>
 
-<!-- Only programAdmins and superUsers are allowed to cahnge roles, otherwise just show the role name -->
-{#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+<!-- Only programAdmins and superUsers are allowed to change roles, otherwise just show the role name -->
+{#if hasProgramPermissions(user, program, 'ProgramAdmin')}
 	<Menubar.Root class="float-right w-fit p-0">
 		<Menubar.Menu value="menu">
 			<Menubar.Trigger>

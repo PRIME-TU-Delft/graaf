@@ -16,7 +16,7 @@
 
 	const form = superForm(editProgramForm, {
 		validators: zodClient(editProgramSchema),
-		id: `edit-program-name`,
+		id: 'edit-program-name',
 		onResult: ({ result }) => {
 			if (result.type == 'success') onSuccess();
 		}

@@ -5,7 +5,7 @@ import { env } from 'process';
 const prisma = new PrismaClient();
 
 async function main() {
-	console.log(`Start seeding ...`);
+	console.log('Start seeding ...');
 
 	await prisma.$transaction([
 		prisma.graph.deleteMany(),
@@ -127,7 +127,7 @@ async function main() {
 		}
 	});
 
-	console.log(`Seeding finished.`);
+	console.log('Seeding finished.');
 }
 
 main()

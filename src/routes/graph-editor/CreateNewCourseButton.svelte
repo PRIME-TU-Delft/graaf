@@ -41,7 +41,7 @@
 	const { form: formData, enhance: newCourseEnhance, submitting, delayed } = form;
 </script>
 
-{#if hasProgramPermissions( user, program, { programAdmin: true, programEditor: false, superAdmin: true } )}
+{#if hasProgramPermissions(user, program, 'ProgramAdmin')}
 	<DialogButton
 		bind:open={dialogOpen}
 		onclick={() => {
