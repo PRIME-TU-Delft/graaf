@@ -6,7 +6,6 @@ const testUsers = [
 	{ fn: 'Abel', ln: 'de Bruijn', admin: true },
 	{ fn: 'Bram', ln: 'Kreulen', admin: true },
 	{ fn: 'Julia', ln: 'van der Kris', admin: true },
-	{ fn: 'Beryl', ln: 'van Gelderen', admin: true },
 	{ fn: 'Beryl', ln: 'van Gelderen', admin: true }
 ];
 
