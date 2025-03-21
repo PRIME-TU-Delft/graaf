@@ -22,6 +22,7 @@
 	import type { PageData } from './$types';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import type { DomainType } from '$lib/validators/graphValidator';
+	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let course = $state(data.course);
@@ -77,9 +78,10 @@
 		if (!response.ok) {
 			toast.error('Failed to update domain style, try again later');
 			return;
+		} else {
+			graphD3Store.graphD3?.setData(course.graphs[0]);
+			graphD3Store.graphD3?.updateDomain(domain.id);
 		}
-
-		
 	}
 
 	// Send a list of domains to the server to rearrange them

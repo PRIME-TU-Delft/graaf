@@ -118,7 +118,7 @@ export class GraphD3 {
 		// Update view
 		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this);
 		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this);
-		else if (graphView.isLectures()) TransitionToolbox.snapToLectures
+		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 
 		// Update Lecture
 		if (!this.data.lectures.find((lecture) => lecture === this.lecture)) {
@@ -165,6 +165,30 @@ export class GraphD3 {
 
 		// Update highlights
 		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.updateHighlight, this);
+	}
+
+	updateDomain(id: number) {
+		console.log({ id });
+
+		const selection = this.content.selectAll<SVGGElement, NodeData>(`#domain-${id}`);
+
+		console.log(selection, id);
+
+		selection
+			.call(NodeToolbox.updateHighlight, this)
+			.call(NodeToolbox.updatePosition, this)
+			.call(NodeToolbox.updateStyle)
+			.call(NodeToolbox.updateText);
+	}
+
+	updateSubject(id: number) {
+		this.content
+			.selectAll<SVGGElement, NodeData>('.node')
+			.filter((node) => node.id === id && node.type === NodeType.SUBJECT)
+			.call(NodeToolbox.updateHighlight, this)
+			.call(NodeToolbox.updatePosition, this)
+			.call(NodeToolbox.updateStyle)
+			.call(NodeToolbox.updateText);
 	}
 
 	zoomIn() {
