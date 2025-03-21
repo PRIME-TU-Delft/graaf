@@ -84,7 +84,7 @@
 
 {#snippet alias(name: string, isOdd: boolean)}
 	<Table.Row class={cn(['bg-blue-100/50 hover:bg-blue-100/30', isOdd && 'bg-blue-100/50'])}>
-		<Table.Cell class="pl-8 " colspan={3}>graph/show-2</Table.Cell>
+		<Table.Cell class="pl-8 " colspan={3}>graph/{name}</Table.Cell>
 		<Table.Cell class="pl-8 " colspan={3}>
 			<Button href={`/graph-editor/courses/${course.code}/graphs/${name}`} variant="outline">
 				<ArrowRight class="h-4 w-4" />
