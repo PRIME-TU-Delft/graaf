@@ -169,7 +169,10 @@ export class ProgramActions {
 		toRole: Role,
 		admins: { id: string }[]
 	) {
+		if (fromRole === 'revoke') return {};
 		if (admins.length >= 1) return {};
+
+		if (fromRole === toRole) return { error: 'You cannot change the role to the same role' };
 
 		if (fromRole == 'admin' && toRole === 'editor')
 			return { error: 'You cannot change the last admin to an editor' };

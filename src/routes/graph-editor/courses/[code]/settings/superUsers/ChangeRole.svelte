@@ -54,16 +54,18 @@
 					</Menubar.SubContent>
 				</Menubar.Sub>
 
-				<Menubar.Separator />
+				{#if courseRole != undefined}
+					<Menubar.Separator />
 
-				<Menubar.Sub>
-					<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
-						Remove user privilages
-					</Menubar.SubTrigger>
-					<Menubar.SubContent class="ml-1 w-32">
-						<ChangeRoleForm {userId} newRole="Revoke" onSuccess={() => (menuIsFocusOn = '')} />
-					</Menubar.SubContent>
-				</Menubar.Sub>
+					<Menubar.Sub>
+						<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
+							Remove user privilages
+						</Menubar.SubTrigger>
+						<Menubar.SubContent class="ml-1 w-32">
+							<ChangeRoleForm {userId} newRole="Revoke" onSuccess={() => (menuIsFocusOn = '')} />
+						</Menubar.SubContent>
+					</Menubar.Sub>
+				{/if}
 			</Menubar.Content>
 		</Menubar.Menu>
 	</Menubar.Root>
