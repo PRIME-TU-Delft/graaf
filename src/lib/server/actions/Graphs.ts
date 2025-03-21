@@ -67,9 +67,9 @@ export class GraphActions {
 	 */
 	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
 		const query = prisma.course.update({
-			where: { 
-				code: form.data.courseCode, 
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor') 
+			where: {
+				code: form.data.courseCode,
+				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			},
 			data: {
 				graphs: {
@@ -123,9 +123,9 @@ export class GraphActions {
 		sourseCourseCode: string
 	) {
 		const destinationCourse = await prisma.course.findFirst({
-			where: { 
-				code: form.data.destinationCourseCode, 
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor') 
+			where: {
+				code: form.data.destinationCourseCode,
+				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			}
 		});
 

@@ -22,9 +22,7 @@
 					<div class="flex w-full items-center justify-between gap-1">
 						<div
 							class="size-4"
-							style:background={domain.style == null
-								? '#ffffff'
-								: settings.COLORS[domain.style]}
+							style:background={domain.style == null ? '#ffffff' : settings.COLORS[domain.style]}
 						></div>
 						<span> {domain.text} </span>
 					</div>

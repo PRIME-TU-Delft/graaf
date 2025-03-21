@@ -25,7 +25,8 @@ export class EdgeToolbox {
 	}
 
 	static create(selection: EdgeSelection) {
-		const styleOf = (edge: EdgeData) => edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
+		const styleOf = (edge: EdgeData) =>
+			edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
 
 		selection
 			.attr('id', (edge) => edge.uuid)

@@ -104,7 +104,7 @@ export const DEFAULT_STYLE = {
 			 L ${right} ${bottom}
 			 L ${left} ${bottom}
 			 Z`
-}
+};
 
 export const STYLES = {
 	PROSPEROUS_RED: {

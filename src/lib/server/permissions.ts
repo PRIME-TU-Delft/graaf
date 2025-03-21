@@ -1,9 +1,5 @@
-
-import type { User } from "@prisma/client";
-import type {
-    ProgramPermissionsOptions,
-    CoursePermissionsOptions
-} from '$lib/utils/permissions';
+import type { User } from '@prisma/client';
+import type { ProgramPermissionsOptions, CoursePermissionsOptions } from '$lib/utils/permissions';
 
 /**
  * Check if the user has permissions to edit the program
