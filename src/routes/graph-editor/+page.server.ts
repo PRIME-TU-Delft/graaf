@@ -8,6 +8,7 @@ import { zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
 import { courseSchema } from '$lib/zod/courseSchema.js';
 import { programSchema } from '$lib/zod/programSchema.js';
+import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
 
 export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
@@ -71,7 +72,8 @@ export const load = (async ({ url, locals }) => {
 			courses,
 			user,
 			programForm: await superValidate(zod(programSchema)),
-			courseForm: await superValidate(zod(courseSchema))
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
+			createNewCourseForm: await superValidate(zod(courseSchema))
 		};
 	} catch (e: unknown) {
 		return {
@@ -81,7 +83,8 @@ export const load = (async ({ url, locals }) => {
 			user,
 			courses: emptyPrismaPromise([] as Course[]),
 			programForm: await superValidate(zod(programSchema)),
-			courseForm: await superValidate(zod(courseSchema))
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
+			createNewCourseForm: await superValidate(zod(courseSchema))
 		};
 	}
 }) satisfies PageServerLoad;

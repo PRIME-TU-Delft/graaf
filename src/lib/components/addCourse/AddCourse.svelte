@@ -47,12 +47,12 @@
 <DialogButton
 	open={dialogOpen}
 	button="Add course"
-	title="Create new course {hasAdminRights ? 'or link one' : ''}"
+	title="Create new course {hasAdminRights && data.length > 0 ? 'or link one' : ''}"
 	icon="plus"
 >
 	<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
 
-	{#if hasAdminRights}
+	{#if hasAdminRights && data.length > 0}
 		<div class="flex items-center gap-2 p-4">
 			<div class="h-1 w-full rounded-l bg-slate-300"></div>
 			<p class="text-nowrap font-medium text-slate-600">Or link existing</p>
