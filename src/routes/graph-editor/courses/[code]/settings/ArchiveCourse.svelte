@@ -39,7 +39,7 @@
 
 	<Form.FormError {form} />
 	<Form.FormButton
-		variant={'destructive'}
+		variant="destructive"
 		disabled={$submitting}
 		loading={$delayed}
 		class="justify-self-end"
