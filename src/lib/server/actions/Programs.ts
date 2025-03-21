@@ -183,12 +183,11 @@ export class ProgramActions {
 			}
 		});
 
-		const currentRole = program?.admins.find((admin) => admin.id === userId) ? 'admin' : 'editor';
+		if (!program) return setError(formData, '', 'Unauthorized');
+		const currentRole = program.admins.find((admin) => admin.id === userId) ? 'admin' : 'editor';
 
 		// If a users is changed to an editor, or revoked, we need to check there is more than one admin
 		if (newRole === 'editor' || (currentRole == 'admin' && newRole === 'revoke')) {
-			if (!program) return setError(formData, '', 'Unauthorized');
-
 			if (program.admins.length <= 1) {
 				if (newRole == 'revoke') return setError(formData, '', 'You cannot revoke the last admin');
 				if (newRole == 'editor')

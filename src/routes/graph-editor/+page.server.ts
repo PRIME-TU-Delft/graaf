@@ -19,7 +19,7 @@ export const load = (async ({ url, locals }) => {
 			include: {
 				courses: {
 					orderBy: {
-						updatedAt: 'desc'
+						isArchived: 'asc'
 					},
 					where: search
 						? { name: { contains: search, mode: 'insensitive' } }

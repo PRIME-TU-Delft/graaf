@@ -17,9 +17,10 @@
 		};
 		courses: Promise<Course[]>;
 		courseForm: SuperValidated<Infer<typeof courseSchema>>;
+		showOnlyUnarchived: boolean;
 	};
 
-	let { user, program, courses, courseForm }: Props = $props();
+	let { user, program, courses, courseForm, showOnlyUnarchived }: Props = $props();
 </script>
 
 <div
@@ -44,5 +45,5 @@
 		</div>
 	</div>
 
-	<CourseGrid courses={program.courses} {user} />
+	<CourseGrid courses={program.courses} {user} {showOnlyUnarchived} />
 </div>
