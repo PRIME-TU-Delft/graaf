@@ -164,6 +164,21 @@ export class ProgramActions {
 		throw redirect(303, '/');
 	}
 
+	static isAllowedToEditSuperUser<Role = 'admin' | 'editor' | 'revoke'>(
+		fromRole: Role,
+		toRole: Role,
+		admins: { id: string }[]
+	) {
+		if (admins.length >= 1) return {};
+
+		if (fromRole == 'admin' && toRole === 'editor')
+			return { error: 'You cannot change the last admin to an editor' };
+		if (fromRole == 'admin' && toRole === 'revoke')
+			return { error: 'You cannot revoke the last admin' };
+
+		return { error: 'You cannot change the last admin' };
+	}
+
 	static async editSuperUser(
 		user: User,
 		formData: SuperValidated<Infer<typeof editSuperUserSchema>>
@@ -179,21 +194,24 @@ export class ProgramActions {
 				...whereHasProgramPermission(user, 'ProgramAdmin')
 			},
 			include: {
-				admins: true
+				admins: { select: { id: true } },
+				editors: { select: { id: true } }
 			}
 		});
 
 		if (!program) return setError(formData, '', 'Unauthorized');
-		const currentRole = program.admins.find((admin) => admin.id === userId) ? 'admin' : 'editor';
 
-		// If a users is changed to an editor, or revoked, we need to check there is more than one admin
-		if (newRole === 'editor' || (currentRole == 'admin' && newRole === 'revoke')) {
-			if (program.admins.length <= 1) {
-				if (newRole == 'revoke') return setError(formData, '', 'You cannot revoke the last admin');
-				if (newRole == 'editor')
-					return setError(formData, '', 'You cannot change the last admin to an editor');
-			}
-		}
+		// if program.admins.length <= 1
+		// admin -NOT ALLOWED-> editor
+		// admin -NOT ALLOWED-> revoke
+		const fromRole = program.admins.find((admin) => admin.id === userId)
+			? 'admin'
+			: program.admins.find((admin) => admin.id === userId)
+				? 'editor'
+				: 'revoke';
+
+		const isAllowed = ProgramActions.isAllowedToEditSuperUser(fromRole, newRole, program.admins);
+		if (isAllowed.error) return setError(formData, '', isAllowed.error);
 
 		function getData() {
 			switch (newRole) {
