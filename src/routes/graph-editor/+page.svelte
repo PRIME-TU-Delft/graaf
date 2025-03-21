@@ -1,16 +1,19 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
+	import { Button } from '$lib/components/ui/button';
 	import type { User } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import CourseGrid from './CourseGrid.svelte';
 	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
 	import Program from './Program.svelte';
 	import SearchCourses from './SearchCourses.svelte';
-	import { goto } from '$app/navigation';
+	import { Funnel, FunnelX } from '@lucide/svelte';
 
 	const { data, form } = $props();
 
 	let accordionOpen = $state('');
+	let showOnlyUnarchived = $state(true);
 
 	$effect(() => {
 		// When add 'course to program' form is submitted with an error
@@ -46,7 +49,7 @@
 					My pinned courses
 				</Accordion.Trigger>
 				<Accordion.Content>
-					<CourseGrid courses={data.pinnedCourses} user={data.user} />
+					<CourseGrid courses={data.pinnedCourses} user={data.user} showOnlyUnarchived={false} />
 				</Accordion.Content>
 			</Accordion.Item>
 		</Accordion.Root>
@@ -56,7 +59,21 @@
 		<div class="flex items-center justify-between">
 			<h2 class="text-xl font-bold">Programs</h2>
 
-			<div class="flex gap-2">
+			<div class="flex items-center gap-2">
+				<Button
+					class="py-6"
+					variant="outline"
+					onclick={() => (showOnlyUnarchived = !showOnlyUnarchived)}
+				>
+					{#if showOnlyUnarchived}
+						<FunnelX />
+						Show all courses
+					{:else}
+						<Funnel />
+						Show only unarchived courses
+					{/if}
+				</Button>
+
 				{#await data.courses then courses}
 					<SearchCourses {courses} />
 				{/await}
@@ -68,7 +85,13 @@
 		</div>
 
 		{#each data.programs as program (program.id)}
-			<Program user={data.user} {program} courses={data.courses} courseForm={data.courseForm} />
+			<Program
+				user={data.user}
+				{program}
+				courses={data.courses}
+				courseForm={data.courseForm}
+				{showOnlyUnarchived}
+			/>
 		{/each}
 	</section>
 </main>

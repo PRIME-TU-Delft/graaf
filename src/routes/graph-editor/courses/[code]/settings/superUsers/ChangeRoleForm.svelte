@@ -2,12 +2,12 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { editSuperUserSchema } from '$lib/zod/superUserProgramSchema';
 	import Check from 'lucide-svelte/icons/check';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
+	import { editSuperUserSchema } from '$lib/zod/courseSchema';
 
 	type ChangeRoleProps = {
 		userId: string;
@@ -37,10 +37,10 @@
 	});
 	const { form: formData, enhance, submitting, delayed } = form;
 
-	const { program } = page.data as PageData;
+	const { course } = page.data as PageData;
 	$effect(() => {
 		// When program.id or userId changes, update the form data
-		$formData.programId = program.id;
+		$formData.courseCode = course.code;
 		$formData.userId = userId;
 		$formData.role = newRole.toLowerCase() as 'admin' | 'editor' | 'revoke';
 	});
@@ -54,7 +54,7 @@
 {:else}
 	<form action="?/edit-super-user" method="POST" class="grow" use:enhance>
 		<input type="hidden" name="userId" value={userId} />
-		<input type="hidden" name="programId" value={program.id} />
+		<input type="hidden" name="courseCode" value={course.code} />
 		<input type="hidden" name="role" value={newRole.toLowerCase()} />
 
 		{#if newRole == 'Revoke'}

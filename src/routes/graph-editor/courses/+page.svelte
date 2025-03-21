@@ -21,7 +21,7 @@
 				<div class="flex items-center gap-2">
 					<span>{course.code}</span>
 
-					<Button href="graph-editor/courses/{course.code}" variant="secondary">
+					<Button href="/graph-editor/courses/{course.code}" variant="secondary">
 						View <ArrowRight />
 					</Button>
 				</div>
