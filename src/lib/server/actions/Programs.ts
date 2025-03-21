@@ -1,41 +1,19 @@
 import prisma from '$lib/server/db/prisma';
-import type { ProgramPermissionsOptions } from '$lib/utils/permissions';
 import { setError } from '$lib/utils/setError';
 import { courseSchema } from '$lib/zod/courseSchema';
 import { programSchema } from '$lib/zod/programSchema';
+import { whereHasProgramPermission } from '../permissions';
+import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
+
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
+import type { User } from '@prisma/client';
+
 import type {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
-import type { User } from '@prisma/client';
-import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-import type { Infer, SuperValidated } from 'sveltekit-superforms';
-
-/**
- * Check if the user has permissions to edit the program
- * @param user - User
- * @param isEither - PermissionsOptions
- * @returns A json object that can be used in a Prisma where query
- * @example
- * const user = { id: 1, role: 'ADMIN' };
- * const permissions = whereHasProgramPermission(user, "ProgramAdminEditor");
- * const program = await prisma.program.findFirst({ where: { id: 1, ...permissions } });
- */
-export function whereHasProgramPermission(user: User, has: ProgramPermissionsOptions) {
-	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
-	if (user.role == 'ADMIN') return {};
-	else if (has === 'OnlySuperAdmin') throw new Error('Only super admins can do this action');
-
-	const hasEditorPermission = { editors: { some: { id: user.id } } };
-	const hasAdminPermission = { admins: { some: { id: user.id } } };
-
-	if (has == 'ProgramAdmin') return { OR: [hasAdminPermission] };
-	if (has == 'ProgramAdminEditor') return { OR: [hasAdminPermission, hasEditorPermission] };
-
-	throw new Error('Invalid permission');
-}
 
 export class ProgramActions {
 	/**
@@ -186,6 +164,24 @@ export class ProgramActions {
 		throw redirect(303, '/');
 	}
 
+	static isAllowedToEditSuperUser<Role = 'admin' | 'editor' | 'revoke'>(
+		fromRole: Role,
+		toRole: Role,
+		admins: { id: string }[]
+	) {
+		if (fromRole === 'revoke') return {};
+		if (admins.length >= 1) return {};
+
+		if (fromRole === toRole) return { error: 'You cannot change the role to the same role' };
+
+		if (fromRole == 'admin' && toRole === 'editor')
+			return { error: 'You cannot change the last admin to an editor' };
+		if (fromRole == 'admin' && toRole === 'revoke')
+			return { error: 'You cannot revoke the last admin' };
+
+		return { error: 'You cannot change the last admin' };
+	}
+
 	static async editSuperUser(
 		user: User,
 		formData: SuperValidated<Infer<typeof editSuperUserSchema>>
@@ -201,21 +197,24 @@ export class ProgramActions {
 				...whereHasProgramPermission(user, 'ProgramAdmin')
 			},
 			include: {
-				admins: true
+				admins: { select: { id: true } },
+				editors: { select: { id: true } }
 			}
 		});
 
 		if (!program) return setError(formData, '', 'Unauthorized');
-		const currentRole = program.admins.find((admin) => admin.id === userId) ? 'admin' : 'editor';
 
-		// If a users is changed to an editor, or revoked, we need to check there is more than one admin
-		if (newRole === 'editor' || (currentRole == 'admin' && newRole === 'revoke')) {
-			if (program.admins.length <= 1) {
-				if (newRole == 'revoke') return setError(formData, '', 'You cannot revoke the last admin');
-				if (newRole == 'editor')
-					return setError(formData, '', 'You cannot change the last admin to an editor');
-			}
-		}
+		// if program.admins.length <= 1
+		// admin -NOT ALLOWED-> editor
+		// admin -NOT ALLOWED-> revoke
+		const fromRole = program.admins.find((admin) => admin.id === userId)
+			? 'admin'
+			: program.admins.find((admin) => admin.id === userId)
+				? 'editor'
+				: 'revoke';
+
+		const isAllowed = ProgramActions.isAllowedToEditSuperUser(fromRole, newRole, program.admins);
+		if (isAllowed.error) return setError(formData, '', isAllowed.error);
 
 		function getData() {
 			switch (newRole) {

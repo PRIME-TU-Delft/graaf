@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { whereHasProgramPermission } from './Programs';
+import { whereHasProgramPermission } from '../permissions';
 import { regularUser, superAdminUser } from './tests/helpers/test-users';
 
 describe('hasProgramPermissions', () => {

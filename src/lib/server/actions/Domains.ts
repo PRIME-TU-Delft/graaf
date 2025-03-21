@@ -38,7 +38,7 @@ export class DomainActions {
 			await prisma.domain.create({
 				data: {
 					name: form.data.name,
-					style: form.data.color == '' ? null : (form.data.color as DomainStyle),
+					style: form.data.style == '' ? null : (form.data.style as DomainStyle),
 					order: lastDomains ? lastDomains.order + 1 : 0,
 					graphId: form.data.graphId
 				}
@@ -117,7 +117,7 @@ export class DomainActions {
 				where: { id: form.data.domainId },
 				data: {
 					name: form.data.name,
-					style: form.data.color == '' ? null : (form.data.color as DomainStyle)
+					style: form.data.style == '' ? null : (form.data.style as DomainStyle)
 				}
 			});
 		} catch (e: unknown) {

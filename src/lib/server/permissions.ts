@@ -1,9 +1,34 @@
-import type { CoursePermissionsOptions } from '$lib/utils/permissions';
+import type { CoursePermissionsOptions, ProgramPermissionsOptions } from '$lib/utils/permissions';
 import { setError } from '$lib/utils/setError';
 import type { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
-import prisma from '../db/prisma';
+import prisma from './db/prisma';
+
+/**
+ * Check if the user has permissions to edit the program
+ * @param user - User
+ * @param isEither - PermissionsOptions
+ * @returns A json object that can be used in a Prisma where query
+ * @example
+ * const user = { id: 1, role: 'ADMIN' };
+ * const permissions = whereHasProgramPermission(user, "ProgramAdminEditor");
+ * const program = await prisma.program.findFirst({ where: { id: 1, ...permissions } });
+ */
+
+export function whereHasProgramPermission(user: User, has: ProgramPermissionsOptions) {
+	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
+	if (user.role == 'ADMIN') return {};
+	else if (has === 'OnlySuperAdmin') throw new Error('Only super admins can do this action');
+
+	const hasEditorPermission = { editors: { some: { id: user.id } } };
+	const hasAdminPermission = { admins: { some: { id: user.id } } };
+
+	if (has == 'ProgramAdmin') return { OR: [hasAdminPermission] };
+	if (has == 'ProgramAdminEditor') return { OR: [hasAdminPermission, hasEditorPermission] };
+
+	throw new Error('Invalid permission');
+}
 
 /**
  * Check if the user has permissions to edit the program
@@ -15,6 +40,7 @@ import prisma from '../db/prisma';
  * const adminPermissions = whereHasCoursePermission(user, {  courseAdmin: true, courseEditor: false });
  * const program = await prisma.program.findFirst({ where: { id: 1, ...adminPermissions } }); // Only program admins, editors,
  */
+
 export function whereHasCoursePermission(user: User, has: CoursePermissionsOptions) {
 	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
 	if (user.role == 'ADMIN') return {};

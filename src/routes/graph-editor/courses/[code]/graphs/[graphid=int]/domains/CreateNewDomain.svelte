@@ -36,7 +36,7 @@
 
 	const { form: formData, enhance } = form;
 
-	const domainColors = settings.COLOR_KEYS;
+	const domainStyles = settings.COLOR_KEYS;
 </script>
 
 <DialogButton
@@ -65,28 +65,28 @@
 			<Form.FieldErrors />
 		</Form.Field>
 
-		<Form.Fieldset {form} name="color" class="flex items-center justify-between">
+		<Form.Fieldset {form} name="style" class="flex items-center justify-between">
 			<div>
 				<Form.Legend>
-					Domain color
+					Domain style
 					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 				</Form.Legend>
-				<Form.Description>the color the domain is visualised with</Form.Description>
+				<Form.Description>the style the domain is visualised with</Form.Description>
 				<Form.FieldErrors />
 			</div>
 
-			<RadioGroup.Root name="color" bind:value={$formData.color} class="grid py-2">
+			<RadioGroup.Root name="style" bind:value={$formData.style} class="grid py-2">
 				<Popover.Root>
 					<Popover.Trigger
 						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
 					>
 						<div
 							class="h-6 w-6 rounded-full"
-							style="background: {$formData.color
-								? settings.COLORS[$formData.color as keyof typeof settings.COLORS]
+							style="background: {$formData.style
+								? settings.COLORS[$formData.style as keyof typeof settings.COLORS]
 								: '#ccc'}"
 						></div>
-						{$formData.color.toLowerCase().replaceAll('_', ' ') || 'None'}
+						{$formData.style.toLowerCase().replaceAll('_', ' ') || 'None'}
 						<ChevronDown />
 					</Popover.Trigger>
 					<Popover.Content>
@@ -104,23 +104,23 @@
 							{/snippet}
 						</Form.Control>
 
-						{#each domainColors as color (color)}
+						{#each domainStyles as style (style)}
 							<Form.Control>
 								{#snippet children({ props })}
 									<div class="flex items-center">
 										<RadioGroup.Item
-											style="border-color: {settings.COLORS[color]}; background: {settings.COLORS[
-												color
+											style="border-color: {settings.COLORS[style]}; background: {settings.COLORS[
+												style
 											]}50; border-width: 3px"
 											class="h-6 w-6"
-											value={color}
+											value={style}
 											{...props}
 										/>
 										<Form.Label class="w-full cursor-pointer p-2">
-											{color.replaceAll('_', ' ').toLowerCase()}
+											{style.replaceAll('_', ' ').toLowerCase()}
 										</Form.Label>
 									</div>
-									{#if $formData.color === color}{/if}
+									{#if $formData.style === style}{/if}
 								{/snippet}
 							</Form.Control>
 						{/each}

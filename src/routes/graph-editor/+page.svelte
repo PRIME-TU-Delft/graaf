@@ -89,8 +89,9 @@
 				user={data.user}
 				{program}
 				courses={data.courses}
-				courseForm={data.courseForm}
 				{showOnlyUnarchived}
+				linkCoursesForm={data.linkCoursesForm}
+				createNewCourseForm={data.createNewCourseForm}
 			/>
 		{/each}
 	</section>

@@ -9,11 +9,11 @@
 		type VisibilityState
 	} from '@tanstack/table-core';
 
+	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
 
-	import AddCourse from '../../../addCourse/AddCourse.svelte';
 	import UnlinkCourses from './UnlinkCourses.svelte';
 
 	import { hasProgramPermissions } from '$lib/utils/permissions';

@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
 import * as settings from '$lib/settings';
 import type { GraphD3 } from './GraphD3';
-import type { EdgeSelection } from './types';
+import type { EdgeData, EdgeSelection } from './types';
 
 export class EdgeToolbox {
 	static init(graph: GraphD3) {
@@ -21,16 +21,19 @@ export class EdgeToolbox {
 			.attr('orient', 'auto-start-reverse')
 			.append('path')
 			.attr('fill', 'context-fill')
-			.attr('d', `M 0 0 L 10 5 L 0 10 Z`);
+			.attr('d', 'M 0 0 L 10 5 L 0 10 Z');
 	}
 
 	static create(selection: EdgeSelection) {
+		const styleOf = (edge: EdgeData) =>
+			edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
+
 		selection
-			.attr('id', (edge) => edge.id)
+			.attr('id', (edge) => edge.uuid)
 			.attr('class', 'edge')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', (edge) => settings.NODE_STYLES[edge.source.style].stroke)
-			.attr('fill', (edge) => settings.NODE_STYLES[edge.source.style].stroke)
+			.attr('stroke', (edge) => styleOf(edge).stroke)
+			.attr('fill', (edge) => styleOf(edge).stroke)
 			.attr('marker-end', 'url(#arrowhead)')
 			.call(EdgeToolbox.updatePosition);
 	}

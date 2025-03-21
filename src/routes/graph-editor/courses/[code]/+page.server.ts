@@ -1,6 +1,7 @@
-import { GraphActions, hasCourseGraphPermissions } from '$lib/server/actions/Graphs.js';
+import { GraphActions } from '$lib/server/actions/Graphs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma';
+import { whereHasCoursePermission } from '$lib/server/permissions.js';
 import { duplicateGraphSchema, graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema.js';
 import type { Course, Prisma } from '@prisma/client';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
@@ -47,7 +48,7 @@ export const load = (async ({ params, locals }) => {
 				NOT: {
 					code: dbCourse.code
 				},
-				...hasCourseGraphPermissions(user)
+				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			},
 			include: {
 				graphs: { select: { name: true } }

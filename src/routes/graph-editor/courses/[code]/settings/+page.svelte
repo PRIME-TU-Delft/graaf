@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
 	import type { PageData } from './$types';
@@ -54,7 +53,7 @@
 			you are allowed to edit.
 		</p>
 		<ul>
-			{#each data.course.programs as program}
+			{#each data.course.programs as program (program.id)}
 				<li>
 					{#if hasProgramPermissions(data.user, program, 'ProgramAdminEditor')}
 						<a href={`/graph-editor/programs/${program.id}/settings`}>{program.name}</a>

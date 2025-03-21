@@ -1,5 +1,5 @@
 import { ProgramActions } from '$lib/server/actions';
-import { whereHasProgramPermission } from '$lib/server/actions/Programs';
+import { whereHasProgramPermission } from '$lib/server/permissions';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { courseSchema } from '$lib/zod/courseSchema';
@@ -55,7 +55,7 @@ export const load = (async ({ params, locals }) => {
 		};
 	} catch (e) {
 		if (e instanceof Error) throw redirect(303, `/graph-editor/?error=${e.message}`);
-		throw redirect(303, `/graph-editor`);
+		throw redirect(303, '/graph-editor');
 	}
 }) satisfies ServerLoad;
 

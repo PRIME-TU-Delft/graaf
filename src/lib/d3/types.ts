@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 
 import * as settings from '$lib/settings';
 
+export { NodeType };
 export type {
 	PrismaGraphPayload,
 	PrismaDomainPayload,
@@ -19,6 +20,14 @@ export type {
 	NodeSelection,
 	EdgeSelection
 };
+
+// -----------------------------> Enums
+
+// Node types
+enum NodeType {
+	DOMAIN = 'domain',
+	SUBJECT = 'subject'
+}
 
 // -----------------------------> Types
 
@@ -79,8 +88,10 @@ type GraphData = {
 
 // Abstraction for domains and subjects
 type NodeData = {
-	id: string;
-	style: keyof typeof settings.NODE_STYLES;
+	id: number;
+	uuid: string;
+	type: NodeType;
+	style: keyof typeof settings.STYLES | null;
 	text: string;
 	x: number;
 	y: number;
@@ -95,7 +106,7 @@ type NodeData = {
 
 // Abstraction for relations
 type EdgeData = {
-	id: string;
+	uuid: string;
 	source: NodeData;
 	target: NodeData;
 };

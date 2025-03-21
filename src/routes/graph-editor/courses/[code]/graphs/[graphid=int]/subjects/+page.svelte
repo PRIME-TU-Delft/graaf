@@ -28,7 +28,7 @@
 	});
 
 	async function handleRearrange(newSubjectList: typeof graph.subjects) {
-		let needRearrange = newSubjectList
+		let body = newSubjectList
 			.filter((subject, index) => subject.order != index)
 			.map((d, index) => {
 				return {
@@ -38,14 +38,14 @@
 				};
 			});
 
-		const response = await fetch(`${graph.id}/subjects/reorder`, {
+		const response = await fetch('/api/subjects/order', {
 			method: 'PATCH',
-			body: JSON.stringify(needRearrange),
+			body: JSON.stringify(body),
 			headers: { 'content-type': 'application/json' }
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update subject color, try again later!');
+			toast.error('Failed to update subject style, try again later!');
 			return;
 		}
 
