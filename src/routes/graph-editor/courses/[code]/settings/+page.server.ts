@@ -1,4 +1,4 @@
-import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { redirect, type ServerLoad } from '@sveltejs/kit';

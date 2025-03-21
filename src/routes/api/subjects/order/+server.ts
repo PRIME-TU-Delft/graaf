@@ -4,7 +4,7 @@ import { patchOrderSchema } from '../schemas';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import type { User } from '@prisma/client';
-import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 
 /*
  * Reorder the subjects in a graph

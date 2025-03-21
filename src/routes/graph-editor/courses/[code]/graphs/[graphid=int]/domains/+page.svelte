@@ -78,6 +78,8 @@
 			toast.error('Failed to update domain style, try again later');
 			return;
 		}
+
+		
 	}
 
 	// Send a list of domains to the server to rearrange them

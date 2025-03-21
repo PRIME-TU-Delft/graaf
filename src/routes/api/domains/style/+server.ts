@@ -4,7 +4,7 @@ import { patchStyleSchema } from '../schemas';
 
 import type { DomainStyle, User } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
-import { whereHasCoursePermission } from '$lib/server/actions/Courses';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 
 /*
  * Restyle a domain
