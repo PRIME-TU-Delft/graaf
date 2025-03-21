@@ -29,8 +29,8 @@ export class EdgeToolbox {
 			.attr('id', (edge) => edge.uuid)
 			.attr('class', 'edge')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', (edge) => settings.NODE_STYLES[edge.source.style].stroke)
-			.attr('fill', (edge) => settings.NODE_STYLES[edge.source.style].stroke)
+			.attr('stroke', (edge) => settings.STYLES[edge.source.style].stroke)
+			.attr('fill', (edge) => settings.STYLES[edge.source.style].stroke)
 			.attr('marker-end', 'url(#arrowhead)')
 			.call(EdgeToolbox.updatePosition);
 	}

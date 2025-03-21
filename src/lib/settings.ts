@@ -95,18 +95,18 @@ export const COLORS = {
 
 export const COLOR_KEYS = Object.keys(COLORS) as (keyof typeof COLORS)[];
 
-export const NODE_STYLES = {
-	DEFAULT: {
-		display_name: 'Default',
-		stroke: '#000000',
-		fill: '#ffffff',
-		path: `M ${left} ${top}
-				 L ${right} ${top}
-				 L ${right} ${bottom}
-				 L ${left} ${bottom}
-				 Z`
-	},
+export const DEFAULT_STYLE = {
+	display_name: 'Default',
+	stroke: '#000000',
+	fill: '#ffffff',
+	path: `M ${left} ${top}
+			 L ${right} ${top}
+			 L ${right} ${bottom}
+			 L ${left} ${bottom}
+			 Z`
+}
 
+export const STYLES = {
 	PROSPEROUS_RED: {
 		display_name: 'Prosperous Red',
 		stroke: COLORS.PROSPEROUS_RED,

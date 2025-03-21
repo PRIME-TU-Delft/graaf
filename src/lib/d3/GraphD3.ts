@@ -238,7 +238,7 @@ export class GraphD3 {
 				id: domain.id,
 				uuid: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
 				type: NodeType.DOMAIN,
-				style: (domain.style ?? 'DEFAULT') as keyof typeof settings.NODE_STYLES,
+				style: domain.style,
 				text: domain.name,
 				x: domain.x,
 				y: domain.y,
@@ -284,7 +284,7 @@ export class GraphD3 {
 				id: subject.id,
 				uuid: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
 				type: NodeType.SUBJECT,
-				style: domain_node?.style ?? 'DEFAULT',
+				style: domain_node?.style ?? null,
 				text: subject.name,
 				parent: domain_node,
 				x: subject.x,

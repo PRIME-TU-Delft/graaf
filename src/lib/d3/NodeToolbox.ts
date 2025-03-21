@@ -32,6 +32,8 @@ class NodeToolbox {
 	}
 
 	static create(selection: NodeSelection, graph: GraphD3) {
+		const styleOf = (node: NodeData) => node.style ? settings.STYLES[node.style] : settings.DEFAULT_STYLE;
+
 		// Node attributes
 		selection
 			.attr('id', (node) => node.id)
@@ -48,9 +50,9 @@ class NodeToolbox {
 		selection
 			.append('path')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', (node) => settings.NODE_STYLES[node.style].stroke)
-			.attr('fill', (node) => settings.NODE_STYLES[node.style].fill)
-			.attr('d', (node) => settings.NODE_STYLES[node.style].path);
+			.attr('stroke', (node) => styleOf(node).stroke)
+			.attr('fill', (node) => styleOf(node).fill)
+			.attr('d', (node) => styleOf(node).path);
 
 		// Node text
 		selection

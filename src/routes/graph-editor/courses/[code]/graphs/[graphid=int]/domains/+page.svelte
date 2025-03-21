@@ -59,12 +59,12 @@
 	});
 
 	/**
-	 * Handles the color change of a domain in domainColor snippet
-	 * @param key - The color key
+	 * Handles the style change of a domain in domainColor snippet
+	 * @param key - The style key
 	 * @param domainIndex - The index of the domain
 	 */
 
-	async function handleChangeColor(key: DomainStyle | null, domainIndex: number) {
+	async function handleChangeStyle(key: DomainStyle | null, domainIndex: number) {
 		const domain = course.graphs[0].domains[domainIndex];
 		domain.style = key;
 
@@ -75,7 +75,7 @@
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update domain color, try again later');
+			toast.error('Failed to update domain style, try again later');
 			return;
 		}
 	}
@@ -117,7 +117,7 @@
 		<Table.Row>
 			<Table.Head class="w-12"></Table.Head>
 			<Table.Head class="max-w-12 px-0">Name</Table.Head>
-			<Table.Head>Color</Table.Head>
+			<Table.Head>Style</Table.Head>
 			<Table.Head class="text-right">Settings</Table.Head>
 		</Table.Row>
 	</Table.Header>
@@ -137,7 +137,7 @@
 					{domain.name}
 				</Table.Cell>
 				<Table.Cell>
-					{@render domainColor(domain.style, index)}
+					{@render domainStyle(domain.style, index)}
 				</Table.Cell>
 				<Table.Cell>
 					<ChangeDomain {graph} {domain} />
@@ -201,11 +201,11 @@
 
 <div class="h-dvh"></div>
 
-<!-- This snippet defines the color button in the Domains table. 
+<!-- This snippet defines the style button in the Domains table. 
  ONCHANGE, it updates the UI locally, then updates the server -->
-{#snippet domainColor(colorKey: string | null, domainIndex: number)}
-	{@const color = colorKey ? settings.COLORS[colorKey as keyof typeof settings.COLORS] : '#cccccc'}
-	{@const triggerId = `color-trigger-${useId()}`}
+{#snippet domainStyle(style: string | null, domainIndex: number)}
+	{@const color = style ? settings.COLORS[style as keyof typeof settings.COLORS] : '#cccccc'}
+	{@const triggerId = `style-trigger-${useId()}`}
 
 	<Popover.Root>
 		<Popover.Trigger class="interactive" id={triggerId}>
@@ -213,7 +213,7 @@
 				class="relative h-6 w-6 scale-100 rounded-full shadow-none transition-all duration-300 hover:scale-110 hover:shadow-lg"
 				style="background: {color}90; border: 2px solid {color};"
 			>
-				{#if colorKey == null}
+				{#if style == null}
 					<div
 						class="absolute left-1/2 top-1/2 h-1 w-3 -translate-x-1/2 -translate-y-1/2 -rotate-[60deg] rounded-full bg-gray-500/30"
 					></div>
@@ -221,17 +221,17 @@
 			</div>
 		</Popover.Trigger>
 		<Popover.Content side="right" class="space-y-1">
-			<p class="font-bold">Change color</p>
+			<p class="font-bold">Change style</p>
 			<p class="pb-4 text-xs text-gray-700">For domain: {graph.domains[domainIndex].name}</p>
 			<Button
 				variant="outline"
 				class={cn(
 					'flex w-full items-center border-0 border-blue-900 p-1 transition-all hover:bg-blue-200/50 focus:bg-blue-200/50',
 					{
-						'border-2 bg-blue-200/30': colorKey == null
+						'border-2 bg-blue-200/30': style == null
 					}
 				)}
-				onclick={() => handleChangeColor(null, domainIndex)}
+				onclick={() => handleChangeStyle(null, domainIndex)}
 			>
 				<div
 					style="border-color: {color}50; background: {color}30; border-width: 3px"
@@ -247,10 +247,10 @@
 					class={cn(
 						'flex w-full items-center border-0 border-blue-900 p-1 transition-all hover:bg-blue-200/50 focus:bg-blue-200/50',
 						{
-							'border-2 bg-blue-200/30': colorKey == key
+							'border-2 bg-blue-200/30': style == key
 						}
 					)}
-					onclick={() => handleChangeColor(key, domainIndex)}
+					onclick={() => handleChangeStyle(key, domainIndex)}
 				>
 					<div
 						style="border-color: {color}; background: {color}50; border-width: 3px"

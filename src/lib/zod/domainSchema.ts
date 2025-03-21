@@ -8,7 +8,7 @@ export const domainSchema = z.object({
 	domainId: z.number(),
 	graphId: z.number().nonnegative('Invalid graph id'),
 	name: z.string().min(1).max(settings.MAX_DOMAIN_NAME_LENGTH),
-	color: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
+	style: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
 });
 
 export const deleteDomainSchema = z.object({
