@@ -6,7 +6,11 @@ const testUsers = [
 	{ fn: 'Abel', ln: 'de Bruijn', admin: true },
 	{ fn: 'Bram', ln: 'Kreulen', admin: true },
 	{ fn: 'Julia', ln: 'van der Kris', admin: true },
-	{ fn: 'Beryl', ln: 'van Gelderen', admin: true }
+	{ fn: 'Beryl', ln: 'van Gelderen', admin: true },
+	{ fn: 'Fokko', ln: 'van de Bult', admin: false },
+	{ fn: 'Boris', ln: 'Pavic', admin: false },
+	{ fn: 'Teun', ln: 'Janssen', admin: false },
+	{ fn: 'Dani', ln: 'Petrova', admin: false }
 ];
 
 const prisma = new PrismaClient();
