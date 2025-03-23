@@ -108,19 +108,30 @@ model Course {
 }
 
 model Graph {
-  id       Int    @id @default(autoincrement())
-  name     String
-  courseId String
+  id        Int     @id @default(autoincrement())
+  name      String
+  courseId  String
+  isVisible Boolean @default(false)
 
   course   Course    @relation("CourseGraph", fields: [courseId], references: [code])
   domains  Domain[]  @relation("GraphDomain")
   subjects Subject[] @relation("GraphSubject")
   lectures Lecture[] @relation("GraphLecture")
+  links    Link[]    @relation("GraphLink")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([courseId, name])
+}
+
+model Link {
+  name String @id @default("")
+
+  graphId Int
+  graph   Graph @relation("GraphLink", fields: [graphId], references: [id], onDelete: Cascade)
+
+  @@unique([name, graphId])
 }
 
 enum DomainStyle {

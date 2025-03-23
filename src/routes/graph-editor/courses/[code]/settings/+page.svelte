@@ -4,7 +4,7 @@
 	import type { PageData } from './$types';
 	import ArchiveCourse from './ArchiveCourse.svelte';
 	import EditCourseName from './EditCourseName.svelte';
-	import GraphLinks from './GraphLinks.svelte';
+	import GraphLinks from './graphLinks/GraphLinks.svelte';
 	import CourseAdmins from './superUsers/CourseAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();

@@ -2,6 +2,7 @@ import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { CourseActions, whereHasCoursePermission } from '$lib/server/permissions';
 import { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
+import { graphEditSchema } from '$lib/zod/graphSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -28,7 +29,11 @@ export const load = (async ({ params, locals }) => {
 						editors: true
 					}
 				},
-				graphs: true
+				graphs: {
+					include: {
+						links: true
+					}
+				}
 			}
 		});
 
@@ -43,7 +48,8 @@ export const load = (async ({ params, locals }) => {
 			allUsers,
 			editCourseForm: await superValidate(zod(courseSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
-			changeArchiveForm: await superValidate(zod(changeArchive))
+			changeArchiveForm: await superValidate(zod(changeArchive)),
+			editGraphForm: await superValidate(zod(graphEditSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page

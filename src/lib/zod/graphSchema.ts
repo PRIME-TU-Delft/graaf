@@ -18,3 +18,15 @@ export const duplicateGraphSchema = z.object({
 	newName: z.string().min(1).max(settings.MAX_GRAPH_NAME_LENGTH),
 	graphId: z.number().min(1)
 });
+
+export const graphEditSchema = graphSchema.extend({
+	graphId: z.number().min(1),
+	isVisible: z.boolean(),
+	aliases: z.array(
+		z
+			.string()
+			.min(1)
+			.max(settings.MAX_LINK_NAME_LENGTH)
+			.regex(/^[a-zA-Z-]+$/, 'Only letters and `-` without a space are allowed')
+	)
+});
