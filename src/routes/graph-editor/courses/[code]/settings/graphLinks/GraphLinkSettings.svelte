@@ -8,17 +8,19 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { cn } from '$lib/utils';
 	import { graphEditSchema } from '$lib/zod/graphSchema';
-	import { ChevronDown, Code, Eye, EyeClosed, Undo2 } from '@lucide/svelte';
-	import type { Course, Graph, Link } from '@prisma/client';
+	import { ChevronDown, Code, Copy, Eye, EyeClosed, Undo2 } from '@lucide/svelte';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
+	import EmbedGraph from './EmbedGraph.svelte';
+	import { EmbedState } from './GraphEmbedState.svelte';
 
 	type GraphLinksProps = {
 		course: Course;
-		graph: Graph & { links: Link[] };
+		graph: Graph & { links: Link[]; lectures: Lecture[] };
 	};
 
 	const { course, graph }: GraphLinksProps = $props();
@@ -56,6 +58,8 @@
 		aliases = [...aliases, newAlias];
 		newAlias = '';
 	}
+
+	const graphEmbedState = new EmbedState();
 </script>
 
 <DialogButton
@@ -78,10 +82,12 @@
 
 						<div class="flex items-center gap-2">
 							{#if isVisible}
-								<Button>
-									<!-- TODO show embeddings -->
-									<Code />
-								</Button>
+								<Popover.Root>
+									<Popover.Trigger><Code /></Popover.Trigger>
+									<Popover.Content class="w-96">
+										<EmbedGraph {graph} {aliases} {course} {graphEmbedState} />
+									</Popover.Content>
+								</Popover.Root>
 							{/if}
 
 							<Button onclick={() => (isVisible = !isVisible)}>
@@ -95,6 +101,22 @@
 		</Form.Field>
 
 		{#if isVisible}
+			{@const mainLink = `${page.url.host}/graph/${graph.id}/${graph.name.replaceAll(' ', '_')}`}
+			<div class="relative mb-2">
+				<Input value={mainLink} disabled />
+
+				<Button
+					variant="outline"
+					class="absolute right-1 top-1/2 size-8 -translate-y-1/2"
+					onclick={() => {
+						navigator.clipboard.writeText(mainLink);
+						toast.success('Link copied to clipboard!');
+					}}
+				>
+					<Copy class="size-4" />
+				</Button>
+			</div>
+
 			<div class="mb-2 rounded border p-2">
 				<h3 class="text-lg font-bold">Aliases</h3>
 				<p class="text-sm">An alias is an extra link that will redirect to the main link.</p>
