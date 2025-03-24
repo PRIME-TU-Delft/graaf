@@ -29,7 +29,9 @@
 			return { error: 'Select a graph alias' };
 		}
 
-		const url = new URL(`${page.url.host}/${course.code}/${graph.id}/${graphEmbedState.alias}`);
+		const url = new URL(
+			`${page.url.host}/graph/${course.code}/${graph.id}/${graphEmbedState.alias}`
+		);
 
 		url.searchParams.set('show', graphEmbedState.show);
 
