@@ -2,13 +2,15 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
+	import type { CoursePermissions } from '$lib/utils/permissions';
 	import { ArrowRight, ChevronDown, Eye, EyeClosed } from '@lucide/svelte';
-	import type { Course, Graph, Link } from '@prisma/client';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import GraphLinkSettings from './GraphLinkSettings.svelte';
+	import { page } from '$app/state';
 
 	type GraphLinksProps = {
-		course: Course;
-		graphs: (Graph & { links: Link[] })[];
+		course: Course & CoursePermissions;
+		graphs: (Graph & { links: Link[]; lectures: Lecture[] })[];
 	};
 
 	const { course, graphs }: GraphLinksProps = $props();
@@ -41,7 +43,11 @@
 				<Table.Row class="p-0">
 					<Table.Cell class="flex items-center gap-1 py-3 font-medium">
 						{graph.name}
-						<Eye />
+						{#if graph.isVisible}
+							<Eye class="border-sm inline size-6 rounded bg-blue-100 p-1" />
+						{:else}
+							<EyeClosed class="border-sm inline size-6 rounded bg-blue-100 p-1" />
+						{/if}
 					</Table.Cell>
 					<Table.Cell class="items-center p-1">{@render aliasDropdown(graph)}</Table.Cell>
 					<Table.Cell class="p-1">
@@ -58,7 +64,7 @@
 				</Table.Row>
 
 				{#each graph.links as link, i}
-					{@render alias(link.name, i % 2 == 0)}
+					{@render alias(link.name, graph, i % 2 == 0)}
 				{/each}
 			{:else}
 				<Table.Row>
@@ -89,9 +95,14 @@
 	{/if}
 {/snippet}
 
-{#snippet alias(name: string, isOdd: boolean)}
+{#snippet alias(name: string, graph: Graph, isOdd: boolean)}
 	<Table.Row class={cn(['bg-blue-100/50 hover:bg-blue-100/30', isOdd && 'bg-blue-100/50'])}>
-		<Table.Cell class="pl-8 " colspan={3}>graph/{name}</Table.Cell>
+		<Table.Cell class="pl-8 " colspan={3}
+			>{page.url.host}/{course.code}/graph/{graph.id}/{graph.name.replaceAll(
+				' ',
+				'_'
+			)}/{name}</Table.Cell
+		>
 		<Table.Cell class="pl-8 " colspan={3}>
 			<Button href={`/graph-editor/courses/${course.code}/graphs/${name}`} variant="outline">
 				<ArrowRight class="h-4 w-4" />

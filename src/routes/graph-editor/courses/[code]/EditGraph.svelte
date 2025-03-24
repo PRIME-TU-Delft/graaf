@@ -5,7 +5,6 @@
 	import { Label } from '$lib/components/ui/label';
 	import type { Graph } from '@prisma/client';
 	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
-	import GraphSettings from './GraphSettings.svelte';
 	import { page } from '$app/state';
 
 	type EditGraphProps = {
@@ -62,6 +61,7 @@
 			{/if}
 		</div>
 
-		<GraphSettings {graph} bind:isGraphSettingsOpen />
+		<!-- TODO: add embed and settings -->
+		<!-- <GraphSettings {graph} bind:isGraphSettingsOpen /> -->
 	</DialogButton>
 </div>

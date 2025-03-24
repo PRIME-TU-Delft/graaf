@@ -1,7 +1,12 @@
 import { env } from '$env/dynamic/private';
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import type { duplicateGraphSchema, graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
+import type {
+	duplicateGraphSchema,
+	graphEditSchema,
+	graphSchema,
+	graphSchemaWithId
+} from '$lib/zod/graphSchema';
 import type { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { redirect } from '@sveltejs/kit';
@@ -61,27 +66,125 @@ export class GraphActions {
 		return await this.updateCourse(query, form, 'name');
 	}
 
-	/**
-	 * Permissions:
-	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
-	 */
-	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
-		const query = prisma.course.update({
+	static updateLinksInGraph(
+		user: User,
+		courseCode: string,
+		graphId: number,
+		newLinks: string[],
+		oldLinks: string[]
+	) {
+		const newLinkSet = new Set(newLinks); // Assume new Set(["a", "b"]);
+		const oldLinkSet = new Set(oldLinks); // Assume new Set(["a", "c"]);
+
+		const createSet = newLinkSet.difference(oldLinkSet); // Set(1) { "b" }
+		const deleteSet = oldLinkSet.difference(newLinkSet); // Set(1) { "c" }
+
+		const createArray = Array.from(createSet).map((link) => ({ name: link }));
+		const deleteArray = Array.from(deleteSet).map((link) => ({ name: link }));
+
+		console.log(createArray, deleteArray);
+
+		const editorQuery = prisma.course.update({
 			where: {
-				code: form.data.courseCode,
+				code: courseCode,
 				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			},
 			data: {
 				graphs: {
 					update: {
-						where: { id: form.data.graphId },
-						data: { name: form.data.name }
+						where: { id: graphId },
+						data: {
+							links: { createMany: { data: createArray } }
+						}
 					}
 				}
 			}
 		});
 
-		return await this.updateCourse(query, form, 'name');
+		const adminQuery = prisma.course.update({
+			where: {
+				code: courseCode,
+				...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+			},
+			data: {
+				graphs: {
+					update: {
+						where: { id: graphId },
+						data: {
+							links: { deleteMany: deleteArray }
+						}
+					}
+				}
+			}
+		});
+
+		return [editorQuery, adminQuery];
+	}
+
+	/**
+	 * Permissions:
+	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
+	 */
+	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphEditSchema>>) {
+		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid graph name');
+
+		console.log('new graph alias', form.data.aliases);
+
+		try {
+			const query = await prisma.course.update({
+				where: {
+					code: form.data.courseCode,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					graphs: {
+						update: {
+							where: { id: form.data.graphId },
+							data: { name: form.data.name }
+						}
+					}
+				},
+				select: {
+					graphs: {
+						where: { id: form.data.graphId },
+						include: { links: true }
+					}
+				}
+			});
+
+			if (!query.graphs.length) return setError(form, '', 'Graph not found');
+
+			const oldLinks = query.graphs[0].links.map((link) => link.name);
+			console.log(JSON.stringify(query), oldLinks);
+
+			const updateVisibleQuery = prisma.course.update({
+				where: {
+					code: form.data.courseCode,
+					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+				},
+				data: {
+					graphs: {
+						update: { where: { id: form.data.graphId }, data: { isVisible: form.data.isVisible } }
+					}
+				}
+			});
+
+			const linkQueries = this.updateLinksInGraph(
+				user,
+				form.data.courseCode,
+				form.data.graphId,
+				form.data.aliases,
+				oldLinks
+			);
+
+			// TODO: This will fail if the user is an editor
+			await prisma.$transaction([updateVisibleQuery, ...linkQueries]);
+		} catch (e) {
+			console.log('error', e);
+			return setError(form, '', 'Failed to update graph');
+		}
+
+		return { form };
 	}
 
 	/**
@@ -94,10 +197,12 @@ export class GraphActions {
 		user: User,
 		form: SuperValidated<Infer<typeof graphSchemaWithId>>
 	) {
+		if (!form.valid) return setError(form, '', 'Invalid graph id');
+
 		const query = prisma.course.update({
 			where: {
 				code: form.data.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
 			},
 			data: {
 				graphs: {
@@ -114,7 +219,7 @@ export class GraphActions {
 	/**
 	 * Permissions:
 	 * https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#C6
-	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
+	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can duplicate graphs
 	 * @returns
 	 */
 	static async duplicateGraph(

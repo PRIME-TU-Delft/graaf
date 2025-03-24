@@ -1,30 +1,32 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import DialogButton from '$lib/components/DialogButton.svelte';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { cn } from '$lib/utils';
+	import { hasCoursePermissions, type CoursePermissions } from '$lib/utils/permissions';
 	import { graphEditSchema } from '$lib/zod/graphSchema';
-	import { ChevronDown, Code, Copy, Eye, EyeClosed, Undo2 } from '@lucide/svelte';
-	import type { Course, Graph, Lecture, Link } from '@prisma/client';
+	import { ChevronDown, Code, Copy, Eye, EyeClosed, Trash, Undo2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+
+	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import { Input } from '$lib/components/ui/input';
+	import DeleteGraph from './DeleteGraph.svelte';
+
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import type { PageData } from '../$types';
-	import EmbedGraph from './EmbedGraph.svelte';
-	import { EmbedState } from './GraphEmbedState.svelte';
 
 	type GraphLinksProps = {
-		course: Course;
-		graph: Graph & { links: Link[]; lectures: Lecture[] };
+		course: Course & CoursePermissions;
+		graph: Graph & {
+			links: Link[];
+			lectures: Lecture[];
+		};
 	};
 
 	const { course, graph }: GraphLinksProps = $props();
-	let graphLinkSettingsOpen = $state(true);
+	let graphLinkSettingsOpen = $state(false);
 
 	let isVisible = $state(graph.isVisible);
 	let aliases = $state(graph.links.map((link) => link.name));
@@ -36,8 +38,10 @@
 		id: 'change-graph-' + id,
 		validators: zodClient(graphEditSchema),
 		onResult: ({ result }) => {
+			console.log({ result });
+
 			if (result.type == 'success') {
-				toast.success('Succesfully unlinked courses!');
+				toast.success('Succesfully changed graph!');
 
 				graphLinkSettingsOpen = false;
 			}
@@ -46,9 +50,27 @@
 
 	const { form: formData, enhance: formEnhance, submitting, delayed } = form;
 
+	function resetForm() {
+		$formData.graphId = graph.id;
+		$formData.courseCode = course.code;
+		$formData.name = graph.name;
+		$formData.isVisible = graph.isVisible;
+		$formData.aliases = graph.links.map((link) => link.name);
+	}
+
+	const hasChanges = $derived.by(() => {
+		return (
+			$formData.name !== graph.name ||
+			$formData.isVisible !== graph.isVisible ||
+			$formData.aliases.length !== graph.links.length ||
+			$formData.aliases.some((alias, i) => alias !== graph.links[i].name)
+		);
+	});
+
 	$effect(() => {
 		$formData.graphId = graph.id;
 		$formData.courseCode = course.code;
+		$formData.name = graph.name;
 		$formData.isVisible = isVisible;
 		$formData.aliases = aliases;
 	});
@@ -58,8 +80,6 @@
 		aliases = [...aliases, newAlias];
 		newAlias = '';
 	}
-
-	const graphEmbedState = new EmbedState();
 </script>
 
 <DialogButton
@@ -68,28 +88,20 @@
 	button="Settings"
 	title="Graph link settings"
 >
-	<form action="?/change-graph" method="POST" use:formEnhance>
+	<form action="?/edit-graph" method="POST" use:formEnhance>
 		<input type="text" name="graphId" value={graph.id} hidden />
 		<input type="text" name="courseCode" value={course.code} hidden />
 
-		<Form.Field {form} name="name">
+		<Form.Field {form} name="isVisible">
 			<Form.Control>
 				{#snippet children({ props })}
 					<Form.Label
 						class="flex items-center justify-between gap-2 rounded border border-blue-100 bg-blue-50 p-2"
 					>
+						<input type="hidden" value={$formData['isVisible']} {...props} />
 						<p>{@render showVisiblity()} Graph is {isVisible ? '' : 'not'} visible to students</p>
 
 						<div class="flex items-center gap-2">
-							{#if isVisible}
-								<Popover.Root>
-									<Popover.Trigger><Code /></Popover.Trigger>
-									<Popover.Content class="w-96">
-										<EmbedGraph {graph} {aliases} {course} {graphEmbedState} />
-									</Popover.Content>
-								</Popover.Root>
-							{/if}
-
 							<Button onclick={() => (isVisible = !isVisible)}>
 								{isVisible ? 'Make private' : 'Make public'}
 							</Button>
@@ -119,21 +131,25 @@
 
 			<div class="mb-2 rounded border p-2">
 				<h3 class="text-lg font-bold">Aliases</h3>
-				<p class="text-sm">An alias is an extra link that will redirect to the main link.</p>
-				<div class="mb-2 grid grid-cols-1 gap-x-4 gap-y-2 md:grid-cols-2">
+				<p class="text-sm">
+					An alias is an extra link that will redirect to the main link. It is used to embed a graph
+					in some other program like Brightspace. An embed can be created by clicking on the
+					<Code class="inline rounded bg-blue-100 p-2" /> icon when closing this modal.
+				</p>
+				<div class="mb-2 grid grid-cols-1 gap-x-4 gap-y-2">
 					{#each aliases as alias, i}
 						<div in:fade class="flex w-full items-center justify-between gap-1">
 							<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{alias}</p>
 
-							<Button class="ml-auto" variant="outline">Move <ChevronDown /></Button>
+							<Button class="ml-auto" variant="outline">Move to other graph<ChevronDown /></Button>
 							<Button
 								variant="destructive"
-								class="p-1"
+								class="w-16 p-1"
 								onclick={() => {
 									aliases = aliases.filter((_, index) => index !== i);
 								}}
 							>
-								Remove
+								<Trash />
 							</Button>
 						</div>
 					{/each}
@@ -172,17 +188,16 @@
 		<div class="flex items-center justify-between gap-1">
 			<Form.FormError class="w-full text-right" {form} />
 
-			{@render deleteGraph()}
+			{#if hasCoursePermissions(page.data.user, course, 'CourseAdminORProgramAdminEditor')}
+				<DeleteGraph {course} {graph} onSuccess={() => (graphLinkSettingsOpen = false)} />
+			{/if}
 
-			<Button
-				variant="outline"
-				disabled={$formData.name == graph.name}
-				onclick={() => ($formData.name = graph.name)}
-			>
-				<!-- Todo: make better reset -->
+			<Button variant="outline" disabled={!hasChanges || $submitting} onclick={resetForm}>
 				<Undo2 /> Reset
 			</Button>
-			<Form.FormButton disabled={$formData.name == graph.name}>Change</Form.FormButton>
+			<Form.FormButton disabled={!hasChanges || $submitting} loading={$delayed}>
+				Change graph
+			</Form.FormButton>
 		</div>
 	</form>
 </DialogButton>
@@ -197,31 +212,4 @@
 			<EyeClosed class="border-sm inline size-6 rounded bg-blue-100 p-1" />
 		</div>
 	{/if}
-{/snippet}
-
-{#snippet deleteGraph()}
-	<Popover.Root>
-		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-			Delete domain
-		</Popover.Trigger>
-		<Popover.Content>
-			<form
-				class="text-sm"
-				action="?/delete-graph"
-				method="POST"
-				use:enhance={() => {
-					toast.success('Graph successfully deleted!');
-					graphLinkSettingsOpen = false;
-				}}
-			>
-				<input type="hidden" name="graphId" value={graph.id} />
-				<input type="hidden" name="name" value={graph.name} />
-				<input type="hidden" name="courseCode" value={graph.courseId} />
-
-				<p class="pl-1 pt-1 font-bold">Are you sure?</p>
-
-				<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete graph</Form.Button>
-			</form>
-		</Popover.Content>
-	</Popover.Root>
 {/snippet}
