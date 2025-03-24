@@ -25,6 +25,7 @@
 		id: 'delete-graph-' + id,
 		validators: zodClient(graphSchemaWithId),
 		onResult: ({ result }) => {
+			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted graph!');
 
@@ -38,6 +39,7 @@
 	$effect(() => {
 		$formData.graphId = graph.id;
 		$formData.courseCode = course.code;
+		$formData.name = graph.name;
 	});
 </script>
 
@@ -49,6 +51,7 @@
 		<form action="?/delete-graph" method="POST" use:enhance>
 			<input type="text" name="graphId" value={graph.id} hidden />
 			<input type="text" name="courseCode" value={course.code} hidden />
+			<input type="text" name="name" value={graph.name} hidden />
 
 			<div class="flex items-center justify-between gap-1">
 				<p class="text-nowrap font-bold">Are you sure?</p>

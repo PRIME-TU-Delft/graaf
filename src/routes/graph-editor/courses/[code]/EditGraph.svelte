@@ -1,27 +1,31 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import { Checkbox } from '$lib/components/ui/checkbox';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import type { Graph } from '@prisma/client';
+	import type { Course, Graph, Lecture } from '@prisma/client';
 	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
-	import { page } from '$app/state';
+	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
+	import type { CoursePermissions } from '$lib/utils/permissions';
 
 	type EditGraphProps = {
-		graph: Graph;
-		course: CourseType;
+		course: Course &
+			CoursePermissions & {
+				graphs: {
+					name: string;
+				}[];
+			};
+		graph: Graph & {
+			lectures: Lecture[];
+		};
 		coursesAccessible: Promise<CourseType[]>;
 	};
 
 	let { graph, course, coursesAccessible }: EditGraphProps = $props();
 
-	let isGraphSettingsOpen = $state(false);
 	let isDuplicateOpen = $state(false);
-	let graphIsVisisble = $state(false);
+	let graphLinkSettingsOpen = $state(false);
 
 	function handleOpenGraphSettings(e: MouseEvent) {
 		e.preventDefault();
-		isGraphSettingsOpen = true;
+		graphLinkSettingsOpen = true;
 	}
 
 	function handleOpenDuplicate(e: MouseEvent) {
@@ -43,25 +47,12 @@
 	</DialogButton>
 
 	<DialogButton
+		bind:open={graphLinkSettingsOpen}
 		onclick={(e) => handleOpenGraphSettings(e)}
+		icon="link"
 		button="Settings"
-		title="Edit Graph"
-		description="TODO"
-		bind:open={isGraphSettingsOpen}
+		title="Graph link settings"
 	>
-		<h3 class="text-xl">Graph links</h3>
-		<div class="mb-2 flex items-center space-x-2 p-2">
-			<Checkbox id="is-visible" bind:checked={graphIsVisisble} />
-			<Label for="is-visible" class="text-sm font-medium leading-none">
-				Graph is {graphIsVisisble ? '' : 'not'} visible to students
-			</Label>
-
-			{#if graphIsVisisble}
-				<Input disabled value="{page.url.host}/graphs/{course.code}/{graph.id}" />
-			{/if}
-		</div>
-
-		<!-- TODO: add embed and settings -->
-		<!-- <GraphSettings {graph} bind:isGraphSettingsOpen /> -->
+		<GraphLinkSettings {course} {graph} onSuccess={() => (graphLinkSettingsOpen = false)} />
 	</DialogButton>
 </div>

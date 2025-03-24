@@ -5,8 +5,9 @@ export class EmbedState {
 	iframeHeight: number = $state(500);
 
 	selectAlias(alias: string) {
-		if (this.alias == alias) this.alias = undefined;
-		else this.alias = alias;
+		if (graphEmbedState.alias == undefined) graphEmbedState.alias = alias;
+		else if (graphEmbedState.alias == alias) graphEmbedState.alias = undefined;
+		else graphEmbedState.alias = alias;
 	}
 
 	selectShow(show: string) {
@@ -15,11 +16,13 @@ export class EmbedState {
 			throw new Error(`Invalid show option: ${show}. Expected one of ${options.join(', ')}`);
 		}
 
-		this.show = show as 'Lecture' | 'Domains' | 'Subjects';
+		graphEmbedState.show = show as 'Lecture' | 'Domains' | 'Subjects';
 	}
 
 	selectShowLecture(show: string) {
-		if (this.showLecture == show) this.showLecture = undefined;
-		else this.showLecture = show;
+		if (graphEmbedState.showLecture == show) graphEmbedState.showLecture = undefined;
+		else graphEmbedState.showLecture = show;
 	}
 }
+
+export const graphEmbedState = new EmbedState();

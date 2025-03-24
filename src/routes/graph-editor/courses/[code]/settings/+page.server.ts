@@ -32,7 +32,6 @@ export const load = (async ({ params, locals }) => {
 				},
 				graphs: {
 					include: {
-						links: true,
 						lectures: true
 					}
 				}

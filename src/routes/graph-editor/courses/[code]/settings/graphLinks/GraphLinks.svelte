@@ -4,13 +4,15 @@
 	import { cn } from '$lib/utils';
 	import type { CoursePermissions } from '$lib/utils/permissions';
 	import { ArrowRight, ChevronDown, Eye, EyeClosed } from '@lucide/svelte';
-	import type { Course, Graph, Lecture, Link } from '@prisma/client';
+	import type { Course, Graph, Lecture } from '@prisma/client';
 	import GraphLinkSettings from './GraphLinkSettings.svelte';
 	import { page } from '$app/state';
+	import EmbedGraph from './EmbedGraph.svelte';
+	import GraphSettingsDialog from './GraphSettingsDialog.svelte';
 
 	type GraphLinksProps = {
 		course: Course & CoursePermissions;
-		graphs: (Graph & { links: Link[]; lectures: Lecture[] })[];
+		graphs: (Graph & { lectures: Lecture[] })[];
 	};
 
 	const { course, graphs }: GraphLinksProps = $props();
@@ -35,6 +37,7 @@
 				<Table.Head>Name</Table.Head>
 				<Table.Head class="w-10 text-center">Aliases</Table.Head>
 				<Table.Head class="w-10"></Table.Head>
+				<Table.Head class="w-10"></Table.Head>
 				<Table.Head class="w-10 text-right"></Table.Head>
 			</Table.Row>
 		</Table.Header>
@@ -42,16 +45,19 @@
 			{#each graphs as graph, i (graph.id)}
 				<Table.Row class="p-0">
 					<Table.Cell class="flex items-center gap-1 py-3 font-medium">
-						{graph.name}
 						{#if graph.isVisible}
 							<Eye class="border-sm inline size-6 rounded bg-blue-100 p-1" />
 						{:else}
 							<EyeClosed class="border-sm inline size-6 rounded bg-blue-100 p-1" />
 						{/if}
+						{graph.name}
 					</Table.Cell>
 					<Table.Cell class="items-center p-1">{@render aliasDropdown(graph)}</Table.Cell>
 					<Table.Cell class="p-1">
-						<GraphLinkSettings {graph} {course} />
+						<EmbedGraph {graph} {course} />
+					</Table.Cell>
+					<Table.Cell class="p-1">
+						<GraphSettingsDialog {graph} {course} />
 					</Table.Cell>
 					<Table.Cell class="p-1 text-right">
 						<Button
@@ -63,9 +69,11 @@
 					</Table.Cell>
 				</Table.Row>
 
-				{#each graph.links as link, i}
-					{@render alias(link.name, graph, i % 2 == 0)}
-				{/each}
+				{#if showAlias == graph.id}
+					{#each graph.aliasLinks as link, i}
+						{@render alias(link, graph, i % 2 == 0)}
+					{/each}
+				{/if}
 			{:else}
 				<Table.Row>
 					<Table.Cell colspan={4} class="text-center">No graphs found.</Table.Cell>
@@ -75,8 +83,8 @@
 	</Table.Root>
 </section>
 
-{#snippet aliasDropdown(graph: Graph & { links: Link[] })}
-	{#if graph.links.length > 0}
+{#snippet aliasDropdown(graph: Graph)}
+	{#if graph.aliasLinks.length > 0}
 		<Button
 			variant="outline"
 			disabled={!graph.isVisible}
@@ -85,7 +93,7 @@
 				else showAlias = graph.id;
 			}}
 		>
-			{graph.links.length}
+			{graph.aliasLinks.length}
 			<ChevronDown
 				class={cn(['h-4 w-4 rotate-0 transition-transform', showAlias == graph.id && 'rotate-180'])}
 			/>
@@ -97,12 +105,9 @@
 
 {#snippet alias(name: string, graph: Graph, isOdd: boolean)}
 	<Table.Row class={cn(['bg-blue-100/50 hover:bg-blue-100/30', isOdd && 'bg-blue-100/50'])}>
-		<Table.Cell class="pl-8 " colspan={3}
-			>{page.url.host}/{course.code}/graph/{graph.id}/{graph.name.replaceAll(
-				' ',
-				'_'
-			)}/{name}</Table.Cell
-		>
+		<Table.Cell class="pl-8 " colspan={3}>
+			{page.url.host}/{course.code}/graph/{graph.id}/{graph.name.replaceAll(' ', '_')}/{name}
+		</Table.Cell>
 		<Table.Cell class="pl-8 " colspan={3}>
 			<Button href={`/graph-editor/courses/${course.code}/graphs/${name}`} variant="outline">
 				<ArrowRight class="h-4 w-4" />

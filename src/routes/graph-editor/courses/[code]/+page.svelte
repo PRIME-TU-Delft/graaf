@@ -7,6 +7,7 @@
 	import EditGraph from './EditGraph.svelte';
 	import { cn } from '$lib/utils';
 	import ShowAdmins from './ShowAdmins.svelte';
+	import EmbedGraph from './settings/graphLinks/EmbedGraph.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -65,6 +66,9 @@
 						View{#if hasAtLeastCourseEditPermissions}/Edit{/if}
 						<ArrowRight />
 					</Button>
+
+					<EmbedGraph {graph} course={data.course} />
+
 					{#if hasAtLeastCourseEditPermissions}
 						<EditGraph {graph} course={data.course} coursesAccessible={data.coursesAccessible} />
 					{/if}
