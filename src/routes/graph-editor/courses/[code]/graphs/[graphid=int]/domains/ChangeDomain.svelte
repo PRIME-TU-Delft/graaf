@@ -25,7 +25,7 @@
 
 	import type { PageData } from './$types';
 	import type { Domain } from '@prisma/client';
-	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
+	import type { DomainType, GraphType } from '$lib/validators/OLDgraphValidator';
 
 	type Props = {
 		domain: DomainType;

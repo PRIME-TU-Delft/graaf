@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import type { GraphType, SubjectType } from '$lib/validators/graphValidator';
+	import type { GraphType, SubjectType } from '$lib/validators/OLDgraphValidator';
 	import { deleteSubjectSchema } from '$lib/zod/subjectSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';

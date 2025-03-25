@@ -21,7 +21,7 @@
 
 	import type { PageData } from './$types';
 	import type { Domain, DomainStyle } from '@prisma/client';
-	import type { DomainType } from '$lib/validators/graphValidator';
+	import type { DomainType } from '$lib/validators/OLDgraphValidator';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 
 	let { data }: { data: PageData } = $props();

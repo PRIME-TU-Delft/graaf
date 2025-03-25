@@ -1,8 +1,10 @@
-import { beforeEach, describe, expect, it, test } from 'vitest';
-import { GraphValidator } from '$lib/validators/graphValidator';
+// GraphValidator.test.ts
+import { describe, expect, test } from 'vitest';
+import { GraphValidator } from './GraphValidator';
 
-import type { DomainType, GraphType } from '$lib/validators/graphValidator';
-import type { Domain } from '@prisma/client';
+import type { Domain, Subject } from '@prisma/client';
+import type { PrismaGraphPayload, PrismaDomainPayload } from './types';
+import type { PrismaSubjectPayload } from '$lib/d3/types';
 
 function dummyDomain(name: string, id: number) {
 	return {
@@ -15,267 +17,249 @@ function dummyDomain(name: string, id: number) {
 		sourceDomains: [] as Domain[],
 		targetDomains: [] as Domain[],
 		graphId: 0
-	} as DomainType;
+	} as PrismaDomainPayload;
 }
 
-function dummyGraph(domains: DomainType[]) {
+function dummySubject(name: string, domain: number, id: number) {
+	return {
+		name,
+		id,
+		x: 0,
+		y: 0,
+		sourceSubjects: [] as Subject[],
+		targetSubjects: [] as Subject[],
+		graphId: 0,
+		domainId: domain
+	} as PrismaSubjectPayload;
+}
+
+function dummyGraph(domains: PrismaDomainPayload[], subjects: PrismaSubjectPayload[]) {
 	return {
 		name: 'graph',
 		id: 0,
 		courseId: 'CSE2000',
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		domains: domains
-	} as GraphType;
+		domains: domains,
+		subjects: subjects
+	} as PrismaGraphPayload;
 }
 
-function addConnection(from: DomainType, to: DomainType) {
+function addDomainConnection(from: PrismaDomainPayload, to: PrismaDomainPayload) {
 	from.targetDomains.push(to);
 	to.sourceDomains.push(from);
 }
 
-describe('Trivial graph', () => {
-	// A -> B -> C
-	// D
-	// [empty graph]
+function addSubjectConnection(from: PrismaSubjectPayload, to: PrismaSubjectPayload) {
+	from.targetSubjects.push(to);
+	to.sourceSubjects.push(from);
+}
 
-	const a = dummyDomain('a', 0);
-	const b = dummyDomain('b', 1);
-	const c = dummyDomain('c', 2);
+describe('GraphValidator', () => {
+	test('should handle trivial graphs', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
 
-	addConnection(a, b);
-	addConnection(b, c);
+		addDomainConnection(domainA, domainB);
+		addDomainConnection(domainB, domainC);
 
-	const graph1 = dummyGraph([a, b, c]);
-	const validator1 = new GraphValidator(graph1);
+		const subjectA = dummySubject('Subject A', 1, 1);
+		const subjectB = dummySubject('Subject B', 2, 2);
+		const subjectC = dummySubject('Subject C', 3, 3);
 
-	const d = dummyDomain('d', 3);
-	const graph2 = dummyGraph([d]);
-	const validator2 = new GraphValidator(graph2);
+		addSubjectConnection(subjectA, subjectB);
+		addSubjectConnection(subjectB, subjectC);
 
-	const validator3 = new GraphValidator(dummyGraph([]));
+		const graph = dummyGraph([domainC, domainB, domainA], [subjectA, subjectB, subjectC]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
 
-	test('has cycles is false', () => {
-		expect(validator1.hasCycle(), 'v1').toBe(undefined);
-		expect(validator2.hasCycle(), 'v2').toBe(undefined);
-
-		expect(validator3.hasCycle(), 'empty graph').toBe(undefined);
+		expect(issues.domainBackEdges).toHaveLength(0);
+		expect(issues.subjectBackEdges).toHaveLength(0);
+		expect(issues.conflictingEdges).toHaveLength(0);
 	});
 
-	test('domain "A" is the only root', () => {
-		expect(validator1.roots.length).toBe(1); // There is only one root
-		expect(validator1.roots).toContain(validator1.getDomainById(0)); // The root is domain 'a'
+	test('should handle empty graphs', () => {
+		const graph = dummyGraph([], []);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
+
+		expect(issues.domainBackEdges).toHaveLength(0);
+		expect(issues.subjectBackEdges).toHaveLength(0);
+		expect(issues.conflictingEdges).toHaveLength(0);
 	});
 
-	test('domain "D" is the only root', () => {
-		expect(validator2.roots.length).toBe(1); // There is only one root
-		expect(validator2.roots).toContain(validator2.getDomainById(3)); // The root is domain 'g'
+	test('should handle graphs with multiple roots (no cycles)', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
+
+		addDomainConnection(domainA, domainC);
+		addDomainConnection(domainB, domainC);
+
+		const subjectA = dummySubject('Subject A', 1, 1);
+		const subjectB = dummySubject('Subject B', 2, 2);
+		const subjectC = dummySubject('Subject C', 3, 3);
+
+		addSubjectConnection(subjectA, subjectB);
+		addSubjectConnection(subjectA, subjectC);
+
+		const graph = dummyGraph([domainA, domainB, domainC], [subjectA, subjectB, subjectC]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
+
+		expect(issues.domainBackEdges).toHaveLength(0);
+		expect(issues.subjectBackEdges).toHaveLength(0);
+		expect(issues.conflictingEdges).toHaveLength(0);
 	});
 
-	test('sub graph sizes', () => {
-		expect(validator1.getSubGraphs().length).toBe(1);
-		expect(validator2.getSubGraphs().length).toBe(1);
-		expect(validator3.getSubGraphs().length).toBe(0);
-	});
-});
+	test('should handle graphs with cycles (single cycle)', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
 
-describe('Cycle graph', () => {
-	// A -> B -> C -> D -> A
-	// G -> H -> G
+		addDomainConnection(domainA, domainB);
+		addDomainConnection(domainB, domainC);
+		addDomainConnection(domainC, domainA); // Introduces cycle
 
-	const a = dummyDomain('a', 0);
-	const b = dummyDomain('b', 1);
-	const c = dummyDomain('c', 2);
-	const d = dummyDomain('d', 3);
+		const subjectA = dummySubject('Subject A', 1, 1);
+		const subjectB = dummySubject('Subject B', 2, 2);
 
-	addConnection(a, b);
-	addConnection(b, c);
-	addConnection(c, d);
-	addConnection(d, a);
+		addSubjectConnection(subjectA, subjectB);
+		addSubjectConnection(subjectB, subjectA); // Introduces cycle
 
-	const graph1 = dummyGraph([a, b, c, d]);
-	const validator1 = new GraphValidator(graph1);
+		const graph = dummyGraph([domainA, domainB, domainC], [subjectA, subjectB]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
 
-	const g = dummyDomain('g', 0);
-	const h = dummyDomain('h', 1);
-	addConnection(g, h);
-	addConnection(h, g);
-
-	const graph2 = dummyGraph([g, h]);
-	const validator2 = new GraphValidator(graph2);
-
-	test('has cycles is true', () => {
-		const c1 = validator1.hasCycle();
-		expect(c1?.source.id).toBe((c1!.target.id - 1) % 4);
-
-		const c2 = validator2.hasCycle();
-		expect(c2?.source.id).toBe((c2!.target.id - 1) % 2);
+		expect(issues.domainBackEdges).toHaveLength(1); // Backedge found
+		expect(issues.domainBackEdges).toContainEqual({ source: 3, target: 1 });
+		expect(issues.subjectBackEdges).toHaveLength(1); // Backedge found
+		expect(issues.subjectBackEdges).toContainEqual({ source: 2, target: 1 });
+		expect(issues.conflictingEdges).toHaveLength(0);
 	});
 
-	test('graph1 has one root', () => {
-		expect(validator1.roots.length).toBe(1); // There is only one root
+	test('should handle graphs with multiple cycles', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
+		const domainD = dummyDomain('D', 4);
+
+		addDomainConnection(domainA, domainB);
+		addDomainConnection(domainB, domainC);
+		addDomainConnection(domainC, domainA); // Introduces cycle
+		addDomainConnection(domainB, domainD);
+		addDomainConnection(domainD, domainC);
+
+		const subjectA = dummySubject('Subject A', 1, 1);
+		const subjectB = dummySubject('Subject B', 2, 2);
+		const subjectC = dummySubject('Subject C', 3, 3);
+
+		addSubjectConnection(subjectA, subjectB); // Introduces cycle
+		addSubjectConnection(subjectB, subjectA);
+		addSubjectConnection(subjectB, subjectC);
+		addSubjectConnection(subjectC, subjectA);
+
+		const graph = dummyGraph([domainA, domainB, domainC], [subjectA, subjectB]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
+
+		expect(issues.domainBackEdges).toHaveLength(1); // One backedge found
+		expect(issues.domainBackEdges).toContainEqual({ source: 3, target: 1 });
+		expect(issues.subjectBackEdges).toHaveLength(2); // Two backedges found
+		expect(issues.subjectBackEdges).toContainEqual({ source: 2, target: 1 });
+		expect(issues.subjectBackEdges).toContainEqual({ source: 3, target: 1 });
+		expect(issues.conflictingEdges).toHaveLength(0);
 	});
 
-	test('graph2 has one root', () => {
-		expect(validator1.roots.length).toBe(1); // There is only one root
-	});
-});
+	test('should handle graphs with conflicting edges (single conflict)', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
 
-describe('multi roots graph', () => {
-	// A -> B -> D -> F
-	// C -> D
+		addDomainConnection(domainA, domainB);
+		addDomainConnection(domainB, domainC);
 
-	const a = dummyDomain('a', 0);
-	const b = dummyDomain('b', 1);
-	const c = dummyDomain('c', 2);
-	const d = dummyDomain('d', 3);
-	const f = dummyDomain('f', 4);
+		const subjectA = dummySubject('Subject A', 1, 1);
+		const subjectB = dummySubject('Subject B', 2, 3);
+		const subjectC = dummySubject('Subject C', 3, 2);
 
-	addConnection(a, b);
-	addConnection(b, d);
-	addConnection(d, f);
-	addConnection(c, d);
+		addSubjectConnection(subjectA, subjectB);
+		addSubjectConnection(subjectB, subjectC);
 
-	const graph1 = dummyGraph([a, b, c, d, f]);
-	const validator1 = new GraphValidator(graph1);
+		const graph = dummyGraph([domainA, domainB], [subjectA, subjectB]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
 
-	test('has cycles is false', () => {
-		expect(validator1.hasCycle(), 'v1').toBe(undefined);
+		expect(issues.domainBackEdges).toHaveLength(0);
+		expect(issues.subjectBackEdges).toHaveLength(0);
+		expect(issues.conflictingEdges).toHaveLength(1); // Conflicting edge found
+		expect(issues.conflictingEdges).toContainEqual({ source: 2, target: 3 });
 	});
 
-	test('domain "A" and "C" are the only roots', () => {
-		expect(validator1.roots.length).toBe(2); // There is only one root
-		expect(validator1.roots).toContain(a); // The root contains domain 'a'
-		expect(validator1.roots).toContain(c); // The root contains domain 'c'
-	});
-});
+	test('should handle graphs with multiple conflicting edges', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
+		const domainD = dummyDomain('D', 4);
 
-describe('Multi roots cycles graph', () => {
-	// A -> B -> A
-	// C
-	// D
+		addDomainConnection(domainA, domainB);
+		addDomainConnection(domainB, domainC);
+		addDomainConnection(domainB, domainD);
 
-	const a = dummyDomain('a', 0);
-	const b = dummyDomain('b', 1);
-	const c = dummyDomain('c', 2);
-	const d = dummyDomain('d', 3);
+		const subjectA = dummySubject('Subject A', 1, 1);
+		const subjectB = dummySubject('Subject B', 2, 2);
+		const subjectC = dummySubject('Subject C', 3, 3);
+		const subjectD = dummySubject('Subject D', 4, 4);
 
-	addConnection(a, b);
-	addConnection(b, a);
+		addSubjectConnection(subjectD, subjectA); // Conflicting edge
+		addSubjectConnection(subjectA, subjectC);
+		addSubjectConnection(subjectC, subjectB); // Conflicting edge
 
-	const graph1 = dummyGraph([a, b, c, d]);
-	const validator1 = new GraphValidator(graph1);
+		const graph = dummyGraph([domainA, domainB], [subjectA, subjectB]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
 
-	test('has cycles is true', () => {
-		const cycle = validator1.hasCycle();
-		expect(cycle?.source.id).toBe(a.id);
-		expect(cycle?.target.id).toBe(b.id);
-	});
-
-	test('roots are a, c and d', () => {
-		expect(validator1.roots.length).toBe(3); // There is only one root
-
-		// Because the graph has a cycle, the roots will be either a or b, but not both
-		expect(validator1.roots).toSatisfy((roots: Domain[]) => {
-			return (roots.includes(a) || roots.includes(b)) && !(roots.includes(a) && roots.includes(b));
-		});
-
-		// These are the other subgraphs roots
-		expect(validator1.roots).toContain(c); // The root contains domain 'c'
-		expect(validator1.roots).toContain(d); // The root contains domain 'd'
+		expect(issues.domainBackEdges).toHaveLength(0);
+		expect(issues.subjectBackEdges).toHaveLength(0);
+		expect(issues.conflictingEdges).toHaveLength(2); // Two conflicting edges found
+		expect(issues.conflictingEdges).toContainEqual({ source: 4, target: 1 });
+		expect(issues.conflictingEdges).toContainEqual({ source: 3, target: 2 });
 	});
 
-	test('sub graph sizes', () => {
-		expect(validator1.getSubGraphs().length).toBe(3);
-	});
-});
+	test('should handle graphs with multiple roots, cycles, and conflicting edges', () => {
+		const domainA = dummyDomain('A', 1);
+		const domainB = dummyDomain('B', 2);
+		const domainC = dummyDomain('C', 3);
+		const domainD = dummyDomain('D', 4);
+		const domainE = dummyDomain('E', 5);
 
-describe('Complex graph', () => {
-	//        <-> E
-	//       /
-	// A -> B -> C -> D
+		addDomainConnection(domainA, domainC);
+		addDomainConnection(domainB, domainC);
+		addDomainConnection(domainC, domainA); // Cycle
+		addDomainConnection(domainC, domainD);
+		addDomainConnection(domainD, domainE);
+		addDomainConnection(domainE, domainD); // Cycle
 
-	const a = dummyDomain('a', 0);
-	const b = dummyDomain('b', 1);
-	const c = dummyDomain('c', 2);
-	const d = dummyDomain('d', 3);
-	const e = dummyDomain('e', 4);
+		const subjectA = dummySubject('Subject A', 1, 3);
+		const subjectB = dummySubject('Subject B', 2, 2);
+		const subjectC = dummySubject('Subject C', 3, 4);
 
-	addConnection(a, b);
-	addConnection(b, c);
-	addConnection(c, d);
+		addSubjectConnection(subjectA, subjectB); // Conflicting edge
+		addSubjectConnection(subjectB, subjectC);
+		addSubjectConnection(subjectC, subjectA); // Cycle
 
-	addConnection(b, e);
-	addConnection(e, b);
+		const graph = dummyGraph([domainA, domainB, domainC, domainD, domainE], [subjectA, subjectB, subjectC]);
+		const validator = new GraphValidator(graph);
+		const issues = validator.validate();
 
-	const graph1 = dummyGraph([a, b, c, d, e]);
-	const validator1 = new GraphValidator(graph1);
-
-	test('has cycles is true', () => {
-		const cycle = validator1.hasCycle();
-		expect(cycle?.source.id).toBe(e.id);
-		expect(cycle?.target.id).toBe(b.id);
-	});
-
-	test('domain "A" is the only root', () => {
-		expect(validator1.roots.length).toBe(1); // There is only one root
-		expect(validator1.roots).toContain(validator1.getDomainById(0)); // The root is domain 'a'
-	});
-});
-
-describe('Remove edge is sound', () => {
-	let graph: GraphType;
-	let validator: GraphValidator;
-
-	beforeEach(() => {
-		const a = dummyDomain('a', 0);
-		const b = dummyDomain('b', 1);
-
-		addConnection(a, b);
-
-		graph = dummyGraph([a, b]);
-		validator = new GraphValidator(graph);
-	});
-
-	it('remove edge', () => {
-		const a = validator.getDomainById(0)!;
-		const b = validator.getDomainById(1)!;
-
-		expect(validator.hasEdge(a, b)).toBe(true);
-		validator.removeEdge(a, b);
-
-		expect(b.sourceDomains.length).toBe(0);
-		expect(a.targetDomains.length).toBe(0);
-		expect(validator.hasEdge(a, b)).toBe(false);
-	});
-
-	describe('Teun graph insane', () => {
-		const a = dummyDomain('a', 0);
-		const b = dummyDomain('b', 1);
-		const c = dummyDomain('c', 2);
-		const d = dummyDomain('d', 3);
-		const e = dummyDomain('e', 4);
-		const f = dummyDomain('f', 5);
-		const g = dummyDomain('g', 6);
-
-		addConnection(a, c);
-		addConnection(c, b);
-		addConnection(c, e);
-		addConnection(e, d);
-		addConnection(d, b);
-		addConnection(e, g);
-		addConnection(g, f);
-		addConnection(f, d);
-		addConnection(b, a);
-
-		const graph1 = dummyGraph([a, b, c, d, e, f, g]);
-		const validator1 = new GraphValidator(graph1);
-
-		test('has cycles is true', () => {
-			const cycle = validator1.hasCycle();
-
-			expect(cycle?.source.id).toBe(c.id);
-			expect(cycle?.target.id).toBe(b.id);
-		});
+		expect(issues.domainBackEdges).toHaveLength(2); // Two cycles
+		expect(issues.domainBackEdges).toContainEqual({ source: 3, target: 1 });
+		expect(issues.domainBackEdges).toContainEqual({ source: 5, target: 4 });
+		expect(issues.subjectBackEdges).toHaveLength(1); // One cycle
+		expect(issues.subjectBackEdges).toContainEqual({ source: 3, target: 1 });
+		expect(issues.conflictingEdges).toHaveLength(1); // Conflicting edge
+		expect(issues.conflictingEdges).toContainEqual({ source: 1, target: 2 });
 	});
 });

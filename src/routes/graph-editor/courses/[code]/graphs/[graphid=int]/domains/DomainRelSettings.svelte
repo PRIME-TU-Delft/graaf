@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form';
-	import type { GraphType } from '$lib/validators/graphValidator';
+	import type { GraphType } from '$lib/validators/OLDgraphValidator';
 	import type { Domain } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';

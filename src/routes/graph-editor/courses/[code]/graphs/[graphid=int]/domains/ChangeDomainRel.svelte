@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { GraphValidator, type GraphType } from '$lib/validators/graphValidator';
+	import { GraphValidator, type GraphType } from '$lib/validators/OLDgraphValidator';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';

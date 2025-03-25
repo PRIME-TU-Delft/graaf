@@ -1,208 +1,275 @@
-import type { Graph, Domain, Subject } from '@prisma/client';
 
-export type DomainType = Domain & { sourceDomains: Domain[]; targetDomains: Domain[] };
-export type SubjectType = Subject & { sourceSubjects: Subject[]; targetSubjects: Subject[] };
-export type GraphType = Graph & { domains: DomainType[]; subjects: SubjectType[] };
+import type { 
+	PrismaGraphPayload,
+	AbstractGraph,
+	AbstractEdge,
+	AbstractNode,
+	Issues
+} from "./types";
 
 export class GraphValidator {
-	domains: Map<number, DomainType> = new Map();
-	roots: DomainType[] = [];
-	subgraphs: Set<DomainType>[] = [];
+	domains: AbstractGraph;
+	subjects: AbstractGraph;
+	domainToSubject: Map<AbstractNode, AbstractNode>;
 
-	constructor(graph: GraphType) {
-		if (graph.domains.length === 0) return; // Guard to prevent empty graphs
+	constructor (graph: PrismaGraphPayload) {
+		this.domains = new Map();
+		this.subjects = new Map();
+		this.domainToSubject = new Map();
 
-		for (const domain of graph.domains) this.domains.set(domain.id, domain);
+		// Construct domain graph
+		for (const domain of graph.domains) {
+			const node: AbstractNode = { id: domain.id, sources: [], targets: [] };
+			this.domains.set(domain.id, node);
 
-		this.findSubGraphs();
-	}
-
-	hasEdge(source: DomainType, target: DomainType): boolean {
-		return (
-			source.targetDomains.some((domain) => domain.id === target.id) &&
-			target.sourceDomains.some((domain) => domain.id === source.id)
-		);
-	}
-
-	removeEdge(source: DomainType, target: DomainType) {
-		const sourceLength = source.targetDomains.length;
-		const targetLength = target.sourceDomains.length;
-		source.targetDomains = source.targetDomains.filter((domain) => domain.id !== target.id);
-		target.sourceDomains = target.sourceDomains.filter((domain) => domain.id !== source.id);
-
-		if (
-			source.targetDomains.length !== sourceLength - 1 ||
-			target.sourceDomains.length !== targetLength - 1
-		) {
-			throw new Error('The edge was not removed');
-		}
-	}
-
-	addEdge(source: DomainType, target: DomainType) {
-		if (this.hasEdge(source, target)) {
-			throw new Error('The edge already exists');
-		}
-
-		source.targetDomains.push(target);
-		target.sourceDomains.push(source);
-	}
-
-	findSubGraphs() {
-		// Reset roots and subgraphs
-		this.roots = [];
-		this.subgraphs = [];
-
-		// Find all subgraphs
-		const subgraphs: Set<DomainType>[] = [];
-		const visited = new Set<number>();
-
-		for (const domain of this.domains.values()) {
-			if (visited.has(domain.id)) continue;
-
-			const subgraph: Set<DomainType> = new Set();
-
-			this.dfs(domain.id, visited, subgraph);
-			subgraphs.push(subgraph);
-		}
-
-		this.subgraphs = subgraphs;
-
-		// Find roots
-		for (const subgraphSet of subgraphs) {
-			const subgraph = Array.from(subgraphSet);
-
-			if (subgraph.length === 0) continue; // I see no reason why this could happen, but just in case
-
-			// A root is a domain that has no source domains
-			const roots = subgraph.filter((domain) => domain.sourceDomains.length === 0);
-			this.roots.push(...roots);
-
-			// If there is no trivial root, then the subgraph is a cycle
-			// the roots will be the first domain in the cycle
-			if (roots.length === 0) {
-				this.roots.push(subgraph[0]);
-			}
-		}
-	}
-
-	/**
-	 * Get a domain by its id
-	 * @param id - The domain id
-	 * @returns The domain if it exists, otherwise undefined
-	 */
-
-	getDomainById(id: number): DomainType | undefined {
-		return this.domains.get(id);
-	}
-
-	getSubGraphs(): Set<DomainType>[] {
-		return this.subgraphs;
-	}
-
-	private dfs(v: number, visited: Set<number>, subgraph: Set<DomainType>) {
-		if (!visited.has(v)) {
-			visited.add(v);
-
-			for (const neighbour of this.domains.get(v)!.targetDomains) {
-				this.dfs(neighbour.id, visited, subgraph);
+			for (const source of domain.sourceDomains) {
+				const sourceNode = this.domains.get(source.id);
+				if (sourceNode) {
+					sourceNode.targets.push(node);
+					node.sources.push(sourceNode);
+				}
 			}
 
-			subgraph.add(this.domains.get(v)!);
-		}
-	}
-
-	/**
-	 * Check if the graph has a cycle
-	 * @param v - The current domain
-	 * @param visited - Set of visited domains
-	 * @param recStack - Set of domains in the current recursion stack
-	 * @returns The cycle-problem relationship if it exists, otherwise undefined
-	 */
-
-	private isCyclicUtil(
-		v: number,
-		visited: Set<number>,
-		recStack: Set<number>
-	): { source: Domain; target: Domain } | undefined {
-		if (!visited.has(v)) {
-			visited.add(v);
-			recStack.add(v);
-
-			for (const neighbour of this.domains.get(v)!.targetDomains) {
-				if (!visited.has(neighbour.id)) {
-					const cycle = this.isCyclicUtil(neighbour.id, visited, recStack);
-
-					if (cycle != undefined) {
-						return cycle;
-					}
-				} else if (recStack.has(neighbour.id)) {
-					return { source: this.domains.get(v)!, target: neighbour };
+			for (const target of domain.targetDomains) {
+				const targetNode = this.domains.get(target.id);
+				if (targetNode) {
+					targetNode.sources.push(node);
+					node.targets.push(targetNode);
 				}
 			}
 		}
 
-		recStack.delete(v);
-		return undefined;
+		// Construct subject graph
+		for (const subject of graph.subjects) {
+			const node: AbstractNode = { id: subject.id, sources: [], targets: [] };
+			this.subjects.set(subject.id, node);
+
+			for (const source of subject.sourceSubjects) {
+				const sourceNode = this.subjects.get(source.id);
+				if (sourceNode) {
+					sourceNode.targets.push(node);
+					node.sources.push(sourceNode);
+				}
+			}
+
+			for (const target of subject.targetSubjects) {
+				const targetNode = this.subjects.get(target.id);
+				if (targetNode) {
+					targetNode.sources.push(node);
+					node.targets.push(targetNode);
+				}
+			}
+
+			// Map domain to subject
+			if (subject.domainId) {
+				const domain = this.domains.get(subject.domainId)!;
+				this.domainToSubject.set(domain, node);
+			}
+		}
 	}
 
-	hasCycle(): { source: Domain; target: Domain } | undefined {
-		const visited = new Set<number>();
-		const recStack = new Set<number>();
+	validate(): Issues {
 
-		for (const root of this.roots) {
-			if (root.targetDomains.length === 0) continue;
+		// Compute domain properties
+		const domainSubgraphs = this.findSubgraphs(this.domains);
+		const domainRoots = this.findRoots(domainSubgraphs);
+		const domainReachability = this.computeReachability(domainSubgraphs);
+				
+		// Compute subject properties
+		const subjectSubgraphs = this.findSubgraphs(this.subjects);
+		const subjectRoots = this.findRoots(subjectSubgraphs);
 
-			const cycle = this.isCyclicUtil(root.id, visited, recStack);
+		console.log(
+			'domainSubgraphs', domainSubgraphs.map(subgraph => Array.from(subgraph).map(node => node.id)),
+			'\nsubjectSubgraphs', subjectSubgraphs.map(subgraph => Array.from(subgraph).map(node => node.id)),
+			'\ndomainRoots', domainRoots.map(node => node.id),
+			'\nsubjectRoots', subjectRoots.map(node => node.id),
+		)
 
-			if (cycle != undefined) {
-				return cycle;
+		// Compute issues
+		const domainBackEdges = this.findBackEdges(domainRoots);
+		const subjectBackEdges = this.findBackEdges(subjectRoots);
+		const conflictingEdges = this.findConflicts(this.subjects, this.domainToSubject, domainReachability);
+
+		return {
+			domainBackEdges: domainBackEdges.map(edge => ({ source: edge.source.id, target: edge.target.id })),
+			subjectBackEdges: subjectBackEdges.map(edge => ({ source: edge.source.id, target: edge.target.id })),
+			conflictingEdges: conflictingEdges.map(edge => ({ source: edge.source.id, target: edge.target.id }))
+		}
+	}
+
+	/**
+	 * Finds subgraphs in the graph using DFS @ O(V + E)
+	 * @param graph The graph to find subgraphs in.
+	 * @returns The subgraphs in the graph.
+	 */
+
+	private findSubgraphs(graph: AbstractGraph): Set<AbstractNode>[] {
+		const subgraphs: Set<AbstractNode>[] = [];
+		const visited = new Set<AbstractNode>();
+
+		for (const node of graph.values()) {
+			if (visited.has(node)) continue; // Only build subgraphs from unvisited nodes
+
+			const subgraph: Set<AbstractNode> = new Set();
+			const stack: AbstractNode[] = [node];
+
+	   		while (stack.length > 0) {
+				const node = stack.pop()!;
+
+				if (visited.has(node)) continue;
+				subgraph.add(node);
+				visited.add(node);
+
+				for (const target of node.targets) {
+					stack.push(target);
+				}
+			}
+
+			subgraphs.push(subgraph);
+		}
+
+		return subgraphs;
+	}
+
+	/**
+	 * Finds root nodes in each subgraph @ O(V)
+	 * @param subgraphs The subgraphs to find roots in.
+	 * @returns The root nodes in each subgraph.
+	 */
+
+	private findRoots(subgraphs: Set<AbstractNode>[]): AbstractNode[] {
+		const arrays = subgraphs.map(set => Array.from(set));
+		const roots: AbstractNode[] = [];
+
+		// Find domain roots
+		for (const subgraph of arrays) {
+			if (subgraph.length === 0) continue;
+
+			// A root is a node that has no incoming edges
+			const filtered = subgraph.filter(node => node.sources.length === 0);
+			roots.push(...filtered);
+
+			// If there is no trivial root, then the subgraph is a cycle
+			// the roots will be the first domain in the cycle
+			if (filtered.length === 0) {
+				roots.push(subgraph[0]);
 			}
 		}
 
-		return undefined;
+		return roots;
 	}
 
-	validateNewEdge(sourceId: number, targetId: number) {
-		const from = this.getDomainById(sourceId);
-		const to = this.getDomainById(targetId);
+	/**
+	 * Finds back edges in the graph using DFS @ O(V + E)
+	 * @param roots The roots of the graph
+	 * @returns The back edges in the graph.
+	 */
 
-		if (from == undefined || to == undefined) {
-			throw new Error('One of the domains does not exist');
+	private findBackEdges(roots: AbstractNode[]): AbstractEdge[] {
+
+		// Recursive cycle detection
+		const findCycle = (node: AbstractNode, visited: Set<AbstractNode>, path: Set<AbstractNode>): AbstractEdge | null => {
+			if (!visited.has(node)) {
+				visited.add(node);
+				path.add(node);
+	
+				for (const target of node.targets) {
+					if (!visited.has(target)) {
+						const cycle = findCycle(target, visited, path);
+
+						if (cycle != null) {
+							return cycle;
+						}
+
+					} else if (path.has(target)) {
+						return { source: node, target: target };
+					}
+				}
+			}
+	
+			path.delete(node);
+			return null;
 		}
 
-		// Add the new edge
-		this.addEdge(from, to);
+		// Find cycles
+		const visited = new Set<AbstractNode>();
+		const path = new Set<AbstractNode>();
+		const cycles: AbstractEdge[] = [];
 
-		// Check if graph is valid
-		this.findSubGraphs();
+		for (const root of roots) {
+			if (root.targets.length === 0) continue;
 
-		const hasCycle = this.hasCycle();
+			const cycle = findCycle(root, visited, path);
+			if (cycle != null) {
+				cycles.push(cycle);
+			}
+		}
 
-		this.removeEdge(from, to); // Revert the changes
-
-		return hasCycle;
+		return cycles;
 	}
 
-	validateEdgeChange(
-		oldSourceId: number,
-		oldTargetId: number,
-		newSourceId: number,
-		newTargetId: number
-	) {
-		const oldSource = this.getDomainById(oldSourceId);
-		const oldTarget = this.getDomainById(oldTargetId);
+	/**
+	 * Precomputes reachability for all nodes in a graph using BFS @ O(V * (V + E))
+	 * @param subgraphs Precomputed subgraphs for the graph.
+	 * @returns The reachability for all nodes in the graph.
+	 */
 
-		if (oldSource == undefined || oldTarget == undefined) {
-			throw new Error('One of the domains does not exist');
+	private computeReachability(subgraphs: Set<AbstractNode>[]): Map<AbstractNode, Set<AbstractNode>> {
+		const reachability = new Map<AbstractNode, Set<AbstractNode>>();
+
+  		for (const subgraph of subgraphs) {
+			for (const node of subgraph) {
+				const reachable = new Set<AbstractNode>();
+				const queue: AbstractNode[] = [node];
+				reachable.add(node);
+	
+				while (queue.length > 0) {
+					const node = queue.shift()!;
+					for (const target of node.targets) {
+						if (!reachable.has(target) && subgraph.has(target)) {
+							reachable.add(target);
+							queue.push(target);
+						}
+					}
+				}
+
+				reachability.set(node, reachable);
+			}
 		}
 
-		// Remove the old edge
-		this.removeEdge(oldSource, oldTarget);
+		return reachability;
+	}
 
-		const hasCycle = this.validateNewEdge(newSourceId, newTargetId);
+	/**
+	 * Finds conflicting edges in Graph B that do not align with Graph A's inheritance rules @ O(E)
+	 * @param graph Graph B, to find conflicts in.
+	 * @param mapping The mapping between nodes from Graph B to Graph A.
+	 * @param reachability Precomputed reachability for Graph A.
+	 * @returns The conflicting edges in Graph B.
+ 	 */
 
-		this.addEdge(oldSource, oldTarget); // Revert the changes
+	private findConflicts(
+		graph: AbstractGraph, 
+		mapping: Map<AbstractNode, AbstractNode>,
+		reachability: Map<AbstractNode, Set<AbstractNode>>
+	): AbstractEdge[] {
+		const conflicts: AbstractEdge[] = [];
 
-		return hasCycle;
+   		for (const sourceB of graph.values()) {
+			for (const targetB of sourceB.targets) {
+				const sourceA = mapping.get(sourceB);
+				const targetA = mapping.get(targetB);
+		   		if (!sourceA || !targetA) continue;
+
+				// Using precomputed reachability for O(1) check
+				const reachableFromSource = reachability.get(sourceA);
+				if (!reachableFromSource || !reachableFromSource.has(targetA)) {
+					conflicts.push({ source: sourceB, target: targetB });
+				}
+			}
+		}
+
+		return conflicts;
 	}
 }

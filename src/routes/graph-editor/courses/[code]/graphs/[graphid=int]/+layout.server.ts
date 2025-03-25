@@ -1,5 +1,5 @@
 import prisma from '$lib/server/db/prisma';
-import { GraphValidator } from '$lib/validators/graphValidator';
+import { GraphValidator } from '$lib/validators/OLDgraphValidator';
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 

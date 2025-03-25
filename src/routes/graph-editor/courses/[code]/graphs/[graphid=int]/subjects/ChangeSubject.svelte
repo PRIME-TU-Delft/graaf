@@ -8,7 +8,7 @@
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import type { GraphType } from '$lib/validators/graphValidator';
+	import type { GraphType } from '$lib/validators/OLDgraphValidator';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
