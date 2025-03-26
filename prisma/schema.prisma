@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// MARK: BEGIN AUTH THINGS
+
 enum UserRole {
   USER
   ADMIN
@@ -73,6 +75,8 @@ model VerificationToken {
 
   @@id([identifier, token])
 }
+
+// MARK: END AUTH THINGS 
 
 model Program {
   id   Int    @id @default(autoincrement())
