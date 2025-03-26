@@ -87,8 +87,7 @@ export class GraphActions {
 							where: { id: form.data.graphId },
 							data: {
 								name: form.data.name,
-								isVisible: form.data.isVisible,
-								aliasLinks: form.data.aliases
+								isVisible: form.data.isVisible
 							}
 						}
 					}

@@ -32,9 +32,11 @@ export const load = (async ({ params, locals }) => {
 				},
 				graphs: {
 					include: {
-						lectures: true
+						lectures: true,
+						links: true
 					}
-				}
+				},
+				links: true
 			}
 		});
 		if (!dbCourse) throw Error('You do not have permissions to access this course setting page');

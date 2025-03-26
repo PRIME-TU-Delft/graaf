@@ -1,13 +1,14 @@
 <script lang="ts">
-	import type { CoursePermissions } from '$lib/utils/permissions';
-	import type { Course, Graph, Lecture } from '@prisma/client';
-	import GraphLinkSettings from './GraphLinkSettings.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import type { CoursePermissions } from '$lib/utils/permissions';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
+	import GraphLinkSettings from './GraphLinkSettings.svelte';
 
 	type GraphLinksProps = {
-		course: Course & CoursePermissions;
+		course: Course & CoursePermissions & { links: Link[] };
 		graph: Graph & {
 			lectures: Lecture[];
+			links: Link[];
 		};
 	};
 

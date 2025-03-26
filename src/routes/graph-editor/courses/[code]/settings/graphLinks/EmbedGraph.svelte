@@ -2,17 +2,17 @@
 	import { page } from '$app/state';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import Input from '$lib/components/ui/input/input.svelte';
+	import Label from '$lib/components/ui/label/label.svelte';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { cn } from '$lib/utils';
 	import { Check, ChevronDown, Code, Copy } from '@lucide/svelte';
-	import type { Course, Graph, Lecture } from '@prisma/client';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { graphEmbedState } from './GraphEmbedState.svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
-	import Input from '$lib/components/ui/input/input.svelte';
 
 	type GraphLinksProps = {
-		graph: Graph & { lectures: Lecture[] };
+		graph: Graph & { lectures: Lecture[]; links: Link[] };
 		course: Course;
 	};
 
@@ -69,7 +69,7 @@
 		<Code /> Embed
 	</Popover.Trigger>
 	<Popover.Content class="grid w-[30rem] grid-cols-1 gap-2">
-		{#if graph.aliasLinks.length == 0}
+		{#if graph.links.length == 0}
 			<p class="col-span-2">
 				Cannot embed graph because no alias is linked to this graph. Add one in the settings panel
 				of this graph.
@@ -80,7 +80,7 @@
 				{@render select(
 					'Alias',
 					graphEmbedState.alias ?? '',
-					graph.aliasLinks,
+					graph.links.map((link) => link.name),
 					graphEmbedState.selectAlias
 				)}
 
@@ -93,9 +93,9 @@
 				)}
 
 				<!-- Show lecture -->
-				{#if graph.lectures.length > 0 && graphEmbedState.show == 'Lecture'}
+				{#if graph.lectures.length > 0}
 					{@render select(
-						'Lecture',
+						'Lecture Highlight',
 						graphEmbedState.showLecture ?? '',
 						graph.lectures.map((lecture) => lecture.name),
 						graphEmbedState.selectShowLecture

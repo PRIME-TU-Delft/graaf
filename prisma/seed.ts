@@ -81,7 +81,7 @@ async function main() {
 	console.log('\n');
 
 	const graph = await prisma.graph.create({
-		data: { name: 'GraphOne', courseId: prisma_courses[0].code }
+		data: { name: 'GraphOne', courseId: prisma_courses[0].id }
 	});
 
 	console.log(`Created graph with id: ${graph.id} \n`);

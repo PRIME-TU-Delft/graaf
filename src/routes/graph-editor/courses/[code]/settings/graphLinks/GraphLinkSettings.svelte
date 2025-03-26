@@ -8,19 +8,20 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
-	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import DeleteGraph from './DeleteGraph.svelte';
 
-	import type { Course, Graph, Lecture } from '@prisma/client';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import type { PageData } from '../$types';
+	import AddAliasLink from './AddAliasLink.svelte';
 
 	type GraphLinksProps = {
-		course: Course & CoursePermissions;
+		course: Course & CoursePermissions & { links: Link[] };
 		graph: Graph & {
 			lectures: Lecture[];
+			links: Link[];
 		};
 		onSuccess?: () => void;
 	};
@@ -28,7 +29,7 @@
 	const { course, graph, onSuccess = () => {} }: GraphLinksProps = $props();
 
 	let isVisible = $state(graph.isVisible);
-	let aliases = $state(graph.aliasLinks.map((link) => link));
+	let aliases = $state(graph.links.map((link) => link));
 	let newAlias = $state('');
 
 	const id = $props.id();
@@ -52,16 +53,10 @@
 		$formData.courseCode = course.code;
 		$formData.name = graph.name;
 		$formData.isVisible = graph.isVisible;
-		$formData.aliases = graph.aliasLinks.map((link) => link);
 	}
 
 	const hasChanges = $derived.by(() => {
-		return (
-			$formData.name !== graph.name ||
-			$formData.isVisible !== graph.isVisible ||
-			$formData.aliases.length !== graph.aliasLinks.length ||
-			$formData.aliases.some((alias, i) => alias !== graph.aliasLinks[i])
-		);
+		return $formData.name !== graph.name || $formData.isVisible !== graph.isVisible;
 	});
 
 	$effect(() => {
@@ -69,12 +64,12 @@
 		$formData.courseCode = course.code;
 		$formData.name = graph.name;
 		$formData.isVisible = isVisible;
-		$formData.aliases = aliases;
+		$formData.aliases = aliases.map((link) => ({ name: link.name, id: link.id }));
 	});
 
 	function handleAddAlias() {
 		if (newAlias.length < 1) return;
-		aliases = [...aliases, newAlias];
+		// TODO: make api call to add alias
 		newAlias = '';
 	}
 </script>
@@ -146,16 +141,13 @@
 				{/each}
 			</div>
 
-			<div in:fade class="flex items-center gap-2">
-				<Input type="text" name="alias" placeholder="Add an alias" bind:value={newAlias} />
-				<Button onclick={handleAddAlias} disabled={newAlias.length < 1}>Add alias</Button>
-			</div>
+			<AddAliasLink {course} {graph} />
 		</div>
 	{/if}
 
 	<Form.Fieldset {form} name="aliases" class="h-0">
 		{#each $formData.aliases, i}
-			<Form.ElementField {form} name="aliases[{i}]">
+			<Form.ElementField {form} name="aliases[{i}].name">
 				<Form.Control>
 					{#snippet children({ props })}
 						<input type="hidden" bind:value={$formData.aliases[i]} {...props} />

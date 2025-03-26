@@ -1,18 +1,17 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
 	import type { CoursePermissions } from '$lib/utils/permissions';
 	import { ArrowRight, ChevronDown, Eye, EyeClosed } from '@lucide/svelte';
-	import type { Course, Graph, Lecture } from '@prisma/client';
-	import GraphLinkSettings from './GraphLinkSettings.svelte';
-	import { page } from '$app/state';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import EmbedGraph from './EmbedGraph.svelte';
 	import GraphSettingsDialog from './GraphSettingsDialog.svelte';
 
 	type GraphLinksProps = {
-		course: Course & CoursePermissions;
-		graphs: (Graph & { lectures: Lecture[] })[];
+		course: Course & CoursePermissions & { links: Link[] };
+		graphs: (Graph & { lectures: Lecture[]; links: Link[] })[];
 	};
 
 	const { course, graphs }: GraphLinksProps = $props();
@@ -70,8 +69,8 @@
 				</Table.Row>
 
 				{#if showAlias == graph.id}
-					{#each graph.aliasLinks as link, i}
-						{@render alias(link, graph, i % 2 == 0)}
+					{#each graph.links as link, i}
+						{@render alias(link.name, graph, i % 2 == 0)}
 					{/each}
 				{/if}
 			{:else}
@@ -83,8 +82,8 @@
 	</Table.Root>
 </section>
 
-{#snippet aliasDropdown(graph: Graph)}
-	{#if graph.aliasLinks.length > 0}
+{#snippet aliasDropdown(graph: Graph & { links: Link[] })}
+	{#if graph.links.length > 0}
 		<Button
 			variant="outline"
 			disabled={!graph.isVisible}
@@ -93,7 +92,7 @@
 				else showAlias = graph.id;
 			}}
 		>
-			{graph.aliasLinks.length}
+			{graph.links.length}
 			<ChevronDown
 				class={cn(['h-4 w-4 rotate-0 transition-transform', showAlias == graph.id && 'rotate-180'])}
 			/>
@@ -103,13 +102,13 @@
 	{/if}
 {/snippet}
 
-{#snippet alias(name: string, graph: Graph, isOdd: boolean)}
+{#snippet alias(linkName: string, graph: Graph, isOdd: boolean)}
 	<Table.Row class={cn(['bg-blue-100/50 hover:bg-blue-100/30', isOdd && 'bg-blue-100/50'])}>
 		<Table.Cell class="pl-8 " colspan={3}>
-			{page.url.host}/{course.code}/graph/{graph.id}/{graph.name.replaceAll(' ', '_')}/{name}
+			{page.url.host}/graph/{course.code}/{linkName}
 		</Table.Cell>
 		<Table.Cell class="pl-8 " colspan={3}>
-			<Button href={`/graph-editor/courses/${course.code}/graphs/${name}`} variant="outline">
+			<Button href={`/graph/${course.code}/${linkName}`} variant="outline">
 				<ArrowRight class="h-4 w-4" />
 			</Button>
 		</Table.Cell>

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import type { Course, Graph, Lecture } from '@prisma/client';
+	import type { CoursePermissions } from '$lib/utils/permissions';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
 	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
-	import type { CoursePermissions } from '$lib/utils/permissions';
 
 	type EditGraphProps = {
 		course: Course &
@@ -11,9 +11,11 @@
 				graphs: {
 					name: string;
 				}[];
+				links: Link[];
 			};
 		graph: Graph & {
 			lectures: Lecture[];
+			links: Link[];
 		};
 		coursesAccessible: Promise<CourseType[]>;
 	};

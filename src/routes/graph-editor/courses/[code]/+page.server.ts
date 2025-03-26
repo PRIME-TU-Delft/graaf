@@ -27,6 +27,7 @@ export const load = (async ({ params, locals }) => {
 				graphs: {
 					include: {
 						lectures: true,
+						links: true,
 						_count: {
 							select: {
 								domains: true,
@@ -42,7 +43,8 @@ export const load = (async ({ params, locals }) => {
 						admins: true,
 						editors: true
 					}
-				}
+				},
+				links: true
 			}
 		});
 
