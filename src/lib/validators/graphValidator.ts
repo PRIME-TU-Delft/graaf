@@ -1,8 +1,7 @@
 
-import type { 
+import type {
 	PrismaGraphPayload,
 	AbstractGraph,
-	AbstractEdge,
 	AbstractNode,
 	Issues
 } from "./types";
@@ -10,122 +9,105 @@ import type {
 export class GraphValidator {
 	domains: AbstractGraph;
 	subjects: AbstractGraph;
-	domainToSubject: Map<AbstractNode, AbstractNode>;
 
 	constructor (graph: PrismaGraphPayload) {
 		this.domains = new Map();
 		this.subjects = new Map();
-		this.domainToSubject = new Map();
 
 		// Construct domain graph
 		for (const domain of graph.domains) {
-			const node: AbstractNode = { id: domain.id, sources: [], targets: [] };
-			this.domains.set(domain.id, node);
+			this.domains.set(domain.id, { id: domain.id, neighbors: [] });
+		}
 
-			for (const source of domain.sourceDomains) {
-				const sourceNode = this.domains.get(source.id);
-				if (sourceNode) {
-					sourceNode.targets.push(node);
-					node.sources.push(sourceNode);
-				}
-			}
-
+		for (const domain of graph.domains) {
+			const sourceNode = this.domains.get(domain.id);
 			for (const target of domain.targetDomains) {
 				const targetNode = this.domains.get(target.id);
-				if (targetNode) {
-					targetNode.sources.push(node);
-					node.targets.push(targetNode);
+
+				if (sourceNode && targetNode) {
+					sourceNode.neighbors.push(targetNode);
 				}
 			}
 		}
 
 		// Construct subject graph
 		for (const subject of graph.subjects) {
-			const node: AbstractNode = { id: subject.id, sources: [], targets: [] };
-			this.subjects.set(subject.id, node);
+			this.subjects.set(subject.id, { id: subject.id, neighbors: [] });
+		}
 
-			for (const source of subject.sourceSubjects) {
-				const sourceNode = this.subjects.get(source.id);
-				if (sourceNode) {
-					sourceNode.targets.push(node);
-					node.sources.push(sourceNode);
-				}
-			}
-
+		for (const subject of graph.subjects) {
+			const sourceNode = this.subjects.get(subject.id);
 			for (const target of subject.targetSubjects) {
 				const targetNode = this.subjects.get(target.id);
-				if (targetNode) {
-					targetNode.sources.push(node);
-					node.targets.push(targetNode);
-				}
-			}
 
-			// Map domain to subject
-			if (subject.domainId) {
-				const domain = this.domains.get(subject.domainId)!;
-				this.domainToSubject.set(domain, node);
+				if (sourceNode && targetNode) {
+					sourceNode.neighbors.push(targetNode);
+				}
 			}
 		}
 	}
 
 	validate(): Issues {
-		const domainCycles = this.findCycles(this.domains)
-			.map(cycle => Array.from(cycle)
-				.map(
-					edge => ({ source: edge.source.id, target: edge.target.id })
-				)
-			);
-		
-		const subjectCycles = this.findCycles(this.subjects)
-			.map(cycle => Array.from(cycle)
-				.map(
-					edge => ({ source: edge.source.id, target: edge.target.id })
-				)
-			);
-
-		const conflictingEdges: { source: number, target: number }[] = [];
-
 		return {
-			domainCycles,
-			subjectCycles,
-			conflictingEdges
+			domainCycles: this.findCycles(this.domains),
+			subjectCycles: this.findCycles(this.subjects),
+			conflictingEdges: []
 		}
+	}
+
+	
+	/**
+	 * Finds the node with the smallest id in a graph.
+	 * @param graph The graph to search
+	 * @returns The node with the smallest id, or null if the graph is empty
+	 */
+
+	private findSmallestIndexNode(graph: AbstractGraph): AbstractNode | null {
+		let smallestIndex = Infinity;
+		let smallestNode = null;
+
+		for (const node of graph.values()) {
+			if (node.id < smallestIndex) {
+				smallestIndex = node.id;
+				smallestNode = node;
+			}
+		}
+
+		return smallestNode;
 	}
 
 	/**
 	 * Finds all strongly connected components in a graph, ignoring trivial sscs of size 1.
 	 * @param graph The graph to search
-	 * @returns An array of sscs - not deeply cloned
+	 * @returns An array of sscs
 	 */
-	
+
 	private findSCCs(graph: AbstractGraph): Set<AbstractNode>[] {
 
 		// Tarjan's algorithm - O(V + E)
 		// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
-		
-		const sccs: Set<AbstractNode>[] = [];
 
-		let index = 0;
-		const indices = new Map<AbstractNode, number>();
-		const lowlinks = new Map<AbstractNode, number>();
+		const sccs: Set<AbstractNode>[] = [];
 
 		const stack: AbstractNode[] = [];
 		const onStack = new Set<AbstractNode>();
-		
+		const indices = new Map<AbstractNode, number>();
+		const lowlinks = new Map<AbstractNode, number>();
+		let index = 0;
+
 		const strongConnect = (node: AbstractNode) => {
+			stack.push(node);
+			onStack.add(node);
 			indices.set(node, index);
 			lowlinks.set(node, index);
 			index++;
 
-			stack.push(node);
-			onStack.add(node);
-
-			for (const other of node.targets) {
-				if (!indices.has(other)) {
-					strongConnect(other);
-					lowlinks.set(node, Math.min(lowlinks.get(node)!, lowlinks.get(other)!));
-				} else if (onStack.has(other)) {
-					lowlinks.set(node, Math.min(lowlinks.get(node)!, indices.get(other)!));
+			for (const neighbor of node.neighbors) {
+				if (!indices.has(neighbor)) {
+					strongConnect(neighbor);
+					lowlinks.set(node, Math.min(lowlinks.get(node)!, lowlinks.get(neighbor)!));
+				} else if (onStack.has(neighbor)) {
+					lowlinks.set(node, Math.min(lowlinks.get(node)!, indices.get(neighbor)!));
 				}
 			}
 
@@ -155,60 +137,13 @@ export class GraphValidator {
 	}
 
 	/**
-	 * Creates a new graph from a strongly connected component. 
-	 * Only edges within the SCC are included.
-	 * @param scc Strongly Connected Component
-	 * @returns A new abstract graph - deeply cloned
-	 */
-
-	private graphFromSCC(scc: Set<AbstractNode>): AbstractGraph {
-		const graph = new Map();
-		for (const node of scc) {
-			graph.set(node.id, { id: node.id, sources: [], targets: [] });
-		}
-
-		for (const source of scc) {
-			for (const target of source.targets) {
-				if (scc.has(target)) {
-					const sourceNode = graph.get(source.id)!;
-					const targetNode = graph.get(target.id)!;
-					sourceNode.targets.push(targetNode);
-					targetNode.sources.push(sourceNode);
-				}
-			}
-		}
-
-		return graph;
-	}
-
-	/**
-	 * Finds the node with the smallest id in a graph.
-	 * @param graph The graph to search
-	 * @returns The node with the smallest id, or null if the graph is empty
-	 */
-
-	private smallestIndexNode(graph: AbstractGraph): AbstractNode | null {
-		let smallestIndex = Infinity;
-		let smallestNode = null;
-
-		for (const node of graph.values()) {
-			if (node.id < smallestIndex) {
-				smallestIndex = node.id;
-				smallestNode = node;
-			}
-		}
-
-		return smallestNode;
-	}
-
-	/**
 	 * Finds the strongly connected component with the provided node.
 	 * @param sccs An array of strongly connected components
 	 * @param node The node to search for
 	 * @returns The strongly connected component containing the node, or null if not found
 	 */
 
-	private sccWithNode(sccs: Set<AbstractNode>[], node: AbstractNode): Set<AbstractNode> | null {
+	private findSCCWithNode(sccs: Set<AbstractNode>[], node: AbstractNode): Set<AbstractNode> | null {
 		for (const scc of sccs) {
 			if (scc.has(node)) {
 				return scc;
@@ -219,22 +154,53 @@ export class GraphValidator {
 	}
 
 	/**
-	 * Creates a new graph without the provided node or any edges to/from that node.
-	 * @param graph The graph to modify
-	 * @param node The node to remove
-	 * @returns A new abstract graph - deeply cloned
+	 * Creates a new graph from a strongly connected component, only including edges within the SCC.
+	 * @param scc The strongly connected component to convert
+	 * @returns A new abstract graph
 	 */
 
-	private graphWithoutNode(graph: AbstractGraph, node: AbstractNode): AbstractGraph {
+	private buildGraphFromSCC(scc: Set<AbstractNode>): AbstractGraph {
+		const newGraph = new Map<number, AbstractNode>();
+		for (const oldNode of scc) {
+			newGraph.set(oldNode.id, { id: oldNode.id, neighbors: [] });
+		}
 
-		// Make a new graph without the smallest node, or its edges
-		const newGraph = new Map(graph);
-		for (const copy of newGraph.values()) {
-			if (copy === node) {
-				newGraph.delete(copy.id);
-			} else {
-				copy.sources = copy.sources.filter(n => n !== node);
-				copy.targets = copy.targets.filter(n => n !== node);
+		for (const oldNode of scc) {
+			const newNode = newGraph.get(oldNode.id);
+			for (const oldNeighbor of oldNode.neighbors) {
+				const newNeighbor = newGraph.get(oldNeighbor.id);
+
+				if (newNode && newNeighbor) {
+					newNode.neighbors.push(newNeighbor);
+				}
+			}
+		}
+
+		return newGraph;
+	}
+
+	/**
+	 * Builds a new graph without the provided node or any edges to/from that node.
+	 * @param graph The graph to modify
+	 * @param excludedNode The node to remove
+	 * @returns A new abstract graph
+	 */
+
+	private buildGraphWithoutNode(graph: AbstractGraph, excludedNode: AbstractNode): AbstractGraph {
+		const newGraph = new Map<number, AbstractNode>();
+		for (const oldNode of graph.values()) {
+			if (oldNode.id === excludedNode.id) continue;
+			newGraph.set(oldNode.id, { id: oldNode.id, neighbors: [] });
+		}
+
+		for (const oldNode of graph.values()) {
+			const newNode = newGraph.get(oldNode.id);
+			for (const oldNeighbor of oldNode.neighbors) {
+				const newNeighbor = newGraph.get(oldNeighbor.id);
+
+				if (newNode && newNeighbor) {
+					newNode.neighbors.push(newNeighbor);
+				}
 			}
 		}
 
@@ -246,12 +212,12 @@ export class GraphValidator {
 	 * @returns An array of cycles, each containing a set of edges that form the cycle
 	 */
 
-	private findCycles(graph: AbstractGraph): Set<AbstractEdge>[] {
+	private findCycles(graph: AbstractGraph): { source: number, target: number }[][] {
 
 		// Johnson's algorithm - O((V + E)(C + 1))
 		// https://en.wikipedia.org/wiki/Johnson%27s_algorithm
 
-		const cycles: Set<AbstractEdge>[] = [];
+		const cycles: { source: number, target: number }[][] = [];
 		const blockedMap = new Map<AbstractNode, Set<AbstractNode>>();
 		const blockedSet = new Set<AbstractNode>();
 		const stack: AbstractNode[] = [];
@@ -259,8 +225,10 @@ export class GraphValidator {
 		// Recursive function to unblock a node and its dependencies
 		const unblock = (node: AbstractNode) => {
 			blockedSet.delete(node);
-			
-			const blocked = blockedMap.get(node) || new Set();
+
+			const blocked = blockedMap.get(node);
+			if (!blocked) return;
+
 			for (const target of blocked) {
 				blocked.delete(target);
 				if (blockedSet.has(target)) {
@@ -277,14 +245,14 @@ export class GraphValidator {
 			blockedSet.add(node);
 			stack.push(node);
 
-			for (const target of node.targets) {
+			for (const target of node.neighbors) {
 				if (target == stack[0]) {
 
 					// If the target is the start node, the stack contains a cycle
-					const cycle = new Set<AbstractEdge>();
+					const cycle: { source: number, target: number }[] = [];
 					for (let i = 0; i < stack.length - 1; i++)
-						cycle.add({ source: stack[i], target: stack[i + 1] });
-					cycle.add({ source: stack[stack.length - 1], target: stack[0] });
+						cycle.push({ source: stack[i].id, target: stack[i + 1].id });
+					cycle.push({ source: stack[stack.length - 1].id, target: stack[0].id });
 					cycles.push(cycle);
 					foundCycle = true;
 
@@ -305,7 +273,7 @@ export class GraphValidator {
 			} else {
 
 				// If no cycle was found, dont unblock it, but add it to the blockedMap of all its targets
-				for (const target of node.targets) {
+				for (const target of node.neighbors) {
 					let blocked = blockedMap.get(target) || new Set();
 					blocked.add(node);
 					blockedMap.set(target, blocked);
@@ -320,17 +288,17 @@ export class GraphValidator {
 		while (subgraph.size > 0) {
 
 			// Find the smallest node in the graph
-			const smallestNode = this.smallestIndexNode(subgraph);
+			const smallestNode = this.findSmallestIndexNode(subgraph);
 			if (!smallestNode) break; // No more nodes
 
 			// Find the strongly connected component containing the smallest node
 			const sccs = this.findSCCs(subgraph);
-			const smallestSCC = this.sccWithNode(sccs, smallestNode);
+			const smallestSCC = this.findSCCWithNode(sccs, smallestNode);
 			if (!smallestSCC) break; // No more SCCs
 
 			// Convert the SCC to a graph
-			const sccGraph = this.graphFromSCC(smallestSCC);
-			const startNode = this.smallestIndexNode(sccGraph); // NOT the same as smallestNode, as sccGraph deeply copies nodes
+			const sccGraph = this.buildGraphFromSCC(smallestSCC);
+			const startNode = this.findSmallestIndexNode(sccGraph); // NOT the same as smallestNode, as sccGraph deeply copies nodes
 			if (!startNode) break; // Should never happen
 
 			// Find cycles in the SCC
@@ -339,7 +307,7 @@ export class GraphValidator {
 			johnson(startNode);
 
 			// Remove the smallest node and its edges from the graph
-			subgraph = this.graphWithoutNode(subgraph, smallestNode);
+			subgraph = this.buildGraphWithoutNode(subgraph, smallestNode);
 		}
 
 		return cycles;

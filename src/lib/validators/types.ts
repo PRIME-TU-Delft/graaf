@@ -34,16 +34,12 @@ export type PrismaSubjectPayload = Prisma.SubjectGetPayload<{
 
 export type AbstractNode = {
 	id: number;
-	sources: AbstractNode[];
-	targets: AbstractNode[];
-}
-
-export type AbstractEdge = {
-	source: AbstractNode;
-	target: AbstractNode;
+	neighbors: AbstractNode[];
 }
 
 export type AbstractGraph = Map<number, AbstractNode>;
+export type AbstractNodeMapping = Map<AbstractNode, AbstractNode>;
+export type ReachabilityMatrix = Map<AbstractNode, Map<AbstractNode, boolean>>;
 
 export type Issues = {
 	domainCycles: { source: number, target: number }[][];
