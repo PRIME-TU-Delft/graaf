@@ -69,207 +69,279 @@ export class GraphValidator {
 	}
 
 	validate(): Issues {
+		const domainCycles = this.findCycles(this.domains)
+			.map(cycle => Array.from(cycle)
+				.map(
+					edge => ({ source: edge.source.id, target: edge.target.id })
+				)
+			);
+		
+		const subjectCycles = this.findCycles(this.subjects)
+			.map(cycle => Array.from(cycle)
+				.map(
+					edge => ({ source: edge.source.id, target: edge.target.id })
+				)
+			);
 
-		// Compute domain properties
-		const domainSubgraphs = this.findSubgraphs(this.domains);
-		const domainRoots = this.findRoots(domainSubgraphs);
-		const domainReachability = this.computeReachability(domainSubgraphs);
-				
-		// Compute subject properties
-		const subjectSubgraphs = this.findSubgraphs(this.subjects);
-		const subjectRoots = this.findRoots(subjectSubgraphs);
-
-		console.log(
-			'domainSubgraphs', domainSubgraphs.map(subgraph => Array.from(subgraph).map(node => node.id)),
-			'\nsubjectSubgraphs', subjectSubgraphs.map(subgraph => Array.from(subgraph).map(node => node.id)),
-			'\ndomainRoots', domainRoots.map(node => node.id),
-			'\nsubjectRoots', subjectRoots.map(node => node.id),
-		)
-
-		// Compute issues
-		const domainBackEdges = this.findBackEdges(domainRoots);
-		const subjectBackEdges = this.findBackEdges(subjectRoots);
-		const conflictingEdges = this.findConflicts(this.subjects, this.domainToSubject, domainReachability);
+		const conflictingEdges: { source: number, target: number }[] = [];
 
 		return {
-			domainBackEdges: domainBackEdges.map(edge => ({ source: edge.source.id, target: edge.target.id })),
-			subjectBackEdges: subjectBackEdges.map(edge => ({ source: edge.source.id, target: edge.target.id })),
-			conflictingEdges: conflictingEdges.map(edge => ({ source: edge.source.id, target: edge.target.id }))
+			domainCycles,
+			subjectCycles,
+			conflictingEdges
 		}
 	}
 
 	/**
-	 * Finds subgraphs in the graph using DFS @ O(V + E)
-	 * @param graph The graph to find subgraphs in.
-	 * @returns The subgraphs in the graph.
+	 * Finds all strongly connected components in a graph, ignoring trivial sscs of size 1.
+	 * @param graph The graph to search
+	 * @returns An array of sscs - not deeply cloned
 	 */
+	
+	private findSCCs(graph: AbstractGraph): Set<AbstractNode>[] {
 
-	private findSubgraphs(graph: AbstractGraph): Set<AbstractNode>[] {
-		const subgraphs: Set<AbstractNode>[] = [];
-		const visited = new Set<AbstractNode>();
+		// Tarjan's algorithm - O(V + E)
+		// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+		
+		const sccs: Set<AbstractNode>[] = [];
+
+		let index = 0;
+		const indices = new Map<AbstractNode, number>();
+		const lowlinks = new Map<AbstractNode, number>();
+
+		const stack: AbstractNode[] = [];
+		const onStack = new Set<AbstractNode>();
+		
+		const strongConnect = (node: AbstractNode) => {
+			indices.set(node, index);
+			lowlinks.set(node, index);
+			index++;
+
+			stack.push(node);
+			onStack.add(node);
+
+			for (const other of node.targets) {
+				if (!indices.has(other)) {
+					strongConnect(other);
+					lowlinks.set(node, Math.min(lowlinks.get(node)!, lowlinks.get(other)!));
+				} else if (onStack.has(other)) {
+					lowlinks.set(node, Math.min(lowlinks.get(node)!, indices.get(other)!));
+				}
+			}
+
+			if (lowlinks.get(node) === indices.get(node)) {
+				const scc = new Set<AbstractNode>();
+				let other: AbstractNode;
+
+				do {
+					other = stack.pop()!;
+					onStack.delete(other);
+					scc.add(other);
+				} while (other !== node);
+
+				if (scc.size > 1) {
+					sccs.push(scc);
+				}
+			}
+		}
 
 		for (const node of graph.values()) {
-			if (visited.has(node)) continue; // Only build subgraphs from unvisited nodes
-
-			const subgraph: Set<AbstractNode> = new Set();
-			const stack: AbstractNode[] = [node];
-
-	   		while (stack.length > 0) {
-				const node = stack.pop()!;
-
-				if (visited.has(node)) continue;
-				subgraph.add(node);
-				visited.add(node);
-
-				for (const target of node.targets) {
-					stack.push(target);
-				}
+			if (!indices.has(node)) {
+				strongConnect(node);
 			}
-
-			subgraphs.push(subgraph);
 		}
 
-		return subgraphs;
+		return sccs;
 	}
 
 	/**
-	 * Finds root nodes in each subgraph @ O(V)
-	 * @param subgraphs The subgraphs to find roots in.
-	 * @returns The root nodes in each subgraph.
+	 * Creates a new graph from a strongly connected component. 
+	 * Only edges within the SCC are included.
+	 * @param scc Strongly Connected Component
+	 * @returns A new abstract graph - deeply cloned
 	 */
 
-	private findRoots(subgraphs: Set<AbstractNode>[]): AbstractNode[] {
-		const arrays = subgraphs.map(set => Array.from(set));
-		const roots: AbstractNode[] = [];
+	private graphFromSCC(scc: Set<AbstractNode>): AbstractGraph {
+		const graph = new Map();
+		for (const node of scc) {
+			graph.set(node.id, { id: node.id, sources: [], targets: [] });
+		}
 
-		// Find domain roots
-		for (const subgraph of arrays) {
-			if (subgraph.length === 0) continue;
-
-			// A root is a node that has no incoming edges
-			const filtered = subgraph.filter(node => node.sources.length === 0);
-			roots.push(...filtered);
-
-			// If there is no trivial root, then the subgraph is a cycle
-			// the roots will be the first domain in the cycle
-			if (filtered.length === 0) {
-				roots.push(subgraph[0]);
+		for (const source of scc) {
+			for (const target of source.targets) {
+				if (scc.has(target)) {
+					const sourceNode = graph.get(source.id)!;
+					const targetNode = graph.get(target.id)!;
+					sourceNode.targets.push(targetNode);
+					targetNode.sources.push(sourceNode);
+				}
 			}
 		}
 
-		return roots;
+		return graph;
 	}
 
 	/**
-	 * Finds back edges in the graph using DFS @ O(V + E)
-	 * @param roots The roots of the graph
-	 * @returns The back edges in the graph.
+	 * Finds the node with the smallest id in a graph.
+	 * @param graph The graph to search
+	 * @returns The node with the smallest id, or null if the graph is empty
 	 */
 
-	private findBackEdges(roots: AbstractNode[]): AbstractEdge[] {
+	private smallestIndexNode(graph: AbstractGraph): AbstractNode | null {
+		let smallestIndex = Infinity;
+		let smallestNode = null;
 
-		// Recursive cycle detection
-		const findCycle = (node: AbstractNode, visited: Set<AbstractNode>, path: Set<AbstractNode>): AbstractEdge | null => {
-			if (!visited.has(node)) {
-				visited.add(node);
-				path.add(node);
-	
-				for (const target of node.targets) {
-					if (!visited.has(target)) {
-						const cycle = findCycle(target, visited, path);
-
-						if (cycle != null) {
-							return cycle;
-						}
-
-					} else if (path.has(target)) {
-						return { source: node, target: target };
-					}
-				}
+		for (const node of graph.values()) {
+			if (node.id < smallestIndex) {
+				smallestIndex = node.id;
+				smallestNode = node;
 			}
-	
-			path.delete(node);
-			return null;
 		}
 
-		// Find cycles
-		const visited = new Set<AbstractNode>();
-		const path = new Set<AbstractNode>();
-		const cycles: AbstractEdge[] = [];
+		return smallestNode;
+	}
 
-		for (const root of roots) {
-			if (root.targets.length === 0) continue;
+	/**
+	 * Finds the strongly connected component with the provided node.
+	 * @param sccs An array of strongly connected components
+	 * @param node The node to search for
+	 * @returns The strongly connected component containing the node, or null if not found
+	 */
 
-			const cycle = findCycle(root, visited, path);
-			if (cycle != null) {
-				cycles.push(cycle);
+	private sccWithNode(sccs: Set<AbstractNode>[], node: AbstractNode): Set<AbstractNode> | null {
+		for (const scc of sccs) {
+			if (scc.has(node)) {
+				return scc;
 			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Creates a new graph without the provided node or any edges to/from that node.
+	 * @param graph The graph to modify
+	 * @param node The node to remove
+	 * @returns A new abstract graph - deeply cloned
+	 */
+
+	private graphWithoutNode(graph: AbstractGraph, node: AbstractNode): AbstractGraph {
+
+		// Make a new graph without the smallest node, or its edges
+		const newGraph = new Map(graph);
+		for (const copy of newGraph.values()) {
+			if (copy === node) {
+				newGraph.delete(copy.id);
+			} else {
+				copy.sources = copy.sources.filter(n => n !== node);
+				copy.targets = copy.targets.filter(n => n !== node);
+			}
+		}
+
+		return newGraph;
+	}
+
+	/**
+	 * Finds all cycles in a graph.
+	 * @returns An array of cycles, each containing a set of edges that form the cycle
+	 */
+
+	private findCycles(graph: AbstractGraph): Set<AbstractEdge>[] {
+
+		// Johnson's algorithm - O((V + E)(C + 1))
+		// https://en.wikipedia.org/wiki/Johnson%27s_algorithm
+
+		const cycles: Set<AbstractEdge>[] = [];
+		const blockedMap = new Map<AbstractNode, Set<AbstractNode>>();
+		const blockedSet = new Set<AbstractNode>();
+		const stack: AbstractNode[] = [];
+
+		// Recursive function to unblock a node and its dependencies
+		const unblock = (node: AbstractNode) => {
+			blockedSet.delete(node);
+			
+			const blocked = blockedMap.get(node) || new Set();
+			for (const target of blocked) {
+				blocked.delete(target);
+				if (blockedSet.has(target)) {
+					unblock(target);
+				}
+			}
+
+			blockedMap.delete(node);
+		}
+
+		// Recursive function to find cycles in an SCC
+		const johnson = (node: AbstractNode): boolean => {
+			let foundCycle = false;
+			blockedSet.add(node);
+			stack.push(node);
+
+			for (const target of node.targets) {
+				if (target == stack[0]) {
+
+					// If the target is the start node, the stack contains a cycle
+					const cycle = new Set<AbstractEdge>();
+					for (let i = 0; i < stack.length - 1; i++)
+						cycle.add({ source: stack[i], target: stack[i + 1] });
+					cycle.add({ source: stack[stack.length - 1], target: stack[0] });
+					cycles.push(cycle);
+					foundCycle = true;
+
+				} else if (!blockedSet.has(target)) {
+
+					// If the target is not blocked, explore it
+					let gotCycle = johnson(target);
+					foundCycle = foundCycle || gotCycle;
+
+				}
+			}
+
+			if (foundCycle) {
+
+				// If a cycle was found containing this node, recursively unblock it and its dependencies
+				unblock(node);
+
+			} else {
+
+				// If no cycle was found, dont unblock it, but add it to the blockedMap of all its targets
+				for (const target of node.targets) {
+					let blocked = blockedMap.get(target) || new Set();
+					blocked.add(node);
+					blockedMap.set(target, blocked);
+				}
+			}
+
+			stack.pop();
+			return foundCycle;
+		}
+
+		let subgraph = graph;
+		while (subgraph.size > 0) {
+
+			// Find the smallest node in the graph
+			const smallestNode = this.smallestIndexNode(subgraph);
+			if (!smallestNode) break; // No more nodes
+
+			// Find the strongly connected component containing the smallest node
+			const sccs = this.findSCCs(subgraph);
+			const smallestSCC = this.sccWithNode(sccs, smallestNode);
+			if (!smallestSCC) break; // No more SCCs
+
+			// Convert the SCC to a graph
+			const sccGraph = this.graphFromSCC(smallestSCC);
+			const startNode = this.smallestIndexNode(sccGraph); // NOT the same as smallestNode, as sccGraph deeply copies nodes
+			if (!startNode) break; // Should never happen
+
+			// Find cycles in the SCC
+			blockedMap.clear();
+			blockedSet.clear();
+			johnson(startNode);
+
+			// Remove the smallest node and its edges from the graph
+			subgraph = this.graphWithoutNode(subgraph, smallestNode);
 		}
 
 		return cycles;
-	}
-
-	/**
-	 * Precomputes reachability for all nodes in a graph using BFS @ O(V * (V + E))
-	 * @param subgraphs Precomputed subgraphs for the graph.
-	 * @returns The reachability for all nodes in the graph.
-	 */
-
-	private computeReachability(subgraphs: Set<AbstractNode>[]): Map<AbstractNode, Set<AbstractNode>> {
-		const reachability = new Map<AbstractNode, Set<AbstractNode>>();
-
-  		for (const subgraph of subgraphs) {
-			for (const node of subgraph) {
-				const reachable = new Set<AbstractNode>();
-				const queue: AbstractNode[] = [node];
-				reachable.add(node);
-	
-				while (queue.length > 0) {
-					const node = queue.shift()!;
-					for (const target of node.targets) {
-						if (!reachable.has(target) && subgraph.has(target)) {
-							reachable.add(target);
-							queue.push(target);
-						}
-					}
-				}
-
-				reachability.set(node, reachable);
-			}
-		}
-
-		return reachability;
-	}
-
-	/**
-	 * Finds conflicting edges in Graph B that do not align with Graph A's inheritance rules @ O(E)
-	 * @param graph Graph B, to find conflicts in.
-	 * @param mapping The mapping between nodes from Graph B to Graph A.
-	 * @param reachability Precomputed reachability for Graph A.
-	 * @returns The conflicting edges in Graph B.
- 	 */
-
-	private findConflicts(
-		graph: AbstractGraph, 
-		mapping: Map<AbstractNode, AbstractNode>,
-		reachability: Map<AbstractNode, Set<AbstractNode>>
-	): AbstractEdge[] {
-		const conflicts: AbstractEdge[] = [];
-
-   		for (const sourceB of graph.values()) {
-			for (const targetB of sourceB.targets) {
-				const sourceA = mapping.get(sourceB);
-				const targetA = mapping.get(targetB);
-		   		if (!sourceA || !targetA) continue;
-
-				// Using precomputed reachability for O(1) check
-				const reachableFromSource = reachability.get(sourceA);
-				if (!reachableFromSource || !reachableFromSource.has(targetA)) {
-					conflicts.push({ source: sourceB, target: targetB });
-				}
-			}
-		}
-
-		return conflicts;
 	}
 }

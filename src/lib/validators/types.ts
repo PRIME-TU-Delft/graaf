@@ -46,7 +46,7 @@ export type AbstractEdge = {
 export type AbstractGraph = Map<number, AbstractNode>;
 
 export type Issues = {
-	domainBackEdges: { source: number, target: number }[];
-	subjectBackEdges: { source: number, target: number }[];
+	domainCycles: { source: number, target: number }[][];
+	subjectCycles: { source: number, target: number }[][];
 	conflictingEdges: { source: number, target: number }[];
 }
