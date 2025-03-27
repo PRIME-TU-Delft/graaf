@@ -4,7 +4,7 @@
 
 	type FormButtonProps = {
 		loading?: boolean;
-		loadingMessage?: String | Snippet;
+		loadingMessage?: string | Snippet;
 	} & Button.Props;
 
 	let {
@@ -24,9 +24,9 @@
 
 {#if loading}
 	<Button.Root bind:ref type="submit" disabled {...restProps}>
-		{#if loadingMessage instanceof String}
+		{#if loadingMessage && typeof loadingMessage === 'string'}
 			{loadingMessage}
-		{:else if loadingMessage}
+		{:else if loadingMessage && typeof loadingMessage === 'function'}
 			{@render loadingMessage?.()}
 		{:else}
 			Loading...

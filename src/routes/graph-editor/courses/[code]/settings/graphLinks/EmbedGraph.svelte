@@ -138,7 +138,7 @@
 			<ChevronDown />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="w-80">
-			{#each values as v}
+			{#each values as v (v)}
 				<DropdownMenu.Item onSelect={() => select(v)} class="justify-between">
 					{v}
 					<Check class={cn('size-4', v != value && 'text-transparent')} />

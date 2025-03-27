@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { hasCoursePermissions, type CoursePermissions } from '$lib/utils/permissions';
 	import { graphEditSchema } from '$lib/zod/graphSchema';
-	import { ChevronDown, Code, Copy, Eye, EyeClosed, Trash, Undo2 } from '@lucide/svelte';
+	import { Code, Eye, EyeOff, Undo2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
@@ -94,22 +94,6 @@
 	</Form.Field>
 
 	{#if isVisible}
-		{@const mainLink = `${page.url.host}/graph/${graph.id}/${graph.name.replaceAll(' ', '_')}`}
-		<div class="relative mb-2">
-			<Input value={mainLink} disabled />
-
-			<Button
-				variant="outline"
-				class="absolute right-1 top-1/2 size-8 -translate-y-1/2"
-				onclick={() => {
-					navigator.clipboard.writeText(mainLink);
-					toast.success('Link copied to clipboard!');
-				}}
-			>
-				<Copy class="size-4" />
-			</Button>
-		</div>
-
 		<div class="mb-2 rounded border p-2">
 			<h3 class="text-lg font-bold">Aliases</h3>
 			<p class="text-sm">
@@ -118,7 +102,7 @@
 				<Code class="inline rounded bg-blue-100 p-2" /> icon when closing this modal.
 			</p>
 			<div class="mb-2 grid grid-cols-1 gap-x-4 gap-y-2">
-				{#each links as link, i}
+				{#each links as link (link.id)}
 					<div in:fade class="flex w-full items-center justify-between gap-1">
 						<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{link.name}</p>
 
@@ -175,7 +159,7 @@
 		</div>
 	{:else}
 		<div in:fade class="inline">
-			<EyeClosed class="border-sm inline size-6 rounded bg-blue-100 p-1" />
+			<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" />
 		</div>
 	{/if}
 {/snippet}

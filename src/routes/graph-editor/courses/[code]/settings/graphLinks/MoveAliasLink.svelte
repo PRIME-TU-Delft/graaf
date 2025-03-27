@@ -4,13 +4,13 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { cn } from '$lib/utils';
-	import { Check, ChevronDown, Trash } from '@lucide/svelte';
+	import { editLinkSchema } from '$lib/zod/graphSchema';
+	import { Check, ChevronDown } from '@lucide/svelte';
 	import type { Course, Graph, Link } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
-	import { editLinkSchema } from '$lib/zod/graphSchema';
 
 	type GraphLinksProps = {
 		course: Course;
@@ -58,7 +58,7 @@
 			<input type="text" name="linkId" value={link.id} hidden />
 			<input type="text" name="graphId" value={graphId} hidden />
 
-			{#each graphs as newGraph, i (newGraph.id)}
+			{#each graphs as newGraph (newGraph.id)}
 				<Button
 					variant="ghost"
 					class="w-full justify-between"
@@ -72,7 +72,7 @@
 				</Button>
 			{/each}
 
-			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage={'Deleting...'}>
+			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Deleting...">
 				Move to {graphs.find((g) => g.id == graphId)!.name}
 			</Form.FormButton>
 		</form>

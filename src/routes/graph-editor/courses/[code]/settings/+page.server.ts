@@ -5,7 +5,7 @@ import { CourseActions, whereHasCoursePermission } from '$lib/server/permissions
 import { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
 import {
 	createNewLinkSchema,
-	editLinkSchema as editLinkSchema,
+	editLinkSchema,
 	graphEditSchema,
 	graphSchemaWithId
 } from '$lib/zod/graphSchema';

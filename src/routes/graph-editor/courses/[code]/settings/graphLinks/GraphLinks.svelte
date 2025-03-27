@@ -4,7 +4,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
 	import type { CoursePermissions } from '$lib/utils/permissions';
-	import { ArrowRight, ChevronDown, Eye, EyeClosed } from '@lucide/svelte';
+	import { ArrowRight, ChevronDown, Eye, EyeOff } from '@lucide/svelte';
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import EmbedGraph from './EmbedGraph.svelte';
 	import GraphSettingsDialog from './GraphSettingsDialog.svelte';
@@ -25,9 +25,9 @@
 		Graphs with a link that is public are indecated with a <Eye
 			class="border-sm inline size-6 rounded bg-blue-100 p-1"
 		/> while private links are shown by
-		<EyeClosed class="border-sm inline size-6 rounded bg-blue-100 p-1" />. Private means that the
-		graph cannot be seen by students. Aliases can be added to have more links to the same graph.
-		When a graph is private all aliases are also disabled.
+		<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" />. Private means that the graph
+		cannot be seen by students. Aliases can be added to have more links to the same graph. When a
+		graph is private all aliases are also disabled.
 	</p>
 
 	<Table.Root class="rounded-md border">
@@ -41,13 +41,13 @@
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
-			{#each graphs as graph, i (graph.id)}
+			{#each graphs as graph (graph.id)}
 				<Table.Row class="p-0">
 					<Table.Cell class="flex items-center gap-1 py-3 font-medium">
 						{#if graph.isVisible}
 							<Eye class="border-sm inline size-6 rounded bg-blue-100 p-1" />
 						{:else}
-							<EyeClosed class="border-sm inline size-6 rounded bg-blue-100 p-1" />
+							<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" />
 						{/if}
 						{graph.name}
 					</Table.Cell>
@@ -69,8 +69,8 @@
 				</Table.Row>
 
 				{#if showAlias == graph.id}
-					{#each graph.links as link, i}
-						{@render alias(link.name, graph, i % 2 == 0)}
+					{#each graph.links as link (link.id)}
+						{@render alias(link.name)}
 					{/each}
 				{/if}
 			{:else}
@@ -102,8 +102,8 @@
 	{/if}
 {/snippet}
 
-{#snippet alias(linkName: string, graph: Graph, isOdd: boolean)}
-	<Table.Row class={cn(['bg-blue-100/50 hover:bg-blue-100/30', isOdd && 'bg-blue-100/50'])}>
+{#snippet alias(linkName: string)}
+	<Table.Row class={cn(['bg-blue-100/50 odd:bg-blue-100/50 hover:bg-blue-100/30'])}>
 		<Table.Cell class="pl-8 " colspan={3}>
 			{page.url.host}/graph/{course.code}/{linkName}
 		</Table.Cell>

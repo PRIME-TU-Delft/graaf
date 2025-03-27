@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import type { Course, Graph, Link } from '@prisma/client';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { toast } from 'svelte-sonner';
-	import type { PageData } from '../$types';
 	import { page } from '$app/state';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import { Input } from '$lib/components/ui/input';
+	import { createNewLinkSchema } from '$lib/zod/graphSchema';
+	import type { Course, Graph, Link } from '@prisma/client';
+	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { createNewLinkSchema } from '$lib/zod/graphSchema';
+	import type { PageData } from '../$types';
 
 	type AddAliasLinkProps = {
 		course: Course & {
@@ -54,7 +53,7 @@
 		</Form.Control>
 	</Form.Field>
 
-	<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage={'Adding link...'}>
+	<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Adding link...">
 		Add link
 	</Form.FormButton>
 </form>

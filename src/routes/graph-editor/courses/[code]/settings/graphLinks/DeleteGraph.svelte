@@ -61,10 +61,10 @@
 				<p class="text-sm text-gray-500">This cannot be undone</p>
 
 				<Form.FormButton
-					variant={'destructive'}
+					variant="destructive"
 					disabled={$submitting}
 					loading={$delayed}
-					loadingMessage={'Deleting...'}
+					loadingMessage="Deleting..."
 				>
 					Yes, delete graph
 				</Form.FormButton>
