@@ -10,9 +10,10 @@
 			lectures: Lecture[];
 			links: Link[];
 		};
+		graphs: Graph[];
 	};
 
-	const { course, graph }: GraphLinksProps = $props();
+	const { course, graph, graphs }: GraphLinksProps = $props();
 	let graphLinkSettingsOpen = $state(false);
 </script>
 
@@ -22,5 +23,5 @@
 	button="Settings"
 	title="Graph link settings"
 >
-	<GraphLinkSettings {course} {graph} onSuccess={() => (graphLinkSettingsOpen = false)} />
+	<GraphLinkSettings {course} {graph} {graphs} onSuccess={() => (graphLinkSettingsOpen = false)} />
 </DialogButton>

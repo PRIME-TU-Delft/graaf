@@ -3,7 +3,12 @@ import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { CourseActions, whereHasCoursePermission } from '$lib/server/permissions';
 import { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
-import { graphEditSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
+import {
+	createNewLinkSchema,
+	editLinkSchema as editLinkSchema,
+	graphEditSchema,
+	graphSchemaWithId
+} from '$lib/zod/graphSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -52,7 +57,9 @@ export const load = (async ({ params, locals }) => {
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			changeArchiveForm: await superValidate(zod(changeArchive)),
 			editGraphForm: await superValidate(zod(graphEditSchema)),
-			deleteGraphForm: await superValidate(zod(graphSchemaWithId))
+			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
+			createLinkForm: await superValidate(zod(createNewLinkSchema)),
+			editLinkForm: await superValidate(zod(editLinkSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page
@@ -81,5 +88,17 @@ export const actions: Actions = {
 	'change-archive': async (event) => {
 		const form = await superValidate(event, zod(changeArchive));
 		return CourseActions.changeArchive(await getUser(event), form);
+	},
+	'add-link': async (event) => {
+		const form = await superValidate(event, zod(createNewLinkSchema));
+		return GraphActions.addLink(await getUser(event), form);
+	},
+	'move-link': async (event) => {
+		const form = await superValidate(event, zod(editLinkSchema));
+		return GraphActions.moveLink(await getUser(event), form);
+	},
+	'delete-link': async (event) => {
+		const form = await superValidate(event, zod(editLinkSchema));
+		return GraphActions.deleteLinkFromGraph(await getUser(event), form);
 	}
 };

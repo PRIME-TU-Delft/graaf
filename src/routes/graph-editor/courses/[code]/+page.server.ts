@@ -3,6 +3,8 @@ import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions.js';
 import {
+	createNewLinkSchema,
+	editLinkSchema,
 	duplicateGraphSchema,
 	graphEditSchema,
 	graphSchema,
@@ -73,6 +75,7 @@ export const load = (async ({ params, locals }) => {
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			editGraphForm: await superValidate(zod(graphEditSchema)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
+			deleteLinkForm: await superValidate(zod(editLinkSchema)),
 			coursesAccessible,
 			course: dbCourse,
 			graphs: dbCourse.graphs,
@@ -86,6 +89,7 @@ export const load = (async ({ params, locals }) => {
 			coursesAccessible: new Promise(() => []) as Prisma.PrismaPromise<Course[]>,
 			editGraphForm: await superValidate(zod(graphEditSchema)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
+			deleteLinkForm: await superValidate(zod(editLinkSchema)),
 			course: undefined,
 			graphs: [],
 			user
@@ -109,7 +113,18 @@ export const actions = {
 	},
 	'duplicate-graph': async (event) => {
 		const form = await superValidate(event, zod(duplicateGraphSchema));
-
 		return GraphActions.duplicateGraph(await getUser(event), form, event.params.code);
+	},
+	'add-link': async (event) => {
+		const form = await superValidate(event, zod(createNewLinkSchema));
+		return GraphActions.addLink(await getUser(event), form);
+	},
+	'move-link': async (event) => {
+		const form = await superValidate(event, zod(editLinkSchema));
+		return GraphActions.moveLink(await getUser(event), form);
+	},
+	'delete-link': async (event) => {
+		const form = await superValidate(event, zod(editLinkSchema));
+		return GraphActions.deleteLinkFromGraph(await getUser(event), form);
 	}
 };

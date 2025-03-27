@@ -4,8 +4,9 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { cn } from '$lib/utils';
-	import { graphSchemaWithId } from '$lib/zod/graphSchema';
-	import type { Course, Graph } from '@prisma/client';
+	import { editLinkSchema } from '$lib/zod/graphSchema';
+	import { Trash } from '@lucide/svelte';
+	import type { Course, Graph, Link } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -14,20 +15,21 @@
 	type GraphLinksProps = {
 		course: Course;
 		graph: Graph;
+		link: Link;
 		onSuccess?: () => void;
 	};
 
-	const { graph, course, onSuccess = () => {} }: GraphLinksProps = $props();
+	const { graph, course, link, onSuccess = () => {} }: GraphLinksProps = $props();
 
 	const id = $props.id();
 
-	const form = superForm((page.data as PageData).editGraphForm, {
-		id: 'delete-graph-' + id,
-		validators: zodClient(graphSchemaWithId),
+	const form = superForm((page.data as PageData).editLinkForm, {
+		id: 'delete-graph-link-' + id,
+		validators: zodClient(editLinkSchema),
 		onResult: ({ result }) => {
 			console.log({ result });
 			if (result.type == 'success') {
-				toast.success('Succesfully deleted graph!');
+				toast.success('Succesfully deleted link!');
 
 				onSuccess();
 			}
@@ -38,20 +40,20 @@
 
 	$effect(() => {
 		$formData.graphId = graph.id;
-		$formData.courseCode = course.code;
-		$formData.name = graph.name;
+		$formData.courseId = course.id;
+		$formData.linkId = link.id;
 	});
 </script>
 
 <Popover.Root>
 	<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-		Delete graph
+		<Trash />
 	</Popover.Trigger>
 	<Popover.Content>
-		<form action="?/delete-graph" method="POST" use:enhance>
+		<form action="?/delete-link" method="POST" use:enhance>
 			<input type="text" name="graphId" value={graph.id} hidden />
-			<input type="text" name="courseCode" value={course.code} hidden />
-			<input type="text" name="name" value={graph.name} hidden />
+			<input type="text" name="courseId" value={course.id} hidden />
+			<input type="text" name="linkId" value={link.id} hidden />
 
 			<div class="grid grid-cols-2 items-center justify-between gap-1">
 				<p class="text-nowrap font-bold">Are you sure?</p>
@@ -66,7 +68,7 @@
 					loading={$delayed}
 					loadingMessage={'Deleting...'}
 				>
-					Yes, delete graph
+					Yes, delete link
 				</Form.FormButton>
 			</div>
 		</form>

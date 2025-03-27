@@ -16,6 +16,8 @@
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import type { PageData } from '../$types';
 	import AddAliasLink from './AddAliasLink.svelte';
+	import DeleteAliasLink from './DeleteAliasLink.svelte';
+	import MoveAliasLink from './MoveAliasLink.svelte';
 
 	type GraphLinksProps = {
 		course: Course & CoursePermissions & { links: Link[] };
@@ -23,14 +25,14 @@
 			lectures: Lecture[];
 			links: Link[];
 		};
+		graphs: Graph[];
 		onSuccess?: () => void;
 	};
 
-	const { course, graph, onSuccess = () => {} }: GraphLinksProps = $props();
+	const { course, graph, graphs, onSuccess = () => {} }: GraphLinksProps = $props();
 
 	let isVisible = $state(graph.isVisible);
-	let aliases = $state(graph.links.map((link) => link));
-	let newAlias = $state('');
+	let links = $state(graph.links.map((link) => link));
 
 	const id = $props.id();
 
@@ -64,14 +66,7 @@
 		$formData.courseCode = course.code;
 		$formData.name = graph.name;
 		$formData.isVisible = isVisible;
-		$formData.aliases = aliases.map((link) => ({ name: link.name, id: link.id }));
 	});
-
-	function handleAddAlias() {
-		if (newAlias.length < 1) return;
-		// TODO: make api call to add alias
-		newAlias = '';
-	}
 </script>
 
 <form action="?/edit-graph" method="POST" use:formEnhance>
@@ -123,39 +118,28 @@
 				<Code class="inline rounded bg-blue-100 p-2" /> icon when closing this modal.
 			</p>
 			<div class="mb-2 grid grid-cols-1 gap-x-4 gap-y-2">
-				{#each aliases as alias, i}
+				{#each links as link, i}
 					<div in:fade class="flex w-full items-center justify-between gap-1">
-						<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{alias}</p>
+						<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{link.name}</p>
 
-						<Button class="ml-auto" variant="outline">Move to other graph<ChevronDown /></Button>
-						<Button
-							variant="destructive"
-							class="w-16 p-1"
-							onclick={() => {
-								aliases = aliases.filter((_, index) => index !== i);
-							}}
-						>
-							<Trash />
-						</Button>
+						{#if graphs.length > 1}
+							<MoveAliasLink {course} {graph} {graphs} {link} {onSuccess} />
+						{/if}
+
+						<DeleteAliasLink {course} {graph} {link} {onSuccess} />
 					</div>
 				{/each}
 			</div>
 
-			<AddAliasLink {course} {graph} />
+			<AddAliasLink
+				{course}
+				{graph}
+				onSuccess={(link) => {
+					links.push(link);
+				}}
+			/>
 		</div>
 	{/if}
-
-	<Form.Fieldset {form} name="aliases" class="h-0">
-		{#each $formData.aliases, i}
-			<Form.ElementField {form} name="aliases[{i}].name">
-				<Form.Control>
-					{#snippet children({ props })}
-						<input type="hidden" bind:value={$formData.aliases[i]} {...props} />
-					{/snippet}
-				</Form.Control>
-			</Form.ElementField>
-		{/each}
-	</Form.Fieldset>
 
 	<Form.Field {form} name="name">
 		<Form.Control>

@@ -56,7 +56,7 @@
 						<EmbedGraph {graph} {course} />
 					</Table.Cell>
 					<Table.Cell class="p-1">
-						<GraphSettingsDialog {graph} {course} />
+						<GraphSettingsDialog {graphs} {graph} {course} />
 					</Table.Cell>
 					<Table.Cell class="p-1 text-right">
 						<Button

@@ -21,15 +21,21 @@ export const duplicateGraphSchema = z.object({
 
 export const graphEditSchema = graphSchema.extend({
 	graphId: z.number().min(1),
-	isVisible: z.boolean(),
-	aliases: z.array(
-		z.object({
-			id: z.number().min(1),
-			name: z
-				.string()
-				.min(1)
-				.max(settings.MAX_LINK_NAME_LENGTH)
-				.regex(/^[a-zA-Z-]+$/, 'Only letters and `-` without a space are allowed')
-		})
-	)
+	isVisible: z.boolean()
+});
+
+export const createNewLinkSchema = z.object({
+	graphId: z.number().min(1),
+	courseId: z.number().min(1),
+	name: z
+		.string()
+		.min(1)
+		.max(settings.MAX_LINK_NAME_LENGTH)
+		.regex(/^[a-zA-Z-]+$/, 'Only letters and `-` without a space are allowed')
+});
+
+export const editLinkSchema = z.object({
+	graphId: z.number().min(1),
+	courseId: z.number().min(1),
+	linkId: z.number().min(1)
 });

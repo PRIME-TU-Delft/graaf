@@ -1,6 +1,8 @@
 import { env } from '$env/dynamic/private';
 import { setError } from '$lib/utils/setError';
 import type {
+	createNewLinkSchema,
+	editLinkSchema,
 	duplicateGraphSchema,
 	graphEditSchema,
 	graphSchema,
@@ -72,8 +74,6 @@ export class GraphActions {
 	 */
 	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphEditSchema>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid graph name');
-
-		console.log('new graph alias', form.data.aliases);
 
 		try {
 			const query = await prisma.course.update({
@@ -317,5 +317,88 @@ export class GraphActions {
 		}
 
 		return { form };
+	}
+
+	static async addLink(user: User, form: SuperValidated<Infer<typeof createNewLinkSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form');
+
+		try {
+			const newLink = await prisma.course.update({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					links: {
+						create: {
+							name: form.data.name,
+							graphId: form.data.graphId
+						}
+					}
+				},
+				select: {
+					links: {
+						where: {
+							graphId: form.data.graphId,
+							name: form.data.name
+						}
+					}
+				}
+			});
+
+			if (!newLink.links.length) return setError(form, '', 'Failed to create link');
+
+			return { form, link: newLink.links[0] };
+		} catch {
+			return setError(form, '', 'Failed to create link');
+		}
+	}
+
+	static async moveLink(user: User, form: SuperValidated<Infer<typeof editLinkSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form');
+
+		try {
+			await prisma.course.update({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					links: {
+						update: {
+							where: { id: form.data.linkId },
+							data: {
+								graphId: form.data.graphId
+							}
+						}
+					}
+				}
+			});
+		} catch {
+			return setError(form, '', 'Failed to move link');
+		}
+	}
+
+	// MARK: Links
+	static async deleteLinkFromGraph(user: User, form: SuperValidated<Infer<typeof editLinkSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form');
+
+		try {
+			await prisma.course.update({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					links: {
+						delete: {
+							id: form.data.linkId
+						}
+					}
+				}
+			});
+		} catch {
+			return setError(form, '', 'Failed to delete link');
+		}
 	}
 }

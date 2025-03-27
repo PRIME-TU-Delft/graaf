@@ -8,9 +8,7 @@
 	type EditGraphProps = {
 		course: Course &
 			CoursePermissions & {
-				graphs: {
-					name: string;
-				}[];
+				graphs: Graph[];
 				links: Link[];
 			};
 		graph: Graph & {
@@ -55,6 +53,11 @@
 		button="Settings"
 		title="Graph link settings"
 	>
-		<GraphLinkSettings {course} {graph} onSuccess={() => (graphLinkSettingsOpen = false)} />
+		<GraphLinkSettings
+			{course}
+			{graph}
+			graphs={course.graphs}
+			onSuccess={() => (graphLinkSettingsOpen = false)}
+		/>
 	</DialogButton>
 </div>

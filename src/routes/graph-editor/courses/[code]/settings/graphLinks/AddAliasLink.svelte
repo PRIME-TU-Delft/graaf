@@ -2,45 +2,59 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import type { Course, Graph, Link } from '@prisma/client';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import { toast } from 'svelte-sonner';
+	import type { PageData } from '../$types';
+	import { page } from '$app/state';
+	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { createNewLinkSchema } from '$lib/zod/graphSchema';
 
 	type AddAliasLinkProps = {
 		course: Course & {
 			links: Link[];
 		};
 		graph: Graph;
+		onSuccess: (link: Link) => void;
 	};
 
-	let { course, graph }: AddAliasLinkProps = $props();
+	let { course, graph, onSuccess }: AddAliasLinkProps = $props();
+	const id = $props.id();
 
-	let newAlias = $state('');
-	let loading = $state(false);
-	let error = $state('');
+	const form = superForm((page.data as PageData).createLinkForm, {
+		id: 'delete-graph-link-' + id,
+		validators: zodClient(createNewLinkSchema),
+		onResult: ({ result }) => {
+			if (result.type == 'success') {
+				toast.success('Succesfully added link!');
 
-	async function handleAddAlias() {
-		// await
-	}
+				console.log({ result });
+				onSuccess(result!.data!.link as Link);
+			}
+		}
+	});
+
+	const { form: formData, enhance, submitting, delayed } = form;
 
 	$effect(() => {
-		if (loading) error = '';
-
-		if (course.links.map((l) => l.name).includes(newAlias)) {
-			error = 'Alias already exists';
-		}
+		$formData.graphId = graph.id;
+		$formData.courseId = course.id;
 	});
 </script>
 
-{#if error}
-	<div class="text-sm text-red-500">{error}</div>
-{/if}
+<form class="flex items-center gap-2" action="?/add-link" method="POST" use:enhance>
+	<input type="text" name="graphId" value={graph.id} hidden />
+	<input type="text" name="courseId" value={course.id} hidden />
 
-<div class="flex items-center gap-2">
-	<Input type="text" name="alias" placeholder="Add an alias" bind:value={newAlias} />
+	<Form.Field {form} name="name" class="grow">
+		<Form.Control>
+			{#snippet children({ props })}
+				<Input class="grow" {...props} placeholder="Add an alias" bind:value={$formData.name} />
+			{/snippet}
+		</Form.Control>
+	</Form.Field>
 
-	<Button onclick={handleAddAlias} disabled={newAlias.length < 1 || loading}>
-		{#if loading}
-			Adding link...
-		{:else}
-			Add link
-		{/if}
-	</Button>
-</div>
+	<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage={'Adding link...'}>
+		Add link
+	</Form.FormButton>
+</form>
