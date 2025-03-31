@@ -73,21 +73,25 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainC, domainB, domainA], [subjectA, subjectB, subjectC]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(0);
-		expect(issues.subjectCycles).toHaveLength(0);
-		expect(issues.conflictingEdges).toHaveLength(0);
+		expect(domainCycles).toHaveLength(0);
+		expect(subjectCycles).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(0);
 	});
 
 	test('should handle empty graphs', () => {
 		const graph = dummyGraph([], []);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(0);
-		expect(issues.subjectCycles).toHaveLength(0);
-		expect(issues.conflictingEdges).toHaveLength(0);
+		expect(domainCycles).toHaveLength(0);
+		expect(subjectCycles).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(0);
 	});
 
 	test('should handle graphs with multiple roots (no cycles/conflicts)', () => {
@@ -107,11 +111,13 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainA, domainB, domainC], [subjectA, subjectB, subjectC]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(0);
-		expect(issues.subjectCycles).toHaveLength(0);
-		expect(issues.conflictingEdges).toHaveLength(0);
+		expect(domainCycles).toHaveLength(0);
+		expect(subjectCycles).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(0);
 	});
 
 	test('should handle graphs with cycles (single cycle)', () => {
@@ -131,10 +137,12 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainA, domainB, domainC], [subjectA, subjectB]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(1);
-		expect(issues.domainCycles).toEqual(
+		expect(domainCycles).toHaveLength(1);
+		expect(domainCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
@@ -144,8 +152,8 @@ describe('GraphValidator', () => {
 			])
 		)
 
-		expect(issues.subjectCycles).toHaveLength(1);
-		expect(issues.subjectCycles).toEqual(
+		expect(subjectCycles).toHaveLength(1);
+		expect(subjectCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
@@ -154,7 +162,7 @@ describe('GraphValidator', () => {
 			])
 		)
 
-		expect(issues.conflictingEdges).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(0);
 	});
 
 	test('should handle graphs with multiple cycles', () => {
@@ -180,10 +188,12 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainA, domainB, domainC, domainD], [subjectA, subjectB, subjectC]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(2);
-		expect(issues.domainCycles).toEqual(
+		expect(domainCycles).toHaveLength(2);
+		expect(domainCycles).toEqual(
 			expect.arrayContaining([
     			expect.arrayContaining([
     				{ source: 1, target: 2 },
@@ -199,8 +209,8 @@ describe('GraphValidator', () => {
 			])
 		)
 
-		expect(issues.subjectCycles).toHaveLength(2);
-		expect(issues.subjectCycles).toEqual(
+		expect(subjectCycles).toHaveLength(2);
+		expect(subjectCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
@@ -214,7 +224,7 @@ describe('GraphValidator', () => {
 			])
 		)
 
-		expect(issues.conflictingEdges).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(0);
 	});
 
 	test('should handle graphs with conflicting edges (single conflict)', () => {
@@ -234,12 +244,14 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainA, domainB, domainC], [subjectA, subjectB, subjectC]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(0);
-		expect(issues.subjectCycles).toHaveLength(0);
-		expect(issues.conflictingEdges).toHaveLength(1); // One conflicting edge found
-		expect(issues.conflictingEdges).toContainEqual({ source: 3, target: 2 });
+		expect(domainCycles).toHaveLength(0);
+		expect(subjectCycles).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(1); // One conflicting edge found
+		expect(conflictingEdges).toContainEqual({ source: 3, target: 2 });
 	});
 
 	test('should handle graphs with multiple conflicting edges', () => {
@@ -263,13 +275,15 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainA, domainB, domainC, domainD], [subjectA, subjectB, subjectC, subjectD]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(0);
-		expect(issues.subjectCycles).toHaveLength(0);
-		expect(issues.conflictingEdges).toHaveLength(2); // Two conflicting edges found
-		expect(issues.conflictingEdges).toContainEqual({ source: 4, target: 1 });
-		expect(issues.conflictingEdges).toContainEqual({ source: 3, target: 2 });
+		expect(domainCycles).toHaveLength(0);
+		expect(subjectCycles).toHaveLength(0);
+		expect(conflictingEdges).toHaveLength(2); // Two conflicting edges found
+		expect(conflictingEdges).toContainEqual({ source: 4, target: 1 });
+		expect(conflictingEdges).toContainEqual({ source: 3, target: 2 });
 	});
 
 	test('should handle graphs with multiple roots, cycles, and conflicting edges', () => {
@@ -296,10 +310,12 @@ describe('GraphValidator', () => {
 
 		const graph = dummyGraph([domainA, domainB, domainC, domainD, domainE], [subjectA, subjectB, subjectC]);
 		const validator = new GraphValidator(graph);
-		const issues = validator.validate();
+		const domainCycles = validator.findCycles(validator.domains);
+		const subjectCycles = validator.findCycles(validator.subjects);
+		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
 
-		expect(issues.domainCycles).toHaveLength(2);
-		expect(issues.domainCycles).toEqual(
+		expect(domainCycles).toHaveLength(2);
+		expect(domainCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 4, target: 5 },
@@ -312,8 +328,8 @@ describe('GraphValidator', () => {
 			])
 		)
 
-		expect(issues.subjectCycles).toHaveLength(1);
-		expect(issues.subjectCycles).toEqual(
+		expect(subjectCycles).toHaveLength(1);
+		expect(subjectCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
@@ -323,13 +339,13 @@ describe('GraphValidator', () => {
 			])
 		)
 
-		expect(issues.conflictingEdges).toHaveLength(2);
-		expect(issues.conflictingEdges).toEqual(
+		expect(conflictingEdges).toHaveLength(2);
+		expect(conflictingEdges).toEqual(
 			expect.arrayContaining([
 				{ source: 1, target: 2 },
 				{ source: 3, target: 1 },
 			])
-		)
+		);
 	});
 });
 

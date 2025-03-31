@@ -32,8 +32,15 @@ export type PrismaSubjectPayload = Prisma.SubjectGetPayload<{
 	}
 }>;
 
+export type Issue = {
+	title: string;
+	message: string;
+	severity: "error" | "warning";
+}
+
 export type Issues = {
-	domainCycles: { source: number, target: number }[][];
-	subjectCycles: { source: number, target: number }[][];
-	conflictingEdges: { source: number, target: number }[];
+	domainIssues: { [key: number]: Issue[] };
+	domainRelationIssues: { [key: number]: { [key: number]: Issue[] } };
+	subjectIssues: { [key: number]: Issue[] };
+	subjectRelationIssues: { [key: number]: { [key: number]: Issue[] } };
 }

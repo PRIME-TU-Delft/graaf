@@ -45,7 +45,7 @@ Conflicting edges
 
 */
 
-import type { PrismaGraphPayload, Issues } from "./types";
+import type { PrismaGraphPayload, Issues, Issue } from "./types";
 
 // Abstract graph representation
 type AbstractGraph = Map<number, AbstractNode>;
@@ -61,11 +61,13 @@ type SCC = Set<AbstractNode>;
 
 // Graph validator class
 export class GraphValidator {
+	graph: PrismaGraphPayload;		// Raw graph data
 	domains: AbstractGraph;			// Abstract representation of the domain graph
 	subjects: AbstractGraph;		// Abstract representation of the subject graph
 	inheritanceMap: InheritanceMap;	// Map linking subjects to domains
 
 	constructor (graph: PrismaGraphPayload) {
+		this.graph = graph;
 		this.domains = new Map();
 		this.subjects = new Map();
 		this.inheritanceMap = new Map();
@@ -116,10 +118,177 @@ export class GraphValidator {
 
 	validate(): Issues {
 		return {
-			domainCycles: this.findCycles(this.domains),
-			subjectCycles: this.findCycles(this.subjects),
-			conflictingEdges: this.findConflictingEdges(this.domains, this.subjects, this.inheritanceMap)
+			...this.findNodeIssues(),
+			...this.findRelationIssues()
+		} as Issues;
+	}
+
+	private findNodeIssues(): Partial<Issues> {
+		const domainIssues: { [key: number]: Issue[] } = {};
+		const subjectIssues: { [key: number]: Issue[] } = {};
+
+		/* Domain issues
+			Domain without name			(Error)
+			Domain without style		(Error)
+			Domain with duplicate name	(Warning)
+			Domain with duplicate style	(Warning)
+			Domain without subjects		(Warning)
+
+			Domain with invalid name/style should be caught by zod
+		*/
+
+		for (const domain of this.graph.domains) {
+			const issues: Issue[] = [];
+
+			const name = domain.name.trim();
+			if (!domain.name) issues.push({
+				title: "Domain without name",
+				message: "Domains must have a name",
+				severity: "error"
+			});
+
+			if (!domain.style) issues.push({
+				title: "Domain without style",
+				message: "Domains must have a style",
+				severity: "error"
+			});
+
+			if (this.graph.domains.find(other => other.name === name && other.id !== domain.id)) 
+				issues.push({ 
+					title: "Domain with duplicate name",
+					message: "Domains must have unique names", 
+					severity: "warning"
+				});
+
+			if (this.graph.domains.find(other => other.style === domain.style && other.id !== domain.id))
+				issues.push({
+					title: "Domain with duplicate style", 
+					message: "Domains must have unique styles",
+					severity: "warning"
+				});
+
+			if (!this.graph.subjects.find(subject => subject.domainId === domain.id)) 
+				issues.push({
+					title: "Domain without subjects", 
+					message: "Domains must have at least one subject", 
+					severity: "warning"
+				});
+
+			domainIssues[domain.id] = issues;
 		}
+
+		/* Subject issues
+			Subject without name			(Error)
+			Subject without domain			(Error)
+			Subject with duplicate name		(Warning)
+
+			Subject with invalid name should be caught by zod
+		*/
+
+		for (const subject of this.graph.subjects) {
+			const issues: Issue[] = [];
+
+			if (!subject.name) issues.push({
+				title: "Subject without name",
+				message: "Subjects must have a name",
+				severity: "error"
+			});
+
+			if (!subject.domainId) issues.push({
+				title: "Subject without domain",
+				message: "Subjects must have a domain",
+				severity: "error"
+			});
+
+			if (this.graph.subjects.find(other => other.name === subject.name && other.id !== subject.id)) 
+				issues.push({ 
+					title: "Subject with duplicate name",
+					message: "Subjects must have unique names", 
+					severity: "warning"
+				});
+
+			subjectIssues[subject.id] = issues;
+		}
+
+		return { domainIssues, subjectIssues };
+	}
+	
+	private findRelationIssues(): Partial<Issues> {
+		const domainRelationIssues: { [key: number]: { [key: number]: Issue[] } } = {};
+		const subjectRelationIssues: { [key: number]: { [key: number]: Issue[] } } = {};
+		
+		/* Domain relation issues
+			Cyclic domain relation		(Error)
+		*/
+
+		const domainCycles = this.findCycles(this.domains);
+		for (const cycle of domainCycles) {
+			const temp = [];
+			for (const edge of cycle) {
+				const source = this.graph.domains.find(domain => domain.id === edge.source);
+				const target = this.graph.domains.find(domain => domain.id === edge.target);
+				temp.push(`${source?.name} -> ${target?.name}`);
+			}
+
+			const message = temp.join(" -> ");
+
+			for (const edge of cycle) {
+				const issues = domainRelationIssues[edge.source][edge.target] || [];
+				issues.push({
+					title: "Cyclic domain relation",
+					message: message,
+					severity: "error"
+				});
+
+				domainRelationIssues[edge.source][edge.target] = issues
+			}
+		}
+
+		/* Subject relation issues
+			Cyclic subject relation			(Error)
+			Conflicting subject relation	(Warning)
+		*/
+
+		
+		const subjectCycles = this.findCycles(this.subjects);
+		for (const cycle of subjectCycles) {
+			const temp = [];
+			for (const edge of cycle) {
+				const source = this.graph.subjects.find(subject => subject.id === edge.source);
+				const target = this.graph.subjects.find(subject => subject.id === edge.target);
+				temp.push(`${source?.name} -> ${target?.name}`);
+			}
+			
+			const message = temp.join(" -> ");
+			
+			for (const edge of cycle) {
+				const issues = subjectRelationIssues[edge.source][edge.target] || [];
+				issues.push({
+					title: "Cyclic subject relation",
+					message: message,
+					severity: "error"
+				});
+				
+				subjectRelationIssues[edge.source][edge.target] = issues
+			}
+		}
+		
+		const conflictingEdges = this.findConflictingEdges(this.domains, this.subjects, this.inheritanceMap);
+		for (const edge of conflictingEdges) {
+			const source = this.graph.subjects.find(subject => subject.id === edge.source);
+			const target = this.graph.subjects.find(subject => subject.id === edge.target);
+
+			const issues = subjectRelationIssues[edge.source][edge.target] || [];
+			issues.push({
+				title: "Conflicting subject relation",
+				message: `${source?.name} -> ${target?.name} is not represented in the domain graph`,
+				severity: "warning"
+			});
+
+			subjectRelationIssues[edge.source][edge.target] = issues;
+		}
+
+		return { domainRelationIssues, subjectRelationIssues };
 	}
 
 	/**
@@ -265,7 +434,7 @@ export class GraphValidator {
 	 * @returns An array of cycles, each containing a set of edges that form the cycle
 	 */
 
-	private findCycles(graph: AbstractGraph): { source: number, target: number }[][] {
+	findCycles(graph: AbstractGraph): { source: number, target: number }[][] {
 
 		// Johnson's algorithm - O((V + E)(C + 1))
 		// https://en.wikipedia.org/wiki/Johnson%27s_algorithm
@@ -416,7 +585,7 @@ export class GraphValidator {
 	 * @returns An array of conflicting edges
 	 */
 
-	private findConflictingEdges(graphA: AbstractGraph, graphB: AbstractGraph, inheritance: InheritanceMap): { source: number, target: number }[] {
+	findConflictingEdges(graphA: AbstractGraph, graphB: AbstractGraph, inheritance: InheritanceMap): { source: number, target: number }[] {
 		const reachabilityMatrix = this.computeReachabilityMatrix(graphA);
 		const conflictingEdges: { source: number, target: number }[] = [];
 
