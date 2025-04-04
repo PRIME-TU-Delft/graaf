@@ -26,22 +26,22 @@
 </script>
 
 <main class="my-6 mb-12 space-y-6">
-	<section class="prose mx-auto p-4 text-blue-900">
-		<h1 class="my-12 text-balance text-4xl font-bold text-blue-950 shadow-blue-500/70">
+	<section class="prose mx-auto p-4">
+		<h1 class="my-12 text-balance text-4xl font-bold text-purple-950 shadow-purple-500/70">
 			Welcome to the PRIME Graph Editor
 		</h1>
+
 		<p>
-			Here you can find all Programs and associated Courses. Click on any of them to edit or view
-			more information. You can also create a sandbox environment to experiment with the Graph
-			Editor. Can't find a specific Program or Course? Maybe you don't have access to it. Contact
-			one of its Admins to get access.
+			Here you can find all Programmes, Courses and Sandboxes you're working on. Can't find what
+			you're looking for? Try looking in the sidebar on the left, or click <b>help</b> in the top right
+			corner.
 		</p>
 	</section>
 
 	{#if data.pinnedCourses && data.pinnedCourses.length > 0}
 		<Accordion.Root
 			type="single"
-			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-blue-100 px-4 py-2 shadow-none shadow-blue-200/70 md:sticky md:border-2 md:border-blue-200 md:shadow-lg"
+			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-purple-100 px-4 py-2 shadow-none shadow-purple-200/70 md:sticky md:border-2 md:border-purple-200 md:shadow-lg"
 			bind:value={accordionOpen}
 		>
 			<Accordion.Item value="accordion">

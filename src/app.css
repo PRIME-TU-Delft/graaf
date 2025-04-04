@@ -73,6 +73,18 @@
 	body {
 		scroll-behavior: smooth;
 		scroll-padding: 8rem;
-		@apply bg-blue-50 text-foreground;
+		@apply bg-white text-foreground;
+	}
+
+	.grain::after {
+		content: '';
+
+		position: absolute;
+		inset: 0;
+
+		background: url('/grain.png') repeat;
+		background-size: 100px 100px;
+		mix-blend-mode: soft-light;
+		filter: contrast(0.5);
 	}
 }

@@ -22,6 +22,6 @@
 	{#if children}
 		{@render children?.()}
 	{:else}
-		<ChevronRight />
+		<ChevronRight class="text-purple-100" />
 	{/if}
 </li>
