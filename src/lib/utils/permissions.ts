@@ -5,7 +5,7 @@ type ProgramsPermission = {
 	admins?: { id: string }[];
 };
 
-type CoursePermissions = {
+export type CoursePermissions = {
 	editors?: { id: string }[];
 	admins?: { id: string }[];
 	programs: ProgramsPermission[];

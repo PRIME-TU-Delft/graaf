@@ -46,6 +46,7 @@ async function createPrograms(users: User[]): Promise<Program[]> {
 async function createCourses(programs: Program[]) {
 	const c1 = prisma.course.create({
 		data: {
+			id: 1,
 			code: 'CS101',
 			name: 'CourseOne',
 			programs: {
@@ -56,6 +57,7 @@ async function createCourses(programs: Program[]) {
 
 	const c2 = prisma.course.create({
 		data: {
+			id: 2,
 			code: 'CS201',
 			name: 'CourseTwo',
 			programs: {
@@ -67,6 +69,7 @@ async function createCourses(programs: Program[]) {
 
 	const c3 = prisma.course.create({
 		data: {
+			id: 3,
 			code: 'CS301',
 			name: 'CourseThree',
 			programs: {
@@ -124,7 +127,7 @@ async function linkSubjectToDomain(subject: Subject, domain: Domain) {
 	});
 }
 
-async function createGraph(name: string, courseId: string) {
+async function createGraph(name: string, courseId: number) {
 	const graph = await prisma.graph.create({
 		data: { name, courseId }
 	});
@@ -177,7 +180,7 @@ beforeEach(async () => {
 	const programs = await createPrograms(users);
 
 	await createCourses(programs);
-	await createGraph('GraphOne', 'CS101');
-	await createGraph('GraphTwo', 'CS201');
-	await createGraph('GraphThree', 'CS301');
+	await createGraph('GraphOne', 1);
+	await createGraph('GraphTwo', 2);
+	await createGraph('GraphThree', 3);
 });

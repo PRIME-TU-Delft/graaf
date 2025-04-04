@@ -7,6 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// MARK: BEGIN AUTH THINGS
+
 enum UserRole {
   USER
   ADMIN
@@ -74,6 +76,8 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
+// MARK: END AUTH THINGS 
+
 model Program {
   id   Int    @id @default(autoincrement())
   name String
@@ -92,7 +96,8 @@ enum CourseType {
 }
 
 model Course {
-  code       String     @id @unique
+  id         Int        @id @default(autoincrement())
+  code       String     @unique
   type       CourseType @default(COURSE)
   name       String
   isArchived Boolean    @default(false)
@@ -102,20 +107,35 @@ model Course {
   editors  User[]    @relation("CourseEditorRelation")
   admins   User[]    @relation("CourseAdminRelation")
   pinnedBy User[]    @relation("PinnedCourse")
+  links    Link[]    @relation("CourseLink")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+model Link {
+  id         Int     @id @default(autoincrement())
+  name       String
+  graphId    Int
+  courseId   Int
+  isArchived Boolean @default(false)
+
+  graph  Graph  @relation("GraphLink", fields: [graphId], references: [id], onDelete: Cascade)
+  course Course @relation("CourseLink", fields: [courseId], references: [id])
+
+  @@unique([courseId, name])
+}
+
 model Graph {
   id       Int    @id @default(autoincrement())
   name     String
-  courseId String
+  courseId Int
 
-  course   Course    @relation("CourseGraph", fields: [courseId], references: [code])
+  course   Course    @relation("CourseGraph", fields: [courseId], references: [id])
   domains  Domain[]  @relation("GraphDomain")
   subjects Subject[] @relation("GraphSubject")
   lectures Lecture[] @relation("GraphLecture")
+  links    Link[]    @relation("GraphLink")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -152,8 +172,6 @@ model Domain {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([name, graphId])
 }
 
 model Subject {
@@ -173,8 +191,6 @@ model Subject {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@unique([name, domainId])
 }
 
 model Lecture {

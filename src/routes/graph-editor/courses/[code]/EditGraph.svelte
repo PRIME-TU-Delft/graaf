@@ -1,23 +1,31 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import type { Graph } from '@prisma/client';
+	import type { CoursePermissions } from '$lib/utils/permissions';
+	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
-	import GraphSettings from './GraphSettings.svelte';
+	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
 
 	type EditGraphProps = {
-		graph: Graph;
-		course: CourseType;
+		course: Course &
+			CoursePermissions & {
+				graphs: Graph[];
+				links: Link[];
+			};
+		graph: Graph & {
+			lectures: Lecture[];
+			links: Link[];
+		};
 		coursesAccessible: Promise<CourseType[]>;
 	};
 
 	let { graph, course, coursesAccessible }: EditGraphProps = $props();
 
-	let isGraphSettingsOpen = $state(false);
 	let isDuplicateOpen = $state(false);
+	let graphLinkSettingsOpen = $state(false);
 
 	function handleOpenGraphSettings(e: MouseEvent) {
 		e.preventDefault();
-		isGraphSettingsOpen = true;
+		graphLinkSettingsOpen = true;
 	}
 
 	function handleOpenDuplicate(e: MouseEvent) {
@@ -39,12 +47,17 @@
 	</DialogButton>
 
 	<DialogButton
+		bind:open={graphLinkSettingsOpen}
 		onclick={(e) => handleOpenGraphSettings(e)}
+		icon="link"
 		button="Settings"
-		title="Edit Graph"
-		description="TODO"
-		bind:open={isGraphSettingsOpen}
+		title="Graph link settings"
 	>
-		<GraphSettings {graph} bind:isGraphSettingsOpen />
+		<GraphLinkSettings
+			{course}
+			{graph}
+			graphs={course.graphs}
+			onSuccess={() => (graphLinkSettingsOpen = false)}
+		/>
 	</DialogButton>
 </div>
