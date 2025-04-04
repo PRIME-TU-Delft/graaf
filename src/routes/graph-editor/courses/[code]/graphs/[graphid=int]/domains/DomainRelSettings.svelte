@@ -3,7 +3,7 @@
 	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form';
-	import type { GraphType } from '$lib/validators/OLDgraphValidator';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import type { Domain } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
@@ -15,7 +15,7 @@
 	}: {
 		domain: Domain;
 		outDomain: Domain;
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 	} = $props();
 
 	let dialogOpen = $state(false);

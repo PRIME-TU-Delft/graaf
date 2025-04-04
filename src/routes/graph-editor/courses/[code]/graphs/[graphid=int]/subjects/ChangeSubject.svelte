@@ -8,7 +8,7 @@
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import type { GraphType } from '$lib/validators/OLDgraphValidator';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -26,7 +26,7 @@
 
 	type Props = {
 		subject: PageData['course']['graphs'][0]['subjects'][0];
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 	};
 
 	let { subject, graph }: Props = $props();

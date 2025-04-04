@@ -1,5 +1,3 @@
-
-
 /* Glossary
 
 Directed acyclic graph (DAG):		A directed graph with no cycles
@@ -45,14 +43,14 @@ Conflicting edges
 
 */
 
-import type { PrismaGraphPayload, Issues, Issue } from "./types";
+import type { PrismaGraphPayload, Issues, Issue } from './types';
 
 // Abstract graph representation
 type AbstractGraph = Map<number, AbstractNode>;
 type AbstractNode = {
 	id: number;
 	neighbors: AbstractNode[];
-}
+};
 
 // Data structures for graph algorithms
 type ReachabilityMatrix = Map<AbstractNode, Map<AbstractNode, boolean>>;
@@ -61,12 +59,12 @@ type SCC = Set<AbstractNode>;
 
 // Graph validator class
 export class GraphValidator {
-	graph: PrismaGraphPayload;		// Raw graph data
-	domains: AbstractGraph;			// Abstract representation of the domain graph
-	subjects: AbstractGraph;		// Abstract representation of the subject graph
-	inheritanceMap: InheritanceMap;	// Map linking subjects to domains
+	graph: PrismaGraphPayload; // Raw graph data
+	domains: AbstractGraph; // Abstract representation of the domain graph
+	subjects: AbstractGraph; // Abstract representation of the subject graph
+	inheritanceMap: InheritanceMap; // Map linking subjects to domains
 
-	constructor (graph: PrismaGraphPayload) {
+	constructor(graph: PrismaGraphPayload) {
 		this.graph = graph;
 		this.domains = new Map();
 		this.subjects = new Map();
@@ -116,11 +114,45 @@ export class GraphValidator {
 		}
 	}
 
+	/**
+	 * Validates the graph and returns a list of issues. Issues are indexable by domain/subject id.
+	 * @returns A list of issues
+	 */
+
 	validate(): Issues {
 		return {
 			...this.findNodeIssues(),
 			...this.findRelationIssues()
 		} as Issues;
+	}
+
+	validateDomainEdgeChange(
+		oldSource: number,
+		oldTarget: number,
+		newSource: number,
+		newTarget: number
+	): Partial<Issues> {
+		const oldSourceNode = this.domains.get(oldSource);
+		const oldTargetNode = this.domains.get(oldTarget);
+		const newSourceNode = this.domains.get(newSource);
+		const newTargetNode = this.domains.get(newTarget);
+
+		if (!oldSourceNode || !oldTargetNode || !newSourceNode || !newTargetNode) {
+			return {}; // Maybe should raise error?
+		}
+
+		// Enact change
+		oldSourceNode.neighbors.filter((node) => node.id !== oldTarget);
+		newSourceNode.neighbors.push(newTargetNode);
+
+		// Check for issues
+		const issues = this.findRelationIssues();
+
+		// Undo change
+		oldSourceNode.neighbors.push(oldTargetNode);
+		newSourceNode.neighbors.filter((node) => node.id !== newTarget);
+
+		return issues;
 	}
 
 	private findNodeIssues(): Partial<Issues> {
@@ -141,37 +173,41 @@ export class GraphValidator {
 			const issues: Issue[] = [];
 
 			const name = domain.name.trim();
-			if (!domain.name) issues.push({
-				title: "Domain without name",
-				message: "Domains must have a name",
-				severity: "error"
-			});
-
-			if (!domain.style) issues.push({
-				title: "Domain without style",
-				message: "Domains must have a style",
-				severity: "error"
-			});
-
-			if (this.graph.domains.find(other => other.name === name && other.id !== domain.id)) 
-				issues.push({ 
-					title: "Domain with duplicate name",
-					message: "Domains must have unique names", 
-					severity: "warning"
+			if (!domain.name)
+				issues.push({
+					title: 'Domain without name',
+					message: 'Domains must have a name',
+					severity: 'error'
 				});
 
-			if (this.graph.domains.find(other => other.style === domain.style && other.id !== domain.id))
+			if (!domain.style)
 				issues.push({
-					title: "Domain with duplicate style", 
-					message: "Domains must have unique styles",
-					severity: "warning"
+					title: 'Domain without style',
+					message: 'Domains must have a style',
+					severity: 'error'
 				});
 
-			if (!this.graph.subjects.find(subject => subject.domainId === domain.id)) 
+			if (this.graph.domains.find((other) => other.name === name && other.id !== domain.id))
 				issues.push({
-					title: "Domain without subjects", 
-					message: "Domains must have at least one subject", 
-					severity: "warning"
+					title: 'Domain with duplicate name',
+					message: 'Domains must have unique names',
+					severity: 'warning'
+				});
+
+			if (
+				this.graph.domains.find((other) => other.style === domain.style && other.id !== domain.id)
+			)
+				issues.push({
+					title: 'Domain with duplicate style',
+					message: 'Domains must have unique styles',
+					severity: 'warning'
+				});
+
+			if (!this.graph.subjects.find((subject) => subject.domainId === domain.id))
+				issues.push({
+					title: 'Domain without subjects',
+					message: 'Domains must have at least one subject',
+					severity: 'warning'
 				});
 
 			domainIssues[domain.id] = issues;
@@ -188,23 +224,27 @@ export class GraphValidator {
 		for (const subject of this.graph.subjects) {
 			const issues: Issue[] = [];
 
-			if (!subject.name) issues.push({
-				title: "Subject without name",
-				message: "Subjects must have a name",
-				severity: "error"
-			});
+			if (!subject.name)
+				issues.push({
+					title: 'Subject without name',
+					message: 'Subjects must have a name',
+					severity: 'error'
+				});
 
-			if (!subject.domainId) issues.push({
-				title: "Subject without domain",
-				message: "Subjects must have a domain",
-				severity: "error"
-			});
+			if (!subject.domainId)
+				issues.push({
+					title: 'Subject without domain',
+					message: 'Subjects must have a domain',
+					severity: 'error'
+				});
 
-			if (this.graph.subjects.find(other => other.name === subject.name && other.id !== subject.id)) 
-				issues.push({ 
-					title: "Subject with duplicate name",
-					message: "Subjects must have unique names", 
-					severity: "warning"
+			if (
+				this.graph.subjects.find((other) => other.name === subject.name && other.id !== subject.id)
+			)
+				issues.push({
+					title: 'Subject with duplicate name',
+					message: 'Subjects must have unique names',
+					severity: 'warning'
 				});
 
 			subjectIssues[subject.id] = issues;
@@ -212,11 +252,11 @@ export class GraphValidator {
 
 		return { domainIssues, subjectIssues };
 	}
-	
+
 	private findRelationIssues(): Partial<Issues> {
 		const domainRelationIssues: { [key: number]: { [key: number]: Issue[] } } = {};
 		const subjectRelationIssues: { [key: number]: { [key: number]: Issue[] } } = {};
-		
+
 		/* Domain relation issues
 			Cyclic domain relation		(Error)
 		*/
@@ -225,22 +265,22 @@ export class GraphValidator {
 		for (const cycle of domainCycles) {
 			const temp = [];
 			for (const edge of cycle) {
-				const source = this.graph.domains.find(domain => domain.id === edge.source);
-				const target = this.graph.domains.find(domain => domain.id === edge.target);
+				const source = this.graph.domains.find((domain) => domain.id === edge.source);
+				const target = this.graph.domains.find((domain) => domain.id === edge.target);
 				temp.push(`${source?.name} -> ${target?.name}`);
 			}
 
-			const message = temp.join(" -> ");
+			const message = temp.join(' -> ');
 
 			for (const edge of cycle) {
 				const issues = domainRelationIssues[edge.source][edge.target] || [];
 				issues.push({
-					title: "Cyclic domain relation",
+					title: 'Cyclic domain relation',
 					message: message,
-					severity: "error"
+					severity: 'error'
 				});
 
-				domainRelationIssues[edge.source][edge.target] = issues
+				domainRelationIssues[edge.source][edge.target] = issues;
 			}
 		}
 
@@ -249,40 +289,43 @@ export class GraphValidator {
 			Conflicting subject relation	(Warning)
 		*/
 
-		
 		const subjectCycles = this.findCycles(this.subjects);
 		for (const cycle of subjectCycles) {
 			const temp = [];
 			for (const edge of cycle) {
-				const source = this.graph.subjects.find(subject => subject.id === edge.source);
-				const target = this.graph.subjects.find(subject => subject.id === edge.target);
+				const source = this.graph.subjects.find((subject) => subject.id === edge.source);
+				const target = this.graph.subjects.find((subject) => subject.id === edge.target);
 				temp.push(`${source?.name} -> ${target?.name}`);
 			}
-			
-			const message = temp.join(" -> ");
-			
+
+			const message = temp.join(' -> ');
+
 			for (const edge of cycle) {
 				const issues = subjectRelationIssues[edge.source][edge.target] || [];
 				issues.push({
-					title: "Cyclic subject relation",
+					title: 'Cyclic subject relation',
 					message: message,
-					severity: "error"
+					severity: 'error'
 				});
-				
-				subjectRelationIssues[edge.source][edge.target] = issues
+
+				subjectRelationIssues[edge.source][edge.target] = issues;
 			}
 		}
-		
-		const conflictingEdges = this.findConflictingEdges(this.domains, this.subjects, this.inheritanceMap);
+
+		const conflictingEdges = this.findConflictingEdges(
+			this.domains,
+			this.subjects,
+			this.inheritanceMap
+		);
 		for (const edge of conflictingEdges) {
-			const source = this.graph.subjects.find(subject => subject.id === edge.source);
-			const target = this.graph.subjects.find(subject => subject.id === edge.target);
+			const source = this.graph.subjects.find((subject) => subject.id === edge.source);
+			const target = this.graph.subjects.find((subject) => subject.id === edge.target);
 
 			const issues = subjectRelationIssues[edge.source][edge.target] || [];
 			issues.push({
-				title: "Conflicting subject relation",
+				title: 'Conflicting subject relation',
 				message: `${source?.name} -> ${target?.name} is not represented in the domain graph`,
-				severity: "warning"
+				severity: 'warning'
 			});
 
 			subjectRelationIssues[edge.source][edge.target] = issues;
@@ -298,7 +341,6 @@ export class GraphValidator {
 	 */
 
 	private findSCCs(graph: AbstractGraph): SCC[] {
-
 		// Tarjan's algorithm - O(V + E)
 		// https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
 
@@ -340,7 +382,7 @@ export class GraphValidator {
 					sccs.push(scc);
 				}
 			}
-		}
+		};
 
 		for (const node of graph.values()) {
 			if (!indices.has(node)) {
@@ -357,7 +399,7 @@ export class GraphValidator {
 	 * @returns The smallest node and its SCC
 	 */
 
-	private findSmallestIndex(sccs: SCC[]): [ SCC | null, AbstractNode | null ] {
+	private findSmallestIndex(sccs: SCC[]): [SCC | null, AbstractNode | null] {
 		let smallestIndex = Infinity;
 		let smallestNode = null;
 		let smallestSCC = null;
@@ -372,7 +414,7 @@ export class GraphValidator {
 			}
 		}
 
-		return [ smallestSCC, smallestNode ];
+		return [smallestSCC, smallestNode];
 	}
 
 	/**
@@ -434,12 +476,11 @@ export class GraphValidator {
 	 * @returns An array of cycles, each containing a set of edges that form the cycle
 	 */
 
-	findCycles(graph: AbstractGraph): { source: number, target: number }[][] {
-
+	findCycles(graph: AbstractGraph): { source: number; target: number }[][] {
 		// Johnson's algorithm - O((V + E)(C + 1))
 		// https://en.wikipedia.org/wiki/Johnson%27s_algorithm
 
-		const cycles: { source: number, target: number }[][] = [];
+		const cycles: { source: number; target: number }[][] = [];
 		const blockedMap = new Map<AbstractNode, Set<AbstractNode>>();
 		const blockedSet = new Set<AbstractNode>();
 		const stack: AbstractNode[] = [];
@@ -459,7 +500,7 @@ export class GraphValidator {
 			}
 
 			blockedMap.delete(node);
-		}
+		};
 
 		// Recursive function to find cycles in an SCC
 		const johnson = (node: AbstractNode): boolean => {
@@ -469,34 +510,27 @@ export class GraphValidator {
 
 			for (const target of node.neighbors) {
 				if (target == stack[0]) {
-
 					// If the target is the start node, the stack contains a cycle
-					const cycle: { source: number, target: number }[] = [];
+					const cycle: { source: number; target: number }[] = [];
 					for (let i = 0; i < stack.length - 1; i++)
 						cycle.push({ source: stack[i].id, target: stack[i + 1].id });
 					cycle.push({ source: stack[stack.length - 1].id, target: stack[0].id });
 					cycles.push(cycle);
 					foundCycle = true;
-
 				} else if (!blockedSet.has(target)) {
-
 					// If the target is not blocked, explore it
-					let gotCycle = johnson(target);
+					const gotCycle = johnson(target);
 					foundCycle = foundCycle || gotCycle;
-
 				}
 			}
 
 			if (foundCycle) {
-
 				// If a cycle was found containing this node, recursively unblock it and its dependencies
 				unblock(node);
-
 			} else {
-
 				// If no cycle was found, dont unblock it, but add it to the blockedMap of all its targets
 				for (const target of node.neighbors) {
-					let blocked = blockedMap.get(target) || new Set();
+					const blocked = blockedMap.get(target) || new Set();
 					blocked.add(node);
 					blockedMap.set(target, blocked);
 				}
@@ -504,14 +538,13 @@ export class GraphValidator {
 
 			stack.pop();
 			return foundCycle;
-		}
+		};
 
 		let subgraph = graph;
 		while (subgraph.size > 0) {
-
 			// Find the strongly connected component containing the smallest node
 			const sccs = this.findSCCs(subgraph);
-			const [ smallestSCC, smallestNode ] = this.findSmallestIndex(sccs);
+			const [smallestSCC, smallestNode] = this.findSmallestIndex(sccs);
 			if (!smallestSCC || !smallestNode) break; // No more SCCs
 
 			// Convert the SCC to a graph
@@ -530,12 +563,11 @@ export class GraphValidator {
 
 	/**
 	 * Computes the reachability matrix of a graph. This is *expensive* and should be used sparingly.
-	 * @param graph The graph to analyze 
+	 * @param graph The graph to analyze
 	 * @returns A reachability matrix, where intersection [i][j] is true if node i can reach node j
 	 */
 
 	private computeReachabilityMatrix(graph: AbstractGraph): ReachabilityMatrix {
-		
 		// Floyd-Warshall algorithm - O(V^3)
 		// https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
 
@@ -585,9 +617,13 @@ export class GraphValidator {
 	 * @returns An array of conflicting edges
 	 */
 
-	findConflictingEdges(graphA: AbstractGraph, graphB: AbstractGraph, inheritance: InheritanceMap): { source: number, target: number }[] {
+	findConflictingEdges(
+		graphA: AbstractGraph,
+		graphB: AbstractGraph,
+		inheritance: InheritanceMap
+	): { source: number; target: number }[] {
 		const reachabilityMatrix = this.computeReachabilityMatrix(graphA);
-		const conflictingEdges: { source: number, target: number }[] = [];
+		const conflictingEdges: { source: number; target: number }[] = [];
 
 		for (const sourceB of graphB.values()) {
 			const sourceA = inheritance.get(sourceB);

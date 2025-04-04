@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { GraphValidator, type GraphType } from '$lib/validators/OLDgraphValidator';
+	import { GraphValidator } from '$lib/validators/graphValidator';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -15,7 +16,7 @@
 	import DomainRelField from './DomainRelField.svelte';
 
 	type Props = {
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 		domain: Domain;
 		outDomain: Domain;
 	};
@@ -31,7 +32,7 @@
 			const graphValidator = new GraphValidator(graph);
 
 			try {
-				const hasCycles = graphValidator.validateEdgeChange(
+				const hasCycles = graphValidator.validateDomainEdgeChange(
 					$formData.oldSourceDomainId,
 					$formData.oldTargetDomainId,
 					$formData.sourceDomainId,

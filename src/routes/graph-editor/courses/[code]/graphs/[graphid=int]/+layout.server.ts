@@ -1,5 +1,5 @@
 import prisma from '$lib/server/db/prisma';
-import { GraphValidator } from '$lib/validators/OLDgraphValidator';
+import { GraphValidator } from '$lib/validators/graphValidator';
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
@@ -55,14 +55,12 @@ export const load: LayoutServerLoad = async ({ params }) => {
 		if (course.graphs.length === 0) error(404, { message: 'Graph not found' });
 
 		const graphValidator = new GraphValidator(course.graphs[0]);
-
-		const cycles = graphValidator.hasCycle();
+		const issues = graphValidator.validate();
 
 		// Happy path
 		return {
 			course: course,
-
-			cycles: cycles
+			issues: issues
 		};
 	} catch (e: unknown) {
 		error(500, { message: e instanceof Error ? e.message : `${e}` });

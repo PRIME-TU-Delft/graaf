@@ -1,6 +1,6 @@
 // GraphValidator.test.ts
 import { describe, expect, test } from 'vitest';
-import { GraphValidator } from './GraphValidator';
+import { GraphValidator } from './graphValidator';
 
 import type { Domain, Subject } from '@prisma/client';
 import type { PrismaGraphPayload, PrismaDomainPayload } from './types';
@@ -75,7 +75,11 @@ describe('GraphValidator', () => {
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(0);
 		expect(subjectCycles).toHaveLength(0);
@@ -87,7 +91,11 @@ describe('GraphValidator', () => {
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(0);
 		expect(subjectCycles).toHaveLength(0);
@@ -113,7 +121,11 @@ describe('GraphValidator', () => {
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(0);
 		expect(subjectCycles).toHaveLength(0);
@@ -139,7 +151,11 @@ describe('GraphValidator', () => {
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(1);
 		expect(domainCycles).toEqual(
@@ -147,20 +163,20 @@ describe('GraphValidator', () => {
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
 					{ source: 2, target: 3 },
-					{ source: 3, target: 1 },
+					{ source: 3, target: 1 }
 				])
 			])
-		)
+		);
 
 		expect(subjectCycles).toHaveLength(1);
 		expect(subjectCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
-					{ source: 2, target: 1 },
+					{ source: 2, target: 1 }
 				])
 			])
-		)
+		);
 
 		expect(conflictingEdges).toHaveLength(0);
 	});
@@ -190,39 +206,43 @@ describe('GraphValidator', () => {
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(2);
 		expect(domainCycles).toEqual(
 			expect.arrayContaining([
-    			expect.arrayContaining([
-    				{ source: 1, target: 2 },
-    				{ source: 2, target: 3 },
-    				{ source: 3, target: 1 },
-    			]),
-    			expect.arrayContaining([
-    				{ source: 1, target: 2 },
-    				{ source: 2, target: 4 },
-    				{ source: 4, target: 3 },
-    				{ source: 3, target: 1 },
+				expect.arrayContaining([
+					{ source: 1, target: 2 },
+					{ source: 2, target: 3 },
+					{ source: 3, target: 1 }
 				]),
+				expect.arrayContaining([
+					{ source: 1, target: 2 },
+					{ source: 2, target: 4 },
+					{ source: 4, target: 3 },
+					{ source: 3, target: 1 }
+				])
 			])
-		)
+		);
 
 		expect(subjectCycles).toHaveLength(2);
 		expect(subjectCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
-					{ source: 2, target: 1 },
+					{ source: 2, target: 1 }
 				]),
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
 					{ source: 2, target: 3 },
-					{ source: 3, target: 1 },
-				]),
+					{ source: 3, target: 1 }
+				])
 			])
-		)
+		);
 
 		expect(conflictingEdges).toHaveLength(0);
 	});
@@ -246,7 +266,11 @@ describe('GraphValidator', () => {
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(0);
 		expect(subjectCycles).toHaveLength(0);
@@ -273,11 +297,18 @@ describe('GraphValidator', () => {
 		addSubjectConnection(subjectA, subjectC);
 		addSubjectConnection(subjectC, subjectB); // Conflicting edge
 
-		const graph = dummyGraph([domainA, domainB, domainC, domainD], [subjectA, subjectB, subjectC, subjectD]);
+		const graph = dummyGraph(
+			[domainA, domainB, domainC, domainD],
+			[subjectA, subjectB, subjectC, subjectD]
+		);
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(0);
 		expect(subjectCycles).toHaveLength(0);
@@ -308,25 +339,32 @@ describe('GraphValidator', () => {
 		addSubjectConnection(subjectB, subjectC);
 		addSubjectConnection(subjectC, subjectA); // Cycle
 
-		const graph = dummyGraph([domainA, domainB, domainC, domainD, domainE], [subjectA, subjectB, subjectC]);
+		const graph = dummyGraph(
+			[domainA, domainB, domainC, domainD, domainE],
+			[subjectA, subjectB, subjectC]
+		);
 		const validator = new GraphValidator(graph);
 		const domainCycles = validator.findCycles(validator.domains);
 		const subjectCycles = validator.findCycles(validator.subjects);
-		const conflictingEdges = validator.findConflictingEdges(validator.domains, validator.subjects, validator.inheritanceMap);
+		const conflictingEdges = validator.findConflictingEdges(
+			validator.domains,
+			validator.subjects,
+			validator.inheritanceMap
+		);
 
 		expect(domainCycles).toHaveLength(2);
 		expect(domainCycles).toEqual(
 			expect.arrayContaining([
 				expect.arrayContaining([
 					{ source: 4, target: 5 },
-					{ source: 5, target: 4 },
+					{ source: 5, target: 4 }
 				]),
 				expect.arrayContaining([
 					{ source: 1, target: 3 },
-					{ source: 3, target: 1 },
-				]),
+					{ source: 3, target: 1 }
+				])
 			])
-		)
+		);
 
 		expect(subjectCycles).toHaveLength(1);
 		expect(subjectCycles).toEqual(
@@ -334,18 +372,17 @@ describe('GraphValidator', () => {
 				expect.arrayContaining([
 					{ source: 1, target: 2 },
 					{ source: 2, target: 3 },
-					{ source: 3, target: 1 },
+					{ source: 3, target: 1 }
 				])
 			])
-		)
+		);
 
 		expect(conflictingEdges).toHaveLength(2);
 		expect(conflictingEdges).toEqual(
 			expect.arrayContaining([
 				{ source: 1, target: 2 },
-				{ source: 3, target: 1 },
+				{ source: 3, target: 1 }
 			])
 		);
 	});
 });
-

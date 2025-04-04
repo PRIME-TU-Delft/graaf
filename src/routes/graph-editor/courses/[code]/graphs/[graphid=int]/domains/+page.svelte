@@ -1,10 +1,8 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
-	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import ChangeDomain from './ChangeDomain.svelte';
@@ -21,7 +19,7 @@
 
 	import type { PageData } from './$types';
 	import type { Domain, DomainStyle } from '@prisma/client';
-	import type { DomainType } from '$lib/validators/OLDgraphValidator';
+	import type { PrismaDomainPayload } from '$lib/validators/types';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -40,23 +38,6 @@
 
 	$effect(() => {
 		if (data) course = data.course;
-	});
-
-	onMount(() => {
-		if (data.cycles) {
-			const from = data.cycles.source;
-			const to = data.cycles.target;
-			toast.warning('Graph contains a domain cycle', {
-				duration: Number.POSITIVE_INFINITY,
-				description: `from ${from.name} to ${to.name}`,
-				action: {
-					label: 'Go to cycle',
-					onClick: () => {
-						goto(`#rel-${from.id}-${to.id}`);
-					}
-				}
-			});
-		}
 	});
 
 	/**
@@ -85,7 +66,7 @@
 	}
 
 	// Send a list of domains to the server to rearrange them
-	async function handleRearrange(list: DomainType[]) {
+	async function handleRearrange(list: PrismaDomainPayload[]) {
 		let body = list
 			.filter((domain, index) => domain.order != index)
 			.map((d, index) => {
