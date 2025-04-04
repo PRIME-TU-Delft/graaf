@@ -19,11 +19,6 @@ export const duplicateGraphSchema = z.object({
 	graphId: z.number().min(1)
 });
 
-export const graphEditSchema = graphSchema.extend({
-	graphId: z.number().min(1),
-	isVisible: z.boolean()
-});
-
 export const createNewLinkSchema = z.object({
 	graphId: z.number().min(1),
 	courseId: z.number().min(1),

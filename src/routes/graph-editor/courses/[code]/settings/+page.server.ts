@@ -3,12 +3,7 @@ import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { CourseActions, whereHasCoursePermission } from '$lib/server/permissions';
 import { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
-import {
-	createNewLinkSchema,
-	editLinkSchema,
-	graphEditSchema,
-	graphSchemaWithId
-} from '$lib/zod/graphSchema';
+import { createNewLinkSchema, editLinkSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -56,7 +51,7 @@ export const load = (async ({ params, locals }) => {
 			editCourseForm: await superValidate(zod(courseSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			changeArchiveForm: await superValidate(zod(changeArchive)),
-			editGraphForm: await superValidate(zod(graphEditSchema)),
+			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
 			createLinkForm: await superValidate(zod(createNewLinkSchema)),
 			editLinkForm: await superValidate(zod(editLinkSchema))
@@ -70,7 +65,7 @@ export const load = (async ({ params, locals }) => {
 
 export const actions: Actions = {
 	'edit-graph': async (event) => {
-		const form = await superValidate(event, zod(graphEditSchema));
+		const form = await superValidate(event, zod(graphSchemaWithId));
 		return GraphActions.editGraph(await getUser(event), form);
 	},
 	'delete-graph': async (event) => {

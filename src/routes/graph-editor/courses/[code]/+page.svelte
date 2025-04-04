@@ -59,6 +59,7 @@
 					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>
 					<p>Domains: {graph._count.domains}</p>
 					<p>Subjects: {graph._count.subjects}</p>
+					<p>Links: {graph.links.length}</p>
 				</div>
 
 				<div class="flex grow-0 flex-col gap-1">
@@ -67,7 +68,7 @@
 						<ArrowRight />
 					</Button>
 
-					<EmbedGraph {graph} course={data.course} />
+					<EmbedGraph {graph} course={data.course} longName />
 
 					{#if hasAtLeastCourseEditPermissions}
 						<EditGraph {graph} course={data.course} coursesAccessible={data.coursesAccessible} />

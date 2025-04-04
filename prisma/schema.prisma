@@ -114,10 +114,11 @@ model Course {
 }
 
 model Link {
-  id       Int    @id @default(autoincrement())
-  name     String
-  graphId  Int
-  courseId Int
+  id         Int     @id @default(autoincrement())
+  name       String
+  graphId    Int
+  courseId   Int
+  isArchived Boolean @default(false)
 
   graph  Graph  @relation("GraphLink", fields: [graphId], references: [id], onDelete: Cascade)
   course Course @relation("CourseLink", fields: [courseId], references: [id])
@@ -126,10 +127,9 @@ model Link {
 }
 
 model Graph {
-  id        Int     @id @default(autoincrement())
-  name      String
-  courseId  Int
-  isVisible Boolean @default(false)
+  id       Int    @id @default(autoincrement())
+  name     String
+  courseId Int
 
   course   Course    @relation("CourseGraph", fields: [courseId], references: [id])
   domains  Domain[]  @relation("GraphDomain")

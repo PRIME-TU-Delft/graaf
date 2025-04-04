@@ -4,9 +4,8 @@ import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions.js';
 import {
 	createNewLinkSchema,
-	editLinkSchema,
 	duplicateGraphSchema,
-	graphEditSchema,
+	editLinkSchema,
 	graphSchema,
 	graphSchemaWithId
 } from '$lib/zod/graphSchema.js';
@@ -73,9 +72,11 @@ export const load = (async ({ params, locals }) => {
 			error: undefined,
 			graphSchema: await superValidate(zod(graphSchema)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
-			editGraphForm: await superValidate(zod(graphEditSchema)),
+			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteLinkForm: await superValidate(zod(editLinkSchema)),
+			createLinkForm: await superValidate(zod(createNewLinkSchema)),
+			editLinkForm: await superValidate(zod(editLinkSchema)),
 			coursesAccessible,
 			course: dbCourse,
 			graphs: dbCourse.graphs,
@@ -87,9 +88,11 @@ export const load = (async ({ params, locals }) => {
 			graphSchema: await superValidate(zod(graphSchema)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			coursesAccessible: new Promise(() => []) as Prisma.PrismaPromise<Course[]>,
-			editGraphForm: await superValidate(zod(graphEditSchema)),
+			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteLinkForm: await superValidate(zod(editLinkSchema)),
+			createLinkForm: await superValidate(zod(createNewLinkSchema)),
+			editLinkForm: await superValidate(zod(editLinkSchema)),
 			course: undefined,
 			graphs: [],
 			user
@@ -104,7 +107,7 @@ export const actions = {
 		return GraphActions.addGraphToCourse(await getUser(event), form);
 	},
 	'edit-graph': async (event) => {
-		const form = await superValidate(event, zod(graphEditSchema));
+		const form = await superValidate(event, zod(graphSchemaWithId));
 		return GraphActions.editGraph(await getUser(event), form);
 	},
 	'delete-graph': async (event) => {

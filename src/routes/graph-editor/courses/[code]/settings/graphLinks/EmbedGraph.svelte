@@ -14,19 +14,16 @@
 	type GraphLinksProps = {
 		graph: Graph & { lectures: Lecture[]; links: Link[] };
 		course: Course;
+		longName?: boolean;
 	};
 
-	const { graph, course }: GraphLinksProps = $props();
+	const { graph, course, longName = false }: GraphLinksProps = $props();
 
 	let popoverOpen = $state(false);
 
 	const embedUrl = $derived.by(() => {
-		if (!graph.isVisible) {
-			return { error: 'Graph is not visible, make it public in the settings panel of this graph' };
-		}
-
 		if (graphEmbedState.alias == undefined) {
-			return { error: 'Select a graph alias' };
+			return { error: 'Select a graph link' };
 		}
 
 		const url = new URL(
@@ -50,7 +47,7 @@
 		let options = ['Domains', 'Subjects'];
 
 		if (graph.lectures.length > 0) {
-			options = ['Lecture', ...options];
+			options = [...options, 'Lecture'];
 		}
 
 		return options;
@@ -66,20 +63,21 @@
 		}}
 		class={cn(buttonVariants({ variant: 'default' }))}
 	>
-		<Code /> Embed
+		<Code />
+		{longName ? 'Embed graph' : ''}
 	</Popover.Trigger>
 	<Popover.Content class="grid w-[30rem] grid-cols-1 gap-2">
 		{#if graph.links.length == 0}
 			<p class="col-span-2">
-				Cannot embed graph because no alias is linked to this graph. Add one in the settings panel
-				of this graph.
+				Cannot embed graph because no links are created for this graph. Add one in the settings
+				panel of this graph.
 			</p>
 		{:else}
 			<div class="space-y-1">
 				<!-- Select alias -->
 				{@render select(
-					'Alias',
-					graphEmbedState.alias ?? '',
+					'Link',
+					graphEmbedState.alias ?? 'Select a link name',
 					graph.links.map((link) => link.name),
 					graphEmbedState.selectAlias
 				)}
@@ -96,7 +94,7 @@
 				{#if graph.lectures.length > 0}
 					{@render select(
 						'Lecture Highlight',
-						graphEmbedState.showLecture ?? '',
+						graphEmbedState.showLecture ?? '(optional)',
 						graph.lectures.map((lecture) => lecture.name),
 						graphEmbedState.selectShowLecture
 					)}

@@ -4,7 +4,6 @@ import type {
 	createNewLinkSchema,
 	editLinkSchema,
 	duplicateGraphSchema,
-	graphEditSchema,
 	graphSchema,
 	graphSchemaWithId
 } from '$lib/zod/graphSchema';
@@ -72,7 +71,7 @@ export class GraphActions {
 	 * Permissions:
 	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
 	 */
-	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphEditSchema>>) {
+	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid graph name');
 
 		try {
@@ -86,8 +85,7 @@ export class GraphActions {
 						update: {
 							where: { id: form.data.graphId },
 							data: {
-								name: form.data.name,
-								isVisible: form.data.isVisible
+								name: form.data.name
 							}
 						}
 					}

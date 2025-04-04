@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { hasCoursePermissions, type CoursePermissions } from '$lib/utils/permissions';
-	import { graphEditSchema } from '$lib/zod/graphSchema';
-	import { Code, Eye, EyeOff, Undo2 } from '@lucide/svelte';
+	import { graphSchemaWithId } from '$lib/zod/graphSchema';
+	import { Code, EyeOff, Undo2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
@@ -31,14 +31,13 @@
 
 	const { course, graph, graphs, onSuccess = () => {} }: GraphLinksProps = $props();
 
-	let isVisible = $state(graph.isVisible);
 	let links = $state(graph.links.map((link) => link));
 
 	const id = $props.id();
 
 	const form = superForm((page.data as PageData).editGraphForm, {
 		id: 'change-graph-' + id,
-		validators: zodClient(graphEditSchema),
+		validators: zodClient(graphSchemaWithId),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully changed graph!');
@@ -54,18 +53,16 @@
 		$formData.graphId = graph.id;
 		$formData.courseCode = course.code;
 		$formData.name = graph.name;
-		$formData.isVisible = graph.isVisible;
 	}
 
 	const hasChanges = $derived.by(() => {
-		return $formData.name !== graph.name || $formData.isVisible !== graph.isVisible;
+		return $formData.name !== graph.name;
 	});
 
 	$effect(() => {
 		$formData.graphId = graph.id;
 		$formData.courseCode = course.code;
 		$formData.name = graph.name;
-		$formData.isVisible = isVisible;
 	});
 </script>
 
@@ -73,57 +70,39 @@
 	<input type="text" name="graphId" value={graph.id} hidden />
 	<input type="text" name="courseCode" value={course.code} hidden />
 
-	<Form.Field {form} name="isVisible">
-		<Form.Control>
-			{#snippet children({ props })}
-				<Form.Label
-					class="flex items-center justify-between gap-2 rounded border border-blue-100 bg-blue-50 p-2"
-				>
-					<input type="hidden" value={$formData['isVisible']} {...props} />
-					<p>{@render showVisiblity()} Graph is {isVisible ? '' : 'not'} visible to students</p>
+	<div class="mb-2 rounded border p-2">
+		<h3 class="text-lg font-bold">Links</h3>
+		<p class="text-sm">
+			A link can be used to make a graph visible to students. Each link needs a unique name within a
+			course. When a link is created, it will be visible to all students. A link can be disabled by
+			clicking on the
+			<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" /> icon. This will make the link
+			invisible to students, but the graph can still be accessed by its editors and admin. An embed can
+			be created by clicking on the
+			<Code class="border-sm inline size-6 rounded bg-blue-100 p-1" /> icon when closing this modal.
+		</p>
+		<div class="my-2 grid grid-cols-1 gap-x-4 gap-y-2">
+			{#each links as link (link.id)}
+				<div in:fade class="flex w-full items-center justify-between gap-1">
+					<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{link.name}</p>
 
-					<div class="flex items-center gap-2">
-						<Button onclick={() => (isVisible = !isVisible)}>
-							{isVisible ? 'Make private' : 'Make public'}
-						</Button>
-					</div>
-				</Form.Label>
-			{/snippet}
-		</Form.Control>
-		<Form.FieldErrors class="!mb-2" />
-	</Form.Field>
+					{#if graphs.length > 1}
+						<MoveAliasLink {course} {graph} {graphs} {link} {onSuccess} />
+					{/if}
 
-	{#if isVisible}
-		<div class="mb-2 rounded border p-2">
-			<h3 class="text-lg font-bold">Aliases</h3>
-			<p class="text-sm">
-				An alias is an extra link that will redirect to the main link. It is used to embed a graph
-				in some other program like Brightspace. An embed can be created by clicking on the
-				<Code class="inline rounded bg-blue-100 p-2" /> icon when closing this modal.
-			</p>
-			<div class="mb-2 grid grid-cols-1 gap-x-4 gap-y-2">
-				{#each links as link (link.id)}
-					<div in:fade class="flex w-full items-center justify-between gap-1">
-						<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{link.name}</p>
-
-						{#if graphs.length > 1}
-							<MoveAliasLink {course} {graph} {graphs} {link} {onSuccess} />
-						{/if}
-
-						<DeleteAliasLink {course} {graph} {link} {onSuccess} />
-					</div>
-				{/each}
-			</div>
-
-			<AddAliasLink
-				{course}
-				{graph}
-				onSuccess={(link) => {
-					links.push(link);
-				}}
-			/>
+					<DeleteAliasLink {course} {graph} {link} {onSuccess} />
+				</div>
+			{/each}
 		</div>
-	{/if}
+
+		<AddAliasLink
+			{course}
+			{graph}
+			onSuccess={(link) => {
+				links.push(link);
+			}}
+		/>
+	</div>
 
 	<Form.Field {form} name="name">
 		<Form.Control>
@@ -151,15 +130,3 @@
 		</Form.FormButton>
 	</div>
 </form>
-
-{#snippet showVisiblity()}
-	{#if isVisible}
-		<div in:fade class="inline">
-			<Eye class="border-sm inline size-6 rounded bg-blue-100 p-1" />
-		</div>
-	{:else}
-		<div in:fade class="inline">
-			<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" />
-		</div>
-	{/if}
-{/snippet}
