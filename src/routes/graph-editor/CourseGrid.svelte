@@ -24,7 +24,7 @@
 	{#each courses as course (course.code)}
 		{@render displayCourse(course)}
 	{:else}
-		<p class="bg-white/80 p-2 col-span-3 text-slate-900/60 rounded">
+		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
 			This program has no courses yet.
 		</p>
 	{/each}
@@ -35,12 +35,33 @@
 		<a
 			href="graph-editor/courses/{course.code}"
 			class={cn([
-				'flex w-full items-center justify-between rounded border-2 bg-white/90 p-2 transition-colors hover:border-blue-200 hover:bg-blue-50',
+				'flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-100/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-100',
 				course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
 			])}
 			in:fade={{ duration: 200 }}
 		>
+			<div class="flex items-end gap-1">
+				<p>{course.name}</p>
+				<p class="pb-0.5 text-xs text-purple-900">({course.code})</p>
+			</div>
+
 			<div class="flex items-center gap-1">
+				{#if course.isArchived}
+					<Tooltip.Provider>
+						<Tooltip.Root>
+							<Tooltip.Trigger>
+								<Archive class="text-purple-900" />
+								<Tooltip.Content
+									side="right"
+									class="border-2 border-amber-900 bg-amber-50 p-2 text-sm text-amber-700"
+								>
+									Course is archived
+								</Tooltip.Content>
+							</Tooltip.Trigger>
+						</Tooltip.Root>
+					</Tooltip.Provider>
+				{/if}
+
 				{#if course.pinnedBy.some((u) => u.id == user?.id)}
 					<form action="?/unpin-course" method="post" use:enhance>
 						<input type="text" name="courseCode" value={course.code} hidden />
@@ -48,9 +69,9 @@
 							onclick={(e) => e.stopPropagation()}
 							type="submit"
 							variant="outline"
-							class="h-8 w-8 border-blue-600 bg-blue-200"
+							class="h-8 w-8 border-purple-600 bg-purple-200"
 						>
-							<Unpin class="text-blue-600" />
+							<Unpin class="text-purple-600" />
 						</Button>
 					</form>
 				{:else}
@@ -60,32 +81,11 @@
 							onclick={(e) => e.stopPropagation()}
 							type="submit"
 							variant="outline"
-							class="h-8 w-8"
+							class="h-8 w-8 border-purple-50 !bg-purple-50"
 						>
 							<Pin />
 						</Button>
 					</form>
-				{/if}
-
-				<p>{course.name}</p>
-			</div>
-
-			<div class="flex items-center gap-1">
-				<p class="text-xs text-blue-900">{course.code}</p>
-
-				{#if course.isArchived}
-					<Tooltip.Provider>
-						<Tooltip.Root>
-							<Tooltip.Trigger>
-								<Archive class="text-blue-900" />
-								<Tooltip.Content
-									side="right"
-									class="border-2 border-amber-900 bg-amber-50 p-2 text-sm text-amber-700"
-									>Course is archived</Tooltip.Content
-								>
-							</Tooltip.Trigger>
-						</Tooltip.Root>
-					</Tooltip.Provider>
 				{/if}
 			</div>
 		</a>

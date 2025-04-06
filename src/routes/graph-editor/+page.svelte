@@ -9,6 +9,7 @@
 	import Program from './Program.svelte';
 	import SearchCourses from './SearchCourses.svelte';
 	import { Funnel, FunnelX } from '@lucide/svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	const { data, form } = $props();
 
@@ -25,7 +26,14 @@
 	});
 </script>
 
-<main class="my-6 mb-12 space-y-6">
+<Help title="Home page">
+	<p>
+		The home page is where you can find Programmes, Courses and Sandboxes you're working on. You can
+		pin courses to the top of the page, and filter Programmes by unarchived courses.
+	</p>
+</Help>
+
+<article class="my-6 mb-12 space-y-6">
 	<section class="prose mx-auto p-4">
 		<h1 class="my-12 text-balance text-4xl font-bold text-purple-950 shadow-purple-500/70">
 			Welcome to the PRIME Graph Editor
@@ -44,8 +52,8 @@
 			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-purple-100 px-4 py-2 shadow-none shadow-purple-200/70 md:sticky md:border-2 md:border-purple-200 md:shadow-lg"
 			bind:value={accordionOpen}
 		>
-			<Accordion.Item value="accordion">
-				<Accordion.Trigger class="text-xl font-bold hover:no-underline">
+			<Accordion.Item value="accordion" class="border-none">
+				<Accordion.Trigger class="text-xl font-bold text-purple-950 hover:no-underline">
 					My pinned courses
 				</Accordion.Trigger>
 				<Accordion.Content>
@@ -56,32 +64,30 @@
 	{/if}
 
 	<section class="mx-auto grid max-w-4xl gap-4 p-4">
-		<div class="flex items-center justify-between">
-			<h2 class="text-xl font-bold">Programs</h2>
+		<div class="grid grid-cols-2 items-center justify-between gap-2 md:grid-cols-4">
+			<h2 class="row-start-1 text-xl font-bold text-purple-950">My Programmes</h2>
 
-			<div class="flex items-center gap-2">
-				<Button
-					class="py-6"
-					variant="outline"
-					onclick={() => (showOnlyUnarchived = !showOnlyUnarchived)}
-				>
-					{#if showOnlyUnarchived}
-						<FunnelX />
-						Show all courses
-					{:else}
-						<Funnel />
-						Show only unarchived courses
-					{/if}
-				</Button>
-
-				{#await data.courses then courses}
-					<SearchCourses {courses} />
-				{/await}
-
-				{#if (data.session?.user as User)?.role === 'ADMIN'}
-					<CreateNewProgramButton form={data.programForm} />
+			<Button
+				class="h-10 border-2 border-gray-600 py-0"
+				variant="outline"
+				onclick={() => (showOnlyUnarchived = !showOnlyUnarchived)}
+			>
+				{#if showOnlyUnarchived}
+					<FunnelX />
+					Show all courses
+				{:else}
+					<Funnel />
+					Show only unarchived courses
 				{/if}
-			</div>
+			</Button>
+
+			{#await data.courses then courses}
+				<SearchCourses {courses} />
+			{/await}
+
+			{#if (data.session?.user as User)?.role === 'ADMIN'}
+				<CreateNewProgramButton form={data.programForm} />
+			{/if}
 		</div>
 
 		{#each data.programs as program (program.id)}
@@ -95,4 +101,4 @@
 			/>
 		{/each}
 	</section>
-</main>
+</article>

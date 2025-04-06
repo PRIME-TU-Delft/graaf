@@ -26,21 +26,17 @@
 		$props();
 </script>
 
-<div
-	class="overflow-hidden rounded-lg border-2 border-blue-200 bg-blue-100 shadow-md shadow-blue-200/70"
->
-	<div class="flex items-center justify-between gap-4 p-2">
-		<h3 class="text-lg font-semibold text-blue-950">{program.name}</h3>
+<div class="overflow-hidden rounded-lg border-2 border-purple-100 bg-purple-50/10">
+	<div class="flex items-center justify-between gap-0 p-2 md:grid-cols-2 md:gap-4">
+		<h3 class="text-lg font-semibold text-purple-950">{program.name}</h3>
 
-		<div class="flex gap-2">
+		<div class="flex flex-col gap-1 md:flex-row">
 			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}
-				<!-- TODO: turn this into the new form -->
-				<!-- <NewCourseForm {program} {user} {courses} {courseForm} /> -->
 				<AddCourse {program} {user} {courses} {linkCoursesForm} {createNewCourseForm} />
 			{/if}
 
 			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}
-				<Button.Root href="graph-editor/programs/{program.id}/settings">
+				<Button.Root href="/graph-editor/programs/{program.id}/settings">
 					<Settings /> Settings
 				</Button.Root>
 			{:else if program.admins.length + program.editors.length > 0}

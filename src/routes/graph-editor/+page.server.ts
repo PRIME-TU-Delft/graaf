@@ -9,6 +9,7 @@ import type { Actions, PageServerLoad } from '../$types.js';
 import { courseSchema } from '$lib/zod/courseSchema.js';
 import { programSchema } from '$lib/zod/programSchema.js';
 import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
+import { whereHasProgramPermission } from '$lib/server/permissions.js';
 
 export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
@@ -17,6 +18,9 @@ export const load = (async ({ url, locals }) => {
 		const search = url.searchParams.get('c')?.toLocaleLowerCase();
 
 		const programs = await prisma.program.findMany({
+			where: {
+				...whereHasProgramPermission(user, 'ProgramAdminEditor')
+			},
 			include: {
 				courses: {
 					orderBy: {
