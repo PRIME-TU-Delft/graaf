@@ -2,6 +2,8 @@
 // Run the following command to upload the data:
 // pnpm prisma db seed
 
+import { ParentType } from "@prisma/client";
+
 export const subjects = [
 	{ name: 'SubjectOne' },
 	{ name: 'SubjectTwo' },
@@ -16,7 +18,12 @@ export const domains = [
 	{ name: 'DomainFour' }
 ];
 
-export const graph = [{ name: 'GraphOne' }];
+export const graph = [
+	{ 
+		name: 'GraphOne',
+		parentType: ParentType
+	}
+];
 
 export const courses = [
 	{

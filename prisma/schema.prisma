@@ -124,15 +124,15 @@ enum ParentType {
 }
 
 model Graph {
-	id       Int    @id @default(autoincrement())
-	name     String
-	courseId String
+	id   Int    @id @default(autoincrement())
+	name String
 
-	course  Course?  @relation("CourseGraph", fields: [parentId], references: [id], map: "course_id", onDelete: Cascade)
-	sandbox Sandbox? @relation("SandboxGraph", fields: [parentId], references: [id], map: "sandbox_id", onDelete: Cascade)
+	course  Course?  @relation("CourseGraph", fields: [courseId], references: [id], onDelete: Cascade)
+	sandbox Sandbox? @relation("SandboxGraph", fields: [sandboxId], references: [id], onDelete: Cascade)
 
 	parentType ParentType
-	parentId   Int?
+	courseId   Int?
+	sandboxId  Int?
 	
 	domains  Domain[]  @relation("GraphDomain")
 	subjects Subject[] @relation("GraphSubject")
@@ -141,7 +141,7 @@ model Graph {
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
 
-	@@unique([courseId, name])
+	@@unique([courseId, sandboxId, name])
 }
 
 enum DomainStyle {

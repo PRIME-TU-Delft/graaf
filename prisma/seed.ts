@@ -1,4 +1,4 @@
-import { Course, Subject, PrismaClient } from '@prisma/client';
+import { Course, Subject, PrismaClient, ParentType } from '@prisma/client';
 import { courses, domains, programs, subjects } from './init';
 import { env } from 'process';
 
@@ -47,6 +47,55 @@ async function main() {
 		await prisma.$transaction(users);
 	}
 
+	const userBram = await prisma.user.findFirstOrThrow({
+		where: {
+			firstName: 'Bram'
+		}
+	});
+
+	const userJulia = await prisma.user.findFirstOrThrow({
+		where: {
+			firstName: 'Julia'
+		}
+	});
+
+	const sandboxes = [
+		prisma.sandbox.create({
+			data: {
+				name: 'SandboxOne',
+				ownerId: userBram.id
+			}
+		}),
+		prisma.sandbox.create({
+			data: {
+				name: 'SandboxTwo',
+				ownerId: userBram.id
+			}
+		}),
+		prisma.sandbox.create({
+			data: {
+				name: 'SandboxThree',
+				ownerId: userJulia.id
+			}
+		})
+	];
+
+	const prisma_sandboxes = await prisma.$transaction(sandboxes);
+	await prisma.sandbox.update({
+		where: {
+			id: prisma_sandboxes.find((sandbox) => sandbox.ownerId === userJulia.id)!.id
+		},
+		data: {
+			editors: {
+				connect: [
+					{
+						id: userBram.id
+					}
+				]
+			}
+		}
+	});
+
 	const prisma_courses: Course[] = [];
 	for (const course of courses) {
 		const prisma_course = await prisma.course.create({
@@ -81,7 +130,11 @@ async function main() {
 	console.log('\n');
 
 	const graph = await prisma.graph.create({
-		data: { name: 'GraphOne', courseId: prisma_courses[0].code }
+		data: { 
+			name: 'GraphOne',
+			courseId: prisma_courses[0].id,
+			parentType: ParentType.COURSE
+		}
 	});
 
 	console.log(`Created graph with id: ${graph.id} \n`);
