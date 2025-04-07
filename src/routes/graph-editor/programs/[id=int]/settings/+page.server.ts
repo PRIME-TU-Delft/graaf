@@ -2,7 +2,7 @@ import { ProgramActions } from '$lib/server/actions';
 import { whereHasProgramPermission } from '$lib/server/permissions';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
-import { courseSchema } from '$lib/zod/courseSchema';
+import { newCourseSchema } from '$lib/zod/courseSchema';
 import {
 	deleteProgramSchema,
 	editProgramSchema,
@@ -51,7 +51,7 @@ export const load = (async ({ params, locals }) => {
 			editProgramForm: await superValidate(zod(editProgramSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			createNewCourseForm: await superValidate(zod(courseSchema))
+			createNewCourseForm: await superValidate(zod(newCourseSchema))
 		};
 	} catch (e) {
 		if (e instanceof Error) throw redirect(303, `/graph-editor/?error=${e.message}`);
@@ -85,7 +85,7 @@ export const actions: Actions = {
 		return ProgramActions.linkCourses(await getUser(event), form, { link: false });
 	},
 	'new-course': async (event) => {
-		const form = await superValidate(event, zod(courseSchema));
+		const form = await superValidate(event, zod(newCourseSchema));
 		return ProgramActions.newCourse(await getUser(event), form);
 	}
 };

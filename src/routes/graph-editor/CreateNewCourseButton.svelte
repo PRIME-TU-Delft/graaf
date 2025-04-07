@@ -1,21 +1,26 @@
 <script lang="ts">
-	import DialogButton from '$lib/components/DialogButton.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input';
-	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import { courseSchema } from '$lib/zod/courseSchema';
-	import type { Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
+	import { hasProgramPermissions } from '$lib/utils/permissions';
+	import { superForm } from 'sveltekit-superforms';
+	import { newCourseSchema } from '$lib/zod/courseSchema';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { Program, User } from '@prisma/client';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+
+	// Components
+	import { Input } from '$lib/components/ui/input';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 
 	type Props = {
-		courseForm: SuperValidated<Infer<typeof courseSchema>>;
+		courseForm: SuperValidated<Infer<typeof newCourseSchema>>;
 		courseValue: string;
 		program: Program & { admins: User[]; editors: User[] };
 		user: User;
 		errorMessage?: string;
 	};
+
+	let dialogOpen = $state(false);
 
 	const {
 		courseForm,
@@ -24,13 +29,10 @@
 		user,
 		errorMessage = 'You do not have the permissions to create a new course'
 	}: Props = $props();
-	const id = useId();
-
-	let dialogOpen = $state(false);
 
 	const form = superForm(courseForm, {
-		validators: zodClient(courseSchema),
-		id: `new-course-${id}`,
+		id: useId(),
+		validators: zodClient(newCourseSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				dialogOpen = false;
@@ -75,8 +77,8 @@
 						<Input {...props} bind:value={$formData.name} />
 					{/snippet}
 				</Form.Control>
-				<Form.Description>This is a common name for the course</Form.Description>
 				<Form.FieldErrors />
+				<Form.Description>This is a common name for the course</Form.Description>
 			</Form.Field>
 
 			<Form.FormButton class="float-right" disabled={$submitting} loading={$delayed}>

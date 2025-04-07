@@ -1,21 +1,21 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
-	import { courseSchema } from '$lib/zod/courseSchema';
+	import { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { Course } from '@prisma/client';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
 	type EditCourseNameProps = {
 		course: Course;
-		editCourseForm: SuperValidated<Infer<typeof courseSchema>>;
+		editCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;
 		onSuccess: () => void;
 	};
 
 	let { course, editCourseForm, onSuccess }: EditCourseNameProps = $props();
 
 	const form = superForm(editCourseForm, {
-		validators: zodClient(courseSchema),
+		validators: zodClient(newCourseSchema),
 		id: `edit-course-name`,
 		onResult: ({ result }) => {
 			if (result.type == 'success') onSuccess();

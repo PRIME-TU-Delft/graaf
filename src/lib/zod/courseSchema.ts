@@ -4,7 +4,7 @@ import * as settings from '$lib/settings';
 // This is a Zod schema for validating forms this cannot be automatically generated
 // from the database schema because that is not accessible at from the client
 
-export const courseSchema = z.object({
+export const newCourseSchema = z.object({
 	code: z
 		.string()
 		.nonempty()
@@ -31,4 +31,9 @@ export const changeArchive = z.object({
 		.max(settings.MAX_COURSE_CODE_LENGTH)
 		.regex(settings.COURSE_CODE_REGEX, 'Course code must be alphanumeric without any spaces'),
 	archive: z.boolean()
+});
+
+export const changePinSchema = z.object({
+	id: z.number(),
+	pin: z.boolean()
 });

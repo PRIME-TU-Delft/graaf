@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
-import { programSchema } from '$lib/zod/programSchema';
-import { courseSchema } from '$lib/zod/courseSchema';
+import { newProgramSchema } from '$lib/zod/programSchema';
+import { newCourseSchema } from '$lib/zod/courseSchema';
 import type { RequestEvent } from '@sveltejs/kit';
 import { describe, expect, test } from 'vitest';
 import { ProgramActions } from '../Programs';
@@ -12,7 +12,7 @@ import { mockLocals, mockUser, type UserType } from './helpers/test-users';
 describe('New Program', () => {
 	test('admin user is allowed to add new program', async () => {
 		const event = { locals: mockLocals('superAdmin') } as RequestEvent;
-		const form = await mockForm({ name: 'new-program' }, programSchema);
+		const form = await mockForm({ name: 'new-program' }, newProgramSchema);
 		expect(form.valid).toBe(true);
 
 		await ProgramActions.newProgram(event, form);
@@ -30,7 +30,7 @@ describe('New Program', () => {
 		'%s user is not allowed to add new program',
 		async (role) => {
 			const event = { locals: mockLocals(role) } as RequestEvent;
-			const form = await mockForm({ name: 'new-program' }, programSchema);
+			const form = await mockForm({ name: 'new-program' }, newProgramSchema);
 			expect(form.valid).toBe(true);
 
 			const response = await ProgramActions.newProgram(event, form);
@@ -52,7 +52,7 @@ describe('New Course', () => {
 			const user = mockUser(role);
 			const form = await mockForm(
 				{ code: 'A100', name: 'new-course', programId: PROGRAM_IDS[1] },
-				courseSchema
+				newCourseSchema
 			);
 			expect(form.valid).toBe(true);
 
@@ -77,7 +77,7 @@ describe('New Course', () => {
 			const user = mockUser(role);
 			const form = await mockForm(
 				{ code: 'A100', name: 'new-course', programId: PROGRAM_IDS[1] },
-				courseSchema
+				newCourseSchema
 			);
 			expect(form.valid).toBe(true);
 

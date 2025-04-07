@@ -1,15 +1,19 @@
 <script lang="ts">
+	import { useId } from 'bits-ui';
+	import { toast } from 'svelte-sonner';
+	import { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { newProgramSchema } from '$lib/zod/programSchema';
+
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+
+	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { programSchema } from '$lib/zod/programSchema';
 
 	type Props = {
-		form: SuperValidated<Infer<typeof programSchema>>;
+		form: SuperValidated<Infer<typeof newProgramSchema>>;
 	};
 
 	const { form: programForm }: Props = $props();
@@ -18,7 +22,7 @@
 
 	const form = superForm(programForm, {
 		id: useId(),
-		validators: zodClient(programSchema),
+		validators: zodClient(newProgramSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Program created successfully!');

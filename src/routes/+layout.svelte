@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
+	import '../app.css';
+
+	// Components
 	import NavigationBar from '$lib/components/NavigationBar.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { toast } from 'svelte-sonner';
-
-	import '../app.css';
 
 	let { data, children } = $props();
 

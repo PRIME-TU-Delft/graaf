@@ -1,13 +1,17 @@
 <script lang="ts">
+	import { cn } from '$lib/utils';
 	import { enhance } from '$app/forms';
+	import { fade } from 'svelte/transition';
+	import type { Course, User } from '@prisma/client';
+
+	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-	import { cn } from '$lib/utils';
+
+	// Icons
 	import { Archive } from '@lucide/svelte';
-	import type { Course, User } from '@prisma/client';
 	import Pin from 'lucide-svelte/icons/pin';
 	import Unpin from 'lucide-svelte/icons/pin-off';
-	import { fade } from 'svelte/transition';
 
 	type CourseGridProps = {
 		courses: (Course & { pinnedBy: Pick<User, 'id'>[] })[];
@@ -21,7 +25,7 @@
 <div
 	class="grid max-h-96 grid-cols-1 gap-1 overflow-auto p-2 sm:grid-cols-2 md:grid-cols-2 md:gap-2"
 >
-	{#each courses as course (course.code)}
+	{#each courses as course (course.id)}
 		{@render displayCourse(course)}
 	{:else}
 		<p class="bg-white/80 p-2 col-span-3 text-slate-900/60 rounded">
@@ -41,32 +45,23 @@
 			in:fade={{ duration: 200 }}
 		>
 			<div class="flex items-center gap-1">
-				{#if course.pinnedBy.some((u) => u.id == user?.id)}
-					<form action="?/unpin-course" method="post" use:enhance>
-						<input type="text" name="courseCode" value={course.code} hidden />
-						<Button
-							onclick={(e) => e.stopPropagation()}
-							type="submit"
-							variant="outline"
-							class="h-8 w-8 border-blue-600 bg-blue-200"
-						>
-							<Unpin class="text-blue-600" />
-						</Button>
-					</form>
-				{:else}
-					<form action="?/pin-course" method="post" use:enhance>
-						<input type="text" name="courseCode" value={course.code} hidden />
-						<Button
-							onclick={(e) => e.stopPropagation()}
-							type="submit"
-							variant="outline"
-							class="h-8 w-8"
-						>
-							<Pin />
-						</Button>
-					</form>
-				{/if}
-
+				<form action="?/change-course-pin" method="post" use:enhance>
+					<input type="text" name="courseId" value={course.id} hidden />
+					<input
+						type="text"
+						name="unpin"
+						value={course.pinnedBy.some((u) => u.id == user?.id)}
+						hidden
+					/>
+					<Button
+						onclick={(e) => e.stopPropagation()}
+						type="submit"
+						variant="outline"
+						class="h-8 w-8 border-blue-600 bg-blue-200"
+					>
+						<Unpin class="text-blue-600" />
+					</Button>
+				</form>
 				<p>{course.name}</p>
 			</div>
 
@@ -81,8 +76,9 @@
 								<Tooltip.Content
 									side="right"
 									class="border-2 border-amber-900 bg-amber-50 p-2 text-sm text-amber-700"
-									>Course is archived</Tooltip.Content
 								>
+									Course is archived
+								</Tooltip.Content>
 							</Tooltip.Trigger>
 						</Tooltip.Root>
 					</Tooltip.Provider>

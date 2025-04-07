@@ -1,13 +1,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
-	import { Button } from '$lib/components/ui/button';
-	import type { User } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
-	import CourseGrid from './CourseGrid.svelte';
-	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
+	import type { User } from '@prisma/client';
+
+	// Components
+	import { Button } from '$lib/components/ui/button';
+	import * as Accordion from '$lib/components/ui/accordion/index.js';
+
 	import Program from './Program.svelte';
+	import CourseGrid from './CourseGrid.svelte';
+	import SandboxGrid from './SandboxGrid.svelte';
 	import SearchCourses from './SearchCourses.svelte';
+	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
+
+	// Icons
 	import { Funnel, FunnelX } from '@lucide/svelte';
 
 	const { data, form } = $props();
@@ -19,7 +25,7 @@
 		// When add 'course to program' form is submitted with an error
 		if (form?.error) toast.error(form.error);
 
-		// When you acces a page you don't have access to, you get redirected to the home page with an error message
+		// When you access a page you don't have access to, you get redirected to the home page with an error message
 		// onDismiss is used to redirect to the home page when the toast is dismissed
 		if (data?.error) toast.error(data.error, { onDismiss: () => goto('/') });
 	});
@@ -50,6 +56,23 @@
 				</Accordion.Trigger>
 				<Accordion.Content>
 					<CourseGrid courses={data.pinnedCourses} user={data.user} showOnlyUnarchived={false} />
+				</Accordion.Content>
+			</Accordion.Item>
+		</Accordion.Root>
+	{/if}
+
+	{#if data.sandboxes && data.sandboxes.length > 0}
+		<Accordion.Root
+			type="single"
+			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-blue-100 px-4 py-2 shadow-none shadow-blue-200/70 md:sticky md:border-2 md:border-blue-200 md:shadow-lg"
+			bind:value={accordionOpen}
+		>
+			<Accordion.Item value="accordion">
+				<Accordion.Trigger class="text-xl font-bold hover:no-underline">
+					My Sandboxes
+				</Accordion.Trigger>
+				<Accordion.Content>
+					<SandboxGrid sanboxes={data.sandboxes} user={data.user} />
 				</Accordion.Content>
 			</Accordion.Item>
 		</Accordion.Root>

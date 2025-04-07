@@ -1,6 +1,6 @@
 import type { CoursePermissionsOptions, ProgramPermissionsOptions } from '$lib/utils/permissions';
 import { setError } from '$lib/utils/setError';
-import type { changeArchive, courseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
+import type { changeArchive, newCourseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import prisma from './db/prisma';
@@ -75,7 +75,7 @@ export class CourseActions {
 	 * PERMISSIONS:
 	 * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
 	 */
-	static async editProgram(user: User, form: SuperValidated<Infer<typeof courseSchema>>) {
+	static async editProgram(user: User, form: SuperValidated<Infer<typeof newCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
 		try {

@@ -1,14 +1,19 @@
 <script lang="ts">
-	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
-	import * as Button from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { courseSchema } from '$lib/zod/courseSchema';
+
+	import type { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
 	import type { Course, Program, User } from '@prisma/client';
-	import Settings from 'lucide-svelte/icons/settings';
-	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+
+	// Components
+	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
+	import * as Button from '$lib/components/ui/button/index.js';
 	import CourseGrid from './CourseGrid.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
+
+	// Icons
+	import Settings from 'lucide-svelte/icons/settings';
 
 	type Props = {
 		user: User;
@@ -19,7 +24,7 @@
 		courses: Promise<Course[]>;
 		showOnlyUnarchived: boolean;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
-		createNewCourseForm: SuperValidated<Infer<typeof courseSchema>>;
+		createNewCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;
 	};
 
 	let { user, program, courses, showOnlyUnarchived, linkCoursesForm, createNewCourseForm }: Props =

@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { fade } from 'svelte/transition';
+	import type { Course } from '@prisma/client';
+
+	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Command from '$lib/components/ui/command/index.js';
-	import type { Course } from '@prisma/client';
+
+	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import Close from 'lucide-svelte/icons/circle-x';
-	import { fade } from 'svelte/transition';
 
-	type Props = {
-		courses: Course[];
-	};
-
+	type Props = { courses: Course[] };
 	const { courses }: Props = $props();
 
 	let courseValue = $state('');
@@ -43,7 +44,7 @@
 		<Command.List
 			class="absolute left-0 top-12 max-h-96 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
 		>
-			{#each courses as course (course.code)}
+			{#each courses as course (course.id)}
 				<Command.Item
 					class="h-full w-full p-2"
 					value={course.code + ' ' + course.name}
