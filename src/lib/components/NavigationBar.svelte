@@ -5,9 +5,8 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { displayName } from '$lib/utils/displayUserName';
 	import type { User } from '@prisma/client';
-	import { Button } from './ui/button';
 	import LogOut from 'lucide-svelte/icons/log-out';
-	import { enhance } from '$app/forms';
+	import { Button } from './ui/button';
 	import Logo from './Logo.svelte';
 
 	type NavigationBarProps = {
@@ -68,12 +67,12 @@
 		<div></div>
 
 		<div class="flex items-center gap-2">
-			<Logo {mouseState} />
+			<!-- <Logo {mouseState} /> -->
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
 					{#if urls.length > 0}
 						<Breadcrumb.Item class="text-md sm:text-lg">
-							<Breadcrumb.Link href={urls[0].url}>{urls[0].name}</Breadcrumb.Link>
+							<Breadcrumb.Link href={urls[0].url}>Home</Breadcrumb.Link>
 						</Breadcrumb.Item>
 					{/if}
 

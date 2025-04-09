@@ -13,6 +13,7 @@
 		dialogOpen: boolean;
 	};
 
+	// eslint-disable-next-line svelte/no-unused-props
 	let { createNewCourseForm, program, dialogOpen = $bindable() }: Props = $props();
 	const id = useId();
 

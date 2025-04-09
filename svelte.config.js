@@ -1,5 +1,8 @@
-import adapter from '@sveltejs/adapter-netlify';
+import nodeAdapter from '@sveltejs/adapter-node';
+import netlifyAdapter from '@sveltejs/adapter-netlify';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+console.log('Building for: ' + process.env.BUILD_ENV === 'netlify' ? 'Netlify' : 'NodeJS');
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -11,7 +14,7 @@ const config = {
 		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
+		adapter: process.env.BUILD_ENV === 'netlify' ? netlifyAdapter() : nodeAdapter()
 	}
 };
 

@@ -1,0 +1,18 @@
+name: 'graaf'
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    volumes:
+      - data:/var/lib/postgresql/data
+      - ./entrypoint:/docker-entrypoint-initdb.d
+    environment:
+      POSTGRES_DB: db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: wachtwoord
+
+volumes:
+  data:

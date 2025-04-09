@@ -41,8 +41,9 @@
 			in:fade={{ duration: 200 }}
 		>
 			<div class="flex items-end gap-1">
+				<p>{course.code}</p>
+				-
 				<p>{course.name}</p>
-				<p class="pb-0.5 text-xs text-purple-900">({course.code})</p>
 			</div>
 
 			<div class="flex items-center gap-1">
