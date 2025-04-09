@@ -46,7 +46,7 @@
 			</div>
 		{/if}
 
-		<form action="auth/signin" method="POST">
+		<form action="?/auth" method="POST">
 			<Button type="submit">Sign-in</Button>
 		</form>
 	{/if}

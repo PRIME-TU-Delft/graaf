@@ -1,4 +1,5 @@
 import { env } from '$env/dynamic/private';
+import { signIn } from '$lib/server/auth';
 import type { Actions } from './$types';
 
 export const load = async ({ locals }) => {
@@ -23,5 +24,6 @@ export const actions = {
 			path: '/',
 			maxAge: 60 * 60 * 24 * 365
 		});
-	}
+	},
+	auth: signIn
 } satisfies Actions;
