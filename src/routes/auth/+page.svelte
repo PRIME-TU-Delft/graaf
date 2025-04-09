@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { Button } from '$lib/components/ui/button';
 	import type { User } from '@prisma/client';
 	import { onMount } from 'svelte';
@@ -47,7 +46,7 @@
 			</div>
 		{/if}
 
-		<form action="auth/signin" method="POST" use:enhance>
+		<form action="?/auth" method="POST">
 			<Button type="submit">Sign-in</Button>
 		</form>
 	{/if}

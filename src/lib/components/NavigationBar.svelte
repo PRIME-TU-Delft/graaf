@@ -5,9 +5,8 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { displayName } from '$lib/utils/displayUserName';
 	import type { User } from '@prisma/client';
-	import { Button } from './ui/button';
 	import LogOut from 'lucide-svelte/icons/log-out';
-	import { enhance } from '$app/forms';
+	import { Button } from './ui/button';
 
 	type NavigationBarProps = {
 		user?: User;
@@ -113,7 +112,7 @@
 				</Avatar.Root>
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content align="end">
-				<form action="/auth/signout" method="POST" use:enhance>
+				<form action="/auth/signout" method="POST">
 					<Button type="submit" variant="outline" class="w-full">Log-out <LogOut /></Button>
 				</form>
 			</DropdownMenu.Content>
