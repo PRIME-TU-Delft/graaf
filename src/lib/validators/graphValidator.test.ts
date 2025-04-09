@@ -21,11 +21,13 @@ function dummyDomain(name: string, id: number) {
 function dummyGraph(domains: DomainType[]) {
 	return {
 		name: 'graph',
-		id: 0,
-		courseId: 'CSE2000',
+		id: 1,
+		courseId: 1,
 		createdAt: new Date(),
 		updatedAt: new Date(),
-		domains: domains
+		isVisible: true,
+		domains: domains,
+		subjects: []
 	} as GraphType;
 }
 
