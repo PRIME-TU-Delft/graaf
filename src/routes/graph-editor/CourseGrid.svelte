@@ -36,6 +36,8 @@
 
 {#snippet displayCourse(course: CourseGridProps['courses'][number])}
 	{#if !(showOnlyUnarchived && course.isArchived)}
+		{@const pinned = course.pinnedBy.some((u) => u.id == user?.id)}
+
 		<a
 			href="graph-editor/courses/{course.code}"
 			class={cn([
@@ -45,12 +47,12 @@
 			in:fade={{ duration: 200 }}
 		>
 			<div class="flex items-center gap-1">
-				<form action="?/change-course-pin" method="post" use:enhance>
-					<input type="text" name="courseId" value={course.id} hidden />
+				<form action="?/change-course-pin" method="POST" use:enhance>
+					<input type="text" name="id" value={course.id} hidden />
 					<input
 						type="text"
-						name="unpin"
-						value={course.pinnedBy.some((u) => u.id == user?.id)}
+						name="pin"
+						value={ !pinned }
 						hidden
 					/>
 					<Button
@@ -59,7 +61,11 @@
 						variant="outline"
 						class="h-8 w-8 border-blue-600 bg-blue-200"
 					>
-						<Unpin class="text-blue-600" />
+						{#if !pinned}
+							<Pin class="text-blue-600" />
+						{:else}
+							<Unpin class="text-blue-600" />
+						{/if}
 					</Button>
 				</form>
 				<p>{course.name}</p>

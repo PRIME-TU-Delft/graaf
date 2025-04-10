@@ -115,7 +115,11 @@ export const actions = {
 	'new-program': async (event) => {
 		const formData = await superValidate(event, zod(newProgramSchema));
 
-		return ProgramActions.newProgram(event, formData);
+		const session = await event.locals.auth();
+		const user = session?.user as User | undefined;
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		return ProgramActions.newProgram(user, formData);
 	},
 
 	'new-course': async (event) => {
@@ -135,7 +139,7 @@ export const actions = {
 		const user = session?.user as User | undefined;
 		if (!user) return fail(401, { error: 'Unauthorized' });
 
-		CourseActions.addCourseToProgram(user, formData);
+		return CourseActions.addCourseToProgram(user, formData);
 	},
 
 	'change-course-pin': async (event) => {
@@ -145,6 +149,6 @@ export const actions = {
 		const user = session?.user as User | undefined;
 		if (!user) return fail(401, { error: 'Unauthorized' });
 
-		CourseActions.changePin(user, formData);
+		return CourseActions.changePin(user, formData);
 	}
 };

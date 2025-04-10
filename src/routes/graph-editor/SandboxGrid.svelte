@@ -9,7 +9,7 @@
 		user: User | undefined;
 	};
 
-	const { sandboxes, user }: CourseGridProps = $props();
+	const { sandboxes }: CourseGridProps = $props();
 </script>
 
 <div
@@ -28,12 +28,7 @@
 		class="flex w-full items-center justify-between rounded border-2 bg-white/90 p-2 transition-colors hover:border-blue-200 hover:bg-blue-50"
 		in:fade={{ duration: 200 }}
 	>
-		<div class="flex items-center gap-1">
-			<p>{sandbox.name}</p>
-		</div>
-
-		<div class="flex items-center gap-1">
-			<p class="text-xs text-blue-900">{displayName(sandbox.owner, 'No owner')}</p>
-		</div>
+		<p>{sandbox.name}</p>
+		<p class="text-xs text-blue-900">{displayName(sandbox.owner, 'No owner')}</p>
 	</a>
 {/snippet}

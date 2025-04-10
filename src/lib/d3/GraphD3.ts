@@ -168,13 +168,8 @@ export class GraphD3 {
 	}
 
 	updateDomain(id: number) {
-		console.log({ id });
-
-		const selection = this.content.selectAll<SVGGElement, NodeData>(`#domain-${id}`);
-
-		console.log(selection, id);
-
-		selection
+		this.content
+			.selectAll<SVGGElement, NodeData>(`#domain-${id}`)
 			.call(NodeToolbox.updateHighlight, this)
 			.call(NodeToolbox.updatePosition, this)
 			.call(NodeToolbox.updateStyle)
@@ -183,8 +178,7 @@ export class GraphD3 {
 
 	updateSubject(id: number) {
 		this.content
-			.selectAll<SVGGElement, NodeData>('.node')
-			.filter((node) => node.id === id && node.type === NodeType.SUBJECT)
+			.selectAll<SVGGElement, NodeData>(`#subject-${id}`)
 			.call(NodeToolbox.updateHighlight, this)
 			.call(NodeToolbox.updatePosition, this)
 			.call(NodeToolbox.updateStyle)

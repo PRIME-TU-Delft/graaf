@@ -18,7 +18,9 @@
 
 	const { data, form } = $props();
 
-	let accordionOpen = $state('');
+
+	let pinnedOpen = $state('');
+	let sandboxesOpen = $state('');
 	let showOnlyUnarchived = $state(true);
 
 	$effect(() => {
@@ -48,7 +50,7 @@
 		<Accordion.Root
 			type="single"
 			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-blue-100 px-4 py-2 shadow-none shadow-blue-200/70 md:sticky md:border-2 md:border-blue-200 md:shadow-lg"
-			bind:value={accordionOpen}
+			bind:value={pinnedOpen}
 		>
 			<Accordion.Item value="accordion">
 				<Accordion.Trigger class="text-xl font-bold hover:no-underline">
@@ -65,14 +67,14 @@
 		<Accordion.Root
 			type="single"
 			class="top-20 z-10 mx-auto grid max-w-4xl gap-4 rounded-lg bg-blue-100 px-4 py-2 shadow-none shadow-blue-200/70 md:sticky md:border-2 md:border-blue-200 md:shadow-lg"
-			bind:value={accordionOpen}
+			bind:value={sandboxesOpen}
 		>
 			<Accordion.Item value="accordion">
 				<Accordion.Trigger class="text-xl font-bold hover:no-underline">
 					My Sandboxes
 				</Accordion.Trigger>
 				<Accordion.Content>
-					<SandboxGrid sanboxes={data.sandboxes} user={data.user} />
+					<SandboxGrid sandboxes={data.sandboxes} user={data.user} />
 				</Accordion.Content>
 			</Accordion.Item>
 		</Accordion.Root>

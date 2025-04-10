@@ -20,15 +20,11 @@ export class ProgramActions {
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#p2
 	 * - Only super admins can add new programs
 	 */
-	static async newProgram(
-		event: RequestEvent,
-		form: SuperValidated<Infer<typeof newProgramSchema>>
-	) {
+	static async newProgram(user: User, form: SuperValidated<Infer<typeof newProgramSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
 		// Check if user is a super admin, otherwise return an error
-		const session = await event.locals.auth();
-		if ((session?.user as User)?.role !== 'ADMIN') {
+		if (user.role !== 'ADMIN') {
 			return setError(form, '', 'You do not have permission to perform this action');
 		}
 

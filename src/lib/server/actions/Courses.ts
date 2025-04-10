@@ -50,6 +50,7 @@ export class CourseActions {
 	static async changePin(user: User, form: SuperValidated<Infer<typeof changePinSchema>>) {
 		if (!form.valid) return setError(form, '', 'form not valid');
 
+
 		try {
 			await prisma.user.update({
 				where: {
