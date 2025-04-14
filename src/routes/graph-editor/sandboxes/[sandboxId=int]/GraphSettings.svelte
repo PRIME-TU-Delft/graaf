@@ -1,23 +1,32 @@
 <script lang="ts">
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { enhance } from '$app/forms';
-	import { page } from '$app/state';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input';
-	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { superForm } from 'sveltekit-superforms';
 	import { cn } from '$lib/utils';
 	import { graphSchemaWithId } from '$lib/zod/graphSchema';
-	import type { Graph } from '@prisma/client';
+	import { toast } from 'svelte-sonner';	
+	
+	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Form from '$lib/components/ui/form/index.js';
+
 	import Undo2 from 'lucide-svelte/icons/undo-2';
-	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
+	
+	import type { Graph } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
-	let { graph, isGraphSettingsOpen = $bindable() }: { graph: Graph; isGraphSettingsOpen: boolean } =
-		$props();
+	let { 
+		graph,
+		editGraphForm,
+		isGraphSettingsOpen = $bindable()
+	}: { 
+		graph: Graph;
+		editGraphForm: SuperValidated<Infer<typeof graphSchemaWithId>>;
+		isGraphSettingsOpen: boolean
+	} = $props();
 
-	const form = superForm((page.data as PageData).editGraphForm, {
+	const form = superForm(editGraphForm, {
 		id: 'edit-graph-' + graph.id,
 		validators: zodClient(graphSchemaWithId),
 		onResult: ({ result }) => {

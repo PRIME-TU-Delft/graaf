@@ -40,7 +40,7 @@
 	const { course } = page.data as PageData;
 	$effect(() => {
 		// When program.id or userId changes, update the form data
-		$formData.courseCode = course.code;
+		$formData.courseId = course.id;
 		$formData.userId = userId;
 		$formData.role = newRole.toLowerCase() as 'admin' | 'editor' | 'revoke';
 	});
@@ -54,7 +54,7 @@
 {:else}
 	<form action="?/edit-super-user" method="POST" class="grow" use:enhance>
 		<input type="hidden" name="userId" value={userId} />
-		<input type="hidden" name="courseCode" value={course.code} />
+		<input type="hidden" name="courseId" value={course.id} />
 		<input type="hidden" name="role" value={newRole.toLowerCase()} />
 
 		{#if newRole == 'Revoke'}

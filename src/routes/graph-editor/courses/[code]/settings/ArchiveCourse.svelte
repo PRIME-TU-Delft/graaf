@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { changeArchive } from '$lib/zod/courseSchema';
+	import { changeArchiveSchema } from '$lib/zod/courseSchema';
 	import type { Course } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
@@ -17,7 +17,7 @@
 
 	const form = superForm((page.data as PageData).changeArchiveForm, {
 		id: 'changeArchive',
-		validators: zodClient(changeArchive),
+		validators: zodClient(changeArchiveSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success(`Changed to ${!course.isArchived ? 'Archived' : 'De-Archived'}!`);
@@ -28,13 +28,13 @@
 	const { form: formData, enhance, submitting, delayed } = form;
 
 	$effect(() => {
-		$formData.code = course.code;
+		$formData.courseId = course.id;
 		$formData.archive = !course.isArchived;
 	});
 </script>
 
 <form action="?/change-archive" method="POST" class="ml-auto" use:enhance>
-	<input type="hidden" name="code" value={course.code} />
+	<input type="hidden" name="courseId" value={course.id} />
 	<input type="hidden" name="archive" value={!course.isArchived} />
 
 	<Form.FormError {form} />

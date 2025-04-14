@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import type { Graph } from '@prisma/client';
-	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
+	import DuplicateGraph, { type CourseType } from '../../sandboxes/[sandboxId=int]/DuplicateGraph.svelte';
 	import GraphSettings from './GraphSettings.svelte';
 
 	type EditGraphProps = {

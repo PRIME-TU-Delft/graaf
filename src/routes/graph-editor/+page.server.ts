@@ -5,10 +5,9 @@ import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { CourseActions } from '$lib/server/actions/Courses.js';
 
 import { zod } from 'sveltekit-superforms/adapters';
-import { newCourseSchema, changePinSchema } from '$lib/zod/courseSchema.js';
+import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema.js';
 import { newProgramSchema } from '$lib/zod/programSchema.js';
-import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
-import { fail, superValidate } from 'sveltekit-superforms';
+import { superValidate } from 'sveltekit-superforms';
 
 import type { Course, User } from '@prisma/client';
 import type { PageServerLoad } from '../$types.js';
@@ -113,42 +112,22 @@ export const load = (async ({ url, locals }) => {
 
 export const actions = {
 	'new-program': async (event) => {
-		const formData = await superValidate(event, zod(newProgramSchema));
-
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		return ProgramActions.newProgram(user, formData);
+		const form = await superValidate(event, zod(newProgramSchema));
+		return ProgramActions.newProgram(await getUser(event), form);
 	},
 
 	'new-course': async (event) => {
-		const formData = await superValidate(event, zod(newCourseSchema));
-
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		return CourseActions.newCourse(user, formData);
+		const form = await superValidate(event, zod(newCourseSchema));
+		return CourseActions.newCourse(await getUser(event), form);
 	},
 
-	'add-course-to-program': async (event) => {
-		const formData = await event.request.formData();
-
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		return CourseActions.addCourseToProgram(user, formData);
+	'link-course': async (event) => {
+		const form = await superValidate(event, zod(linkingCoursesSchema));
+		return CourseActions.linkCourses(await getUser(event), form);
 	},
 
 	'change-course-pin': async (event) => {
-		const formData = await superValidate(event, zod(changePinSchema));
-
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		return CourseActions.changePin(user, formData);
+		const form = await superValidate(event, zod(changePinSchema));
+		return CourseActions.changePin(await getUser(event), form);
 	}
 };

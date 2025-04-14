@@ -48,7 +48,7 @@
 		>
 			<div class="flex items-center gap-1">
 				<form action="?/change-course-pin" method="POST" use:enhance>
-					<input type="text" name="id" value={course.id} hidden />
+					<input type="text" name="courseId" value={course.id} hidden />
 					<input
 						type="text"
 						name="pin"

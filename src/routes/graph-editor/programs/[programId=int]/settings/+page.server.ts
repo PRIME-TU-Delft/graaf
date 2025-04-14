@@ -12,11 +12,12 @@ import {
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
+import { CourseActions } from '$lib/server/actions/Courses';
 
 export const load = (async ({ params, locals }) => {
 	try {
-		if (!params.id) throw Error('a program id is required');
-		const programId = parseInt(params.id, 10);
+		if (!params.programId) throw Error('a program id is required');
+		const programId = parseInt(params.programId, 10);
 
 		const user = await getUser({ locals });
 
@@ -72,20 +73,16 @@ export const actions: Actions = {
 		const form = await superValidate(event, zod(editSuperUserSchema));
 		return ProgramActions.editSuperUser(await getUser(event), form);
 	},
-	'add-course-to-program': async ({ request, locals }) => {
-		const formData = await request.formData();
-		ProgramActions.addCourseToProgram(await getUser({ locals }), formData);
-	},
 	'link-courses': async (event) => {
 		const form = await superValidate(event, zod(linkingCoursesSchema));
-		return ProgramActions.linkCourses(await getUser(event), form, { link: true });
+		return CourseActions.linkCourses(await getUser(event), form, { link: true });
 	},
 	'unlink-courses': async (event) => {
 		const form = await superValidate(event, zod(linkingCoursesSchema));
-		return ProgramActions.linkCourses(await getUser(event), form, { link: false });
+		return CourseActions.linkCourses(await getUser(event), form, { link: false });
 	},
 	'new-course': async (event) => {
 		const form = await superValidate(event, zod(newCourseSchema));
-		return ProgramActions.newCourse(await getUser(event), form);
+		return CourseActions.newCourse(await getUser(event), form);
 	}
 };

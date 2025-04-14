@@ -1,7 +1,8 @@
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
-import { CourseActions, whereHasCoursePermission } from '$lib/server/permissions';
-import { changeArchive, newCourseSchema, editSuperUserSchema } from '$lib/zod/courseSchema';
+import { whereHasCoursePermission } from '$lib/server/permissions';
+import { CourseActions } from '$lib/server/actions/Courses';
+import { changeArchiveSchema, newCourseSchema, editSuperUserSchema, editCourseSchema } from '$lib/zod/courseSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -42,7 +43,7 @@ export const load = (async ({ params, locals }) => {
 			allUsers,
 			editCourseForm: await superValidate(zod(newCourseSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
-			changeArchiveForm: await superValidate(zod(changeArchive))
+			changeArchiveForm: await superValidate(zod(changeArchiveSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page
@@ -53,15 +54,15 @@ export const load = (async ({ params, locals }) => {
 
 export const actions: Actions = {
 	'edit-course': async (event) => {
-		const form = await superValidate(event, zod(newCourseSchema));
-		return CourseActions.editProgram(await getUser(event), form);
+		const form = await superValidate(event, zod(editCourseSchema));
+		return CourseActions.editCourse(await getUser(event), form);
 	},
 	'edit-super-user': async (event) => {
 		const form = await superValidate(event, zod(editSuperUserSchema));
 		return CourseActions.editSuperUser(await getUser(event), form);
 	},
 	'change-archive': async (event) => {
-		const form = await superValidate(event, zod(changeArchive));
+		const form = await superValidate(event, zod(changeArchiveSchema));
 		return CourseActions.changeArchive(await getUser(event), form);
 	}
 };

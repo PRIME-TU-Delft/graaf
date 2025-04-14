@@ -2,7 +2,7 @@ import { GraphActions } from '$lib/server/actions/Graphs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions.js';
-import { duplicateGraphSchema, graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema.js';
+import { duplicateGraphSchema, newGraphSchema, graphSchemaWithId } from '$lib/zod/graphSchema.js';
 import type { Course, Prisma } from '@prisma/client';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
@@ -61,7 +61,7 @@ export const load = (async ({ params, locals }) => {
 		// Happy path
 		return {
 			error: undefined,
-			graphSchema: await superValidate(zod(graphSchema)),
+			graphSchema: await superValidate(zod(newGraphSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			coursesAccessible,
@@ -72,7 +72,7 @@ export const load = (async ({ params, locals }) => {
 	} catch (e: unknown) {
 		return {
 			error: e instanceof Error ? e.message : `${e}`,
-			graphSchema: await superValidate(zod(graphSchema)),
+			graphSchema: await superValidate(zod(newGraphSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			coursesAccessible: new Promise(() => []) as Prisma.PrismaPromise<Course[]>,
@@ -84,24 +84,20 @@ export const load = (async ({ params, locals }) => {
 }) satisfies ServerLoad;
 
 export const actions = {
-	'add-graph-to-course': async (event) => {
-		const form = await superValidate(event, zod(graphSchema));
-
-		return GraphActions.addGraphToCourse(await getUser(event), form);
+	'new-graph': async (event) => {
+		const form = await superValidate(event, zod(newGraphSchema));
+		return GraphActions.newGraph(await getUser(event), form);
 	},
 	'edit-graph': async (event) => {
 		const form = await superValidate(event, zod(graphSchemaWithId));
-
 		return GraphActions.editGraph(await getUser(event), form);
 	},
 	'delete-graph': async (event) => {
 		const form = await superValidate(event, zod(graphSchemaWithId));
-
-		return GraphActions.deleteGraphFromCourse(await getUser(event), form);
+		return GraphActions.deleteGraph(await getUser(event), form);
 	},
 	'duplicate-graph': async (event) => {
 		const form = await superValidate(event, zod(duplicateGraphSchema));
-
-		return GraphActions.duplicateGraph(await getUser(event), form, event.params.code);
+		return GraphActions.duplicateGraph(await getUser(event), form);
 	}
 };

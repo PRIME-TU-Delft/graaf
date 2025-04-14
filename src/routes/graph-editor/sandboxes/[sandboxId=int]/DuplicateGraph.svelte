@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -7,7 +6,6 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
-	import type { Course, Graph } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
@@ -15,33 +13,39 @@
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { fly } from 'svelte/transition';
-	import { superForm } from 'sveltekit-superforms';
+	import { superForm} from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
 
-	export type CourseType = Course & {
-		graphs: {
-			name: string;
-		}[];
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { Graph, Prisma } from '@prisma/client';
+	import { displayName } from '$lib/utils/displayUserName';
+
+	type Props = {
+		graph: Graph;
+		availableCourses: Prisma.CourseGetPayload<{
+			include: {
+				graphs: { select: { name: true } }
+			}
+		}>[];
+		availableSandboxes: Prisma.SandboxGetPayload<{
+			include: {
+				graphs: { select: { name: true } },
+				owner: true
+			}
+		}>[];
+		duplicateGraphForm: SuperValidated<Infer<typeof duplicateGraphSchema>>;
+		isDuplicateOpen?: boolean;
 	};
 
 	let {
 		graph,
-		course,
+		availableCourses,
+		availableSandboxes,
+		duplicateGraphForm,
 		isDuplicateOpen = $bindable(),
-		coursesAccessible
-	}: {
-		graph: Graph;
-		course: CourseType;
-		isDuplicateOpen: boolean;
-		coursesAccessible: Promise<CourseType[]>;
-	} = $props();
+	}: Props = $props();
 
-	let isDestinationCourseOpen = $state(false);
-	let selectableCourses = $state<CourseType[]>([]);
-	const triggerId = useId();
-
-	const form = superForm((page.data as PageData).duplicateGraphForm, {
+	const form = superForm(duplicateGraphForm, {
 		id: 'duplicate-graph-' + graph.id,
 		validators: zodClient(duplicateGraphSchema),
 		onResult: ({ result }) => {
@@ -52,35 +56,51 @@
 		}
 	});
 
+	const triggerId = useId();
 	const { form: formData, enhance, submitting, delayed } = form;
 
+	let isDestinationCourseOpen = $state(false);
+	let availableDestinations = $derived.by(() => {
+		const destinations: { id: number, name: string, owner: string | undefined, type: 'SANDBOX' | 'COURSE' }[] = availableSandboxes.map(s => ({
+			id: s.id,
+			name: s.name,
+			owner: displayName(s.owner),
+			type: 'SANDBOX'
+		}));
+		
+		return destinations.concat(
+			availableCourses.map(c => ({
+				id: c.id,
+				name: c.code + c.name,
+				owner: undefined,
+				type: 'COURSE'
+			}))
+		);
+	});
+
 	let graphHasSameNameAsOriginal = $derived.by(() => {
-		const { destinationCourseCode, newName } = fromStore(formData).current;
+		const { destinationId, destinationType, newName } = fromStore(formData).current;
 
-		const graphsInSelectedCourse = selectableCourses.find(
-			(f) => f.code === destinationCourseCode
-		)?.graphs;
+		let graphsInDestination;
+		if (destinationType === 'COURSE') {
+			graphsInDestination = availableCourses.find(c => c.id === destinationId)?.graphs;
+		} else {
+			graphsInDestination = availableSandboxes.find(s => s.id === destinationId)?.graphs;
+		}
 
-		if (!graphsInSelectedCourse) return false;
-
-		return graphsInSelectedCourse.some((g) => g.name === newName);
+		if (!graphsInDestination) return false;
+		return graphsInDestination.some(g => g.name === newName);
 	});
 
 	$effect(() => {
 		if (graph.id) {
 			$formData.newName = graph.name + ' copy';
 			$formData.graphId = graph.id;
-			$formData.destinationCourseCode = course.code;
+			$formData.destinationType = graph.parentType;
+			$formData.destinationId = (graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number;
 		}
 	});
 
-	$effect(() => {
-		selectableCourses = [course];
-
-		coursesAccessible.then((courses) => {
-			selectableCourses = [...selectableCourses, ...courses];
-		});
-	});
 </script>
 
 <form action="?/duplicate-graph" method="POST" use:enhance>
@@ -97,7 +117,7 @@
 		<Form.FieldErrors />
 	</Form.Field>
 
-	{@render selectCourse()}
+	{@render selectDestination()}
 
 	{#if graphHasSameNameAsOriginal}
 		<p
@@ -114,13 +134,13 @@
 
 		<Button
 			variant="outline"
-			disabled={$formData.newName == graph.name && $formData.destinationCourseCode == course.code}
 			onclick={() =>
 				form.reset({
 					newState: {
+						newName: graph.name + ' copy',
 						graphId: graph.id,
-						newName: graph.name,
-						destinationCourseCode: course.code
+						destinationType: graph.parentType,
+						destinationId: (graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number
 					}
 				})}
 		>
@@ -135,8 +155,8 @@
 	</div>
 </form>
 
-{#snippet selectCourse()}
-	<Form.Field {form} name="destinationCourseCode">
+{#snippet selectDestination()}
+	<Form.Field {form} name="destination">
 		<Popover.Root bind:open={isDestinationCourseOpen}>
 			<Form.Control id={triggerId}>
 				{#snippet children({ props })}
@@ -147,7 +167,7 @@
 							role="combobox"
 							{...props}
 						>
-							{selectableCourses.find((f) => f.code === $formData.destinationCourseCode)?.name}
+							{availableDestinations.find(d => d.type === $formData.destinationType && d.id === $formData.destinationId)?.name}
 							<ChevronsUpDown class="opacity-50" />
 						</Popover.Trigger>
 						<input
@@ -164,19 +184,20 @@
 					<Command.Input autofocus placeholder="Search course..." class="h-9" />
 					<Command.Empty>No course found.</Command.Empty>
 					<Command.Group>
-						{#each selectableCourses as course (course.code)}
+						{#each availableDestinations as destination (destination.id + destination.type)}
 							<Command.Item
-								value={course.code + ' ' + course.name}
+								value={destination.type}
 								onSelect={() => {
-									$formData.destinationCourseCode = course.code;
-									closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
+									$formData.destinationId = destination.id;
+									$formData.destinationType = destination.type;
+									closeAndFocusTrigger(triggerId, () => isDestinationCourseOpen = false);
 								}}
 							>
-								{course.name}
+								{destination.name} <!-- TODO something with destination.owner -->
 								<Check
 									class={cn(
 										'ml-auto',
-										course.code !== $formData.destinationCourseCode && 'text-transparent'
+										(destination.type !== $formData.destinationType || destination.id !== $formData.destinationId) && 'text-transparent'
 									)}
 								/>
 							</Command.Item>

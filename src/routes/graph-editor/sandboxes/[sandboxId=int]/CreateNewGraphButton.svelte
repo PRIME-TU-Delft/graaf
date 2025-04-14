@@ -3,21 +3,17 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import { toast } from 'svelte-sonner';
-	import { type Infer, superForm, type SuperValidated } from 'sveltekit-superforms';
+	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { newGraphSchema } from '$lib/zod/graphSchema';
-	import type { Course } from '@prisma/client';
+	import { page } from '$app/state';
 
-	type Props = {
-		form: SuperValidated<Infer<typeof newGraphSchema>>;
-		course: Course;
-	};
-
-	const { form: graphForm, course }: Props = $props();
+	import type { PageData } from './$types';
 
 	let dialogOpen = $state(false);
 
-	const form = superForm(graphForm, {
+	const data = page.data as PageData;
+	const form = superForm(data.newGraphForm, {
 		validators: zodClient(newGraphSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -35,14 +31,12 @@
 	icon="plus"
 	button="New Graph"
 	title="Create Graph"
-	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study. Create this new graph in the {course.name}"
+	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study. Create this new graph in the {data.sandbox?.name}"
 	class="sm:col-span-2"
 >
-	<!-- For sumbitting a NEW PROGRAM
- 	It triggers an action that can be seen in +page.server.ts -->
 	<form action="?/new-graph" method="POST" use:enhance>
-		<input type="hidden" name="parentId" value={course.id} />
-		<input type="hidden" name="parentType" value="COURSE" />
+		<input type="hidden" name="parentId" value={data.sandbox?.id} />
+		<input type="hidden" name="parentType" value="SANDBOX" />
 
 		<Form.Field {form} name="name">
 			<Form.Control>

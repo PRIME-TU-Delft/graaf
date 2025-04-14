@@ -18,6 +18,8 @@ export type CoursePermissionsOptions =
 	| 'CourseAdminORProgramAdminEditor'
 	| 'CourseAdminEditorORProgramAdminEditor';
 
+export type SandboxPermissionOptions = 'Owner' | 'OwnerOREditor';
+
 export function hasProgramPermissions(
 	user: User,
 	program: ProgramsPermission,

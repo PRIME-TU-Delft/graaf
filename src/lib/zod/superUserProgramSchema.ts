@@ -17,5 +17,5 @@ export const editSuperUserSchema = z.object({
 
 export const linkingCoursesSchema = z.object({
 	programId: z.number().min(1),
-	courseCodes: z.array(z.string().nonempty()).nonempty()
+	courseIds: z.array(z.number().min(1)).nonempty()
 });

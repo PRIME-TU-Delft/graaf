@@ -31,7 +31,7 @@
 </script>
 
 <form action="?/edit-course" method="POST" use:newCourseEnhance>
-	<input type="hidden" name="code" value={course.code} />
+	<input type="hidden" name="courseId" value={course.id} />
 
 	<div class="flex gap-3">
 		<Form.Field {form} name="name" class="grow">

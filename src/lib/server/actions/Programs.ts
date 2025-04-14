@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { newProgramSchema } from '$lib/zod/programSchema';
 import { whereHasProgramPermission } from '../permissions';
-import { redirect, type RequestEvent } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import type { User } from '@prisma/client';
@@ -11,7 +11,6 @@ import type {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema,
-	linkingCoursesSchema
 } from '$lib/zod/superUserProgramSchema';
 
 export class ProgramActions {

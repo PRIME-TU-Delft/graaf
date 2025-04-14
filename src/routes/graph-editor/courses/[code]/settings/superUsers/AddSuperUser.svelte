@@ -69,12 +69,12 @@
 	const userRole = $derived(isAdmin ? 'admin' : 'editor');
 
 	$effect(() => {
-		$formData.courseCode = course.code;
+		$formData.courseId = course.id;
 	});
 </script>
 
 <form action="?/edit-super-user" method="POST" use:enhance>
-	<input type="hidden" name="courseCode" value={course.code} />
+	<input type="hidden" name="courseId" value={course.id} />
 
 	<Form.Field {form} name="userId">
 		<SelectUsers

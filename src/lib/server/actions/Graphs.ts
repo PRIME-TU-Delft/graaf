@@ -1,18 +1,15 @@
 import { env } from '$env/dynamic/private';
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import type { duplicateGraphSchema, graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
-import type { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { redirect } from '@sveltejs/kit';
+import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
+
+import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
-import { whereHasCoursePermission } from '../permissions';
+import type { duplicateGraphSchema, newGraphSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
 
 export class GraphActions {
-	/**
-	 * Wrapper for updating a course -> graph
-	 * @returns form with error or form
-	 */
 	private static async updateCourse<T, S extends Record<string, unknown>>(
 		query: T,
 		form: SuperValidated<S>,
@@ -43,94 +40,181 @@ export class GraphActions {
 		return { form };
 	}
 
-	static async addGraphToCourse(user: User, form: SuperValidated<Infer<typeof graphSchema>>) {
-		if (!form.valid) return setError(form, 'name', 'Invalid graph name');
+	private static async updateSandbox<T, S extends Record<string, unknown>>(
+		query: T,
+		form: SuperValidated<S>,
+		path: FormPathLeavesWithErrors<S>
+	) {
+		try {
+			await query;
+		} catch (e: unknown) {
+			if (env.DEBUG) console.error(e);
 
-		const query = prisma.course.update({
-			where: {
-				code: form.data.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			},
-			data: {
-				graphs: {
-					create: { name: form.data.name }
-				}
+			if (
+				e instanceof PrismaClientKnownRequestError &&
+				e.meta &&
+				'cause' in e.meta &&
+				e.meta.cause instanceof String &&
+				(e.meta.cause as string).includes("No 'Sandbox' record")
+			) {
+				return setError(
+					form,
+					path,
+					'You are not allowed to edit this sandbox. You are not an owner or editor'
+				);
 			}
-		});
 
-		return await this.updateCourse(query, form, 'name');
+			return setError(form, path, e instanceof Error ? e.message : `${e}`);
+		}
+
+		return { form };
 	}
 
-	/**
-	 * Permissions:
-	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
-	 */
-	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
-		const query = prisma.course.update({
-			where: {
-				code: form.data.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			},
-			data: {
-				graphs: {
-					update: {
-						where: { id: form.data.graphId },
-						data: { name: form.data.name }
+	static async newGraph(user: User, form: SuperValidated<Infer<typeof newGraphSchema>>) {
+		if (!form.valid) return setError(form, 'name', 'Invalid form');
+
+		if (form.data.parentType === 'COURSE') {
+			const query = prisma.course.update({
+				where: {
+					id: form.data.parentId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					graphs: {
+						create: { 
+							parentType: form.data.parentType,
+							name: form.data.name
+						}
 					}
 				}
-			}
-		});
+			});
 
-		return await this.updateCourse(query, form, 'name');
-	}
+			return await this.updateCourse(query, form, 'name');
 
-	/**
-	 * Permissions:
-	 * https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#C6
-	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
-	 * @returns
-	 */
-	static async deleteGraphFromCourse(
-		user: User,
-		form: SuperValidated<Infer<typeof graphSchemaWithId>>
-	) {
-		const query = prisma.course.update({
-			where: {
-				code: form.data.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			},
-			data: {
-				graphs: {
-					delete: { id: form.data.graphId }
+		} else if (form.data.parentType === 'SANDBOX') {
+			const query = prisma.sandbox.update({
+				where: {
+					id: form.data.parentId,
+					...whereHasSandboxPermission(user, 'OwnerOREditor')
+				},
+				data: {
+					graphs: {
+						create: { 
+							parentType: form.data.parentType,
+							name: form.data.name
+						}
+					}
 				}
-			}
-		});
+			});
 
-		// This also deletes the graph's domains, subjects, and relations
-
-		return await this.updateCourse(query, form, 'name');
+			return await this.updateSandbox(query, form, 'name');
+		}
 	}
 
-	/**
-	 * Permissions:
-	 * https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#C6
-	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
-	 * @returns
-	 */
-	static async duplicateGraph(
-		user: User,
-		form: SuperValidated<Infer<typeof duplicateGraphSchema>>,
-		sourseCourseCode: string
-	) {
-		const destinationCourse = await prisma.course.findFirst({
-			where: {
-				code: form.data.destinationCourseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			}
-		});
+	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
+		if (!form.valid) return setError(form, 'name', 'Invalid form');
 
-		if (!destinationCourse)
-			return setError(form, 'destinationCourseCode', 'You do not have access to this course.');
+		if (form.data.parentType === 'COURSE') {
+			const query = prisma.course.update({
+				where: {
+					id: form.data.parentId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					graphs: {
+						update: {
+							where: { id: form.data.graphId },
+							data: { name: form.data.name }
+						}
+					}
+				}
+			});
+
+			return await this.updateCourse(query, form, 'name');
+
+		} else if (form.data.parentType === 'SANDBOX') {
+			const query = prisma.sandbox.update({
+				where: {
+					id: form.data.parentId,
+					...whereHasSandboxPermission(user, 'OwnerOREditor')
+				},
+				data: {
+					graphs: {
+						update: {
+							where: { id: form.data.graphId },
+							data: { name: form.data.name }
+						}
+					}
+				}
+			});
+
+			return await this.updateSandbox(query, form, 'name');
+		}
+	}
+
+	static async deleteGraph(user: User,form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
+		if (!form.valid) return setError(form, 'name', 'Invalid form');
+
+		if (form.data.parentType === 'COURSE') {
+			const query = prisma.course.update({
+				where: {
+					id: form.data.parentId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					graphs: {
+						delete: { id: form.data.graphId }
+					}
+				}
+			});
+
+			return await this.updateCourse(query, form, 'name');
+		
+		} else if (form.data.parentType === 'SANDBOX') {
+			const query = prisma.sandbox.update({
+				where: {
+					id: form.data.parentId,
+					...whereHasSandboxPermission(user, 'OwnerOREditor')
+				},
+				data: {
+					graphs: {
+						delete: { id: form.data.graphId }
+					}
+				}
+			});
+
+			return await this.updateSandbox(query, form, 'name');
+		}
+	}
+
+	static async duplicateGraph(user: User, form: SuperValidated<Infer<typeof duplicateGraphSchema>>) {
+		if (!form.valid) return setError(form, 'newName', 'Invalid form');
+
+		let destinationUrl: string = '';
+		if (form.data.destinationType === 'COURSE') {
+			const destination = await prisma.course.findFirst({
+				where: {
+					id: form.data.destinationId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				}
+			});
+
+			if (!destination)
+				return setError(form, '', 'Destination course not found or you do not have access to it');
+			destinationUrl = `/graph-editor/courses/${destination.code}`;
+
+		} else if (form.data.destinationType === 'SANDBOX') {
+			const destination = await prisma.sandbox.findFirst({
+				where: {
+					id: form.data.destinationId,
+					...whereHasSandboxPermission(user, 'OwnerOREditor')
+				}
+			});
+
+			if (!destination)
+				return setError(form, '', 'Destination sandbox not found or you do not have access to it');
+			destinationUrl = `/graph-editor/sandboxes/${destination.id}`;
+		}
 
 		const sourcegraph = await prisma.graph.findFirst({
 			where: { id: form.data.graphId },
@@ -156,13 +240,19 @@ export class GraphActions {
 			}
 		});
 
-		if (!sourcegraph) return setError(form, '', 'source graph not found');
+		if (!sourcegraph) {
+			return setError(form, '', 'Source graph not found');
+		}
 
-		// Create entities in the destination course
+		const parentId = form.data.destinationType === 'COURSE' 
+					   ? { courseId: form.data.destinationId }
+					   : { sandboxId: form.data.destinationId };
+					 
 		const newGraph = await prisma.graph.create({
 			data: {
+				parentType: form.data.destinationType,
+				...parentId,
 				name: form.data.newName,
-				course: { connect: { code: destinationCourse.code } },
 				domains: {
 					createMany: {
 						data: sourcegraph.domains.map((domain) => ({
@@ -254,9 +344,7 @@ export class GraphActions {
 						}))
 					},
 					domain: subject.domain
-						? {
-								connect: { id: domainMapping.get(subject.domain.id) }
-							}
+						? { connect: { id: domainMapping.get(subject.domain.id) } }
 						: undefined
 				}
 			});
@@ -285,9 +373,9 @@ export class GraphActions {
 			return setError(form, '', 'Failed to duplicate relations');
 		}
 
-		if (destinationCourse.code !== sourseCourseCode) {
-			// Redirect to the destination course
-			redirect(303, `/graph-editor/courses/${form.data.destinationCourseCode}`);
+		// Redirect to the destination course
+		if (form.data.sourceId !== form.data.destinationId) {
+			redirect(303, destinationUrl);
 		}
 
 		return { form };
