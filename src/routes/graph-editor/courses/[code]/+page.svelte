@@ -7,6 +7,7 @@
 	import EditGraph from './EditGraph.svelte';
 	import { cn } from '$lib/utils';
 	import ShowAdmins from './ShowAdmins.svelte';
+	import EmbedGraph from './settings/graphLinks/EmbedGraph.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -58,6 +59,7 @@
 					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>
 					<p>Domains: {graph._count.domains}</p>
 					<p>Subjects: {graph._count.subjects}</p>
+					<p>Links: {graph.links.length}</p>
 				</div>
 
 				<div class="flex grow-0 flex-col gap-1">
@@ -65,6 +67,9 @@
 						View{#if hasAtLeastCourseEditPermissions}/Edit{/if}
 						<ArrowRight />
 					</Button>
+
+					<EmbedGraph {graph} course={data.course} longName />
+
 					{#if hasAtLeastCourseEditPermissions}
 						<EditGraph {graph} course={data.course} coursesAccessible={data.coursesAccessible} />
 					{/if}

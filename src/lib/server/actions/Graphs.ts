@@ -1,11 +1,17 @@
 import { env } from '$env/dynamic/private';
-import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import type { duplicateGraphSchema, graphSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
+import type {
+	createNewLinkSchema,
+	editLinkSchema,
+	duplicateGraphSchema,
+	graphSchema,
+	graphSchemaWithId
+} from '$lib/zod/graphSchema';
 import type { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { redirect } from '@sveltejs/kit';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
+import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '../permissions';
 
 export class GraphActions {
@@ -66,22 +72,38 @@ export class GraphActions {
 	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
 	 */
 	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
-		const query = prisma.course.update({
-			where: {
-				code: form.data.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			},
-			data: {
-				graphs: {
-					update: {
-						where: { id: form.data.graphId },
-						data: { name: form.data.name }
+		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid graph name');
+
+		try {
+			const query = await prisma.course.update({
+				where: {
+					code: form.data.courseCode,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					graphs: {
+						update: {
+							where: { id: form.data.graphId },
+							data: {
+								name: form.data.name
+							}
+						}
+					}
+				},
+				select: {
+					graphs: {
+						where: { id: form.data.graphId }
 					}
 				}
-			}
-		});
+			});
 
-		return await this.updateCourse(query, form, 'name');
+			if (!query.graphs.length) return setError(form, '', 'Graph not found');
+		} catch (e) {
+			console.log('error', e);
+			return setError(form, '', 'Failed to update graph');
+		}
+
+		return { form };
 	}
 
 	/**
@@ -94,10 +116,12 @@ export class GraphActions {
 		user: User,
 		form: SuperValidated<Infer<typeof graphSchemaWithId>>
 	) {
+		if (!form.valid) return setError(form, '', 'Invalid graph id');
+
 		const query = prisma.course.update({
 			where: {
 				code: form.data.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
 			},
 			data: {
 				graphs: {
@@ -114,7 +138,7 @@ export class GraphActions {
 	/**
 	 * Permissions:
 	 * https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#C6
-	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can delete graphs
+	 * - Either COURSE_ADMINS, COURSE_EDITOR, PROGRAM_EDITOR, PROGRAM_ADMIN, SUPER_ADMIN can duplicate graphs
 	 * @returns
 	 */
 	static async duplicateGraph(
@@ -291,5 +315,88 @@ export class GraphActions {
 		}
 
 		return { form };
+	}
+
+	static async addLink(user: User, form: SuperValidated<Infer<typeof createNewLinkSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form');
+
+		try {
+			const newLink = await prisma.course.update({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					links: {
+						create: {
+							name: form.data.name,
+							graphId: form.data.graphId
+						}
+					}
+				},
+				select: {
+					links: {
+						where: {
+							graphId: form.data.graphId,
+							name: form.data.name
+						}
+					}
+				}
+			});
+
+			if (!newLink.links.length) return setError(form, '', 'Failed to create link');
+
+			return { form, link: newLink.links[0] };
+		} catch {
+			return setError(form, '', 'Failed to create link');
+		}
+	}
+
+	static async moveLink(user: User, form: SuperValidated<Infer<typeof editLinkSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form');
+
+		try {
+			await prisma.course.update({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					links: {
+						update: {
+							where: { id: form.data.linkId },
+							data: {
+								graphId: form.data.graphId
+							}
+						}
+					}
+				}
+			});
+		} catch {
+			return setError(form, '', 'Failed to move link');
+		}
+	}
+
+	// MARK: Links
+	static async deleteLinkFromGraph(user: User, form: SuperValidated<Infer<typeof editLinkSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form');
+
+		try {
+			await prisma.course.update({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
+				data: {
+					links: {
+						delete: {
+							id: form.data.linkId
+						}
+					}
+				}
+			});
+		} catch {
+			return setError(form, '', 'Failed to delete link');
+		}
 	}
 }

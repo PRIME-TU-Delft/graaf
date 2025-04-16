@@ -14,6 +14,7 @@ export const MAX_COURSE_NAME_LENGTH = 50;
 
 // Graph settings
 export const MAX_GRAPH_NAME_LENGTH = 50;
+export const MAX_LINK_NAME_LENGTH = 12;
 
 // Domain settings
 export const MAX_DOMAIN_NAME_LENGTH = 50;

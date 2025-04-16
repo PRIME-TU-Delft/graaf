@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import ArchiveCourse from './ArchiveCourse.svelte';
 	import EditCourseName from './EditCourseName.svelte';
+	import GraphLinks from './graphLinks/GraphLinks.svelte';
 	import CourseAdmins from './superUsers/CourseAdmins.svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -64,6 +65,8 @@
 		</ul>
 	</section>
 {/if}
+
+<GraphLinks course={data.course} graphs={data.course.graphs} />
 
 <!-- Only a program admin or super admin is able to archive/de-archive a  -->
 {#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
