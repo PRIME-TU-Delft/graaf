@@ -30,10 +30,8 @@ Simple cycles
 
 Conflicting edges
   To detect conflicting edges, we use the reachability matrix of the domain graph. We first precompute the reachability
-  matrix of the domain graph using the Floyd-Warshall algorithm, which is O(V^3). This is very slow, but the alternative
-  is a dfs from each node, which is O(V * (V + E)). Floyd-Warshall is better for dense graphs, and as our graph is small,
-  the difference is negligible. We then iterate over all edges in the subject graph, and check if the source can reach 
-  the target in the domain graph.
+  matrix of the domain graph using a DFS from each node, which is O(V * (V + E)). Floyd-Warshall is better for dense graphs (O(V^3)).
+  We then iterate over all edges in the subject graph, and check if the source can reach the target in the domain graph.
 
   There is an optimization available. We could reuse the SCCs calculated during Johnson's algorithm to build a smaller
   directed acyclic graph. As all nodes within an SCC can reach each other, we only need to consider the edges between
@@ -562,14 +560,12 @@ export class GraphValidator {
 	}
 
 	/**
-	 * Computes the reachability matrix of a graph. This is *expensive* and should be used sparingly.
+	 * Computes the reachability matrix of a graph. This is **expensive** and should be used sparingly.
 	 * @param graph The graph to analyze
 	 * @returns A reachability matrix, where intersection [i][j] is true if node i can reach node j
 	 */
 
 	private computeReachabilityMatrix(graph: AbstractGraph): ReachabilityMatrix {
-		// Floyd-Warshall algorithm - O(V^3)
-		// https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
 
 		// Initialize reachability matrix
 		const reachabilityMatrix = new Map<AbstractNode, Map<AbstractNode, boolean>>();
@@ -590,18 +586,23 @@ export class GraphValidator {
 			}
 		}
 
-		// Compute transitive closure
-		for (const k of graph.values()) {
-			const kRow = reachabilityMatrix.get(k)!;
+		// DFS from each node
+		for (const node of graph.values()) {
+			const visited = new Set<AbstractNode>();
+			const stack: AbstractNode[] = [node];
 
-			for (const i of graph.values()) {
-				const iRow = reachabilityMatrix.get(i)!;
-				const ik = iRow.get(k)!;
+			while (stack.length > 0) {
+				const current = stack.pop()!;
+				if (visited.has(current)) continue;
+				visited.add(current);
 
-				for (const j of graph.values()) {
-					const kj = kRow.get(j)!;
-					const ij = iRow.get(j)!;
-					iRow.set(j, ij || (ik && kj));
+				const row = reachabilityMatrix.get(node)!;
+				row.set(current, true);
+
+				for (const neighbor of current.neighbors) {
+					if (!visited.has(neighbor)) {
+						stack.push(neighbor);
+					}
 				}
 			}
 		}
