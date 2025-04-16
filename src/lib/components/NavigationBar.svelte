@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
@@ -6,14 +7,16 @@
 	import { displayName } from '$lib/utils/displayUserName';
 	import type { User } from '@prisma/client';
 	import LogOut from 'lucide-svelte/icons/log-out';
-	import { Button } from './ui/button';
+	import { fly } from 'svelte/transition';
 	import Logo from './Logo.svelte';
+	import { Button } from './ui/button';
 
 	type NavigationBarProps = {
 		user?: User;
+		sidebarOpen: boolean;
 	};
 
-	let { user }: NavigationBarProps = $props();
+	let { user, sidebarOpen }: NavigationBarProps = $props();
 	let mouseState: number = $state(-1);
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
 
@@ -67,7 +70,11 @@
 		<div></div>
 
 		<div class="flex items-center gap-2">
-			<!-- <Logo {mouseState} /> -->
+			{#if !sidebarOpen}
+				<div transition:fly={{ x: 20 }} class="hidden md:block">
+					<Logo {mouseState} />
+				</div>
+			{/if}
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
 					{#if urls.length > 0}
@@ -138,7 +145,7 @@
 					</Avatar.Root>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="end">
-					<form action="/auth/signout" method="POST">
+					<form action="/auth/signout" method="POST" use:enhance>
 						<Button type="submit" variant="outline" class="w-full">Log-out <LogOut /></Button>
 					</form>
 				</DropdownMenu.Content>

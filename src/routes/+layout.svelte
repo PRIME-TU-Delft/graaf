@@ -13,19 +13,7 @@
 
 	let { data, children } = $props();
 
-	$effect(() => {
-		toast.promise(data.testConnection, {
-			loading: 'Loading...',
-			duration: Number.POSITIVE_INFINITY,
-			error: 'Error, could not connect to the database',
-			action: {
-				label: 'Retry connection',
-				onClick: () => {
-					location.reload();
-				}
-			}
-		});
-	});
+	let sidebarOpen = $state(false);
 
 	async function handleToggleAdmin() {
 		const res = await fetch('/auth/toggle-admin', {
@@ -39,9 +27,9 @@
 
 <Toaster closeButton />
 
-<NavigationBar user={data.user} />
+<NavigationBar user={data.user} {sidebarOpen} />
 
-<Sidebar.Provider>
+<Sidebar.Provider bind:open={sidebarOpen}>
 	{#if page.url.pathname?.includes('graph-editor')}
 		<AppSidebar user={data.user} />
 	{/if}
