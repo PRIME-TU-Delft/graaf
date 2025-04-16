@@ -1,12 +1,19 @@
 <script lang="ts">
-	import Button from '$lib/components/ui/button/button.svelte';
-	import { hasCoursePermissions } from '$lib/utils/permissions';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import type { PageData } from './$types';
-	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import EditGraph from './EditGraph.svelte';
 	import { cn } from '$lib/utils';
+	import { displayName } from '$lib/utils/displayUserName';
+	import { hasCoursePermissions } from '$lib/utils/permissions';
+
+	// Components
+	import Button from '$lib/components/ui/button/button.svelte';
+	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
+	import GraphTile from './GraphTile.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
+	
+	// Icons
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+
+	// Types
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -32,12 +39,13 @@
 	{/if}
 </section>
 
-{#if data.graphSchema != undefined && data.course != null}
+{#if data.course != null}
 	{@const hasAtLeastCourseEditPermissions = hasCoursePermissions(
 		data.user,
 		data.course,
 		'CourseAdminEditorORProgramAdminEditor'
 	)}
+
 	<section
 		class={cn([
 			'mx-auto my-12 grid max-w-4xl gap-4 p-4',
@@ -45,31 +53,13 @@
 		])}
 	>
 		{#if hasAtLeastCourseEditPermissions}
-			<CreateNewGraphButton form={data.graphSchema} course={data.course} />
+			<CreateNewGraphButton />
 		{/if}
 
-		<!-- MARK: GRAPHS -->
-		{#each data.graphs as graph (graph.id)}
-			<a
-				class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
-				href="graph-editor/graphs/{graph.id}"
-			>
-				<div class="grow">
-					<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>
-					<p>Domains: {graph._count.domains}</p>
-					<p>Subjects: {graph._count.subjects}</p>
-				</div>
+		<CreateNewGraphButton />
 
-				<div class="flex grow-0 flex-col gap-1">
-					<Button class="transition-colors group-hover:bg-blue-500">
-						View{#if hasAtLeastCourseEditPermissions}/Edit{/if}
-						<ArrowRight />
-					</Button>
-					{#if hasAtLeastCourseEditPermissions}
-						<EditGraph {graph} course={data.course} coursesAccessible={data.coursesAccessible} />
-					{/if}
-				</div>
-			</a>
+		{#each data.graphs as graph (graph.id)}
+			<GraphTile {graph} {hasAtLeastCourseEditPermissions} />
 		{/each}
 	</section>
 {/if}
