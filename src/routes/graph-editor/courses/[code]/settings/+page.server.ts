@@ -2,7 +2,12 @@ import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions';
 import { CourseActions } from '$lib/server/actions/Courses';
-import { changeArchiveSchema, newCourseSchema, editSuperUserSchema, editCourseSchema } from '$lib/zod/courseSchema';
+import {
+	changeArchiveSchema,
+	newCourseSchema,
+	editSuperUserSchema,
+	editCourseSchema
+} from '$lib/zod/courseSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';

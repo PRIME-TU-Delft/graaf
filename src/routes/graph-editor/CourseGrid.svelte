@@ -49,12 +49,7 @@
 			<div class="flex items-center gap-1">
 				<form action="?/change-course-pin" method="POST" use:enhance>
 					<input type="text" name="courseId" value={course.id} hidden />
-					<input
-						type="text"
-						name="pin"
-						value={ !pinned }
-						hidden
-					/>
+					<input type="text" name="pin" value={!pinned} hidden />
 					<Button
 						onclick={(e) => e.stopPropagation()}
 						type="submit"

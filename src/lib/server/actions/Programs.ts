@@ -10,7 +10,7 @@ import type { User } from '@prisma/client';
 import type {
 	deleteProgramSchema,
 	editProgramSchema,
-	editSuperUserSchema,
+	editSuperUserSchema
 } from '$lib/zod/superUserProgramSchema';
 
 export class ProgramActions {

@@ -8,7 +8,7 @@
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 	import GraphTile from './GraphTile.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
-	
+
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 

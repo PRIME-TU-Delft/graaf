@@ -24,25 +24,25 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	let { 
+	let {
 		graph,
 		availableCourses,
 		availableSandboxes,
-		isDuplicateOpen = $bindable() 
+		isDuplicateOpen = $bindable()
 	}: {
-		graph: Prisma.GraphGetPayload<{}>,
-		availableCourses: Prisma.CourseGetPayload<{ 
-			include: { 
-				graphs: { select: { name: true }}
-			}
-		}>[],
-		availableSandboxes: Prisma.SandboxGetPayload<{ 
-			include: { 
-				owner: true,
-				graphs: { select: { name: true }}
-			}
-		}>[],
-		isDuplicateOpen: boolean
+		graph: Prisma.GraphGetPayload<{}>;
+		availableCourses: Prisma.CourseGetPayload<{
+			include: {
+				graphs: { select: { name: true } };
+			};
+		}>[];
+		availableSandboxes: Prisma.SandboxGetPayload<{
+			include: {
+				owner: true;
+				graphs: { select: { name: true } };
+			};
+		}>[];
+		isDuplicateOpen: boolean;
 	} = $props();
 
 	const data = page.data;
@@ -62,15 +62,20 @@
 
 	let isDestinationCourseOpen = $state(false);
 	let availableDestinations = $derived.by(() => {
-		const destinations: { id: number, name: string, owner: string | undefined, type: 'SANDBOX' | 'COURSE' }[] = availableSandboxes.map(s => ({
+		const destinations: {
+			id: number;
+			name: string;
+			owner: string | undefined;
+			type: 'SANDBOX' | 'COURSE';
+		}[] = availableSandboxes.map((s) => ({
 			id: s.id,
 			name: s.name,
 			owner: displayName(s.owner),
 			type: 'SANDBOX'
 		}));
-		
+
 		return destinations.concat(
-			availableCourses.map(c => ({
+			availableCourses.map((c) => ({
 				id: c.id,
 				name: c.code + c.name,
 				owner: undefined,
@@ -84,13 +89,13 @@
 
 		let graphsInDestination;
 		if (destinationType === 'COURSE') {
-			graphsInDestination = availableCourses.find(c => c.id === destinationId)?.graphs;
+			graphsInDestination = availableCourses.find((c) => c.id === destinationId)?.graphs;
 		} else {
-			graphsInDestination = availableSandboxes.find(s => s.id === destinationId)?.graphs;
+			graphsInDestination = availableSandboxes.find((s) => s.id === destinationId)?.graphs;
 		}
 
 		if (!graphsInDestination) return false;
-		return graphsInDestination.some(g => g.name === newName);
+		return graphsInDestination.some((g) => g.name === newName);
 	});
 
 	$effect(() => {
@@ -98,10 +103,11 @@
 			$formData.newName = graph.name + ' copy';
 			$formData.graphId = graph.id;
 			$formData.destinationType = graph.parentType;
-			$formData.destinationId = (graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number;
+			$formData.destinationId = (
+				graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId
+			) as number;
 		}
 	});
-
 </script>
 
 <form action="?/duplicate-graph" method="POST" use:enhance>
@@ -141,7 +147,9 @@
 						newName: graph.name + ' copy',
 						graphId: graph.id,
 						destinationType: graph.parentType,
-						destinationId: (graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number
+						destinationId: (graph.parentType === 'COURSE'
+							? graph.courseId
+							: graph.sandboxId) as number
 					}
 				})}
 		>
@@ -168,7 +176,9 @@
 							role="combobox"
 							{...props}
 						>
-							{availableDestinations.find(d => d.type === $formData.destinationType && d.id === $formData.destinationId)?.name}
+							{availableDestinations.find(
+								(d) => d.type === $formData.destinationType && d.id === $formData.destinationId
+							)?.name}
 							<ChevronsUpDown class="opacity-50" />
 						</Popover.Trigger>
 						<input
@@ -191,14 +201,17 @@
 								onSelect={() => {
 									$formData.destinationId = destination.id;
 									$formData.destinationType = destination.type;
-									closeAndFocusTrigger(triggerId, () => isDestinationCourseOpen = false);
+									closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
 								}}
 							>
-								{destination.name} <!-- TODO something with destination.owner -->
+								{destination.name}
+								<!-- TODO something with destination.owner -->
 								<Check
 									class={cn(
 										'ml-auto',
-										(destination.type !== $formData.destinationType || destination.id !== $formData.destinationId) && 'text-transparent'
+										(destination.type !== $formData.destinationType ||
+											destination.id !== $formData.destinationId) &&
+											'text-transparent'
 									)}
 								/>
 							</Command.Item>

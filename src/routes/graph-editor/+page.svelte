@@ -18,7 +18,6 @@
 
 	const { data, form } = $props();
 
-
 	let pinnedOpen = $state('');
 	let sandboxesOpen = $state('');
 	let showOnlyUnarchived = $state(true);

@@ -130,7 +130,7 @@ async function main() {
 	console.log('\n');
 
 	const graph = await prisma.graph.create({
-		data: { 
+		data: {
 			name: 'GraphOne',
 			courseId: prisma_courses[0].id,
 			parentType: ParentType.COURSE

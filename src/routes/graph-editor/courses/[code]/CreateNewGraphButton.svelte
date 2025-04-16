@@ -31,7 +31,8 @@
 	icon="plus"
 	button="New Graph"
 	title="Create Graph"
-	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study. Create this new graph in the {data.course?.name}"
+	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study. Create this new graph in the {data
+		.course?.name}"
 	class="sm:col-span-2"
 >
 	<form action="?/new-graph" method="POST" use:enhance>

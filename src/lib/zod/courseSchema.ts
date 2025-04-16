@@ -16,7 +16,7 @@ export const newCourseSchema = z.object({
 
 export const editCourseSchema = z.object({
 	courseId: z.number(),
-	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH),
+	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH)
 });
 
 export const editSuperUserSchema = z.object({

@@ -6,7 +6,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 	import GraphTile from './GraphTile.svelte';
-	
+
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 
@@ -45,7 +45,7 @@
 		<CreateNewGraphButton />
 
 		{#each data.graphs as graph (graph.id)}
-			<GraphTile 
+			<GraphTile
 				{graph}
 				availableCourses={data.availableCourses}
 				availableSandboxes={data.availableSandboxes}

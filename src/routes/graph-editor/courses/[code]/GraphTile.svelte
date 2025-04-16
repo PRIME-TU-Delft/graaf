@@ -12,12 +12,12 @@
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 
-	let { 
+	let {
 		graph,
-		hasAtLeastCourseEditPermissions 
+		hasAtLeastCourseEditPermissions
 	}: {
-		graph: Prisma.GraphGetPayload<{}>,
-		hasAtLeastCourseEditPermissions: boolean
+		graph: Prisma.GraphGetPayload<{}>;
+		hasAtLeastCourseEditPermissions: boolean;
 	} = $props();
 
 	let isGraphSettingsOpen = $state(false);
@@ -60,13 +60,14 @@
 					bind:open={isDuplicateOpen}
 					class="grow"
 				>
-					<DuplicateGraph {graph} 
-						availableCourses={data.availableCourses} 
+					<DuplicateGraph
+						{graph}
+						availableCourses={data.availableCourses}
 						availableSandboxes={data.availableSandboxes}
-						bind:isDuplicateOpen 
+						bind:isDuplicateOpen
 					/>
 				</DialogButton>
-		
+
 				<DialogButton
 					onclick={(e) => handleOpenGraphSettings(e)}
 					button="Settings"

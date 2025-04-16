@@ -81,7 +81,7 @@ export class GraphActions {
 				},
 				data: {
 					graphs: {
-						create: { 
+						create: {
 							parentType: form.data.parentType,
 							name: form.data.name
 						}
@@ -90,7 +90,6 @@ export class GraphActions {
 			});
 
 			return await this.updateCourse(query, form, 'name');
-
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -99,7 +98,7 @@ export class GraphActions {
 				},
 				data: {
 					graphs: {
-						create: { 
+						create: {
 							parentType: form.data.parentType,
 							name: form.data.name
 						}
@@ -131,7 +130,6 @@ export class GraphActions {
 			});
 
 			return await this.updateCourse(query, form, 'name');
-
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -152,7 +150,7 @@ export class GraphActions {
 		}
 	}
 
-	static async deleteGraph(user: User,form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
+	static async deleteGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid form');
 
 		if (form.data.parentType === 'COURSE') {
@@ -169,7 +167,6 @@ export class GraphActions {
 			});
 
 			return await this.updateCourse(query, form, 'name');
-		
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -187,7 +184,10 @@ export class GraphActions {
 		}
 	}
 
-	static async duplicateGraph(user: User, form: SuperValidated<Infer<typeof duplicateGraphSchema>>) {
+	static async duplicateGraph(
+		user: User,
+		form: SuperValidated<Infer<typeof duplicateGraphSchema>>
+	) {
 		if (!form.valid) return setError(form, 'newName', 'Invalid form');
 
 		let destinationUrl: string = '';
@@ -202,7 +202,6 @@ export class GraphActions {
 			if (!destination)
 				return setError(form, '', 'Destination course not found or you do not have access to it');
 			destinationUrl = `/graph-editor/courses/${destination.code}`;
-
 		} else if (form.data.destinationType === 'SANDBOX') {
 			const destination = await prisma.sandbox.findFirst({
 				where: {
@@ -244,10 +243,11 @@ export class GraphActions {
 			return setError(form, '', 'Source graph not found');
 		}
 
-		const parentId = form.data.destinationType === 'COURSE' 
-					   ? { courseId: form.data.destinationId }
-					   : { sandboxId: form.data.destinationId };
-					 
+		const parentId =
+			form.data.destinationType === 'COURSE'
+				? { courseId: form.data.destinationId }
+				: { sandboxId: form.data.destinationId };
+
 		const newGraph = await prisma.graph.create({
 			data: {
 				parentType: form.data.destinationType,

@@ -4,26 +4,26 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { cn } from '$lib/utils';
 	import { graphSchemaWithId } from '$lib/zod/graphSchema';
-	import { toast } from 'svelte-sonner';	
-	
+	import { toast } from 'svelte-sonner';
+
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 
 	import Undo2 from 'lucide-svelte/icons/undo-2';
-	
+
 	import type { Graph } from '@prisma/client';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
-	let { 
+	let {
 		graph,
 		editGraphForm,
 		isGraphSettingsOpen = $bindable()
-	}: { 
+	}: {
 		graph: Graph;
 		editGraphForm: SuperValidated<Infer<typeof graphSchemaWithId>>;
-		isGraphSettingsOpen: boolean
+		isGraphSettingsOpen: boolean;
 	} = $props();
 
 	const form = superForm(editGraphForm, {

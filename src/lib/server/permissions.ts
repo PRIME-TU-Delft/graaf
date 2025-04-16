@@ -1,4 +1,8 @@
-import type { CoursePermissionsOptions, ProgramPermissionsOptions, SandboxPermissionOptions } from '$lib/utils/permissions';
+import type {
+	CoursePermissionsOptions,
+	ProgramPermissionsOptions,
+	SandboxPermissionOptions
+} from '$lib/utils/permissions';
 import type { User } from '@prisma/client';
 
 /**
@@ -70,10 +74,9 @@ export function whereHasSandboxPermission(user: User, has: SandboxPermissionOpti
 	const hasOwnerPermission = { ownerId: user.id };
 	const hasEditorPermission = { editors: { some: { id: user.id } } };
 
-	const hasPermission: (
-		typeof hasOwnerPermission | 
-		typeof hasEditorPermission
-	)[] = [hasOwnerPermission];
+	const hasPermission: (typeof hasOwnerPermission | typeof hasEditorPermission)[] = [
+		hasOwnerPermission
+	];
 
 	if (has == 'Owner') return { OR: hasPermission };
 	hasPermission.push(hasEditorPermission);

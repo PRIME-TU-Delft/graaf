@@ -8,7 +8,7 @@
 	import { page } from '$app/state';
 
 	import type { Graph } from '@prisma/client';
-	
+
 	// Components
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -18,12 +18,12 @@
 	// Icons
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	let { 
+	let {
 		graph,
 		isGraphSettingsOpen = $bindable()
-	}: { 
+	}: {
 		graph: Graph;
-		isGraphSettingsOpen: boolean
+		isGraphSettingsOpen: boolean;
 	} = $props();
 
 	const data = page.data;

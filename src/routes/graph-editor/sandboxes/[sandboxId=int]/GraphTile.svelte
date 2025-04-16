@@ -3,7 +3,7 @@
 	import DuplicateGraph from './DuplicateGraph.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	
+
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 
 	import type { Prisma } from '@prisma/client';
@@ -20,29 +20,24 @@
 					};
 				};
 			};
-		}>,
+		}>;
 		availableCourses: Prisma.CourseGetPayload<{
 			include: {
-				graphs: { select: { name: true } }
-			}
-		}>[],
+				graphs: { select: { name: true } };
+			};
+		}>[];
 		availableSandboxes: Prisma.SandboxGetPayload<{
 			include: {
-				graphs: { select: { name: true } },
-				owner: true
-			}
-		}>[],
-		editGraphForm: SuperValidated<Infer<typeof graphSchemaWithId>>,
-		duplicateGraphForm: SuperValidated<Infer<typeof duplicateGraphSchema>>
+				graphs: { select: { name: true } };
+				owner: true;
+			};
+		}>[];
+		editGraphForm: SuperValidated<Infer<typeof graphSchemaWithId>>;
+		duplicateGraphForm: SuperValidated<Infer<typeof duplicateGraphSchema>>;
 	};
 
-	let { 
-		graph, 
-		availableCourses, 
-		availableSandboxes, 
-		editGraphForm,
-		duplicateGraphForm
-	}: Props = $props();
+	let { graph, availableCourses, availableSandboxes, editGraphForm, duplicateGraphForm }: Props =
+		$props();
 
 	let isGraphSettingsOpen = $state(false);
 	let isDuplicateOpen = $state(false);
@@ -72,7 +67,7 @@
 			View/Edit
 			<ArrowRight />
 		</Button>
-		
+
 		<div class="flex flex-col gap-1 lg:flex-row">
 			<DialogButton
 				onclick={(e) => handleOpenDuplicate(e)}
@@ -82,9 +77,15 @@
 				bind:open={isDuplicateOpen}
 				class="grow"
 			>
-				<DuplicateGraph {graph} {availableCourses} {availableSandboxes} {duplicateGraphForm} bind:isDuplicateOpen />
+				<DuplicateGraph
+					{graph}
+					{availableCourses}
+					{availableSandboxes}
+					{duplicateGraphForm}
+					bind:isDuplicateOpen
+				/>
 			</DialogButton>
-		
+
 			<DialogButton
 				onclick={(e) => handleOpenGraphSettings(e)}
 				button="Settings"

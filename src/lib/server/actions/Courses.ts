@@ -1,12 +1,12 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasCoursePermission, whereHasProgramPermission } from '../permissions';
-import { 
-	newCourseSchema, 
-	editCourseSchema, 
+import {
+	newCourseSchema,
+	editCourseSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema,
-	changePinSchema, 
+	changePinSchema,
 	changeArchiveSchema
 } from '$lib/zod/courseSchema';
 
@@ -15,13 +15,12 @@ import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import { get } from 'http';
 
 export class CourseActions {
-
 	/**
 	 * PERMISSIONS:
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#c1
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
 	 */
-	
+
 	static async newCourse(user: User, form: SuperValidated<Infer<typeof newCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -47,7 +46,7 @@ export class CourseActions {
 				}
 			});
 		} catch {
-			return setError(form, 'name', 'You don\'t have permission to create a new course');
+			return setError(form, 'name', "You don't have permission to create a new course");
 		}
 
 		return {
@@ -87,7 +86,7 @@ export class CourseActions {
 				data: getData()
 			});
 		} catch {
-			return setError(form, '', 'You don\'t have permission to edit super users');
+			return setError(form, '', "You don't have permission to edit super users");
 		}
 	}
 
@@ -113,14 +112,14 @@ export class CourseActions {
 				data: getData()
 			});
 		} catch {
-			return setError(form, '', 'You don\'t have permission to link/unlink courses');
+			return setError(form, '', "You don't have permission to link/unlink courses");
 		}
 	}
 
-  	/**
-	  * PERMISSIONS:
-	  * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
-	  */
+	/**
+	 * PERMISSIONS:
+	 * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
+	 */
 	static async editCourse(user: User, form: SuperValidated<Infer<typeof editCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -135,7 +134,7 @@ export class CourseActions {
 				}
 			});
 		} catch {
-			return setError(form, '', 'You don\'t have permission to edit this course');
+			return setError(form, '', "You don't have permission to edit this course");
 		}
 
 		return { form };
@@ -179,7 +178,7 @@ export class CourseActions {
 				}
 			});
 		} catch {
-			return setError(form, '', 'You don\'t have permission to (de)archive this course');
+			return setError(form, '', "You don't have permission to (de)archive this course");
 		}
 	}
 }
