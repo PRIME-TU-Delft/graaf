@@ -12,10 +12,9 @@
 	type CourseGridProps = {
 		courses: (Course & { pinnedBy: Pick<User, 'id'>[] })[];
 		user: User | undefined;
-		showOnlyUnarchived: boolean;
 	};
 
-	const { courses, user, showOnlyUnarchived }: CourseGridProps = $props();
+	const { courses, user }: CourseGridProps = $props();
 </script>
 
 <div
@@ -31,64 +30,62 @@
 </div>
 
 {#snippet displayCourse(course: CourseGridProps['courses'][number])}
-	{#if !(showOnlyUnarchived && course.isArchived)}
-		<a
-			href="graph-editor/courses/{course.code}"
-			class={cn([
-				'flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-100/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-100',
-				course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
-			])}
-			in:fade={{ duration: 200 }}
-		>
-			<div class="flex items-end gap-1">
-				<p>{course.code}</p>
-				-
-				<p>{course.name}</p>
-			</div>
+	<a
+		href="/graph-editor/courses/{course.code}"
+		class={cn([
+			'flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-100/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-100',
+			course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
+		])}
+		in:fade={{ duration: 200 }}
+	>
+		<div class="flex items-end gap-1">
+			<p>{course.code}</p>
+			-
+			<p>{course.name}</p>
+		</div>
 
-			<div class="flex items-center gap-1">
-				{#if course.isArchived}
-					<Tooltip.Provider>
-						<Tooltip.Root>
-							<Tooltip.Trigger>
-								<Archive class="text-purple-900" />
-								<Tooltip.Content
-									side="right"
-									class="border-2 border-amber-900 bg-amber-50 p-2 text-sm text-amber-700"
-								>
-									Course is archived
-								</Tooltip.Content>
-							</Tooltip.Trigger>
-						</Tooltip.Root>
-					</Tooltip.Provider>
-				{/if}
+		<div class="flex items-center gap-1">
+			{#if course.isArchived}
+				<Tooltip.Provider>
+					<Tooltip.Root>
+						<Tooltip.Trigger>
+							<Archive class="text-purple-900" />
+							<Tooltip.Content
+								side="right"
+								class="border-2 border-amber-900 bg-amber-50 p-2 text-sm text-amber-700"
+							>
+								Course is archived
+							</Tooltip.Content>
+						</Tooltip.Trigger>
+					</Tooltip.Root>
+				</Tooltip.Provider>
+			{/if}
 
-				{#if course.pinnedBy.some((u) => u.id == user?.id)}
-					<form action="?/unpin-course" method="post" use:enhance>
-						<input type="text" name="courseCode" value={course.code} hidden />
-						<Button
-							onclick={(e) => e.stopPropagation()}
-							type="submit"
-							variant="outline"
-							class="h-8 w-8 border-purple-600 bg-purple-200"
-						>
-							<Unpin class="text-purple-600" />
-						</Button>
-					</form>
-				{:else}
-					<form action="?/pin-course" method="post" use:enhance>
-						<input type="text" name="courseCode" value={course.code} hidden />
-						<Button
-							onclick={(e) => e.stopPropagation()}
-							type="submit"
-							variant="outline"
-							class="h-8 w-8 border-purple-50 !bg-purple-50"
-						>
-							<Pin />
-						</Button>
-					</form>
-				{/if}
-			</div>
-		</a>
-	{/if}
+			{#if course.pinnedBy.some((u) => u.id == user?.id)}
+				<form action="?/unpin-course" method="post" use:enhance>
+					<input type="text" name="courseCode" value={course.code} hidden />
+					<Button
+						onclick={(e) => e.stopPropagation()}
+						type="submit"
+						variant="outline"
+						class="h-8 w-8 border-purple-600 bg-purple-200"
+					>
+						<Unpin class="text-purple-600" />
+					</Button>
+				</form>
+			{:else}
+				<form action="?/pin-course" method="post" use:enhance>
+					<input type="text" name="courseCode" value={course.code} hidden />
+					<Button
+						onclick={(e) => e.stopPropagation()}
+						type="submit"
+						variant="outline"
+						class="h-8 w-8 border-purple-50 !bg-purple-50"
+					>
+						<Pin />
+					</Button>
+				</form>
+			{/if}
+		</div>
+	</a>
 {/snippet}

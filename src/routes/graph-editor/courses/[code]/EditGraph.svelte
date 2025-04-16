@@ -3,7 +3,6 @@
 	import type { CoursePermissions } from '$lib/utils/permissions';
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import DuplicateGraph, { type CourseType } from './DuplicateGraph.svelte';
-	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
 
 	type EditGraphProps = {
 		course: Course &
@@ -21,12 +20,6 @@
 	let { graph, course, coursesAccessible }: EditGraphProps = $props();
 
 	let isDuplicateOpen = $state(false);
-	let graphLinkSettingsOpen = $state(false);
-
-	function handleOpenGraphSettings(e: MouseEvent) {
-		e.preventDefault();
-		graphLinkSettingsOpen = true;
-	}
 
 	function handleOpenDuplicate(e: MouseEvent) {
 		e.preventDefault();
@@ -45,20 +38,5 @@
 		class="grow"
 	>
 		<DuplicateGraph {graph} {course} {coursesAccessible} bind:isDuplicateOpen />
-	</DialogButton>
-
-	<DialogButton
-		bind:open={graphLinkSettingsOpen}
-		onclick={(e) => handleOpenGraphSettings(e)}
-		icon="link"
-		button="Link"
-		title="Graph link settings"
-	>
-		<GraphLinkSettings
-			{course}
-			{graph}
-			graphs={course.graphs}
-			onSuccess={() => (graphLinkSettingsOpen = false)}
-		/>
 	</DialogButton>
 </div>

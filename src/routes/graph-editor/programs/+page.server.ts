@@ -14,17 +14,12 @@ export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
 
 	try {
-		const search = url.searchParams.get('c')?.toLocaleLowerCase();
-
 		const programs = await prisma.program.findMany({
 			include: {
 				courses: {
 					orderBy: {
 						isArchived: 'asc'
 					},
-					where: search
-						? { name: { contains: search, mode: 'insensitive' } }
-						: { NOT: { name: '' } },
 					include: {
 						pinnedBy: {
 							select: {

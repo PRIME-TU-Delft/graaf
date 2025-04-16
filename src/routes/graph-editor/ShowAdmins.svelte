@@ -15,7 +15,7 @@
 </script>
 
 <DialogButton
-	title="Super Users for {program.name}"
+	title="Admins or Editors for {program.name}"
 	description=""
 	icon="admins"
 	variant="secondary"

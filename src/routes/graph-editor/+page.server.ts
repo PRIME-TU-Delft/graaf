@@ -9,26 +9,28 @@ import type { Actions, PageServerLoad } from '../$types.js';
 import { courseSchema } from '$lib/zod/courseSchema.js';
 import { programSchema } from '$lib/zod/programSchema.js';
 import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
-import { whereHasProgramPermission } from '$lib/server/permissions.js';
+import { whereHasCoursePermission } from '$lib/server/permissions.js';
 
 export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
 
 	try {
-		const search = url.searchParams.get('c')?.toLocaleLowerCase();
-
 		const programs = await prisma.program.findMany({
 			where: {
-				...whereHasProgramPermission(user, 'ProgramAdminEditor')
+				courses: {
+					some: {
+						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					}
+				}
 			},
 			include: {
 				courses: {
 					orderBy: {
 						isArchived: 'asc'
 					},
-					where: search
-						? { name: { contains: search, mode: 'insensitive' } }
-						: { NOT: { name: '' } },
+					where: {
+						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
 					include: {
 						pinnedBy: {
 							select: {
@@ -62,7 +64,6 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		// TODO: Check if we need pagination here
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'

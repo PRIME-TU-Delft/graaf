@@ -17,13 +17,11 @@
 			admins: User[];
 		};
 		courses: Promise<Course[]>;
-		showOnlyUnarchived: boolean;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
 		createNewCourseForm: SuperValidated<Infer<typeof courseSchema>>;
 	};
 
-	let { user, program, courses, showOnlyUnarchived, linkCoursesForm, createNewCourseForm }: Props =
-		$props();
+	let { user, program, courses, linkCoursesForm, createNewCourseForm }: Props = $props();
 </script>
 
 <div class="overflow-hidden rounded-lg border-2 border-purple-100 bg-purple-50/10">
@@ -45,5 +43,5 @@
 		</div>
 	</div>
 
-	<CourseGrid courses={program.courses} {user} {showOnlyUnarchived} />
+	<CourseGrid courses={program.courses} {user} />
 </div>

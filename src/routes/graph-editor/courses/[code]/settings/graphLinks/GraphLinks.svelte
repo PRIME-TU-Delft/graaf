@@ -6,11 +6,11 @@
 	import type { CoursePermissions } from '$lib/utils/permissions';
 	import { ArrowRight, Eye, EyeOff, Link as LinkIcon } from '@lucide/svelte';
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
-	import EmbedGraph from './EmbedGraph.svelte';
 	import GraphSettingsDialog from './GraphSettingsDialog.svelte';
+	import LinkEmbedGraph from './LinkEmbedGraph.svelte';
 
 	type GraphLinksProps = {
-		course: Course & CoursePermissions & { links: Link[] };
+		course: Course & CoursePermissions & { graphs: Graph[]; links: Link[] };
 		graphs: (Graph & { lectures: Lecture[]; links: Link[] })[];
 	};
 
@@ -52,7 +52,7 @@
 					</Table.Cell>
 					<Table.Cell class="text-right">{graph.links.length || ''}</Table.Cell>
 					<Table.Cell class="p-1 text-right">
-						<EmbedGraph {graph} {course} />
+						<LinkEmbedGraph {graph} {course} hasAtLeastCourseEditPermissions />
 					</Table.Cell>
 					<Table.Cell class="p-1">
 						<GraphSettingsDialog {graphs} {graph} {course} />

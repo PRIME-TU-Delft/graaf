@@ -1,20 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import Help from '$lib/components/Help.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
-	import { Button } from '$lib/components/ui/button';
 	import type { User } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import CourseGrid from './CourseGrid.svelte';
 	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
 	import Program from './Program.svelte';
 	import SearchCourses from './SearchCourses.svelte';
-	import { Funnel, FunnelX } from '@lucide/svelte';
-	import Help from '$lib/components/Help.svelte';
 
 	const { data, form } = $props();
 
 	let accordionOpen = $state('');
-	let showOnlyUnarchived = $state(true);
 
 	$effect(() => {
 		// When add 'course to program' form is submitted with an error
@@ -57,29 +54,15 @@
 					My pinned courses
 				</Accordion.Trigger>
 				<Accordion.Content>
-					<CourseGrid courses={data.pinnedCourses} user={data.user} showOnlyUnarchived={false} />
+					<CourseGrid courses={data.pinnedCourses} user={data.user} />
 				</Accordion.Content>
 			</Accordion.Item>
 		</Accordion.Root>
 	{/if}
 
 	<section class="mx-auto grid max-w-4xl gap-4 p-4">
-		<div class="grid grid-cols-2 items-center justify-between gap-2 md:grid-cols-4">
+		<div class="grid grid-cols-2 items-center justify-between gap-2 md:grid-cols-3">
 			<h2 class="row-start-1 text-xl font-bold text-purple-950">My Programmes</h2>
-
-			<Button
-				class="h-10 border-2 border-gray-600 py-0"
-				variant="outline"
-				onclick={() => (showOnlyUnarchived = !showOnlyUnarchived)}
-			>
-				{#if showOnlyUnarchived}
-					<FunnelX />
-					Show all courses
-				{:else}
-					<Funnel />
-					Show only unarchived courses
-				{/if}
-			</Button>
 
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
@@ -95,7 +78,6 @@
 				user={data.user}
 				{program}
 				courses={data.courses}
-				{showOnlyUnarchived}
 				linkCoursesForm={data.linkCoursesForm}
 				createNewCourseForm={data.createNewCourseForm}
 			/>
