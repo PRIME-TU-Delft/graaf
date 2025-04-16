@@ -12,7 +12,6 @@ import {
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
-import { get } from 'http';
 
 export class CourseActions {
 	/**

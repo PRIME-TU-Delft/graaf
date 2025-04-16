@@ -2,11 +2,9 @@
 	import { displayName } from '$lib/utils/displayUserName';
 	import { fade } from 'svelte/transition';
 	import { Prisma } from '@prisma/client';
-	import type { User } from '@prisma/client';
 
 	type CourseGridProps = {
 		sandboxes: Prisma.SandboxGetPayload<{ include: { owner: true } }>[];
-		user: User | undefined;
 	};
 
 	const { sandboxes }: CourseGridProps = $props();

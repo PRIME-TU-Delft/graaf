@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import { displayName } from '$lib/utils/displayUserName';
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 
 	// Components

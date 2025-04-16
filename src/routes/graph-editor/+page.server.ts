@@ -9,7 +9,7 @@ import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod
 import { newProgramSchema } from '$lib/zod/programSchema.js';
 import { superValidate } from 'sveltekit-superforms';
 
-import type { Course, User } from '@prisma/client';
+import type { Course } from '@prisma/client';
 import type { PageServerLoad } from '../$types.js';
 
 export const load = (async ({ url, locals }) => {
