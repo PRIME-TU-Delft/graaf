@@ -55,7 +55,8 @@
 	}}
 >
 	<input type="hidden" name="graphId" value={graph.id} />
-	<input type="hidden" name="courseCode" value={graph.courseId} />
+	<input type="hidden" name="parentType" value="SANDBOX" />
+	<input type="hidden" name="parentId" value={graph.sandboxId} />
 
 	<Form.Field {form} name="name">
 		<Form.Control>

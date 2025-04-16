@@ -76,6 +76,7 @@ export const load = (async ({ params, locals }) => {
 			availableSandboxes,
 			newGraphForm: await superValidate(zod(newGraphSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
+			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			error: undefined
 		};
 	} catch (e: unknown) {
@@ -87,6 +88,7 @@ export const load = (async ({ params, locals }) => {
 			availableSandboxes: [],
 			newGraphForm: await superValidate(zod(newGraphSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
+			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			error: e instanceof Error ? e.message : `${e}`
 		};
 	}
@@ -96,6 +98,14 @@ export const actions: Actions = {
 	'new-graph': async (event) => {
 		const formData = await superValidate(event, zod(newGraphSchema));
 		return GraphActions.newGraph(await getUser(event), formData);
+	},
+	'edit-graph': async (event) => {
+		const form = await superValidate(event, zod(graphSchemaWithId));
+		return GraphActions.editGraph(await getUser(event), form);
+	},
+	'delete-graph': async (event) => {
+		const form = await superValidate(event, zod(graphSchemaWithId));
+		return GraphActions.deleteGraph(await getUser(event), form);
 	},
 	'duplicate-graph': async (event) => {
 		const form = await superValidate(event, zod(duplicateGraphSchema));

@@ -45,7 +45,13 @@
 		<CreateNewGraphButton />
 
 		{#each data.graphs as graph (graph.id)}
-			<GraphTile graph={graph} />
+			<GraphTile 
+				{graph}
+				availableCourses={data.availableCourses}
+				availableSandboxes={data.availableSandboxes}
+				editGraphForm={data.editGraphForm}
+				duplicateGraphForm={data.duplicateGraphForm}
+			/>
 		{/each}
 	</section>
 {/if}

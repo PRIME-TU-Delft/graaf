@@ -156,7 +156,7 @@
 </form>
 
 {#snippet selectDestination()}
-	<Form.Field {form} name="destination">
+	<Form.Field {form} name="destinationId">
 		<Popover.Root bind:open={isDestinationCourseOpen}>
 			<Form.Control id={triggerId}>
 				{#snippet children({ props })}
@@ -172,8 +172,8 @@
 						</Popover.Trigger>
 						<input
 							hidden
-							value={$formData.destinationCourseCode}
-							defaultValue={course.code}
+							value={$formData.destinationId}
+							defaultValue={graph.courseId}
 							name={props.name}
 						/>
 					</div>

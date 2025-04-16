@@ -41,7 +41,7 @@
 		availableCourses, 
 		availableSandboxes, 
 		editGraphForm,
-		duplicateGraphForm,
+		duplicateGraphForm
 	}: Props = $props();
 
 	let isGraphSettingsOpen = $state(false);
