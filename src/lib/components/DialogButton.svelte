@@ -1,12 +1,12 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { cn } from '$lib/utils';
-	import { BadgeHelp, Ellipsis, Link, Pencil, Plus, Users } from '@lucide/svelte';
+	import { BadgeHelp, Copy, Ellipsis, Link, Pencil, Plus, Users } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
-		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link' | 'help';
+		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link' | 'help' | 'copy';
 		open?: boolean;
 		button?: string;
 		title: string;
@@ -39,7 +39,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Trigger
 		class={cn(
-			'bg-primary hover:bg-primary/80 flex items-center gap-2 text-nowrap rounded p-2 text-sm shadow-none transition-all hover:shadow-lg',
+			'flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm shadow-none transition-all hover:bg-primary/80 hover:shadow-lg',
 			{ 'opacity-50': disabled },
 			buttonVariants({ variant }),
 			classes
@@ -62,6 +62,8 @@
 			<Link class="size-5" />
 		{:else if icon == 'help'}
 			<BadgeHelp class="size-5" />
+		{:else if icon == 'copy'}
+			<Copy class="size-5" />
 		{/if}
 
 		{#if button}

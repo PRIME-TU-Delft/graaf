@@ -18,6 +18,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
+	import { Copy } from '@lucide/svelte';
 
 	export type CourseType = Course & {
 		graphs: {
@@ -127,6 +128,7 @@
 			<Undo2 /> Reset
 		</Button>
 		<Form.FormButton disabled={$submitting} loading={$delayed}>
+			<Copy />
 			Duplicate
 			{#snippet loadingMessage()}
 				<span>Copying graph elements...</span>

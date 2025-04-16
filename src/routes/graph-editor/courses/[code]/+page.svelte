@@ -42,7 +42,7 @@
 	<section
 		class={cn([
 			'mx-auto my-12 grid max-w-4xl gap-4 p-4',
-			data.graphs.length > 0 ? 'grid-cols-1 sm:grid-cols-2' : ''
+			data.graphs.length > 0 ? 'grid-cols-1 sm:grid-cols-1' : ''
 		])}
 	>
 		{#if hasAtLeastCourseEditPermissions}

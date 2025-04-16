@@ -138,7 +138,7 @@
 					</Avatar.Root>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="end">
-					<form action="/auth/signout" method="POST" use:enhance>
+					<form action="/auth/signout" method="POST">
 						<Button type="submit" variant="outline" class="w-full">Log-out <LogOut /></Button>
 					</form>
 				</DropdownMenu.Content>

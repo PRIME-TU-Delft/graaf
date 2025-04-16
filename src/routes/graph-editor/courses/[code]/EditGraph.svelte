@@ -38,6 +38,7 @@
 	<DialogButton
 		onclick={(e) => handleOpenDuplicate(e)}
 		button="Duplicate"
+		icon="copy"
 		title="Duplicate/Move Graph"
 		description="Copy this graph within this or another course. This will create a new graph with the same content in the selected course."
 		bind:open={isDuplicateOpen}
@@ -50,7 +51,7 @@
 		bind:open={graphLinkSettingsOpen}
 		onclick={(e) => handleOpenGraphSettings(e)}
 		icon="link"
-		button="Settings"
+		button="Link"
 		title="Graph link settings"
 	>
 		<GraphLinkSettings

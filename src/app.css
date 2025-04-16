@@ -1,3 +1,5 @@
+@import '@fontsource-variable/noto-sans';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -43,6 +45,7 @@
 	body {
 		scroll-behavior: smooth;
 		scroll-padding: 8rem;
+		font-family: 'Noto Sans Variable', 'Arial', sans-serif;
 		@apply bg-white text-foreground;
 	}
 
