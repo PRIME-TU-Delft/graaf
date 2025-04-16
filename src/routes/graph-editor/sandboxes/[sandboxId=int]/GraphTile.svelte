@@ -60,7 +60,7 @@
 
 <a
 	class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-blue-300 bg-blue-100 p-4 text-blue-900 shadow-none transition-shadow hover:shadow-lg"
-	href="./graphs/{graph.id}"
+	href="graph-editor/graphs/{graph.id}"
 >
 	<div class="grow">
 		<h2 class="text-xl font-bold text-blue-950">{graph.name}</h2>

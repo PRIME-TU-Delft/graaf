@@ -25,8 +25,7 @@
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let course = $state(data.course);
-	let graph = $derived(data.course.graphs[0]);
+	let graph = $state(data.graph);
 
 	const domainMapping = $derived.by(() => {
 		const map: { domain: Domain; outDomain: Domain }[] = [];
@@ -36,10 +35,6 @@
 			}
 		}
 		return map;
-	});
-
-	$effect(() => {
-		if (data) course = data.course;
 	});
 
 	onMount(() => {
@@ -66,7 +61,7 @@
 	 */
 
 	async function handleChangeStyle(key: DomainStyle | null, domainIndex: number) {
-		const domain = course.graphs[0].domains[domainIndex];
+		const domain = graph.domains[domainIndex];
 		domain.style = key;
 
 		const response = await fetch('/api/domains/style', {
@@ -79,7 +74,7 @@
 			toast.error('Failed to update domain style, try again later');
 			return;
 		} else {
-			graphD3Store.graphD3?.setData(course.graphs[0]);
+			graphD3Store.graphD3?.setData(graph);
 			graphD3Store.graphD3?.updateDomain(domain.id);
 		}
 	}
@@ -107,7 +102,7 @@
 			return;
 		}
 
-		course.graphs[0].domains = list;
+		graph.domains = list;
 	}
 </script>
 
@@ -127,7 +122,7 @@
 	</Table.Header>
 	<Table.Body>
 		<SortableList
-			list={course.graphs[0].domains}
+			list={graph.domains}
 			onrearrange={(list) => handleRearrange(list)}
 			useId={(domain) => `${domain.id}-${domain.name}`}
 		>

@@ -14,8 +14,7 @@
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let course = $state(data.course);
-	const graph = $derived(data.course.graphs[0]);
+	let graph = $state(data.graph);
 
 	const subjectMapping = $derived.by(() => {
 		const map: { subject: Subject; outSubject: Subject }[] = [];
@@ -49,7 +48,7 @@
 			return;
 		}
 
-		course.graphs[0].subjects = newSubjectList;
+		graph.subjects = newSubjectList;
 	}
 </script>
 
@@ -69,7 +68,7 @@
 	</Table.Header>
 	<Table.Body>
 		<SortableList
-			list={course.graphs[0].subjects}
+			list={graph.subjects}
 			onrearrange={(list) => handleRearrange(list)}
 			useId={(subject) => `${subject.id}-${subject.name}`}
 		>
