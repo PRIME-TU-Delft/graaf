@@ -3,8 +3,11 @@
 	import CreateNewProgramButton from '../CreateNewProgramButton.svelte';
 	import Program from '../Program.svelte';
 	import SearchCourses from '../SearchCourses.svelte';
+	import { cn } from '$lib/utils';
 
 	const { data } = $props();
+
+	let isSuperAdmin = $derived((data.session?.user as User)?.role === 'ADMIN');
 </script>
 
 <section class="prose mx-auto mt-12 p-4 text-purple-900">
@@ -13,14 +16,14 @@
 </section>
 
 <section class="mx-auto grid max-w-4xl gap-4 p-4">
-	<div class="grid grid-cols-2 items-center justify-between gap-2 md:grid-cols-4">
-		<h2 class="row-start-1 text-xl font-bold text-purple-950">All Programmes</h2>
+	<div class="flex w-full items-center justify-between gap-2">
+		<h2 class="w-full grow whitespace-nowrap text-xl font-bold">All Programmes</h2>
 
 		{#await data.courses then courses}
 			<SearchCourses {courses} />
 		{/await}
 
-		{#if (data.session?.user as User)?.role === 'ADMIN'}
+		{#if isSuperAdmin}
 			<CreateNewProgramButton form={data.programForm} />
 		{/if}
 	</div>

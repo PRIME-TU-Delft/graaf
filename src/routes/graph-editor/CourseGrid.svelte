@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { cn } from '$lib/utils';
@@ -48,7 +49,13 @@
 			{#if course.isArchived}
 				<Tooltip.Provider>
 					<Tooltip.Root>
-						<Tooltip.Trigger>
+						<Tooltip.Trigger
+							onclick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								goto(`/graph-editor/courses/${course.code}/settings#archive-course`);
+							}}
+						>
 							<Archive class="text-purple-900" />
 							<Tooltip.Content
 								side="right"

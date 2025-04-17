@@ -47,7 +47,7 @@
 				<Command.Item
 					class="h-full w-full p-2"
 					value={course.code + ' ' + course.name}
-					onclick={() => goto(`graph-editor/courses/${course.code}`)}
+					onclick={() => goto(`/graph-editor/courses/${course.code}`)}
 				>
 					<p class="grow font-medium">{course.name}</p>
 					<p class="grow text-right text-xs">{course.code}</p>

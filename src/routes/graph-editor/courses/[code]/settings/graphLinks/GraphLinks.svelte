@@ -6,7 +6,6 @@
 	import type { CoursePermissions } from '$lib/utils/permissions';
 	import { ArrowRight, Eye, EyeOff, Link as LinkIcon } from '@lucide/svelte';
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
-	import GraphSettingsDialog from './GraphSettingsDialog.svelte';
 	import LinkEmbedGraph from './LinkEmbedGraph.svelte';
 
 	type GraphLinksProps = {
@@ -34,9 +33,7 @@
 			<Table.Row>
 				<Table.Head>Name</Table.Head>
 				<Table.Head class="w-10 text-center">Links</Table.Head>
-				<Table.Head class="w-10">Embed</Table.Head>
-				<Table.Head class="w-24 text-right">Settings</Table.Head>
-				<Table.Head class="w-10 text-right">Go to</Table.Head>
+				<Table.Head class="whitespace-nowrap">Embed/Link settings</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
@@ -54,17 +51,6 @@
 					<Table.Cell class="p-1 text-right">
 						<LinkEmbedGraph {graph} {course} hasAtLeastCourseEditPermissions />
 					</Table.Cell>
-					<Table.Cell class="p-1">
-						<GraphSettingsDialog {graphs} {graph} {course} />
-					</Table.Cell>
-					<Table.Cell class="p-1 text-right">
-						<Button
-							href={`/graph-editor/courses/${course.code}/graphs/${graph.id}`}
-							variant="outline"
-						>
-							View <ArrowRight class="h-4 w-4" />
-						</Button>
-					</Table.Cell>
 				</Table.Row>
 
 				{#each graph.links as link (link.id)}
@@ -80,13 +66,13 @@
 </section>
 
 {#snippet alias(linkName: string)}
-	<Table.Row class={cn(['bg-blue-100/50 odd:bg-blue-100/50 hover:bg-blue-100/30'])}>
-		<Table.Cell class="pl-8 " colspan={4}>
+	<Table.Row class={cn(['bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-100/30'])}>
+		<Table.Cell class="pl-8" colspan={2}>
 			{page.url.host}/graph/{course.code}/{linkName}
 		</Table.Cell>
-		<Table.Cell class="pl-8 " colspan={1}>
+		<Table.Cell class="text-right" colspan={1}>
 			<Button href={`/graph/${course.code}/${linkName}`} variant="outline">
-				<ArrowRight class="h-4 w-4" />
+				Preview <ArrowRight class="h-4 w-4" />
 			</Button>
 		</Table.Cell>
 	</Table.Row>

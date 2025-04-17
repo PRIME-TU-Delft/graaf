@@ -61,8 +61,8 @@
 	{/if}
 
 	<section class="mx-auto grid max-w-4xl gap-4 p-4">
-		<div class="grid grid-cols-2 items-center justify-between gap-2 md:grid-cols-3">
-			<h2 class="row-start-1 text-xl font-bold text-purple-950">My Programmes</h2>
+		<div class="flex w-full items-center justify-between gap-2">
+			<h2 class="w-full grow whitespace-nowrap text-xl font-bold">My Programmes</h2>
 
 			{#await data.courses then courses}
 				<SearchCourses {courses} />

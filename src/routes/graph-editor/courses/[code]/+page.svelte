@@ -47,7 +47,7 @@
 		<!-- MARK: GRAPHS -->
 		{#each data.graphs as graph (graph.id)}
 			<a
-				class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-300 bg-purple-100 p-4 text-purple-900 shadow-none transition-shadow hover:shadow-lg"
+				class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-shadow hover:shadow-lg"
 				href="{data.course.code}/graphs/{graph.id}"
 			>
 				<div class="grow">
