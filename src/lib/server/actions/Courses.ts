@@ -148,9 +148,9 @@ export class CourseActions {
 		}
 
 		try {
-			await prisma.user.update({
+			await prisma.course.update({
 				where: {
-					id: user.id
+					id: form.data.courseId
 				},
 				data: getData()
 			});

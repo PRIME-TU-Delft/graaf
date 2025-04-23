@@ -6,12 +6,14 @@ import { superValidate } from 'sveltekit-superforms';
 import { getUser } from '$lib/server/actions/Users.js';
 import { duplicateGraphSchema, graphSchemaWithId, newGraphSchema } from '$lib/zod/graphSchema.js';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '$lib/server/permissions';
+import { LinkActions } from '$lib/server/actions/Links';
+import { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
 
 import type { Actions } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';
 
 export const load = (async ({ params, locals }) => {
-	if (!params.sandboxId) redirect(303, '/');
+	if (!params.sandboxId) throw Error('Missing sandbox ID');
 
 	const user = await getUser({ locals });
 	const sandboxId = parseInt(params.sandboxId);
@@ -28,6 +30,8 @@ export const load = (async ({ params, locals }) => {
 			include: {
 				graphs: {
 					include: {
+						links: true,
+						lectures: true,
 						_count: {
 							select: {
 								domains: true,
@@ -36,6 +40,7 @@ export const load = (async ({ params, locals }) => {
 						}
 					}
 				},
+				links: true,
 				owner: true,
 				editors: true
 			}
@@ -77,6 +82,10 @@ export const load = (async ({ params, locals }) => {
 			newGraphForm: await superValidate(zod(newGraphSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
+			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
+			deleteLinkForm: await superValidate(zod(editLinkSchema)),
+			newLinkForm: await superValidate(zod(newLinkSchema)),
+			editLinkForm: await superValidate(zod(editLinkSchema)),
 			error: undefined
 		};
 	} catch (e: unknown) {
@@ -89,6 +98,10 @@ export const load = (async ({ params, locals }) => {
 			newGraphForm: await superValidate(zod(newGraphSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
+			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
+			deleteLinkForm: await superValidate(zod(editLinkSchema)),
+			newLinkForm: await superValidate(zod(newLinkSchema)),
+			editLinkForm: await superValidate(zod(editLinkSchema)),
 			error: e instanceof Error ? e.message : `${e}`
 		};
 	}
@@ -110,5 +123,17 @@ export const actions: Actions = {
 	'duplicate-graph': async (event) => {
 		const form = await superValidate(event, zod(duplicateGraphSchema));
 		return GraphActions.duplicateGraph(await getUser(event), form);
+	},
+	'new-link': async (event) => {
+		const form = await superValidate(event, zod(newLinkSchema));
+		return LinkActions.newLink(await getUser(event), form);
+	},
+	'move-link': async (event) => {
+		const form = await superValidate(event, zod(editLinkSchema));
+		return LinkActions.moveLink(await getUser(event), form);
+	},
+	'delete-link': async (event) => {
+		const form = await superValidate(event, zod(editLinkSchema));
+		return LinkActions.deleteLink(await getUser(event), form);
 	}
 };

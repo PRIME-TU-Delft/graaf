@@ -1,13 +1,19 @@
+
 import { env } from '$env/dynamic/private';
-import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
+
+import type {
+	newGraphSchema,
+	graphSchemaWithId,
+	duplicateGraphSchema
+} from '$lib/zod/graphSchema';
 
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
-import type { duplicateGraphSchema, newGraphSchema, graphSchemaWithId } from '$lib/zod/graphSchema';
 
 export class GraphActions {
 	private static async updateCourse<T, S extends Record<string, unknown>>(
@@ -71,7 +77,7 @@ export class GraphActions {
 	}
 
 	static async newGraph(user: User, form: SuperValidated<Infer<typeof newGraphSchema>>) {
-		if (!form.valid) return setError(form, 'name', 'Invalid form');
+		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
 		if (form.data.parentType === 'COURSE') {
 			const query = prisma.course.update({
@@ -111,7 +117,7 @@ export class GraphActions {
 	}
 
 	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
-		if (!form.valid) return setError(form, 'name', 'Invalid form');
+		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
 		if (form.data.parentType === 'COURSE') {
 			const query = prisma.course.update({
@@ -151,7 +157,7 @@ export class GraphActions {
 	}
 
 	static async deleteGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
-		if (!form.valid) return setError(form, 'name', 'Invalid form');
+		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
 		if (form.data.parentType === 'COURSE') {
 			const query = prisma.course.update({

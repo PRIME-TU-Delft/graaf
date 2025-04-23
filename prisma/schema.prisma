@@ -7,6 +7,8 @@ datasource db {
 	url      = env("DATABASE_URL")
 }
 
+// MARK: BEGIN AUTH THINGS
+
 enum UserRole {
 	USER
 	ADMIN
@@ -76,6 +78,8 @@ model VerificationToken {
 	@@id([identifier, token])
 }
 
+// MARK: END AUTH THINGS 
+
 model Program {
 	id   Int    @id @default(autoincrement())
 	name String
@@ -99,6 +103,7 @@ model Course {
 	editors  User[]    @relation("CourseEditor")
 	admins   User[]    @relation("CourseAdmin")
 	pinnedBy User[]    @relation("PinnedCourse")
+	links    Link[]    @relation("CourseLink")
 
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
@@ -111,6 +116,7 @@ model Sandbox {
 	owner   User    @relation("SandboxOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 	editors User[]  @relation("SandboxEditor")
 	graphs  Graph[] @relation("SandboxGraph")
+	links   Link[]  @relation("SandboxLink")
 
 	ownerId String
 
@@ -123,21 +129,41 @@ enum ParentType {
 	SANDBOX
 }
 
+model Link {
+	id         Int     @id @default(autoincrement())
+	name       String
+	isArchived Boolean @default(false)
+
+	course  Course?  @relation("CourseLink", fields: [courseId], references: [id])
+	sandbox Sandbox? @relation("SandboxLink", fields: [sandboxId], references: [id])
+	graph   Graph    @relation("GraphLink", fields: [graphId], references: [id], onDelete: Cascade)
+  
+	parentType ParentType
+	courseId  Int?
+	sandboxId Int?
+	graphId   Int
+
+	createdAt DateTime @default(now())
+	updatedAt DateTime @updatedAt
+
+	@@unique([courseId, name])
+}
+
 model Graph {
 	id   Int    @id @default(autoincrement())
 	name String
 
-	course  Course?  @relation("CourseGraph", fields: [courseId], references: [id], onDelete: Cascade)
-	sandbox Sandbox? @relation("SandboxGraph", fields: [sandboxId], references: [id], onDelete: Cascade)
+	course  Course?    @relation("CourseGraph", fields: [courseId], references: [id], onDelete: Cascade)
+	sandbox Sandbox?   @relation("SandboxGraph", fields: [sandboxId], references: [id], onDelete: Cascade)
+	domains  Domain[]  @relation("GraphDomain")
+	subjects Subject[] @relation("GraphSubject")
+	lectures Lecture[] @relation("GraphLecture")
+	links    Link[]    @relation("GraphLink")
 
 	parentType ParentType
 	courseId   Int?
 	sandboxId  Int?
 	
-	domains  Domain[]  @relation("GraphDomain")
-	subjects Subject[] @relation("GraphSubject")
-	lectures Lecture[] @relation("GraphLecture")
-
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
 
@@ -173,8 +199,6 @@ model Domain {
 
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
-
-	@@unique([name, graphId])
 }
 
 model Subject {
@@ -194,8 +218,6 @@ model Subject {
 
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
-
-	@@unique([name, domainId])
 }
 
 model Lecture {
@@ -209,6 +231,4 @@ model Lecture {
 
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
-
-	@@unique([name, graphId])
 }

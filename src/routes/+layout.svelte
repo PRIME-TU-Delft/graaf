@@ -1,29 +1,20 @@
 <script lang="ts">
 	import { dev } from '$app/environment';
+	import { toast } from 'svelte-sonner';
+	import { page } from '$app/state';  
 	import '../app.css';
 
 	// Components
 	import NavigationBar from '$lib/components/NavigationBar.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import { toast } from 'svelte-sonner';
+	import AppSidebar from './AppSidebar.svelte';
 
 	let { data, children } = $props();
 
-	$effect(() => {
-		toast.promise(data.testConnection, {
-			loading: 'Loading...',
-			duration: Number.POSITIVE_INFINITY,
-			error: 'Error, could not connect to the database',
-			action: {
-				label: 'Retry connection',
-				onClick: () => {
-					location.reload();
-				}
-			}
-		});
-	});
+	let sidebarOpen = $state(false);
 
 	async function handleToggleAdmin() {
 		const res = await fetch('/auth/toggle-admin', {
@@ -37,11 +28,19 @@
 
 <Toaster closeButton />
 
-<NavigationBar user={data.user} />
+<NavigationBar user={data.user} {sidebarOpen} />
 
-<main class="pt-4">
-	{@render children()}
-</main>
+<Sidebar.Provider bind:open={sidebarOpen}>
+	{#if page.url.pathname?.includes('graph-editor')}
+		<AppSidebar user={data.user} />
+	{/if}
+	<main class="mt-12 w-full p-4">
+		{#if page.url.pathname?.includes('graph-editor')}
+			<Sidebar.Trigger class="fixed top-4 z-50 bg-purple-100"></Sidebar.Trigger>
+		{/if}
+		{@render children?.()}
+	</main>
+</Sidebar.Provider>
 
 {#if dev}
 	<!-- When in Dev mode, allow the user to toggle between ADMIN/USER role  -->

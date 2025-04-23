@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { displayName } from '$lib/utils/displayUserName';
 	import { fade } from 'svelte/transition';
-	import { Prisma } from '@prisma/client';
+	import { displayName } from '$lib/utils/displayUserName';
+	import type { Sandbox, User } from '@prisma/client';
 
-	type CourseGridProps = {
-		sandboxes: Prisma.SandboxGetPayload<{ include: { owner: true } }>[];
+	type SandboxGridProps = {
+		sandboxes: (Sandbox & { owner: User })[];
+		user: User | undefined;
 	};
 
-	const { sandboxes }: CourseGridProps = $props();
+	const { sandboxes, user }: SandboxGridProps = $props();
 </script>
 
 <div
@@ -16,17 +17,22 @@
 	{#each sandboxes as sandbox (sandbox.id)}
 		{@render displaySandbox(sandbox)}
 	{:else}
-		<p class="bg-white/80 p-2 col-span-3 text-slate-900/60 rounded">You have no Sandboxes</p>
+		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
+			No sandboxes found.
+		</p>
 	{/each}
 </div>
 
-{#snippet displaySandbox(sandbox: CourseGridProps['sandboxes'][number])}
+{#snippet displaySandbox(sandbox: SandboxGridProps['sandboxes'][number])}
 	<a
-		href="graph-editor/sandboxes/{sandbox.id}"
-		class="flex w-full items-center justify-between rounded border-2 bg-white/90 p-2 transition-colors hover:border-blue-200 hover:bg-blue-50"
+		href="/graph-editor/sandboxes/{sandbox.id}"
+		class="flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-100/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-100"
 		in:fade={{ duration: 200 }}
 	>
-		<p>{sandbox.name}</p>
-		<p class="text-xs text-blue-900">{displayName(sandbox.owner, 'No owner')}</p>
+		<div class="flex items-end gap-1">
+			<p>{sandbox.name}</p>
+			-
+			<p>{displayName(sandbox.owner)}</p>
+		</div>
 	</a>
 {/snippet}

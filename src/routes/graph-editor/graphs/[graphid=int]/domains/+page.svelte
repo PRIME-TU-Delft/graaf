@@ -262,7 +262,7 @@
 	</Popover.Root>
 {/snippet}
 
-<style>
+<style lang="postcss">
 	:global(.dragging) {
 		@apply opacity-50 shadow-lg ring-2 ring-blue-400;
 	}

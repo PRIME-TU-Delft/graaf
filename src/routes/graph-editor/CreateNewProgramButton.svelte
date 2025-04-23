@@ -37,8 +37,10 @@
 <DialogButton
 	bind:open={dialogOpen}
 	icon="plus"
-	button="New Program"
+	button="Add Program"
 	title="Create Program"
+	variant="grain"
+	class="row-start-1 md:col-start-4"
 	description="Programs are collections of Courses, usually pertaining to the same field of study. Looking to try
 	out the Graph editor? Try making a sandbox environment instead!"
 >

@@ -3,7 +3,7 @@ import { emptyPrismaPromise } from '$lib/utils.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { CourseActions } from '$lib/server/actions/Courses.js';
-
+import { whereHasCoursePermission } from '$lib/server/permissions.js';
 import { zod } from 'sveltekit-superforms/adapters';
 import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema.js';
 import { newProgramSchema } from '$lib/zod/programSchema.js';
@@ -16,16 +16,22 @@ export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
 
 	try {
-		const search = url.searchParams.get('c')?.toLocaleLowerCase();
 		const programs = await prisma.program.findMany({
+			where: {
+				courses: {
+					some: {
+						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					}
+				}
+			},
 			include: {
 				courses: {
 					orderBy: {
 						isArchived: 'asc'
 					},
-					where: search
-						? { name: { contains: search, mode: 'insensitive' } }
-						: { NOT: { name: '' } },
+					where: {
+						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
 					include: {
 						pinnedBy: {
 							select: {
@@ -77,7 +83,6 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		// TODO: Check if we need pagination here
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'

@@ -1,14 +1,19 @@
 import type { User } from '@prisma/client';
 
-type ProgramsPermission = {
+export type ProgramsPermissions = {
 	editors?: { id: string }[];
 	admins?: { id: string }[];
 };
 
-type CoursePermissions = {
+export type CoursePermissions = {
 	editors?: { id: string }[];
 	admins?: { id: string }[];
-	programs: ProgramsPermission[];
+	programs: ProgramsPermissions[];
+};
+
+export type SandboxPermissions = {
+	editors?: { id: string }[];
+	owner?: { id: string };
 };
 
 export type ProgramPermissionsOptions = 'OnlySuperAdmin' | 'ProgramAdmin' | 'ProgramAdminEditor';
@@ -22,7 +27,7 @@ export type SandboxPermissionOptions = 'Owner' | 'OwnerOREditor';
 
 export function hasProgramPermissions(
 	user: User,
-	program: ProgramsPermission,
+	program: ProgramsPermissions,
 	has: ProgramPermissionsOptions
 ) {
 	// If the user is a super-admin, they can edit any course. Thus no special where permission is required
@@ -64,4 +69,13 @@ export function hasCoursePermissions(
 		return isCourseAdmin || isCourseEditor || isProgramAdmin || isProgramEditor;
 
 	return false;
+}
+
+export function hasSandboxPermissions(user: User, sandbox: SandboxPermissions, has: SandboxPermissionOptions) {
+	const isOwner = sandbox.owner?.id === user.id;
+	const isEditor = sandbox.editors?.some((editor) => editor.id === user.id) ?? false;
+
+	if (has == 'Owner') return isOwner;
+	if (has == 'OwnerOREditor') return isOwner || isEditor;
+	return false; // Never reached
 }
