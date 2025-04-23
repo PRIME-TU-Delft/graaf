@@ -1,9 +1,10 @@
 <script lang="ts">
 	import Logo from '$lib/components/Logo.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { Home, LibraryBig, Notebook, User } from '@lucide/svelte';
+	import type { User } from '@prisma/client';
+	import NavUser from './NavUser.svelte';
 
-	let { user }: { user?: { role: string } } = $props();
+	let { user }: { user: User } = $props();
 
 	let mouseState: number = $state(-1);
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
@@ -34,33 +35,24 @@
 	});
 </script>
 
-<Sidebar.Root>
+<Sidebar.Root collapsible="icon">
 	<Sidebar.Header
-		class="items center grain relative flex w-full flex-row bg-purple-950 p-4 text-white"
-		onclick={handleNavClick}
+		class="grain flex-row bg-purple-950 p-4 transition-all group-data-[state=collapsed]:px-2"
 	>
-		<Logo {mouseState} />
-		<p class="select-none">Graph-Editor</p>
+		<Logo
+			class="scale-100 transition-transform group-data-[state=collapsed]:scale-75"
+			{mouseState}
+		/>
+		<p class="truncate whitespace-nowrap text-white group-data-[state=collapsed]:hidden">
+			Graph-editor
+		</p>
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<Sidebar.Menu class="space-y-2 py-3">
-			{#each menuItems.filter((mi) => mi != null) as item}
-				<Sidebar.MenuItem class="px-2">
-					<Sidebar.MenuButton>
-						{#snippet child({ props })}
-							<a href={item.path} {...props}>
-								{#if item.icon === 'Home'}<Home />{/if}
-								{#if item.icon === 'LibraryBig'}<LibraryBig />{/if}
-								{#if item.icon === 'Notebook'}<Notebook />{/if}
-								{#if item.icon === 'User'}<User />{/if}
-
-								{item.name}
-							</a>
-						{/snippet}
-					</Sidebar.MenuButton>
-				</Sidebar.MenuItem>
-			{/each}
-		</Sidebar.Menu>
+		<!-- Add content -->
 	</Sidebar.Content>
+
+	<Sidebar.Footer>
+		<NavUser {user} />
+	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>
