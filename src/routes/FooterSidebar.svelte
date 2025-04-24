@@ -1,21 +1,21 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
 	import { enhance } from '$app/forms';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { displayName } from '$lib/utils/displayUserName';
-	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import { ChevronLeft, ShieldUser } from '@lucide/svelte';
 	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import LogOut from '@lucide/svelte/icons/log-out';
-	import Sparkles from '@lucide/svelte/icons/sparkles';
 	import type { User } from '@prisma/client';
+	import { toast } from 'svelte-sonner';
 
 	let { user }: { user: User } = $props();
 	const sidebar = useSidebar();
-
-	let signOutForm: HTMLFormElement;
 
 	const displayNameShort = $derived(
 		displayName(user)
@@ -23,6 +23,15 @@
 			.map((n) => n[0])
 			.join('')
 	);
+
+	async function handleToggleAdmin() {
+		const res = await fetch('/auth/toggle-admin', {
+			method: 'PATCH'
+		}).then((res) => res.json());
+
+		if (res.error) toast.error(res.error);
+		else location.reload();
+	}
 </script>
 
 <Sidebar.Menu>
@@ -61,35 +70,37 @@
 				align="end"
 				sideOffset={4}
 			>
-				<DropdownMenu.Label class="p-0 font-normal">
-					<div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-						<Avatar.Root class="h-8 w-8 rounded-lg">
-							<Avatar.Image src={user.image} alt={displayName(user)} />
-							<Avatar.Fallback class="rounded-lg">{displayNameShort}</Avatar.Fallback>
-						</Avatar.Root>
-						<div class="grid flex-1 text-left text-sm leading-tight">
-							<span class="truncate font-semibold">{displayName(user)}</span>
-							<span class="truncate text-xs">{user.email}</span>
-						</div>
-					</div>
-				</DropdownMenu.Label>
-				<DropdownMenu.Separator />
-				<DropdownMenu.Group>
-					<DropdownMenu.Item class="justify-between">
-						Promote to super admin
-						<Sparkles />
-					</DropdownMenu.Item>
-				</DropdownMenu.Group>
-
-				<DropdownMenu.Separator />
+				{#if dev}
+					<DropdownMenu.Group>
+						<DropdownMenu.Item onclick={handleToggleAdmin}>
+							<Tooltip.Provider>
+								<Tooltip.Root open={false} delayDuration={1000}>
+									<Tooltip.Trigger class="flex w-full items-center justify-between">
+										{#if user.role == 'ADMIN'}
+											<p>Demote admin to user</p>
+										{:else}
+											<p>Promote user to admin</p>
+										{/if}
+										<ShieldUser />
+									</Tooltip.Trigger>
+									<Tooltip.Content side="right">
+										<pre>{JSON.stringify(user, null, 2)}</pre>
+									</Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
+						</DropdownMenu.Item>
+					</DropdownMenu.Group>
+					<DropdownMenu.Separator />
+				{/if}
 
 				<form action="/auth/signout" method="POST" use:enhance>
 					<Button
 						type="submit"
 						variant="ghost"
-						class="w-full justify-between rounded-sm px-2 py-1.5 text-sm outline-none"
+						size="sm"
+						class="w-full justify-between rounded-sm px-2 text-sm outline-none"
 					>
-						Log-out <LogOut />
+						Log-out <LogOut class="size-4" />
 					</Button>
 				</form>
 			</DropdownMenu.Content>

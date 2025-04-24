@@ -1,22 +1,8 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { page } from '$app/state';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { displayName } from '$lib/utils/displayUserName';
-	import type { User } from '@prisma/client';
-	import LogOut from 'lucide-svelte/icons/log-out';
-	import { fly } from 'svelte/transition';
-	import Logo from './Logo.svelte';
-	import { Button } from './ui/button';
 
-	type NavigationBarProps = {
-		user?: User;
-		sidebarOpen: boolean;
-	};
-
-	let { user, sidebarOpen }: NavigationBarProps = $props();
 	let mouseState: number = $state(-1);
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
 
@@ -61,20 +47,13 @@
 	class="fixed top-0 z-10 w-full bg-purple-950/80 bg-gradient-to-br from-purple-950 to-purple-900/80 backdrop-blur-sm"
 >
 	<div
-		class="grain flex w-full items-center justify-between px-4 py-2"
+		class="grain flex h-14 w-full items-center justify-center"
 		onclick={handleNavClick}
 		onkeydown={handleNavClick}
 		role="button"
 		tabindex="-1"
 	>
-		<div></div>
-
 		<div class="flex items-center gap-2">
-			{#if !sidebarOpen}
-				<div transition:fly={{ x: 20 }} class="hidden md:block">
-					<Logo {mouseState} />
-				</div>
-			{/if}
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
 					{#if urls.length > 0}
@@ -128,28 +107,5 @@
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</div>
-
-		{#if user}
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger class="z-20">
-					<Avatar.Root
-						class="ring-0 ring-purple-600 transition-all focus-within:ring-2 hover:ring-2 focus:ring-2"
-					>
-						<Avatar.Image src={user.image} alt={displayName(user)} />
-						<Avatar.Fallback class="text-xs">
-							{displayName(user)
-								.split(' ')
-								.map((name) => name[0])
-								.join('')}
-						</Avatar.Fallback>
-					</Avatar.Root>
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content align="end">
-					<form action="/auth/signout" method="POST" use:enhance>
-						<Button type="submit" variant="outline" class="w-full">Log-out <LogOut /></Button>
-					</form>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-		{/if}
 	</div>
 </nav>

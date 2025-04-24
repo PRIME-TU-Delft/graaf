@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { cn } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
 
-	let { mouseState }: { mouseState: number } = $props();
+	let { mouseState, class: classes }: { mouseState: number; class: string } = $props();
+
+	const twClasses = cn(classes);
 
 	// Define constants
 	const viewboxSize = 100;
@@ -155,7 +158,7 @@
 
 <a href="/">
 	<!-- SVG Logo -->
-	<svg viewBox="0 0 {viewboxSize} {viewboxSize}">
+	<svg viewBox="0 0 {viewboxSize} {viewboxSize}" class={twClasses}>
 		<!-- Edges -->
 		<line
 			x1={edgeX1(v1.current, v2.current)}
