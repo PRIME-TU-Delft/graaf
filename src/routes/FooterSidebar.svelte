@@ -6,6 +6,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { useSidebar } from '$lib/components/ui/sidebar/index.js';
 	import { displayName } from '$lib/utils/displayUserName';
+	import { ChevronLeft, ChevronRight } from '@lucide/svelte';
 	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Sparkles from '@lucide/svelte/icons/sparkles';
@@ -25,6 +26,14 @@
 </script>
 
 <Sidebar.Menu>
+	<Sidebar.MenuItem>
+		<Sidebar.Trigger class="h-full w-full items-center justify-between gap-0 p-2">
+			<p class="truncate whitespace-nowrap">Collapse sidebar</p>
+
+			<ChevronLeft class="rotate-0 transition-transform group-data-[state=collapsed]:rotate-180" />
+		</Sidebar.Trigger>
+	</Sidebar.MenuItem>
+
 	<Sidebar.MenuItem>
 		<DropdownMenu.Root>
 			<DropdownMenu.Trigger>

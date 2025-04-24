@@ -2,7 +2,7 @@
 	import Logo from '$lib/components/Logo.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { User } from '@prisma/client';
-	import NavUser from './NavUser.svelte';
+	import FooterSidebar from './FooterSidebar.svelte';
 
 	let { user }: { user: User } = $props();
 
@@ -47,12 +47,16 @@
 			Graph-editor
 		</p>
 	</Sidebar.Header>
-	<Sidebar.Content>
+	<Sidebar.Content class="space-y-1">
 		<!-- Add content -->
+		<p class="w-full rounded p-2 hover:bg-purple-50">Home</p>
+		<p class="w-full rounded p-2 hover:bg-purple-50">Programmes</p>
+		<p class="w-full rounded p-2 hover:bg-purple-50">Courses</p>
+		<p class="w-full rounded p-2 hover:bg-purple-50">Users</p>
 	</Sidebar.Content>
 
 	<Sidebar.Footer>
-		<NavUser {user} />
+		<FooterSidebar {user} />
 	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

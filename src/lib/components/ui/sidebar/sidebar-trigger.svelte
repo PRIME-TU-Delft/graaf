@@ -9,6 +9,7 @@
 		ref = $bindable(null),
 		class: className,
 		onclick,
+		children,
 		...restProps
 	}: ComponentProps<typeof Button> & {
 		onclick?: (e: MouseEvent) => void;
@@ -25,10 +26,15 @@
 	}}
 	data-sidebar="trigger"
 	variant="ghost"
-	size="icon"
+	size={children ? 'sm' : 'icon'}
 	class={cn('h-7 w-7', className)}
 	{...restProps}
 >
-	<PanelLeft />
+	{#if children}
+		{@render children()}
+	{:else}
+		<PanelLeft />
+	{/if}
+
 	<span class="sr-only">Toggle Sidebar</span>
 </Button>
