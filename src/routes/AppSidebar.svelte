@@ -29,7 +29,7 @@
 	let menuItems = $derived.by(() => {
 		const items = [
 			{ name: 'Home', path: '/graph-editor', icon: Home },
-			{ name: 'Programs', path: '/graph-editor/programs', icon: LibraryBig },
+			{ name: 'Programmes', path: '/graph-editor/programs', icon: LibraryBig },
 			{ name: 'Courses', path: '/graph-editor/courses', icon: Notebook }
 		];
 		if (user?.role === 'ADMIN') {
