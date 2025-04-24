@@ -168,11 +168,7 @@ export class GraphD3 {
 	}
 
 	updateDomain(id: number) {
-		console.log({ id });
-
 		const selection = this.content.selectAll<SVGGElement, NodeData>(`#domain-${id}`);
-
-		console.log(selection, id);
 
 		selection
 			.call(NodeToolbox.updateHighlight, this)

@@ -4,12 +4,28 @@
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 	import Preview from './Preview.svelte';
+	import { afterNavigate } from '$app/navigation';
+	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	let tabs = ['Domains', 'Subjects', 'Lectures'];
 
 	const currentTab = $derived(page.url.href.split('/').pop()?.toLowerCase());
+
+	afterNavigate((navigation) => {
+		const pathname = navigation.to?.url?.pathname;
+
+		if (!pathname) return;
+
+		if (pathname.endsWith('domains')) {
+			graphD3Store.graphD3?.setView('DOMAINS');
+		} else if (pathname.endsWith('subjects')) {
+			graphD3Store.graphD3?.setView('SUBJECTS');
+		} else if (pathname.endsWith('lectures')) {
+			graphD3Store.graphD3?.setView('LECTURES');
+		}
+	});
 </script>
 
 <div class="layout prose mx-auto grid max-w-[80rem] gap-2 p-4 pt-10 text-blue-900">
