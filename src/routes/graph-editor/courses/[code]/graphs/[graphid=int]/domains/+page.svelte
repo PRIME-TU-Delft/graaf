@@ -171,7 +171,7 @@
 				{id}
 				class={[
 					'transition-colors delay-300',
-					page.url.hash == `#${id}` ? 'bg-blue-200' : 'bg-blue-200/0'
+					page.url.hash == `#${id}` ? 'bg-purple-200' : 'bg-purple-200/0'
 				]}
 			>
 				<Table.Cell>
@@ -230,9 +230,9 @@
 			<Button
 				variant="outline"
 				class={cn(
-					'flex w-full items-center border-0 border-blue-900 p-1 transition-all hover:bg-blue-200/50 focus:bg-blue-200/50',
+					'flex w-full items-center border-0 border-purple-900 p-1 transition-all hover:bg-purple-200/50 focus:bg-purple-200/50',
 					{
-						'border-2 bg-blue-200/30': style == null
+						'border-2 bg-purple-200/30': style == null
 					}
 				)}
 				onclick={() => handleChangeStyle(null, domainIndex)}
@@ -249,9 +249,9 @@
 				<Button
 					variant="outline"
 					class={cn(
-						'flex w-full items-center border-0 border-blue-900 p-1 transition-all hover:bg-blue-200/50 focus:bg-blue-200/50',
+						'flex w-full items-center border-0 border-purple-900 p-1 transition-all hover:bg-purple-200/50 focus:bg-purple-200/50',
 						{
-							'border-2 bg-blue-200/30': style == key
+							'border-2 bg-purple-200/30': style == key
 						}
 					)}
 					onclick={() => handleChangeStyle(key, domainIndex)}
@@ -269,6 +269,6 @@
 
 <style lang="postcss">
 	:global(.dragging) {
-		@apply opacity-50 shadow-lg ring-2 ring-blue-400;
+		@apply opacity-50 shadow-lg ring-2 ring-purple-400;
 	}
 </style>

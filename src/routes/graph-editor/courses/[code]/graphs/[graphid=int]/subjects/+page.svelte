@@ -127,7 +127,7 @@
 				{id}
 				class={[
 					'transition-colors delay-300',
-					page.url.hash == `#${id}` ? 'bg-blue-200' : 'bg-blue-200/0'
+					page.url.hash == `#${id}` ? 'bg-purple-200' : 'bg-purple-200/0'
 				]}
 			>
 				<Table.Cell>
