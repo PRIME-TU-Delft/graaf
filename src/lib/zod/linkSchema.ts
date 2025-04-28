@@ -13,7 +13,7 @@ export const newLinkSchema = z.object({
 		.string()
 		.min(1)
 		.max(settings.MAX_LINK_NAME_LENGTH)
-		.regex(/^[a-zA-Z-]+$/, 'Only letters and `-` without a space are allowed')
+		.regex(/^[a-zA-Z0-9-]+$/, 'Only letters and `-` without a space are allowed')
 });
 
 export const editLinkSchema = z.object({

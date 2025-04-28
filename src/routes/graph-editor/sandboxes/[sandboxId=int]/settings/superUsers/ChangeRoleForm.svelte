@@ -37,10 +37,10 @@
 	});
 	const { form: formData, enhance, submitting, delayed } = form;
 
-	const { sandbox } = page.data as PageData;
+	const { course } = page.data as PageData;
 	$effect(() => {
 		// When program.id or userId changes, update the form data
-		$formData.courseId = sandbox.id;
+		$formData.courseId = course.id;
 		$formData.userId = userId;
 		$formData.role = newRole.toLowerCase() as 'admin' | 'editor' | 'revoke';
 	});

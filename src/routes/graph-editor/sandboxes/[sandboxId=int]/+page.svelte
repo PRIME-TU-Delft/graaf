@@ -6,7 +6,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import EditGraph from './EditGraph.svelte';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import LinkEmbedGraph from './settings/graphLinks/LinkEmbedGraph.svelte';
+	import LinkGraph from './settings/links/LinkGraph.svelte';
 
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
@@ -22,7 +22,7 @@
 		<h1>Oops! Something went wrong</h1>
 		<p>{data.error}</p>
 	{:else}
-		<div class="flex justify-between">
+		<div class="flex justify-between gap-4">
 			<h1 class="shadow-blue-500/70">{data.sandbox.name} - {displayName(data.sandbox.owner)}</h1>
 
 			{#if data.user.id == data.sandbox.ownerId}
@@ -72,7 +72,7 @@
 						<ArrowRight />
 					</Button>
 
-					<LinkEmbedGraph {graph} sandbox={data.sandbox} longName />
+					<LinkGraph {graph} sandbox={data.sandbox} />
 					<EditGraph {graph} availableCourses={data.availableCourses} availableSandboxes={data.availableSandboxes} />
 				</div>
 			</a>
