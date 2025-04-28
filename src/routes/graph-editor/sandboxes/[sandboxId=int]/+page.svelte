@@ -45,7 +45,7 @@
 		nor should their content be posted publicly.
 		<br>
 		Looking to create a course? Please contact a programme administrator.
-		You can also copy graphs from your sandbox to a course, or even upgrade your sandbox to a course!
+		You can also copy graphs from your sandbox to a course, if you already have one.
 	</p>
 </section>
 

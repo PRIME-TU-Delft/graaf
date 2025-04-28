@@ -40,7 +40,7 @@
 	<a
 		href="/graph-editor/courses/{course.code}"
 		class={cn([
-			'flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-100/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-100',
+			'flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-50/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-200/50',
 			course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
 		])}
 		in:fade={{ duration: 200 }}

@@ -31,10 +31,13 @@ async function main() {
 
 	if (env.NETLIFY_CONTEXT != 'PROD') {
 		const users = testUsers.map((user) => {
+			const email =
+				user.fn.replaceAll(' ', '').toLowerCase() + user.ln.replaceAll(' ', '_').toLowerCase();
+
 			return prisma.user.create({
 				data: {
 					role: user.admin ? 'ADMIN' : 'USER',
-					email: `${user.fn.toLowerCase() + user.ln.toLowerCase()}@tudelft.nl`,
+					email: `${email}@tudelft.nl`,
 					nickname: user.fn + ' ' + user.ln,
 					firstName: user.fn,
 					lastName: user.ln,

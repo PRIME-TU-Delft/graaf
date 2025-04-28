@@ -14,7 +14,7 @@
 	{title}
 	button="Help"
 	icon="help"
-	class="fixed right-16 top-2 z-20 gap-1 bg-transparent text-white hover:underline"
+	class="fixed right-4 top-2 z-20 gap-1 bg-transparent text-white hover:underline"
 >
 	{@render children()}
 </DialogButton>
