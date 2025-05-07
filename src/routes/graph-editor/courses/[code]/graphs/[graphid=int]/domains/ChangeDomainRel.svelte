@@ -3,15 +3,15 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { type GraphType } from '$lib/validators/graphValidator';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
+	import { Replace } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
+	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
 	import type { SuperFormData } from 'sveltekit-superforms/client';
-	import { fromStore } from 'svelte/store';
-	import { Replace } from '@lucide/svelte';
+	import type { PageData } from './$types';
 
 	type Props = {
 		graph: GraphType;
@@ -29,7 +29,6 @@
 			onResult: ({ result }) => {
 				if (result.type == 'success') {
 					toast.success('Successfully changed relationship!');
-					popupOpen = false;
 				} else if (result.type == 'error') {
 					toast.error('Error changing domain relationship', {
 						description: 'The relationship probably already exists. Try reflshing the page.'

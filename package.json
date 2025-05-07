@@ -74,6 +74,7 @@
 		"d3": "^7.9.0",
 		"paneforge": "^0.0.6",
 		"postgres": "^3.4.5",
+		"screenfull": "^6.0.2",
 		"svelte-dnd-action": "^0.9.61",
 		"tsx": "^4.19.3"
 	},

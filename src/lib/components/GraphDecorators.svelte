@@ -6,11 +6,37 @@
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 	import { fade } from 'svelte/transition';
+	import { Button } from './ui/button';
+	import { Maximize, Minimize } from '@lucide/svelte';
+	import screenfull from 'screenfull';
 
 	let { graphD3 }: { graphD3: GraphD3 } = $props();
+
+	let isFullscreen = $state(false); // Is the scene fullscreen?
+
+	$effect(() => {
+		if (screenfull.isEnabled) {
+			screenfull.on('change', () => {
+				isFullscreen = screenfull.isFullscreen;
+			});
+		}
+	});
+
+	function toggleFullscreen() {
+		if (!screenfull.isEnabled || !document) return;
+
+		const svgParent = graphD3.svg.node()?.parentElement?.parentElement;
+
+		if (!svgParent) {
+			console.error('SVG parent element not found');
+			return;
+		}
+
+		screenfull.toggle(svgParent);
+	}
 </script>
 
-{#if graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
+{#if !graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
 	<Accordion.Root
 		type="single"
 		class="absolute right-4 top-4 rounded-xl border-b-0 bg-white/90 p-3"
@@ -34,20 +60,24 @@
 
 {#if !graphView.isLectures()}
 	<div
-		class="absolute bottom-3 right-3 flex flex-col gap-2"
+		class="absolute bottom-1 right-1 flex flex-col gap-1"
 		transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }}
 	>
-		<button
-			class="size-7 scale-100 rounded-full p-1 ring-blue-800 transition-transform hover:scale-110 focus:ring-1"
-			onclick={() => graphD3.zoomIn()}
-		>
+		<Button class="size-8 rounded-xl" onclick={() => graphD3.zoomIn()} size="icon">
 			<ZoomIn />
-		</button>
-		<button
-			class="size-7 scale-100 rounded-full p-1 ring-blue-800 transition-transform hover:scale-110 focus:ring-1"
-			onclick={() => graphD3.zoomOut()}
-		>
+		</Button>
+		<Button class="size-8 rounded-xl" onclick={() => graphD3.zoomOut()} size="icon">
 			<ZoomOut />
-		</button>
+		</Button>
+
+		{#if screenfull.isEnabled && document}
+			<Button class="size-8 rounded-xl" onclick={toggleFullscreen}>
+				{#if isFullscreen}
+					<Minimize class="h-5 w-5" />
+				{:else}
+					<Maximize class="h-5 w-5" />
+				{/if}
+			</Button>
+		{/if}
 	</div>
 {/if}
