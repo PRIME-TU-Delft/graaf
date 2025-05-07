@@ -41,54 +41,58 @@
 	);
 </script>
 
-<Popover.Root bind:open={popupOpen}>
-	<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }))}
-		><Plus /> Create Relationship</Popover.Trigger
-	>
-	<Popover.Content>
-		<form action="?/add-domain-rel" method="POST" use:enhance>
-			<p class="text-lg font-bold">Create Relationship</p>
+<div class="sticky top-2 z-10 mt-12 flex justify-between">
+	<h2 class="m-0">Relationships</h2>
 
-			<input type="hidden" name="graphId" value={graph.id} />
+	<Popover.Root bind:open={popupOpen}>
+		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'h-9')}>
+			<Plus /> Create Relationship</Popover.Trigger
+		>
+		<Popover.Content>
+			<form action="?/add-domain-rel" method="POST" use:enhance>
+				<p class="text-lg font-bold">Create Relationship</p>
 
-			<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
-			<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
+				<input type="hidden" name="graphId" value={graph.id} />
 
-			<Form.FormError {form} />
+				<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
+				<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
 
-			<div class="flex justify-between gap-1">
-				{@render relVisualizer()}
-				<Form.FormButton
-					disabled={isTheSameDomain || !$formData.sourceDomainId || !$formData.targetDomainId}
-				>
-					Submit
-				</Form.FormButton>
+				<Form.FormError {form} />
+
+				<div class="flex justify-between gap-1">
+					{@render relVisualizer()}
+					<Form.FormButton
+						disabled={isTheSameDomain || !$formData.sourceDomainId || !$formData.targetDomainId}
+					>
+						Submit
+					</Form.FormButton>
+				</div>
+			</form>
+		</Popover.Content>
+	</Popover.Root>
+
+	{#snippet relVisualizer()}
+		<div class="flex items-center gap-1">
+			<div
+				class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
+					'border-red-500': isTheSameDomain
+				})}
+				class:opacity-50={$formData.sourceDomainId == 0}
+			>
+				{$formData.sourceDomainId || 'select in'}
 			</div>
-		</form>
-	</Popover.Content>
-</Popover.Root>
-
-{#snippet relVisualizer()}
-	<div class="flex items-center gap-1">
-		<div
-			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-				'border-red-500': isTheSameDomain
-			})}
-			class:opacity-50={$formData.sourceDomainId == 0}
-		>
-			{$formData.sourceDomainId || 'select in'}
+			<ArrowRight class="size-4" />
+			<div
+				class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
+					'border-red-500': isTheSameDomain
+				})}
+				class:opacity-50={$formData.targetDomainId == 0}
+			>
+				{$formData.targetDomainId || 'select out'}
+			</div>
+			{#if isTheSameDomain}
+				<p class="ml-1 text-xs text-red-500">Domains can't be the same.</p>
+			{/if}
 		</div>
-		<ArrowRight class="size-4" />
-		<div
-			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-				'border-red-500': isTheSameDomain
-			})}
-			class:opacity-50={$formData.targetDomainId == 0}
-		>
-			{$formData.targetDomainId || 'select out'}
-		</div>
-		{#if isTheSameDomain}
-			<p class="ml-1 text-xs text-red-500">Domains can't be the same.</p>
-		{/if}
-	</div>
-{/snippet}
+	{/snippet}
+</div>

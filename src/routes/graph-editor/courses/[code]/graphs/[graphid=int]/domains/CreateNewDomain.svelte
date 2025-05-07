@@ -45,6 +45,7 @@
 	button="New Domain"
 	title="Create Domain"
 	description="A domain is a collection of subjects that are related to each other."
+	class="sticky top-2 z-10 float-right -mt-14 h-9"
 >
 	<!-- For sumbitting a NEW PROGRAM
  	It triggers an action that can be seen in +page.server.ts -->

@@ -14,16 +14,16 @@
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import SortableList from '../SortableList.svelte';
 
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
+	import { dragHandle } from 'svelte-dnd-action';
 
 	import { enhance } from '$app/forms';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
-	import type { DomainType } from '$lib/validators/graphValidator';
-	import { ChevronRight, Replace, Sparkles, Trash } from '@lucide/svelte';
+	import { ChevronRight, Sparkles, Trash } from '@lucide/svelte';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
@@ -101,17 +101,16 @@
 		}
 	}
 
-	// Send a list of domains to the server to rearrange them
-	async function handleRearrange(list: DomainType[]) {
-		let body = list
-			.filter((domain, index) => domain.order != index)
-			.map((d, index) => {
-				return {
-					domainId: d.id,
-					oldOrder: d.order,
-					newOrder: index
-				};
-			});
+	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
+		course.graphs[0].domains = e.detail.items;
+	}
+	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
+		course.graphs[0].domains = e.detail.items;
+
+		const body = course.graphs[0].domains.map((domain, index) => ({
+			domainId: domain.id,
+			newOrder: index
+		}));
 
 		const response = await fetch('/api/domains/order', {
 			method: 'PATCH',
@@ -120,58 +119,61 @@
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update domain order, try again later!');
-			return;
-		}
+			// Reset the order of the domains
+			course.graphs[0].domains = course.graphs[0].domains.toSorted((a, b) => a.order - b.order);
 
-		course.graphs[0].domains = list;
+			toast.error('Failed to update domain order, try again later!');
+		} else {
+			// Update the order of the domains in the graph
+			course.graphs[0].domains.forEach((domain, index) => {
+				domain.order = index;
+			});
+		}
 	}
 </script>
 
-<div class="sticky top-4 z-10 float-right -mt-8">
-	<CreateNewDomain {graph} />
-</div>
+<CreateNewDomain {graph} />
 
-<Table.Root class="mt-2">
-	<Table.Header>
-		<Table.Row>
-			<Table.Head class="w-12"></Table.Head>
-			<Table.Head class="max-w-12 px-0">Name</Table.Head>
-			<Table.Head>Style</Table.Head>
-			<Table.Head class="text-right">Settings</Table.Head>
-		</Table.Row>
-	</Table.Header>
-	<Table.Body>
-		<SortableList
-			list={course.graphs[0].domains}
-			onrearrange={(list) => handleRearrange(list)}
-			useId={(domain) => `${domain.id}-${domain.name}`}
-		>
-			{#snippet children(domain, index)}
-				<Table.Cell class="px-1">
-					<Button variant="secondary" onclick={() => toast.warning('Not implemented')}>
-						<MoveVertical />
-					</Button>
-				</Table.Cell>
-				<Table.Cell class="max-w-40 overflow-hidden text-ellipsis text-nowrap pr-0">
-					{domain.name}
-				</Table.Cell>
-				<Table.Cell>
-					{@render domainStyle(domain.style, index)}
-				</Table.Cell>
-				<Table.Cell>
-					<ChangeDomain {graph} {domain} />
-				</Table.Cell>
-			{/snippet}
-		</SortableList>
-	</Table.Body>
-</Table.Root>
+<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', '5rem', '5rem']}>
+	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+		<div class="p-2"></div>
+		<div class="p-2">Name</div>
+		<div class="p-2">Style</div>
+		<div class="p-2 text-right">Settings</div>
+	</div>
 
-<h2>Relationships</h2>
+	<Grid.ReorderRows
+		items={course.graphs[0].domains}
+		onconsider={handleDndConsider}
+		onfinalize={handleDndFinalize}
+	>
+		{#snippet children(domain, index)}
+			<Grid.Cell class="p-0">
+				<div
+					class="m-2 rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
+					use:dragHandle
+					aria-label="drag-handle for {domain.name}"
+				>
+					<MoveVertical class="h-4 w-4" />
+				</div>
+			</Grid.Cell>
 
-<div class="sticky top-4 z-20 float-right -mt-14">
-	<CreateNewRelationship {graph} />
-</div>
+			<Grid.Cell>
+				<p class="m-0 truncate">{domain.name}</p>
+			</Grid.Cell>
+
+			<Grid.Cell>
+				{@render domainStyle(domain.style, index)}
+			</Grid.Cell>
+
+			<Grid.Cell>
+				<ChangeDomain {graph} {domain} />
+			</Grid.Cell>
+		{/snippet}
+	</Grid.ReorderRows>
+</Grid.Root>
+
+<CreateNewRelationship {graph} />
 
 <Table.Root class="mt-2">
 	<Table.Header>

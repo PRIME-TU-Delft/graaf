@@ -4,7 +4,6 @@ import * as settings from '$lib/settings';
 export const patchOrderSchema = z.array(
 	z.object({
 		domainId: z.number(),
-		oldOrder: z.number(),
 		newOrder: z.number()
 	})
 );

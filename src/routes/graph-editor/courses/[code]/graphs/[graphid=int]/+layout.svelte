@@ -38,10 +38,10 @@
 					<DropdownMenu.Trigger
 						class={cn(
 							buttonVariants({ variant: 'default', size: 'lg' }),
-							'sticky top-0 z-10 rounded-ee-2xl rounded-es-none rounded-se-none'
+							'sticky top-0 z-20 rounded-ee-2xl rounded-es-none rounded-se-none'
 						)}
 					>
-						{currentTab}
+						View: {currentTab}
 						<ChevronDown />
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
