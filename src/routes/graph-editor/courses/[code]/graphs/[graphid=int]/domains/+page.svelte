@@ -1,8 +1,8 @@
 <script lang="ts">
-	import * as settings from '$lib/settings';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { cn } from '$lib/utils';
+	import * as settings from '$lib/settings';
+	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
@@ -10,19 +10,23 @@
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
 	import CreateNewRelationship from './CreateNewDomainRel.svelte';
-	import DomainRelSettings from './DomainRelSettings.svelte';
 
+	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import { Button } from '$lib/components/ui/button';
 	import SortableList from '../SortableList.svelte';
 
 	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 
-	import type { PageData } from './$types';
-	import type { Domain, DomainStyle } from '@prisma/client';
-	import type { DomainType } from '$lib/validators/graphValidator';
+	import { enhance } from '$app/forms';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
+	import type { DomainType } from '$lib/validators/graphValidator';
+	import { ChevronRight, Replace, Sparkles, Trash } from '@lucide/svelte';
+	import type { Domain, DomainStyle } from '@prisma/client';
+	import type { PageData } from './$types';
+	import ChangeDomainRel from './ChangeDomainRel.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let course = $state(data.course);
@@ -37,6 +41,10 @@
 		}
 		return map;
 	});
+
+	class ChangeStyleOpenState {
+		isOpen = $state(false);
+	}
 
 	$effect(() => {
 		if (data) course = data.course;
@@ -65,7 +73,12 @@
 	 * @param domainIndex - The index of the domain
 	 */
 
-	async function handleChangeStyle(key: DomainStyle | null, domainIndex: number) {
+	async function handleChangeStyle(
+		key: DomainStyle | null,
+		domainIndex: number,
+		triggerId: string,
+		isOpenState: ChangeStyleOpenState
+	) {
 		const domain = course.graphs[0].domains[domainIndex];
 		domain.style = key;
 
@@ -81,6 +94,10 @@
 		} else {
 			graphD3Store.graphD3?.setData(course.graphs[0]);
 			graphD3Store.graphD3?.updateDomain(domain.id);
+
+			closeAndFocusTrigger(triggerId, () => {
+				isOpenState.isOpen = false;
+			});
 		}
 	}
 
@@ -111,8 +128,7 @@
 	}
 </script>
 
-<div class="flex items-end justify-between">
-	<h2 class="m-0">Domains</h2>
+<div class="sticky top-4 z-10 float-right -mt-8">
 	<CreateNewDomain {graph} />
 </div>
 
@@ -151,17 +167,19 @@
 	</Table.Body>
 </Table.Root>
 
-<div class="mt-12 flex items-end justify-between">
-	<h2 class="m-0">Relationship</h2>
+<h2>Relationships</h2>
+
+<div class="sticky top-4 z-20 float-right -mt-14">
 	<CreateNewRelationship {graph} />
 </div>
+
 <Table.Root class="mt-2">
 	<Table.Header>
 		<Table.Row>
 			<Table.Head></Table.Head>
-			<Table.Head>Name</Table.Head>
-			<Table.Head>Linked to</Table.Head>
-			<Table.Head class="text-right">Settings</Table.Head>
+			<Table.Head>Domain from</Table.Head>
+			<Table.Head>Domain to</Table.Head>
+			<Table.Head class="text-right">Delete</Table.Head>
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
@@ -178,17 +196,13 @@
 					{index + 1}
 				</Table.Cell>
 				<Table.Cell>
-					<Button variant="secondary" href="#{domain.id}-{domain.name}">
-						{domain.name}
-					</Button>
+					{@render domainRelation('domain', domain, outDomain)}
 				</Table.Cell>
 				<Table.Cell>
-					<Button variant="secondary" href="#{outDomain.id}-{outDomain.name}">
-						{outDomain.name}
-					</Button>
+					{@render domainRelation('outDomain', domain, outDomain)}
 				</Table.Cell>
 				<Table.Cell class="text-right">
-					<DomainRelSettings {domain} {outDomain} {graph} />
+					{@render deleteDomainRel(domain, outDomain)}
 				</Table.Cell>
 			</Table.Row>
 		{:else}
@@ -203,15 +217,14 @@
 	</Table.Body>
 </Table.Root>
 
-<div class="h-dvh"></div>
-
 <!-- This snippet defines the style button in the Domains table. 
  ONCHANGE, it updates the UI locally, then updates the server -->
 {#snippet domainStyle(style: string | null, domainIndex: number)}
 	{@const color = style ? settings.COLORS[style as keyof typeof settings.COLORS] : '#cccccc'}
 	{@const triggerId = `style-trigger-${useId()}`}
+	{@const isOpenState = new ChangeStyleOpenState()}
 
-	<Popover.Root>
+	<Popover.Root bind:open={isOpenState.isOpen}>
 		<Popover.Trigger class="interactive" id={triggerId}>
 			<div
 				class="relative h-6 w-6 scale-100 rounded-full shadow-none transition-all duration-300 hover:scale-110 hover:shadow-lg"
@@ -235,7 +248,7 @@
 						'border-2 bg-purple-200/30': style == null
 					}
 				)}
-				onclick={() => handleChangeStyle(null, domainIndex)}
+				onclick={() => handleChangeStyle(null, domainIndex, triggerId, isOpenState)}
 			>
 				<div
 					style="border-color: {color}50; background: {color}30; border-width: 3px"
@@ -254,7 +267,7 @@
 							'border-2 bg-purple-200/30': style == key
 						}
 					)}
-					onclick={() => handleChangeStyle(key, domainIndex)}
+					onclick={() => handleChangeStyle(key, domainIndex, triggerId, isOpenState)}
 				>
 					<div
 						style="border-color: {color}; background: {color}50; border-width: 3px"
@@ -263,6 +276,57 @@
 					<p class="grow cursor-pointer p-2">{key.replaceAll('_', ' ').toLowerCase()}</p>
 				</Button>
 			{/each}
+		</Popover.Content>
+	</Popover.Root>
+{/snippet}
+
+{#snippet domainRelation(
+	type: 'domain' | 'outDomain' = 'domain',
+	domain: Domain,
+	outDomain: Domain
+)}
+	{@const thisDomain = type == 'domain' ? domain : outDomain}
+
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
+			{thisDomain.name}
+			<ChevronRight />
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
+			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
+				<a href="#{thisDomain.id}-{thisDomain.name}">
+					<DropdownMenu.Item>
+						<Sparkles />
+						Highlight {thisDomain.name}
+					</DropdownMenu.Item>
+				</a>
+				<DropdownMenu.Separator />
+			</DropdownMenu.Group>
+
+			<DropdownMenu.Group>
+				<DropdownMenu.GroupHeading>
+					Change {thisDomain.name} to:
+				</DropdownMenu.GroupHeading>
+
+				<ChangeDomainRel {graph} inDomain={domain} {outDomain} {type} />
+			</DropdownMenu.Group>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
+
+{#snippet deleteDomainRel(domain: Domain, outDomain: Domain)}
+	<Popover.Root>
+		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
+			<Trash />
+		</Popover.Trigger>
+		<Popover.Content side="right" class="space-y-1">
+			<form action="?/delete-domain-rel" method="POST" use:enhance>
+				<input type="hidden" name="sourceDomainId" value={domain.id} />
+				<input type="hidden" name="targetDomainId" value={outDomain.id} />
+
+				<p class="mb-2">Are you sure you would like to delete relationship</p>
+				<Form.Button variant="destructive" type="submit">Yes, delete</Form.Button>
+			</form>
 		</Popover.Content>
 	</Popover.Root>
 {/snippet}

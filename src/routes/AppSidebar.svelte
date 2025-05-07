@@ -66,7 +66,7 @@
 										<Tooltip.Trigger class="w-full">
 											{@render sidebarItem(item, props)}
 										</Tooltip.Trigger>
-										<Tooltip.Content side="right">
+										<Tooltip.Content side="right" class="z-[100]">
 											<p>{item.name}</p>
 										</Tooltip.Content>
 									</Tooltip.Root>
