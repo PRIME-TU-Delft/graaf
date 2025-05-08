@@ -41,32 +41,35 @@
 	);
 </script>
 
-<Popover.Root bind:open={popupOpen}>
-	<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }))}>
-		<Plus /> Create Relationship
-	</Popover.Trigger>
-	<Popover.Content>
-		<form action="?/add-subject-rel" method="POST" use:enhance>
-			<p class="text-lg font-bold">Create Relationship</p>
+<div class="sticky top-2 z-10 mt-12 flex justify-between">
+	<h2 class="m-0">Relationships</h2>
+	<Popover.Root bind:open={popupOpen}>
+		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }))}>
+			<Plus /> Create Relationship
+		</Popover.Trigger>
+		<Popover.Content>
+			<form action="?/add-subject-rel" method="POST" use:enhance>
+				<p class="text-lg font-bold">Create Relationship</p>
 
-			<input type="hidden" name="graphId" value={graph.id} />
+				<input type="hidden" name="graphId" value={graph.id} />
 
-			<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} {form} {formData} />
-			<SubjectRelField id="targetSubjectId" subjects={graph.subjects} {form} {formData} />
+				<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} {form} {formData} />
+				<SubjectRelField id="targetSubjectId" subjects={graph.subjects} {form} {formData} />
 
-			<Form.FormError {form} />
+				<Form.FormError {form} />
 
-			<div class="flex justify-between gap-1">
-				{@render relVisualizer()}
-				<Form.FormButton
-					disabled={isTheSameSubject || !$formData.sourceSubjectId || !$formData.targetSubjectId}
-				>
-					Submit
-				</Form.FormButton>
-			</div>
-		</form>
-	</Popover.Content>
-</Popover.Root>
+				<div class="flex justify-between gap-1">
+					{@render relVisualizer()}
+					<Form.FormButton
+						disabled={isTheSameSubject || !$formData.sourceSubjectId || !$formData.targetSubjectId}
+					>
+						Submit
+					</Form.FormButton>
+				</div>
+			</form>
+		</Popover.Content>
+	</Popover.Root>
+</div>
 
 {#snippet relVisualizer()}
 	<div class="flex items-center gap-1">

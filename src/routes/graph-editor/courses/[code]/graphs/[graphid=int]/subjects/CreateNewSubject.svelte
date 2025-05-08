@@ -47,6 +47,7 @@
 	button="New Subject"
 	title="Create Subject"
 	description="A subject can be related to other subject."
+	class="sticky top-2 z-10 float-right -mt-14 h-9"
 >
 	<!-- For sumbitting a NEW PROGRAM
  	It triggers an action that can be seen in +page.server.ts -->

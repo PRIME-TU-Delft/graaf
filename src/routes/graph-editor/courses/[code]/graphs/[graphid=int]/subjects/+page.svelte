@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
-	import * as Table from '$lib/components/ui/table/index.js';
+	import { enhance } from '$app/forms';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Grid from '$lib/components/ui/grid/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { cn } from '$lib/utils';
+	import { ChevronRight, Sparkles, Trash } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
 	import Link from 'lucide-svelte/icons/link';
-	import MoveVertical from 'lucide-svelte/icons/move-vertical';
 	import { toast } from 'svelte-sonner';
-	import SortableList from '../SortableList.svelte';
 	import type { PageData } from './$types';
 	import ChangeSubject from './ChangeSubject.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
@@ -18,25 +20,30 @@
 	const graph = $derived(data.course.graphs[0]);
 
 	const subjectMapping = $derived.by(() => {
-		const map: { subject: Subject; outSubject: Subject }[] = [];
+		const map: { id: string; subject: Subject; outSubject: Subject }[] = [];
 		for (const subject of graph.subjects) {
 			for (const targetSubject of subject.targetSubjects) {
-				map.push({ subject, outSubject: targetSubject });
+				map.push({
+					id: `subject-rel-${subject.id}-${targetSubject.id}`,
+					subject,
+					outSubject: targetSubject
+				});
 			}
 		}
 		return map;
 	});
 
-	async function handleRearrange(newSubjectList: typeof graph.subjects) {
-		let body = newSubjectList
-			.filter((subject, index) => subject.order != index)
-			.map((d, index) => {
-				return {
-					subjectId: d.id,
-					oldOrder: d.order,
-					newOrder: index
-				};
-			});
+	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['subjects'] }>) {
+		course.graphs[0].subjects = e.detail.items;
+	}
+
+	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['subjects'] }>) {
+		course.graphs[0].subjects = e.detail.items;
+
+		const body = course.graphs[0].subjects.map((subject, index) => ({
+			subjectId: subject.id,
+			newOrder: index
+		}));
 
 		const response = await fetch('/api/subjects/order', {
 			method: 'PATCH',
@@ -45,124 +52,134 @@
 		});
 
 		if (!response.ok) {
-			toast.error('Failed to update subject style, try again later!');
-			return;
-		}
+			// Reset the order of the domains
+			course.graphs[0].subjects = course.graphs[0].subjects.toSorted((a, b) => a.order - b.order);
 
-		course.graphs[0].subjects = newSubjectList;
+			console.log(await response.json());
+
+			toast.error('Failed to update subject order, try again later!');
+		} else {
+			// Update the order of the domains in the graph
+			course.graphs[0].subjects.forEach((domain, index) => {
+				domain.order = index;
+			});
+		}
 	}
 </script>
 
-<div class="flex items-end justify-between">
-	<h2 class="m-0">Subject</h2>
-	<CreateNewSubject {graph} />
-</div>
+<CreateNewSubject {graph} />
 
-<Table.Root class="mt-2">
-	<Table.Header>
-		<Table.Row>
-			<Table.Head class="w-12"></Table.Head>
-			<Table.Head>Name</Table.Head>
-			<Table.Head class="flex items-center gap-1"><Link class="size-4" />Domain</Table.Head>
-			<Table.Head>Edit</Table.Head>
-		</Table.Row>
-	</Table.Header>
-	<Table.Body>
-		<SortableList
-			list={course.graphs[0].subjects}
-			onrearrange={(list) => handleRearrange(list)}
-			useId={(subject) => `${subject.id}-${subject.name}`}
-		>
-			{#snippet children(subject)}
-				<Table.Cell class="px-0">
-					<Button variant="secondary" onclick={() => toast.warning('Not implemented')}>
-						<MoveVertical />
-					</Button>
-				</Table.Cell>
-				<Table.Cell>{subject.name}</Table.Cell>
-				<Table.Cell>
-					{#if subject.domain}
-						<Button
-							class="interactive"
-							variant="outline"
-							href="./domains#{subject.domain!.id}-{subject.domain!.name}"
-						>
-							{subject.domain.name}
-						</Button>
-					{:else}
-						<Button
-							class="interactive"
-							variant="outline"
-							onclick={() => toast.warning('Not implemented')}
-						>
-							None
-						</Button>
-					{/if}
-				</Table.Cell>
-				<Table.Cell>
-					<ChangeSubject {subject} {graph} />
-				</Table.Cell>
-			{/snippet}
-		</SortableList>
-	</Table.Body>
-</Table.Root>
+<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
+	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+		<div class="p-2"></div>
+		<div class="p-2">Name</div>
+		<div class="flex gap-2 p-2"><Link class="size-4" />Domain</div>
+		<div class="p-2 text-right">Edit</div>
+	</div>
 
-<div class="mt-12 flex items-end justify-between">
-	<h2 class="m-0">Relationships</h2>
-	<CreateNewSubjectRel {graph} />
-</div>
-<Table.Root class="mt-2">
-	<Table.Header>
-		<Table.Row>
-			<Table.Head></Table.Head>
-			<Table.Head>Name</Table.Head>
-			<Table.Head>Linked to</Table.Head>
-			<Table.Head class="text-right">Settings</Table.Head>
-		</Table.Row>
-	</Table.Header>
-	<Table.Body>
-		{#each subjectMapping as { subject, outSubject }, index (subject.id.toString() + outSubject.id.toString())}
-			{@const id = `domain-rel-${subject.id}-${outSubject.id}`}
-			<Table.Row
-				{id}
-				class={[
-					'transition-colors delay-300',
-					page.url.hash == `#${id}` ? 'bg-purple-200' : 'bg-purple-200/0'
-				]}
-			>
-				<Table.Cell>
-					{index + 1}
-				</Table.Cell>
-				<Table.Cell>
-					<Button variant="secondary" href="#{subject.id}-{subject.name}">
-						{subject.name}
-					</Button>
-				</Table.Cell>
-				<Table.Cell>
-					<Button variant="secondary" href="#{outSubject.id}-{outSubject.name}">
-						{outSubject.name}
-					</Button>
-				</Table.Cell>
-				<Table.Cell>
-					<Button
-						class="float-right"
-						variant="outline"
-						onclick={() => toast.warning('Not implemented', { description: 'includes: delete' })}
-					>
-						<Ellipsis />
-					</Button>
-				</Table.Cell>
-			</Table.Row>
-		{:else}
-			<Table.Row>
-				<Table.Cell colspan={2}>Create first subject relationship</Table.Cell>
+	<Grid.ReorderRows
+		name="subject"
+		items={course.graphs[0].subjects}
+		onconsider={handleDndConsider}
+		onfinalize={handleDndFinalize}
+	>
+		{#snippet children(subject)}
+			<Grid.Cell>
+				{subject.name}
+			</Grid.Cell>
 
-				<Table.Cell colspan={2}>
-					<CreateNewSubjectRel {graph} />
-				</Table.Cell>
-			</Table.Row>
-		{/each}
-	</Table.Body>
-</Table.Root>
+			<Grid.Cell>
+				{#if subject.domain}
+					<Button variant="outline" href="./domains#domain-{subject.domain!.id}">
+						{subject.domain.name}
+					</Button>
+				{:else}
+					<Button variant="outline" onclick={() => toast.warning('Not implemented')}>None</Button>
+				{/if}
+			</Grid.Cell>
+
+			<Grid.Cell>
+				<ChangeSubject {subject} {graph} />
+			</Grid.Cell>
+		{/snippet}
+	</Grid.ReorderRows>
+</Grid.Root>
+
+<CreateNewSubjectRel {graph} />
+
+<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
+	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+		<div class="p-2"></div>
+		<div class="p-2">Subject from</div>
+		<div class="p-2">Subject to</div>
+		<div class="p-2 text-right">Edit</div>
+	</div>
+
+	<Grid.Rows name="subject-rel" items={subjectMapping}>
+		{#snippet children({ id, subject, outSubject }, index)}
+			<Grid.Cell>
+				{index + 1}
+			</Grid.Cell>
+
+			<Grid.Cell>
+				{@render subjectRelation('subject', subject, outSubject)}
+			</Grid.Cell>
+			<Grid.Cell>
+				{@render subjectRelation('outSubject', subject, outSubject)}
+			</Grid.Cell>
+			<Grid.Cell class="justify-end">
+				{@render deleteSubjectRel(subject, outSubject)}
+			</Grid.Cell>
+		{/snippet}
+	</Grid.Rows>
+</Grid.Root>
 
 <div class="h-dvh"></div>
+
+{#snippet subjectRelation(type: 'subject' | 'outSubject', subject: Subject, outSubject: Subject)}
+	{@const thisSubject = type == 'subject' ? subject : outSubject}
+
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
+			{thisSubject.name}
+			<ChevronRight />
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
+			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
+				<a href="#subject-{thisSubject.id}">
+					<DropdownMenu.Item>
+						<Sparkles />
+						Highlight {thisSubject.name}
+					</DropdownMenu.Item>
+				</a>
+				<DropdownMenu.Separator />
+			</DropdownMenu.Group>
+
+			<DropdownMenu.Group>
+				<DropdownMenu.GroupHeading>
+					Change {thisSubject.name} to:
+				</DropdownMenu.GroupHeading>
+
+				TODO: add this functionality for subjects
+				<!-- <ChangeSubjectRel {graph} inSubject={subject} {outSubject} {type} /> -->
+			</DropdownMenu.Group>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
+
+{#snippet deleteSubjectRel(subject: Subject, outSubject: Subject)}
+	<Popover.Root>
+		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
+			<Trash />
+		</Popover.Trigger>
+		<Popover.Content side="right" class="space-y-1">
+			<form action="?/delete-subject-rel" method="POST" use:enhance>
+				<input type="hidden" name="sourceSubjectId" value={subject.id} />
+				<input type="hidden" name="targetSubjectId" value={outSubject.id} />
+
+				<p class="mb-2">Are you sure you would like to delete this relationship</p>
+				<Form.Button variant="destructive" type="submit">Yes, delete</Form.Button>
+			</form>
+		</Popover.Content>
+	</Popover.Root>
+{/snippet}

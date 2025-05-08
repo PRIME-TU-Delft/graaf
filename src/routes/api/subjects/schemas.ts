@@ -3,7 +3,6 @@ import { z } from 'zod';
 export const patchOrderSchema = z.array(
 	z.object({
 		subjectId: z.number(),
-		oldOrder: z.number(),
 		newOrder: z.number()
 	})
 );

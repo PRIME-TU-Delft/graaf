@@ -46,8 +46,8 @@
 
 	<Popover.Root bind:open={popupOpen}>
 		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'h-9')}>
-			<Plus /> Create Relationship</Popover.Trigger
-		>
+			<Plus /> Create Relationship
+		</Popover.Trigger>
 		<Popover.Content>
 			<form action="?/add-domain-rel" method="POST" use:enhance>
 				<p class="text-lg font-bold">Create Relationship</p>

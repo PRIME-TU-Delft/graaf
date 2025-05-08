@@ -18,9 +18,6 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
 
-	import MoveVertical from 'lucide-svelte/icons/move-vertical';
-	import { dragHandle } from 'svelte-dnd-action';
-
 	import { enhance } from '$app/forms';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 	import { ChevronRight, Sparkles, Trash } from '@lucide/svelte';
@@ -143,21 +140,12 @@
 	</div>
 
 	<Grid.ReorderRows
+		name="domain"
 		items={course.graphs[0].domains}
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
 		{#snippet children(domain, index)}
-			<Grid.Cell class="p-0">
-				<div
-					class="m-2 rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
-					use:dragHandle
-					aria-label="drag-handle for {domain.name}"
-				>
-					<MoveVertical class="h-4 w-4" />
-				</div>
-			</Grid.Cell>
-
 			<Grid.Cell>
 				<p class="m-0 truncate">{domain.name}</p>
 			</Grid.Cell>
@@ -296,7 +284,7 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
 			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
-				<a href="#{thisDomain.id}-{thisDomain.name}">
+				<a href="#domain-{thisDomain.id}">
 					<DropdownMenu.Item>
 						<Sparkles />
 						Highlight {thisDomain.name}
@@ -326,15 +314,9 @@
 				<input type="hidden" name="sourceDomainId" value={domain.id} />
 				<input type="hidden" name="targetDomainId" value={outDomain.id} />
 
-				<p class="mb-2">Are you sure you would like to delete relationship</p>
+				<p class="mb-2">Are you sure you would like to delete this relationship</p>
 				<Form.Button variant="destructive" type="submit">Yes, delete</Form.Button>
 			</form>
 		</Popover.Content>
 	</Popover.Root>
 {/snippet}
-
-<style lang="postcss">
-	:global(.dragging) {
-		@apply opacity-50 shadow-lg ring-2 ring-purple-400;
-	}
-</style>
