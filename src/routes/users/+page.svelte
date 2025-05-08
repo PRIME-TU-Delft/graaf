@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { cn } from '$lib/utils';
 	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
-	import { cn } from '$lib/utils';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -11,7 +11,7 @@
 	<p>Here you can find all users</p>
 
 	<div class="grid gap-2">
-		{#each data.users.toSorted((a, b) => (a.id == data.user.id ? -1 : 0)) as user, i (user.id)}
+		{#each data.users.toSorted((a) => (a.id == data.user.id ? -1 : 0)) as user, i (user.id)}
 			<div
 				class={cn(
 					'flex items-center justify-between rounded bg-purple-50 p-2 shadow-none shadow-purple-300 transition-all hover:bg-purple-100 hover:shadow-sm',

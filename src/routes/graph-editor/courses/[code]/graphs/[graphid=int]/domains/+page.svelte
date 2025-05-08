@@ -181,7 +181,7 @@
 		</div>
 
 		<Grid.Rows name="subject-rel" items={domainMapping} class="space-y-1">
-			{#snippet children({ id, domain, outDomain }, index)}
+			{#snippet children({ domain, outDomain }, index)}
 				<Grid.Cell>
 					{index + 1}
 				</Grid.Cell>

@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { type GraphType } from '$lib/validators/graphValidator';
-	import { changeSubjectRelSchema, subjectRelSchema } from '$lib/zod/subjectSchema';
+	import { changeSubjectRelSchema } from '$lib/zod/subjectSchema';
 	import { Replace } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';

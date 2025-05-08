@@ -3,7 +3,7 @@
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
-	let mouseState: number = $state(-1);
+	let mouseState: number = $state(-1); // eslint-disable-line @typescript-eslint/no-unused-vars
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
 
 	let urls = $derived.by(() => {

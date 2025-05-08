@@ -2,17 +2,10 @@
 	import { ArrowRight, MoveVertical } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import type { SubjectType } from './types';
+	import type { LectureType, SubjectType } from './types';
 
 	type Props = {
-		lecture: {
-			id: number;
-			name: string;
-			subjects: {
-				id: number;
-				name: string;
-			}[];
-		};
+		lecture: LectureType;
 	};
 
 	const { lecture = $bindable() }: Props = $props();

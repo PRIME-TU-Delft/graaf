@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import type { GraphType } from '$lib/validators/graphValidator';

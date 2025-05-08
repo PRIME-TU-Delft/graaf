@@ -24,7 +24,7 @@
 
 	function formGenerator(id: string) {
 		return superForm((page.data as PageData).changeDomainRelForm, {
-			id: type + 'changeDomainRelForm' + useId(),
+			id: type + 'changeDomainRelForm' + useId() + '-' + id,
 			validators: zodClient(changeDomainRelSchema),
 			onResult: ({ result }) => {
 				if (result.type == 'success') {

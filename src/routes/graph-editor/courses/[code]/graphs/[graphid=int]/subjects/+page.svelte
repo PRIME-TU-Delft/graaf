@@ -92,7 +92,7 @@
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
-		{#snippet children(subject, index)}
+		{#snippet children(subject)}
 			<Grid.Cell>
 				{subject.name}
 			</Grid.Cell>
@@ -122,7 +122,7 @@
 		</div>
 
 		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
-			{#snippet children({ id, subject, outSubject }, index)}
+			{#snippet children({ subject, outSubject }, index)}
 				<Grid.Cell>
 					{index + 1}
 				</Grid.Cell>

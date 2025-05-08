@@ -3,7 +3,6 @@
 	import CreateNewProgramButton from '../CreateNewProgramButton.svelte';
 	import Program from '../Program.svelte';
 	import SearchCourses from '../SearchCourses.svelte';
-	import { cn } from '$lib/utils';
 
 	const { data } = $props();
 
