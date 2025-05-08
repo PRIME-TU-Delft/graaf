@@ -1,16 +1,7 @@
-<script module>
-	export type GridStateType = {
-		columnTemplate: string[];
-	};
-
-	class GridState implements GridStateType {
-		columnTemplate: string[] = $state([]);
-	}
-</script>
-
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import { onMount, setContext, type Snippet } from 'svelte';
+	import { GridState } from './gridState.svelte';
 
 	type Props = {
 		class?: string;

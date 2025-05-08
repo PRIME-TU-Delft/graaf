@@ -12,6 +12,14 @@
 
 		graphD3Store.setGraphD3(d3Canvas, payload, editable);
 	});
+
+	function onResetSimulation() {
+		if (d3Canvas == null) return;
+
+		graphD3Store.clearGraphD3();
+
+		graphD3Store.setGraphD3(d3Canvas, payload, editable);
+	}
 </script>
 
 <!-- Markup -->
@@ -20,6 +28,6 @@
 	<svg class="block h-full w-full" bind:this={d3Canvas} />
 
 	{#if graphD3Store.graphD3}
-		<GraphDecorators graphD3={graphD3Store.graphD3} />
+		<GraphDecorators graphD3={graphD3Store.graphD3} {onResetSimulation} />
 	{/if}
 </div>

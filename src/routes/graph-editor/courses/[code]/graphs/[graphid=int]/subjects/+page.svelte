@@ -1,24 +1,32 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '$lib/components/ui/button';
+
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
+
 	import { cn } from '$lib/utils';
 	import { ChevronRight, Sparkles, Trash } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from 'lucide-svelte/icons/link';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
+
+	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
 	import ChangeSubject from './ChangeSubject.svelte';
+	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
-	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
-	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let course = $derived(data.course);
+
+	// This is a workaround for the fact that we can't use $derived due to the reordering
+	let course = $state(data.course);
+	$effect(() => {
+		course = data.course;
+	});
 
 	type Graph = PageData['course']['graphs'][0];
 
@@ -57,8 +65,6 @@
 		if (!response.ok) {
 			// Reset the order of the domains
 			course.graphs[0].subjects = course.graphs[0].subjects.toSorted((a, b) => a.order - b.order);
-
-			console.log(await response.json());
 
 			toast.error('Failed to update subject order, try again later!');
 		} else {

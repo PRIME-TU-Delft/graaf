@@ -3,7 +3,7 @@
 	import { cn } from '$lib/utils';
 	import { getContext, type Snippet } from 'svelte';
 	import { flip } from 'svelte/animate';
-	import type { GridStateType } from './Grid.svelte';
+	import type { GridStateType } from './gridState.svelte';
 
 	const flipDurationMs = 300;
 

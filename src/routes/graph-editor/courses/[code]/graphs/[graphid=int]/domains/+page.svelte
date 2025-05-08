@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import * as settings from '$lib/settings';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
@@ -16,7 +15,6 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
 
 	import { enhance } from '$app/forms';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
@@ -26,7 +24,13 @@
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
 
 	let { data }: { data: PageData } = $props();
+
+	// This is a workaround for the fact that we can't use $derived due to the reordering
 	let course = $state(data.course);
+	$effect(() => {
+		course = data.course;
+	});
+
 	let graph = $derived(data.course.graphs[0]);
 
 	const domainMapping = $derived.by(() => {
@@ -46,10 +50,6 @@
 	class ChangeStyleOpenState {
 		isOpen = $state(false);
 	}
-
-	$effect(() => {
-		if (data) course = data.course;
-	});
 
 	onMount(() => {
 		if (data.cycles) {
