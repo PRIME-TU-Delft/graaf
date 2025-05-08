@@ -2,9 +2,9 @@
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { type GraphType } from '$lib/validators/graphValidator';
-	import { changeDomainRelSchema } from '$lib/zod/domainSchema';
+	import { changeSubjectRelSchema, subjectRelSchema } from '$lib/zod/subjectSchema';
 	import { Replace } from '@lucide/svelte';
-	import type { Domain } from '@prisma/client';
+	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
@@ -15,22 +15,22 @@
 
 	type Props = {
 		graph: GraphType;
-		inDomain: Domain;
-		outDomain: Domain;
-		type: 'domain' | 'outDomain';
+		inSubject: Subject;
+		outSubject: Subject;
+		type: 'subject' | 'outSubject';
 	};
 
-	const { graph, inDomain, outDomain, type }: Props = $props();
+	const { graph, inSubject, outSubject, type }: Props = $props();
 
 	function formGenerator(id: string) {
-		return superForm((page.data as PageData).changeDomainRelForm, {
-			id: type + 'changeDomainRelForm' + useId(),
-			validators: zodClient(changeDomainRelSchema),
+		return superForm((page.data as PageData).changeSubjectRelForm, {
+			id: type + 'changeSubjectRelForm' + useId() + id,
+			validators: zodClient(changeSubjectRelSchema),
 			onResult: ({ result }) => {
 				if (result.type == 'success') {
 					toast.success('Successfully changed relationship!');
 				} else if (result.type == 'error') {
-					toast.error('Error changing domain relationship', {
+					toast.error('Error changing subject relationship', {
 						description: 'The relationship probably already exists. Try reflshing the page.'
 					});
 				}
@@ -41,46 +41,46 @@
 	function setFormData(
 		_: HTMLFormElement,
 		{
-			domain,
+			subject,
 			formData
 		}: {
-			domain: Domain;
-			formData: SuperFormData<Infer<typeof changeDomainRelSchema>>;
+			subject: Subject;
+			formData: SuperFormData<Infer<typeof changeSubjectRelSchema>>;
 		}
 	) {
 		formData.set({
 			graphId: graph.id,
-			oldSourceDomainId: inDomain.id,
-			oldTargetDomainId: outDomain.id,
-			sourceDomainId: type == 'domain' ? domain.id : inDomain.id,
-			targetDomainId: type == 'outDomain' ? domain.id : outDomain.id
+			sourceSubjectId: type == 'subject' ? subject.id : inSubject.id,
+			targetSubjectId: type == 'outSubject' ? subject.id : outSubject.id,
+			oldSourceSubjectId: inSubject.id,
+			oldTargetSubjectId: outSubject.id
 		});
 	}
 </script>
 
-{#each graph.domains as domain (domain.id)}
-	{#if domain.id != inDomain.id && domain.id != outDomain.id}
-		{@const form = formGenerator(domain.id.toString())}
+{#each graph.subjects as subject (subject.id)}
+	{#if subject.id != inSubject.id && subject.id != outSubject.id}
+		{@const form = formGenerator(subject.id.toString())}
 		{@const { form: formData, enhance, submitting, delayed } = form}
 
 		<form
-			action="?/change-domain-rel"
+			action="?/change-subject-rel"
 			method="POST"
-			use:setFormData={{ domain, formData }}
+			use:setFormData={{ subject, formData }}
 			use:enhance
 		>
 			<input type="hidden" name="graphId" value={graph.id} />
-			<input type="hidden" name="oldSourceDomainId" value={inDomain.id} />
-			<input type="hidden" name="oldTargetDomainId" value={outDomain.id} />
+			<input type="hidden" name="oldSourceSubjectId" value={inSubject.id} />
+			<input type="hidden" name="oldTargetSubjectId" value={outSubject.id} />
 			<input
 				type="hidden"
-				name="sourceDomainId"
-				value={type == 'domain' ? domain.id : inDomain.id}
+				name="sourceSubjectId"
+				value={type == 'subject' ? subject.id : inSubject.id}
 			/>
 			<input
 				type="hidden"
-				name="targetDomainId"
-				value={type == 'outDomain' ? domain.id : outDomain.id}
+				name="targetSubjectId"
+				value={type == 'outSubject' ? subject.id : outSubject.id}
 			/>
 
 			<Form.FormButton
@@ -88,10 +88,10 @@
 				variant="ghost"
 				disabled={fromStore(submitting).current}
 				loading={fromStore(delayed).current}
-				loadingMessage="Changing to {domain.name} relationship..."
+				loadingMessage="Changing to {subject.name} relationship..."
 			>
 				<Replace />
-				{domain.name}
+				{subject.name}
 			</Form.FormButton>
 		</form>
 	{/if}

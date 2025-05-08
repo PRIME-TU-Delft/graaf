@@ -15,14 +15,16 @@
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
+	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let course = $derived(data.course);
-	const graph = $derived(data.course.graphs[0]);
+
+	type Graph = PageData['course']['graphs'][0];
 
 	const subjectMapping = $derived.by(() => {
 		const map: { id: string; subject: Subject; outSubject: Subject }[] = [];
-		for (const subject of graph.subjects) {
+		for (const subject of course.graphs[0].subjects) {
 			for (const targetSubject of subject.targetSubjects) {
 				map.push({
 					id: `subject-rel-${subject.id}-${targetSubject.id}`,
@@ -34,11 +36,11 @@
 		return map;
 	});
 
-	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['subjects'] }>) {
+	function handleDndConsider(e: CustomEvent<{ items: Graph['subjects'] }>) {
 		course.graphs[0].subjects = e.detail.items;
 	}
 
-	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['subjects'] }>) {
+	async function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
 		course.graphs[0].subjects = e.detail.items;
 
 		const body = course.graphs[0].subjects.map((subject, index) => ({
@@ -68,7 +70,7 @@
 	}
 </script>
 
-<CreateNewSubject {graph} />
+<CreateNewSubject graph={course.graphs[0]} />
 
 <Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
@@ -90,17 +92,17 @@
 			</Grid.Cell>
 
 			<Grid.Cell>
-				<ChangeDomainForSubject {subject} {graph} />
+				<ChangeDomainForSubject {subject} graph={course.graphs[0]} />
 			</Grid.Cell>
 
 			<Grid.Cell>
-				<ChangeSubject {subject} {graph} />
+				<ChangeSubject {subject} graph={course.graphs[0]} />
 			</Grid.Cell>
 		{/snippet}
 	</Grid.ReorderRows>
 </Grid.Root>
 
-<CreateNewSubjectRel {graph} />
+<CreateNewSubjectRel graph={course.graphs[0]} />
 
 <Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
@@ -110,7 +112,7 @@
 		<div class="p-2 text-right">Edit</div>
 	</div>
 
-	<Grid.Rows name="subject-rel" items={subjectMapping}>
+	<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
 		{#snippet children({ id, subject, outSubject }, index)}
 			<Grid.Cell>
 				{index + 1}
@@ -155,8 +157,7 @@
 					Change {thisSubject.name} to:
 				</DropdownMenu.GroupHeading>
 
-				TODO: add this functionality for subjects
-				<!-- <ChangeSubjectRel {graph} inSubject={subject} {outSubject} {type} /> -->
+				<ChangeSubjectRel graph={course.graphs[0]} inSubject={subject} {outSubject} {type} />
 			</DropdownMenu.Group>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>

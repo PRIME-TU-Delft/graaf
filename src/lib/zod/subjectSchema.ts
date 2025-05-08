@@ -22,3 +22,8 @@ export const subjectRelSchema = z.object({
 	sourceSubjectId: z.number().gt(0, 'Please select a source subject'),
 	targetSubjectId: z.number().gt(0, 'Please select a target domain')
 });
+
+export const changeSubjectRelSchema = subjectRelSchema.extend({
+	oldSourceSubjectId: z.number().gt(0, 'Please select a source subject'),
+	oldTargetSubjectId: z.number().gt(0, 'Please select a target subject')
+});
