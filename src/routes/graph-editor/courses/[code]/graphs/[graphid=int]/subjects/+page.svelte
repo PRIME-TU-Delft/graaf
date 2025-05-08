@@ -102,36 +102,38 @@
 	</Grid.ReorderRows>
 </Grid.Root>
 
-<CreateNewSubjectRel graph={course.graphs[0]} />
+{#if course.graphs[0].subjects.length == 0}
+	<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">No subjects found</p>
+{:else}
+	<CreateNewSubjectRel graph={course.graphs[0]} />
 
-<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
-	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
-		<div class="p-2"></div>
-		<div class="p-2">Subject from</div>
-		<div class="p-2">Subject to</div>
-		<div class="p-2 text-right">Edit</div>
-	</div>
+	<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
+		<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+			<div class="p-2"></div>
+			<div class="p-2">Subject from</div>
+			<div class="p-2">Subject to</div>
+			<div class="p-2 text-right">Delete</div>
+		</div>
 
-	<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
-		{#snippet children({ id, subject, outSubject }, index)}
-			<Grid.Cell>
-				{index + 1}
-			</Grid.Cell>
+		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
+			{#snippet children({ id, subject, outSubject }, index)}
+				<Grid.Cell>
+					{index + 1}
+				</Grid.Cell>
 
-			<Grid.Cell>
-				{@render subjectRelation('subject', subject, outSubject)}
-			</Grid.Cell>
-			<Grid.Cell>
-				{@render subjectRelation('outSubject', subject, outSubject)}
-			</Grid.Cell>
-			<Grid.Cell class="justify-end">
-				{@render deleteSubjectRel(subject, outSubject)}
-			</Grid.Cell>
-		{/snippet}
-	</Grid.Rows>
-</Grid.Root>
-
-<div class="h-dvh"></div>
+				<Grid.Cell>
+					{@render subjectRelation('subject', subject, outSubject)}
+				</Grid.Cell>
+				<Grid.Cell>
+					{@render subjectRelation('outSubject', subject, outSubject)}
+				</Grid.Cell>
+				<Grid.Cell class="justify-end">
+					{@render deleteSubjectRel(subject, outSubject)}
+				</Grid.Cell>
+			{/snippet}
+		</Grid.Rows>
+	</Grid.Root>
+{/if}
 
 {#snippet subjectRelation(type: 'subject' | 'outSubject', subject: Subject, outSubject: Subject)}
 	{@const thisSubject = type == 'subject' ? subject : outSubject}

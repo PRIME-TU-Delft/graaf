@@ -30,10 +30,14 @@
 	let graph = $derived(data.course.graphs[0]);
 
 	const domainMapping = $derived.by(() => {
-		const map: { domain: Domain; outDomain: Domain }[] = [];
+		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
 		for (const domain of graph.domains) {
 			for (const targetDomain of domain.targetDomains) {
-				map.push({ domain, outDomain: targetDomain });
+				map.push({
+					id: `domain-rel-${domain.id}-${targetDomain.id}`,
+					domain,
+					outDomain: targetDomain
+				});
 			}
 		}
 		return map;
@@ -161,51 +165,40 @@
 	</Grid.ReorderRows>
 </Grid.Root>
 
-<CreateNewRelationship {graph} />
+{#if graph.domains.length == 0}
+	<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">
+		No domains found. Create a new domain to start.
+	</p>
+{:else}
+	<CreateNewRelationship {graph} />
 
-<Table.Root class="mt-2">
-	<Table.Header>
-		<Table.Row>
-			<Table.Head></Table.Head>
-			<Table.Head>Domain from</Table.Head>
-			<Table.Head>Domain to</Table.Head>
-			<Table.Head class="text-right">Delete</Table.Head>
-		</Table.Row>
-	</Table.Header>
-	<Table.Body>
-		{#each domainMapping as { domain, outDomain }, index (domain.id.toString() + outDomain.id.toString())}
-			{@const id = `domain-rel-${domain.id}-${outDomain.id}`}
-			<Table.Row
-				{id}
-				class={[
-					'transition-colors delay-300',
-					page.url.hash == `#${id}` ? 'bg-purple-200' : 'bg-purple-200/0'
-				]}
-			>
-				<Table.Cell>
+	<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
+		<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+			<div class="p-2"></div>
+			<div class="p-2">Subject from</div>
+			<div class="p-2">Subject to</div>
+			<div class="p-2 text-right">Delete</div>
+		</div>
+
+		<Grid.Rows name="subject-rel" items={domainMapping} class="space-y-1">
+			{#snippet children({ id, domain, outDomain }, index)}
+				<Grid.Cell>
 					{index + 1}
-				</Table.Cell>
-				<Table.Cell>
-					{@render domainRelation('domain', domain, outDomain)}
-				</Table.Cell>
-				<Table.Cell>
-					{@render domainRelation('outDomain', domain, outDomain)}
-				</Table.Cell>
-				<Table.Cell class="text-right">
-					{@render deleteDomainRel(domain, outDomain)}
-				</Table.Cell>
-			</Table.Row>
-		{:else}
-			<Table.Row>
-				<Table.Cell colspan={2}>Create first domain relationship</Table.Cell>
+				</Grid.Cell>
 
-				<Table.Cell colspan={2}>
-					<CreateNewRelationship {graph} />
-				</Table.Cell>
-			</Table.Row>
-		{/each}
-	</Table.Body>
-</Table.Root>
+				<Grid.Cell>
+					{@render domainRelation('domain', domain, outDomain)}
+				</Grid.Cell>
+				<Grid.Cell>
+					{@render domainRelation('outDomain', domain, outDomain)}
+				</Grid.Cell>
+				<Grid.Cell class="justify-end">
+					{@render deleteDomainRel(domain, outDomain)}
+				</Grid.Cell>
+			{/snippet}
+		</Grid.Rows>
+	</Grid.Root>
+{/if}
 
 <!-- This snippet defines the style button in the Domains table. 
  ONCHANGE, it updates the UI locally, then updates the server -->

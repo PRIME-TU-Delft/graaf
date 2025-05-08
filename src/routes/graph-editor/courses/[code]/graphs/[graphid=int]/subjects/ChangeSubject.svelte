@@ -37,7 +37,7 @@
 	const triggerId = useId();
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
-		id: 'change-domain-form-' + useId(),
+		id: 'change-subject-form-' + useId() + '-' + subject.id,
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
 			// Guard for not success

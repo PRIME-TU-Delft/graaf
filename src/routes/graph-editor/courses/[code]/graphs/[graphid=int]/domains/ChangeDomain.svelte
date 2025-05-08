@@ -37,7 +37,7 @@
 	let changeDomainDialog = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainForm, {
-		id: 'change-domain-form-' + useId(),
+		id: 'change-domain-form-' + useId() + domain.id,
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type != 'success') return;

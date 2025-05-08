@@ -37,15 +37,16 @@
 		{#if subject.domain}
 			{subject.domain.name}
 		{:else}
-			<Button class="size-6" variant="warning" size="icon">
+			<div class="rounded bg-orange-300 p-1 text-orange-900">
 				<TriangleAlert />
-			</Button>
+			</div>
 
 			Choose domain
 		{/if}
 
 		<ChevronRight />
 	</DropdownMenu.Trigger>
+
 	<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
 		{#if subject.domain}
 			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">

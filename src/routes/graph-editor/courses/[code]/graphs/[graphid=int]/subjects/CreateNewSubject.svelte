@@ -29,6 +29,7 @@
 	let domainIdOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
+		id: 'create-subject-form-' + useId(),
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -70,8 +71,14 @@
 				<Form.Control id={triggerId}>
 					{#snippet children({ props })}
 						<div class="mt-2 flex w-full items-center justify-between">
-							<Form.Label>Link to domain (optional)</Form.Label>
+							<Form.Label>
+								Link to domain (optional)
+								{#if graph.domains.length === 0}
+									<p class="text-xs text-orange-900">(No domains available; Create one first.)</p>
+								{/if}
+							</Form.Label>
 							<Popover.Trigger
+								disabled={graph.domains.length === 0}
 								class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
 								role="combobox"
 								{...props}

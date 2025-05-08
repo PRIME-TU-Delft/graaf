@@ -74,7 +74,7 @@
 		</p>
 	{:else}
 		<p class="max-w-64 p-1">
-			This domain is not part of any subject relationship, so it can be safely deleted.
+			This subject is not part of any subject relationship, so it can be safely deleted.
 		</p>
 	{/if}
 

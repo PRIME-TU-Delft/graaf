@@ -22,7 +22,7 @@
 	let { subject, graph, domain, onSuccess }: Props = $props();
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
-		id: 'change-domain-form-' + useId() + (domain?.id ?? 'none'),
+		id: 'change-domain-form-1-' + useId() + (domain?.id ?? 'none'),
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
 			// Guard for not success
