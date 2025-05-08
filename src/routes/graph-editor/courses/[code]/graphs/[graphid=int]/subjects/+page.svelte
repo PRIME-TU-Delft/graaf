@@ -14,9 +14,10 @@
 	import ChangeSubject from './ChangeSubject.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
+	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
 
 	let { data }: { data: PageData } = $props();
-	let course = $state(data.course);
+	let course = $derived(data.course);
 	const graph = $derived(data.course.graphs[0]);
 
 	const subjectMapping = $derived.by(() => {
@@ -83,19 +84,13 @@
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
-		{#snippet children(subject)}
+		{#snippet children(subject, index)}
 			<Grid.Cell>
 				{subject.name}
 			</Grid.Cell>
 
 			<Grid.Cell>
-				{#if subject.domain}
-					<Button variant="outline" href="./domains#domain-{subject.domain!.id}">
-						{subject.domain.name}
-					</Button>
-				{:else}
-					<Button variant="outline" onclick={() => toast.warning('Not implemented')}>None</Button>
-				{/if}
+				<ChangeDomainForSubject {subject} {graph} />
 			</Grid.Cell>
 
 			<Grid.Cell>

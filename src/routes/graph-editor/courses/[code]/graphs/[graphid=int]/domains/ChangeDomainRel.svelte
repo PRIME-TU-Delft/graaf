@@ -10,7 +10,7 @@
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { SuperFormData } from 'sveltekit-superforms/client';
+	import type { Infer, SuperFormData } from 'sveltekit-superforms/client';
 	import type { PageData } from './$types';
 
 	type Props = {
@@ -45,21 +45,13 @@
 			formData
 		}: {
 			domain: Domain;
-			formData: SuperFormData<{
-				graphId: number;
-				sourceDomainId: number;
-				targetDomainId: number;
-				oldSourceDomainId: number;
-				oldTargetDomainId: number;
-			}>;
+			formData: SuperFormData<Infer<typeof domainRelSchema>>;
 		}
 	) {
 		formData.set({
 			graphId: graph.id,
 			sourceDomainId: inDomain.id,
-			targetDomainId: outDomain.id,
-			oldSourceDomainId: type == 'domain' ? domain.id : inDomain.id,
-			oldTargetDomainId: type == 'outDomain' ? domain.id : outDomain.id
+			targetDomainId: outDomain.id
 		});
 	}
 </script>
