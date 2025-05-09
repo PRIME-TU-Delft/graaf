@@ -22,6 +22,9 @@ export const MAX_DOMAIN_NAME_LENGTH = 50;
 // Subject settings
 export const MAX_SUBJECT_NAME_LENGTH = 50;
 
+// Lecture settings
+export const MAX_LECTURE_NAME_LENGTH = 50;
+
 // ------------------------> Editor settings
 
 // Grid settings

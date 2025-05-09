@@ -39,7 +39,7 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
 </script>
 
 <DialogButton
@@ -115,6 +115,8 @@
 			</Popover.Root>
 		</Form.Field>
 
-		<Form.Button class="float-right mt-4">Submit</Form.Button>
+		<Form.Button disabled={$submitting} loading={$delayed} class="float-right mt-4">
+			Create Subject
+		</Form.Button>
 	</form>
 </DialogButton>

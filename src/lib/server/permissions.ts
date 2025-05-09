@@ -70,6 +70,24 @@ export function whereHasCoursePermission(user: User, has: CoursePermissionsOptio
 	return { OR: hasPermission };
 }
 
+/**
+ * Is a wrapper for whereHasCoursePermission to be used in
+ * for queries that start with `prisma.graph.update` or other course CRUD operations
+ * @param user - User
+ * @param has - CoursePermissionsOptions
+ * @returns A json object that can be used in a Prisma grap where query
+ */
+export function whereHasGraphCoursePermission(user: User, has: CoursePermissionsOptions) {
+	if (user.role == 'ADMIN') return {};
+	else if (has === 'OnlySuperAdmin') throw new Error('Only super admins can do this action');
+
+	return {
+		course: {
+			...whereHasCoursePermission(user, has)
+		}
+	};
+}
+
 export class CourseActions {
 	/**
 	 * PERMISSIONS:
