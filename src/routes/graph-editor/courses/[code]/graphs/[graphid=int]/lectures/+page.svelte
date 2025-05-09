@@ -37,7 +37,10 @@
 	onfinalize={handleDndFinalize}
 >
 	{#each lectures as lecture, index (lecture.id)}
-		<div animate:flip={{ duration: flipDurationMs }} class="!outline-purple-50">
+		<div
+			animate:flip={{ duration: flipDurationMs }}
+			class="rounded bg-purple-50/30 !outline-2 !outline-purple-500 !backdrop-blur-lg"
+		>
 			<div class="flex w-full items-center justify-between gap-2">
 				<div
 					class="m-2 rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"

@@ -31,7 +31,9 @@
 >
 	{#each lecture.subjects as subject (subject.id)}
 		<div animate:flip={{ duration: flipDurationMs }} class="!outline-purple-50">
-			<div class="flex w-full items-center justify-between bg-purple-50/50">
+			<div
+				class="flex w-full items-center justify-between rounded bg-purple-50/30 backdrop-blur-sm"
+			>
 				<div
 					class="m-2 rounded bg-purple-300 p-2 transition-colors hover:bg-purple-400"
 					use:dragHandle
@@ -40,7 +42,11 @@
 					<MoveVertical class="h-4 w-4" />
 				</div>
 
-				<p class="m-0 flex">{lecture.name} <ArrowRight /> {subject.name}</p>
+				<p class="m-0 flex items-center gap-1">
+					{lecture.name}
+					<ArrowRight class="size-4" />
+					{subject.name}
+				</p>
 
 				<p class="m-0 p-2">...</p>
 			</div>
