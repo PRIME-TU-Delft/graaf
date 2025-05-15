@@ -1,10 +1,10 @@
-import { json } from '@sveltejs/kit';
 import prisma from '$lib/server/db/prisma';
+import { json } from '@sveltejs/kit';
 import { patchOrderSchema } from '../schemas';
 
-import type { RequestHandler } from '@sveltejs/kit';
+import { whereHasGraphCoursePermission } from '$lib/server/permissions';
 import type { User } from '@prisma/client';
-import { whereHasCoursePermission } from '$lib/server/permissions';
+import type { RequestHandler } from '@sveltejs/kit';
 
 /*
  * Reorder the subjects in a graph
@@ -24,22 +24,20 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
 	// Update the order of the subjects
 	try {
-		const changes = parsed.data.map(({ subjectId, newOrder }) => {
-			return prisma.subject.update({
+		const changes = parsed.data.map(({ lectureId, newOrder }) => {
+			return prisma.lecture.update({
 				where: {
-					id: subjectId,
+					id: lectureId,
 					graph: {
-						course: {
-							...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-						}
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 					}
 				},
 				data: { order: newOrder }
 			});
 		});
 
-		const newSubjects = await prisma.$transaction(changes);
-		return json(newSubjects);
+		const newLectures = await prisma.$transaction(changes);
+		return json(newLectures);
 	} catch (e: unknown) {
 		return json({ error: e instanceof Error ? e.message : `${e}` }, { status: 400 });
 	}

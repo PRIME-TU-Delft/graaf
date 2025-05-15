@@ -7,6 +7,7 @@
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
 	import CreateNewLecture from './CreateNewLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: PageData } = $props();
 
@@ -18,13 +19,33 @@
 		lectures = data.course.graphs[0].lectures;
 	});
 
-	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>): void {
+	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
 	}
 
-	function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>): void {
-		// TODO: add actual logic to update the lecture subjects
+	async function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
+
+		const body = lectures.map((lecture, index) => ({
+			lectureId: lecture.id,
+			newOrder: index
+		}));
+
+		const response = await fetch('/api/lectures/order', {
+			method: 'PATCH',
+			body: JSON.stringify(body),
+			headers: { 'content-type': 'application/json' }
+		});
+
+		if (!response.ok) {
+			lectures = lectures.toSorted((a, b) => a.order - b.order);
+
+			toast.error('Error while reordering lectures');
+		} else {
+			lectures.forEach((lecture, index) => {
+				lecture.order = index;
+			});
+		}
 	}
 </script>
 

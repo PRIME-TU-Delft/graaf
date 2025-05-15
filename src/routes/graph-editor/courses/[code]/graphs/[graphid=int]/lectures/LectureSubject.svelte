@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { ArrowRight, MoveVertical, Plus } from '@lucide/svelte';
+	import { MoveVertical, Plus } from '@lucide/svelte';
 	import type { Lecture, Subject } from '@prisma/client';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
+	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
 
 	type Props = {
@@ -12,14 +13,43 @@
 
 	const { lecture = $bindable() }: Props = $props();
 
+	let subjectBackup = [...lecture.subjects];
+
 	const flipDurationMs = 300;
 
 	function handleDndConsider(e: CustomEvent<DndEvent<Subject>>): void {
 		lecture.subjects = e.detail.items;
 	}
 
-	function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>): void {
+	async function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
+		// When there is a internal change of subject reorder
+		if (subjectBackup.length === e.detail.items.length) {
+			lecture.subjects = subjectBackup;
+			return;
+		}
+
 		lecture.subjects = e.detail.items;
+
+		const body = {
+			name: lecture.name,
+			graphId: lecture.graphId,
+			lectureId: lecture.id,
+			subjectIds: e.detail.items.map((subject) => subject.id)
+		};
+
+		const response = await fetch('/api/lectures/order-subjects', {
+			method: 'PATCH',
+			body: JSON.stringify(body),
+			headers: { 'content-type': 'application/json' }
+		});
+
+		if (!response.ok) {
+			lecture.subjects = subjectBackup;
+
+			toast.error('Error while reordering lectures');
+		} else {
+			subjectBackup = lecture.subjects;
+		}
 	}
 </script>
 
@@ -31,9 +61,7 @@
 >
 	{#each lecture.subjects as subject (subject.id)}
 		<div animate:flip={{ duration: flipDurationMs }} class="!outline-purple-50">
-			<div
-				class="flex w-full items-center justify-between rounded bg-purple-50/30 backdrop-blur-sm"
-			>
+			<div class="flex w-full items-center rounded bg-purple-50/30 backdrop-blur-sm">
 				<div
 					class="m-2 rounded bg-purple-300 p-2 transition-colors hover:bg-purple-400"
 					use:dragHandle
@@ -43,12 +71,8 @@
 				</div>
 
 				<p class="m-0 flex items-center gap-1">
-					{lecture.name}
-					<ArrowRight class="size-4" />
 					{subject.name}
 				</p>
-
-				<p class="m-0 p-2">...</p>
 			</div>
 		</div>
 	{:else}

@@ -18,7 +18,6 @@ export const actions = {
 	},
 	'link-subject-to-lecture': async (event) => {
 		const form = await superValidate(event, zod(lectureSchema));
-
-		console.log(form);
+		return LectureActions.linkSubjectsToLecture(await getUser(event), form);
 	}
 };

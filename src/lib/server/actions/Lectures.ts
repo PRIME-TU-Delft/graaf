@@ -49,4 +49,30 @@ export class LectureActions {
 			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
 		}
 	}
+
+	static async linkSubjectsToLecture(
+		user: User,
+		form: SuperValidated<Infer<typeof lectureSchema>>
+	) {
+		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid lecture');
+
+		try {
+			await prisma.lecture.update({
+				where: {
+					id: form.data.lectureId,
+					graph: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					}
+				},
+				data: {
+					subjects: {
+						set: form.data.subjectIds.map((id) => ({ id }))
+					}
+				}
+			});
+		} catch (e: unknown) {
+			return setError(form, 'subjectIds._errors', e instanceof Error ? e.message : `${e}`);
+		}
+	}
 }

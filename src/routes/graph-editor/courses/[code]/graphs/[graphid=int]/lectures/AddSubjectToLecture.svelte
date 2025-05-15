@@ -2,14 +2,15 @@
 	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Label from '$lib/components/ui/label/index.js';
 	import { lectureSchema } from '$lib/zod/lectureSchema';
+	import { Check } from '@lucide/svelte';
 	import type { Graph, Lecture, Subject } from '@prisma/client';
-	import { useId } from 'bits-ui';
+	import { Checkbox, useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
-	import { fromStore } from 'svelte/store';
 
 	type Props = {
 		lecture: Lecture & {
@@ -21,7 +22,7 @@
 	const { lecture, graph }: Props = $props();
 
 	let dialogOpen = $state(false);
-	let subjectsLinked: number[] = $derived(lecture.subjects.map((s) => s.id));
+	let subjectsLinked: string[] = $state(lecture.subjects.map((s) => s.id.toString()));
 
 	const form = superForm((page.data as PageData).newLectureForm, {
 		id: 'linking-subject-to-lecture-form-' + useId(),
@@ -35,33 +36,35 @@
 	});
 
 	const { form: formData, enhance, submitting, delayed } = form;
+
+	$effect(() => {
+		if (lecture) {
+			$formData.lectureId = lecture.id;
+			$formData.name = lecture.name;
+			$formData.graphId = graph.id;
+		}
+	});
 </script>
 
 <DialogButton
 	bind:open={dialogOpen}
-	icon="plus"
-	button="Edit Subjects"
+	icon={subjectsLinked.length > 0 ? 'edit' : 'plus'}
+	button={subjectsLinked.length > 0 ? 'Edit subjects' : 'Add subjects'}
 	title="Link/Unlink Subjects to Lecture"
 	description="A lecture can have zero or more subjects."
 >
 	<form action="?/link-subject-to-lecture" method="POST" use:enhance>
 		<input type="hidden" name="lectureId" value={lecture.id} />
+		<input type="hidden" name="graphId" value={graph.id} />
 		<input type="hidden" name="name" value={lecture.name} />
 
-		{#each graph.subjects as subject}
-			<div class="flex items-center">
-				<input
-					id={subject.id.toString()}
-					type="checkbox"
-					name="linkedSubjects"
-					value={subject}
-					bind:group={subjectsLinked}
-				/>
-				<label for={subject.id.toString()} class="ml-2">
-					{subject.name}
-				</label>
+		<Checkbox.Group class="flex flex-col gap-3" bind:value={subjectsLinked} name="Subjects">
+			<div class="flex flex-col gap-4">
+				{#each graph.subjects.toSorted((a, b) => (a.name > b.name ? -1 : 1)) as subject}
+					{@render MyCheckbox({ label: subject.name, value: subject.id.toString() })}
+				{/each}
 			</div>
-		{/each}
+		</Checkbox.Group>
 
 		<Form.Fieldset {form} name="subjectIds" class="h-0">
 			{#each subjectsLinked, i}
@@ -69,7 +72,8 @@
 					<Form.Control>
 						{#snippet children({ props })}
 							<input
-								bind:value={() => subjectsLinked[i], (v) => ($formData.subjectIds[i] = v)}
+								hidden
+								bind:value={() => subjectsLinked[i], (v) => ($formData.subjectIds[i] = Number(v))}
 								{...props}
 							/>
 						{/snippet}
@@ -79,8 +83,38 @@
 			<Form.FieldErrors />
 		</Form.Fieldset>
 
-		<Form.Button disabled={$submitting} loading={$delayed} class="bottom-4 float-right mt-4">
-			(Un-)link Subjects
-		</Form.Button>
+		<div
+			class="sticky bottom-0 mt-4 flex w-full justify-end bg-gradient-to-b from-white/0 to-white/100 py-4 backdrop-blur-sm"
+		>
+			<Form.Button disabled={$submitting} loading={$delayed}>(Un-)link Subjects</Form.Button>
+		</div>
 	</form>
 </DialogButton>
+
+{#snippet MyCheckbox({ value, label }: { value: string; label: string })}
+	{@const id = useId()}
+	<div class="flex items-center">
+		<Checkbox.Root
+			{id}
+			aria-labelledby="{id}-label"
+			class="data-[state=unchecked]:border-border-input data-[state=unchecked]:hover:border-dark-40 peer inline-flex size-[25px] items-center justify-center rounded-md border border-muted bg-foreground transition-all duration-150 ease-in-out active:scale-[0.98] data-[state=unchecked]:bg-background"
+			name="hello"
+			{value}
+		>
+			{#snippet children({ checked, indeterminate })}
+				<div class="inline-flex items-center justify-center text-background">
+					{#if checked}
+						<Check class="size-[15px]" />
+					{/if}
+				</div>
+			{/snippet}
+		</Checkbox.Root>
+		<Label.Root
+			id="{id}-label"
+			for={id}
+			class="pl-3 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+		>
+			{label}
+		</Label.Root>
+	</div>
+{/snippet}
