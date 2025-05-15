@@ -60,7 +60,7 @@
 
 		<Checkbox.Group class="flex flex-col gap-3" bind:value={subjectsLinked} name="Subjects">
 			<div class="flex flex-col gap-4">
-				{#each graph.subjects.toSorted((a, b) => (a.name > b.name ? -1 : 1)) as subject}
+				{#each graph.subjects.toSorted( (a, b) => (a.name > b.name ? -1 : 1) ) as subject (subject.id)}
 					{@render MyCheckbox({ label: subject.name, value: subject.id.toString() })}
 				{/each}
 			</div>
@@ -101,7 +101,7 @@
 			name="hello"
 			{value}
 		>
-			{#snippet children({ checked, indeterminate })}
+			{#snippet children({ checked })}
 				<div class="inline-flex items-center justify-center text-background">
 					{#if checked}
 						<Check class="size-[15px]" />

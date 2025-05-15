@@ -4,7 +4,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import { lectureSchema } from '$lib/zod/lectureSchema';
-	import type { Graph, Lecture, Subject } from '@prisma/client';
+	import type { Graph, Lecture } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
@@ -12,10 +12,8 @@
 	import type { PageData } from './$types';
 
 	type Props = {
-		lecture: Lecture & {
-			subjects: Subject[];
-		};
-		graph: Graph & { subjects: Subject[] };
+		lecture: Lecture;
+		graph: Graph;
 		onSuccess: () => void;
 	};
 

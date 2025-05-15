@@ -42,7 +42,7 @@
 
 	$effect(() => {
 		// When the style is changed, close its popover
-		fromStore(formData).current.style;
+		fromStore(formData).current.style; // eslint-disable-line @typescript-eslint/no-unused-expressions
 
 		stylePopoverOpen = false;
 	});
