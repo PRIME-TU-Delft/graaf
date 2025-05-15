@@ -1,15 +1,21 @@
 <script lang="ts">
-	import * as Menubar from '$lib/components/ui/menubar/index.js';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { cn } from '$lib/utils';
 	import { Ellipsis, MoveVertical } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
+	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
 	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
+	import ChangeLecture from './ChangeLecture.svelte';
 	import CreateNewLecture from './CreateNewLecture.svelte';
+	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
-	import { toast } from 'svelte-sonner';
 
 	let { data }: { data: PageData } = $props();
+
+	let changeLectureOpen = $state(false);
 
 	const flipDurationMs = 300;
 
@@ -72,28 +78,40 @@
 				</div>
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 
-				<AddSubjectToLecture {lecture} graph={data.course.graphs[0]} />
+				{#if data.course.graphs[0].subjects.length > 0}
+					<AddSubjectToLecture {lecture} graph={data.course.graphs[0]} />
+				{/if}
 
-				<Menubar.Root>
-					<Menubar.Menu value="menu">
-						<Menubar.Trigger class="h-full w-full">
-							<Ellipsis class="size-4 w-full" />
-						</Menubar.Trigger>
-						<Menubar.Content>
-							<Menubar.Item disabled>Edit</Menubar.Item>
+				<DropdownMenu.Root bind:open={changeLectureOpen}>
+					<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
+						<Ellipsis class="size-4 w-full" />
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Item class="p-0">
+							<ChangeLecture
+								{lecture}
+								graph={data.course.graphs[0]}
+								onSuccess={() => (changeLectureOpen = false)}
+							/>
+						</DropdownMenu.Item>
 
-							<Menubar.Sub>
-								<Menubar.SubTrigger disabled class="font-bold text-red-700 hover:bg-red-100">
-									Delete
-								</Menubar.SubTrigger>
-								<Menubar.SubContent class="ml-1 w-32">Yes, delete this lecture</Menubar.SubContent>
-							</Menubar.Sub>
-						</Menubar.Content>
-					</Menubar.Menu>
-				</Menubar.Root>
+						<DropdownMenu.Sub>
+							<DropdownMenu.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
+								Delete
+							</DropdownMenu.SubTrigger>
+							<DropdownMenu.SubContent class="ml-1 w-40">
+								<DeleteLecture
+									{lecture}
+									graph={data.course.graphs[0]}
+									onSuccess={() => (changeLectureOpen = false)}
+								/>
+							</DropdownMenu.SubContent>
+						</DropdownMenu.Sub>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
 			</div>
 
-			<LectureSubject bind:lecture={lectures[index]} />
+			<LectureSubject bind:lecture={lectures[index]} subjects={data.course.graphs[0].subjects} />
 		</div>
 	{:else}
 		<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">

@@ -71,7 +71,7 @@
 			<Menubar.Item class="p-0">
 				<DialogButton
 					button="Edit"
-					title="Domain Relationship Settings"
+					title="Subject Settings"
 					description="Edit the settings of the subject {subject.name}."
 					bind:open={changeSubjectDialog}
 					variant="outline"

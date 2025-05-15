@@ -6,12 +6,13 @@
 	import { flip } from 'svelte/animate';
 
 	type Props = {
+		subjects: Subject[];
 		lecture: Lecture & {
 			subjects: Subject[];
 		};
 	};
 
-	const { lecture = $bindable() }: Props = $props();
+	const { subjects, lecture = $bindable() }: Props = $props();
 
 	let subjectBackup = [...lecture.subjects];
 
@@ -77,10 +78,14 @@
 		</div>
 	{:else}
 		<p class="m-0 items-center">
-			Add subject by clicking the <span
-				class="border-sm h-6 gap-1 text-xs rounded bg-purple-200 p-1 inline-flex items-center"
-				><Plus class="size-3" /> Edit Subjects</span
-			>, or by dragging another lecture's subject into this field
+			{#if subjects.length > 0}
+				Add subject by clicking the <span
+					class="border-sm h-6 gap-1 text-xs rounded bg-purple-200 p-1 inline-flex items-center"
+					><Plus class="size-3" /> Edit Subjects</span
+				>, or by dragging another lecture's subject into this field
+			{:else}
+				No subjects, add one first in the subjects view.
+			{/if}
 		</p>
 	{/each}
 </div>

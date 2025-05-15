@@ -1,5 +1,5 @@
 import prisma from '$lib/server/db/prisma';
-import { lectureSchema } from '$lib/zod/lectureSchema';
+import { deleteLectureSchema, lectureSchema } from '$lib/zod/lectureSchema';
 import type { User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
@@ -50,6 +50,27 @@ export class LectureActions {
 		}
 	}
 
+	static async changeLectureName(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
+		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
+
+		try {
+			await prisma.lecture.update({
+				where: {
+					id: form.data.lectureId,
+					graph: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					}
+				},
+				data: {
+					name: form.data.name
+				}
+			});
+		} catch (e: unknown) {
+			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
 	static async linkSubjectsToLecture(
 		user: User,
 		form: SuperValidated<Infer<typeof lectureSchema>>
@@ -73,6 +94,26 @@ export class LectureActions {
 			});
 		} catch (e: unknown) {
 			return setError(form, 'subjectIds._errors', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	static async deleteLecture(user: User, form: SuperValidated<Infer<typeof deleteLectureSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid lecture');
+
+		console.log('Deleting lecture', form.data);
+
+		try {
+			await prisma.lecture.delete({
+				where: {
+					id: form.data.lectureId,
+					graph: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					}
+				}
+			});
+		} catch (e: unknown) {
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 }

@@ -15,6 +15,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
+	import { fromStore } from 'svelte/store';
 
 	type Props = {
 		graph: Graph;
@@ -23,6 +24,7 @@
 	const { graph }: Props = $props();
 
 	let dialogOpen = $state(false);
+	let stylePopoverOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainForm, {
 		validators: zodClient(domainSchema),
@@ -37,6 +39,13 @@
 	const { form: formData, enhance } = form;
 
 	const domainStyles = settings.COLOR_KEYS;
+
+	$effect(() => {
+		// When the style is changed, close its popover
+		fromStore(formData).current.style;
+
+		stylePopoverOpen = false;
+	});
 </script>
 
 <DialogButton
@@ -77,7 +86,7 @@
 			</div>
 
 			<RadioGroup.Root name="style" bind:value={$formData.style} class="grid py-2">
-				<Popover.Root>
+				<Popover.Root bind:open={stylePopoverOpen}>
 					<Popover.Trigger
 						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
 					>
