@@ -103,24 +103,26 @@
 </script>
 
 <section class="container prose mx-auto mt-8 p-4">
-	<div class="flex items-center justify-between gap-4">
-		<h2 class="m-0">Course super users</h2>
-
-		<Button variant="outline" onclick={() => (onlyCourseSuperUsers = !onlyCourseSuperUsers)}>
-			{#if onlyCourseSuperUsers}
-				<FunnelX />
-				Show all super users
-			{:else}
-				<Funnel />
-				Show only course super users
-			{/if}
-		</Button>
-	</div>
+	<h2 class="m-0">Course Admins and Editors</h2>
 
 	<p>
 		A course editor is allowed to change graphs. An admin is also allowed to create links and
 		(De)Archive courses.
 	</p>
+
+	<Button
+		class="mb-1"
+		variant="outline"
+		onclick={() => (onlyCourseSuperUsers = !onlyCourseSuperUsers)}
+	>
+		{#if onlyCourseSuperUsers}
+			<FunnelX />
+			Show all admins and editors
+		{:else}
+			<Funnel />
+			Hide program admins and editors
+		{/if}
+	</Button>
 
 	<SuperUserDataTable data={filteredUsers} {course} {columns} />
 </section>

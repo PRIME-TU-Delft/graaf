@@ -17,7 +17,7 @@
 </script>
 
 <section
-	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-blue-50/80 p-4 shadow-none shadow-blue-200/70 backdrop-blur sm:sticky sm:border sm:border-blue-200 sm:shadow-lg"
+	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
 >
 	<h1 class="m-0">{data.course.name}</h1>
 
@@ -71,6 +71,7 @@
 <!-- Only a program admin or super admin is able to archive/de-archive a  -->
 {#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 	<section
+		id="archive-course"
 		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 	>
 		<h2 class="text-red-950">Danger zone</h2>

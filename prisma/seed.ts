@@ -10,7 +10,8 @@ const testUsers = [
 	{ fn: 'Fokko', ln: 'van de Bult', admin: false },
 	{ fn: 'Boris', ln: 'Pavic', admin: false },
 	{ fn: 'Teun', ln: 'Janssen', admin: false },
-	{ fn: 'Dani', ln: 'Petrova', admin: false }
+	{ fn: 'Dani', ln: 'Petrova', admin: false },
+	{ fn: 'Dennis', ln: 'den Ouden-van der Horst', admin: false }
 ];
 
 const prisma = new PrismaClient();
@@ -30,10 +31,13 @@ async function main() {
 
 	if (env.NETLIFY_CONTEXT != 'PROD') {
 		const users = testUsers.map((user) => {
+			const email =
+				user.fn.replaceAll(' ', '').toLowerCase() + user.ln.replaceAll(' ', '_').toLowerCase();
+
 			return prisma.user.create({
 				data: {
 					role: user.admin ? 'ADMIN' : 'USER',
-					email: `${user.fn.toLowerCase() + user.ln.toLowerCase()}@tudelft.nl`,
+					email: `${email}@tudelft.nl`,
 					nickname: user.fn + ' ' + user.ln,
 					firstName: user.fn,
 					lastName: user.ln,

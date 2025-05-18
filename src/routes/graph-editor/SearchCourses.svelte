@@ -17,10 +17,10 @@
 </script>
 
 <Command.Root
-	class="relative overflow-visible border-2 border-transparent focus-within:border-blue-500"
+	class="relative overflow-visible border-2 border-gray-600 focus-within:border-purple-500"
 >
 	<Command.Input
-		class="!border-0 !shadow-none !outline-none !ring-0"
+		class="h-9 !border-0 p-0 !shadow-none !outline-none !ring-0"
 		placeholder="Search courses..."
 		hasBorder={false}
 		bind:value={courseValue}
@@ -47,7 +47,7 @@
 				<Command.Item
 					class="h-full w-full p-2"
 					value={course.code + ' ' + course.name}
-					onclick={() => goto(`graph-editor/courses/${course.code}`)}
+					onclick={() => goto(`/graph-editor/courses/${course.code}`)}
 				>
 					<p class="grow font-medium">{course.name}</p>
 					<p class="grow text-right text-xs">{course.code}</p>

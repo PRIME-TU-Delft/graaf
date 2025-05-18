@@ -61,7 +61,9 @@
 			{#each table.getRowModel().rows as row (row.id)}
 				<Table.Row
 					data-state={row.getIsSelected() && 'selected'}
-					class={row.original.id == user.id ? 'bg-blue-100 hover:bg-blue-200' : ''}
+					class={row.original.id == user.id
+						? 'bg-purple-50/50 even:bg-purple-100/50 hover:bg-purple-50'
+						: ''}
 					fadeDuration={200}
 				>
 					{#each row.getVisibleCells() as cell (cell.id)}
@@ -75,7 +77,7 @@
 			<Table.Row>
 				{#if table.getRowModel().rows.length == 0}
 					{@render addNewUserButton(
-						'There are no super users, contact a super admin to add you as a super user.'
+						'There are no admins or editors, contact a super admin to add you as a super user.'
 					)}
 				{:else}
 					{@render addNewUserButton()}

@@ -1,7 +1,12 @@
 import prisma from '$lib/server/db/prisma';
 import { zod } from 'sveltekit-superforms/adapters';
-import { setError, superValidate } from 'sveltekit-superforms';
-import { deleteSubjectSchema, subjectRelSchema, subjectSchema } from '$lib/zod/subjectSchema';
+import { fail, setError, superValidate } from 'sveltekit-superforms';
+import {
+	changeSubjectRelSchema,
+	deleteSubjectSchema,
+	subjectRelSchema,
+	subjectSchema
+} from '$lib/zod/subjectSchema';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -112,6 +117,40 @@ export class SubjectActions {
 		}
 	}
 
+	private static async connectSubjects(inId: number, outId: number) {
+		// Check if the subjecs are already connected
+		const isConnected = await prisma.subject.findFirst({
+			where: {
+				id: inId,
+				targetSubjects: { some: { id: outId } }
+			}
+		});
+
+		if (isConnected) {
+			throw new Error('Subjects are already connected');
+		}
+
+		const addTargetToSource = prisma.subject.update({
+			where: {
+				id: inId
+			},
+			data: {
+				targetSubjects: { connect: { id: outId } }
+			}
+		});
+
+		const addSourceToTarget = prisma.subject.update({
+			where: {
+				id: outId
+			},
+			data: {
+				sourceSubjects: { connect: { id: inId } }
+			}
+		});
+
+		await prisma.$transaction([addTargetToSource, addSourceToTarget]);
+	}
+
 	/**
 	 * Adds a relationship between two subjects based on the provided event.
 	 *
@@ -177,6 +216,66 @@ export class SubjectActions {
 			});
 
 			await prisma.$transaction([addTargetToSource, addSourceToTarget]);
+		} catch (e: unknown) {
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
+		}
+	}
+
+	private static async disconnectSubjects(sourceId: number, targetId: number) {
+		const removeTargetFromSource = prisma.subject.update({
+			where: { id: sourceId },
+			data: {
+				targetSubjects: {
+					disconnect: { id: targetId }
+				}
+			}
+		});
+
+		const removeSourceFromTarget = prisma.subject.update({
+			where: { id: targetId },
+			data: {
+				sourceSubjects: {
+					disconnect: { id: sourceId }
+				}
+			}
+		});
+
+		await prisma.$transaction([removeTargetFromSource, removeSourceFromTarget]);
+	}
+
+	static async deleteSubjectRel(event: RequestEvent) {
+		const form = await event.request.formData();
+		const sourceSubjectId = parseInt(form.get('sourceSubjectId') as string);
+		const targetSubjectId = parseInt(form.get('targetSubjectId') as string);
+
+		if (isNaN(sourceSubjectId) || isNaN(targetSubjectId)) {
+			return fail(400, {
+				inputSubjectId: sourceSubjectId,
+				targetSubjectId: targetSubjectId,
+				errorMessage: 'Invalid relationship id'
+			});
+		}
+
+		try {
+			await SubjectActions.disconnectSubjects(sourceSubjectId, targetSubjectId);
+		} catch (e: unknown) {
+			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
+		}
+	}
+
+	static async changeSubjectRel(event: RequestEvent) {
+		const form = await superValidate(event, zod(changeSubjectRelSchema));
+
+		if (!form.valid) {
+			return setError(form, '', form.message);
+		}
+
+		try {
+			await SubjectActions.disconnectSubjects(
+				form.data.oldSourceSubjectId,
+				form.data.oldTargetSubjectId
+			);
+			await SubjectActions.connectSubjects(form.data.sourceSubjectId, form.data.targetSubjectId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}

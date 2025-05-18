@@ -19,22 +19,22 @@
 </script>
 
 <DialogButton
-	title="Super Users for {course.name}"
+	title="Admins or Editors for {course.name}"
 	description=""
 	icon="admins"
 	variant="secondary"
 	class="max-h-[50dvh] "
 >
 	<Table.Root class="max-h-[1/2]">
-		{#if course.admins.length == 0 || course.editors.length > 0}
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Name</Table.Head>
-					<Table.Head class="text-right">Role</Table.Head>
-				</Table.Row>
-			</Table.Header>
+		<Table.Header>
+			<Table.Row>
+				<Table.Head>Name</Table.Head>
+				<Table.Head class="text-right">Role</Table.Head>
+			</Table.Row>
+		</Table.Header>
 
-			<Table.Body>
+		<Table.Body>
+			{#if course.admins.length > 0 || course.editors.length > 0 || course.programs.filter((p) => p.admins.length > 0 || p.editors.length > 0).length > 0}
 				{#each course.programs as program (program.id)}
 					{#each program.admins as admin (admin.id)}
 						<Table.Row>
@@ -63,7 +63,17 @@
 						<Table.Cell class="text-right">Editor</Table.Cell>
 					</Table.Row>
 				{/each}
-			</Table.Body>
-		{/if}
+			{:else if course.programs.length > 0}
+				<Table.Row>
+					<Table.Cell colspan={2} class="text-center">
+						No admins or editors found for this course.
+					</Table.Cell>
+				</Table.Row>
+			{:else}
+				<Table.Row>
+					<Table.Cell colspan={2} class="text-center">This course has no programs.</Table.Cell>
+				</Table.Row>
+			{/if}
+		</Table.Body>
 	</Table.Root>
 </DialogButton>

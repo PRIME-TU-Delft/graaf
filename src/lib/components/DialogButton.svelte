@@ -1,12 +1,12 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { cn } from '$lib/utils';
-	import { Ellipsis, Link, Pencil, Plus, Users } from '@lucide/svelte';
+	import { BadgeHelp, Copy, Ellipsis, Link, Pencil, Plus, Users } from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
-		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link';
+		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link' | 'help' | 'copy';
 		open?: boolean;
 		button?: string;
 		title: string;
@@ -60,6 +60,10 @@
 			<Users class="size-5" />
 		{:else if icon == 'link'}
 			<Link class="size-5" />
+		{:else if icon == 'help'}
+			<BadgeHelp class="size-5" />
+		{:else if icon == 'copy'}
+			<Copy class="size-5" />
 		{/if}
 
 		{#if button}

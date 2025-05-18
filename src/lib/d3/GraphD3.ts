@@ -111,6 +111,16 @@ export class GraphD3 {
 	}
 
 	// -----------------------------> Public methods
+	clear() {
+		this.svg.selectAll('*').remove(); // Clear SVG
+		this.data = {
+			domain_nodes: [],
+			domain_edges: [],
+			subject_nodes: [],
+			subject_edges: [],
+			lectures: []
+		};
+	}
 
 	setData(payload: PrismaGraphPayload) {
 		this.data = this.formatPayload(payload);
@@ -168,11 +178,7 @@ export class GraphD3 {
 	}
 
 	updateDomain(id: number) {
-		console.log({ id });
-
 		const selection = this.content.selectAll<SVGGElement, NodeData>(`#domain-${id}`);
-
-		console.log(selection, id);
 
 		selection
 			.call(NodeToolbox.updateHighlight, this)
@@ -216,7 +222,7 @@ export class GraphD3 {
 	}
 
 	startSimulation() {
-		if (graphState.isIdle()) return;
+		if (!graphState.isIdle()) return;
 
 		this.content
 			.selectAll<SVGGElement, NodeData>('.node.fixed')
@@ -228,7 +234,7 @@ export class GraphD3 {
 	}
 
 	stopSimulation() {
-		if (graphState.isSimulating()) return;
+		if (!graphState.isSimulating()) return;
 
 		this.content
 			.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
@@ -238,6 +244,8 @@ export class GraphD3 {
 		this.simulation.stop();
 
 		graphState.toIdle();
+
+		this.centerOnGraph();
 	}
 
 	hasFreeNodes() {

@@ -9,7 +9,7 @@
 <form action="?/test-user" method="POST" use:enhance>
 	<input type="hidden" name="userId" value={user.id} />
 
-	<button type="submit" class="w-full rounded-md bg-blue-100 p-4 text-left hover:bg-blue-200">
+	<button type="submit" class="w-full rounded-md bg-purple-50 p-4 text-left hover:bg-purple-100">
 		Log in as {displayName(user)}
 	</button>
 </form>

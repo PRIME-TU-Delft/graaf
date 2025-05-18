@@ -16,7 +16,7 @@
 	} = $props();
 
 	const attrs = $derived({
-		class: cn('hover:text-foreground transition-colors', className),
+		class: cn('hover:text-white text-white/80 transition-colors z-20', className),
 		href,
 		...restProps
 	});
