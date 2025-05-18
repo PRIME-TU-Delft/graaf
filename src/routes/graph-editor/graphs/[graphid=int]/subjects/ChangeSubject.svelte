@@ -37,13 +37,15 @@
 	const triggerId = useId();
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
-		id: 'change-domain-form-' + useId(),
+		id: 'change-subject-form-' + useId() + '-' + subject.id,
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
 			// Guard for not success
 			if (result.type != 'success') return;
 
-			toast.success('Domain changed successfully!');
+			changeSubjectDialog = false;
+
+			toast.success('Subject changed successfully!');
 		}
 	});
 
@@ -69,7 +71,7 @@
 			<Menubar.Item class="p-0">
 				<DialogButton
 					button="Edit"
-					title="Domain Relationship Settings"
+					title="Subject Settings"
 					description="Edit the settings of the subject {subject.name}."
 					bind:open={changeSubjectDialog}
 					variant="outline"
@@ -135,12 +137,12 @@
 		<Form.Field {form} name="name">
 			<Form.Control>
 				{#snippet children({ props })}
-					<Form.Label for="name">Domain name</Form.Label>
+					<Form.Label for="name">Subject name</Form.Label>
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
 			<Form.Description>
-				A common name for the domain, i.e:
+				A common name for the subject, i.e:
 				<span class="font-mono text-xs">"Complex numbers"</span>
 			</Form.Description>
 			<Form.FieldErrors />

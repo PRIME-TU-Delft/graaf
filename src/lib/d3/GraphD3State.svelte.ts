@@ -1,26 +1,27 @@
 class GraphState {
-	private state = $state<'TRANSITIONING' | 'SIMULATING' | 'IDLE'>('TRANSITIONING');
+	private _state = $state<'TRANSITIONING' | 'SIMULATING' | 'IDLE'>('TRANSITIONING');
+	readonly state = $derived(this._state);
 
 	isIdle() {
-		return this.state === 'IDLE';
+		return this._state === 'IDLE';
 	}
 	toIdle() {
-		this.state = 'IDLE';
+		this._state = 'IDLE';
 	}
 
 	isSimulating() {
-		return this.state === 'SIMULATING';
+		return this._state === 'SIMULATING';
 	}
 	toSimulating() {
-		this.state = 'SIMULATING';
+		this._state = 'SIMULATING';
 	}
 
 	isTransitioning() {
-		return this.state === 'TRANSITIONING';
+		return this._state === 'TRANSITIONING';
 	}
 
 	toTransitioning() {
-		this.state = 'TRANSITIONING';
+		this._state = 'TRANSITIONING';
 	}
 }
 

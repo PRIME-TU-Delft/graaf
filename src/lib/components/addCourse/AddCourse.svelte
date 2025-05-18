@@ -45,7 +45,7 @@
 </script>
 
 <DialogButton
-	open={dialogOpen}
+	bind:open={dialogOpen}
 	button="Add course"
 	title="Create new course {hasAdminRights && data.length > 0 ? 'or link one' : ''}"
 	icon="plus"

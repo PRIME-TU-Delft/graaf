@@ -37,7 +37,7 @@
 	let changeDomainDialog = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainForm, {
-		id: 'change-domain-form-' + useId(),
+		id: 'change-domain-form-' + useId() + domain.id,
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type != 'success') return;
@@ -68,9 +68,9 @@
   @props { domain: DomainType, graph: GraphType }
 -->
 
-<Menubar.Root class="interactive ml-auto max-w-10 p-0">
+<Menubar.Root class="ml-auto max-w-10 p-0">
 	<Menubar.Menu value="menu">
-		<Menubar.Trigger class="h-full w-full">
+		<Menubar.Trigger class={cn(buttonVariants({ variant: 'outline', size: 'icon' }))}>
 			<Ellipsis class="size-4 w-full" />
 		</Menubar.Trigger>
 		<Menubar.Content>

@@ -14,6 +14,7 @@ DATABASE_URL="postgres://root:mysecretpassword@localhost:5432/local"
 
 ```bash
 # Terminal 1
+cd db
 podman compose up db # Or docker compose up db
 
 # Terminal 2
@@ -28,6 +29,7 @@ pnpm prisma db seed # will setup the database with some initial data
 
 ```bash
 # Terminal 1 - if not already running
+cd db
 podman compose up # Or docker compose up
 
 # Terminal 2

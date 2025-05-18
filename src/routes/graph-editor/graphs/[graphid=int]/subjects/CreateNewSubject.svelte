@@ -29,6 +29,7 @@
 	let domainIdOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
+		id: 'create-subject-form-' + useId(),
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -38,7 +39,7 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
 </script>
 
 <DialogButton
@@ -47,6 +48,7 @@
 	button="New Subject"
 	title="Create Subject"
 	description="A subject can be related to other subject."
+	class="sticky top-2 z-10 float-right -mt-14 h-9"
 >
 	<!-- For sumbitting a NEW PROGRAM
  	It triggers an action that can be seen in +page.server.ts -->
@@ -69,8 +71,14 @@
 				<Form.Control id={triggerId}>
 					{#snippet children({ props })}
 						<div class="mt-2 flex w-full items-center justify-between">
-							<Form.Label>Link to domain (optional)</Form.Label>
+							<Form.Label>
+								Link to domain (optional)
+								{#if graph.domains.length === 0}
+									<p class="text-xs text-orange-900">(No domains available; Create one first.)</p>
+								{/if}
+							</Form.Label>
 							<Popover.Trigger
+								disabled={graph.domains.length === 0}
 								class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
 								role="combobox"
 								{...props}
@@ -107,6 +115,8 @@
 			</Popover.Root>
 		</Form.Field>
 
-		<Form.Button class="float-right mt-4">Submit</Form.Button>
+		<Form.Button disabled={$submitting} loading={$delayed} class="float-right mt-4">
+			Create Subject
+		</Form.Button>
 	</form>
 </DialogButton>
