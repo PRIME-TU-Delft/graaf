@@ -13,18 +13,14 @@
 	import { Plus } from '@lucide/svelte';
 
 	// Types
-	import type { Sandbox, Graph, Link } from '@prisma/client';
+	import type { Graph, Link } from '@prisma/client';
 	import type { PageData } from '../$types';
 
 	type AddAliasLinkProps = {
-		sandbox: Sandbox & {
-			links: Link[];
-		};
 		graph: Graph;
-		onSuccess: (link: Link) => void;
 	};
 
-	let { sandbox, graph, onSuccess }: AddAliasLinkProps = $props();
+	let { graph }: AddAliasLinkProps = $props();
 
 	const id = $props.id();
 	const data = page.data as PageData;
@@ -34,7 +30,6 @@
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully added link!');
-				onSuccess(result!.data!.link as Link);
 			}
 		}
 	});
@@ -43,20 +38,20 @@
 
 	$effect(() => {
 		$formData.graphId = graph.id;
-		$formData.parentId = sandbox.id;
+		$formData.parentId = data.sandbox.id;
 		$formData.parentType = 'SANDBOX';
 	});
 
-	const linkDuplicate = $derived(sandbox.links.find((link) => link.name == $formData.name));
+	const linkDuplicate = $derived(data.sandbox.links.find((link) => link.name == $formData.name));
 	const linkInvalidCharacters = $derived.by(() => {
 		return $formData.name.match(/^[a-zA-Z0-9-]+$/) == null;
 	});
 </script>
 
 <form class="flex flex-col gap-2" action="?/new-link" method="POST" use:enhance>
-	<input type="text" name="graphId" value={graph.id} hidden />
-	<input type="text" name="parentId" value={sandbox.id} hidden />
-	<input type="text" name="parentType" value="SANDBOX" hidden />
+	<input type="hidden" name="graphId" value={graph.id} />
+	<input type="hidden" name="parentId" value={data.sandbox.id} />
+	<input type="hidden" name="parentType" value="SANDBOX" />
 
 	<div class="grow flex flex-row gap-2 items-center">
 		<Form.Field {form} name="name" class="grow">

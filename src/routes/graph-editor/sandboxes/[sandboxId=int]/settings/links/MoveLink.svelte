@@ -7,7 +7,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	
 	// Components
-	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	
@@ -15,18 +15,15 @@
 	import { Check, ChevronDown } from '@lucide/svelte';
 	
 	// Types
-	import type { Sandbox, Graph, Link } from '@prisma/client';
+	import type { Graph, Link } from '@prisma/client';
 	import type { PageData } from '../$types';
 
 	type MoveAliasLinkProps = {
-		sandbox: Sandbox;
 		graph: Graph;
-		graphs: Graph[];
 		link: Link;
-		onSuccess: () => void;
 	};
 
-	const { sandbox, graph, graphs, link, onSuccess }: MoveAliasLinkProps = $props();
+	const { graph, link }: MoveAliasLinkProps = $props();
 
 	const id = $props.id();
 	const data = page.data as PageData;
@@ -37,7 +34,6 @@
 			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully moved link!');
-				onSuccess();
 			}
 		}
 	});
@@ -47,7 +43,7 @@
 	let graphId = $state(graph.id);
 	
 	$effect(() => {
-		$formData.parentId = sandbox.id;
+		$formData.parentId = data.sandbox.id;
 		$formData.parentType = 'SANDBOX';
 		$formData.linkId = link.id;
 		$formData.graphId = graphId;
@@ -60,12 +56,12 @@
 	</Popover.Trigger>
 	<Popover.Content>
 		<form action="?/move-link" method="POST" use:enhance>
-			<input type="text" name="parentId" value={sandbox.id} hidden />
-			<input type="text" name="parentType" value="SANDBOX" hidden />
-			<input type="text" name="linkId" value={link.id} hidden />
-			<input type="text" name="graphId" value={graphId} hidden />
+			<input type="hidden" name="parentId" value={data.sandbox.id} />
+			<input type="hidden" name="parentType" value="SANDBOX" />
+			<input type="hidden" name="linkId" value={link.id} />
+			<input type="hidden" name="graphId" value={graphId} />
 
-			{#each graphs as newGraph (newGraph.id)}
+			{#each data.sandbox.graphs as newGraph (newGraph.id)}
 				<Form.FormButton
 					disabled={$submitting || newGraph.id === graph.id} 
 					loading={$delayed} 

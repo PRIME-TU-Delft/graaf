@@ -1,5 +1,29 @@
-import { redirect, type ServerLoad } from '@sveltejs/kit';
+import prisma from '$lib/server/db/prisma';
+import { getUser } from '$lib/server/actions/Users';
 
-export const load: ServerLoad = async () => {
-	redirect(303, `/graph-editor`);
-};
+import type { ServerLoad } from '@sveltejs/kit';
+
+export const load = (async ({ locals }) => {
+	const user = await getUser({ locals });
+	const sandboxes = await prisma.sandbox.findMany({
+		where: {
+			OR: [
+				{ ownerId: user.id },
+				{
+					editors: {
+						some: {
+							id: user.id
+						}
+					}
+				}
+			]
+		},
+		include: {
+			owner: true
+		}
+	});
+
+	return {
+		sandboxes
+	};
+}) satisfies ServerLoad;

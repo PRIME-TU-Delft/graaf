@@ -6,7 +6,7 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import EditGraph from './EditGraph.svelte';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import LinkGraph from './settings/links/LinkGraph.svelte';
+	import GraphLinkSettings from './settings/links/GraphLinkSettings.svelte';
 
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
@@ -72,7 +72,7 @@
 						<ArrowRight />
 					</Button>
 
-					<LinkGraph {graph} sandbox={data.sandbox} />
+					<GraphLinkSettings graph={graph} />
 					<EditGraph {graph} availableCourses={data.availableCourses} availableSandboxes={data.availableSandboxes} />
 				</div>
 			</a>

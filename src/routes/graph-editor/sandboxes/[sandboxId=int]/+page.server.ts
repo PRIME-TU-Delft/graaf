@@ -1,5 +1,5 @@
 import prisma from '$lib/server/db/prisma';
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import { GraphActions } from '$lib/server/actions';
 import { zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';

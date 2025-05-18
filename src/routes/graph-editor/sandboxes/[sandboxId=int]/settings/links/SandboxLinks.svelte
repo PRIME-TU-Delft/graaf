@@ -5,7 +5,7 @@
 	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import LinkGraph from './LinkGraph.svelte';
+	import GraphLinkSettings from './GraphLinkSettings.svelte';
 	
 	// Icons
 	import { ArrowRight } from '@lucide/svelte';
@@ -20,51 +20,52 @@
 	};
 
 	const { sandbox, graphs }: SandboxLinksProps = $props();
-	let graphLinkSettingsOpen = $state(false);
-
 </script>
 
 <section class="prose mx-auto p-4">
 	<h2 class="mt-4 mb-0">Sandbox links</h2>
-	<Table.Root class="rounded-md border">
-		<Table.Header>
-			<Table.Row>
-				<Table.Head>Name</Table.Head>
-				<Table.Head class="w-10">Links</Table.Head>
-				<Table.Head class="text-right">Actions</Table.Head>
-			</Table.Row>
-		</Table.Header>
-		<Table.Body>
-			{#each graphs as graph (graph.id)}
+
+	<p>
+		You can share graphs in this sandbox with other users.
+		They will be able to view the shared graphs, but not edit them.
+	</p>
+
+	<div class="rounded-md border">
+		<Table.Root class="m-0">
+			<Table.Header>
 				<Table.Row>
-					<Table.Cell class="font-medium">
-						{graph.name}
-					</Table.Cell>
-
-					<Table.Cell class="text-center">
-						{graph.links.length}
-					</Table.Cell>
-
-					<Table.Cell class="text-right">
-						<LinkGraph
-							sandbox={sandbox}
-							graph={graph}
-							graphs={graphs}
-							onSuccess={() => (graphLinkSettingsOpen = false)}
-						/>
-					</Table.Cell>
+					<Table.Head>Name</Table.Head>
+					<Table.Head class="w-10">Links</Table.Head>
+					<Table.Head class="text-right">Actions</Table.Head>
 				</Table.Row>
+			</Table.Header>
+			<Table.Body>
+				{#each graphs as graph (graph.id)}
+					<Table.Row>
+						<Table.Cell class="font-medium">
+							{graph.name}
+						</Table.Cell>
 
-				{#each graph.links as link (link.id)}
-					{@render alias(link.name)}
+						<Table.Cell class="text-center">
+							{graph.links.length}
+						</Table.Cell>
+
+						<Table.Cell class="text-right">
+							<GraphLinkSettings graph={graph} />
+						</Table.Cell>
+					</Table.Row>
+
+					{#each graph.links as link (link.id)}
+						{@render alias(link.name)}
+					{/each}
+				{:else}
+					<Table.Row>
+						<Table.Cell colspan={4} class="text-center"> No graphs found. </Table.Cell>
+					</Table.Row>
 				{/each}
-			{:else}
-				<Table.Row>
-					<Table.Cell colspan={4} class="text-center"> No graphs found. </Table.Cell>
-				</Table.Row>
-			{/each}
-		</Table.Body>
-	</Table.Root>
+			</Table.Body>
+		</Table.Root>
+	</div>
 </section>
 
 {#snippet alias(linkName: string)}

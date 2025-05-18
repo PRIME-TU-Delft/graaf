@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
-	import { editLinkSchema } from '$lib/zod/linkSchema';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { editSuperUserSchema } from '$lib/zod/sandboxSchema';
 
 	// Components
 	import { buttonVariants } from '$lib/components/ui/button';
@@ -12,28 +12,29 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	
 	// Icons
-	import { Trash } from '@lucide/svelte';
+	import { Trash2 } from '@lucide/svelte';
 
 	// Types
-	import type { Graph, Link } from '@prisma/client';
+	import type { User, Sandbox } from '@prisma/client';
 	import type { PageData } from '../$types';
 
-	type DeleteAliasLinkProps = {
-		graph: Graph;
-		link: Link;
+	type DeleteSandboxProps = {
+        user: User;
+		sandbox: Sandbox;
+		onSuccess?: () => void;
 	};
 
-	const { graph, link }: DeleteAliasLinkProps = $props();
+	let { user, sandbox, onSuccess = () => {} }: DeleteSandboxProps = $props();
 
 	const id = $props.id();
 	const data = page.data as PageData;
-	const form = superForm(data.editLinkForm, {
-		id: 'delete-link-' + id,
-		validators: zodClient(editLinkSchema),
+	const form = superForm(data.editSuperUserForm, {
+		id: 'edit-super-user-' + id,
+		validators: zodClient(editSuperUserSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
-				toast.success('Succesfully deleted link!');
+				toast.success('Successfully removed editor!');
+				onSuccess();
 			}
 		}
 	});
@@ -41,36 +42,29 @@
 	const { form: formData, enhance, submitting, delayed } = form;
 
 	$effect(() => {
-		$formData.graphId = graph.id;
-		$formData.parentId = data.sandbox.id;
-		$formData.parentType = 'SANDBOX';
-		$formData.linkId = link.id;
+		$formData.sandboxId = sandbox.id;
+        $formData.userId = user.id;
+        $formData.role = 'revoke';
 	});
 </script>
 
 <Popover.Root>
 	<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-		<Trash />
+		<Trash2 />
 	</Popover.Trigger>
 	<Popover.Content>
-		<form action="?/delete-link" method="POST" use:enhance>
-			<input type="hidden" name="graphId" value={graph.id} />
-			<input type="hidden" name="parentId" value={data.sandbox.id} />
-			<input type="hidden" name="parentType" value="SANDBOX" />
-			<input type="hidden" name="linkId" value={link.id} />
+		<form action="?/edit-super-user" method="POST" use:enhance>
+			<input type="hidden" name="sandboxId" value={sandbox.id} />
+            <input type="hidden" name="userId" value={user.id} />
+            <input type="hidden" name="role" value="revoke" />
 
 			<div class="flex flex-row items-center justify-between">
-				<div>
-					<p class="font-bold">Delete Link</p>
-					<p class="text-sm text-muted-foreground">
-						This cannot be undone.
-					</p>
-				</div>
+				<p class="font-bold">Remove as Editor</p>
 				<Form.FormButton
 					variant="destructive"
 					disabled={$submitting}
 					loading={$delayed}
-					loadingMessage="Deleting..."
+					loadingMessage="Removing..."
 				>
 					Confirm
 				</Form.FormButton>

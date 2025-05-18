@@ -16,7 +16,8 @@ import {
 
 import { 
 	editSandboxSchema,
-	deleteSandboxSchema
+	deleteSandboxSchema,
+	editSuperUserSchema
 } from '$lib/zod/sandboxSchema';
 
 // Types
@@ -58,13 +59,8 @@ export const load = (async ({ params, locals }) => {
 			deleteSandboxForm: await superValidate(zod(deleteSandboxSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			newLinkForm: await superValidate(zod(newLinkSchema)),
-			editLinkForm: await superValidate(zod(editLinkSchema))
-
-			/* editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
-			changeArchiveForm: await superValidate(zod(changeArchiveSchema)),
-			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
-			createLinkForm: await superValidate(zod(newLinkSchema)),
-			editLinkForm: await superValidate(zod(editLinkSchema)) */
+			editLinkForm: await superValidate(zod(editLinkSchema)),
+			editSuperUserForm: await superValidate(zod(editSuperUserSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page
@@ -97,5 +93,9 @@ export const actions: Actions = {
 	'delete-link': async (event) => {
 		const form = await superValidate(event, zod(editLinkSchema));
 		return LinkActions.deleteLink(await getUser(event), form);
+	},
+	'edit-super-user': async (event) => {
+		const form = await superValidate(event, zod(editSuperUserSchema));
+		return SandboxActions.editSuperUser(await getUser(event), form);
 	}
 };

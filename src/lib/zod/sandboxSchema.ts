@@ -13,3 +13,9 @@ export const deleteSandboxSchema = z.object({
 	sandboxId: z.number()
 });
 
+export const editSuperUserSchema = z.object({
+	sandboxId: z.number(),
+	userId: z.string(),
+	role: z.enum(['owner', 'editor', 'revoke'])
+});
+
