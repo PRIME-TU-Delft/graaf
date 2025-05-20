@@ -5,7 +5,8 @@
 	import ChangeRole from './ChangeRole.svelte';
 	import SuperUserDataTable from './SuperUserDataTable.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { FunnelX, Funnel } from '@lucide/svelte';
+	import Funnel from '@lucide/svelte/icons/filter';
+	import FunnelX from '@lucide/svelte/icons/filter-x';
 
 	type CourseAdminProps = {
 		user: User;

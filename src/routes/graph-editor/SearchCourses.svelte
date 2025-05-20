@@ -22,7 +22,6 @@
 	<Command.Input
 		class="h-9 !border-0 p-0 !shadow-none !ring-0 !outline-none"
 		placeholder="Search courses..."
-		hasBorder={false}
 		bind:value={courseValue}
 	/>
 

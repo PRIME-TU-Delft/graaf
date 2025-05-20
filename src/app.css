@@ -2,6 +2,7 @@
 
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
 
 :root {
 	--background: hsl(0 0% 100%) /* <- Wrap in HSL */;
@@ -21,7 +22,7 @@
 	--accent: hsl(210 40% 96.1%);
 	--accent-foreground: hsl(222.2 47.4% 11.2%);
 	--destructive: hsl(353 82% 74%);
-	--destructive-foreground: hsl(0 0% 98%);
+	--destructive-foreground: hsl(0, 87%, 15%);
 	--ring: hsl(240 10% 3.9%);
 	--sidebar-background: hsl(0 0% 98%);
 	--sidebar-foreground: hsl(240 5.3% 26.1%);
