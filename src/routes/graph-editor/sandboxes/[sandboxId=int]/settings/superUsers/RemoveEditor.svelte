@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { cn } from '$lib/utils';
+	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/sandboxSchema';
 
 	// Components
-	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 	
 	// Icons
 	import { Trash2 } from '@lucide/svelte';
@@ -26,10 +24,9 @@
 
 	let { user, sandbox, onSuccess = () => {} }: DeleteSandboxProps = $props();
 
-	const id = $props.id();
 	const data = page.data as PageData;
 	const form = superForm(data.editSuperUserForm, {
-		id: 'edit-super-user-' + id,
+		id: 'edit-super-user-' + useId(),
 		validators: zodClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -39,38 +36,20 @@
 		}
 	});
 
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		$formData.sandboxId = sandbox.id;
-        $formData.userId = user.id;
-        $formData.role = 'revoke';
-	});
+	const { enhance, submitting, delayed } = form;
 </script>
 
-<Popover.Root>
-	<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-		<Trash2 />
-	</Popover.Trigger>
-	<Popover.Content>
-		<form action="?/edit-super-user" method="POST" use:enhance>
-			<input type="hidden" name="sandboxId" value={sandbox.id} />
-            <input type="hidden" name="userId" value={user.id} />
-            <input type="hidden" name="role" value="revoke" />
+<form action="?/edit-super-user" method="POST" use:enhance>
+	<input type="hidden" name="sandboxId" value={sandbox.id} />
+    <input type="hidden" name="userId" value={user.id} />
+    <input type="hidden" name="role" value="revoke" />
 
-			<div class="flex flex-row items-center justify-between">
-				<p class="font-bold">Remove as Editor</p>
-				<Form.FormButton
-					variant="destructive"
-					disabled={$submitting}
-					loading={$delayed}
-					loadingMessage="Removing..."
-				>
-					Confirm
-				</Form.FormButton>
-			</div>
-
-			<Form.FormError class="w-full text-right" {form} />
-		</form>
-	</Popover.Content>
-</Popover.Root>
+	<Form.FormButton
+		variant="destructive"
+		disabled={$submitting}
+		loading={$delayed}
+		loadingMessage="Removing..."
+	>
+		<Trash2 /> Revoke
+	</Form.FormButton>
+</form>

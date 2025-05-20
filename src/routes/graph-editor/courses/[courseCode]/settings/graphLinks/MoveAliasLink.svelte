@@ -30,7 +30,6 @@
 		id: 'move-graph-link-' + id,
 		validators: zodClient(editLinkSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully move link!');
 

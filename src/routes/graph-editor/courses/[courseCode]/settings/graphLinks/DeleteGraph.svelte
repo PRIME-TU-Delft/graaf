@@ -25,7 +25,6 @@
 		id: 'delete-graph-' + id,
 		validators: zodClient(graphSchemaWithId),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted graph!');
 

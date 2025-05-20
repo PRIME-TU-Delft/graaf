@@ -1,47 +1,38 @@
 <script lang="ts">
+	
+	// Components
+	import DuplicateGraph from './DuplicateGraph.svelte';
+	import DialogButton from '$lib/components/DialogButton.svelte';
+	
+	// Types
 	import type { Prisma } from '@prisma/client';
 
-	import DialogButton from '$lib/components/DialogButton.svelte';
-	import DuplicateGraph from './DuplicateGraph.svelte';
-
-	let { graph, availableCourses, availableSandboxes }: {
+	type DuplicateGraphProps = {
 		graph: Prisma.GraphGetPayload<{
 			include: {
 				lectures: true;
 				links: true;
 			}
 		}>;
-		availableCourses: Prisma.CourseGetPayload<{
-			include: {
-				graphs: { select: { name: true } };
-			};
-		}>[];
-		availableSandboxes: Prisma.SandboxGetPayload<{
-			include: {
-				owner: true;
-				graphs: { select: { name: true } };
-			};
-		}>[];
-	} = $props();
+	};
 
+	let { graph }: DuplicateGraphProps = $props();
 	let isDuplicateOpen = $state(false);
-
-	function handleOpenDuplicate(e: MouseEvent) {
-		e.preventDefault();
-		isDuplicateOpen = true;
-	}
 </script>
 
 <div class="flex flex-col gap-1 lg:flex-row">
 	<DialogButton
-		onclick={(e) => handleOpenDuplicate(e)}
 		button="Duplicate"
 		icon="copy"
-		title="Duplicate/Move Graph"
-		description="Copy this graph within this or another course. This will create a new graph with the same content in the selected course."
+		title="Duplicate Graph"
+		description="Copy this graph to another course or sandbox. This will create a new graph with the same content in the selected destination."
 		bind:open={isDuplicateOpen}
 		class="grow"
+		onclick={event => {
+			event.preventDefault();
+			isDuplicateOpen = true;
+		}}
 	>
-		<DuplicateGraph {graph} {availableCourses} {availableSandboxes} bind:isDuplicateOpen />
+		<DuplicateGraph {graph} bind:isDuplicateOpen />
 	</DialogButton>
 </div>

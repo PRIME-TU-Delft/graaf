@@ -10,20 +10,15 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import SelectUsers from '$lib/components/SelectUsers.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { Button } from '$lib/components/ui/button';
+
+	// Icons
+	import { Undo2 } from '@lucide/svelte';
 
 	// Types
 	import type { PageData } from './$types';
 	
 	const data = page.data as PageData;
-
-	// Get users that can be transfered to
-	const nonOwner = $derived(
-		data.allUsers.filter(
-			(user) => data.sandbox.owner.id != user.id
-		)
-	);
-
-	// Build the form
 	const form = superForm(data.editSuperUserForm, {
 		id: 'edit-super-user-' + useId(),
 		validators: zodClient(editSuperUserSchema),
@@ -37,8 +32,13 @@
 
 	const { form: formData, enhance, submitting, delayed } = form;
 
-	// Svelte stuff
 	let transferOwnershipDialogOpen = $state(false);
+	const nonOwner = $derived(
+		data.allUsers.filter(
+			(user) => data.sandbox.owner.id != user.id
+		)
+	);
+
 	$effect(() => {
 		$formData.sandboxId = data.sandbox.id;
 		$formData.role = 'owner';
@@ -52,8 +52,9 @@
 	title="Transfer Ownership"
 	icon="swap"
 	description="
-	Transfer ownership of this sandbox to another user. 
-	You will become an editor, and lose the ability to edit the settings of this sandbox.
+		This will transfer ownership of this sandbox to another user. 
+		You will become an editor, and lose the ability to edit the settings of this sandbox.
+		This cannot be undone by you.
 	"
 	bind:open={transferOwnershipDialogOpen}
 >
@@ -63,16 +64,31 @@
 
 		<Form.Field {form} name="userId">
 			<SelectUsers
+				value={$formData.userId}
 				users={nonOwner}
 				onSelect={(user) => {
 					$formData.userId = user.id;
 				}}
 			/>
+			<Form.FieldErrors />
 		</Form.Field>
 
 		<div class="mt-2 flex items-center justify-between gap-1">
 			<Form.FormError class="w-full" {form} />
-			<Form.FormButton disabled={$submitting || !$formData.userId} loading={$delayed}>
+			<Button
+				variant="outline"
+				onclick={() =>
+					form.reset({
+						newState: {
+							userId: undefined,
+							sandboxId: data.sandbox.id,
+							role: 'owner'
+						}
+					})}
+			>
+				<Undo2 /> Reset
+			</Button>
+			<Form.FormButton disabled={$submitting} loading={$delayed}>
 				Transfer ownership
 				{#snippet loadingMessage()}
 					<span>Transferring ownership...</span>

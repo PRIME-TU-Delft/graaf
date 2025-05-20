@@ -380,7 +380,10 @@ export class GraphActions {
 		}
 
 		// Redirect to the destination course
-		if (form.data.sourceId !== form.data.destinationId) {
+		if (sourcegraph.parentType !== form.data.destinationType ||
+			sourcegraph.parentType === 'COURSE' && sourcegraph.courseId !== form.data.destinationId ||
+			sourcegraph.parentType === 'SANDBOX' && sourcegraph.sandboxId !== form.data.destinationId
+		) {
 			redirect(303, destinationUrl);
 		}
 

@@ -34,7 +34,7 @@
 			{ name: 'Sandboxes', path: '/graph-editor/sandboxes', icon: FlaskRound },
 		];
 		if (user?.role === 'ADMIN') {
-			items.push({ name: 'Users', path: '/users', icon: UserIcon });
+			items.push({ name: 'Users', path: '/graph-editor/users', icon: UserIcon });
 		}
 
 		return items;

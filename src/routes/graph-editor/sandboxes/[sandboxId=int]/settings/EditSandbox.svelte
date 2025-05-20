@@ -9,7 +9,11 @@
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import { Button } from '$lib/components/ui/button';
 	
+	// Icons
+	import { Undo2 } from '@lucide/svelte';
+
 	// Types
 	import type { PageData } from './$types';
 
@@ -31,6 +35,7 @@
 
 	// Svelte stuff
 	let editSandboxDialogOpen = $state(false);
+
 	$effect(() => {
 		$formData.sandboxId = data.sandbox.id;
 		$formData.name = data.sandbox.name;
@@ -55,22 +60,31 @@
 						<Input {...props} bind:value={$formData.name} />
 					{/snippet}
 				</Form.Control>
-				<Form.FieldErrors class="mb-2" />
+				<Form.FieldErrors />
 			</Form.Field>
 		</div>
 	
-		<Form.FormError class="my-2" {form} />
-	
-		<Form.FormButton
-			class="float-right"
-			disabled={$submitting || $formData.name == data.sandbox.name}
-			loading={$delayed}
-		>
-			Save new name
-			{#snippet loadingMessage()}
-				<span>Saving new name...</span>
-			{/snippet}
-		</Form.FormButton>
+		<div class="mt-2 flex items-center justify-between gap-1">
+			<Form.FormError class="w-full" {form} />
+			<Button
+				variant="outline"
+				onclick={() =>
+					form.reset({
+						newState: {
+							name: data.sandbox.name,
+							sandboxId: data.sandbox.id
+						}
+					})}
+			>
+				<Undo2 /> Reset
+			</Button>
+			<Form.FormButton disabled={$submitting} loading={$delayed}>
+				Save new name
+				{#snippet loadingMessage()}
+					<span>Saving new name...</span>
+				{/snippet}
+			</Form.FormButton>
+		</div>
 	</form>
 </DialogButton>
 

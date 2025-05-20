@@ -27,7 +27,6 @@
 		id: 'delete-graph-link-' + id,
 		validators: zodClient(editLinkSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted link!');
 

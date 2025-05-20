@@ -11,16 +11,16 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 
 	type AddNewUserProps = {
+		value?: string;
 		users: User[];
 		userRoles?: Map<string, string>;
 		onSelect?: (user: User) => void;
 	};
 
-	const { users, userRoles = new Map(), onSelect = () => {} }: AddNewUserProps = $props();
+	let { value = $bindable(), users, userRoles = new Map(), onSelect = () => {} }: AddNewUserProps = $props();
 	const id = useId();
 
 	let isSuperUserPopoverOpen = $state(false);
-	let value = $state();
 </script>
 
 <Popover.Root bind:open={isSuperUserPopoverOpen}>
@@ -45,7 +45,7 @@
 	</Form.Control>
 	<Popover.Content>
 		<Command.Root loop>
-			<Command.Input autofocus placeholder="Search users..." class="h-9" />
+			<Command.Input autofocus placeholder="Search users..." class="h-9 my-1" />
 			<Command.Empty>No user found.</Command.Empty>
 			<Command.Group>
 				{#each users as user (user.id)}

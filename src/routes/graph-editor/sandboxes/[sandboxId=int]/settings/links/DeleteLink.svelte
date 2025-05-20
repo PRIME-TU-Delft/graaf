@@ -31,7 +31,6 @@
 		id: 'delete-link-' + id,
 		validators: zodClient(editLinkSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted link!');
 			}
@@ -61,7 +60,7 @@
 
 			<div class="flex flex-row items-center justify-between">
 				<div>
-					<p class="font-bold">Delete Link</p>
+					<h5 class="font-bold">Delete Link</h5>
 					<p class="text-sm text-muted-foreground">
 						This cannot be undone.
 					</p>

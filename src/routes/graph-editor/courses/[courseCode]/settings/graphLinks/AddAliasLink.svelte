@@ -26,8 +26,6 @@
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully added link!');
-
-				console.log({ result });
 				onSuccess(result!.data!.link as Link);
 			}
 		}
