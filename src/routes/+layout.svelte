@@ -4,6 +4,7 @@
 	import NavigationBar from '$lib/components/NavigationBar.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import { ModeWatcher } from "mode-watcher";
 
 	import type { User } from '@prisma/client';
 	import '../app.css';
@@ -21,6 +22,7 @@
 	);
 </script>
 
+<ModeWatcher />
 <Toaster closeButton />
 
 <NavigationBar />
