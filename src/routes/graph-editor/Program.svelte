@@ -26,7 +26,13 @@
 		newCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;
 	};
 
-	let { user, program, courses, linkCoursesForm, newCourseForm: createNewCourseForm }: Props = $props();
+	let {
+		user,
+		program,
+		courses,
+		linkCoursesForm,
+		newCourseForm: createNewCourseForm
+	}: Props = $props();
 </script>
 
 <div class="overflow-hidden rounded-lg border-2 border-purple-100 bg-purple-50/10">

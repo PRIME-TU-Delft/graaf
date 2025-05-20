@@ -6,10 +6,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import GraphLinkSettings from './GraphLinkSettings.svelte';
-	
+
 	// Icons
 	import { ArrowRight } from '@lucide/svelte';
-	
+
 	// Types
 	import type { Sandbox, Graph, Lecture, Link } from '@prisma/client';
 	import type { SandboxPermissions } from '$lib/utils/permissions';
@@ -23,11 +23,11 @@
 </script>
 
 <section class="prose mx-auto p-4">
-	<h2 class="mt-4 mb-0">Sandbox links</h2>
+	<h2 class="mb-0 mt-4">Sandbox links</h2>
 
 	<p>
-		You can share graphs in this sandbox with other users.
-		They will be able to view the shared graphs, but not edit them.
+		You can share graphs in this sandbox with other users. They will be able to view the shared
+		graphs, but not edit them.
 	</p>
 
 	<div class="rounded-md border">
@@ -51,7 +51,7 @@
 						</Table.Cell>
 
 						<Table.Cell class="text-right">
-							<GraphLinkSettings graph={graph} />
+							<GraphLinkSettings {graph} />
 						</Table.Cell>
 					</Table.Row>
 
@@ -60,7 +60,7 @@
 					{/each}
 				{:else}
 					<Table.Row>
-						<Table.Cell colspan={4} class="text-center"> No graphs found. </Table.Cell>
+						<Table.Cell colspan={4} class="text-center">No graphs found.</Table.Cell>
 					</Table.Row>
 				{/each}
 			</Table.Body>

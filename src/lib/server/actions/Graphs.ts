@@ -1,4 +1,3 @@
-
 import { env } from '$env/dynamic/private';
 import { setError } from '$lib/utils/setError';
 import prisma from '$lib/server/db/prisma';
@@ -6,11 +5,7 @@ import { redirect } from '@sveltejs/kit';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 
-import type {
-	newGraphSchema,
-	graphSchemaWithId,
-	duplicateGraphSchema
-} from '$lib/zod/graphSchema';
+import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
 
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
@@ -380,9 +375,10 @@ export class GraphActions {
 		}
 
 		// Redirect to the destination course
-		if (sourcegraph.parentType !== form.data.destinationType ||
-			sourcegraph.parentType === 'COURSE' && sourcegraph.courseId !== form.data.destinationId ||
-			sourcegraph.parentType === 'SANDBOX' && sourcegraph.sandboxId !== form.data.destinationId
+		if (
+			sourcegraph.parentType !== form.data.destinationType ||
+			(sourcegraph.parentType === 'COURSE' && sourcegraph.courseId !== form.data.destinationId) ||
+			(sourcegraph.parentType === 'SANDBOX' && sourcegraph.sandboxId !== form.data.destinationId)
 		) {
 			redirect(303, destinationUrl);
 		}

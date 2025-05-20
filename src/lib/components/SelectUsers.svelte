@@ -17,7 +17,12 @@
 		onSelect?: (user: User) => void;
 	};
 
-	let { value = $bindable(), users, userRoles = new Map(), onSelect = () => {} }: AddNewUserProps = $props();
+	let {
+		value = $bindable(),
+		users,
+		userRoles = new Map(),
+		onSelect = () => {}
+	}: AddNewUserProps = $props();
 	const id = useId();
 
 	let isSuperUserPopoverOpen = $state(false);
@@ -45,7 +50,7 @@
 	</Form.Control>
 	<Popover.Content>
 		<Command.Root loop>
-			<Command.Input autofocus placeholder="Search users..." class="h-9 my-1" />
+			<Command.Input autofocus placeholder="Search users..." class="my-1 h-9" />
 			<Command.Empty>No user found.</Command.Empty>
 			<Command.Group>
 				{#each users as user (user.id)}

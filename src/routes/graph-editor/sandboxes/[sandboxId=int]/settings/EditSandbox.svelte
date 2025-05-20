@@ -10,7 +10,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button } from '$lib/components/ui/button';
-	
+
 	// Icons
 	import { Undo2 } from '@lucide/svelte';
 
@@ -40,7 +40,6 @@
 		$formData.sandboxId = data.sandbox.id;
 		$formData.name = data.sandbox.name;
 	});
-
 </script>
 
 <DialogButton
@@ -51,7 +50,7 @@
 >
 	<form action="?/edit-sandbox" method="POST" use:enhance>
 		<input type="hidden" name="sandboxId" value={data.sandbox.id} />
-			
+
 		<div class="flex gap-3">
 			<Form.Field {form} name="name" class="grow">
 				<Form.Control>
@@ -63,7 +62,7 @@
 				<Form.FieldErrors />
 			</Form.Field>
 		</div>
-	
+
 		<div class="mt-2 flex items-center justify-between gap-1">
 			<Form.FormError class="w-full" {form} />
 			<Button
@@ -87,5 +86,3 @@
 		</div>
 	</form>
 </DialogButton>
-
-

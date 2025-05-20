@@ -22,9 +22,8 @@
 	<h2 class="m-0">Sandbox Editors</h2>
 
 	<p>
-		You can add other users as editors to this sandbox.
-		They will be able to view, edit, and share all graphs in this sandbox.
-		They cannot change its settings, or delete it.
+		You can add other users as editors to this sandbox. They will be able to view, edit, and share
+		all graphs in this sandbox. They cannot change its settings, or delete it.
 	</p>
 
 	<div class="rounded-md border">
@@ -40,10 +39,7 @@
 							{displayName(editor)}
 						</Table.Cell>
 						<Table.Cell class="text-right">
-							<RemoveEditor
-								sandbox={sandbox}
-								user={editor}
-							/>
+							<RemoveEditor {sandbox} user={editor} />
 						</Table.Cell>
 					</Table.Row>
 				{/each}
@@ -66,7 +62,8 @@
 			bind:open={dialogOpen}
 			class="w-full"
 		>
-			<AddEditor {sandbox}
+			<AddEditor
+				{sandbox}
 				onSuccess={() => {
 					dialogOpen = false;
 				}}

@@ -8,7 +8,7 @@
 
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
-	
+
 	// Icons
 	import { Trash2 } from '@lucide/svelte';
 
@@ -17,7 +17,7 @@
 	import type { PageData } from '../$types';
 
 	type DeleteSandboxProps = {
-        user: User;
+		user: User;
 		sandbox: Sandbox;
 		onSuccess?: () => void;
 	};
@@ -41,8 +41,8 @@
 
 <form action="?/edit-super-user" method="POST" use:enhance>
 	<input type="hidden" name="sandboxId" value={sandbox.id} />
-    <input type="hidden" name="userId" value={user.id} />
-    <input type="hidden" name="role" value="revoke" />
+	<input type="hidden" name="userId" value={user.id} />
+	<input type="hidden" name="role" value="revoke" />
 
 	<Form.FormButton
 		variant="destructive"

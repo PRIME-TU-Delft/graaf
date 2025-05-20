@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { fade } from 'svelte/transition';
-	
+
 	// Components
 	import AddLink from './AddLink.svelte';
 	import DeleteLink from './DeleteLink.svelte';
@@ -26,7 +26,6 @@
 
 	// On success callback
 	let graphLinkSettingsOpen = $state(false);
-
 </script>
 
 <DialogButton
@@ -40,7 +39,7 @@
 		People with access to this link with will be able to view the graph, but not edit it.
 		Graphs can have multiple links.
 	"
-	onclick={event => {
+	onclick={(event) => {
 		event.preventDefault();
 		graphLinkSettingsOpen = true;
 	}}

@@ -72,7 +72,7 @@
 	<input type="text" name="graphId" value={graph.id} hidden />
 	<input type="text" name="parentId" value={course.id} hidden />
 	<input type="text" name="parentType" value="COURSE" hidden />
-	
+
 	<div class="mb-2 rounded border p-2">
 		<h3 class="text-lg font-bold">Links</h3>
 		<p class="text-sm">

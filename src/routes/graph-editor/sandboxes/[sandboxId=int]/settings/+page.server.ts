@@ -9,12 +9,9 @@ import { GraphActions } from '$lib/server/actions/Graphs';
 import { graphSchemaWithId } from '$lib/zod/graphSchema';
 import { LinkActions } from '$lib/server/actions/Links';
 
-import { 
-	newLinkSchema,
-	editLinkSchema
-} from '$lib/zod/linkSchema';
+import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema';
 
-import { 
+import {
 	editSandboxSchema,
 	deleteSandboxSchema,
 	editSuperUserSchema
@@ -46,7 +43,7 @@ export const load = (async ({ params, locals }) => {
 				links: true
 			}
 		});
-		if (!dbSandbox) throw Error('You do not have permissions to access this sandbox\'s settings');
+		if (!dbSandbox) throw Error("You do not have permissions to access this sandbox's settings");
 
 		// TODO: Check if we need pagination here
 		const allUsers = await prisma.user.findMany();

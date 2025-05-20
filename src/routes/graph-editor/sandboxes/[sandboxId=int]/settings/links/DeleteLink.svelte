@@ -10,7 +10,7 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	
+
 	// Icons
 	import { Trash } from '@lucide/svelte';
 
@@ -61,9 +61,7 @@
 			<div class="flex flex-row items-center justify-between">
 				<div>
 					<h5 class="font-bold">Delete Link</h5>
-					<p class="text-sm text-muted-foreground">
-						This cannot be undone.
-					</p>
+					<p class="text-sm text-muted-foreground">This cannot be undone.</p>
 				</div>
 				<Form.FormButton
 					variant="destructive"

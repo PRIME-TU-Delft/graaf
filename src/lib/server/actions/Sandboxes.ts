@@ -4,8 +4,8 @@ import { whereHasSandboxPermission } from '$lib/server/permissions';
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
-import type { 
-	deleteSandboxSchema, 
+import type {
+	deleteSandboxSchema,
 	editSandboxSchema,
 	editSuperUserSchema
 } from '$lib/zod/sandboxSchema';
@@ -13,7 +13,6 @@ import { disconnect } from 'process';
 import { connect } from 'http2';
 
 export class SandboxActions {
-
 	/**
 	 * PERMISSIONS:
 	 * - Only OWNERS can edit sandboxes
@@ -86,13 +85,16 @@ export class SandboxActions {
 			const isOwner = current.ownerId === form.data.userId;
 
 			if (form.data.role === 'revoke' && (isOwner || !isEditor)) {
-				return setError(form, '', "Can only revoke editors");
-			} if (form.data.role === 'owner' && isOwner) {
-				return setError(form, '', "User is already the owner of this sandbox");
-			} if (form.data.role === 'editor' && isEditor) {
-				return setError(form, '', "User is already an editor of this sandbox");
-			} if (form.data.role === 'editor' && isOwner) {
-				return setError(form, '', "Cannot add the owner as an editor");
+				return setError(form, '', 'Can only revoke editors');
+			}
+			if (form.data.role === 'owner' && isOwner) {
+				return setError(form, '', 'User is already the owner of this sandbox');
+			}
+			if (form.data.role === 'editor' && isEditor) {
+				return setError(form, '', 'User is already an editor of this sandbox');
+			}
+			if (form.data.role === 'editor' && isOwner) {
+				return setError(form, '', 'Cannot add the owner as an editor');
 			}
 
 			const data: any = {};
@@ -116,10 +118,9 @@ export class SandboxActions {
 				},
 				data
 			});
-
 		} catch (error) {
 			console.error(error);
-			return setError(form, '', "Something went wrong");
+			return setError(form, '', 'Something went wrong');
 		}
 
 		return { form };

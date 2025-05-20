@@ -18,4 +18,3 @@ export const editSuperUserSchema = z.object({
 	userId: z.string(),
 	role: z.enum(['owner', 'editor', 'revoke'])
 });
-

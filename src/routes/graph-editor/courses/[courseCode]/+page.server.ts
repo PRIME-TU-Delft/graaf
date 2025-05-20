@@ -8,11 +8,7 @@ import { whereHasCoursePermission, whereHasSandboxPermission } from '$lib/server
 import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema.js';
 import { LinkActions } from '$lib/server/actions/Links';
 
-import {
-	newGraphSchema,
-	graphSchemaWithId,
-	duplicateGraphSchema
-} from '$lib/zod/graphSchema.js';
+import { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema.js';
 
 import type { Actions } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';

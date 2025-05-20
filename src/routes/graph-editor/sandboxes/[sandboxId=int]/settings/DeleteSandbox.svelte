@@ -23,17 +23,15 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This action cannot be undone. This will permanently delete this sandbox, its graphs and links.
+				This action cannot be undone. This will permanently delete this sandbox, its graphs and
+				links.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 			<form action="?/delete-sandbox" method="POST" use:enhance>
 				<input type="hidden" name="sandboxId" value={data.sandbox.id} />
-				<AlertDialog.Action 
-					type="submit"
-					class={buttonVariants({ variant: 'destructive' })}
-				>
+				<AlertDialog.Action type="submit" class={buttonVariants({ variant: 'destructive' })}>
 					Delete anyway
 				</AlertDialog.Action>
 			</form>

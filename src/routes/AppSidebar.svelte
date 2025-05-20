@@ -31,7 +31,7 @@
 			{ name: 'Home', path: '/graph-editor', icon: Home },
 			{ name: 'Programmes', path: '/graph-editor/programs', icon: LibraryBig },
 			{ name: 'Courses', path: '/graph-editor/courses', icon: Notebook },
-			{ name: 'Sandboxes', path: '/graph-editor/sandboxes', icon: FlaskRound },
+			{ name: 'Sandboxes', path: '/graph-editor/sandboxes', icon: FlaskRound }
 		];
 		if (user?.role === 'ADMIN') {
 			items.push({ name: 'Users', path: '/graph-editor/users', icon: UserIcon });

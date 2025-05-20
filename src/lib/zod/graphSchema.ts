@@ -18,5 +18,5 @@ export const duplicateGraphSchema = z.object({
 	graphId: z.number().min(1),
 	newName: z.string().min(1).max(settings.MAX_GRAPH_NAME_LENGTH),
 	destinationType: z.enum(['SANDBOX', 'COURSE']),
-	destinationId: z.number().min(1),
+	destinationId: z.number().min(1)
 });

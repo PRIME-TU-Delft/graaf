@@ -5,7 +5,7 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/sandboxSchema';
-	
+
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
 	import SelectUsers from '$lib/components/SelectUsers.svelte';
@@ -17,7 +17,7 @@
 
 	// Types
 	import type { PageData } from './$types';
-	
+
 	const data = page.data as PageData;
 	const form = superForm(data.editSuperUserForm, {
 		id: 'edit-super-user-' + useId(),
@@ -33,17 +33,12 @@
 	const { form: formData, enhance, submitting, delayed } = form;
 
 	let transferOwnershipDialogOpen = $state(false);
-	const nonOwner = $derived(
-		data.allUsers.filter(
-			(user) => data.sandbox.owner.id != user.id
-		)
-	);
+	const nonOwner = $derived(data.allUsers.filter((user) => data.sandbox.owner.id != user.id));
 
 	$effect(() => {
 		$formData.sandboxId = data.sandbox.id;
 		$formData.role = 'owner';
 	});
-
 </script>
 
 <DialogButton
@@ -97,5 +92,3 @@
 		</div>
 	</form>
 </DialogButton>
-
-

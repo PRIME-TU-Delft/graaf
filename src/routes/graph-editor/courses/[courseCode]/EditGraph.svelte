@@ -4,12 +4,16 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import DuplicateGraph from './DuplicateGraph.svelte';
 
-	let { graph, availableCourses, availableSandboxes }: {
+	let {
+		graph,
+		availableCourses,
+		availableSandboxes
+	}: {
 		graph: Prisma.GraphGetPayload<{
 			include: {
 				lectures: true;
 				links: true;
-			}
+			};
 		}>;
 		availableCourses: Prisma.CourseGetPayload<{
 			include: {

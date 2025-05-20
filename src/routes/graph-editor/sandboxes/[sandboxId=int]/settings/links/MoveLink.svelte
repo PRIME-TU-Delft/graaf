@@ -5,15 +5,15 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	
+
 	// Components
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	
+
 	// Icons
 	import { Check, ChevronDown } from '@lucide/svelte';
-	
+
 	// Types
 	import type { Graph, Link } from '@prisma/client';
 	import type { PageData } from '../$types';
@@ -36,11 +36,11 @@
 			}
 		}
 	});
-	
+
 	const { form: formData, enhance, submitting, delayed } = form;
-	
+
 	let graphId = $state(graph.id);
-	
+
 	$effect(() => {
 		$formData.parentId = data.sandbox.id;
 		$formData.parentType = 'SANDBOX';
@@ -62,8 +62,8 @@
 
 			{#each data.sandbox.graphs as newGraph (newGraph.id)}
 				<Form.FormButton
-					disabled={$submitting || newGraph.id === graph.id} 
-					loading={$delayed} 
+					disabled={$submitting || newGraph.id === graph.id}
+					loading={$delayed}
 					loadingMessage="Deleting..."
 					variant="ghost"
 					class="w-full justify-between"

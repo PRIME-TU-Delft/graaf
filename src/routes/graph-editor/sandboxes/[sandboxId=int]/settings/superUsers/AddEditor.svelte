@@ -5,7 +5,7 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	
+
 	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -27,7 +27,7 @@
 	};
 
 	let { sandbox, onSuccess = () => {} }: AddEditorProps = $props();
-	
+
 	const data = page.data as PageData;
 	const form = superForm(data.editSuperUserForm, {
 		id: 'edit-super-user-' + useId(),
@@ -44,7 +44,7 @@
 
 	const nonSuperUser = $derived(
 		data.allUsers.filter(
-			user => sandbox.owner.id != user.id && !sandbox.editors.some((u) => u.id == user.id)
+			(user) => sandbox.owner.id != user.id && !sandbox.editors.some((u) => u.id == user.id)
 		)
 	);
 
@@ -52,7 +52,6 @@
 		$formData.sandboxId = sandbox.id;
 		$formData.role = 'editor';
 	});
-	
 </script>
 
 <form action="?/edit-super-user" method="POST" use:enhance>

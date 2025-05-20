@@ -21,27 +21,25 @@
 		<h1>Oops! Something went wrong</h1>
 		<p>{data.error}</p>
 	{:else}
-
 		<section class="prose mx-auto p-4">
-
-				<div class="flex justify-between gap-4 my-12">
-					<div>
-						<h1 class="m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
-							{data.sandbox.name}
-						</h1>
-						<h2 class="m-0 text-2xl font-bold text-purple-950 shadow-purple-500/70">
-							{displayName(data.sandbox.owner)}
-						</h2>
-					</div>
-					{#if data.user.id == data.sandbox.ownerId}
-						<Button href="{data.sandbox.id}/settings">Settings <ArrowRight /></Button>
-					{/if}
+			<div class="my-12 flex justify-between gap-4">
+				<div>
+					<h1 class="m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
+						{data.sandbox.name}
+					</h1>
+					<h2 class="m-0 text-2xl font-bold text-purple-950 shadow-purple-500/70">
+						{displayName(data.sandbox.owner)}
+					</h2>
 				</div>
+				{#if data.user.id == data.sandbox.ownerId}
+					<Button href="{data.sandbox.id}/settings">Settings <ArrowRight /></Button>
+				{/if}
+			</div>
 
-				<p>
-					This is the overview of your sandbox, where you have freedom to use the graph editor as you please.
-					You can create new graphs, edit existing ones, and share them with others.
-				</p>
+			<p>
+				This is the overview of your sandbox, where you have freedom to use the graph editor as you
+				please. You can create new graphs, edit existing ones, and share them with others.
+			</p>
 		</section>
 
 		<section
@@ -49,11 +47,12 @@
 		>
 			<h2 class="text-xl font-bold text-red-700">This is not a course</h2>
 			<p>
-				Sandboxes are used for personal projects or assignments. They should <b>not</b> be used to represent a university course,
-				nor should their content be posted publicly.
-			</p><p>
-				Looking to create a course? Please contact a programme administrator.
-				You can also copy graphs from your sandbox to a course, if you already have one.
+				Sandboxes are used for personal projects or assignments. They should <b>not</b> be used to represent
+				a university course, nor should their content be posted publicly.
+			</p>
+			<p>
+				Looking to create a course? Please contact a programme administrator. You can also copy
+				graphs from your sandbox to a course, if you already have one.
 			</p>
 		</section>
 
@@ -89,4 +88,3 @@
 		</section>
 	{/if}
 </article>
-

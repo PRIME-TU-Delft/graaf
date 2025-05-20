@@ -1,7 +1,16 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { cn } from '$lib/utils';
-	import { ArrowLeftRight, BadgeHelp, Copy, Ellipsis, Link, Pencil, Plus, Users } from '@lucide/svelte';
+	import {
+		ArrowLeftRight,
+		BadgeHelp,
+		Copy,
+		Ellipsis,
+		Link,
+		Pencil,
+		Plus,
+		Users
+	} from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 

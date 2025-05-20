@@ -44,7 +44,7 @@
 
 	let duplicateLinkName = $derived.by(() => {
 		const { name } = fromStore(formData).current;
-		return graph.links.some(link => link.name === name);
+		return graph.links.some((link) => link.name === name);
 	});
 
 	$effect(() => {
@@ -53,7 +53,6 @@
 		$formData.parentId = data.sandbox.id;
 		$formData.parentType = 'SANDBOX';
 	});
-
 </script>
 
 <form class="flex flex-col" action="?/new-link" method="POST" use:enhance>
@@ -82,8 +81,7 @@
 			class="mt-2 rounded border-2 border-amber-700 bg-amber-50 p-2 text-sm text-amber-700"
 		>
 			<h3 class="font-bold">Warning</h3>
-			This graph already has a link with the same name. This may cause
-			confusion.
+			This graph already has a link with the same name. This may cause confusion.
 		</div>
 	{/if}
 

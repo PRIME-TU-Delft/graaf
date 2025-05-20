@@ -1,8 +1,7 @@
 <script lang="ts">
-
 	// Components
 	import EditSandbox from './EditSandbox.svelte';
-	import DeleteSandbox from './DeleteSandbox.svelte';  
+	import DeleteSandbox from './DeleteSandbox.svelte';
 	import SandboxLinks from './links/SandboxLinks.svelte';
 	import SandboxSuperUsers from './superUsers/SandboxEditors.svelte';
 	import TransferOwnership from './TransferOwnership.svelte';
@@ -28,15 +27,15 @@
 	class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 >
 	<h2 class="text-red-950">Danger zone</h2>
-	<div class="flex items-center gap-2 my-2">
+	<div class="my-2 flex items-center gap-2">
 		<p class="my-0">Transfer ownership</p>
-		<div class="flex-grow border-dotted border-t-2 border-red-400 mx-2"></div>
+		<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
 		<TransferOwnership />
 	</div>
 
-	<div class="flex items-center gap-2 my-2">
+	<div class="my-2 flex items-center gap-2">
 		<p class="my-0">Delete sandbox</p>
-		<div class="flex-grow border-dotted border-t-2 border-red-400 mx-2"></div>
+		<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
 		<DeleteSandbox />
 	</div>
 </section>

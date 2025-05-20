@@ -71,7 +71,11 @@ export function hasCoursePermissions(
 	return false;
 }
 
-export function hasSandboxPermissions(user: User, sandbox: SandboxPermissions, has: SandboxPermissionOptions) {
+export function hasSandboxPermissions(
+	user: User,
+	sandbox: SandboxPermissions,
+	has: SandboxPermissionOptions
+) {
 	const isOwner = sandbox.owner?.id === user.id;
 	const isEditor = sandbox.editors?.some((editor) => editor.id === user.id) ?? false;
 

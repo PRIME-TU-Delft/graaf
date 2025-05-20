@@ -3,14 +3,14 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { newGraphSchema } from '$lib/zod/graphSchema';
-	import { page } from '$app/state'
-	
+	import { page } from '$app/state';
+
 	// Components
 	import { Input } from '$lib/components/ui/input';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Button } from '$lib/components/ui/button';
-	
+
 	// Icons
 	import { Plus, Undo2 } from '@lucide/svelte';
 
@@ -20,10 +20,10 @@
 
 	type CreateNewGraphButtonProps = {
 		sandbox: Sandbox;
-	}
+	};
 
 	let { sandbox }: CreateNewGraphButtonProps = $props();
-	
+
 	const data = page.data as PageData;
 	const form = superForm(data.newGraphForm, {
 		validators: zodClient(newGraphSchema),
@@ -44,7 +44,6 @@
 		$formData.parentId = sandbox.id;
 		$formData.parentType = 'SANDBOX';
 	});
-
 </script>
 
 <DialogButton
@@ -85,7 +84,7 @@
 				<Undo2 /> Reset
 			</Button>
 			<Form.FormButton disabled={$submitting} loading={$delayed}>
-			<Plus /> Create
+				<Plus /> Create
 				{#snippet loadingMessage()}
 					<span>Creating graph...</span>
 				{/snippet}

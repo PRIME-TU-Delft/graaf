@@ -1,9 +1,8 @@
 <script lang="ts">
-	
 	// Components
 	import DuplicateGraph from './DuplicateGraph.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	
+
 	// Types
 	import type { Prisma } from '@prisma/client';
 
@@ -12,7 +11,7 @@
 			include: {
 				lectures: true;
 				links: true;
-			}
+			};
 		}>;
 	};
 
@@ -28,7 +27,7 @@
 		description="Copy this graph to another course or sandbox. This will create a new graph with the same content in the selected destination."
 		bind:open={isDuplicateOpen}
 		class="grow"
-		onclick={event => {
+		onclick={(event) => {
 			event.preventDefault();
 			isDuplicateOpen = true;
 		}}

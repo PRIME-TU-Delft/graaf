@@ -72,7 +72,11 @@
 					<LinkEmbedGraph {graph} course={data.course} longName {hasAtLeastCourseEditPermissions} />
 
 					{#if hasAtLeastCourseEditPermissions}
-						<EditGraph {graph} availableCourses={data.availableCourses} availableSandboxes={data.availableSandboxes} />
+						<EditGraph
+							{graph}
+							availableCourses={data.availableCourses}
+							availableSandboxes={data.availableSandboxes}
+						/>
 					{/if}
 				</div>
 			</a>

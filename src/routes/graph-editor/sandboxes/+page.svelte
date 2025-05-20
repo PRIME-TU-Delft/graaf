@@ -4,7 +4,7 @@
 
 	// Components
 	import Button from '$lib/components/ui/button/button.svelte';
-	
+
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 

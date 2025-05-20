@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { toast } from 'svelte-sonner'
+	import { toast } from 'svelte-sonner';
 	import type { User } from '@prisma/client';
-	
+
 	// Components
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
-	
+
 	import Program from './Program.svelte';
 	import CourseGrid from './CourseGrid.svelte';
 	import SandboxGrid from './SandboxGrid.svelte';

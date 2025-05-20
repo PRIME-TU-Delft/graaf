@@ -17,9 +17,7 @@
 	{#each sandboxes as sandbox (sandbox.id)}
 		{@render displaySandbox(sandbox)}
 	{:else}
-		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
-			No sandboxes found.
-		</p>
+		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">No sandboxes found.</p>
 	{/each}
 </div>
 

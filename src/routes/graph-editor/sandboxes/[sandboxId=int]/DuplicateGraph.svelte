@@ -16,7 +16,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	
+
 	// Icons
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
@@ -49,7 +49,7 @@
 	const { form: formData, enhance, submitting, delayed } = form;
 
 	let isDestinationCourseOpen = $state(false);
-	
+
 	let destinationSandboxes = $derived(
 		data.availableSandboxes.map((s) => ({
 			id: s.id,
@@ -65,13 +65,8 @@
 			name: `${c.code} ${c.name}`
 		}))
 	);
-	
-	let availableDestinations = $derived(
-		[
-			...destinationCourses,
-			...destinationSandboxes
-		]
-	);
+
+	let availableDestinations = $derived([...destinationCourses, ...destinationSandboxes]);
 
 	let graphHasSameNameAsOriginal = $derived.by(() => {
 		const { destinationId, destinationType, newName } = fromStore(formData).current;
@@ -119,8 +114,7 @@
 			class="mt-2 rounded border-2 border-amber-700 bg-amber-50 p-2 text-sm text-amber-700"
 		>
 			<h3 class="font-bold">Warning</h3>
-			The destination already has a graph with the same name. This may cause
-			confusion.
+			The destination already has a graph with the same name. This may cause confusion.
 		</div>
 	{/if}
 
@@ -136,9 +130,9 @@
 						newName: graph.name + ' copy',
 						graphId: graph.id,
 						destinationType: graph.parentType,
-						destinationId: (
-							graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId
-						) as number
+						destinationId: (graph.parentType === 'COURSE'
+							? graph.courseId
+							: graph.sandboxId) as number
 					}
 				})}
 		>
@@ -181,7 +175,7 @@
 			</Form.Control>
 			<Popover.Content>
 				<Command.Root loop>
-					<Command.Input autofocus placeholder="Search destinations..." class="h-9 my-1" />
+					<Command.Input autofocus placeholder="Search destinations..." class="my-1 h-9" />
 					<Command.Empty>No course found.</Command.Empty>
 					<Command.Group heading="Sandboxes">
 						{#each destinationSandboxes as sandbox (sandbox.id)}
@@ -198,14 +192,14 @@
 									class={cn(
 										'ml-auto',
 										($formData.destinationType !== 'SANDBOX' ||
-										 $formData.destinationId !== sandbox.id) &&
+											$formData.destinationId !== sandbox.id) &&
 											'text-transparent'
 									)}
 								/>
 							</Command.Item>
 						{/each}
 					</Command.Group>
-					
+
 					<Command.Group heading="Courses">
 						{#each destinationCourses as course (course.id)}
 							<Command.Item
@@ -221,7 +215,7 @@
 									class={cn(
 										'ml-auto',
 										($formData.destinationType !== 'COURSE' ||
-										 $formData.destinationId !== course.id) &&
+											$formData.destinationId !== course.id) &&
 											'text-transparent'
 									)}
 								/>

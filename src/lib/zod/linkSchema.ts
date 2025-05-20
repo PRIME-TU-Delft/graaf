@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 import * as settings from '$lib/settings';
 
@@ -7,8 +6,8 @@ import * as settings from '$lib/settings';
 
 export const newLinkSchema = z.object({
 	parentId: z.number(),
-    parentType: z.enum(['SANDBOX', 'COURSE']),
-    graphId: z.number().min(1),
+	parentType: z.enum(['SANDBOX', 'COURSE']),
+	graphId: z.number().min(1),
 	name: z
 		.string()
 		.min(1)
@@ -18,7 +17,7 @@ export const newLinkSchema = z.object({
 
 export const editLinkSchema = z.object({
 	parentId: z.number(),
-    parentType: z.enum(['SANDBOX', 'COURSE']),
-    graphId: z.number().min(1),
+	parentType: z.enum(['SANDBOX', 'COURSE']),
+	graphId: z.number().min(1),
 	linkId: z.number().min(1)
 });
