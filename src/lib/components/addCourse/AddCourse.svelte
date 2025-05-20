@@ -55,7 +55,7 @@
 	{#if hasAdminRights && data.length > 0}
 		<div class="flex items-center gap-2 p-4">
 			<div class="h-1 w-full rounded-l bg-slate-300"></div>
-			<p class="text-nowrap font-medium text-slate-600">Or link existing</p>
+			<p class="font-medium text-nowrap text-slate-600">Or link existing</p>
 			<div class="h-1 w-full rounded-r bg-slate-300"></div>
 		</div>
 

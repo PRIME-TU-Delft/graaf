@@ -46,7 +46,7 @@
 
 <ProgramAdmins program={data.program} user={data.user} />
 
-<section class="container prose mx-auto p-4">
+<section class="prose container mx-auto p-4">
 	<CoursesDataTable
 		data={data.program?.courses}
 		program={data.program}

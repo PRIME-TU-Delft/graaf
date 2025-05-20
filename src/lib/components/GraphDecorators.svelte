@@ -51,7 +51,7 @@
 {#if !graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
 	<Accordion.Root
 		type="single"
-		class="absolute right-4 top-4 rounded-xl border-b-0 bg-white/90 p-3"
+		class="absolute top-4 right-4 rounded-xl border-b-0 bg-white/90 p-3"
 	>
 		<Accordion.Item class="border-none" value="item-1">
 			<Accordion.Trigger class="p-0">Domain Legend</Accordion.Trigger>
@@ -72,7 +72,7 @@
 
 <!-- Zoom button -->
 <div
-	class="absolute bottom-1 right-1 flex flex-col gap-1"
+	class="absolute right-1 bottom-1 flex flex-col gap-1"
 	transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }}
 >
 	{#if !graphView.isLectures()}

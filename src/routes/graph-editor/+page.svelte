@@ -32,7 +32,7 @@
 
 <article class="my-6 mb-12 space-y-6">
 	<section class="prose mx-auto p-4">
-		<h1 class="my-12 text-balance text-4xl font-bold text-purple-950 shadow-purple-500/70">
+		<h1 class="my-12 text-4xl font-bold text-balance text-purple-950 shadow-purple-500/70">
 			Welcome to the PRIME Graph Editor
 		</h1>
 
@@ -62,7 +62,7 @@
 
 	<section class="mx-auto grid max-w-4xl gap-4 p-4">
 		<div class="flex w-full items-center justify-between gap-2">
-			<h2 class="w-full grow whitespace-nowrap text-xl font-bold">My Programmes</h2>
+			<h2 class="w-full grow text-xl font-bold whitespace-nowrap">My Programmes</h2>
 
 			{#await data.courses then courses}
 				<SearchCourses {courses} />

@@ -68,7 +68,7 @@
 	{@render formArray('targetDomains')}
 	{@render formArray('connectedSubjects')}
 
-	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
+	<p class="pt-1 pl-1 font-bold">Are you sure?</p>
 
 	{#if relationCount > 0 || connectedSubjects.length > 0}
 		{@const domainMessage = `delete ${relationCount} domain relationship${relationCount != 1 ? 's' : ''}`}

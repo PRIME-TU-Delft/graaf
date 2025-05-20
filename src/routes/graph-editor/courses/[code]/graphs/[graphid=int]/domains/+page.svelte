@@ -215,7 +215,7 @@
 			>
 				{#if style == null}
 					<div
-						class="absolute left-1/2 top-1/2 h-1 w-3 -translate-x-1/2 -translate-y-1/2 -rotate-[60deg] rounded-full bg-gray-500/30"
+						class="absolute top-1/2 left-1/2 h-1 w-3 -translate-x-1/2 -translate-y-1/2 -rotate-[60deg] rounded-full bg-gray-500/30"
 					></div>
 				{/if}
 			</div>

@@ -66,7 +66,7 @@
 	{@render formArray('sourceSubjects')}
 	{@render formArray('targetSubjects')}
 
-	<p class="pl-1 pt-1 font-bold">Are you sure?</p>
+	<p class="pt-1 pl-1 font-bold">Are you sure?</p>
 
 	{#if relationCount > 0}
 		<p class="max-w-64 p-1">

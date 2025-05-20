@@ -102,7 +102,7 @@
 	]);
 </script>
 
-<section class="container prose mx-auto mt-8 p-4">
+<section class="prose container mx-auto mt-8 p-4">
 	<h2 class="m-0">Course Admins and Editors</h2>
 
 	<p>

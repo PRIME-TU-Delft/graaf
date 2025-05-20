@@ -39,7 +39,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Trigger
 		class={cn(
-			'flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm shadow-none transition-all hover:bg-primary/80 hover:shadow-lg',
+			'bg-primary hover:bg-primary/80 flex items-center gap-2 rounded p-2 text-sm text-nowrap shadow-none transition-all hover:shadow-lg',
 			{ 'opacity-50': disabled },
 			buttonVariants({ variant }),
 			classes

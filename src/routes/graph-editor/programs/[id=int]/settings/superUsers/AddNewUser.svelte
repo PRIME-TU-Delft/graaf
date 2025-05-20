@@ -72,7 +72,7 @@
 
 	<div class="flex items-center space-x-2 p-2">
 		<Checkbox id="is-admin" bind:checked={isAdmin} />
-		<Label for="is-admin" class="text-sm font-medium leading-none">
+		<Label for="is-admin" class="text-sm leading-none font-medium">
 			User is allowed admin permissions
 		</Label>
 	</div>
