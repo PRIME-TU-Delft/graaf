@@ -35,9 +35,9 @@
 	}: Props = $props();
 </script>
 
-<div class="overflow-hidden rounded-lg border-2 border-purple-100 bg-purple-50/10">
+<div class="overflow-hidden rounded-lg border-2 border-gray-200">
 	<div class="flex items-center justify-between gap-0 p-2 md:grid-cols-2 md:gap-4">
-		<h3 class="text-lg font-semibold text-purple-950">{program.name}</h3>
+		<h3 class="text-lg font-semibold text-purple-900">{program.name}</h3>
 
 		<div class="flex flex-col gap-1 md:flex-row">
 			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}

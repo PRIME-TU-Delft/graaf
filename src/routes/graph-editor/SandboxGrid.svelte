@@ -12,7 +12,7 @@
 </script>
 
 <div
-	class="grid max-h-96 grid-cols-1 gap-1 overflow-auto p-2 sm:grid-cols-2 md:grid-cols-2 md:gap-2"
+	class="grid max-h-96 grid-cols-2 gap-1 overflow-auto p-2 sm:grid-cols-3 md:grid-cols-4 md:gap-2"
 >
 	{#each sandboxes as sandbox (sandbox.id)}
 		{@render displaySandbox(sandbox)}
@@ -24,13 +24,10 @@
 {#snippet displaySandbox(sandbox: SandboxGridProps['sandboxes'][number])}
 	<a
 		href="/graph-editor/sandboxes/{sandbox.id}"
-		class="flex w-full items-center justify-between rounded border-2 border-transparent bg-purple-100/50 p-2 transition-colors hover:border-purple-200 hover:bg-purple-100"
+		class="rounded border-2 border-purple-200 bg-purple-100/50 p-2 transition-colors hover:bg-purple-100"
 		in:fade={{ duration: 200 }}
 	>
-		<div class="flex items-end gap-1">
-			<p>{sandbox.name}</p>
-			-
-			<p>{displayName(sandbox.owner)}</p>
-		</div>
+		<p>{sandbox.name}</p>
+		<p class="text-sm">{displayName(sandbox.owner)}</p>
 	</a>
 {/snippet}

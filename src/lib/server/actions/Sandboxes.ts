@@ -7,12 +7,34 @@ import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import type {
 	deleteSandboxSchema,
 	editSandboxSchema,
-	editSuperUserSchema
+	editSuperUserSchema,
+	newSandboxSchema
 } from '$lib/zod/sandboxSchema';
-import { disconnect } from 'process';
-import { connect } from 'http2';
 
 export class SandboxActions {
+	static async newSandbox(user: User, form: SuperValidated<Infer<typeof newSandboxSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.sandbox.create({
+				data: {
+					name: form.data.name,
+					owner: {
+						connect: {
+							id: user.id
+						}
+					}
+				}
+			});
+		} catch {
+			return setError(form, 'name', "You don't have permission to create a new course");
+		}
+
+		return {
+			form
+		};
+	}
+
 	/**
 	 * PERMISSIONS:
 	 * - Only OWNERS can edit sandboxes

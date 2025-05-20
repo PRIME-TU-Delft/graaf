@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { User } from '@prisma/client';
-	import CreateNewProgramButton from '../CreateNewProgramButton.svelte';
+	import CreateNewProgramButton from '../CreateNewProgram.svelte';
 	import Program from '../Program.svelte';
 	import SearchCourses from '../SearchCourses.svelte';
 

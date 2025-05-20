@@ -4,18 +4,12 @@
 	import type { User } from '@prisma/client';
 
 	// Components
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
-
+	import PinnedCourses from './PinnedCourses.svelte';
 	import Program from './Program.svelte';
-	import CourseGrid from './CourseGrid.svelte';
-	import SandboxGrid from './SandboxGrid.svelte';
+	import Sandboxes from './Sandboxes.svelte';
 	import SearchCourses from './SearchCourses.svelte';
-	import CreateNewProgramButton from './CreateNewProgramButton.svelte';
+	import NewProgramButton from './newProgramButton.svelte';
 	import Help from '$lib/components/Help.svelte';
-
-	let pinnedOpen = $state('');
-	let sandboxesOpen = $state('');
-	let showOnlyUnarchived = $state(true);
 
 	const { data, form } = $props();
 
@@ -36,7 +30,7 @@
 	</p>
 </Help>
 
-<article class="my-6 mb-12 space-y-6">
+<article class="my-6 mb-12">
 	<section class="prose mx-auto p-4">
 		<h1 class="my-12 text-balance text-4xl font-bold text-purple-950 shadow-purple-500/70">
 			Welcome to the PRIME Graph Editor
@@ -49,61 +43,36 @@
 		</p>
 	</section>
 
-	{#if data.pinnedCourses && data.pinnedCourses.length > 0}
-		<Accordion.Root
-			type="single"
-			class="mx-auto grid max-w-4xl gap-4 rounded-lg bg-purple-100 px-4 py-2 shadow-none shadow-purple-200/70 md:border-2 md:border-purple-200 md:shadow-lg"
-			bind:value={pinnedOpen}
-		>
-			<Accordion.Item value="accordion" class="border-none">
-				<Accordion.Trigger class="text-xl font-bold text-purple-950 hover:no-underline">
-					My pinned courses
-				</Accordion.Trigger>
-				<Accordion.Content>
-					<CourseGrid courses={data.pinnedCourses} user={data.user} />
-				</Accordion.Content>
-			</Accordion.Item>
-		</Accordion.Root>
-	{/if}
-
-	{#if data.sandboxes && data.sandboxes.length > 0}
-		<Accordion.Root
-			type="single"
-			class="mx-auto grid max-w-4xl gap-4 rounded-lg bg-purple-100 px-4 py-2 shadow-none shadow-purple-200/70 md:border-2 md:border-purple-200 md:shadow-lg"
-			bind:value={sandboxesOpen}
-		>
-			<Accordion.Item value="accordion">
-				<Accordion.Trigger class="text-xl font-bold text-purple-950 hover:no-underline">
-					My Sandboxes
-				</Accordion.Trigger>
-				<Accordion.Content>
-					<SandboxGrid sandboxes={data.sandboxes} user={data.user} />
-				</Accordion.Content>
-			</Accordion.Item>
-		</Accordion.Root>
-	{/if}
+	<PinnedCourses user={data.user} pinnedCourses={data.pinnedCourses} />
+	<Sandboxes sandboxes={data.sandboxes} />
 
 	<section class="mx-auto grid max-w-4xl gap-4 p-4">
-		<div class="flex w-full items-center justify-between gap-2">
-			<h2 class="w-full grow whitespace-nowrap text-xl font-bold">My Programmes</h2>
+		<div class="flex w-full items-center justify-between gap-4">
+			<h2 class="whitespace-nowrap text-xl font-bold text-purple-950">My Programmes</h2>
+			<div class="w-full border-t-2 border-purple-200"></div>
 
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
 			{/await}
 
 			{#if (data.session?.user as User)?.role === 'ADMIN'}
-				<CreateNewProgramButton form={data.programForm} />
+				<NewProgramButton />
 			{/if}
 		</div>
 
 		{#each data.programs as program (program.id)}
-			<Program
+			<Program {program}
 				user={data.user}
-				{program}
 				courses={data.courses}
 				linkCoursesForm={data.linkCoursesForm}
-				newCourseForm={data.createNewCourseForm}
+				newCourseForm={data.newCourseForm}
 			/>
 		{/each}
+
+		{#if data.programs.length === 0}
+			<p class="col-span-3 rounded bg-purple-100/80 p-2 text-purple-900">
+				There are no courses you have access to.
+			</p>
+		{/if}
 	</section>
 </article>

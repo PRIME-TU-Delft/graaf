@@ -1,12 +1,14 @@
-import prisma from '$lib/server/db/prisma.js';
-import { emptyPrismaPromise } from '$lib/utils.js';
-import { getUser } from '$lib/server/actions/Users.js';
-import { ProgramActions } from '$lib/server/actions/Programs.js';
-import { CourseActions } from '$lib/server/actions/Courses.js';
-import { whereHasCoursePermission } from '$lib/server/permissions.js';
+import prisma from '$lib/server/db/prisma';
+import { emptyPrismaPromise } from '$lib/utils';
+import { getUser } from '$lib/server/actions/Users';
+import { ProgramActions } from '$lib/server/actions/Programs';
+import { CourseActions } from '$lib/server/actions/Courses';
+import { SandboxActions } from '$lib/server/actions/Sandboxes';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 import { zod } from 'sveltekit-superforms/adapters';
-import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema.js';
-import { newProgramSchema } from '$lib/zod/programSchema.js';
+import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema';
+import { newProgramSchema } from '$lib/zod/programSchema';
+import { newSandboxSchema } from '$lib/zod/sandboxSchema';
 import { superValidate } from 'sveltekit-superforms';
 
 import type { Course } from '@prisma/client';
@@ -96,8 +98,9 @@ export const load = (async ({ url, locals }) => {
 			sandboxes,
 			pinnedCourses,
 			error: url.searchParams.get('error'),
-			programForm: await superValidate(zod(newProgramSchema)),
-			createNewCourseForm: await superValidate(zod(newCourseSchema)),
+			newProgramForm: await superValidate(zod(newProgramSchema)),
+			newSandboxForm: await superValidate(zod(newSandboxSchema)),
+			newCourseForm: await superValidate(zod(newCourseSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
 		};
 	} catch (e: unknown) {
@@ -108,8 +111,9 @@ export const load = (async ({ url, locals }) => {
 			sandboxes: [],
 			pinnedCourses: [],
 			error: e instanceof Error ? e.message : `${e}`,
-			programForm: await superValidate(zod(newProgramSchema)),
-			createNewCourseForm: await superValidate(zod(newCourseSchema)),
+			newProgramForm: await superValidate(zod(newProgramSchema)),
+			newSandboxForm: await superValidate(zod(newSandboxSchema)),
+			newCourseForm: await superValidate(zod(newCourseSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
 		};
 	}
@@ -124,6 +128,11 @@ export const actions = {
 	'new-course': async (event) => {
 		const form = await superValidate(event, zod(newCourseSchema));
 		return CourseActions.newCourse(await getUser(event), form);
+	},
+
+	'new-sandbox': async (event) => {
+		const form = await superValidate(event, zod(newSandboxSchema));
+		return SandboxActions.newSandbox(await getUser(event), form);
 	},
 
 	'link-course': async (event) => {

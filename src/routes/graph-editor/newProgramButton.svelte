@@ -1,26 +1,20 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { newProgramSchema } from '$lib/zod/programSchema';
 
-	import type { Infer, SuperValidated } from 'sveltekit-superforms';
-
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 
-	type Props = {
-		form: SuperValidated<Infer<typeof newProgramSchema>>;
-	};
+	import type { PageData } from './$types';
 
-	const { form: programForm }: Props = $props();
-
-	let dialogOpen = $state(false);
-
-	const form = superForm(programForm, {
+	const data = page.data as PageData;
+	const form = superForm(data.newProgramForm, {
 		id: useId(),
 		validators: zodClient(newProgramSchema),
 		onResult: ({ result }) => {
@@ -32,6 +26,7 @@
 	});
 
 	const { form: formData, enhance } = form;
+	let dialogOpen = $state(false);
 </script>
 
 <DialogButton

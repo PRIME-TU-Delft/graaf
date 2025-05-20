@@ -4,6 +4,11 @@ import * as settings from '$lib/settings';
 // This is a Zod schema for validating forms this cannot be automatically generated
 // from the database schema because that is not accessible at from the client
 
+export const newSandboxSchema = z.object({
+	ownerId: z.string(),
+	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH)
+});
+
 export const editSandboxSchema = z.object({
 	sandboxId: z.number(),
 	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH)
