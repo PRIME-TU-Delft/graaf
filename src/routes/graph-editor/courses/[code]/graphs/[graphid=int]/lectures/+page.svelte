@@ -15,7 +15,9 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let changeLectureOpen = $state(false);
+	class ChangeLectureClass {
+		open = $state(false);
+	}
 
 	const flipDurationMs = 300;
 
@@ -64,6 +66,8 @@
 	onfinalize={handleDndFinalize}
 >
 	{#each lectures as lecture, index (lecture.id)}
+		{@const changeLecture = new ChangeLectureClass()}
+
 		<div
 			animate:flip={{ duration: flipDurationMs }}
 			class="rounded bg-purple-50/30 !outline-2 !outline-purple-500 !backdrop-blur-lg"
@@ -82,7 +86,7 @@
 					<AddSubjectToLecture {lecture} graph={data.course.graphs[0]} />
 				{/if}
 
-				<DropdownMenu.Root bind:open={changeLectureOpen}>
+				<DropdownMenu.Root bind:open={changeLecture.open}>
 					<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
 						<Ellipsis class="size-4 w-full" />
 					</DropdownMenu.Trigger>
@@ -91,7 +95,7 @@
 							<ChangeLecture
 								{lecture}
 								graph={data.course.graphs[0]}
-								onSuccess={() => (changeLectureOpen = false)}
+								onSuccess={() => (changeLecture.open = false)}
 							/>
 						</DropdownMenu.Item>
 
@@ -103,7 +107,7 @@
 								<DeleteLecture
 									{lecture}
 									graph={data.course.graphs[0]}
-									onSuccess={() => (changeLectureOpen = false)}
+									onSuccess={() => (changeLecture.open = false)}
 								/>
 							</DropdownMenu.SubContent>
 						</DropdownMenu.Sub>
