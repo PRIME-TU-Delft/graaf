@@ -10,8 +10,12 @@
 	import SearchCourses from './SearchCourses.svelte';
 	import NewProgramButton from './newProgramButton.svelte';
 	import Help from '$lib/components/Help.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Archive, ArchiveX } from '@lucide/svelte';
 
 	const { data, form } = $props();
+
+	let showArchivedCourses = $state(false);
 
 	$effect(() => {
 		// When add 'course to program' form is submitted with an error
@@ -30,7 +34,7 @@
 	</p>
 </Help>
 
-<article class="my-6 mb-12">
+<article class="my-6 mb-12 space-y-8">
 	<section class="prose mx-auto p-4">
 		<h1 class="my-12 text-balance text-4xl font-bold text-purple-950 shadow-purple-500/70">
 			Welcome to the PRIME Graph Editor
@@ -43,16 +47,31 @@
 		</p>
 	</section>
 
-	<PinnedCourses user={data.user} pinnedCourses={data.pinnedCourses} />
+	<PinnedCourses {showArchivedCourses}  user={data.user} pinnedCourses={data.pinnedCourses} />
 	<Sandboxes sandboxes={data.sandboxes} />
 
-	<section class="mx-auto grid max-w-4xl gap-4 p-4">
-		<div class="flex w-full items-center justify-between gap-4">
-			<h2 class="whitespace-nowrap text-xl font-bold text-purple-950">My Programmes</h2>
-			<div class="w-full border-t-2 border-purple-200"></div>
+	<section class="mx-auto grid max-w-4xl gap-3 p-4">
+		<div class="flex w-full items-center justify-between gap-2">
+			<h2 class="grow w-full whitespace-nowrap text-xl font-bold text-purple-950">Courses & Programmes</h2>
 
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
+
+				{#if courses.some(course => course.isArchived)}
+					<Button
+						variant="outline"
+						class="border-2 p-3"
+						onclick={() => {
+							showArchivedCourses = !showArchivedCourses;
+						}}
+					>
+						{#if showArchivedCourses}
+							<ArchiveX />
+						{:else}
+							<Archive />
+						{/if}	
+					</Button>
+				{/if}
 			{/await}
 
 			{#if (data.session?.user as User)?.role === 'ADMIN'}
@@ -61,18 +80,12 @@
 		</div>
 
 		{#each data.programs as program (program.id)}
-			<Program {program}
+			<Program {program} {showArchivedCourses}
 				user={data.user}
 				courses={data.courses}
 				linkCoursesForm={data.linkCoursesForm}
 				newCourseForm={data.newCourseForm}
 			/>
 		{/each}
-
-		{#if data.programs.length === 0}
-			<p class="col-span-3 rounded bg-purple-100/80 p-2 text-purple-900">
-				There are no courses you have access to.
-			</p>
-		{/if}
 	</section>
 </article>

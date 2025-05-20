@@ -34,10 +34,9 @@
 	icon="plus"
 	button="Add Sandbox"
 	title="Create Sandbox"
-	variant="grain"
-	class="row-start-1 md:col-start-4"
-	description="Sandboxes are collections of Courses, usually pertaining to the same field of study. Looking to try
-	out the Graph editor? Try making a sandbox environment instead!"
+	variant="outline"
+	class="w-full h-full rounded border-2 border-purple-200 bg-purple-100/50 p-2 transition-colors hover:bg-purple-100 hover:shadow-none"
+	description="Sandboxes are collections of graphs, used for experimentation, personal projects, or assignments. They should not be used to represent a university course."
 >
 	<!-- For sumbitting a NEW SANDBOX
  	It triggers an action that can be seen in +page.server.ts -->

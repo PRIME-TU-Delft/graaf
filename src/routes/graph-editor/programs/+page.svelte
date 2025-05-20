@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { User } from '@prisma/client';
-	import CreateNewProgramButton from '../CreateNewProgram.svelte';
+	import CreateNewProgramButton from '../newProgramButton.svelte';
 	import Program from '../Program.svelte';
 	import SearchCourses from '../SearchCourses.svelte';
 
@@ -23,7 +23,7 @@
 		{/await}
 
 		{#if isSuperAdmin}
-			<CreateNewProgramButton form={data.newProgramForm} />
+			<CreateNewProgramButton />
 		{/if}
 	</div>
 

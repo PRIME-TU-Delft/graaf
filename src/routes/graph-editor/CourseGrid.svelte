@@ -2,30 +2,34 @@
 	import { cn } from '$lib/utils';
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
-	import type { Course, User } from '@prisma/client';
-
+	
 	// Components
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-
+	
 	// Icons
 	import { Archive } from '@lucide/svelte';
 	import Pin from 'lucide-svelte/icons/pin';
 	import Unpin from 'lucide-svelte/icons/pin-off';
 
+	import type { Course, User } from '@prisma/client';
+
 	type CourseGridProps = {
-		courses: (Course & { pinnedBy: Pick<User, 'id'>[] })[];
 		user: User | undefined;
+		courses: (Course & { pinnedBy: Pick<User, 'id'>[] })[];
+		showArchivedCourses: boolean;
 	};
 
-	const { courses, user }: CourseGridProps = $props();
+	const { user, courses, showArchivedCourses }: CourseGridProps = $props();
 </script>
 
 <div
 	class="grid max-h-96 grid-cols-1 gap-1 overflow-auto p-2 sm:grid-cols-2 md:grid-cols-2 md:gap-2"
 >
 	{#each courses as course (course.id)}
-		{@render displayCourse(course)}
+		{#if showArchivedCourses || !course.isArchived}
+			{@render displayCourse(course)}
+		{/if}
 	{:else}
 		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
 			This program has no courses yet.
@@ -39,7 +43,7 @@
 	<a
 		href="/graph-editor/courses/{course.code}"
 		class={cn([
-			'flex w-full items-center justify-between gap-3 rounded border-2 border-transparent p-2 transition-colors hover:border-purple-200 hover:bg-purple-50',
+			'flex w-full items-center justify-between gap-3 rounded border-2 border-transparent p-2 transition-colors hover:border-purple-200 hover:bg-purple-50/50',
 			course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
 		])}
 		in:fade={{ duration: 200 }}

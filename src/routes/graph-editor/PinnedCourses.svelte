@@ -11,34 +11,39 @@
 	type PinnedCoursesProps = {
 		user: User;
 		pinnedCourses: (Course & { pinnedBy: Pick<User, 'id'>[] })[];
+		showArchivedCourses: boolean;
 	};
 
-	const { user, pinnedCourses }: PinnedCoursesProps = $props();
-	let showPinnedCourses = $state(false);
+	const { user, pinnedCourses, showArchivedCourses }: PinnedCoursesProps = $props();
+	let collapsePinnedCourses = $state(false);
+	let showPinnedCourses = $derived(
+		pinnedCourses && pinnedCourses.filter(course => !course.isArchived || showArchivedCourses).length > 0,
+	);
+
 </script>
 
-{#if pinnedCourses && pinnedCourses.length > 0}
-	<section class="mx-auto grid max-w-4xl gap-4 p-4">
+{#if showPinnedCourses}
+	<section 
+		class="mx-auto grid max-w-4xl gap-4 p-4 rounded-lg border-2 border-purple-200 bg-purple-50/50"
+	>
 		<div class="flex w-full items-center justify-between gap-4">
 			<h2 class="whitespace-nowrap text-xl font-bold text-purple-950">My Pinned Courses</h2>
-			<div class="grow border-t-2 border-purple-200"></div>
 			<Button
 				variant="link"
-				class="p-0"
 				onclick={() => {
-					showPinnedCourses = !showPinnedCourses;
+					collapsePinnedCourses = !collapsePinnedCourses;
 				}}
 			>
-				{#if showPinnedCourses}
-					<ChevronDown /> Hide
-				{:else}
+				{#if collapsePinnedCourses}
 					<ChevronRight /> Show
+				{:else}
+					<ChevronDown /> Hide
 				{/if}
 			</Button>
 		</div>
 
-		{#if showPinnedCourses}
-			<CourseGrid {user} courses={pinnedCourses} />
+		{#if !collapsePinnedCourses}
+			<CourseGrid {user} {showArchivedCourses} courses={pinnedCourses} />
 		{/if}
 	</section>
 {/if}

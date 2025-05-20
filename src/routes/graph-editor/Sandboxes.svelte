@@ -3,7 +3,6 @@
 	// Components
 	import { Button } from '$lib/components/ui/button';
 	import SandboxGrid from './SandboxGrid.svelte';
-	import NewSandboxButton from './newSandboxButton.svelte';
 
 	// Icons
 	import { ChevronDown, ChevronRight } from '@lucide/svelte';
@@ -16,36 +15,27 @@
 	};
 
 	const { sandboxes }: PinnedCoursesProps = $props();
-	let showPinnedCourses = $state(false);
+	let collapsePinnedCourses = $state(true);
 </script>
 
-{#if sandboxes && sandboxes.length > 0}
-	<section class="mx-auto grid max-w-4xl gap-2 p-4">
-		<div class="flex w-full items-center justify-between gap-4">
-			<h2 class="whitespace-nowrap text-xl font-bold text-purple-950">My Sandboxes</h2>
-			<div class="grow mx-2 border-t-2 border-purple-200"></div>
-
-			{#if showPinnedCourses}
-				<NewSandboxButton />
+<section class="!mt-3 mx-auto grid max-w-4xl gap-4 p-4 rounded-lg border-2 border-purple-200 bg-purple-50/50">
+	<div class="flex w-full items-center justify-between gap-4">
+		<h2 class="w-full whitespace-nowrap text-xl font-bold text-purple-950">My Sandboxes</h2>
+		<Button
+			variant="link"
+			onclick={() => {
+				collapsePinnedCourses = !collapsePinnedCourses;
+			}}
+		>
+			{#if collapsePinnedCourses}
+				<ChevronRight /> Show
+			{:else}
+				<ChevronDown /> Hide
 			{/if}
-
-			<Button
-				variant="link"
-				class="p-0"
-				onclick={() => {
-					showPinnedCourses = !showPinnedCourses;
-				}}
-			>
-				{#if showPinnedCourses}
-					<ChevronDown /> Hide
-				{:else}
-					<ChevronRight /> Show
-				{/if}
-			</Button>
-		</div>
-
-		{#if showPinnedCourses}
-			<SandboxGrid {sandboxes} />
-		{/if}
-	</section>
-{/if}
+		</Button>
+	</div>
+	
+	{#if !collapsePinnedCourses}
+		<SandboxGrid {sandboxes} />
+	{/if}
+</section>

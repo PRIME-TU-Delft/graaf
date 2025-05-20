@@ -42,7 +42,7 @@
 			</Button>
 		</div>
 		<Command.List
-			class="absolute left-0 top-12 max-h-96 w-full rounded-lg border border-gray-200 bg-white shadow-lg"
+			class="absolute left-0 top-12 max-h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-lg"
 		>
 			{#each courses as course (course.id)}
 				<Command.Item
@@ -50,7 +50,7 @@
 					value={course.code + ' ' + course.name}
 					onclick={() => goto(`/graph-editor/courses/${course.code}`)}
 				>
-					<p class="grow font-medium">
+					<p class="grow font-medium text-gray-900">
 						{course.code} {course.name}
 					</p>
 					<ArrowRight class="" />
