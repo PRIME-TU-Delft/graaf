@@ -19,7 +19,7 @@
 	<EditSandbox />
 </section>
 
-<SandboxSuperUsers sandbox={data.sandbox} user={data.user} />
+<SandboxSuperUsers sandbox={data.sandbox} />
 <SandboxLinks sandbox={data.sandbox} graphs={data.sandbox.graphs} />
 
 <section
