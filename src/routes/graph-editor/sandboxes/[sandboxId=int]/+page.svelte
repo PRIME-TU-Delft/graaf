@@ -43,7 +43,7 @@
 		</section>
 
 		<section
-			class="mx-auto max-w-4xl rounded-lg bg-red-100/50 px-4 py-2 shadow-none shadow-red-900/70 md:border-2 md:border-amber-700 md:shadow-lg"
+			class="mx-auto max-w-4xl rounded-lg bg-amber-100/50 px-4 py-2 shadow-none shadow-red-900/70 md:border-2 md:border-amber-700 md:shadow-md"
 		>
 			<h2 class="text-xl font-bold text-amber-950">This is not a course</h2>
 			<p>
