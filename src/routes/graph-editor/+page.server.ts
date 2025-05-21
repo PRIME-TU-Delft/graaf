@@ -1,30 +1,39 @@
-import { ProgramActions } from '$lib/server/actions/Programs.js';
-import { getUser } from '$lib/server/actions/Users.js';
-import prisma from '$lib/server/db/prisma.js';
-import { emptyPrismaPromise } from '$lib/utils.js';
-import type { Course, User } from '@prisma/client';
-import { fail, superValidate } from 'sveltekit-superforms';
+import prisma from '$lib/server/db/prisma';
+import { emptyPrismaPromise } from '$lib/utils';
+import { getUser } from '$lib/server/actions/Users';
+import { ProgramActions } from '$lib/server/actions/Programs';
+import { CourseActions } from '$lib/server/actions/Courses';
+import { SandboxActions } from '$lib/server/actions/Sandboxes';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 import { zod } from 'sveltekit-superforms/adapters';
-import type { Actions, PageServerLoad } from '../$types.js';
-import { courseSchema } from '$lib/zod/courseSchema.js';
-import { programSchema } from '$lib/zod/programSchema.js';
-import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
+import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema';
+import { newProgramSchema } from '$lib/zod/programSchema';
+import { newSandboxSchema } from '$lib/zod/sandboxSchema';
+import { superValidate } from 'sveltekit-superforms';
+
+import type { Course } from '@prisma/client';
+import type { PageServerLoad } from '../$types.js';
 
 export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
 
 	try {
-		const search = url.searchParams.get('c')?.toLocaleLowerCase();
-
 		const programs = await prisma.program.findMany({
+			where: {
+				courses: {
+					some: {
+						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					}
+				}
+			},
 			include: {
 				courses: {
 					orderBy: {
 						isArchived: 'asc'
 					},
-					where: search
-						? { name: { contains: search, mode: 'insensitive' } }
-						: { NOT: { name: '' } },
+					where: {
+						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
 					include: {
 						pinnedBy: {
 							select: {
@@ -58,7 +67,24 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		// TODO: Check if we need pagination here
+		const sandboxes = await prisma.sandbox.findMany({
+			where: {
+				OR: [
+					{ ownerId: user.id },
+					{
+						editors: {
+							some: {
+								id: user.id
+							}
+						}
+					}
+				]
+			},
+			include: {
+				owner: true
+			}
+		});
+
 		const courses = prisma.course.findMany({
 			orderBy: {
 				updatedAt: 'desc'
@@ -66,116 +92,56 @@ export const load = (async ({ url, locals }) => {
 		});
 
 		return {
-			pinnedCourses,
-			error: url.searchParams.get('error'),
+			user,
 			programs,
 			courses,
-			user,
-			programForm: await superValidate(zod(programSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			createNewCourseForm: await superValidate(zod(courseSchema))
+			sandboxes,
+			pinnedCourses,
+			error: url.searchParams.get('error'),
+			newProgramForm: await superValidate(zod(newProgramSchema)),
+			newSandboxForm: await superValidate(zod(newSandboxSchema)),
+			newCourseForm: await superValidate(zod(newCourseSchema)),
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
 		};
 	} catch (e: unknown) {
 		return {
+			user,
+			programs: [],
+			courses: emptyPrismaPromise([] as Course[]),
+			sandboxes: [],
 			pinnedCourses: [],
 			error: e instanceof Error ? e.message : `${e}`,
-			programs: [],
-			user,
-			courses: emptyPrismaPromise([] as Course[]),
-			programForm: await superValidate(zod(programSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			createNewCourseForm: await superValidate(zod(courseSchema))
+			newProgramForm: await superValidate(zod(newProgramSchema)),
+			newSandboxForm: await superValidate(zod(newSandboxSchema)),
+			newCourseForm: await superValidate(zod(newCourseSchema)),
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
 		};
 	}
 }) satisfies PageServerLoad;
 
 export const actions = {
-	// Creates a new program with the given name
 	'new-program': async (event) => {
-		const formData = await superValidate(event, zod(programSchema));
-
-		return ProgramActions.newProgram(event, formData);
+		const form = await superValidate(event, zod(newProgramSchema));
+		return ProgramActions.newProgram(await getUser(event), form);
 	},
 
-	// Creates a new course with the given NAME and CODE
 	'new-course': async (event) => {
-		const formData = await superValidate(event, zod(courseSchema));
-
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		return ProgramActions.newCourse(user, formData);
+		const form = await superValidate(event, zod(newCourseSchema));
+		return CourseActions.newCourse(await getUser(event), form);
 	},
 
-	'add-course-to-program': async (event) => {
-		const formData = await event.request.formData();
-
-		const session = await event.locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		ProgramActions.addCourseToProgram(user, formData);
+	'new-sandbox': async (event) => {
+		const form = await superValidate(event, zod(newSandboxSchema));
+		return SandboxActions.newSandbox(await getUser(event), form);
 	},
 
-	'pin-course': async ({ locals, request }) => {
-		const data = await request.formData();
-		const courseCode = data.get('courseCode') as string | undefined;
-
-		if (!courseCode) return { error: 'missing course code' };
-
-		const session = await locals.auth();
-		if (!session) return { error: 'no session found' };
-
-		const user = session.user as User;
-
-		try {
-			await prisma.user.update({
-				where: {
-					id: user.id
-				},
-				data: {
-					pinned_courses: {
-						connect: {
-							code: courseCode
-						}
-					}
-				}
-			});
-		} catch (e) {
-			return {
-				error: e instanceof Error ? e.message : `${e}`
-			};
-		}
+	'link-course': async (event) => {
+		const form = await superValidate(event, zod(linkingCoursesSchema));
+		return CourseActions.linkCourses(await getUser(event), form);
 	},
-	'unpin-course': async ({ request, locals }) => {
-		const data = await request.formData();
-		const courseCode = data.get('courseCode') as string | undefined;
 
-		if (!courseCode) return { error: 'missing course code' };
-
-		const session = await locals.auth();
-		if (!session) return { error: 'no session found' };
-
-		const user = session.user as User;
-
-		try {
-			await prisma.user.update({
-				where: {
-					id: user.id
-				},
-				data: {
-					pinned_courses: {
-						disconnect: {
-							code: courseCode
-						}
-					}
-				}
-			});
-		} catch (e) {
-			return {
-				error: e instanceof Error ? e.message : `${e}`
-			};
-		}
+	'change-course-pin': async (event) => {
+		const form = await superValidate(event, zod(changePinSchema));
+		return CourseActions.changePin(await getUser(event), form);
 	}
-} satisfies Actions;
+};

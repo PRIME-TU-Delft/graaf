@@ -1,4 +1,4 @@
-import { redirect, type Handle, type RequestEvent } from '@sveltejs/kit';
+import { json, redirect, type Handle, type RequestEvent } from '@sveltejs/kit';
 import { handle as authHandle } from '$lib/server/auth';
 import prisma from '$lib/server/db/prisma';
 import type { Session } from '@auth/sveltekit';
@@ -24,6 +24,17 @@ async function authFunction(event: RequestEvent, user_id?: string) {
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Suppress well-known Chrome DevTools requests
+	// From https://www.reddit.com/r/node/comments/1kcr0wh/comment/mq62f24
+	if (event.url.pathname.startsWith('/.well-known/appspecific/com.chrome.devtools')) {
+		return json({
+			workspace: {
+				root: env.ROOT || '',
+				uuid: '839e066f-bc31-4813-ac9b-09fafcfdd014'
+			}
+		});
+	}
+
 	// Disable all forms of authentication in deploy previews
 	if (env.NETLIFY_CONTEXT == 'DEPLOY_PREVIEW') {
 		const user_id = event.cookies.get('user_id');

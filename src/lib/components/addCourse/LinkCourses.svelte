@@ -49,7 +49,7 @@
 
 	$effect(() => {
 		$formData.programId = program.id;
-		$formData.courseCodes = selectedCourses.map((c) => c?.code) as [string, ...string[]];
+		$formData.courseIds = selectedCourses.map((c) => c?.id) as [number, ...number[]];
 	});
 </script>
 
@@ -58,12 +58,12 @@
 		<form action="?/link-courses" method="POST" use:enhance>
 			<input type="text" name="programId" value={program.id} hidden />
 
-			<Form.Fieldset {form} name="courseCodes" class="h-0">
-				{#each $formData.courseCodes, i}
-					<Form.ElementField {form} name="courseCodes[{i}]">
+			<Form.Fieldset {form} name="courseIds" class="h-0">
+				{#each $formData.courseIds, i}
+					<Form.ElementField {form} name="courseIds[{i}]">
 						<Form.Control>
 							{#snippet children({ props })}
-								<input type="hidden" bind:value={$formData.courseCodes[i]} {...props} />
+								<input type="hidden" bind:value={$formData.courseIds[i]} {...props} />
 							{/snippet}
 						</Form.Control>
 					</Form.ElementField>

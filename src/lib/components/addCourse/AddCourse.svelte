@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { courseSchema } from '$lib/zod/courseSchema';
+	import type { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { onMount } from 'svelte';
@@ -16,7 +16,7 @@
 		program: Program & { courses: Course[]; admins: User[]; editors: User[] };
 		courses: Promise<Course[]>;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
-		createNewCourseForm: SuperValidated<Infer<typeof courseSchema>>;
+		createNewCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;
 	};
 
 	let { user, program, courses, linkCoursesForm, createNewCourseForm }: AddCourseProps = $props();
@@ -55,7 +55,7 @@
 	{#if hasAdminRights && data.length > 0}
 		<div class="flex items-center gap-2 p-4">
 			<div class="h-1 w-full rounded-l bg-slate-300"></div>
-			<p class="text-nowrap font-medium text-slate-600">Or link existing</p>
+			<p class="font-medium text-nowrap text-slate-600">Or link existing</p>
 			<div class="h-1 w-full rounded-r bg-slate-300"></div>
 		</div>
 

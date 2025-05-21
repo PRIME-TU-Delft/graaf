@@ -1,5 +1,5 @@
-import { z } from 'zod';
 import * as settings from '$lib/settings';
+import { z } from 'zod';
 
 // This is a Zod schema for validating forms this cannot be automatically generated
 // from the database schema because that is not accessible from the client
@@ -42,9 +42,21 @@ export const changeDomainRelSchema = z
 	})
 	.refine(
 		(data) =>
-			data.sourceDomainId !== data.oldSourceDomainId &&
+			data.sourceDomainId !== data.oldSourceDomainId ||
 			data.targetDomainId !== data.oldTargetDomainId,
 		{
 			message: 'This is the original relationship, change either one'
+		}
+	)
+	.refine(
+		async () => {
+			await new Promise((resolve) => setTimeout(resolve, 300));
+			// TODO: async check if the new relationship already exists
+
+			// return !existingRel;
+			return true;
+		},
+		{
+			message: 'This relationship already exists'
 		}
 	);

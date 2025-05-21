@@ -11,7 +11,6 @@ import { whereHasCoursePermission } from '$lib/server/permissions';
  * This can be a on a server call because it doesn't affect graph topography
  * and thus will never be critical
  **/
-
 export const PATCH: RequestHandler = async ({ request, locals }) => {
 	// Validate the request body
 	const body = await request.json();

@@ -1,12 +1,21 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { cn } from '$lib/utils';
-	import { Ellipsis, Link, Pencil, Plus, Users } from '@lucide/svelte';
+	import {
+		ArrowLeftRight,
+		BadgeHelp,
+		Copy,
+		Ellipsis,
+		Link,
+		Pencil,
+		Plus,
+		Users
+	} from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
-		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link';
+		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link' | 'help' | 'copy' | 'swap';
 		open?: boolean;
 		button?: string;
 		title: string;
@@ -39,7 +48,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Trigger
 		class={cn(
-			'flex items-center gap-2 text-nowrap rounded bg-primary p-2 text-sm shadow-none transition-all hover:bg-primary/80 hover:shadow-lg',
+			'bg-primary hover:bg-primary/80 flex items-center gap-2 rounded p-2 text-sm text-nowrap shadow-none transition-all hover:shadow-lg',
 			{ 'opacity-50': disabled },
 			buttonVariants({ variant }),
 			classes
@@ -60,6 +69,12 @@
 			<Users class="size-5" />
 		{:else if icon == 'link'}
 			<Link class="size-5" />
+		{:else if icon == 'help'}
+			<BadgeHelp class="size-5" />
+		{:else if icon == 'copy'}
+			<Copy class="size-5" />
+		{:else if icon == 'swap'}
+			<ArrowLeftRight class="size-5" />
 		{/if}
 
 		{#if button}

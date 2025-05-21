@@ -1,8 +1,10 @@
 <script lang="ts">
-	import DialogButton from '$lib/components/DialogButton.svelte';
-	import type { Program, User } from '@prisma/client';
-	import * as Table from '$lib/components/ui/table/index.js';
 	import { displayName } from '$lib/utils/displayUserName';
+	import type { Program, User } from '@prisma/client';
+
+	// Components
+	import DialogButton from '$lib/components/DialogButton.svelte';
+	import * as Table from '$lib/components/ui/table/index.js';
 
 	type ShowAdminsProps = {
 		program: Program & {
@@ -15,7 +17,7 @@
 </script>
 
 <DialogButton
-	title="Super Users for {program.name}"
+	title="Admins or Editors for {program.name}"
 	description=""
 	icon="admins"
 	variant="secondary"

@@ -1,14 +1,19 @@
 <script lang="ts">
-	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
-	import * as Button from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { courseSchema } from '$lib/zod/courseSchema';
+
+	import type { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
 	import type { Course, Program, User } from '@prisma/client';
-	import Settings from 'lucide-svelte/icons/settings';
-	import { type Infer, type SuperValidated } from 'sveltekit-superforms';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+
+	// Components
+	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
+	import * as Button from '$lib/components/ui/button/index.js';
 	import CourseGrid from './CourseGrid.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
+
+	// Icons
+	import Settings from 'lucide-svelte/icons/settings';
 
 	type Props = {
 		user: User;
@@ -17,30 +22,32 @@
 			admins: User[];
 		};
 		courses: Promise<Course[]>;
-		showOnlyUnarchived: boolean;
+		showArchivedCourses: boolean;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
-		createNewCourseForm: SuperValidated<Infer<typeof courseSchema>>;
+		newCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;
 	};
 
-	let { user, program, courses, showOnlyUnarchived, linkCoursesForm, createNewCourseForm }: Props =
-		$props();
+	let {
+		user,
+		program,
+		courses,
+		showArchivedCourses,
+		linkCoursesForm,
+		newCourseForm: createNewCourseForm
+	}: Props = $props();
 </script>
 
-<div
-	class="overflow-hidden rounded-lg border-2 border-blue-200 bg-blue-100 shadow-md shadow-blue-200/70"
->
-	<div class="flex items-center justify-between gap-4 p-2">
-		<h3 class="text-lg font-semibold text-blue-950">{program.name}</h3>
+<div class="overflow-hidden rounded-lg border-2 border-gray-200">
+	<div class="flex items-center justify-between gap-0 px-4 py-2 md:grid-cols-2 md:gap-4">
+		<h3 class="text-lg font-semibold text-purple-950">{program.name}</h3>
 
-		<div class="flex gap-2">
+		<div class="flex flex-row gap-1">
 			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}
-				<!-- TODO: turn this into the new form -->
-				<!-- <NewCourseForm {program} {user} {courses} {courseForm} /> -->
 				<AddCourse {program} {user} {courses} {linkCoursesForm} {createNewCourseForm} />
 			{/if}
 
 			{#if hasProgramPermissions(user, program, 'ProgramAdminEditor')}
-				<Button.Root href="graph-editor/programs/{program.id}/settings">
+				<Button.Root href="/graph-editor/programs/{program.id}/settings">
 					<Settings /> Settings
 				</Button.Root>
 			{:else if program.admins.length + program.editors.length > 0}
@@ -49,5 +56,5 @@
 		</div>
 	</div>
 
-	<CourseGrid courses={program.courses} {user} {showOnlyUnarchived} />
+	<CourseGrid {user} {showArchivedCourses} courses={program.courses} />
 </div>
