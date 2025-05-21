@@ -21,9 +21,6 @@
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 
 	let { data }: { data: PageData } = $props();
-<<<<<<< HEAD:src/routes/graph-editor/graphs/[graphid=int]/subjects/+page.svelte
-	let graph = $state(data.graph);
-=======
 
 	// This is a workaround for the fact that we can't use $derived due to the reordering
 	let course = $state(data.course);
@@ -32,7 +29,6 @@
 	});
 
 	type Graph = PageData['course']['graphs'][0];
->>>>>>> lecture-view:src/routes/graph-editor/courses/[code]/graphs/[graphid=int]/subjects/+page.svelte
 
 	const subjectMapping = $derived.by(() => {
 		const map: { id: string; subject: Subject; outSubject: Subject }[] = [];
@@ -70,9 +66,6 @@
 			// Reset the order of the domains
 			course.graphs[0].subjects = course.graphs[0].subjects.toSorted((a, b) => a.order - b.order);
 
-<<<<<<< HEAD:src/routes/graph-editor/graphs/[graphid=int]/subjects/+page.svelte
-		graph.subjects = newSubjectList;
-=======
 			toast.error('Failed to update subject order, try again later!');
 		} else {
 			// Update the order of the domains in the graph
@@ -80,62 +73,11 @@
 				domain.order = index;
 			});
 		}
->>>>>>> lecture-view:src/routes/graph-editor/courses/[code]/graphs/[graphid=int]/subjects/+page.svelte
 	}
 </script>
 
 <CreateNewSubject graph={course.graphs[0]} />
 
-<<<<<<< HEAD:src/routes/graph-editor/graphs/[graphid=int]/subjects/+page.svelte
-<Table.Root class="mt-2">
-	<Table.Header>
-		<Table.Row>
-			<Table.Head class="w-12"></Table.Head>
-			<Table.Head>Name</Table.Head>
-			<Table.Head class="flex items-center gap-1"><Link class="size-4" />Domain</Table.Head>
-			<Table.Head>Edit</Table.Head>
-		</Table.Row>
-	</Table.Header>
-	<Table.Body>
-		<SortableList
-			list={graph.subjects}
-			onrearrange={(list) => handleRearrange(list)}
-			useId={(subject) => `${subject.id}-${subject.name}`}
-		>
-			{#snippet children(subject)}
-				<Table.Cell class="px-0">
-					<Button variant="secondary" onclick={() => toast.warning('Not implemented')}>
-						<MoveVertical />
-					</Button>
-				</Table.Cell>
-				<Table.Cell>{subject.name}</Table.Cell>
-				<Table.Cell>
-					{#if subject.domain}
-						<Button
-							class="interactive"
-							variant="outline"
-							href="./domains#{subject.domain!.id}-{subject.domain!.name}"
-						>
-							{subject.domain.name}
-						</Button>
-					{:else}
-						<Button
-							class="interactive"
-							variant="outline"
-							onclick={() => toast.warning('Not implemented')}
-						>
-							None
-						</Button>
-					{/if}
-				</Table.Cell>
-				<Table.Cell>
-					<ChangeSubject {subject} {graph} />
-				</Table.Cell>
-			{/snippet}
-		</SortableList>
-	</Table.Body>
-</Table.Root>
-=======
 <Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
 		<div class="p-2"></div>
@@ -143,7 +85,6 @@
 		<div class="flex gap-2 p-2"><Link class="size-4" />Domain</div>
 		<div class="p-2 text-right">Edit</div>
 	</div>
->>>>>>> lecture-view:src/routes/graph-editor/courses/[code]/graphs/[graphid=int]/subjects/+page.svelte
 
 	<Grid.ReorderRows
 		name="subject"
