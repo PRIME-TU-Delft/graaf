@@ -101,7 +101,8 @@ export const load = (async ({ url, locals }) => {
 			newProgramForm: await superValidate(zod(newProgramSchema)),
 			newSandboxForm: await superValidate(zod(newSandboxSchema)),
 			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(zod(changePinSchema))
 		};
 	} catch (e: unknown) {
 		return {
@@ -114,7 +115,8 @@ export const load = (async ({ url, locals }) => {
 			newProgramForm: await superValidate(zod(newProgramSchema)),
 			newSandboxForm: await superValidate(zod(newSandboxSchema)),
 			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(zod(changePinSchema))
 		};
 	}
 }) satisfies PageServerLoad;
