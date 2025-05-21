@@ -9,8 +9,7 @@
 		Link,
 		Pencil,
 		Plus,
-		Users,
-		X
+		Users
 	} from '@lucide/svelte';
 	import type { Snippet } from 'svelte';
 	import { buttonVariants, type ButtonVariant } from './ui/button';

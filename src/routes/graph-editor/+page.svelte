@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import type { User } from '@prisma/client';
 
 	// Components
+	import Help from '$lib/components/Help.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Archive, ArchiveX } from '@lucide/svelte';
 	import PinnedCourses from './PinnedCourses.svelte';
 	import Program from './Program.svelte';
 	import Sandboxes from './Sandboxes.svelte';
 	import SearchCourses from './SearchCourses.svelte';
-	import NewProgramButton from './newProgramButton.svelte';
-	import Help from '$lib/components/Help.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Archive, ArchiveX } from '@lucide/svelte';
 
 	const { data, form } = $props();
 
