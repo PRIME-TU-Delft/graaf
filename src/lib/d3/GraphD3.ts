@@ -22,6 +22,7 @@ import type {
 	PrismaGraphPayload,
 	SVGSelection
 } from './types';
+import type { DomainStyle } from '@prisma/client';
 
 export class GraphD3 {
 	data: GraphData;
@@ -122,20 +123,6 @@ export class GraphD3 {
 		};
 	}
 
-	setData(payload: PrismaGraphPayload) {
-		this.data = this.formatPayload(payload);
-
-		// Update view
-		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this);
-		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this);
-		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
-
-		// Update Lecture
-		if (!this.data.lectures.find((lecture) => lecture === this.lecture)) {
-			this.setLecture(null);
-		}
-	}
-
 	setView(targetView: GraphView) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
@@ -177,22 +164,11 @@ export class GraphD3 {
 		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.updateHighlight, this);
 	}
 
-	updateDomain(id: number) {
+	setDomainStyle(id: number, style: DomainStyle | null) {
 		this.content
 			.selectAll<SVGGElement, NodeData>(`#domain-${id}`)
-			.call(NodeToolbox.updateHighlight, this)
-			.call(NodeToolbox.updatePosition, this)
+			.each(function (node) { node.style = style })
 			.call(NodeToolbox.updateStyle)
-			.call(NodeToolbox.updateText);
-	}
-
-	updateSubject(id: number) {
-		this.content
-			.selectAll<SVGGElement, NodeData>(`#subject-${id}`)
-			.call(NodeToolbox.updateHighlight, this)
-			.call(NodeToolbox.updatePosition, this)
-			.call(NodeToolbox.updateStyle)
-			.call(NodeToolbox.updateText);
 	}
 
 	zoomIn() {

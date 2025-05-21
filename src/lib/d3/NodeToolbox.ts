@@ -102,7 +102,7 @@ class NodeToolbox {
 	}
 
 	static async save(selection: NodeSelection) {
-		// We are not guaranteed to select either all domains or all subjects, so we have two options:
+		// We are not guaranteed to select only domains, or only subjects, so we have two options:
 		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
 		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
 		// We will go with option 2 for now, as save isnt called often (only on drag-end and simulation-end)

@@ -91,9 +91,7 @@
 			toast.error('Failed to update domain style, try again later');
 			return;
 		} else {
-			graphD3Store.graphD3?.setData(graph);
-			graphD3Store.graphD3?.updateDomain(domain.id);
-
+			graphD3Store.graphD3?.setDomainStyle(domain.id, key);
 			closeAndFocusTrigger(triggerId, () => {
 				isOpenState.isOpen = false;
 			});
