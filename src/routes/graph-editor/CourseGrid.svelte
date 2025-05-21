@@ -36,8 +36,6 @@
 </div>
 
 {#snippet displayCourse(course: CourseGridProps['courses'][number])}
-	{@const pinned = course.pinnedBy.some((u) => u.id == user?.id)}
-
 	<a
 		href="/graph-editor/courses/{course.code}"
 		class={cn([
