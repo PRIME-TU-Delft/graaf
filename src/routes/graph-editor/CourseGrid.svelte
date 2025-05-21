@@ -2,11 +2,11 @@
 	import { cn } from '$lib/utils';
 	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
-	
+
 	// Components
 	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
-	
+
 	// Icons
 	import { Archive } from '@lucide/svelte';
 	import Pin from 'lucide-svelte/icons/pin';
@@ -49,7 +49,8 @@
 		in:fade={{ duration: 200 }}
 	>
 		<div class="flex gap-1">
-			{course.code} {course.name}
+			{course.code}
+			{course.name}
 		</div>
 
 		<div class="mx-2 flex-grow border-t-2 border-dotted border-purple-200"></div>

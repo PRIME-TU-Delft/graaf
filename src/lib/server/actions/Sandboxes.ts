@@ -119,7 +119,10 @@ export class SandboxActions {
 				return setError(form, '', 'Cannot add the owner as an editor');
 			}
 
-			const data: any = {};
+			const data: {
+				editors?: { connect?: { id: string }; disconnect?: { id: string } };
+				owner?: { connect?: { id: string } };
+			} = {};
 
 			if (form.data.role === 'revoke' && isEditor) {
 				data.editors = { disconnect: { id: form.data.userId } };

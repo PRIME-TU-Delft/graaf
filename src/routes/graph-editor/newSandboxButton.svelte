@@ -24,7 +24,7 @@
 			}
 		}
 	});
-	
+
 	const { form: formData, enhance } = form;
 	let dialogOpen = $state(false);
 </script>
@@ -35,7 +35,7 @@
 	button="Add Sandbox"
 	title="Create Sandbox"
 	variant="outline"
-	class="w-full h-full rounded border-2 border-purple-200 bg-purple-100/50 p-2 transition-colors hover:bg-purple-100 hover:shadow-none"
+	class="h-full w-full rounded border-2 border-purple-200 bg-purple-100/50 p-2 transition-colors hover:bg-purple-100 hover:shadow-none"
 	description="Sandboxes are collections of graphs, used for experimentation, personal projects, or assignments. They should not be used to represent a university course."
 >
 	<!-- For sumbitting a NEW SANDBOX

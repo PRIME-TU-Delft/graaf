@@ -1,11 +1,10 @@
 import { env } from '$env/dynamic/private';
-import { setError } from '$lib/utils/setError';
 import prisma from '$lib/server/db/prisma';
-import { redirect } from '@sveltejs/kit';
+import { setError } from '$lib/utils/setError';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 
-import type { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema';
+import type { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
 
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';

@@ -61,7 +61,7 @@
 			<div class="flex flex-row items-center justify-between">
 				<div>
 					<h5 class="font-bold">Delete Link</h5>
-					<p class="text-sm text-muted-foreground">This cannot be undone.</p>
+					<p class="text-muted-foreground text-sm">This cannot be undone.</p>
 				</div>
 				<Form.FormButton
 					variant="destructive"

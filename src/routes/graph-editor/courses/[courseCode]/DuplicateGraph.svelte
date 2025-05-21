@@ -10,7 +10,7 @@
 	import { useId } from 'bits-ui';
 	import { page } from '$app/state';
 
-	import type { Prisma } from '@prisma/client';
+	import type { Graph, Prisma } from '@prisma/client';
 
 	// Components
 	import { Button, buttonVariants } from '$lib/components/ui/button';
@@ -31,7 +31,7 @@
 		availableSandboxes,
 		isDuplicateOpen = $bindable()
 	}: {
-		graph: Prisma.GraphGetPayload<{}>;
+		graph: Graph;
 		availableCourses: Prisma.CourseGetPayload<{
 			include: {
 				graphs: { select: { name: true } };

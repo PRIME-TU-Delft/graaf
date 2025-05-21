@@ -11,9 +11,7 @@
 	const { sandboxes }: SandboxGridProps = $props();
 </script>
 
-<div
-	class="grid max-h-96 grid-cols-2 gap-1 overflow-auto p-2 md:grid-cols-3 md:gap-2"
->
+<div class="grid max-h-96 grid-cols-2 gap-1 overflow-auto p-2 md:grid-cols-3 md:gap-2">
 	{#each sandboxes as sandbox (sandbox.id)}
 		{@render displaySandbox(sandbox)}
 	{:else}

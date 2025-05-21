@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	// Components
 	import { Button } from '$lib/components/ui/button';
 	import SandboxGrid from './SandboxGrid.svelte';
@@ -18,9 +17,11 @@
 	let collapsePinnedCourses = $state(true);
 </script>
 
-<section class="!mt-3 mx-auto grid max-w-4xl gap-4 p-4 rounded-lg border-2 border-purple-200 bg-purple-50/50">
+<section
+	class="mx-auto !mt-3 grid max-w-4xl gap-4 rounded-lg border-2 border-purple-200 bg-purple-50/50 p-4"
+>
 	<div class="flex w-full items-center justify-between gap-4">
-		<h2 class="w-full whitespace-nowrap text-xl font-bold text-purple-950">My Sandboxes</h2>
+		<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">My Sandboxes</h2>
 		<Button
 			variant="link"
 			onclick={() => {
@@ -34,7 +35,7 @@
 			{/if}
 		</Button>
 	</div>
-	
+
 	{#if !collapsePinnedCourses}
 		<SandboxGrid {sandboxes} />
 	{/if}

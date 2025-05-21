@@ -1,24 +1,23 @@
 <script lang="ts">
-	import type { Sandbox, User } from '@prisma/client';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import AddEditor from './AddEditor.svelte';
 	import { displayName } from '$lib/utils/displayUserName';
+	import type { Sandbox, User } from '@prisma/client';
+	import AddEditor from './AddEditor.svelte';
 	import RemoveEditor from './RemoveEditor.svelte';
 
 	type SandboxEditorsProps = {
-		user: User;
 		sandbox: Sandbox & {
 			owner: User;
 			editors: User[];
 		};
 	};
 
-	let { user, sandbox }: SandboxEditorsProps = $props();
+	let { sandbox }: SandboxEditorsProps = $props();
 	let dialogOpen = $state(false);
 </script>
 
-<section class="container prose mx-auto mt-8 p-4">
+<section class="prose container mx-auto mt-8 p-4">
 	<h2 class="m-0">Sandbox Editors</h2>
 
 	<p>
@@ -52,7 +51,7 @@
 	</div>
 </section>
 
-{#snippet addNewUserButton(error?: string)}
+{#snippet addNewUserButton()}
 	<Table.Cell colspan={2}>
 		<DialogButton
 			button="Add an editor"

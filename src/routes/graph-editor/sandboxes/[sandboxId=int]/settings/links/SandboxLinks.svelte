@@ -15,7 +15,7 @@
 	import type { SandboxPermissions } from '$lib/utils/permissions';
 
 	type SandboxLinksProps = {
-		sandbox: Sandbox & SandboxPermissions & { graphs: Graph[]; links: Link[] };
+		sandbox: Sandbox & SandboxPermissions & { graphs: Graph[] };
 		graphs: (Graph & { lectures: Lecture[]; links: Link[] })[];
 	};
 
@@ -23,7 +23,7 @@
 </script>
 
 <section class="prose mx-auto p-4">
-	<h2 class="mb-0 mt-4">Sandbox links</h2>
+	<h2 class="mt-4 mb-0">Sandbox links</h2>
 
 	<p>
 		You can share graphs in this sandbox with other users. They will be able to view the shared

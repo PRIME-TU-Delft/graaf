@@ -1,15 +1,15 @@
+import { CourseActions } from '$lib/server/actions/Courses.js';
 import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import type { Course, User } from '@prisma/client';
-import { fail, superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import type { Actions, PageServerLoad } from '../$types.js';
 import { newCourseSchema } from '$lib/zod/courseSchema.js';
 import { newProgramSchema } from '$lib/zod/programSchema.js';
 import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
-import { CourseActions } from '$lib/server/actions/Courses.js';
+import type { Course } from '@prisma/client';
+import { superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
+import type { Actions, PageServerLoad } from '../$types.js';
 
 export const load = (async ({ url, locals }) => {
 	const user = await getUser({ locals });
