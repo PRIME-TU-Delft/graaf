@@ -1,12 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import Logo from '$lib/components/Logo.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import type { User } from '@prisma/client';
-	import FooterSidebar from './FooterSidebar.svelte';
-	import { Home, LibraryBig, Notebook, User as UserIcon, FlaskRound } from '@lucide/svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { cn } from '$lib/utils';
-	import { page } from '$app/state';
+	import { FlaskRound, Home, LibraryBig, Notebook, User as UserIcon } from '@lucide/svelte';
+	import type { User } from '@prisma/client';
+	import FooterSidebar from './FooterSidebar.svelte';
 
 	let { user }: { user: User } = $props();
 

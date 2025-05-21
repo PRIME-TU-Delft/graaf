@@ -24,10 +24,10 @@
 		<section class="prose mx-auto p-4">
 			<div class="my-12 flex justify-between gap-4">
 				<div>
-					<h1 class="m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
+					<h1 class="!m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
 						{data.sandbox.name}
 					</h1>
-					<h2 class="m-0 text-2xl font-bold text-purple-950 shadow-purple-500/70">
+					<h2 class="!m-0 text-2xl font-bold text-purple-950 shadow-purple-500/70">
 						{displayName(data.sandbox.owner)}
 					</h2>
 				</div>
@@ -43,7 +43,7 @@
 		</section>
 
 		<section
-			class="prose mx-auto max-w-4xl rounded-lg bg-red-100/50 px-4 py-2 shadow-none shadow-red-900/70 md:border-2 md:border-red-700 md:shadow-lg"
+			class="mx-auto max-w-4xl rounded-lg bg-red-100/50 px-4 py-2 shadow-none shadow-red-900/70 md:border-2 md:border-red-700 md:shadow-lg"
 		>
 			<h2 class="text-xl font-bold text-red-700">This is not a course</h2>
 			<p>

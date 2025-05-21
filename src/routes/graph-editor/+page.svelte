@@ -1,17 +1,15 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import type { User } from '@prisma/client';
 
 	// Components
+	import Help from '$lib/components/Help.svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { Archive, ArchiveX } from '@lucide/svelte';
 	import PinnedCourses from './PinnedCourses.svelte';
 	import Program from './Program.svelte';
 	import Sandboxes from './Sandboxes.svelte';
 	import SearchCourses from './SearchCourses.svelte';
-	import NewProgramButton from './newProgramButton.svelte';
-	import Help from '$lib/components/Help.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Archive, ArchiveX } from '@lucide/svelte';
 
 	const { data, form } = $props();
 
@@ -57,7 +55,7 @@
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
 
-				{#if courses.some((course) => course.isArchived)}
+				{#if data.programs.length && courses.some((course) => course.isArchived)}
 					<Button
 						variant="outline"
 						class="border-2 p-3"
@@ -73,10 +71,6 @@
 					</Button>
 				{/if}
 			{/await}
-
-			{#if (data.session?.user as User)?.role === 'ADMIN'}
-				<NewProgramButton />
-			{/if}
 		</div>
 
 		{#each data.programs as program (program.id)}
@@ -88,6 +82,13 @@
 				linkCoursesForm={data.linkCoursesForm}
 				newCourseForm={data.newCourseForm}
 			/>
+		{:else}
+			<p class="text-muted-foreground">
+				You do not have access to any course. Go to the <a
+					class="underline"
+					href="./graph-editor/programs">Programmes</a
+				> page to see all programmes and courses.
+			</p>
 		{/each}
 	</section>
 </article>

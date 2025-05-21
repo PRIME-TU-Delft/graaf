@@ -30,7 +30,7 @@
 	});
 </script>
 
-<div class="prose mx-auto max-w-[80rem]">
+<div class="mx-auto max-w-[80rem]">
 	<PaneGroup direction="horizontal" autoSaveId="panels" class="w-full !overflow-visible">
 		<Pane defaultSize={50} class="h-[calc(100dvh-8rem)] rounded-lg">
 			<div class="h-full scroll-p-16 overflow-y-auto scroll-smooth rounded-lg bg-purple-100/50">
