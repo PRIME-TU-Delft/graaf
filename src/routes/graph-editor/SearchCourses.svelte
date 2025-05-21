@@ -18,16 +18,17 @@
 </script>
 
 <Command.Root
-	class="relative overflow-visible border-2 border-gray-200 focus-within:border-purple-500"
+	class="relative h-9 overflow-visible border-2 border-gray-200 focus-within:border-purple-500"
 >
 	<Command.Input
-		class="h-9 !border-0 p-0 !shadow-none !ring-0 !outline-none"
+		class="h-8 !border-0 p-0 !shadow-none !ring-0 !outline-none"
 		placeholder="Search courses..."
+		hasBorder={false}
 		bind:value={courseValue}
 	/>
 
 	{#if courseValue}
-		<div class="absolute top-1/2 right-1 h-fit w-fit -translate-y-1/2" in:fade>
+		<div class="absolute top-1/2 right-0 h-fit w-fit -translate-y-1/2" in:fade>
 			<Button
 				onclick={(e) => {
 					e.preventDefault();
@@ -35,13 +36,13 @@
 					courseValue = '';
 				}}
 				class="size-8 p-0"
-				variant="outline"
+				variant="ghost"
 			>
 				<Close class="size-3" />
 			</Button>
 		</div>
 		<Command.List
-			class="absolute top-12 left-0 max-h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-lg"
+			class="absolute top-10 left-0 max-h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-lg"
 		>
 			{#each courses as course (course.id)}
 				<Command.Item

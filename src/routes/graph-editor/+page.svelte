@@ -73,10 +73,6 @@
 					</Button>
 				{/if}
 			{/await}
-
-			{#if (data.session?.user as User)?.role === 'ADMIN'}
-				<NewProgramButton />
-			{/if}
 		</div>
 
 		{#each data.programs as program (program.id)}

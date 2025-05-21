@@ -20,7 +20,7 @@
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
 >
-	<h1 class="m-0">{data.course.name}</h1>
+	<h1 class="!m-0">{data.course.name}</h1>
 
 	{#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 		<DialogButton
