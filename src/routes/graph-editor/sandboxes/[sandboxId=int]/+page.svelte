@@ -43,16 +43,19 @@
 		</section>
 
 		<section
-			class="mx-auto max-w-4xl rounded-lg bg-red-100/50 px-4 py-2 shadow-none shadow-red-900/70 md:border-2 md:border-red-700 md:shadow-lg"
+			class="mx-auto max-w-4xl rounded-lg bg-red-100/50 px-4 py-2 shadow-none shadow-red-900/70 md:border-2 md:border-amber-700 md:shadow-lg"
 		>
-			<h2 class="text-xl font-bold text-red-700">This is not a course</h2>
+			<h2 class="text-xl font-bold text-amber-950">This is not a course</h2>
 			<p>
 				Sandboxes are used for personal projects or assignments. They should <b>not</b> be used to represent
-				a university course, nor should their content be posted publicly.
+				a university course, nor should their content be posted publicly. Sandbox courses often become
+				difficult to locate over time.
 			</p>
+			<br />
 			<p>
-				Looking to create a course? Please contact a programme administrator. You can also copy
-				graphs from your sandbox to a course, if you already have one.
+				Looking to create a course? Please contact a programme administrator. You can find all
+				administrator at the <a class="underline" href="/graph-editor/programs">programmes</a> page.
+				You can also copy graphs from your sandbox to a course, if you already have one.
 			</p>
 		</section>
 
