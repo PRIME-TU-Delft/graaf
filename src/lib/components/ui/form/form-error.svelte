@@ -20,7 +20,7 @@
 	const errors = $derived(fromStore(form.allErrors).current);
 </script>
 
-<div class={cn('text-sm font-medium text-destructive', className)} {...restProps}>
+<div class={cn('text-destructive text-sm font-medium', className)} {...restProps}>
 	{#each errors as error (error.path)}
 		{#if error.path == '_errors' || error.path == ''}
 			{#if children}

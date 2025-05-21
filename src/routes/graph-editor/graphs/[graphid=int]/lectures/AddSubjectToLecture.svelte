@@ -97,12 +97,12 @@
 		<Checkbox.Root
 			{id}
 			aria-labelledby="{id}-label"
-			class="data-[state=unchecked]:border-border-input data-[state=unchecked]:hover:border-dark-40 peer inline-flex size-[25px] items-center justify-center rounded-md border border-muted bg-foreground transition-all duration-150 ease-in-out active:scale-[0.98] data-[state=unchecked]:bg-background"
+			class="data-[state=unchecked]:border-border-input data-[state=unchecked]:hover:border-dark-40 peer border-muted bg-foreground data-[state=unchecked]:bg-background inline-flex size-[25px] items-center justify-center rounded-md border transition-all duration-150 ease-in-out active:scale-[0.98]"
 			name="hello"
 			{value}
 		>
 			{#snippet children({ checked })}
-				<div class="inline-flex items-center justify-center text-background">
+				<div class="text-background inline-flex items-center justify-center">
 					{#if checked}
 						<Check class="size-[15px]" />
 					{/if}
@@ -112,7 +112,7 @@
 		<Label.Root
 			id="{id}-label"
 			for={id}
-			class="pl-3 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+			class="pl-3 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 		>
 			{label}
 		</Label.Root>

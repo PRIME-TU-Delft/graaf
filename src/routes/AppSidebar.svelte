@@ -43,7 +43,7 @@
 
 <Sidebar.Root collapsible="icon">
 	<Sidebar.Header
-		class="grain flex-row bg-purple-950 p-4 transition-all group-data-[state=collapsed]:px-2"
+		class="flex-row bg-purple-950 p-4 transition-all group-data-[state=collapsed]:px-2"
 	>
 		<Logo
 			class="scale-100 transition-transform group-data-[state=collapsed]:scale-75"
@@ -97,7 +97,7 @@
 		onclick={handleNavClick}
 		class={cn(
 			props.class,
-			isActive && 'grain bg-purple-950 text-white hover:bg-purple-900 hover:text-white'
+			isActive && 'bg-purple-950 text-white hover:bg-purple-900 hover:text-white'
 		)}
 	>
 		<item.icon />

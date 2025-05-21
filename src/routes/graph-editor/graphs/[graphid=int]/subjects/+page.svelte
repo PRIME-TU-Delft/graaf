@@ -23,16 +23,16 @@
 	let { data }: { data: PageData } = $props();
 
 	// This is a workaround for the fact that we can't use $derived due to the reordering
-	let course = $state(data.course);
+	let graph = $state(data.graph);
 	$effect(() => {
-		course = data.course;
+		graph = data.graph;
 	});
 
-	type Graph = PageData['course']['graphs'][0];
+	type Graph = PageData['graph'];
 
 	const subjectMapping = $derived.by(() => {
 		const map: { id: string; subject: Subject; outSubject: Subject }[] = [];
-		for (const subject of course.graphs[0].subjects) {
+		for (const subject of graph.subjects) {
 			for (const targetSubject of subject.targetSubjects) {
 				map.push({
 					id: `subject-rel-${subject.id}-${targetSubject.id}`,
@@ -45,13 +45,13 @@
 	});
 
 	function handleDndConsider(e: CustomEvent<{ items: Graph['subjects'] }>) {
-		course.graphs[0].subjects = e.detail.items;
+		graph.subjects = e.detail.items;
 	}
 
 	async function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
-		course.graphs[0].subjects = e.detail.items;
+		graph.subjects = e.detail.items;
 
-		const body = course.graphs[0].subjects.map((subject, index) => ({
+		const body = graph.subjects.map((subject, index) => ({
 			subjectId: subject.id,
 			newOrder: index
 		}));
@@ -64,19 +64,19 @@
 
 		if (!response.ok) {
 			// Reset the order of the domains
-			course.graphs[0].subjects = course.graphs[0].subjects.toSorted((a, b) => a.order - b.order);
+			graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
 
 			toast.error('Failed to update subject order, try again later!');
 		} else {
 			// Update the order of the domains in the graph
-			course.graphs[0].subjects.forEach((domain, index) => {
+			graph.subjects.forEach((domain, index) => {
 				domain.order = index;
 			});
 		}
 	}
 </script>
 
-<CreateNewSubject graph={course.graphs[0]} />
+<CreateNewSubject {graph} />
 
 <Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
@@ -88,7 +88,7 @@
 
 	<Grid.ReorderRows
 		name="subject"
-		items={course.graphs[0].subjects}
+		items={graph.subjects}
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
@@ -98,20 +98,20 @@
 			</Grid.Cell>
 
 			<Grid.Cell>
-				<ChangeDomainForSubject {subject} graph={course.graphs[0]} />
+				<ChangeDomainForSubject {subject} {graph} />
 			</Grid.Cell>
 
 			<Grid.Cell>
-				<ChangeSubject {subject} graph={course.graphs[0]} />
+				<ChangeSubject {subject} {graph} />
 			</Grid.Cell>
 		{/snippet}
 	</Grid.ReorderRows>
 </Grid.Root>
 
-{#if course.graphs[0].subjects.length == 0}
+{#if graph.subjects.length == 0}
 	<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">No subjects found</p>
 {:else}
-	<CreateNewSubjectRel graph={course.graphs[0]} />
+	<CreateNewSubjectRel {graph} />
 
 	<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 		<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
@@ -165,7 +165,7 @@
 					Change {thisSubject.name} to:
 				</DropdownMenu.GroupHeading>
 
-				<ChangeSubjectRel graph={course.graphs[0]} inSubject={subject} {outSubject} {type} />
+				<ChangeSubjectRel {graph} inSubject={subject} {outSubject} {type} />
 			</DropdownMenu.Group>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>

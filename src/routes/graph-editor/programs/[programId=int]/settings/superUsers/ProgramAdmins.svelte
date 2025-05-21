@@ -63,7 +63,7 @@
 	]);
 </script>
 
-<section class="container prose mx-auto p-4">
+<section class="prose container mx-auto p-4">
 	<h2 class="mb-2">Program super users</h2>
 	<p>
 		A <span class="font-mono">Program Editor</span> is able to add or delete a course to this

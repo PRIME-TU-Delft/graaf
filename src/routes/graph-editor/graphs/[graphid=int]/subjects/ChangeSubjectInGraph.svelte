@@ -13,7 +13,7 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 
 	type Props = {
-		subject: PageData['course']['graphs'][0]['subjects'][0];
+		subject: PageData['graph']['subjects'][0];
 		graph: GraphType;
 		domain?: Domain;
 		onSuccess?: () => void;

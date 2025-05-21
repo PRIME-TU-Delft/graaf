@@ -21,14 +21,13 @@
 	class="relative overflow-visible border-2 border-gray-200 focus-within:border-purple-500"
 >
 	<Command.Input
-		class="h-9 !border-0 p-0 !shadow-none !outline-none !ring-0"
+		class="h-9 !border-0 p-0 !shadow-none !ring-0 !outline-none"
 		placeholder="Search courses..."
-		hasBorder={false}
 		bind:value={courseValue}
 	/>
 
 	{#if courseValue}
-		<div class="absolute right-1 top-1/2 h-fit w-fit -translate-y-1/2" in:fade>
+		<div class="absolute top-1/2 right-1 h-fit w-fit -translate-y-1/2" in:fade>
 			<Button
 				onclick={(e) => {
 					e.preventDefault();
@@ -42,7 +41,7 @@
 			</Button>
 		</div>
 		<Command.List
-			class="absolute left-0 top-12 max-h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-lg"
+			class="absolute top-12 left-0 max-h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-lg"
 		>
 			{#each courses as course (course.id)}
 				<Command.Item
@@ -51,7 +50,8 @@
 					onclick={() => goto(`/graph-editor/courses/${course.code}`)}
 				>
 					<p class="grow font-medium text-gray-900">
-						{course.code} {course.name}
+						{course.code}
+						{course.name}
 					</p>
 					<ArrowRight class="" />
 				</Command.Item>

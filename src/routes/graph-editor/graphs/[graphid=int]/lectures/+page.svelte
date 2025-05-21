@@ -15,14 +15,16 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let changeLectureOpen = $state(false);
+	class ChangeLectureClass {
+		open = $state(false);
+	}
 
 	const flipDurationMs = 300;
 
 	// This is a workaround for the fact that we can't use $derived due to the reordering from the svelte-dnd-action library
-	let lectures = $state(data.course.graphs[0].lectures);
+	let lectures = $state(data.graph.lectures);
 	$effect(() => {
-		lectures = data.course.graphs[0].lectures;
+		lectures = data.graph.lectures;
 	});
 
 	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
@@ -55,7 +57,7 @@
 	}
 </script>
 
-<CreateNewLecture graph={data.course.graphs[0]} />
+<CreateNewLecture graph={data.graph} />
 
 <div
 	class="space-y-3 rounded !outline-purple-300"
@@ -64,6 +66,8 @@
 	onfinalize={handleDndFinalize}
 >
 	{#each lectures as lecture, index (lecture.id)}
+		{@const changeLecture = new ChangeLectureClass()}
+
 		<div
 			animate:flip={{ duration: flipDurationMs }}
 			class="rounded bg-purple-50/30 !outline-2 !outline-purple-500 !backdrop-blur-lg"
@@ -78,11 +82,11 @@
 				</div>
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 
-				{#if data.course.graphs[0].subjects.length > 0}
-					<AddSubjectToLecture {lecture} graph={data.course.graphs[0]} />
+				{#if data.graph.subjects.length > 0}
+					<AddSubjectToLecture {lecture} graph={data.graph} />
 				{/if}
 
-				<DropdownMenu.Root bind:open={changeLectureOpen}>
+				<DropdownMenu.Root bind:open={changeLecture.open}>
 					<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
 						<Ellipsis class="size-4 w-full" />
 					</DropdownMenu.Trigger>
@@ -90,8 +94,8 @@
 						<DropdownMenu.Item class="p-0">
 							<ChangeLecture
 								{lecture}
-								graph={data.course.graphs[0]}
-								onSuccess={() => (changeLectureOpen = false)}
+								graph={data.graph}
+								onSuccess={() => (changeLecture.open = false)}
 							/>
 						</DropdownMenu.Item>
 
@@ -102,8 +106,8 @@
 							<DropdownMenu.SubContent class="ml-1 w-40">
 								<DeleteLecture
 									{lecture}
-									graph={data.course.graphs[0]}
-									onSuccess={() => (changeLectureOpen = false)}
+									graph={data.graph}
+									onSuccess={() => (changeLecture.open = false)}
 								/>
 							</DropdownMenu.SubContent>
 						</DropdownMenu.Sub>
@@ -111,7 +115,7 @@
 				</DropdownMenu.Root>
 			</div>
 
-			<LectureSubject bind:lecture={lectures[index]} subjects={data.course.graphs[0].subjects} />
+			<LectureSubject bind:lecture={lectures[index]} subjects={data.graph.subjects} />
 		</div>
 	{:else}
 		<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">

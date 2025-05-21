@@ -137,7 +137,7 @@
 					{#if embedUrl.data}
 						<Button
 							variant="outline"
-							class="absolute bottom-3 right-1 size-8"
+							class="absolute right-1 bottom-3 size-8"
 							onclick={() => {
 								navigator.clipboard.writeText(embedUrl.data);
 								toast.success('Link copied to clipboard!');

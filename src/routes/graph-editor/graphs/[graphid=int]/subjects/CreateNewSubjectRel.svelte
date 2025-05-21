@@ -14,6 +14,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import SubjectRelField from './SubjectRelField.svelte';
+	import { dev } from '$app/environment';
 
 	type Props = {
 		graph: Graph & { subjects: Subject[] };
@@ -59,7 +60,9 @@
 				<Form.FormError {form} />
 
 				<div class="flex justify-between gap-1">
-					{@render relVisualizer()}
+					{#if dev}
+						{@render relVisualizer()}
+					{/if}
 					<Form.FormButton
 						disabled={isTheSameSubject || !$formData.sourceSubjectId || !$formData.targetSubjectId}
 					>

@@ -38,7 +38,7 @@
 					<DropdownMenu.Trigger
 						class={cn(
 							buttonVariants({ variant: 'default', size: 'lg' }),
-							'sticky top-0 z-20 rounded-ee-2xl rounded-es-none rounded-se-none'
+							'sticky top-0 z-20 rounded-se-none rounded-ee-2xl rounded-es-none'
 						)}
 					>
 						View: {currentTab}
@@ -80,7 +80,7 @@
 		</Pane>
 
 		{#if !hidePreview}
-			<PaneResizer class="relative flex w-2 items-center justify-center bg-background">
+			<PaneResizer class="bg-background relative flex w-2 items-center justify-center">
 				<div
 					class="absolute z-10 flex h-7 w-5 items-center justify-center rounded-sm border bg-purple-500"
 				>

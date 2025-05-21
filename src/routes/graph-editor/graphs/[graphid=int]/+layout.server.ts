@@ -34,6 +34,9 @@ export const load: LayoutServerLoad = async ({ params }) => {
 						sourceSubjects: true,
 						targetSubjects: true,
 						domain: true
+					},
+					orderBy: {
+						order: 'asc'
 					}
 				},
 				lectures: {

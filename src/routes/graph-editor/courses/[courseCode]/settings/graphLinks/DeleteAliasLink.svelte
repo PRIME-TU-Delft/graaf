@@ -57,7 +57,7 @@
 			<input type="text" name="linkId" value={link.id} hidden />
 
 			<div class="grid grid-cols-2 items-center justify-between gap-1">
-				<p class="text-nowrap font-bold">Are you sure?</p>
+				<p class="font-bold text-nowrap">Are you sure?</p>
 
 				<Form.FormError class="w-full text-right" {form} />
 

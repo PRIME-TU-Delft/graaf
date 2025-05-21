@@ -16,7 +16,7 @@
 
 <section class="mx-auto grid max-w-4xl gap-4 p-4">
 	<div class="flex w-full items-center justify-between gap-2">
-		<h2 class="w-full grow whitespace-nowrap text-xl font-bold">All Programmes</h2>
+		<h2 class="w-full grow text-xl font-bold whitespace-nowrap">All Programmes</h2>
 
 		{#await data.courses then courses}
 			<SearchCourses {courses} />
@@ -34,6 +34,7 @@
 			courses={data.courses}
 			newCourseForm={data.newCourseForm}
 			linkCoursesForm={data.linkCoursesForm}
+			showArchivedCourses={false}
 		/>
 	{/each}
 </section>

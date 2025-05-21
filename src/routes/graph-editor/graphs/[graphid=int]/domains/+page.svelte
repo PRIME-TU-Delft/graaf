@@ -26,12 +26,10 @@
 	let { data }: { data: PageData } = $props();
 
 	// This is a workaround for the fact that we can't use $derived due to the reordering
-	let course = $state(data.course);
+	let graph = $state(data.graph);
 	$effect(() => {
-		course = data.course;
+		graph = data.graph;
 	});
-
-	let graph = $derived(data.graph);
 
 	const domainMapping = $derived.by(() => {
 		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
@@ -80,7 +78,7 @@
 		triggerId: string,
 		isOpenState: ChangeStyleOpenState
 	) {
-		const domain = course.graphs[0].domains[domainIndex];
+		const domain = graph.domains[domainIndex];
 		domain.style = key;
 
 		const response = await fetch('/api/domains/style', {
@@ -103,12 +101,12 @@
 	}
 
 	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
-		course.graphs[0].domains = e.detail.items;
+		graph.domains = e.detail.items;
 	}
 	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
-		course.graphs[0].domains = e.detail.items;
+		graph.domains = e.detail.items;
 
-		const body = course.graphs[0].domains.map((domain, index) => ({
+		const body = graph.domains.map((domain, index) => ({
 			domainId: domain.id,
 			newOrder: index
 		}));
@@ -121,12 +119,12 @@
 
 		if (!response.ok) {
 			// Reset the order of the domains
-			course.graphs[0].domains = course.graphs[0].domains.toSorted((a, b) => a.order - b.order);
+			graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
 
 			toast.error('Failed to update domain order, try again later!');
 		} else {
 			// Update the order of the domains in the graph
-			course.graphs[0].domains.forEach((domain, index) => {
+			graph.domains.forEach((domain, index) => {
 				domain.order = index;
 			});
 		}
@@ -145,7 +143,7 @@
 
 	<Grid.ReorderRows
 		name="domain"
-		items={course.graphs[0].domains}
+		items={graph.domains}
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
@@ -215,7 +213,7 @@
 			>
 				{#if style == null}
 					<div
-						class="absolute left-1/2 top-1/2 h-1 w-3 -translate-x-1/2 -translate-y-1/2 -rotate-[60deg] rounded-full bg-gray-500/30"
+						class="absolute top-1/2 left-1/2 h-1 w-3 -translate-x-1/2 -translate-y-1/2 -rotate-[60deg] rounded-full bg-gray-500/30"
 					></div>
 				{/if}
 			</div>

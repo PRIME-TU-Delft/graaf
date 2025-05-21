@@ -36,7 +36,7 @@
 
 <article class="my-6 mb-12 space-y-8">
 	<section class="prose mx-auto p-4">
-		<h1 class="my-12 text-balance text-4xl font-bold text-purple-950 shadow-purple-500/70">
+		<h1 class="my-12 text-4xl font-bold text-balance text-purple-950 shadow-purple-500/70">
 			Welcome to the PRIME Graph Editor
 		</h1>
 
@@ -47,17 +47,17 @@
 		</p>
 	</section>
 
-	<PinnedCourses {showArchivedCourses}  user={data.user} pinnedCourses={data.pinnedCourses} />
+	<PinnedCourses {showArchivedCourses} user={data.user} pinnedCourses={data.pinnedCourses} />
 	<Sandboxes sandboxes={data.sandboxes} />
 
 	<section class="mx-auto grid max-w-4xl gap-3 p-4">
 		<div class="flex w-full items-center justify-between gap-2">
-			<h2 class="grow w-full whitespace-nowrap text-xl font-bold text-purple-950">Courses & Programmes</h2>
+			<h2 class="w-full grow text-xl font-bold whitespace-nowrap">My Programmes</h2>
 
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
 
-				{#if courses.some(course => course.isArchived)}
+				{#if courses.some((course) => course.isArchived)}
 					<Button
 						variant="outline"
 						class="border-2 p-3"
@@ -69,7 +69,7 @@
 							<ArchiveX />
 						{:else}
 							<Archive />
-						{/if}	
+						{/if}
 					</Button>
 				{/if}
 			{/await}
@@ -80,7 +80,9 @@
 		</div>
 
 		{#each data.programs as program (program.id)}
-			<Program {program} {showArchivedCourses}
+			<Program
+				{program}
+				{showArchivedCourses}
 				user={data.user}
 				courses={data.courses}
 				linkCoursesForm={data.linkCoursesForm}
