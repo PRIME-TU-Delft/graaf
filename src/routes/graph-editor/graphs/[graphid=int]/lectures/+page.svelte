@@ -83,7 +83,9 @@
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 
 				{#if data.graph.subjects.length > 0}
-					<AddSubjectToLecture {lecture} graph={data.graph} />
+					{#key lecture.subjects}
+						<AddSubjectToLecture {lecture} graph={data.graph} />
+					{/key}
 				{/if}
 
 				<DropdownMenu.Root bind:open={changeLecture.open}>
