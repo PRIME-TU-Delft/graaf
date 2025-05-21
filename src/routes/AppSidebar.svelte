@@ -7,6 +7,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { cn } from '$lib/utils';
 	import { page } from '$app/state';
+	import { fade } from 'svelte/transition';
 
 	let { user }: { user: User } = $props();
 

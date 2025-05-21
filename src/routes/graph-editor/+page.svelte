@@ -57,7 +57,7 @@
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
 
-				{#if courses.some((course) => course.isArchived)}
+				{#if data.programs.length && courses.some((course) => course.isArchived)}
 					<Button
 						variant="outline"
 						class="border-2 p-3"
@@ -84,6 +84,13 @@
 				linkCoursesForm={data.linkCoursesForm}
 				newCourseForm={data.newCourseForm}
 			/>
+		{:else}
+			<p class="text-muted-foreground">
+				You do not have access to any course. Go to the <a
+					class="underline"
+					href="./graph-editor/programs">Programmes</a
+				> page to see all programmes and courses.
+			</p>
 		{/each}
 	</section>
 </article>
