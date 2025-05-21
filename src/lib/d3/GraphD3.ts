@@ -362,6 +362,8 @@ export class GraphD3 {
 		// Extract lecture data
 		for (const lecture of data.lectures) {
 			const lecture_data: LectureData = {
+				id: lecture.id,
+				name: lecture.name,
 				past_nodes: [],
 				present_nodes: [],
 				future_nodes: [],

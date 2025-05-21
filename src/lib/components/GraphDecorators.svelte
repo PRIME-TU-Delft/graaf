@@ -1,12 +1,14 @@
 <script lang="ts">
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Command from '$lib/components/ui/command/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 
 	import { GraphD3 } from '$lib/d3/GraphD3';
 	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import * as settings from '$lib/settings';
 
-	import { ChevronUp, Maximize, Minimize, Orbit, SearchSlash } from '@lucide/svelte';
+	import { Check, ChevronDown, ChevronsUpDown, ChevronUp, Maximize, Minimize, Orbit, SearchSlash } from '@lucide/svelte';
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
@@ -23,7 +25,9 @@
 
 	let { graphD3, onResetSimulation }: Props = $props();
 
-	let isFullscreen = $state(false); // Is the scene fullscreen?
+	let isFullscreen = $state(false);
+	let isLecturePopoverOpen = $state(false);
+	let chosenLecture = $state(graphD3.lecture);
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -51,24 +55,63 @@
 {#if !graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
 	<Accordion.Root
 		type="single"
-		class="absolute top-4 right-4 rounded-xl border-b-0 bg-white/90 p-3"
+		class="absolute top-4 right-4 p-3 text-purple-900"
 	>
 		<Accordion.Item class="border-none" value="item-1">
 			<Accordion.Trigger class="p-0">Domain Legend</Accordion.Trigger>
 			<Accordion.Content>
 				{#each graphD3.data.domain_nodes as domain (domain.id)}
-					<div class="flex w-full items-center justify-between gap-1">
+					<div class="flex w-full items-center justify-between gap-3">
+						<span class="w-full text-right text-gray-900"> {domain.text} </span>
 						<div
 							class="size-4"
 							style:background={domain.style == null ? '#ffffff' : settings.COLORS[domain.style]}
 						></div>
-						<span> {domain.text} </span>
 					</div>
 				{/each}
 			</Accordion.Content>
 		</Accordion.Item>
 	</Accordion.Root>
 {/if}
+
+<!-- Select Lecture -->
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger
+		class={cn(
+			buttonVariants({ variant: 'link' }),
+			"absolute top-4 left-4 p-3"
+		)}
+	>
+		{chosenLecture?.name || 'Select a lecture'}
+		<ChevronDown />
+	</DropdownMenu.Trigger>
+	<DropdownMenu.Content>
+		<DropdownMenu.Group>
+			<DropdownMenu.Item
+					onclick={() => {
+						chosenLecture = null;
+						graphD3.setLecture(null);
+					}}
+				>
+					Unselect
+					<Check class={cn('ml-auto w-auto', chosenLecture && 'w-0 text-transparent')} />
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				{#each graphD3.data.lectures as lecture (lecture.id)}
+					<DropdownMenu.Item
+						onclick={() => {
+							chosenLecture = lecture;
+							graphD3.setLecture(lecture);
+							isLecturePopoverOpen = false;
+						}}
+					>
+						{lecture.name}
+						<Check class={cn('ml-auto w-auto', lecture.id !== chosenLecture?.id && 'w-0 text-transparent')} />
+					</DropdownMenu.Item>
+				{/each}
+		</DropdownMenu.Group>
+	</DropdownMenu.Content>
+</DropdownMenu.Root>
 
 <!-- Zoom button -->
 <div

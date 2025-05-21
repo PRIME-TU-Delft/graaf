@@ -41,7 +41,7 @@
 							'sticky top-0 z-20 rounded-se-none rounded-ee-2xl rounded-es-none'
 						)}
 					>
-						View: {currentTab}
+						View {currentTab}
 						<ChevronDown />
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
