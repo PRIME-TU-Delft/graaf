@@ -44,6 +44,11 @@ export class GraphD3 {
 	constructor(element: SVGSVGElement, payload: PrismaGraphPayload, editable: boolean) {
 		this.editable = editable;
 
+		// Set zoom lock to false if editable
+		if (this.editable) {
+			this.zoom_lock = false;
+		}
+
 		// Format data
 		this.data = this.formatPayload(payload);
 
