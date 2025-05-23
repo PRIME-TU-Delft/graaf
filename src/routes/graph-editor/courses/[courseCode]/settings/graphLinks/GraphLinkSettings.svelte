@@ -33,8 +33,6 @@
 
 	let links = $derived(graph.links.map((link) => link));
 
-	$inspect(links);
-
 	const id = $props.id();
 
 	const form = superForm((page.data as PageData).editGraphForm, {
