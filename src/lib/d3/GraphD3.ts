@@ -167,8 +167,10 @@ export class GraphD3 {
 	setDomainStyle(id: number, style: DomainStyle | null) {
 		this.content
 			.selectAll<SVGGElement, NodeData>(`#domain-${id}`)
-			.each(function (node) { node.style = style })
-			.call(NodeToolbox.updateStyle)
+			.each(function (node) {
+				node.style = style;
+			})
+			.call(NodeToolbox.updateStyle);
 	}
 
 	zoomIn() {
