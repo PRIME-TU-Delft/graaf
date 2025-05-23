@@ -18,10 +18,11 @@
 
 	type Props = {
 		graphD3: GraphD3;
+		editable: boolean;
 		onResetSimulation: () => void;
 	};
 
-	let { graphD3, onResetSimulation }: Props = $props();
+	let { graphD3, editable, onResetSimulation }: Props = $props();
 
 	let isFullscreen = $state(false); // Is the scene fullscreen?
 
@@ -105,7 +106,7 @@
 </div>
 
 <!-- Simulation buttons -->
-{#if !graphView.isLectures() && !isFullscreen}
+{#if editable && !graphView.isLectures() && !isFullscreen}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			class={cn(buttonVariants({ variant: 'outline' }), 'absolute bottom-1 left-1')}
