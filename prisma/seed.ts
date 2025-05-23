@@ -11,6 +11,7 @@ const testUsers = [
 	{ fn: 'Boris', ln: 'Pavic', admin: false },
 	{ fn: 'Teun', ln: 'Janssen', admin: false },
 	{ fn: 'Dani', ln: 'Petrova', admin: false },
+	{ fn: 'Rens', ln: 'Dur', admin: false },
 	{ fn: 'Dennis', ln: 'den Ouden-van der Horst', admin: false }
 ];
 
