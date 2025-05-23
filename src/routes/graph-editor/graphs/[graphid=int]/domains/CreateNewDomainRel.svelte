@@ -6,14 +6,13 @@
 	import { cn } from '$lib/utils';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain, Graph } from '@prisma/client';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import { useId } from 'bits-ui';
 	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
-	import { useId } from 'bits-ui';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
