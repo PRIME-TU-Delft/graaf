@@ -44,6 +44,11 @@ export class GraphD3 {
 	constructor(element: SVGSVGElement, payload: PrismaGraphPayload, editable: boolean) {
 		this.editable = editable;
 
+		// Set zoom lock to false if editable
+		if (this.editable) {
+			this.zoom_lock = false;
+		}
+
 		// Format data
 		this.data = this.formatPayload(payload);
 
@@ -167,8 +172,10 @@ export class GraphD3 {
 	setDomainStyle(id: number, style: DomainStyle | null) {
 		this.content
 			.selectAll<SVGGElement, NodeData>(`#domain-${id}`)
-			.each(function (node) { node.style = style })
-			.call(NodeToolbox.updateStyle)
+			.each(function (node) {
+				node.style = style;
+			})
+			.call(NodeToolbox.updateStyle);
 	}
 
 	zoomIn() {

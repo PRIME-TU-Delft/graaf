@@ -25,7 +25,7 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
 	let dialogOpen = $state(false);
 </script>
 
@@ -52,6 +52,14 @@
 			<Form.FieldErrors />
 		</Form.Field>
 
-		<Form.Button class="float-right mt-4">Submit</Form.Button>
+		<div class="mt-4 flex w-full justify-end">
+			<Form.FormButton
+				disabled={$submitting}
+				loading={$delayed}
+				loadingMessage="Creating sandbox..."
+			>
+				Create new sandbox
+			</Form.FormButton>
+		</div>
 	</form>
 </DialogButton>

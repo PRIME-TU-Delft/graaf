@@ -86,7 +86,9 @@
 		<div
 			class="sticky bottom-0 mt-4 flex w-full justify-end bg-gradient-to-b from-white/0 to-white/100 py-4 backdrop-blur-sm"
 		>
-			<Form.Button disabled={$submitting} loading={$delayed}>(Un-)link Subjects</Form.Button>
+			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Unlinking...">
+				(Un-)link Subjects
+			</Form.FormButton>
 		</div>
 	</form>
 </DialogButton>

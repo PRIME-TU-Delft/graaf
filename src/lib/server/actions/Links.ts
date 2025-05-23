@@ -73,6 +73,9 @@ export class LinkActions {
 	static async newLink(user: User, form: SuperValidated<Infer<typeof newLinkSchema>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
+		// make name lowercase
+		form.data.name = form.data.name.toLowerCase();
+
 		if (form.data.parentType === 'COURSE') {
 			const query = prisma.course.update({
 				where: {

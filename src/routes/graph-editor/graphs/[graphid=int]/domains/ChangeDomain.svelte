@@ -46,7 +46,7 @@
 		}
 	});
 
-	const { form: formData, enhance, tainted, isTainted } = form;
+	const { form: formData, enhance, tainted, isTainted, submitting, delayed } = form;
 
 	const domainStyles = settings.COLOR_KEYS;
 
@@ -239,6 +239,9 @@
 				<Undo2 /> Reset
 			</Button>
 			<Form.Button>Change</Form.Button>
+			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Changing...">
+				Change
+			</Form.FormButton>
 		</div>
 	</form>
 {/snippet}

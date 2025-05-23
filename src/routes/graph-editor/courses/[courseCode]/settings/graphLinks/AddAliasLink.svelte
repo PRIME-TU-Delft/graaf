@@ -7,7 +7,8 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from '../$types';
+	import type { PageData } from '../../$types';
+	import type { PageData as SettingsPageData } from '../$types';
 
 	type AddAliasLinkProps = {
 		course: Course & {
@@ -20,13 +21,16 @@
 	let { course, graph, onSuccess }: AddAliasLinkProps = $props();
 	const id = $props.id();
 
-	const form = superForm((page.data as PageData).createLinkForm, {
+	const form = superForm((page.data as PageData & SettingsPageData).newLinkForm, {
 		id: 'delete-graph-link-' + id,
 		validators: zodClient(newLinkSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully added link!');
-				onSuccess(result!.data!.link as Link);
+
+				if (result!.data!.link instanceof Object) {
+					onSuccess(result!.data!.link as Link);
+				}
 			}
 		}
 	});
@@ -45,7 +49,7 @@
 	});
 </script>
 
-<form class="flex items-center gap-2" action="?/add-link" method="POST" use:enhance>
+<form class="flex items-center gap-2" action="?/new-link" method="POST" use:enhance>
 	<input type="text" name="graphId" value={graph.id} hidden />
 	<input type="text" name="parentId" value={course.id} hidden />
 	<input type="text" name="parentType" value="COURSE" hidden />

@@ -49,7 +49,7 @@
 		}
 	});
 
-	const { form: formData, enhance, tainted, isTainted } = form;
+	const { form: formData, enhance, tainted, isTainted, submitting, delayed } = form;
 
 	$effect(() => {
 		if (subject) {
@@ -213,7 +213,14 @@
 			>
 				<Undo2 /> Reset
 			</Button>
-			<Form.Button>Change</Form.Button>
+
+			<Form.FormButton
+				disabled={$submitting}
+				loading={$delayed}
+				loadingMessage="Changing subjects..."
+			>
+				Change
+			</Form.FormButton>
 		</div>
 	</form>
 {/snippet}

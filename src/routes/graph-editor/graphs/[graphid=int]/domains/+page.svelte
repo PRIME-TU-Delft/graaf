@@ -304,7 +304,9 @@
 				<input type="hidden" name="targetDomainId" value={outDomain.id} />
 
 				<p class="mb-2">Are you sure you would like to delete this relationship</p>
-				<Form.Button variant="destructive" type="submit">Yes, delete</Form.Button>
+				<Form.FormButton variant="destructive" loadingMessage="Deleting...">
+					Yes, delete
+				</Form.FormButton>
 			</form>
 		</Popover.Content>
 	</Popover.Root>

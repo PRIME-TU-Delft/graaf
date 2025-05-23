@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
+	import { page } from '$app/state';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { toast } from 'svelte-sonner';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { fromStore } from 'svelte/store';
 	import { displayName } from '$lib/utils/displayUserName';
+	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
+	import { useId } from 'bits-ui';
+	import { toast } from 'svelte-sonner';
+	import { fromStore } from 'svelte/store';
 	import { fly } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
-	import { useId } from 'bits-ui';
-	import { page } from '$app/state';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { PageData } from './$types';
 
 	import type { Graph, Prisma } from '@prisma/client';
 
@@ -18,12 +19,11 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-
 	// Icons
+	import { Copy } from '@lucide/svelte';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
-	import { Copy } from '@lucide/svelte';
 
 	let {
 		graph,
@@ -48,7 +48,7 @@
 
 	const data = page.data;
 	const triggerId = useId();
-	const form = superForm(data.duplicateGraphForm, {
+	const form = superForm((data as PageData).duplicateGraphForm, {
 		id: 'duplicate-graph-' + graph.id,
 		validators: zodClient(duplicateGraphSchema),
 		onResult: ({ result }) => {
@@ -113,6 +113,12 @@
 
 <form action="?/duplicate-graph" method="POST" use:enhance>
 	<input type="text" name="graphId" value={graph.id} hidden />
+	<input
+		type="text"
+		name="destinationType"
+		value={fromStore(formData).current.destinationType}
+		hidden
+	/>
 
 	<Form.Field {form} name="newName">
 		<Form.Control>
@@ -172,7 +178,7 @@
 			<Form.Control id={triggerId}>
 				{#snippet children({ props })}
 					<div class="mt-2 flex w-full items-center justify-between">
-						<Form.Label>Move to course</Form.Label>
+						<Form.Label>Move to course / Sandbox</Form.Label>
 						<Popover.Trigger
 							class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
 							role="combobox"
@@ -197,9 +203,9 @@
 					<Command.Input autofocus placeholder="Search course..." class="h-9" />
 					<Command.Empty>No course found.</Command.Empty>
 					<Command.Group>
-						{#each availableDestinations as destination (destination.id + destination.type)}
+						{#each availableDestinations as destination (destination.type + destination.id)}
 							<Command.Item
-								value={destination.type}
+								value={destination.type + destination.id.toString()}
 								onSelect={() => {
 									$formData.destinationId = destination.id;
 									$formData.destinationType = destination.type;

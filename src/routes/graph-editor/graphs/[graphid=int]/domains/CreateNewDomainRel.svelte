@@ -6,14 +6,13 @@
 	import { cn } from '$lib/utils';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Domain, Graph } from '@prisma/client';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import { useId } from 'bits-ui';
 	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
-	import { useId } from 'bits-ui';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
@@ -34,7 +33,7 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting } = form;
 
 	const isTheSameDomain = $derived(
 		$formData.sourceDomainId == $formData.targetDomainId && $formData.sourceDomainId != 0
@@ -60,39 +59,14 @@
 				<Form.FormError {form} />
 
 				<div class="flex justify-between gap-1">
-					{@render relVisualizer()}
 					<Form.FormButton
+						loading={$submitting}
 						disabled={isTheSameDomain || !$formData.sourceDomainId || !$formData.targetDomainId}
 					>
-						Submit
+						Create relationship
 					</Form.FormButton>
 				</div>
 			</form>
 		</Popover.Content>
 	</Popover.Root>
-
-	{#snippet relVisualizer()}
-		<div class="flex items-center gap-1">
-			<div
-				class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-					'border-red-500': isTheSameDomain
-				})}
-				class:opacity-50={$formData.sourceDomainId == 0}
-			>
-				{$formData.sourceDomainId || 'select in'}
-			</div>
-			<ArrowRight class="size-4" />
-			<div
-				class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-					'border-red-500': isTheSameDomain
-				})}
-				class:opacity-50={$formData.targetDomainId == 0}
-			>
-				{$formData.targetDomainId || 'select out'}
-			</div>
-			{#if isTheSameDomain}
-				<p class="ml-1 text-xs text-red-500">Domains can't be the same.</p>
-			{/if}
-		</div>
-	{/snippet}
 </div>
