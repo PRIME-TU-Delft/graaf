@@ -4,8 +4,9 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import { cn } from '$lib/utils';
 	import type { CoursePermissions } from '$lib/utils/permissions';
-	import { ArrowRight, Eye, EyeOff, Link as LinkIcon } from '@lucide/svelte';
+	import { ArrowRight } from '@lucide/svelte';
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
+	import GraphLinkSettings from './GraphLinkSettings.svelte';
 	import LinkEmbedGraph from './LinkEmbedGraph.svelte';
 
 	type GraphLinksProps = {
@@ -18,38 +19,26 @@
 
 <section class="prose mx-auto p-4">
 	<h2>Graph links</h2>
-	<p>
-		Graphs with some link is indecated with a <Eye
-			class="border-sm inline size-6 rounded bg-blue-100 p-1"
-		/> while graphs without links are indicated with an
-		<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" />. A new graph link can be
-		created in the <LinkIcon class="border-sm inline size-6 rounded bg-blue-100 p-1" /> settings panel.
-		A graph can have multiple links and links can be moved between graphs. A link name needs to be unique
-		within a course.
-	</p>
 
-	<Table.Root class="rounded-md border">
+	<Table.Root class="mt-0 rounded-md border">
 		<Table.Header>
 			<Table.Row>
 				<Table.Head>Name</Table.Head>
-				<Table.Head class="w-10 text-center">Links</Table.Head>
-				<Table.Head class="whitespace-nowrap">Embed/Link settings</Table.Head>
+				<Table.Head class="w-10 text-center">Embed/Links</Table.Head>
+				<Table.Head class="w-10 whitespace-nowrap">Settings</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
 			{#each graphs as graph (graph.id)}
 				<Table.Row class="p-0">
 					<Table.Cell class="flex items-center gap-1 py-3 font-medium">
-						{#if graph.links.length > 0}
-							<Eye class="border-sm inline size-6 rounded bg-blue-100 p-1" />
-						{:else}
-							<EyeOff class="border-sm inline size-6 rounded bg-blue-100 p-1" />
-						{/if}
 						{graph.name}
 					</Table.Cell>
-					<Table.Cell class="text-right">{graph.links.length || ''}</Table.Cell>
 					<Table.Cell class="p-1 text-right">
 						<LinkEmbedGraph {graph} {course} hasAtLeastCourseEditPermissions />
+					</Table.Cell>
+					<Table.Cell class="p-1 text-right">
+						<GraphLinkSettings {graph} {course} />
 					</Table.Cell>
 				</Table.Row>
 

@@ -11,8 +11,11 @@
 	import { Check, ChevronDown, Code, Copy } from '@lucide/svelte';
 	import type { Course, Graph, Lecture, Link } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
-	import { graphEmbedState } from './GraphEmbedState.svelte';
-	import GraphLinkSettings from './GraphLinkSettings.svelte';
+	import { fade } from 'svelte/transition';
+	import AddAliasLink from './AddAliasLink.svelte';
+	import DeleteAliasLink from './DeleteAliasLink.svelte';
+	import { EmbedState } from './GraphEmbedState.svelte';
+	import MoveAliasLink from './MoveAliasLink.svelte';
 
 	type GraphLinksProps = {
 		graph: Graph & { lectures: Lecture[]; links: Link[] };
@@ -25,14 +28,10 @@
 		hasAtLeastCourseEditPermissions: boolean;
 	};
 
-	const {
-		graph,
-		course,
-		longName = false,
-		hasAtLeastCourseEditPermissions
-	}: GraphLinksProps = $props();
+	const { graph, course, hasAtLeastCourseEditPermissions }: GraphLinksProps = $props();
 
-	let popoverOpen = $state(false);
+	let links = $derived(graph.links.map((link) => link));
+
 	let graphLinkSettingsOpen = $state(false);
 
 	function handleOpenGraphSettings(e: MouseEvent) {
@@ -40,11 +39,7 @@
 		graphLinkSettingsOpen = true;
 	}
 
-	const embedUrl = $derived.by(() => {
-		if (graphEmbedState.alias == undefined) {
-			return { error: 'Select a graph link' };
-		}
-
+	function getEmbedUrl(graphEmbedState: EmbedState) {
 		const url = new URL(`${page.url.host}/graph/${course.code}/${graphEmbedState.alias}`);
 
 		url.searchParams.set('show', graphEmbedState.show);
@@ -55,10 +50,10 @@
 			url.searchParams.delete('lecture');
 		}
 
-		const pre = `<iframe width="100%"" height="${graphEmbedState.iframeHeight}" src="`;
+		const pre = `<iframe width="100%"" height="${graphEmbedState.iframeHeight}px" src="`;
 		const post = `" frameborder="0" allowfullscreen></iframe>`;
-		return { data: pre + url.toString() + post };
-	});
+		return { pre, url: url.toString(), post };
+	}
 
 	let selectViewOptions = $derived.by(() => {
 		let options = ['Domains', 'Subjects'];
@@ -71,116 +66,122 @@
 	});
 </script>
 
-<div class="flex flex-col gap-1 sm:flex-row">
-	<Popover.Root bind:open={popoverOpen}>
-		<Popover.Trigger
-			onclick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				popoverOpen = !popoverOpen;
-			}}
-			class={cn(buttonVariants({ variant: 'default' }), 'grow')}
-		>
-			<Code />
-			{longName ? 'Embed graph' : ''}
-		</Popover.Trigger>
-		<Popover.Content class="grid w-[30rem] grid-cols-1 gap-2">
-			{#if graph.links.length == 0}
-				<p class="col-span-2">
-					Cannot embed graph because no links are created for this graph. Add one in the settings
-					panel of this graph.
-				</p>
-			{:else}
-				<div class="space-y-1">
-					<!-- Select alias -->
-					{@render select(
-						'Link',
-						graphEmbedState.alias ?? 'Select a link name',
-						graph.links.map((link) => link.name),
-						graphEmbedState.selectAlias
-					)}
-
-					<!-- Select view mode -->
-					{@render select(
-						'View',
-						graphEmbedState.show,
-						selectViewOptions,
-						graphEmbedState.selectShow
-					)}
-
-					<!-- Show lecture -->
-					{#if graph.lectures.length > 0}
-						{@render select(
-							'Lecture Highlight',
-							graphEmbedState.showLecture ?? '(optional)',
-							graph.lectures.map((lecture) => lecture.name),
-							graphEmbedState.selectShowLecture
-						)}
-					{/if}
-
-					<Label class="flex items-center justify-between gap-2 text-nowrap">
-						Height of the iframe
-						<Input
-							type="number"
-							class="w-32 text-right"
-							bind:value={graphEmbedState.iframeHeight}
-						/>
-					</Label>
-				</div>
-
-				<div class="relative h-auto">
-					<textarea readonly class="h-20 w-full resize-none rounded font-mono text-xs"
-						>{embedUrl.error ?? embedUrl.data}</textarea
-					>
-					{#if embedUrl.data}
-						<Button
-							variant="outline"
-							class="absolute right-1 bottom-3 size-8"
-							onclick={() => {
-								navigator.clipboard.writeText(embedUrl.data);
-								toast.success('Link copied to clipboard!');
-							}}
-						>
-							<Copy class="size-4" />
-						</Button>
-					{/if}
-				</div>
-			{/if}
-		</Popover.Content>
-	</Popover.Root>
-
+<DialogButton
+	bind:open={graphLinkSettingsOpen}
+	onclick={(e) => handleOpenGraphSettings(e)}
+	icon="link"
+	description="A link can be used to make a graph visible to students. Each link needs a unique name within a
+			course. When a link is created, it will be visible to all students."
+	button="Link"
+	title="Graph link settings"
+	class="grow"
+>
 	{#if hasAtLeastCourseEditPermissions}
-		<DialogButton
-			bind:open={graphLinkSettingsOpen}
-			onclick={(e) => handleOpenGraphSettings(e)}
-			icon="link"
-			button="Link"
-			title="Graph link settings"
-			class="grow"
-		>
-			<GraphLinkSettings
+		<p class="text-sm"></p>
+		<div class="my-2 grid grid-cols-1 gap-x-4 gap-y-2">
+			{#each links as link (link.id || link.name)}
+				<div in:fade class="flex w-full items-center justify-between gap-1">
+					<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{link.name}</p>
+
+					{#if course.graphs.length > 1}
+						<MoveAliasLink {course} {graph} graphs={course.graphs} {link} />
+					{/if}
+
+					{@render embed(link)}
+
+					<DeleteAliasLink {course} {graph} {link} />
+				</div>
+			{/each}
+		</div>
+
+		{#key links}
+			<AddAliasLink
 				{course}
 				{graph}
-				graphs={course.graphs}
-				onSuccess={() => (graphLinkSettingsOpen = false)}
+				onSuccess={(link) => {
+					links.push(link);
+				}}
 			/>
-		</DialogButton>
+		{/key}
 	{/if}
-</div>
+</DialogButton>
 
-{#snippet select(name: string, value: string, values: string[], select: (value: string) => void)}
+{#snippet embed(link: Link)}
+	{@const graphEmbedState = new EmbedState(link.name)}
+	{@const embedUrl = getEmbedUrl(graphEmbedState)}
+	{@const embedUrlString = `${embedUrl.pre}${embedUrl.url}${embedUrl.post}`}
+
+	<Popover.Root bind:open={graphEmbedState.isOpen}>
+		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }))}><Code /></Popover.Trigger>
+		<Popover.Content class="w-96 space-y-2 p-4" align="start" sideOffset={8}>
+			<!-- Select view mode -->
+			{@render selectView(graphEmbedState)}
+
+			<!-- Show lecture -->
+			{#if graph.lectures.length > 0}
+				{@render selectLecture(graphEmbedState)}
+			{/if}
+
+			<Label class="flex items-center justify-between gap-2 text-nowrap">
+				Height of the iframe
+				<Input type="number" class="w-32 text-right" bind:value={graphEmbedState.iframeHeight} />
+			</Label>
+
+			<div class="relative h-auto">
+				<div class="h-20 w-full resize-none rounded border p-2 font-mono text-xs">
+					{embedUrl.pre}<span class="font-bold">{embedUrl.url}</span>{embedUrl.post}
+				</div>
+				<Button
+					variant="outline"
+					class="absolute right-1 bottom-1 size-8"
+					onclick={() => {
+						navigator.clipboard.writeText(embedUrlString);
+						graphEmbedState.isOpen = false;
+						toast.success('Link copied to clipboard!');
+					}}
+				>
+					<Copy class="size-4" />
+				</Button>
+			</div>
+		</Popover.Content>
+	</Popover.Root>
+{/snippet}
+
+{#snippet selectView(state: EmbedState)}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			class={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-between')}
 		>
-			<p>{name}: <span class="font-mono text-xs">{value}</span></p>
+			<p>View: <span class="font-mono text-xs">{state.show}</span></p>
 			<ChevronDown />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="w-80">
-			{#each values as v (v)}
-				<DropdownMenu.Item onSelect={() => select(v)} class="justify-between">
+			{#each selectViewOptions as v (v)}
+				<DropdownMenu.Item onSelect={() => EmbedState.selectShow(state, v)} class="justify-between">
 					{v}
-					<Check class={cn('size-4', v != value && 'text-transparent')} />
+					<Check class={cn('size-4', v != state.show && 'text-transparent')} />
+				</DropdownMenu.Item>
+			{/each}
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/snippet}
+
+{#snippet selectLecture(state: EmbedState)}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger
+			class={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-between')}
+		>
+			<p>Lecture: <span class="font-mono text-xs">{state.showLecture ?? '(Optional)'}</span></p>
+			<ChevronDown />
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content class="w-80">
+			{#each graph.lectures.map((l) => l.name) as v (v)}
+				<DropdownMenu.Item
+					onSelect={() => EmbedState.selectShowLecture(state, v)}
+					class="justify-between"
+				>
+					{v}
+					<Check class={cn('size-4', v != state.showLecture && 'text-transparent')} />
 				</DropdownMenu.Item>
 			{/each}
 		</DropdownMenu.Content>

@@ -14,6 +14,7 @@
 
 	// Types
 	import type { PageData } from './$types';
+	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
 
 	let { data }: { data: PageData } = $props();
 </script>
@@ -70,6 +71,10 @@
 					</Button>
 
 					<LinkEmbedGraph {graph} course={data.course} longName {hasAtLeastCourseEditPermissions} />
+
+					{#if hasAtLeastCourseEditPermissions}
+						<GraphLinkSettings {graph} course={data.course} />
+					{/if}
 
 					{#if hasAtLeastCourseEditPermissions}
 						<EditGraph
