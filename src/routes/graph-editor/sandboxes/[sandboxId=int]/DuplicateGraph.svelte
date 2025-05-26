@@ -9,7 +9,6 @@
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
 
 	// Components
 	import { Button, buttonVariants } from '$lib/components/ui/button';
@@ -23,14 +22,26 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	import type { Graph } from '@prisma/client';
+	import type { PageData } from './$types';	
+	import type { Prisma, Graph } from '@prisma/client';
 
 	type DuplicateGraphProps = {
 		graph: Graph;
+		availableCourses: Prisma.CourseGetPayload<{
+			include: {
+				graphs: { select: { name: true } };
+			};
+		}>[];
+		availableSandboxes: Prisma.SandboxGetPayload<{
+			include: {
+				owner: true;
+				graphs: { select: { name: true } };
+			};
+		}>[];
 		isDuplicateOpen?: boolean;
 	};
 
-	let { graph, isDuplicateOpen = $bindable() }: DuplicateGraphProps = $props();
+	let { graph, availableCourses, availableSandboxes, isDuplicateOpen = $bindable() }: DuplicateGraphProps = $props();
 
 	const triggerId = useId();
 	const data = page.data as PageData;
@@ -50,7 +61,7 @@
 	let isDestinationCourseOpen = $state(false);
 
 	let destinationSandboxes = $derived(
-		data.availableSandboxes.map((s) => ({
+		availableSandboxes.map((s) => ({
 			id: s.id,
 			type: 'SANDBOX',
 			name: `${s.name} - ${displayName(s.owner)}`
@@ -58,7 +69,7 @@
 	);
 
 	let destinationCourses = $derived(
-		data.availableCourses.map((c) => ({
+		availableCourses.map((c) => ({
 			id: c.id,
 			type: 'COURSE',
 			name: `${c.code} ${c.name}`
@@ -72,9 +83,9 @@
 
 		let graphsInDestination;
 		if (destinationType === 'COURSE') {
-			graphsInDestination = data.availableCourses.find((c) => c.id === destinationId)?.graphs;
+			graphsInDestination = availableCourses.find((c) => c.id === destinationId)?.graphs;
 		} else {
-			graphsInDestination = data.availableSandboxes.find((s) => s.id === destinationId)?.graphs;
+			graphsInDestination = availableSandboxes.find((s) => s.id === destinationId)?.graphs;
 		}
 
 		if (!graphsInDestination) return false;
@@ -185,7 +196,7 @@
 					<Command.Group heading="Sandboxes">
 						{#each destinationSandboxes as destination (destination.id)}
 							<Command.Item
-								value={'SANDBOX' + destination.id.toString()}
+								value={sandbox.name}
 								onSelect={() => {
 									$formData.destinationId = destination.id;
 									$formData.destinationType = 'SANDBOX';
@@ -208,7 +219,7 @@
 					<Command.Group heading="Courses">
 						{#each destinationCourses as course (course.id)}
 							<Command.Item
-								value={'COURSE' + String(course.id)}
+								value={course.name}
 								onSelect={() => {
 									$formData.destinationId = course.id;
 									$formData.destinationType = 'COURSE';
