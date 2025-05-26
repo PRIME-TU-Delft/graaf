@@ -2,7 +2,7 @@
 
 ## Preview
 
-https://graaf.netlify.app
+https://graaf--preview.netlify.app
 
 ## Installation
 

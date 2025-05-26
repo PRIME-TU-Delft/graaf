@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
+	import { page } from '$app/state';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { toast } from 'svelte-sonner';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { fromStore } from 'svelte/store';
 	import { displayName } from '$lib/utils/displayUserName';
+	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
+	import { useId } from 'bits-ui';
+	import { toast } from 'svelte-sonner';
+	import { fromStore } from 'svelte/store';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
-	import { useId } from 'bits-ui';
-	import { page } from '$app/state';
+	import { zodClient } from 'sveltekit-superforms/adapters';
+	import type { PageData } from './$types';
 
 	// Components
 	import { Button, buttonVariants } from '$lib/components/ui/button';
@@ -16,14 +17,12 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-
 	// Icons
+	import { Copy } from '@lucide/svelte';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
-	import { Copy } from '@lucide/svelte';
 
-	import type { PageData } from './$types';
 	import type { Graph } from '@prisma/client';
 
 	type DuplicateGraphProps = {
@@ -96,6 +95,12 @@
 
 <form action="?/duplicate-graph" method="POST" use:enhance>
 	<input type="text" name="graphId" value={graph.id} hidden />
+	<input
+		type="text"
+		name="destinationType"
+		value={fromStore(formData).current.destinationType}
+		hidden
+	/>
 
 	<Form.Field {form} name="newName">
 		<Form.Control>
@@ -153,7 +158,7 @@
 			<Form.Control id={triggerId}>
 				{#snippet children({ props })}
 					<div class="mt-2 flex w-full items-center justify-between">
-						<Form.Label>Destination</Form.Label>
+						<Form.Label>Move to course / Sandbox</Form.Label>
 						<Popover.Trigger
 							class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
 							role="combobox"
@@ -178,21 +183,21 @@
 					<Command.Input autofocus placeholder="Search destinations..." class="my-1 h-9" />
 					<Command.Empty>No course found.</Command.Empty>
 					<Command.Group heading="Sandboxes">
-						{#each destinationSandboxes as sandbox (sandbox.id)}
+						{#each destinationSandboxes as destination (destination.id)}
 							<Command.Item
-								value={String(sandbox.id)}
+								value={'SANDBOX' + destination.id.toString()}
 								onSelect={() => {
-									$formData.destinationId = sandbox.id;
+									$formData.destinationId = destination.id;
 									$formData.destinationType = 'SANDBOX';
 									closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
 								}}
 							>
-								{sandbox.name}
+								{destination.name}
 								<Check
 									class={cn(
 										'ml-auto',
 										($formData.destinationType !== 'SANDBOX' ||
-											$formData.destinationId !== sandbox.id) &&
+											$formData.destinationId !== destination.id) &&
 											'text-transparent'
 									)}
 								/>
@@ -203,7 +208,7 @@
 					<Command.Group heading="Courses">
 						{#each destinationCourses as course (course.id)}
 							<Command.Item
-								value={String(course.id)}
+								value={'COURSE' + String(course.id)}
 								onSelect={() => {
 									$formData.destinationId = course.id;
 									$formData.destinationType = 'COURSE';

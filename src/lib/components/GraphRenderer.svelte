@@ -28,6 +28,6 @@
 	<svg class="block h-full w-full" bind:this={d3Canvas} />
 
 	{#if graphD3Store.graphD3}
-		<GraphDecorators graphD3={graphD3Store.graphD3} {onResetSimulation} />
+		<GraphDecorators graphD3={graphD3Store.graphD3} {editable} {onResetSimulation} />
 	{/if}
 </div>

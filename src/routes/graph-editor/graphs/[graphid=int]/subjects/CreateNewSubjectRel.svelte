@@ -35,7 +35,7 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
 
 	const isTheSameSubject = $derived(
 		$formData.sourceSubjectId == $formData.targetSubjectId && $formData.sourceSubjectId != 0
@@ -64,9 +64,13 @@
 						{@render relVisualizer()}
 					{/if}
 					<Form.FormButton
-						disabled={isTheSameSubject || !$formData.sourceSubjectId || !$formData.targetSubjectId}
+						loading={$delayed}
+						disabled={$submitting ||
+							isTheSameSubject ||
+							!$formData.sourceSubjectId ||
+							!$formData.targetSubjectId}
 					>
-						Submit
+						Create relationship
 					</Form.FormButton>
 				</div>
 			</form>

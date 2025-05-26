@@ -31,7 +31,7 @@
 
 	const { course, graph, graphs, onSuccess = () => {} }: GraphLinksProps = $props();
 
-	let links = $state(graph.links.map((link) => link));
+	let links = $derived(graph.links.map((link) => link));
 
 	const id = $props.id();
 
@@ -85,7 +85,7 @@
 			<Code class="border-sm inline size-6 rounded bg-blue-100 p-1" /> icon when closing this modal.
 		</p>
 		<div class="my-2 grid grid-cols-1 gap-x-4 gap-y-2">
-			{#each links as link (link.id)}
+			{#each links as link (link.id || link.name)}
 				<div in:fade class="flex w-full items-center justify-between gap-1">
 					<p class="w-full rounded border border-blue-100 bg-blue-50/50 p-2">{link.name}</p>
 
@@ -98,13 +98,15 @@
 			{/each}
 		</div>
 
-		<AddAliasLink
-			{course}
-			{graph}
-			onSuccess={(link) => {
-				links.push(link);
-			}}
-		/>
+		{#key links}
+			<AddAliasLink
+				{course}
+				{graph}
+				onSuccess={(link) => {
+					links.push(link);
+				}}
+			/>
+		{/key}
 	</div>
 
 	<Form.Field {form} name="name">

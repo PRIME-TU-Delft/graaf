@@ -5,10 +5,10 @@ import { redirect } from '@sveltejs/kit';
 // If the connection is successful, it will return the first program in the database
 // Otherwise, it will throw an error
 
-export const load = async ({ locals, url }) => {
+export const load = async ({ locals }) => {
 	const session = await locals.auth();
 
-	if (!session?.user && !url.pathname.startsWith('/auth')) redirect(303, '/auth');
+	if (!session?.user) redirect(303, '/auth');
 
 	return {
 		session,
