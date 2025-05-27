@@ -24,16 +24,17 @@ export class EdgeToolbox {
 			.attr('d', 'M 0 0 L 10 5 L 0 10 Z');
 	}
 
-	static create(selection: EdgeSelection) {
-		const styleOf = (edge: EdgeData) =>
-			edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
+	private static styleOf(edge: EdgeData) {
+		return edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
+	}
 
+	static create(selection: EdgeSelection) {
 		selection
 			.attr('id', (edge) => edge.uuid)
 			.attr('class', 'edge')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', (edge) => styleOf(edge).stroke)
-			.attr('fill', (edge) => styleOf(edge).stroke)
+			.attr('stroke', (edge) => EdgeToolbox.styleOf(edge).stroke)
+			.attr('fill', (edge) => EdgeToolbox.styleOf(edge).stroke)
 			.attr('marker-end', 'url(#arrowhead)')
 			.call(EdgeToolbox.updatePosition);
 	}
@@ -104,5 +105,11 @@ export class EdgeToolbox {
 				.attr('x2', x2 * settings.GRID_UNIT)
 				.attr('y2', y2 * settings.GRID_UNIT);
 		});
+	}
+
+	static updateStyle(selection: EdgeSelection) {
+		selection
+			.attr('stroke', (edge) => EdgeToolbox.styleOf(edge).stroke)
+			.attr('fill', (edge) => EdgeToolbox.styleOf(edge).stroke)
 	}
 }

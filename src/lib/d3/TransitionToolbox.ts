@@ -53,7 +53,11 @@ export class TransitionToolbox {
 				},
 
 				function (update) {
-					return update.call(NodeToolbox.updateHighlight, graph);
+					return update
+						.call(NodeToolbox.updatePosition, graph, callback !== undefined)
+						.call(NodeToolbox.updateHighlight, graph)
+						.call(NodeToolbox.updateStyle)
+						.call(NodeToolbox.updateText);
 				},
 
 				function (exit) {
@@ -72,7 +76,7 @@ export class TransitionToolbox {
 
 		// Update relations
 		graph.content
-			.selectAll<SVGGElement, EdgeData>('.edge')
+			.selectAll<SVGLineElement, EdgeData>('.edge')
 			.data(edges, (edge) => edge.uuid)
 			.join(
 				function (enter) {
@@ -80,7 +84,9 @@ export class TransitionToolbox {
 				},
 
 				function (update) {
-					return update;
+					return update
+						.call(EdgeToolbox.updatePosition, callback !== undefined)
+						.call(EdgeToolbox.updateStyle);
 				},
 
 				function (exit) {
@@ -334,7 +340,7 @@ export class TransitionToolbox {
 
 		// Transition to new camera pov
 		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.moveCamera(graph, transform);
+		CameraToolbox.moveCamera(graph, transform, () => {});
 
 		// Move content to domain positions, then fade in new content
 		this.moveContent(graph, graph.data.subject_nodes, this.domainTransform, () => {

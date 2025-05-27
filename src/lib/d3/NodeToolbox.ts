@@ -72,6 +72,13 @@ class NodeToolbox {
 				.on('start', function () {
 					const selection = d3.select<SVGGElement, NodeData>(this);
 					selection.call(NodeToolbox.setFixed, graph, true);
+
+					// Stop simulation if there are no unfixed nodes
+					const unfixed = graph.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
+					if (unfixed.empty()) {
+						console.log('Stopping simulation due to fixed nodes');
+						graph.stopSimulation();
+					}
 				})
 
 				.on('drag', function (event, node) {
@@ -83,6 +90,7 @@ class NodeToolbox {
 
 					NodeToolbox.updatePosition(selection, graph);
 
+					// Excite simulation if it is running
 					if (graphState.isSimulating()) {
 						graph.simulation.alpha(1).restart();
 					}
@@ -107,6 +115,8 @@ class NodeToolbox {
 		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
 		// We will go with option 2 for now, as save isnt called often (only on drag-end and simulation-end)
 		// and this offloads some work from the server
+
+		console.log(`Saving ${selection.size()} nodes`)
 
 		// Group nodes by type
 		const domains = selection.filter((node) => node.type === NodeType.DOMAIN).data();
@@ -196,9 +206,8 @@ class NodeToolbox {
 	}
 
 	static setFixed(selection: NodeSelection, graph: GraphD3, fixed: boolean) {
-		if (selection.classed('fixed') === fixed) return;
-
 		selection
+			.filter(fixed ? ':not(.fixed)' : '.fixed')
 			.classed('fixed', fixed)
 			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
 			.each((node) => {

@@ -7,17 +7,19 @@
 	import { cn } from '$lib/utils';
 	import { Check, ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
+	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
+	
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	import Preview from './Preview.svelte';
-
+	
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	let tabs = ['Domains', 'Subjects', 'Lectures'];
 
 	let hidePreview = $state(page.url.searchParams.get('hidePreview') === 'true');
-
+	const lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	const currentTab = $derived(page.url.pathname.split('/').pop());
+	const searchParams = $derived('?hidePreview=' + String(hidePreview) + (lectureID ? '&lectureID=' + lectureID : ''));
 
 	afterNavigate(() => {
 		const pathname = currentTab?.toUpperCase();
@@ -54,7 +56,7 @@
 										<Check />
 									</DropdownMenu.Item>
 								{:else}
-									<a href="./{tab.toLowerCase()}">
+									<a href="./{tab.toLowerCase()}{searchParams}">
 										<DropdownMenu.Item>
 											{tab}
 										</DropdownMenu.Item>
@@ -65,7 +67,7 @@
 							<DropdownMenu.Item
 								onclick={() => {
 									hidePreview = !hidePreview;
-									goto(page.url.pathname + `?hidePreview=${String(hidePreview)}`);
+									goto(page.url.pathname + searchParams);
 								}}>{hidePreview ? 'Show' : 'Hide'} Preview</DropdownMenu.Item
 							>
 							<DropdownMenu.Item disabled>View preview in other tab</DropdownMenu.Item>
@@ -89,7 +91,9 @@
 			</PaneResizer>
 
 			<Pane defaultSize={50}>
-				<Preview graph={data.graph} />
+				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
+					<GraphRenderer data={data.graph} editable={true} {lectureID} />
+				</div>
 			</Pane>
 		{/if}
 	</PaneGroup>

@@ -31,13 +31,5 @@
 		<ChevronDownIcon
 			class="text-primary pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200"
 		/>
-
-		<p class="text-primary">
-			{#if open}
-				Hide
-			{:else}
-				Show
-			{/if}
-		</p>
 	</AccordionPrimitive.Trigger>
 </AccordionPrimitive.Header>
