@@ -238,7 +238,6 @@
 			>
 				<Undo2 /> Reset
 			</Button>
-			<Form.Button>Change</Form.Button>
 			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Changing...">
 				Change
 			</Form.FormButton>
