@@ -4,11 +4,7 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import DuplicateGraph from './DuplicateGraph.svelte';
 
-	let {
-		graph,
-		availableCourses,
-		availableSandboxes
-	}: {
+	type DuplicateGraphProps = {
 		graph: Prisma.GraphGetPayload<{
 			include: {
 				lectures: true;
@@ -26,7 +22,9 @@
 				graphs: { select: { name: true } };
 			};
 		}>[];
-	} = $props();
+	};
+
+	let { graph, availableCourses, availableSandboxes }: DuplicateGraphProps = $props();
 
 	let isDuplicateOpen = $state(false);
 
@@ -41,7 +39,7 @@
 		onclick={(e) => handleOpenDuplicate(e)}
 		button="Duplicate"
 		icon="copy"
-		title="Duplicate/Move Graph"
+		title="Duplicate Graph"
 		description="Copy this graph within this or another course. This will create a new graph with the same content in the selected course."
 		bind:open={isDuplicateOpen}
 		class="grow"

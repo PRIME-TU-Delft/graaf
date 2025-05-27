@@ -3,7 +3,7 @@ import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import { newCourseSchema } from '$lib/zod/courseSchema.js';
+import { changePinSchema, newCourseSchema } from '$lib/zod/courseSchema.js';
 import { newProgramSchema } from '$lib/zod/programSchema.js';
 import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
 import type { Course } from '@prisma/client';
@@ -69,7 +69,8 @@ export const load = (async ({ url, locals }) => {
 			user,
 			newProgramForm: await superValidate(zod(newProgramSchema)),
 			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(zod(changePinSchema))
 		};
 	} catch (e: unknown) {
 		return {
@@ -80,7 +81,8 @@ export const load = (async ({ url, locals }) => {
 			courses: emptyPrismaPromise([] as Course[]),
 			newProgramForm: await superValidate(zod(newProgramSchema)),
 			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema))
+			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(zod(changePinSchema))
 		};
 	}
 }) satisfies PageServerLoad;

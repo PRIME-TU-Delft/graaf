@@ -88,7 +88,7 @@
 </p>
 
 <div class="rounded-md border">
-	<Table.Root class="m-0">
+	<Table.Root class="!m-0">
 		<Table.Header>
 			{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
 				<Table.Row>

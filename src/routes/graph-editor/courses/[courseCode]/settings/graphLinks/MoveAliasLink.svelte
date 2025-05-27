@@ -54,9 +54,10 @@
 	</Popover.Trigger>
 	<Popover.Content>
 		<form action="?/move-link" method="POST" use:enhance>
-			<input type="text" name="courseId" value={course.id} hidden />
-			<input type="text" name="linkId" value={link.id} hidden />
 			<input type="text" name="graphId" value={graphId} hidden />
+			<input type="text" name="parentId" value={course.id} hidden />
+			<input type="hidden" name="parentType" value="COURSE" />
+			<input type="text" name="linkId" value={link.id} hidden />
 
 			{#each graphs as newGraph (newGraph.id)}
 				<Button

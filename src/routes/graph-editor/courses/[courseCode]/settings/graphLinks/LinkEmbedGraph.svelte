@@ -45,9 +45,7 @@
 			return { error: 'Select a graph link' };
 		}
 
-		const url = new URL(
-			`${page.url.host}/graph/${course.code}/${graph.id}/${graphEmbedState.alias}`
-		);
+		const url = new URL(`${page.url.host}/graph/${course.code}/${graphEmbedState.alias}`);
 
 		url.searchParams.set('show', graphEmbedState.show);
 

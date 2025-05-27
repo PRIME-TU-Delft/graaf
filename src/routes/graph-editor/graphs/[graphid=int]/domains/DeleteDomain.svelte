@@ -29,7 +29,7 @@
 		}
 	});
 
-	const { form: formData, enhance } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
 
 	$effect(() => {
 		// When the domain changes, update the form data
@@ -89,7 +89,15 @@
 		</p>
 	{/if}
 
-	<Form.Button variant="destructive" class="mt-1 w-full">Yes, delete domain</Form.Button>
+	<Form.FormButton
+		class="mt-1 w-full"
+		variant="destructive"
+		disabled={$submitting}
+		loading={$delayed}
+		loadingMessage="Deleting..."
+	>
+		Yes, delete domain
+	</Form.FormButton>
 </form>
 
 {#snippet formArray(name: 'sourceDomains' | 'targetDomains' | 'connectedSubjects')}

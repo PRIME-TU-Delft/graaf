@@ -32,24 +32,19 @@
 	</a>
 	(PRogramme for Inovation in Math Education) and is a tool for teachers to create and share course graphs.
 
-	{#if data?.session?.user}
-		<p>Click on the button below to get started!</p>
-		<Button href="/graph-editor">Start editing</Button>
-	{:else}
-		<p>Sign-in to get started!</p>
+	<p>Sign-in to get started!</p>
 
-		{#if data.isInNetlify}
-			<div class="space-y-2 p-2">
-				{#each testUsers as user (user.id)}
-					<TestUser {user} />
-				{/each}
-			</div>
-		{/if}
-
-		<form action="?/auth" method="POST">
-			<Button type="submit">Sign-in</Button>
-		</form>
+	{#if data.isInNetlify}
+		<div class="space-y-2 p-2">
+			{#each testUsers as user (user.id)}
+				<TestUser {user} />
+			{/each}
+		</div>
 	{/if}
+
+	<form action="?/auth" method="POST">
+		<Button type="submit">Sign-in</Button>
+	</form>
 </section>
 
 <section class="prose mx-auto mt-2">

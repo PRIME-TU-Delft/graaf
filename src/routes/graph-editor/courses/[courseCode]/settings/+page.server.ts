@@ -60,7 +60,7 @@ export const load = (async ({ params, locals }) => {
 			changeArchiveForm: await superValidate(zod(changeArchiveSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
-			createLinkForm: await superValidate(zod(newLinkSchema)),
+			newLinkForm: await superValidate(zod(newLinkSchema)),
 			editLinkForm: await superValidate(zod(editLinkSchema))
 		};
 	} catch (e) {

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
-	import { enhance } from '$app/forms';
 	import { fade } from 'svelte/transition';
 
 	// Components
@@ -9,10 +8,9 @@
 
 	// Icons
 	import { Archive } from '@lucide/svelte';
-	import Pin from 'lucide-svelte/icons/pin';
-	import Unpin from 'lucide-svelte/icons/pin-off';
 
 	import type { Course, User } from '@prisma/client';
+	import PinUnpin from './PinUnpin.svelte';
 
 	type CourseGridProps = {
 		user: User | undefined;
@@ -38,8 +36,6 @@
 </div>
 
 {#snippet displayCourse(course: CourseGridProps['courses'][number])}
-	{@const pinned = course.pinnedBy.some((u) => u.id == user?.id)}
-
 	<a
 		href="/graph-editor/courses/{course.code}"
 		class={cn([
@@ -71,22 +67,9 @@
 				</Button>
 			{/if}
 
-			<form action="?/change-course-pin" method="POST" use:enhance>
-				<input type="text" name="courseId" value={course.id} hidden />
-				<input type="text" name="pin" value={!pinned} hidden />
-				<Button
-					onclick={(e) => e.stopPropagation()}
-					type="submit"
-					variant="outline"
-					class="h-8 w-8 border-purple-600 bg-purple-200"
-				>
-					{#if !pinned}
-						<Pin class="text-purple-600" />
-					{:else}
-						<Unpin class="text-purple-600" />
-					{/if}
-				</Button>
-			</form>
+			{#if user}
+				<PinUnpin {course} {user} />
+			{/if}
 		</div>
 	</a>
 {/snippet}
