@@ -232,12 +232,12 @@ export class TransitionToolbox {
 
 	// -----------------------------> Transitions
 
-	static snapToDomains(graph: GraphD3) {
+	static snapToDomains(graph: GraphD3, animateCamera = false) {
 		graphState.toTransitioning();
 
 		// Set camera pov and background
 		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.moveCamera(graph, transform);
+		CameraToolbox.moveCamera(graph, transform, animateCamera ? () => {} : undefined);
 		BackgroundToolbox.grid(graph);
 
 		// Set content
@@ -249,12 +249,12 @@ export class TransitionToolbox {
 		graphView.toDomains();
 	}
 
-	static snapToSubjects(graph: GraphD3) {
+	static snapToSubjects(graph: GraphD3, animateCamera = false) {
 		graphState.toTransitioning();
 
 		// Set camera pov and background
 		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
-		CameraToolbox.moveCamera(graph, transform);
+		CameraToolbox.moveCamera(graph, transform, animateCamera ? () => {} : undefined);
 		BackgroundToolbox.grid(graph);
 
 		// Set content

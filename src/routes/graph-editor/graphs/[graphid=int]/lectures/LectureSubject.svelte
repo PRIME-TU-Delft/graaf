@@ -49,7 +49,6 @@
 			toast.error('Error while reordering lectures');
 		} else {
 			subjectBackup = lecture.subjects;
-			console.log(lecture.subjects.map((subject) => subject.name));
 		}
 	}
 </script>

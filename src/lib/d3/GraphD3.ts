@@ -122,6 +122,7 @@ export class GraphD3 {
 	}
 
 	// -----------------------------> Public methods
+	
 	clear() {
 		this.svg.selectAll('*').remove(); // Clear SVG
 		this.data = {
@@ -133,14 +134,15 @@ export class GraphD3 {
 		};
 	}
 
-	setData(data: GraphData) {
+	setData(data: GraphData, animateCamera: boolean) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
 
 		this.data = data;
+		this.repairReferences(); // Kids, this is why you don't rely on references in JSON
 
-		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this);
-		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this);
+		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this, animateCamera);
+		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this, animateCamera);
 		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 
 		// Save new data
@@ -244,7 +246,7 @@ export class GraphD3 {
 
 		// Restore data
 		if (this.data_backup) {
-			this.setData(this.data_backup);
+			this.setData(this.data_backup, true);
 			this.data_backup = null;
 		} else {
 			throw new Error('No backup data available to reset simulation');
@@ -264,8 +266,8 @@ export class GraphD3 {
 
 		// Cleanup
 		this.data_backup = null;
-		graphState.toIdle();
 		this.centerOnGraph();
+		graphState.toIdle();
 	}
 
 	hasFreeNodes() {
@@ -278,7 +280,6 @@ export class GraphD3 {
 		}
 
 		const nodes = this.content.selectAll<SVGGElement, NodeData>('.node').data();
-
 		const transform = CameraToolbox.centralTransform(this, nodes);
 		CameraToolbox.moveCamera(this, transform, () => {});
 	}
@@ -328,7 +329,7 @@ export class GraphD3 {
 
 				// Add edge to graph
 				graph.domain_edges.push({
-					uuid: 'domain-${source.id}-${target.id}', // Unique edge id from source and target ids
+					uuid: `domain-${source.id}-${target.id}`, // Unique edge id from source and target ids
 					source: source_node,
 					target: target_node
 				});
@@ -471,5 +472,32 @@ export class GraphD3 {
 		}
 
 		return graph;
+	}
+
+	private repairReferences() {
+
+		// Map domain nodes by id
+		const domain_map = new Map<number, NodeData>();
+		for (const node of this.data.domain_nodes) {
+			domain_map.set(node.id, node);
+		}
+
+		// Map subject nodes by id
+		const subject_map = new Map<number, NodeData>();
+		for (const node of this.data.subject_nodes) {
+			subject_map.set(node.id, node);
+		}
+
+		// Repair domain edges
+		for (const edge of this.data.domain_edges) {
+			edge.source = domain_map.get(edge.source.id) ?? edge.source;
+			edge.target = domain_map.get(edge.target.id) ?? edge.target;
+		}
+
+		// Repair subject edges
+		for (const edge of this.data.subject_edges) {
+			edge.source = subject_map.get(edge.source.id) ?? edge.source;
+			edge.target = subject_map.get(edge.target.id) ?? edge.target;
+		}
 	}
 }

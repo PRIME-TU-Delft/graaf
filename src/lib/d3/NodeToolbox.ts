@@ -76,7 +76,6 @@ class NodeToolbox {
 					// Stop simulation if there are no unfixed nodes
 					const unfixed = graph.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
 					if (unfixed.empty()) {
-						console.log('Stopping simulation due to fixed nodes');
 						graph.stopSimulation();
 					}
 				})
@@ -115,8 +114,6 @@ class NodeToolbox {
 		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
 		// We will go with option 2 for now, as save isnt called often (only on drag-end and simulation-end)
 		// and this offloads some work from the server
-
-		console.log(`Saving ${selection.size()} nodes`)
 
 		// Group nodes by type
 		const domains = selection.filter((node) => node.type === NodeType.DOMAIN).data();
@@ -167,7 +164,7 @@ class NodeToolbox {
 		selection.each(function (node) {
 			graph.content
 				.selectAll<SVGLineElement, EdgeData>('.edge')
-				.filter((edge) => edge.source === node || edge.target === node)
+				.filter((edge) => edge.source.uuid === node.uuid || edge.target.uuid === node.uuid)
 				.call(EdgeToolbox.updatePosition, transition);
 		});
 	}

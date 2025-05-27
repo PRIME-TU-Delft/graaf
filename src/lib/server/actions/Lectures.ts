@@ -100,8 +100,6 @@ export class LectureActions {
 	static async deleteLecture(user: User, form: SuperValidated<Infer<typeof deleteLectureSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid lecture');
 
-		console.log('Deleting lecture', form.data);
-
 		try {
 			await prisma.lecture.delete({
 				where: {

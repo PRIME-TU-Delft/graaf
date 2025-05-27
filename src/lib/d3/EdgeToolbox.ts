@@ -40,6 +40,13 @@ export class EdgeToolbox {
 	}
 
 	static updatePosition(selection: EdgeSelection, transition: boolean = false) {
+		/* We are calculating the line connecting two nodes.
+		 * It should start at the center of the start node and end at the BOUNDS of the end node.
+		 * Said differently, we need to find the intersection of a line with a rectangle centered at the target node.
+		 * To do this, we split the plane in four using the two diagonals of the rectangle. We find in which quadrant
+		 * the source node is, then find the intersection with the corresponding side of the rectangle.
+		 */
+
 		// Lower edges
 		selection.lower();
 
@@ -74,13 +81,6 @@ export class EdgeToolbox {
 
 				return;
 			}
-
-			/* We are calculating the line connecting two nodes.
-			 * It should start at the center of the start node and end at the BOUNDS of the end node.
-			 * Said differently, we need to find the intersection of a line with a rectangle centered at the target node.
-			 * To do this, we split the plane in four using the two diagonals of the rectangle. We find in which quadrant
-			 * the source node is, then find the intersection with the corresponding side of the rectangle.
-			 */
 
 			// Bounds of our four quadrants
 			const ratio = halfHeight / halfWidth;
