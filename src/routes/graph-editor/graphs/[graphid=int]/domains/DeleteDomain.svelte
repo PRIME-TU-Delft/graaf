@@ -72,7 +72,7 @@
 
 	{#if relationCount > 0 || connectedSubjects.length > 0}
 		{@const domainMessage = `delete ${relationCount} domain relationship${relationCount != 1 ? 's' : ''}`}
-		{@const subjectMessage = `remove domain from ${connectedSubjects.length} subject${connectedSubjects.length != 1 ? 's' : ''}`}
+		{@const subjectMessage = `unlink this domain from ${connectedSubjects.length} subject${connectedSubjects.length != 1 ? 's' : ''}`}
 		<p class="max-w-64 p-1">
 			<!-- Will add either or both messages concatinatted if the set is larger than 0 -->
 			This will also {[

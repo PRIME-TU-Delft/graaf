@@ -17,6 +17,7 @@
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import DialogButton from './DialogButton.svelte';
 
 	type Props = {
 		graphD3: GraphD3;
@@ -76,44 +77,46 @@
 {/if}
 
 <!-- Select Lecture -->
-<DropdownMenu.Root>
-	<DropdownMenu.Trigger
-		class={cn(
-			buttonVariants({ variant: 'link' }),
-			"absolute top-4 left-4 p-3"
-		)}
-	>
-		{chosenLecture?.name || 'Select a lecture'}
-		<ChevronDown />
-	</DropdownMenu.Trigger>
-	<DropdownMenu.Content>
-		<DropdownMenu.Group>
-			<DropdownMenu.Item
-					onclick={() => {
-						lectureID = null;
-						graphD3.setLecture(null);
-					}}
-				>
-					Unselect
-					<Check class={cn('ml-auto w-auto', lectureID && 'w-0 text-transparent')} />
-				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				{#each graphD3.data.lectures as lecture (lecture.id)}
-					<DropdownMenu.Item
+{#if !isFullscreen && graphD3.data.lectures.length > 0}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger
+			class={cn(
+				buttonVariants({ variant: 'link' }),
+				"absolute top-4 left-4 p-3"
+			)}
+		>
+			{chosenLecture?.name || 'Select a lecture'}
+			<ChevronDown />
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content>
+			<DropdownMenu.Group>
+				<DropdownMenu.Item
 						onclick={() => {
-							lectureID = lecture.id;
-							goto(`${page.url.pathname}?lectureID=${lecture.id}`);
-							graphD3.setLecture(lecture);
-							isLecturePopoverOpen = false;
+							lectureID = null;
+							graphD3.setLecture(null);
 						}}
 					>
-						{lecture.name}
-						<Check class={cn('ml-auto w-auto', lecture.id !== lectureID && 'w-0 text-transparent')} />
+						Unselect
+						<Check class={cn('ml-auto w-auto', lectureID && 'w-0 text-transparent')} />
 					</DropdownMenu.Item>
-				{/each}
-		</DropdownMenu.Group>
-	</DropdownMenu.Content>
-</DropdownMenu.Root>
+					<DropdownMenu.Separator />
+					{#each graphD3.data.lectures as lecture (lecture.id)}
+						<DropdownMenu.Item
+							onclick={() => {
+								lectureID = lecture.id;
+								goto(`${page.url.pathname}?lectureID=${lecture.id}`);
+								graphD3.setLecture(lecture);
+								isLecturePopoverOpen = false;
+							}}
+						>
+							{lecture.name}
+							<Check class={cn('ml-auto w-auto', lecture.id !== lectureID && 'w-0 text-transparent')} />
+						</DropdownMenu.Item>
+					{/each}
+			</DropdownMenu.Group>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
+{/if}
 
 <!-- Zoom button -->
 <div
@@ -149,41 +152,43 @@
 	{/if}
 </div>
 
-<!-- Simulation buttons -->
+<!-- AutoLayout buttons -->
 {#if editable && !graphView.isLectures() && !isFullscreen}
-	<DropdownMenu.Root>
-		<DropdownMenu.Trigger
-			class={cn(buttonVariants({ variant: 'outline' }), 'absolute bottom-1 left-1')}
-		>
-			Simulation
-			<ChevronUp />
-		</DropdownMenu.Trigger>
-		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
-			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
-				<DropdownMenu.GroupHeading>
-					Attention! This will move all nodes in the graph.
-				</DropdownMenu.GroupHeading>
-
-				{#if graphState.state != 'SIMULATING'}
-					<DropdownMenu.Item
-						disabled={graphState.state == 'TRANSITIONING'}
-						onclick={() => graphD3.startSimulation()}
-					>
-						<Orbit /> Start simulation
-					</DropdownMenu.Item>
-				{:else if graphState.state == 'SIMULATING'}
-					<DropdownMenu.Item
-						onclick={() => {
-							graphD3.resetSimulation();
-						}}
-					>
+	{#if graphState.isSimulating()}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger
+				class={cn(buttonVariants({ variant: 'default' }), 'absolute bottom-1 left-1')}
+			>
+				Autolayout Options
+				<ChevronUp />
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
+				<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
+					<DropdownMenu.GroupHeading>
+						Autolayout Options
+					</DropdownMenu.GroupHeading>
+					<DropdownMenu.Item onclick={() => graphD3.resetSimulation() }>
 						<Orbit /> Reset simulation
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onclick={() => graphD3.stopSimulation()}>
 						<Orbit /> Stop simulation
 					</DropdownMenu.Item>
-				{/if}
-			</DropdownMenu.Group>
-		</DropdownMenu.Content>
-	</DropdownMenu.Root>
+				</DropdownMenu.Group>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+	{:else}
+		<DialogButton
+			button="Start Autolayout"
+			title="Are you sure?"
+			description="Autolayout uses a force simulation. Nodes with a dashed border will push other nodes away, and pull their neighbors closer. Clicking or moving a node locks it in place."
+			variant="default"
+			class="absolute bottom-1 left-1"
+		>
+			<div class="flex justify-end">
+				<Button onclick={() => graphD3.startSimulation()}>
+					<Orbit /> Start Autolayout
+				</Button>
+			</div>
+		</DialogButton>
+	{/if}
 {/if}

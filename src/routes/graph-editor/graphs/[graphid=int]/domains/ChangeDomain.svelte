@@ -91,7 +91,7 @@
 				<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
 					Delete
 				</Menubar.SubTrigger>
-				<Menubar.SubContent class="ml-1 w-32">
+				<Menubar.SubContent>
 					<DeleteDomain {domain} {graph} />
 				</Menubar.SubContent>
 			</Menubar.Sub>
@@ -103,22 +103,22 @@
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(domain.sourceDomains, 'Source')}
-			{@render relations(domain.targetDomains, 'Target')}
+			{@render relations(domain.sourceDomains, 'Sources')}
+			{@render relations(domain.targetDomains, 'Targets')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>
 
-{#snippet relations(domains: Domain[], title: 'Source' | 'Target')}
+{#snippet relations(domains: Domain[], title: 'Sources' | 'Targets')}
 	{#if domains.length > 0}
 		<Menubar.Sub>
-			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>
+			<Menubar.SubTrigger>{title}</Menubar.SubTrigger>
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each domains as domain (domain.id)}
 					<div class="flex flex-col items-center gap-1">
 						<Button
 							class="w-full font-mono text-xs"
-							href="#{domain.id}-{domain.name}"
+							href="#domain-{domain.id}"
 							variant="ghost"
 						>
 							{domain.name}
@@ -129,7 +129,7 @@
 		</Menubar.Sub>
 	{:else}
 		<Menubar.Item class="justify-between">
-			<span>{title} relations: </span>
+			<span>{title}</span>
 			<span class="text-gray-400">None</span>
 		</Menubar.Item>
 	{/if}
@@ -147,10 +147,6 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>
-				A common name for the domain, i.e:
-				<span class="font-mono text-xs">"Complex numbers"</span>
-			</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
@@ -160,7 +156,6 @@
 					Domain style
 					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 				</Form.Legend>
-				<Form.Description>the style the domain is visualised with</Form.Description>
 				<Form.FieldErrors />
 			</div>
 
@@ -238,8 +233,12 @@
 			>
 				<Undo2 /> Reset
 			</Button>
-			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Changing...">
-				Change
+			<Form.FormButton 
+				disabled={$submitting} 
+				loading={$delayed} 
+				loadingMessage="Changing..."
+			>
+				Save
 			</Form.FormButton>
 		</div>
 	</form>

@@ -14,7 +14,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import SubjectRelField from './SubjectRelField.svelte';
-	import { dev } from '$app/environment';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 
 	type Props = {
 		graph: Graph & { subjects: Subject[] };
@@ -22,15 +22,14 @@
 
 	const { graph }: Props = $props();
 
-	let popupOpen = $state(false);
-
+	let dialogOpen = $state(false);
 	const form = superForm((page.data as PageData).newSubjectRelForm, {
 		id: 'subjectRelForm' + useId(),
 		validators: zodClient(subjectRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Subject created successfully!');
-				popupOpen = false;
+				dialogOpen = false;
 			}
 		}
 	});
@@ -43,62 +42,33 @@
 </script>
 
 <div class="sticky top-2 z-10 mt-12 flex justify-between">
-	<h2 class="m-0">Relationships</h2>
-	<Popover.Root bind:open={popupOpen}>
-		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }))}>
-			<Plus /> Create Relationship
-		</Popover.Trigger>
-		<Popover.Content>
-			<form action="?/add-subject-rel" method="POST" use:enhance>
-				<p class="text-lg font-bold">Create Relationship</p>
+	<h2 class="m-0 flex items-center">Relationships</h2>
+	<DialogButton
+		bind:open={dialogOpen}
+		icon="plus"
+		button="New Relationship"
+		title="Create Relationship"
+		description="Relationships connect subjects to each other."
+	>
+		<form action="?/add-subject-rel" method="POST" use:enhance>
+			<input type="hidden" name="graphId" value={graph.id} />
 
-				<input type="hidden" name="graphId" value={graph.id} />
+			<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} {form} {formData} />
+			<SubjectRelField id="targetSubjectId" subjects={graph.subjects} {form} {formData} />
 
-				<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} {form} {formData} />
-				<SubjectRelField id="targetSubjectId" subjects={graph.subjects} {form} {formData} />
+			<Form.FormError {form} />
 
-				<Form.FormError {form} />
-
-				<div class="flex justify-between gap-1">
-					{#if dev}
-						{@render relVisualizer()}
-					{/if}
-					<Form.FormButton
-						loading={$delayed}
-						disabled={$submitting ||
-							isTheSameSubject ||
-							!$formData.sourceSubjectId ||
-							!$formData.targetSubjectId}
-					>
-						Create relationship
-					</Form.FormButton>
-				</div>
-			</form>
-		</Popover.Content>
-	</Popover.Root>
+			<div class="w-full flex justify-end items-center">
+				<Form.FormButton
+					loading={$delayed}
+					disabled={$submitting ||
+						isTheSameSubject ||
+						!$formData.sourceSubjectId ||
+						!$formData.targetSubjectId}
+				>
+					Create relationship
+				</Form.FormButton>
+			</div>
+		</form>
+	</DialogButton>
 </div>
-
-{#snippet relVisualizer()}
-	<div class="flex items-center gap-1">
-		<div
-			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-				'border-red-500': isTheSameSubject
-			})}
-			class:opacity-50={$formData.sourceSubjectId == 0}
-		>
-			{$formData.sourceSubjectId || 'select in'}
-		</div>
-		<ArrowRight class="size-4" />
-		<div
-			class={cn('rounded-full border-2 border-slate-500 px-2 py-1 text-xs', {
-				'border-red-500': isTheSameSubject
-			})}
-			class:opacity-50={$formData.targetSubjectId == 0}
-		>
-			{$formData.targetSubjectId || 'select out'}
-		</div>
-		{#if isTheSameSubject}
-			<p class="ml-1 text-xs text-red-500">Subjects can't be the same.</p>
-		{/if}
-	</div>
-{/snippet}

@@ -64,7 +64,6 @@
 				{/snippet}
 			</Form.Control>
 			<Form.FieldErrors class="mb-2" />
-			<Form.Description>Lecture Name</Form.Description>
 		</Form.Field>
 
 		<div class="mt-4 flex w-full justify-end">
@@ -73,7 +72,7 @@
 				loading={$delayed}
 				loadingMessage="Changing lecture..."
 			>
-				Change lecture
+				Save
 			</Form.FormButton>
 		</div>
 	</form>

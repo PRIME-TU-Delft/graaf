@@ -70,7 +70,7 @@
 
 		<div
 			animate:flip={{ duration: flipDurationMs }}
-			class="rounded bg-purple-50/30 !outline-2 !outline-purple-500 !backdrop-blur-lg"
+			class="rounded bg-purple-50/30 !backdrop-blur-lg"
 		>
 			<div class="flex w-full items-center justify-between gap-2">
 				<div

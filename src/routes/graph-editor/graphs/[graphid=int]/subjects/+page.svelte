@@ -31,13 +31,13 @@
 	type Graph = PageData['graph'];
 
 	const subjectMapping = $derived.by(() => {
-		const map: { id: string; subject: Subject; outSubject: Subject }[] = [];
-		for (const subject of graph.subjects) {
-			for (const targetSubject of subject.targetSubjects) {
+		const map: { id: string; sourceSubject: Subject; targetSubject: Subject }[] = [];
+		for (const sourceSubject of graph.subjects) {
+			for (const targetSubject of sourceSubject.targetSubjects) {
 				map.push({
-					id: `subject-rel-${subject.id}-${targetSubject.id}`,
-					subject,
-					outSubject: targetSubject
+					id: `subject-rel-${sourceSubject.id}-${targetSubject.id}`,
+					sourceSubject,
+					targetSubject
 				});
 			}
 		}
@@ -116,43 +116,51 @@
 	<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 		<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
 			<div class="p-2"></div>
-			<div class="p-2">Subject from</div>
-			<div class="p-2">Subject to</div>
+			<div class="p-2">Source</div>
+			<div class="p-2">Target</div>
 			<div class="p-2 text-right">Delete</div>
 		</div>
 
 		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
-			{#snippet children({ subject, outSubject }, index)}
+			{#snippet children({ sourceSubject, targetSubject }, index)}
 				<Grid.Cell>
 					{index + 1}
 				</Grid.Cell>
 
 				<Grid.Cell>
-					{@render subjectRelation('subject', subject, outSubject)}
+					{@render subjectRelation('sourceSubject', sourceSubject, targetSubject)}
 				</Grid.Cell>
 				<Grid.Cell>
-					{@render subjectRelation('outSubject', subject, outSubject)}
+					{@render subjectRelation('targetSubject', sourceSubject, targetSubject)}
 				</Grid.Cell>
 				<Grid.Cell class="justify-end">
-					{@render deleteSubjectRel(subject, outSubject)}
+					{@render deleteSubjectRel(sourceSubject, targetSubject)}
 				</Grid.Cell>
 			{/snippet}
 		</Grid.Rows>
 	</Grid.Root>
 {/if}
 
-{#snippet subjectRelation(type: 'subject' | 'outSubject', subject: Subject, outSubject: Subject)}
-	{@const thisSubject = type == 'subject' ? subject : outSubject}
+{#snippet subjectRelation(type: 'sourceSubject' | 'targetSubject', sourceSubject: Subject, targetSubject: Subject)}
+	{@const thisSubject = type == 'sourceSubject' ? sourceSubject : targetSubject}
 
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
-			{thisSubject.name}
+		<DropdownMenu.Trigger class={cn(
+			'relative w-full',
+			buttonVariants({ variant: 'outline' })
+		)}>
+			<span class="w-full text-left">{thisSubject.name}</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
-			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
+			<DropdownMenu.Group class="sticky top-0 z-10">
 				<a href="#subject-{thisSubject.id}">
-					<DropdownMenu.Item>
+					<DropdownMenu.Item
+						class={cn(
+							"w-full justify-start",
+							buttonVariants({ variant: 'ghost' })
+						)}
+					>
 						<Sparkles />
 						Highlight {thisSubject.name}
 					</DropdownMenu.Item>
@@ -160,26 +168,36 @@
 				<DropdownMenu.Separator />
 			</DropdownMenu.Group>
 
-			<DropdownMenu.Group>
-				<DropdownMenu.GroupHeading>
-					Change {thisSubject.name} to:
-				</DropdownMenu.GroupHeading>
+			{@const otherSubjects = graph.subjects.filter(
+				subject => subject.id != sourceSubject.id && subject.id != targetSubject.id
+			)}
 
-				<ChangeSubjectRel {graph} inSubject={subject} {outSubject} {type} />
-			</DropdownMenu.Group>
+			{#if otherSubjects.length > 0}
+				<DropdownMenu.Group>
+					<DropdownMenu.GroupHeading>
+						Set {type == 'sourceSubject' ? 'source' : 'target'} subject
+					</DropdownMenu.GroupHeading>
+
+					{#each otherSubjects as subject (subject.id)}
+						<DropdownMenu.Item class="p-0">
+							<ChangeSubjectRel {graph} {subject} {sourceSubject} {targetSubject} {type} />
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Group>
+			{/if}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet deleteSubjectRel(subject: Subject, outSubject: Subject)}
+{#snippet deleteSubjectRel(sourceSubject: Subject, targetSubject: Subject)}
 	<Popover.Root>
 		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
 			<Trash />
 		</Popover.Trigger>
 		<Popover.Content side="right" class="space-y-1">
 			<form action="?/delete-subject-rel" method="POST" use:enhance>
-				<input type="hidden" name="sourceSubjectId" value={subject.id} />
-				<input type="hidden" name="targetSubjectId" value={outSubject.id} />
+				<input type="hidden" name="sourceSubjectId" value={sourceSubject.id} />
+				<input type="hidden" name="targetSubjectId" value={targetSubject.id} />
 
 				<p class="mb-2">Are you sure you would like to delete this relationship</p>
 				<Form.Button variant="destructive" type="submit">Yes, delete</Form.Button>

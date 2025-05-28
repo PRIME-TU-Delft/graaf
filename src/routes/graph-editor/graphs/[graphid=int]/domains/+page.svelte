@@ -171,8 +171,8 @@
 	<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 		<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
 			<div class="p-2"></div>
-			<div class="p-2">Subject from</div>
-			<div class="p-2">Subject to</div>
+			<div class="p-2">Source</div>
+			<div class="p-2">Target</div>
 			<div class="p-2 text-right">Delete</div>
 		</div>
 
@@ -183,10 +183,10 @@
 				</Grid.Cell>
 
 				<Grid.Cell>
-					{@render domainRelation('domain', domain, outDomain)}
+					{@render domainRelation('sourceDomain', domain, outDomain)}
 				</Grid.Cell>
 				<Grid.Cell>
-					{@render domainRelation('outDomain', domain, outDomain)}
+					{@render domainRelation('targetDomain', domain, outDomain)}
 				</Grid.Cell>
 				<Grid.Cell class="justify-end">
 					{@render deleteDomainRel(domain, outDomain)}
@@ -260,21 +260,29 @@
 {/snippet}
 
 {#snippet domainRelation(
-	type: 'domain' | 'outDomain' = 'domain',
-	domain: Domain,
-	outDomain: Domain
+	type: 'sourceDomain' | 'targetDomain' = 'sourceDomain',
+	sourceDomain: Domain,
+	targetDomain: Domain
 )}
-	{@const thisDomain = type == 'domain' ? domain : outDomain}
+	{@const thisDomain = type == 'sourceDomain' ? sourceDomain : targetDomain}
 
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class={cn(buttonVariants({ variant: 'outline' }))}>
-			{thisDomain.name}
+		<DropdownMenu.Trigger class={cn(
+			'relative w-full',
+			buttonVariants({ variant: 'outline' })
+		)}>
+			<span class="w-full text-left">{thisDomain.name}</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
-			<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
+			<DropdownMenu.Group class="sticky top-0 z-10">
 				<a href="#domain-{thisDomain.id}">
-					<DropdownMenu.Item>
+					<DropdownMenu.Item
+						class={cn(
+							"w-full justify-start",
+							buttonVariants({ variant: 'ghost' })
+						)}
+					>
 						<Sparkles />
 						Highlight {thisDomain.name}
 					</DropdownMenu.Item>
@@ -282,26 +290,36 @@
 				<DropdownMenu.Separator />
 			</DropdownMenu.Group>
 
-			<DropdownMenu.Group>
-				<DropdownMenu.GroupHeading>
-					Change {thisDomain.name} to:
-				</DropdownMenu.GroupHeading>
+			{@const otherDomains = graph.domains.filter(
+				domain => domain.id != sourceDomain.id && domain.id != targetDomain.id
+			)}
 
-				<ChangeDomainRel {graph} inDomain={domain} {outDomain} {type} />
-			</DropdownMenu.Group>
+			{#if otherDomains.length > 0}
+				<DropdownMenu.Group>
+					<DropdownMenu.GroupHeading>
+						Set {type == 'sourceDomain' ? 'source' : 'target'} domain
+					</DropdownMenu.GroupHeading>
+
+					{#each otherDomains as domain (domain.id)}
+						<DropdownMenu.Item class="p-0">
+							<ChangeDomainRel {graph} {domain} {sourceDomain} {targetDomain} {type} />
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Group>
+			{/if}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/snippet}
 
-{#snippet deleteDomainRel(domain: Domain, outDomain: Domain)}
+{#snippet deleteDomainRel(sourceDomain: Domain, targetDomain: Domain)}
 	<Popover.Root>
 		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
 			<Trash />
 		</Popover.Trigger>
 		<Popover.Content side="right" class="space-y-1">
 			<form action="?/delete-domain-rel" method="POST" use:enhance>
-				<input type="hidden" name="sourceDomainId" value={domain.id} />
-				<input type="hidden" name="targetDomainId" value={outDomain.id} />
+				<input type="hidden" name="sourceDomainId" value={sourceDomain.id} />
+				<input type="hidden" name="targetDomainId" value={targetDomain.id} />
 
 				<p class="mb-2">Are you sure you would like to delete this relationship</p>
 				<Form.FormButton variant="destructive" loadingMessage="Deleting...">
