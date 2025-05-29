@@ -34,7 +34,7 @@
 
 <div class="mx-auto max-w-[100rem]">
 	<PaneGroup direction="horizontal" autoSaveId="panels" class="w-full !overflow-visible">
-		<Pane defaultSize={40} class="h-[calc(100dvh-8rem)] rounded-lg">
+		<Pane defaultSize={50} class="h-[calc(100dvh-8rem)] rounded-lg">
 			<div class="h-full scroll-p-16 overflow-y-auto scroll-smooth rounded-lg bg-purple-100/50">
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger
@@ -90,7 +90,7 @@
 				</div>
 			</PaneResizer>
 
-			<Pane defaultSize={60}>
+			<Pane defaultSize={50}>
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
 					<GraphRenderer data={data.graph} editable={true} {lectureID} />
 				</div>

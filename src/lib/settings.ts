@@ -74,7 +74,7 @@ export const CENTER_FORCE = 0.05;
 export const CHARGE_FORCE = -15;
 
 // Animation settings
-export const GRAPH_ANIMATION_DURATION: Milliseconds = 1000;
+export const GRAPH_ANIMATION_DURATION: Milliseconds = 500;
 
 // Node style settings
 const top = STROKE_WIDTH / 2;
