@@ -44,7 +44,7 @@ export class BackgroundToolbox {
 
 	static lecture(graph: GraphD3) {
 		BackgroundToolbox.clear(graph);
-	
+
 		// Calculate table dimensions
 		const size = graph.lecture
 			? Math.max(
@@ -55,22 +55,20 @@ export class BackgroundToolbox {
 			: 0;
 
 		const column_left = settings.STROKE_WIDTH / 2;
-		const column_top  = settings.STROKE_WIDTH / 2 
-						  + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT;
+		const column_top =
+			settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT;
 
 		const column_width = (2 * settings.LECTURE_PADDING + settings.NODE_WIDTH) * settings.GRID_UNIT;
-		const column_height = (
-			size * settings.NODE_HEIGHT +
-			(size + 1) * settings.LECTURE_PADDING
-		) * settings.GRID_UNIT;
+		const column_height =
+			(size * settings.NODE_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT;
 
 		const outer_width = 3 * column_width + settings.STROKE_WIDTH;
-		const outer_height = (
-			settings.LECTURE_HEADER_HEIGHT +
-			size * settings.NODE_HEIGHT +
-			(size + 1) * settings.LECTURE_PADDING
-		) * settings.GRID_UNIT 
-		+ settings.STROKE_WIDTH;
+		const outer_height =
+			(settings.LECTURE_HEADER_HEIGHT +
+				size * settings.NODE_HEIGHT +
+				(size + 1) * settings.LECTURE_PADDING) *
+				settings.GRID_UNIT +
+			settings.STROKE_WIDTH;
 
 		// Past subject colunm
 		graph.background

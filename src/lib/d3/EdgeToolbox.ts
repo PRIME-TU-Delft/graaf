@@ -110,6 +110,6 @@ export class EdgeToolbox {
 	static updateStyle(selection: EdgeSelection) {
 		selection
 			.attr('stroke', (edge) => EdgeToolbox.styleOf(edge).stroke)
-			.attr('fill', (edge) => EdgeToolbox.styleOf(edge).stroke)
+			.attr('fill', (edge) => EdgeToolbox.styleOf(edge).stroke);
 	}
 }

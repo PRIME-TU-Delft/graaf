@@ -116,11 +116,7 @@
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each domains as domain (domain.id)}
 					<div class="flex flex-col items-center gap-1">
-						<Button
-							class="w-full font-mono text-xs"
-							href="#domain-{domain.id}"
-							variant="ghost"
-						>
+						<Button class="w-full font-mono text-xs" href="#domain-{domain.id}" variant="ghost">
 							{domain.name}
 						</Button>
 					</div>
@@ -233,11 +229,7 @@
 			>
 				<Undo2 /> Reset
 			</Button>
-			<Form.FormButton 
-				disabled={$submitting} 
-				loading={$delayed} 
-				loadingMessage="Changing..."
-			>
+			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Changing...">
 				Save
 			</Form.FormButton>
 		</div>

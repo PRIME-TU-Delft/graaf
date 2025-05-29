@@ -42,7 +42,12 @@ export class GraphD3 {
 	keys: Record<string, boolean> = {};
 	data_backup: GraphData | null = null;
 
-	constructor(element: SVGSVGElement, payload: PrismaGraphPayload, editable: boolean, lectureId: number | null = null) {
+	constructor(
+		element: SVGSVGElement,
+		payload: PrismaGraphPayload,
+		editable: boolean,
+		lectureId: number | null = null
+	) {
 		this.editable = editable;
 
 		// Set zoom lock to false if editable
@@ -58,9 +63,10 @@ export class GraphD3 {
 		}
 
 		// SVG setup
-		this.svg = d3.select<SVGSVGElement, unknown>(element)
+		this.svg = d3
+			.select<SVGSVGElement, unknown>(element)
 			.attr('preserveAspectRatio', 'xMinYMin meet');
-		
+
 		this.svg.selectAll('*').remove(); // Clear SVG
 
 		// Set up SVG components - order is important!
@@ -125,7 +131,7 @@ export class GraphD3 {
 	}
 
 	// -----------------------------> Public methods
-	
+
 	clear() {
 		this.svg.selectAll('*').remove(); // Clear SVG
 		this.data = {
@@ -149,8 +155,7 @@ export class GraphD3 {
 		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 
 		// Save new data
-		this.content.selectAll<SVGGElement, NodeData>('.node')
-			.call(NodeToolbox.save);
+		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.save);
 	}
 
 	setView(targetView: GraphView) {
@@ -260,7 +265,8 @@ export class GraphD3 {
 		if (!graphState.isSimulating()) return;
 
 		// Fix all nodes
-		this.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
+		this.content
+			.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
 			.call(NodeToolbox.setFixed, this, true)
 			.call(NodeToolbox.save);
 
@@ -437,7 +443,6 @@ export class GraphD3 {
 
 			// Gather past and future nodes and edges
 			for (const subject of lecture.subjects) {
-
 				// Gather past nodes and edges
 				const source_edges = reverse_edge_map.get(subject.id);
 				if (source_edges) {
@@ -446,7 +451,8 @@ export class GraphD3 {
 							lecture_data.past_nodes.includes(edge.source) ||
 							lecture_data.present_nodes.includes(edge.source) ||
 							lecture_data.future_nodes.includes(edge.source)
-						) continue; // Avoid duplicates
+						)
+							continue; // Avoid duplicates
 
 						lecture_data.past_nodes.push(edge.source);
 						lecture_data.nodes.push(edge.source);
@@ -462,8 +468,9 @@ export class GraphD3 {
 							lecture_data.past_nodes.includes(edge.source) ||
 							lecture_data.present_nodes.includes(edge.source) ||
 							lecture_data.future_nodes.includes(edge.source)
-						) continue; // Avoid duplicates
-						
+						)
+							continue; // Avoid duplicates
+
 						lecture_data.future_nodes.push(edge.target);
 						lecture_data.nodes.push(edge.target);
 						lecture_data.edges.push(edge);
@@ -478,7 +485,6 @@ export class GraphD3 {
 	}
 
 	private repairReferences() {
-
 		// Map domain nodes by id
 		const domain_map = new Map<number, NodeData>();
 		for (const node of this.data.domain_nodes) {

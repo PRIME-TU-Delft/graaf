@@ -25,13 +25,8 @@
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
 	type Props = {
-<<<<<<< HEAD:src/routes/graph-editor/graphs/[graphid=int]/subjects/ChangeSubject.svelte
 		subject: PageData['graph']['subjects'][0];
-		graph: GraphType;
-=======
-		subject: PageData['course']['graphs'][0]['subjects'][0];
 		graph: PrismaGraphPayload;
->>>>>>> graph-validator:src/routes/graph-editor/courses/[code]/graphs/[graphid=int]/subjects/ChangeSubject.svelte
 	};
 
 	let { subject, graph }: Props = $props();
@@ -114,11 +109,7 @@
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each subjects as subject (subject.id)}
 					<div class="flex flex-col items-center gap-1">
-						<Button
-							class="w-full font-mono text-xs"
-							href="#subject-{subject.id}"
-							variant="ghost"
-						>
+						<Button class="w-full font-mono text-xs" href="#subject-{subject.id}" variant="ghost">
 							{subject.name}
 						</Button>
 					</div>

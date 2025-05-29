@@ -9,7 +9,6 @@ import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
 
 import type { EdgeData, NodeData } from './types';
-import { Camera } from '@lucide/svelte';
 
 // -----------------------------> Classes
 
@@ -174,14 +173,14 @@ export class TransitionToolbox {
 
 		const height = Math.max(past.length, present.length, future.length);
 		const dx = x - (3 * settings.LECTURE_COLUMN_WIDTH) / 2;
-		const dy = y - (
-				settings.LECTURE_HEADER_HEIGHT + 
-				height * settings.NODE_HEIGHT + 
-				(height + 1) * settings.LECTURE_PADDING
-			) / 2 
+		const dy =
+			y -
+			(settings.LECTURE_HEADER_HEIGHT +
+				height * settings.NODE_HEIGHT +
+				(height + 1) * settings.LECTURE_PADDING) /
+				2;
 
 		return (node: NodeData) => {
-
 			// Set past node positions to the right column
 			if (past?.includes(node)) {
 				const index = past.indexOf(node);
@@ -313,8 +312,8 @@ export class TransitionToolbox {
 		graphState.toTransitioning();
 
 		// Transition to new camera pov - centered on the current graph for minimal movement
-		const client = CameraToolbox.clientTransform(graph, 'lecture');					// Zoom out to fit into scaled lecture background	
-		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);	// Pan to the center of the domain nodes
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
+		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes); // Pan to the center of the domain nodes
 		CameraToolbox.moveCamera(graph, { ...central, k: client.k }, () => {});
 
 		// Set new content in domain positions
@@ -360,13 +359,15 @@ export class TransitionToolbox {
 		const lecture = graph.lecture; // Ref to lecture for future callbacks
 
 		// Transition to new camera pov - centered on the current graph for minimal movement
-		const client = CameraToolbox.clientTransform(graph, 'lecture');					 // Zoom out to fit into scaled lecture background
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
 		const central = CameraToolbox.centralTransform(graph, graph.data.subject_nodes); // Pan to the center of the subject nodes
 		CameraToolbox.moveCamera(graph, { ...central, k: client.k }, () => {});
 
 		// Fade in new content, then move to lecture positions, then update background
 		this.setContent(graph, lecture.nodes, lecture.edges, () => {
-			this.moveContent(graph, lecture.nodes,
+			this.moveContent(
+				graph,
+				lecture.nodes,
 				this.lectureTransform(graph, central.x, central.y),
 				() => {
 					graphState.toIdle();
@@ -389,8 +390,8 @@ export class TransitionToolbox {
 		BackgroundToolbox.grid(graph);
 
 		// Snap camera and content to correct pov
-		const client = CameraToolbox.clientTransform(graph, 'lecture');					// Zoom out to fit into scaled lecture background	
-		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);	// Pan to the center of the domain nodes
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
+		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes); // Pan to the center of the domain nodes
 		CameraToolbox.moveCamera(graph, { ...central, k: client.k });
 		this.moveContent(
 			graph,
@@ -423,7 +424,7 @@ export class TransitionToolbox {
 		BackgroundToolbox.grid(graph);
 
 		// Snap camera and content to correct pov
-		const client = CameraToolbox.clientTransform(graph, 'lecture'); 				 // Zoom out to fit into scaled lecture background
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
 		const central = CameraToolbox.centralTransform(graph, graph.data.subject_nodes); // Pan to the center of the subject nodes
 		CameraToolbox.moveCamera(graph, { ...central, k: client.k });
 		this.moveContent(

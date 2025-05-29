@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { type GraphType } from '$lib/validators/graphValidator';
 	import { changeSubjectRelSchema } from '$lib/zod/subjectSchema';
 	import { Replace } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
@@ -11,9 +10,10 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 		subject: Subject;
 		sourceSubject: Subject;
 		targetSubject: Subject;
@@ -45,17 +45,11 @@
 			targetSubjectId: type == 'targetSubject' ? subject.id : targetSubject.id,
 			oldSourceSubjectId: sourceSubject.id,
 			oldTargetSubjectId: targetSubject.id
-		})
+		});
 	});
-	
 </script>
 
-<form
-	class="w-full"
-	action="?/change-subject-rel"
-	method="POST"
-	use:enhance
->
+<form class="w-full" action="?/change-subject-rel" method="POST" use:enhance>
 	<input type="hidden" name="graphId" value={graph.id} />
 	<input type="hidden" name="oldSourceSubjectId" value={sourceSubject.id} />
 	<input type="hidden" name="oldTargetSubjectId" value={targetSubject.id} />

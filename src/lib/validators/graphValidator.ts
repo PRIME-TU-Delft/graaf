@@ -135,7 +135,7 @@ export class GraphValidator {
 				order: lecture.order,
 				nodes: lectureNodes
 			});
-		}		
+		}
 	}
 
 	/**
@@ -330,7 +330,9 @@ export class GraphValidator {
 	}
 
 	private findLectureIssues(): Partial<Issues> {
-		const lectureIssues: { [key: number]: { 'lecture': Issue[], 'subjects': { [key: number]: Issue[] }}} = {};
+		const lectureIssues: {
+			[key: number]: { lecture: Issue[]; subjects: { [key: number]: Issue[] } };
+		} = {};
 
 		/* Lecture issues
 			Lecture with no name				(Error)
@@ -404,11 +406,13 @@ export class GraphValidator {
 						const ancestor = this.graph.subjects.find((s) => s.id === ancestorNode.id);
 						if (!subject || !ancestor) continue;
 
-						lectureIssues[lecture.id].subjects[subject.id] = [{
-							title: 'Missing prerequisite',
-							message: `Subject ${subject.name} requires ${ancestor.name} as a prerequisite, but is not covered in previous lectures`,
-							severity: 'warning'
-						}];
+						lectureIssues[lecture.id].subjects[subject.id] = [
+							{
+								title: 'Missing prerequisite',
+								message: `Subject ${subject.name} requires ${ancestor.name} as a prerequisite, but is not covered in previous lectures`,
+								severity: 'warning'
+							}
+						];
 					}
 				}
 			}
@@ -651,7 +655,6 @@ export class GraphValidator {
 	 */
 
 	private computeReachabilityMatrix(graph: AbstractGraph): ReachabilityMatrix {
-
 		// Initialize reachability matrix
 		const reachabilityMatrix = new Map<AbstractNode, Map<AbstractNode, boolean>>();
 		for (const node of graph.values()) {

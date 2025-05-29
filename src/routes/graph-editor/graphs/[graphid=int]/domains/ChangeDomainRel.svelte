@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { type GraphType } from '$lib/validators/graphValidator';
 	import { changeDomainRelSchema } from '$lib/zod/domainSchema';
 	import { Replace } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
@@ -11,9 +10,10 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 		domain: Domain;
 		sourceDomain: Domain;
 		targetDomain: Domain;
@@ -45,17 +45,11 @@
 			targetDomainId: type == 'targetDomain' ? domain.id : targetDomain.id,
 			oldSourceDomainId: sourceDomain.id,
 			oldTargetDomainId: targetDomain.id
-		})
+		});
 	});
-	
 </script>
 
-<form
-	class="w-full"
-	action="?/change-domain-rel"
-	method="POST"
-	use:enhance
->
+<form class="w-full" action="?/change-domain-rel" method="POST" use:enhance>
 	<input type="hidden" name="graphId" value={graph.id} />
 	<input type="hidden" name="oldSourceDomainId" value={sourceDomain.id} />
 	<input type="hidden" name="oldTargetDomainId" value={targetDomain.id} />

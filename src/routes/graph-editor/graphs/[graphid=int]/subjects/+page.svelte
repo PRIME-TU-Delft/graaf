@@ -141,14 +141,15 @@
 	</Grid.Root>
 {/if}
 
-{#snippet subjectRelation(type: 'sourceSubject' | 'targetSubject', sourceSubject: Subject, targetSubject: Subject)}
+{#snippet subjectRelation(
+	type: 'sourceSubject' | 'targetSubject',
+	sourceSubject: Subject,
+	targetSubject: Subject
+)}
 	{@const thisSubject = type == 'sourceSubject' ? sourceSubject : targetSubject}
 
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class={cn(
-			'relative w-full',
-			buttonVariants({ variant: 'outline' })
-		)}>
+		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
 			<span class="w-full text-left">{thisSubject.name}</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
@@ -156,10 +157,7 @@
 			<DropdownMenu.Group class="sticky top-0 z-10">
 				<a href="#subject-{thisSubject.id}">
 					<DropdownMenu.Item
-						class={cn(
-							"w-full justify-start",
-							buttonVariants({ variant: 'ghost' })
-						)}
+						class={cn('w-full justify-start', buttonVariants({ variant: 'ghost' }))}
 					>
 						<Sparkles />
 						Highlight {thisSubject.name}
@@ -169,7 +167,7 @@
 			</DropdownMenu.Group>
 
 			{@const otherSubjects = graph.subjects.filter(
-				subject => subject.id != sourceSubject.id && subject.id != targetSubject.id
+				(subject) => subject.id != sourceSubject.id && subject.id != targetSubject.id
 			)}
 
 			{#if otherSubjects.length > 0}

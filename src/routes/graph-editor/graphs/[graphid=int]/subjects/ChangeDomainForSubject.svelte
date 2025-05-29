@@ -2,15 +2,15 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import type { GraphType } from '$lib/validators/graphValidator';
 	import { ChevronRight, Sparkles, TriangleAlert } from '@lucide/svelte';
 	import { useId } from 'bits-ui';
 	import type { PageData } from './$types';
 	import ChangeSubjectInGraph from './ChangeSubjectInGraph.svelte';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
 		subject: PageData['graph']['subjects'][0];
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 	};
 
 	let { subject, graph }: Props = $props();
@@ -50,10 +50,7 @@
 			<DropdownMenu.Group class="sticky top-0 z-10">
 				<a href="./domains/#domain-{subject.domain.id}">
 					<DropdownMenu.Item
-						class={cn(
-							"w-full justify-start",
-							buttonVariants({ variant: 'ghost' })
-						)}
+						class={cn('w-full justify-start', buttonVariants({ variant: 'ghost' }))}
 					>
 						<Sparkles />
 						Highlight {subject.domain.name}
@@ -64,9 +61,7 @@
 		{/if}
 
 		<DropdownMenu.Group>
-			<DropdownMenu.GroupHeading>
-				Set linked domain
-			</DropdownMenu.GroupHeading>
+			<DropdownMenu.GroupHeading>Set linked domain</DropdownMenu.GroupHeading>
 
 			{@render domainList()}
 		</DropdownMenu.Group>

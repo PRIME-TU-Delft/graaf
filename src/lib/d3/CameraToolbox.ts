@@ -15,13 +15,13 @@ export class CameraToolbox {
 	}
 
 	/** Contains a bunch of handy knickknacks
-	  * 
-	  * **x** and **y** are the offsets to center the origin. When the background is a lecture, or mode is explicitly set to 'lecture',
-	  * the offsets are calculated based on the lecture size. Otherwise they are set to the center of the svg.
-	  * 
-	  * **k** is used to scale the graph to fit the lecture background. Said differently, it contains the ratio between the client size and the lecture background size.
-	  * When the background is a grid, or mode is 'graph' or undefined, **k** is set to 1.
-	  */
+	 *
+	 * **x** and **y** are the offsets to center the origin. When the background is a lecture, or mode is explicitly set to 'lecture',
+	 * the offsets are calculated based on the lecture size. Otherwise they are set to the center of the svg.
+	 *
+	 * **k** is used to scale the graph to fit the lecture background. Said differently, it contains the ratio between the client size and the lecture background size.
+	 * When the background is a grid, or mode is 'graph' or undefined, **k** is set to 1.
+	 */
 
 	static clientTransform(graph: GraphD3, mode?: 'graph' | 'lecture'): CameraTransform {
 		if (mode !== 'graph' && (graph.background.classed('lecture') || mode === 'lecture')) {
@@ -33,21 +33,24 @@ export class CameraToolbox {
 					)
 				: 0;
 
-			const outer_width = 3 * (
-				2 * settings.LECTURE_PADDING + settings.NODE_WIDTH
-			) * settings.GRID_UNIT + settings.STROKE_WIDTH;
+			const outer_width =
+				3 * (2 * settings.LECTURE_PADDING + settings.NODE_WIDTH) * settings.GRID_UNIT +
+				settings.STROKE_WIDTH;
 
-			const outer_height = (
-				settings.LECTURE_HEADER_HEIGHT +
-				size * settings.NODE_HEIGHT +
-				(size + 1) * settings.LECTURE_PADDING
-			) * settings.GRID_UNIT + settings.STROKE_WIDTH;
+			const outer_height =
+				(settings.LECTURE_HEADER_HEIGHT +
+					size * settings.NODE_HEIGHT +
+					(size + 1) * settings.LECTURE_PADDING) *
+					settings.GRID_UNIT +
+				settings.STROKE_WIDTH;
 
 			return {
 				x: outer_width / 2,
 				y: outer_height / 2,
-				k: Math.min(1,
-					(graph.svg.node()!.clientWidth - 2 * settings.LECTURE_PADDING * settings.GRID_UNIT) / outer_width
+				k: Math.min(
+					1,
+					(graph.svg.node()!.clientWidth - 2 * settings.LECTURE_PADDING * settings.GRID_UNIT) /
+						outer_width
 				)
 			};
 		} else {

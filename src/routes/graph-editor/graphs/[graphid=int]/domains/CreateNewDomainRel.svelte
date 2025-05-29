@@ -1,14 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover';
-	import { cn } from '$lib/utils';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
 	import type { Graph, Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
@@ -58,7 +53,7 @@
 
 			<Form.FormError {form} />
 
-			<div class="w-full flex justify-end items-center">
+			<div class="flex w-full items-center justify-end">
 				<Form.FormButton
 					loading={$delayed}
 					disabled={$submitting ||

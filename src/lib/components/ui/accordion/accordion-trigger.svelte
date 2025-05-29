@@ -7,12 +7,10 @@
 		ref = $bindable(null),
 		class: className,
 		level = 3,
-		open = false,
 		children,
 		...restProps
 	}: WithoutChild<AccordionPrimitive.TriggerProps> & {
 		level?: AccordionPrimitive.HeaderProps['level'];
-		open?: boolean;
 	} = $props();
 </script>
 

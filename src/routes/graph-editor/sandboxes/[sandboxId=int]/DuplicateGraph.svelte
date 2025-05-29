@@ -22,7 +22,7 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	import type { PageData } from './$types';	
+	import type { PageData } from './$types';
 	import type { Prisma, Graph } from '@prisma/client';
 
 	type DuplicateGraphProps = {
@@ -41,7 +41,12 @@
 		isDuplicateOpen?: boolean;
 	};
 
-	let { graph, availableCourses, availableSandboxes, isDuplicateOpen = $bindable() }: DuplicateGraphProps = $props();
+	let {
+		graph,
+		availableCourses,
+		availableSandboxes,
+		isDuplicateOpen = $bindable()
+	}: DuplicateGraphProps = $props();
 
 	const triggerId = useId();
 	const data = page.data as PageData;
@@ -194,21 +199,21 @@
 					<Command.Input autofocus placeholder="Search destinations..." class="my-1 h-9" />
 					<Command.Empty>No course found.</Command.Empty>
 					<Command.Group heading="Sandboxes">
-						{#each destinationSandboxes as destination (destination.id)}
+						{#each destinationSandboxes as sandbox (sandbox.id)}
 							<Command.Item
 								value={sandbox.name}
 								onSelect={() => {
-									$formData.destinationId = destination.id;
+									$formData.destinationId = sandbox.id;
 									$formData.destinationType = 'SANDBOX';
 									closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
 								}}
 							>
-								{destination.name}
+								{sandbox.name}
 								<Check
 									class={cn(
 										'ml-auto',
 										($formData.destinationType !== 'SANDBOX' ||
-											$formData.destinationId !== destination.id) &&
+											$formData.destinationId !== sandbox.id) &&
 											'text-transparent'
 									)}
 								/>

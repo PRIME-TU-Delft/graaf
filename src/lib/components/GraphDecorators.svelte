@@ -6,7 +6,15 @@
 	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import * as settings from '$lib/settings';
 
-	import { Check, ChevronDown, ChevronUp, Maximize, Minimize, Orbit, SearchSlash } from '@lucide/svelte';
+	import {
+		Check,
+		ChevronDown,
+		ChevronUp,
+		Maximize,
+		Minimize,
+		Orbit,
+		SearchSlash
+	} from '@lucide/svelte';
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
@@ -27,9 +35,8 @@
 	let { graphD3, editable }: Props = $props();
 
 	let isFullscreen = $state(false);
-	let isLecturePopoverOpen = $state(false);
 	let lectureID = $state(Number(page.url.searchParams.get('lectureID')) || null);
-	let chosenLecture = $derived(graphD3.data.lectures.find(lecture => lecture.id === lectureID)); 
+	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -55,10 +62,7 @@
 </script>
 
 {#if !graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
-	<Accordion.Root
-		type="single"
-		class="absolute top-4 right-4 p-3 text-purple-900"
-	>
+	<Accordion.Root type="single" class="absolute top-4 right-4 p-3 text-purple-900">
 		<Accordion.Item class="border-none" value="item-1">
 			<Accordion.Trigger class="p-0">Domain Legend</Accordion.Trigger>
 			<Accordion.Content>
@@ -80,10 +84,7 @@
 {#if !isFullscreen && graphD3.data.lectures.length > 0}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class={cn(
-				buttonVariants({ variant: 'link' }),
-				"absolute top-4 left-4 p-3"
-			)}
+			class={cn(buttonVariants({ variant: 'link' }), 'absolute top-4 left-4 p-3')}
 		>
 			{chosenLecture?.name || 'Select a lecture'}
 			<ChevronDown />
@@ -91,28 +92,29 @@
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
 				<DropdownMenu.Item
+					onclick={() => {
+						lectureID = null;
+						graphD3.setLecture(null);
+					}}
+				>
+					Unselect
+					<Check class={cn('ml-auto w-auto', lectureID && 'w-0 text-transparent')} />
+				</DropdownMenu.Item>
+				<DropdownMenu.Separator />
+				{#each graphD3.data.lectures as lecture (lecture.id)}
+					<DropdownMenu.Item
 						onclick={() => {
-							lectureID = null;
-							graphD3.setLecture(null);
+							lectureID = lecture.id;
+							goto(`${page.url.pathname}?lectureID=${lecture.id}`);
+							graphD3.setLecture(lecture);
 						}}
 					>
-						Unselect
-						<Check class={cn('ml-auto w-auto', lectureID && 'w-0 text-transparent')} />
+						{lecture.name}
+						<Check
+							class={cn('ml-auto w-auto', lecture.id !== lectureID && 'w-0 text-transparent')}
+						/>
 					</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					{#each graphD3.data.lectures as lecture (lecture.id)}
-						<DropdownMenu.Item
-							onclick={() => {
-								lectureID = lecture.id;
-								goto(`${page.url.pathname}?lectureID=${lecture.id}`);
-								graphD3.setLecture(lecture);
-								isLecturePopoverOpen = false;
-							}}
-						>
-							{lecture.name}
-							<Check class={cn('ml-auto w-auto', lecture.id !== lectureID && 'w-0 text-transparent')} />
-						</DropdownMenu.Item>
-					{/each}
+				{/each}
 			</DropdownMenu.Group>
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
@@ -164,10 +166,8 @@
 			</DropdownMenu.Trigger>
 			<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
 				<DropdownMenu.Group class="sticky top-0 z-10 mt-2 bg-white/90 backdrop-blur-md">
-					<DropdownMenu.GroupHeading>
-						Autolayout Options
-					</DropdownMenu.GroupHeading>
-					<DropdownMenu.Item onclick={() => graphD3.resetSimulation() }>
+					<DropdownMenu.GroupHeading>Autolayout Options</DropdownMenu.GroupHeading>
+					<DropdownMenu.Item onclick={() => graphD3.resetSimulation()}>
 						<Orbit /> Reset simulation
 					</DropdownMenu.Item>
 					<DropdownMenu.Item onclick={() => graphD3.stopSimulation()}>

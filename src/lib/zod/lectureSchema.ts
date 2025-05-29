@@ -19,4 +19,3 @@ export const reorderLecturesSchema = z.array(
 		newOrder: z.number()
 	})
 );
-

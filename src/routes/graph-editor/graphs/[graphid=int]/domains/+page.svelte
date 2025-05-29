@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import * as settings from '$lib/settings';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
-	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import ChangeDomain from './ChangeDomain.svelte';
@@ -48,23 +46,6 @@
 	class ChangeStyleOpenState {
 		isOpen = $state(false);
 	}
-
-	onMount(() => {
-		if (data.cycles) {
-			const from = data.cycles.source;
-			const to = data.cycles.target;
-			toast.warning('Graph contains a domain cycle', {
-				duration: Number.POSITIVE_INFINITY,
-				description: `from ${from.name} to ${to.name}`,
-				action: {
-					label: 'Go to cycle',
-					onClick: () => {
-						goto(`#rel-${from.id}-${to.id}`);
-					}
-				}
-			});
-		}
-	});
 
 	/**
 	 * Handles the style change of a domain in domainColor snippet
@@ -267,10 +248,7 @@
 	{@const thisDomain = type == 'sourceDomain' ? sourceDomain : targetDomain}
 
 	<DropdownMenu.Root>
-		<DropdownMenu.Trigger class={cn(
-			'relative w-full',
-			buttonVariants({ variant: 'outline' })
-		)}>
+		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
 			<span class="w-full text-left">{thisDomain.name}</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
@@ -278,10 +256,7 @@
 			<DropdownMenu.Group class="sticky top-0 z-10">
 				<a href="#domain-{thisDomain.id}">
 					<DropdownMenu.Item
-						class={cn(
-							"w-full justify-start",
-							buttonVariants({ variant: 'ghost' })
-						)}
+						class={cn('w-full justify-start', buttonVariants({ variant: 'ghost' }))}
 					>
 						<Sparkles />
 						Highlight {thisDomain.name}
@@ -291,7 +266,7 @@
 			</DropdownMenu.Group>
 
 			{@const otherDomains = graph.domains.filter(
-				domain => domain.id != sourceDomain.id && domain.id != targetDomain.id
+				(domain) => domain.id != sourceDomain.id && domain.id != targetDomain.id
 			)}
 
 			{#if otherDomains.length > 0}

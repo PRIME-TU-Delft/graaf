@@ -74,7 +74,7 @@ class NodeToolbox {
 					selection.call(NodeToolbox.setFixed, graph, true);
 
 					// Stop simulation if there are no unfixed nodes
-					const unfixed = graph.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
+					const unfixed = graph.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)');
 					if (unfixed.empty()) {
 						graph.stopSimulation();
 					}

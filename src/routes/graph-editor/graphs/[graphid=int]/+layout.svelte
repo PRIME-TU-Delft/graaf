@@ -8,10 +8,10 @@
 	import { Check, ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
-	
+
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	
+
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	let tabs = ['Domains', 'Subjects', 'Lectures'];
@@ -19,7 +19,9 @@
 	let hidePreview = $state(page.url.searchParams.get('hidePreview') === 'true');
 	const lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	const currentTab = $derived(page.url.pathname.split('/').pop());
-	const searchParams = $derived('?hidePreview=' + String(hidePreview) + (lectureID ? '&lectureID=' + lectureID : ''));
+	const searchParams = $derived(
+		'?hidePreview=' + String(hidePreview) + (lectureID ? '&lectureID=' + lectureID : '')
+	);
 
 	afterNavigate(() => {
 		const pathname = currentTab?.toUpperCase();

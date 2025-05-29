@@ -30,8 +30,6 @@
 		}, result);
 	});
 
-	console.log('Navigation URLs:', urls);
-
 	function handleNavClick() {
 		mouseState = Math.random();
 
