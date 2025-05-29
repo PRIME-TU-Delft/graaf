@@ -148,7 +148,6 @@ export class GraphD3 {
 		if (graphState.isSimulating()) this.stopSimulation();
 
 		this.data = data;
-		this.repairReferences(); // Kids, this is why you don't rely on references in JSON
 
 		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this, animateCamera);
 		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this, animateCamera);
@@ -236,7 +235,7 @@ export class GraphD3 {
 		if (!graphState.isIdle()) return;
 
 		// Copy data
-		this.data_backup = JSON.parse(JSON.stringify(this.data)); // Deeply clone graph date before simulating
+		this.data_backup = structuredClone(this.data); // Deeply clone graph date before simulating
 
 		// Release all nodes
 		this.content
@@ -482,31 +481,5 @@ export class GraphD3 {
 		}
 
 		return graph;
-	}
-
-	private repairReferences() {
-		// Map domain nodes by id
-		const domain_map = new Map<number, NodeData>();
-		for (const node of this.data.domain_nodes) {
-			domain_map.set(node.id, node);
-		}
-
-		// Map subject nodes by id
-		const subject_map = new Map<number, NodeData>();
-		for (const node of this.data.subject_nodes) {
-			subject_map.set(node.id, node);
-		}
-
-		// Repair domain edges
-		for (const edge of this.data.domain_edges) {
-			edge.source = domain_map.get(edge.source.id) ?? edge.source;
-			edge.target = domain_map.get(edge.target.id) ?? edge.target;
-		}
-
-		// Repair subject edges
-		for (const edge of this.data.subject_edges) {
-			edge.source = subject_map.get(edge.source.id) ?? edge.source;
-			edge.target = subject_map.get(edge.target.id) ?? edge.target;
-		}
 	}
 }
