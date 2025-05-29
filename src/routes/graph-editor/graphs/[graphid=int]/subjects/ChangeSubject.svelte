@@ -8,7 +8,7 @@
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import type { GraphType } from '$lib/validators/graphValidator';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -25,8 +25,13 @@
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
 	type Props = {
+<<<<<<< HEAD:src/routes/graph-editor/graphs/[graphid=int]/subjects/ChangeSubject.svelte
 		subject: PageData['graph']['subjects'][0];
 		graph: GraphType;
+=======
+		subject: PageData['course']['graphs'][0]['subjects'][0];
+		graph: PrismaGraphPayload;
+>>>>>>> graph-validator:src/routes/graph-editor/courses/[code]/graphs/[graphid=int]/subjects/ChangeSubject.svelte
 	};
 
 	let { subject, graph }: Props = $props();
