@@ -20,6 +20,7 @@
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
+	import IssueIndicator from '../IssueIndicator.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -112,8 +113,9 @@
 
 <CreateNewDomain {graph} />
 
-<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', '5rem', '5rem']}>
+<Grid.Root columnTemplate={['3rem', '3rem', 'minmax(12rem, 1fr)', '5rem', '5rem']}>
 	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+		<div class="p-2"></div>
 		<div class="p-2"></div>
 		<div class="p-2">Name</div>
 		<div class="p-2">Style</div>
@@ -127,6 +129,11 @@
 		onfinalize={handleDndFinalize}
 	>
 		{#snippet children(domain, index)}
+			<Grid.Cell>
+				{@const issues = data.issues.domainIssues[domain.id] || []}
+				<IssueIndicator {issues} />
+			</Grid.Cell>
+
 			<Grid.Cell>
 				<p class="m-0 truncate">{domain.name}</p>
 			</Grid.Cell>
@@ -158,9 +165,10 @@
 		</div>
 
 		<Grid.Rows name="subject-rel" items={domainMapping} class="space-y-1">
-			{#snippet children({ domain, outDomain }, index)}
+			{#snippet children({ domain, outDomain })}
 				<Grid.Cell>
-					{index + 1}
+					{@const issues = data.issues.domainRelationIssues[domain.id]?.[outDomain.id] || []}
+					<IssueIndicator {issues} />
 				</Grid.Cell>
 
 				<Grid.Cell>

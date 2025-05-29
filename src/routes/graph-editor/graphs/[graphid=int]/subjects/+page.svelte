@@ -19,6 +19,7 @@
 	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
+	import IssueIndicator from '../IssueIndicator.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -78,8 +79,9 @@
 
 <CreateNewSubject {graph} />
 
-<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
+<Grid.Root columnTemplate={['3rem', '3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
 	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
+		<div class="p-2"></div>
 		<div class="p-2"></div>
 		<div class="p-2">Name</div>
 		<div class="flex gap-2 p-2"><Link class="size-4" />Domain</div>
@@ -93,6 +95,11 @@
 		onfinalize={handleDndFinalize}
 	>
 		{#snippet children(subject)}
+			<Grid.Cell>
+				{@const issues = data.issues.subjectIssues[subject.id] || []}
+				<IssueIndicator {issues} />
+			</Grid.Cell>
+
 			<Grid.Cell>
 				{subject.name}
 			</Grid.Cell>
@@ -122,9 +129,10 @@
 		</div>
 
 		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
-			{#snippet children({ sourceSubject, targetSubject }, index)}
+			{#snippet children({ sourceSubject, targetSubject })}
 				<Grid.Cell>
-					{index + 1}
+					{@const issues = data.issues.subjectRelationIssues[sourceSubject.id]?.[targetSubject.id] || []}
+					<IssueIndicator {issues} />
 				</Grid.Cell>
 
 				<Grid.Cell>

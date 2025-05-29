@@ -259,14 +259,18 @@ export class GraphValidator {
 
 		const domainCycles = this.findCycles(this.domains);
 		for (const cycle of domainCycles) {
-			const temp = [];
+			const temp = [
+				this.graph.domains.find(
+					(domain) => domain.id === cycle[0].source
+				)?.name || 'Unknown Domain'
+			];
+
 			for (const edge of cycle) {
-				const source = this.graph.domains.find((domain) => domain.id === edge.source);
 				const target = this.graph.domains.find((domain) => domain.id === edge.target);
-				temp.push(`${source?.name} -> ${target?.name}`);
+				temp.push(target?.name || 'Unknown Domain');
 			}
 
-			const message = temp.join(' -> ');
+			const message = temp.join(' → ');
 
 			const backedge = cycle[cycle.length - 1];
 			const sourceIssues = domainRelationIssues[backedge.source];
@@ -289,14 +293,18 @@ export class GraphValidator {
 
 		const subjectCycles = this.findCycles(this.subjects);
 		for (const cycle of subjectCycles) {
-			const temp = [];
+			const temp = [
+				this.graph.subjects.find(
+					(subject) => subject.id === cycle[0].source
+				)?.name || 'Unknown Subject'
+			];
+
 			for (const edge of cycle) {
-				const source = this.graph.subjects.find((subject) => subject.id === edge.source);
 				const target = this.graph.subjects.find((subject) => subject.id === edge.target);
-				temp.push(`${source?.name} -> ${target?.name}`);
+				temp.push(target?.name || 'Unknown Subject');
 			}
 
-			const message = temp.join(' -> ');
+			const message = temp.join(' → ');
 
 			const backedge = cycle[cycle.length - 1];
 			const sourceIssues = subjectRelationIssues[backedge.source];
@@ -418,7 +426,7 @@ export class GraphValidator {
 						lectureIssues[lecture.id].subjects[subject.id] = [
 							{
 								title: 'Missing prerequisite',
-								message: `Subject ${subject.name} requires ${ancestor.name} as a prerequisite, but is not covered in previous lectures`,
+								message: `${subject.name} requires ${ancestor.name} as a prerequisite, but is not covered in previous lectures`,
 								severity: 'warning'
 							}
 						];
