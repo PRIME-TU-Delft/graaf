@@ -14,9 +14,54 @@ export class CameraToolbox {
 		);
 	}
 
+	/** Contains a bunch of handy knickknacks
+	  * 
+	  * **x** and **y** are the offsets to center the origin. When the background is a lecture, or mode is explicitly set to 'lecture',
+	  * the offsets are calculated based on the lecture size. Otherwise they are set to the center of the svg.
+	  * 
+	  * **k** is used to scale the graph to fit the lecture background. Said differently, it contains the ratio between the client size and the lecture background size.
+	  * When the background is a grid, or mode is 'graph' or undefined, **k** is set to 1.
+	  */
+
+	static clientTransform(graph: GraphD3, mode?: 'graph' | 'lecture'): CameraTransform {
+		if (mode !== 'graph' && (graph.background.classed('lecture') || mode === 'lecture')) {
+			const size = graph.lecture
+				? Math.max(
+						graph.lecture.past_nodes.length,
+						graph.lecture.present_nodes.length,
+						graph.lecture.future_nodes.length
+					)
+				: 0;
+
+			const outer_width = 3 * (
+				2 * settings.LECTURE_PADDING + settings.NODE_WIDTH
+			) * settings.GRID_UNIT + settings.STROKE_WIDTH;
+
+			const outer_height = (
+				settings.LECTURE_HEADER_HEIGHT +
+				size * settings.NODE_HEIGHT +
+				(size + 1) * settings.LECTURE_PADDING
+			) * settings.GRID_UNIT + settings.STROKE_WIDTH;
+
+			return {
+				x: outer_width / 2,
+				y: outer_height / 2,
+				k: Math.min(1,
+					(graph.svg.node()!.clientWidth - 2 * settings.LECTURE_PADDING * settings.GRID_UNIT) / outer_width
+				)
+			};
+		} else {
+			return {
+				x: graph.svg.node()!.clientWidth / 2,
+				y: graph.svg.node()!.clientHeight / 2,
+				k: 1
+			};
+		}
+	}
+
 	static centralTransform(graph: GraphD3, nodes: NodeData[]): CameraTransform {
 		if (nodes.length === 0) {
-			return { x: 0, y: 0, k: 1 };
+			return this.clientTransform(graph);
 		}
 
 		let min_x = Infinity;
@@ -37,8 +82,8 @@ export class CameraToolbox {
 		max_y += settings.GRID_PADDING;
 
 		return {
-			x: (max_x + min_x) / 2,
-			y: (max_y + min_y) / 2,
+			x: (min_x + max_x) / 2,
+			y: (min_y + max_y) / 2,
 			k: Math.max(
 				settings.MIN_ZOOM,
 				Math.min(
@@ -51,6 +96,8 @@ export class CameraToolbox {
 	}
 
 	static moveCamera(graph: GraphD3, transform: CameraTransform, callback?: () => void) {
+		const client = CameraToolbox.clientTransform(graph);
+
 		graph.svg
 			.transition()
 			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
@@ -59,8 +106,8 @@ export class CameraToolbox {
 				graph.zoom.transform,
 				d3.zoomIdentity
 					.translate(
-						graph.svg.node()!.clientWidth / 2 - transform.k * transform.x * settings.GRID_UNIT,
-						graph.svg.node()!.clientHeight / 2 - transform.k * transform.y * settings.GRID_UNIT
+						client.x - transform.k * transform.x * settings.GRID_UNIT,
+						client.y - transform.k * transform.y * settings.GRID_UNIT
 					)
 					.scale(transform.k)
 			);

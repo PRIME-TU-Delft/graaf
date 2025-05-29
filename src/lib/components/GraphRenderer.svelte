@@ -16,7 +16,7 @@
 
 <!-- Markup -->
 
-<div class="relative h-full w-full overflow-hidden rounded-sm bg-white">
+<div class="relative h-full w-full overflow-hidden rounded-sm bg-white flex items-center justify-center">
 	<svg class="block h-full w-full" bind:this={d3Canvas} />
 
 	{#if graphD3Store.graphD3}

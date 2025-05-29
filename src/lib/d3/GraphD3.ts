@@ -58,7 +58,9 @@ export class GraphD3 {
 		}
 
 		// SVG setup
-		this.svg = d3.select<SVGSVGElement, unknown>(element).attr('display', 'block');
+		this.svg = d3.select<SVGSVGElement, unknown>(element)
+			.attr('preserveAspectRatio', 'xMinYMin meet');
+		
 		this.svg.selectAll('*').remove(); // Clear SVG
 
 		// Set up SVG components - order is important!
@@ -87,6 +89,7 @@ export class GraphD3 {
 			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
 			.filter((event) => CameraToolbox.allowZoomAndPan(this, event))
 			.on('zoom', (event) => {
+				this.svg.select('#origin').attr('transform', event.transform);
 				this.content.attr('transform', event.transform);
 				BackgroundToolbox.transformGrid(this, event.transform);
 			});
