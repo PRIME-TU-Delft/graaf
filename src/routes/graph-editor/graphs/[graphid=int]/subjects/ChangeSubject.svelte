@@ -8,7 +8,7 @@
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import type { GraphType } from '$lib/validators/graphValidator';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -26,7 +26,7 @@
 
 	type Props = {
 		subject: PageData['graph']['subjects'][0];
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 	};
 
 	let { subject, graph }: Props = $props();
@@ -35,16 +35,12 @@
 	let domainIdOpen = $state(false);
 
 	const triggerId = useId();
-
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'change-subject-form-' + useId() + '-' + subject.id,
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
-			// Guard for not success
 			if (result.type != 'success') return;
-
 			changeSubjectDialog = false;
-
 			toast.success('Subject changed successfully!');
 		}
 	});
@@ -77,7 +73,7 @@
 					variant="outline"
 					class="h-auto w-full justify-start rounded-sm border-0 px-2 py-1.5 hover:shadow-none"
 				>
-					{@render changeDomain()}
+					{@render changeSubject()}
 				</DialogButton>
 			</Menubar.Item>
 
@@ -85,36 +81,32 @@
 				<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
 					Delete
 				</Menubar.SubTrigger>
-				<Menubar.SubContent class="ml-1 w-32">
+				<Menubar.SubContent>
 					<DeleteSubject {subject} {graph} />
 				</Menubar.SubContent>
 			</Menubar.Sub>
 
 			<Menubar.Separator />
-			<Menubar.Item class="justify-between">
-				<span>Highlight in preview</span>
+			<Menubar.Item class="justify-between" disabled>
+				<span>Find in graph</span>
 				<ArrowRight class="size-4" />
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(subject.sourceSubjects, 'Source')}
-			{@render relations(subject.targetSubjects, 'Target')}
+			{@render relations(subject.sourceSubjects, 'Sources')}
+			{@render relations(subject.targetSubjects, 'Targets')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>
 
-{#snippet relations(subjects: Subject[], title: 'Source' | 'Target')}
+{#snippet relations(subjects: Subject[], title: 'Sources' | 'Targets')}
 	{#if subjects.length > 0}
 		<Menubar.Sub>
-			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>
+			<Menubar.SubTrigger>{title}</Menubar.SubTrigger>
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each subjects as subject (subject.id)}
 					<div class="flex flex-col items-center gap-1">
-						<Button
-							class="w-full font-mono text-xs"
-							href="#{subject.id}-{subject.name}"
-							variant="ghost"
-						>
+						<Button class="w-full font-mono text-xs" href="#subject-{subject.id}" variant="ghost">
 							{subject.name}
 						</Button>
 					</div>
@@ -123,13 +115,13 @@
 		</Menubar.Sub>
 	{:else}
 		<Menubar.Item class="justify-between">
-			<span>{title} relations: </span>
+			<span>{title}</span>
 			<span class="text-gray-400">None</span>
 		</Menubar.Item>
 	{/if}
 {/snippet}
 
-{#snippet changeDomain()}
+{#snippet changeSubject()}
 	<form action="?/change-subject-in-graph" method="POST" use:enhance>
 		<input type="hidden" name="graphId" value={graph.id} />
 		<input type="hidden" name="subjectId" value={subject.id} />
@@ -141,10 +133,6 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>
-				A common name for the subject, i.e:
-				<span class="font-mono text-xs">"Complex numbers"</span>
-			</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
@@ -153,7 +141,10 @@
 				<Form.Control id={triggerId}>
 					{#snippet children({ props })}
 						<div class="mt-2 flex w-full items-center justify-between">
-							<Form.Label>Link to domain (optional)</Form.Label>
+							<Form.Label>
+								Link to Domain
+								<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
+							</Form.Label>
 							<Popover.Trigger
 								class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
 								role="combobox"
@@ -166,6 +157,7 @@
 						</div>
 					{/snippet}
 				</Form.Control>
+
 				<Popover.Content>
 					<Command.Root>
 						<Command.Input autofocus placeholder="Search domain..." class="h-9" />
@@ -207,7 +199,6 @@
 				onclick={() => {
 					$formData.name = subject.name;
 					$formData.domainId = subject.domainId ?? 0;
-
 					tainted.set({ name: false, domainId: false, graphId: false });
 				}}
 			>
@@ -215,11 +206,11 @@
 			</Button>
 
 			<Form.FormButton
-				disabled={$submitting}
+				disabled={$submitting || !isTainted($tainted)}
 				loading={$delayed}
-				loadingMessage="Changing subjects..."
+				loadingMessage="Saving..."
 			>
-				Change
+				Save
 			</Form.FormButton>
 		</div>
 	</form>

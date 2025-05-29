@@ -53,7 +53,11 @@ export class TransitionToolbox {
 				},
 
 				function (update) {
-					return update.call(NodeToolbox.updateHighlight, graph);
+					return update
+						.call(NodeToolbox.updatePosition, graph, callback !== undefined)
+						.call(NodeToolbox.updateHighlight, graph)
+						.call(NodeToolbox.updateStyle)
+						.call(NodeToolbox.updateText);
 				},
 
 				function (exit) {
@@ -72,7 +76,7 @@ export class TransitionToolbox {
 
 		// Update relations
 		graph.content
-			.selectAll<SVGGElement, EdgeData>('.edge')
+			.selectAll<SVGLineElement, EdgeData>('.edge')
 			.data(edges, (edge) => edge.uuid)
 			.join(
 				function (enter) {
@@ -80,7 +84,9 @@ export class TransitionToolbox {
 				},
 
 				function (update) {
-					return update;
+					return update
+						.call(EdgeToolbox.updatePosition, callback !== undefined)
+						.call(EdgeToolbox.updateStyle);
 				},
 
 				function (exit) {
@@ -226,13 +232,13 @@ export class TransitionToolbox {
 
 	// -----------------------------> Transitions
 
-	static snapToDomains(graph: GraphD3) {
+	static snapToDomains(graph: GraphD3, animateCamera = false) {
 		graphState.toTransitioning();
 
-		// Set camera pov and background
-		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.moveCamera(graph, transform);
+		// Set camera pov and background - Background must be set before moving camera
 		BackgroundToolbox.grid(graph);
+		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
+		CameraToolbox.moveCamera(graph, transform, animateCamera ? () => {} : undefined);
 
 		// Set content
 		this.setContent(graph, graph.data.domain_nodes, graph.data.domain_edges);
@@ -243,13 +249,13 @@ export class TransitionToolbox {
 		graphView.toDomains();
 	}
 
-	static snapToSubjects(graph: GraphD3) {
+	static snapToSubjects(graph: GraphD3, animateCamera = false) {
 		graphState.toTransitioning();
 
-		// Set camera pov and background
-		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
-		CameraToolbox.moveCamera(graph, transform);
+		// Set camera pov and background - Background must be set before moving camera
 		BackgroundToolbox.grid(graph);
+		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
+		CameraToolbox.moveCamera(graph, transform, animateCamera ? () => {} : undefined);
 
 		// Set content
 		this.setContent(graph, graph.data.subject_nodes, graph.data.subject_edges);
@@ -263,9 +269,9 @@ export class TransitionToolbox {
 	static snapToLectures(graph: GraphD3) {
 		graphState.toTransitioning();
 
-		// Set camera pov and background
-		CameraToolbox.moveCamera(graph, { x: 0, y: 0, k: 1 });
+		// Set camera pov and background - Background must be set before moving camera
 		BackgroundToolbox.lecture(graph);
+		CameraToolbox.moveCamera(graph, { x: 0, y: 0, k: 1 });
 
 		// Set content
 		const nodes = graph.lecture ? graph.lecture.nodes : [];
@@ -291,7 +297,6 @@ export class TransitionToolbox {
 
 		// Transition content to original positions
 		this.restoreContentPosition(graph, () => {
-			// Cleanup
 			graphState.toIdle();
 			graphView.toSubjects();
 		});
@@ -307,8 +312,9 @@ export class TransitionToolbox {
 		graphState.toTransitioning();
 
 		// Transition to new camera pov - centered on the current graph for minimal movement
-		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.moveCamera(graph, { ...transform, k: 1 }, () => {});
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
+		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes); // Pan to the center of the domain nodes
+		CameraToolbox.moveCamera(graph, { ...central, k: client.k }, () => {});
 
 		// Set new content in domain positions
 		this.setContent(graph, graph.lecture.nodes, graph.lecture.edges);
@@ -318,11 +324,8 @@ export class TransitionToolbox {
 		this.moveContent(
 			graph,
 			graph.lecture.nodes,
-			this.lectureTransform(graph, transform.x, transform.y),
+			this.lectureTransform(graph, central.x, central.y),
 			() => {
-				BackgroundToolbox.lecture(graph);
-
-				// Cleanup
 				graphState.toIdle();
 				graphView.toLectures();
 			}
@@ -334,12 +337,11 @@ export class TransitionToolbox {
 
 		// Transition to new camera pov
 		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.moveCamera(graph, transform);
+		CameraToolbox.moveCamera(graph, transform, () => {});
 
 		// Move content to domain positions, then fade in new content
 		this.moveContent(graph, graph.data.subject_nodes, this.domainTransform, () => {
 			this.setContent(graph, graph.data.domain_nodes, graph.data.domain_edges, () => {
-				// Cleanup
 				graphState.toIdle();
 				graphView.toDomains();
 			});
@@ -357,19 +359,17 @@ export class TransitionToolbox {
 		const lecture = graph.lecture; // Ref to lecture for future callbacks
 
 		// Transition to new camera pov - centered on the current graph for minimal movement
-		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
-		CameraToolbox.moveCamera(graph, { ...transform, k: 1 }, () => {});
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
+		const central = CameraToolbox.centralTransform(graph, graph.data.subject_nodes); // Pan to the center of the subject nodes
+		CameraToolbox.moveCamera(graph, { ...central, k: client.k }, () => {});
 
 		// Fade in new content, then move to lecture positions, then update background
 		this.setContent(graph, lecture.nodes, lecture.edges, () => {
 			this.moveContent(
 				graph,
 				lecture.nodes,
-				this.lectureTransform(graph, transform.x, transform.y),
+				this.lectureTransform(graph, central.x, central.y),
 				() => {
-					BackgroundToolbox.lecture(graph);
-
-					// Cleanup
 					graphState.toIdle();
 					graphView.toLectures();
 				}
@@ -386,23 +386,25 @@ export class TransitionToolbox {
 
 		graphState.toTransitioning();
 
-		// Snap camera and content to new pov - as the camera might be at (0, 0) at this time
-		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.panCamera(graph, transform.x, transform.y);
+		// Update background - Background must be set before moving camera/calculating central transform
+		BackgroundToolbox.grid(graph);
+
+		// Snap camera and content to correct pov
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
+		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes); // Pan to the center of the domain nodes
+		CameraToolbox.moveCamera(graph, { ...central, k: client.k });
 		this.moveContent(
 			graph,
 			graph.lecture.nodes,
-			this.lectureTransform(graph, transform.x, transform.y)
+			this.lectureTransform(graph, central.x, central.y)
 		);
 
-		// Update background and zoom out to new pov
-		BackgroundToolbox.grid(graph);
-		CameraToolbox.zoomCamera(graph, transform.k, () => {});
+		// Zoom out to new pov
+		CameraToolbox.zoomCamera(graph, central.k, () => {});
 
 		// Transition content to domain positions, then fade in new content
 		this.moveContent(graph, graph.lecture.nodes, this.domainTransform, () => {
 			this.setContent(graph, graph.data.domain_nodes, graph.data.domain_edges, () => {
-				// Cleanup
 				graphState.toIdle();
 				graphView.toDomains();
 			});
@@ -418,23 +420,25 @@ export class TransitionToolbox {
 
 		graphState.toTransitioning();
 
-		// Snap camera and content to new pov - as the camera might be at (0, 0) at this time
-		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
-		CameraToolbox.panCamera(graph, transform.x, transform.y);
+		// Update background
+		BackgroundToolbox.grid(graph);
+
+		// Snap camera and content to correct pov
+		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
+		const central = CameraToolbox.centralTransform(graph, graph.data.subject_nodes); // Pan to the center of the subject nodes
+		CameraToolbox.moveCamera(graph, { ...central, k: client.k });
 		this.moveContent(
 			graph,
 			graph.lecture.nodes,
-			this.lectureTransform(graph, transform.x, transform.y)
+			this.lectureTransform(graph, central.x, central.y)
 		);
 
-		// Set new background and zoom out to new pov
-		BackgroundToolbox.grid(graph);
-		CameraToolbox.zoomCamera(graph, transform.k, () => {});
+		// Zoom out to fit subject nodes
+		CameraToolbox.zoomCamera(graph, central.k, () => {});
 
 		// Transition content to original positions, then fade in new content
 		this.restoreContentPosition(graph, () => {
 			this.setContent(graph, graph.data.subject_nodes, graph.data.subject_edges, () => {
-				// Cleanup
 				graphState.toIdle();
 				graphView.toSubjects();
 			});

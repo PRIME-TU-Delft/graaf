@@ -68,10 +68,6 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>
-				A common name for the domain, i.e:
-				<span class="font-mono text-xs">"Complex numbers"</span>
-			</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
@@ -81,7 +77,6 @@
 					Domain style
 					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 				</Form.Legend>
-				<Form.Description>the style the domain is visualised with</Form.Description>
 				<Form.FieldErrors />
 			</div>
 
@@ -143,9 +138,9 @@
 			<Form.FormButton
 				disabled={$submitting}
 				loading={$delayed}
-				loadingMessage="Creating program..."
+				loadingMessage="Creating domain..."
 			>
-				Create new domain
+				Create domain
 			</Form.FormButton>
 		</div>
 	</form>

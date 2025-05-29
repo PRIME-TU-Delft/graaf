@@ -53,11 +53,6 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description
-				>A common name for a lecture. For instance: <span class="font-mono"
-					>"Week 1: Introduction"</span
-				></Form.Description
-			>
 			<Form.FieldErrors />
 		</Form.Field>
 

@@ -84,7 +84,11 @@
 						</Button>
 
 						<GraphLinkSettings {graph} />
-						<EditGraph {graph} />
+						<EditGraph
+							{graph}
+							availableCourses={data.availableCourses}
+							availableSandboxes={data.availableSandboxes}
+						/>
 					</div>
 				</a>
 			{/each}

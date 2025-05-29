@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { type GraphType } from '$lib/validators/graphValidator';
 	import { changeDomainRelSchema } from '$lib/zod/domainSchema';
 	import { Replace } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
@@ -10,89 +9,68 @@
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { Infer, SuperFormData } from 'sveltekit-superforms/client';
 	import type { PageData } from './$types';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
-		graph: GraphType;
-		inDomain: Domain;
-		outDomain: Domain;
-		type: 'domain' | 'outDomain';
+		graph: PrismaGraphPayload;
+		domain: Domain;
+		sourceDomain: Domain;
+		targetDomain: Domain;
+		type: 'sourceDomain' | 'targetDomain';
 	};
 
-	const { graph, inDomain, outDomain, type }: Props = $props();
+	const { graph, domain, sourceDomain, targetDomain, type }: Props = $props();
 
-	function formGenerator(id: string) {
-		return superForm((page.data as PageData).changeDomainRelForm, {
-			id: type + 'changeDomainRelForm' + useId() + '-' + id,
-			validators: zodClient(changeDomainRelSchema),
-			onResult: ({ result }) => {
-				if (result.type == 'success') {
-					toast.success('Successfully changed relationship!');
-				} else if (result.type == 'error') {
-					toast.error('Error changing domain relationship', {
-						description: 'The relationship probably already exists. Try reflshing the page.'
-					});
-				}
+	const form = superForm((page.data as PageData).changeDomainRelForm, {
+		id: `change-${type}-rel-form-${useId()}`,
+		validators: zodClient(changeDomainRelSchema),
+		onResult: ({ result }) => {
+			if (result.type == 'success') {
+				toast.success('Successfully changed relationship!');
+			} else if (result.type == 'error') {
+				toast.error('Error changing domain relationship', {
+					description: 'The relationship probably already exists. Try refreshing the page.'
+				});
 			}
-		});
-	}
-
-	function setFormData(
-		_: HTMLFormElement,
-		{
-			domain,
-			formData
-		}: {
-			domain: Domain;
-			formData: SuperFormData<Infer<typeof changeDomainRelSchema>>;
 		}
-	) {
+	});
+
+	const { form: formData, enhance, submitting, delayed } = form;
+
+	$effect(() => {
 		formData.set({
 			graphId: graph.id,
-			oldSourceDomainId: inDomain.id,
-			oldTargetDomainId: outDomain.id,
-			sourceDomainId: type == 'domain' ? domain.id : inDomain.id,
-			targetDomainId: type == 'outDomain' ? domain.id : outDomain.id
+			sourceDomainId: type == 'sourceDomain' ? domain.id : sourceDomain.id,
+			targetDomainId: type == 'targetDomain' ? domain.id : targetDomain.id,
+			oldSourceDomainId: sourceDomain.id,
+			oldTargetDomainId: targetDomain.id
 		});
-	}
+	});
 </script>
 
-{#each graph.domains as domain (domain.id)}
-	{#if domain.id != inDomain.id && domain.id != outDomain.id}
-		{@const form = formGenerator(domain.id.toString())}
-		{@const { form: formData, enhance, submitting, delayed } = form}
-
-		<form
-			action="?/change-domain-rel"
-			method="POST"
-			use:setFormData={{ domain, formData }}
-			use:enhance
-		>
-			<input type="hidden" name="graphId" value={graph.id} />
-			<input type="hidden" name="oldSourceDomainId" value={inDomain.id} />
-			<input type="hidden" name="oldTargetDomainId" value={outDomain.id} />
-			<input
-				type="hidden"
-				name="sourceDomainId"
-				value={type == 'domain' ? domain.id : inDomain.id}
-			/>
-			<input
-				type="hidden"
-				name="targetDomainId"
-				value={type == 'outDomain' ? domain.id : outDomain.id}
-			/>
-
-			<Form.FormButton
-				class="w-full justify-start"
-				variant="ghost"
-				disabled={fromStore(submitting).current}
-				loading={fromStore(delayed).current}
-				loadingMessage="Changing to {domain.name} relationship..."
-			>
-				<Replace />
-				{domain.name}
-			</Form.FormButton>
-		</form>
-	{/if}
-{/each}
+<form class="w-full" action="?/change-domain-rel" method="POST" use:enhance>
+	<input type="hidden" name="graphId" value={graph.id} />
+	<input type="hidden" name="oldSourceDomainId" value={sourceDomain.id} />
+	<input type="hidden" name="oldTargetDomainId" value={targetDomain.id} />
+	<input
+		type="hidden"
+		name="sourceDomainId"
+		value={type == 'sourceDomain' ? domain.id : sourceDomain.id}
+	/>
+	<input
+		type="hidden"
+		name="targetDomainId"
+		value={type == 'targetDomain' ? domain.id : targetDomain.id}
+	/>
+	<Form.FormButton
+		class="w-full justify-start"
+		variant="ghost"
+		disabled={fromStore(submitting).current}
+		loading={fromStore(delayed).current}
+		loadingMessage="Changing to {domain.name} relationship..."
+	>
+		<Replace />
+		{domain.name}
+	</Form.FormButton>
+</form>

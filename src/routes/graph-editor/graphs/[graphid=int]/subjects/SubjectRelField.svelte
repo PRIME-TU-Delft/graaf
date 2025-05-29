@@ -22,7 +22,7 @@
 	const { id, subjects, form, formData }: Props = $props();
 
 	const triggerId = useId();
-	const shortName = $derived(id == 'sourceSubjectId' ? 'in' : 'out');
+	const fieldLabel = $derived(id == 'sourceSubjectId' ? 'Source subject' : 'Target subject');
 	let popupOpen = $state(false);
 
 	function closeAndFocusTrigger(triggerId: string) {
@@ -43,21 +43,21 @@
 		<Form.Control id={triggerId}>
 			{#snippet children({ props })}
 				<div class="my-2 flex w-full items-center justify-between">
-					<Form.Label for="name">Subject {shortName}:</Form.Label>
+					<Form.Label for="name">{fieldLabel}</Form.Label>
 
 					<Popover.Trigger
+						class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
 						role="combobox"
 						{...props}
-						class={cn(buttonVariants({ variant: 'outline' }))}
 					>
-						<div>{subjects.find((f) => f.id === $formData[id])?.name ?? 'Select subject'}</div>
+						{subjects.find((f) => f.id === $formData[id])?.name ?? 'Select subject'}
 						<ChevronsUpDown class="opacity-50" />
 					</Popover.Trigger>
 					<input class="contents" hidden value={$formData[id]} name={props.name} />
 				</div>
 			{/snippet}
 		</Form.Control>
-		<Popover.Content class="w-[200px] p-0">
+		<Popover.Content>
 			<Command.Root>
 				<Command.Input autofocus placeholder="Search subjects..." class="h-9" />
 				<Command.Empty>No subject found.</Command.Empty>

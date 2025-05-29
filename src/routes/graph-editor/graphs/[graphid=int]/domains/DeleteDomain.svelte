@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
+	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
 	import { deleteDomainSchema } from '$lib/zod/domainSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
@@ -10,8 +10,8 @@
 	import type { PageData } from './$types';
 
 	type Props = {
-		domain: DomainType;
-		graph: GraphType;
+		domain: PrismaDomainPayload;
+		graph: PrismaGraphPayload;
 	};
 
 	let { domain, graph }: Props = $props();
@@ -72,7 +72,7 @@
 
 	{#if relationCount > 0 || connectedSubjects.length > 0}
 		{@const domainMessage = `delete ${relationCount} domain relationship${relationCount != 1 ? 's' : ''}`}
-		{@const subjectMessage = `remove domain from ${connectedSubjects.length} subject${connectedSubjects.length != 1 ? 's' : ''}`}
+		{@const subjectMessage = `unlink this domain from ${connectedSubjects.length} subject${connectedSubjects.length != 1 ? 's' : ''}`}
 		<p class="max-w-64 p-1">
 			<!-- Will add either or both messages concatinatted if the set is larger than 0 -->
 			This will also {[

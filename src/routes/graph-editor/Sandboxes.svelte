@@ -17,7 +17,7 @@
 <section class="mx-auto !mt-3 max-w-4xl rounded-lg border-2 border-purple-200 bg-purple-50/50 p-2">
 	<Accordion.Root type="single" class="w-full" bind:value={collapseSandboxes}>
 		<Accordion.Item value="item">
-			<Accordion.Trigger open={collapseSandboxes == 'item'}>
+			<Accordion.Trigger>
 				<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">My Sandboxes</h2>
 			</Accordion.Trigger>
 			<Accordion.Content><SandboxGrid {sandboxes} /></Accordion.Content>

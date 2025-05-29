@@ -3,31 +3,28 @@
 	import type { PrismaGraphPayload } from '$lib/d3/types';
 	import GraphDecorators from './GraphDecorators.svelte';
 
-	let { data: payload, editable }: { data: PrismaGraphPayload; editable: boolean } = $props();
+	let {
+		data: payload,
+		editable,
+		lectureID
+	}: { data: PrismaGraphPayload; editable: boolean; lectureID: number | null } = $props();
 
 	let d3Canvas = $state<SVGSVGElement>();
 
 	$effect(() => {
 		if (d3Canvas == null) return;
-
-		graphD3Store.setGraphD3(d3Canvas, payload, editable);
+		graphD3Store.setGraphD3(d3Canvas, payload, editable, lectureID);
 	});
-
-	function onResetSimulation() {
-		if (d3Canvas == null) return;
-
-		graphD3Store.clearGraphD3();
-
-		graphD3Store.setGraphD3(d3Canvas, payload, editable);
-	}
 </script>
 
 <!-- Markup -->
 
-<div class="relative h-full w-full overflow-hidden rounded-sm bg-white">
+<div
+	class="relative flex h-full w-full items-center justify-center overflow-hidden rounded-sm bg-white"
+>
 	<svg class="block h-full w-full" bind:this={d3Canvas} />
 
 	{#if graphD3Store.graphD3}
-		<GraphDecorators graphD3={graphD3Store.graphD3} {editable} {onResetSimulation} />
+		<GraphDecorators graphD3={graphD3Store.graphD3} {editable} />
 	{/if}
 </div>

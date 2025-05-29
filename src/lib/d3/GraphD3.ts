@@ -40,8 +40,14 @@ export class GraphD3 {
 	zoom_lock = true;
 	lecture: LectureData | null = null;
 	keys: Record<string, boolean> = {};
+	data_backup: GraphData | null = null;
 
-	constructor(element: SVGSVGElement, payload: PrismaGraphPayload, editable: boolean) {
+	constructor(
+		element: SVGSVGElement,
+		payload: PrismaGraphPayload,
+		editable: boolean,
+		lectureId: number | null = null
+	) {
 		this.editable = editable;
 
 		// Set zoom lock to false if editable
@@ -52,8 +58,15 @@ export class GraphD3 {
 		// Format data
 		this.data = this.formatPayload(payload);
 
+		if (lectureId !== null) {
+			this.lecture = this.data.lectures.find((l) => l.id === lectureId) ?? null;
+		}
+
 		// SVG setup
-		this.svg = d3.select<SVGSVGElement, unknown>(element).attr('display', 'block');
+		this.svg = d3
+			.select<SVGSVGElement, unknown>(element)
+			.attr('preserveAspectRatio', 'xMinYMin meet');
+
 		this.svg.selectAll('*').remove(); // Clear SVG
 
 		// Set up SVG components - order is important!
@@ -82,6 +95,7 @@ export class GraphD3 {
 			.scaleExtent([settings.MIN_ZOOM, settings.MAX_ZOOM])
 			.filter((event) => CameraToolbox.allowZoomAndPan(this, event))
 			.on('zoom', (event) => {
+				this.svg.select('#origin').attr('transform', event.transform);
 				this.content.attr('transform', event.transform);
 				BackgroundToolbox.transformGrid(this, event.transform);
 			});
@@ -117,6 +131,7 @@ export class GraphD3 {
 	}
 
 	// -----------------------------> Public methods
+
 	clear() {
 		this.svg.selectAll('*').remove(); // Clear SVG
 		this.data = {
@@ -126,6 +141,20 @@ export class GraphD3 {
 			subject_edges: [],
 			lectures: []
 		};
+	}
+
+	setData(data: GraphData, animateCamera: boolean) {
+		if (graphState.isTransitioning()) return;
+		if (graphState.isSimulating()) this.stopSimulation();
+
+		this.data = data;
+
+		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this, animateCamera);
+		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this, animateCamera);
+		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
+
+		// Save new data
+		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.save);
 	}
 
 	setView(targetView: GraphView) {
@@ -205,28 +234,48 @@ export class GraphD3 {
 	startSimulation() {
 		if (!graphState.isIdle()) return;
 
+		// Copy data
+		this.data_backup = structuredClone(this.data); // Deeply clone graph date before simulating
+
+		// Release all nodes
 		this.content
 			.selectAll<SVGGElement, NodeData>('.node.fixed')
 			.call(NodeToolbox.setFixed, this, false);
 
+		// Excite simulation
 		this.simulation.alpha(1).restart();
 
 		graphState.toSimulating();
 	}
 
+	resetSimulation() {
+		if (!graphState.isSimulating()) return;
+
+		// Restore data
+		if (this.data_backup) {
+			this.setData(this.data_backup, true);
+			this.data_backup = null;
+		} else {
+			throw new Error('No backup data available to reset simulation');
+		}
+	}
+
 	stopSimulation() {
 		if (!graphState.isSimulating()) return;
 
+		// Fix all nodes
 		this.content
 			.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
 			.call(NodeToolbox.setFixed, this, true)
 			.call(NodeToolbox.save);
 
+		// Freeze simulation
 		this.simulation.stop();
 
-		graphState.toIdle();
-
+		// Cleanup
+		this.data_backup = null;
 		this.centerOnGraph();
+		graphState.toIdle();
 	}
 
 	hasFreeNodes() {
@@ -239,7 +288,6 @@ export class GraphD3 {
 		}
 
 		const nodes = this.content.selectAll<SVGGElement, NodeData>('.node').data();
-
 		const transform = CameraToolbox.centralTransform(this, nodes);
 		CameraToolbox.moveCamera(this, transform, () => {});
 	}
@@ -289,7 +337,7 @@ export class GraphD3 {
 
 				// Add edge to graph
 				graph.domain_edges.push({
-					uuid: 'domain-${source.id}-${target.id}', // Unique edge id from source and target ids
+					uuid: `domain-${source.id}-${target.id}`, // Unique edge id from source and target ids
 					source: source_node,
 					target: target_node
 				});
@@ -379,8 +427,8 @@ export class GraphD3 {
 				edges: []
 			};
 
+			// Get present nodes
 			for (const subject of lecture.subjects) {
-				// Get subject node
 				const subject_node = subject_map.get(subject.id);
 				if (subject_node === undefined) throw new Error('Invalid graph data'); // Occurs when a lecture has non-existent subjects
 				lecture_data.present_nodes.push(subject_node);
@@ -390,11 +438,21 @@ export class GraphD3 {
 				if (subject_node.parent) {
 					lecture_data.domains.push(subject_node.parent);
 				}
+			}
 
+			// Gather past and future nodes and edges
+			for (const subject of lecture.subjects) {
 				// Gather past nodes and edges
 				const source_edges = reverse_edge_map.get(subject.id);
 				if (source_edges) {
 					for (const edge of source_edges.values()) {
+						if (
+							lecture_data.past_nodes.includes(edge.source) ||
+							lecture_data.present_nodes.includes(edge.source) ||
+							lecture_data.future_nodes.includes(edge.source)
+						)
+							continue; // Avoid duplicates
+
 						lecture_data.past_nodes.push(edge.source);
 						lecture_data.nodes.push(edge.source);
 						lecture_data.edges.push(edge);
@@ -405,6 +463,13 @@ export class GraphD3 {
 				const target_edges = forward_edge_map.get(subject.id);
 				if (target_edges) {
 					for (const edge of target_edges.values()) {
+						if (
+							lecture_data.past_nodes.includes(edge.source) ||
+							lecture_data.present_nodes.includes(edge.source) ||
+							lecture_data.future_nodes.includes(edge.source)
+						)
+							continue; // Avoid duplicates
+
 						lecture_data.future_nodes.push(edge.target);
 						lecture_data.nodes.push(edge.target);
 						lecture_data.edges.push(edge);

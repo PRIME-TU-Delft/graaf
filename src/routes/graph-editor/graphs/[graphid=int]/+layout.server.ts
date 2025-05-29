@@ -42,6 +42,9 @@ export const load: LayoutServerLoad = async ({ params }) => {
 				lectures: {
 					include: {
 						subjects: true
+					},
+					orderBy: {
+						order: 'asc'
 					}
 				}
 			}
@@ -50,12 +53,12 @@ export const load: LayoutServerLoad = async ({ params }) => {
 		if (!graph) error(404, { message: 'Graph not found' });
 
 		const graphValidator = new GraphValidator(graph);
-		const cycles = graphValidator.hasCycle();
+		const issues = graphValidator.validate();
 
 		// Happy path
 		return {
 			graph: graph,
-			cycles: cycles
+			issues: issues
 		};
 	} catch (e: unknown) {
 		error(500, { message: e instanceof Error ? e.message : `${e}` });

@@ -12,6 +12,7 @@
 	import CreateNewLecture from './CreateNewLecture.svelte';
 	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
+	import IssueIndicator from '../IssueIndicator.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -67,20 +68,23 @@
 >
 	{#each lectures as lecture, index (lecture.id)}
 		{@const changeLecture = new ChangeLectureClass()}
+		{@const lectureIssues = data.issues.lectureIssues[lecture.id] || { lecture: [], subjects: {} }}
 
 		<div
 			animate:flip={{ duration: flipDurationMs }}
-			class="rounded bg-purple-50/30 !outline-2 !outline-purple-500 !backdrop-blur-lg"
+			class="rounded bg-purple-50/30 !backdrop-blur-lg"
 		>
-			<div class="flex w-full items-center justify-between gap-2">
+			<div class="flex w-full items-center justify-between gap-2 gap-2 p-2">
 				<div
-					class="m-2 rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
+					class="rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
 					use:dragHandle
 					aria-label="drag-handle for {lecture.id}"
 				>
 					<MoveVertical class="h-4 w-4" />
 				</div>
+
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
+				<IssueIndicator issues={lectureIssues.lecture} />
 
 				{#if data.graph.subjects.length > 0}
 					{#key lecture.subjects}
@@ -117,7 +121,11 @@
 				</DropdownMenu.Root>
 			</div>
 
-			<LectureSubject bind:lecture={lectures[index]} subjects={data.graph.subjects} />
+			<LectureSubject
+				bind:lecture={lectures[index]}
+				subjects={data.graph.subjects}
+				issues={lectureIssues.subjects}
+			/>
 		</div>
 	{:else}
 		<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">
