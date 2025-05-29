@@ -68,7 +68,7 @@
 >
 	{#each lectures as lecture, index (lecture.id)}
 		{@const changeLecture = new ChangeLectureClass()}
-		{@const lectureIssues = data.issues.lectureIssues[lecture.id] || []}
+		{@const lectureIssues = data.issues.lectureIssues[lecture.id] || { lecture: [], subjects: {} }}
 
 		<div
 			animate:flip={{ duration: flipDurationMs }}
