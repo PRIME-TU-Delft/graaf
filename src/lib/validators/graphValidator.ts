@@ -15,6 +15,7 @@ Conflicting edge: 					An edge in the subject graph that conflicts with an edge 
 So we want to achieve two things:
   1) Find every simple cycle in both domains and subjects
   2) Find all edges in subjects that conflict with edges in domains
+  3) Find lectures with subjects with missing prerequisites
 
 Abstraction
   As most algorithms we use have to be applied to both domains and subjects, and as their schemas are not
@@ -45,6 +46,12 @@ import type { PrismaGraphPayload, Issues, Issue } from './types';
 
 // Abstract graph representation
 type AbstractGraph = Map<number, AbstractNode>;
+type AbstractGroup = {
+	id: number;
+	order: number;
+	nodes: AbstractNode[];
+};
+
 type AbstractNode = {
 	id: number;
 	neighbors: AbstractNode[];
@@ -61,12 +68,14 @@ export class GraphValidator {
 	domains: AbstractGraph; // Abstract representation of the domain graph
 	subjects: AbstractGraph; // Abstract representation of the subject graph
 	inheritanceMap: InheritanceMap; // Map linking subjects to domains
+	lectures: AbstractGroup[]; // Lectures in the graph
 
 	constructor(graph: PrismaGraphPayload) {
 		this.graph = graph;
 		this.domains = new Map();
 		this.subjects = new Map();
 		this.inheritanceMap = new Map();
+		this.lectures = [];
 
 		// Construct domain graph
 		for (const domain of graph.domains) {
@@ -110,6 +119,23 @@ export class GraphValidator {
 				this.inheritanceMap.set(subjectNode, domainNode);
 			}
 		}
+
+		// Construct lectures
+		for (const lecture of graph.lectures) {
+			const lectureNodes: AbstractNode[] = [];
+			for (const subject of lecture.subjects) {
+				const subjectNode = this.subjects.get(subject.id);
+				if (subjectNode) {
+					lectureNodes.push(subjectNode);
+				}
+			}
+
+			this.lectures.push({
+				id: lecture.id,
+				order: lecture.order,
+				nodes: lectureNodes
+			});
+		}		
 	}
 
 	/**
@@ -120,37 +146,9 @@ export class GraphValidator {
 	validate(): Issues {
 		return {
 			...this.findNodeIssues(),
-			...this.findRelationIssues()
+			...this.findRelationIssues(),
+			...this.findLectureIssues()
 		} as Issues;
-	}
-
-	validateDomainEdgeChange(
-		oldSource: number,
-		oldTarget: number,
-		newSource: number,
-		newTarget: number
-	): Partial<Issues> {
-		const oldSourceNode = this.domains.get(oldSource);
-		const oldTargetNode = this.domains.get(oldTarget);
-		const newSourceNode = this.domains.get(newSource);
-		const newTargetNode = this.domains.get(newTarget);
-
-		if (!oldSourceNode || !oldTargetNode || !newSourceNode || !newTargetNode) {
-			return {}; // Maybe should raise error?
-		}
-
-		// Enact change
-		oldSourceNode.neighbors.filter((node) => node.id !== oldTarget);
-		newSourceNode.neighbors.push(newTargetNode);
-
-		// Check for issues
-		const issues = this.findRelationIssues();
-
-		// Undo change
-		oldSourceNode.neighbors.push(oldTargetNode);
-		newSourceNode.neighbors.filter((node) => node.id !== newTarget);
-
-		return issues;
 	}
 
 	private findNodeIssues(): Partial<Issues> {
@@ -270,16 +268,15 @@ export class GraphValidator {
 
 			const message = temp.join(' -> ');
 
-			for (const edge of cycle) {
-				const issues = domainRelationIssues[edge.source][edge.target] || [];
-				issues.push({
-					title: 'Cyclic domain relation',
-					message: message,
-					severity: 'error'
-				});
+			const backedge = cycle[cycle.length - 1];
+			const issues = domainRelationIssues[backedge.source][backedge.target] || [];
+			issues.push({
+				title: 'Cyclic domain relation',
+				message: message,
+				severity: 'error'
+			});
 
-				domainRelationIssues[edge.source][edge.target] = issues;
-			}
+			domainRelationIssues[backedge.source][backedge.target] = issues;
 		}
 
 		/* Subject relation issues
@@ -298,16 +295,15 @@ export class GraphValidator {
 
 			const message = temp.join(' -> ');
 
-			for (const edge of cycle) {
-				const issues = subjectRelationIssues[edge.source][edge.target] || [];
-				issues.push({
-					title: 'Cyclic subject relation',
-					message: message,
-					severity: 'error'
-				});
+			const backedge = cycle[cycle.length - 1];
+			const issues = subjectRelationIssues[backedge.source][backedge.target] || [];
+			issues.push({
+				title: 'Cyclic subject relation',
+				message: message,
+				severity: 'error'
+			});
 
-				subjectRelationIssues[edge.source][edge.target] = issues;
-			}
+			subjectRelationIssues[backedge.source][backedge.target] = issues;
 		}
 
 		const conflictingEdges = this.findConflictingEdges(
@@ -315,6 +311,7 @@ export class GraphValidator {
 			this.subjects,
 			this.inheritanceMap
 		);
+
 		for (const edge of conflictingEdges) {
 			const source = this.graph.subjects.find((subject) => subject.id === edge.source);
 			const target = this.graph.subjects.find((subject) => subject.id === edge.target);
@@ -330,6 +327,94 @@ export class GraphValidator {
 		}
 
 		return { domainRelationIssues, subjectRelationIssues };
+	}
+
+	private findLectureIssues(): Partial<Issues> {
+		const lectureIssues: { [key: number]: { 'lecture': Issue[], 'subjects': { [key: number]: Issue[] }}} = {};
+
+		/* Lecture issues
+			Lecture with no name				(Error)
+			Lecture with no subjects			(Error)
+			Lecture with duplicate name			(Warning)
+			Subject with missing prerequisite	(Warning)
+		*/
+
+		for (const lecture of this.graph.lectures) {
+			const issues: Issue[] = [];
+
+			const name = lecture.name.trim();
+			if (!lecture.name)
+				issues.push({
+					title: 'Lecture without name',
+					message: 'Lectures must have a name',
+					severity: 'error'
+				});
+
+			if (lecture.subjects.length === 0)
+				issues.push({
+					title: 'Lecture without subjects',
+					message: 'Lectures must have at least one subject',
+					severity: 'error'
+				});
+
+			if (this.graph.lectures.find((other) => other.name === name && other.id !== lecture.id))
+				issues.push({
+					title: 'Lecture with duplicate name',
+					message: 'Lectures must have unique names',
+					severity: 'warning'
+				});
+
+			lectureIssues[lecture.id] = {
+				lecture: issues,
+				subjects: {}
+			};
+		}
+
+		// Map each subject to its earliest lecture
+		const lectureMap = new Map<number, AbstractGroup>();
+		for (const lecture of this.lectures) {
+			for (const subject of lecture.nodes) {
+				const existingLecture = lectureMap.get(subject.id);
+				if (!existingLecture) {
+					lectureMap.set(subject.id, lecture);
+				} else {
+					if (existingLecture.order > lecture.order) {
+						lectureMap.set(subject.id, lecture);
+					}
+				}
+			}
+		}
+
+		// Find all ancestors for each subject
+		// TODO this is sloppy, I feel like you could do this in one pass... whatever
+		const subjectAncestors = new Map<number, Set<AbstractNode>>();
+		for (const subject of this.subjects.values()) {
+			const ancestors = this.findAncestors(this.subjects, subject);
+			subjectAncestors.set(subject.id, ancestors);
+		}
+
+		// Check for subjects with missing prerequisites
+		// TODO also feels super slow, but its 4am
+		for (const lecture of this.lectures) {
+			for (const subjectNode of lecture.nodes) {
+				for (const ancestorNode of subjectAncestors.get(subjectNode.id) || []) {
+					const ancestorLecture = lectureMap.get(ancestorNode.id);
+					if (!ancestorLecture || ancestorLecture.order > lecture.order) {
+						const subject = this.graph.subjects.find((s) => s.id === subjectNode.id);
+						const ancestor = this.graph.subjects.find((s) => s.id === ancestorNode.id);
+						if (!subject || !ancestor) continue;
+
+						lectureIssues[lecture.id].subjects[subject.id] = [{
+							title: 'Missing prerequisite',
+							message: `Subject ${subject.name} requires ${ancestor.name} as a prerequisite, but is not covered in previous lectures`,
+							severity: 'warning'
+						}];
+					}
+				}
+			}
+		}
+
+		return { lectureIssues };
 	}
 
 	/**
@@ -641,5 +726,57 @@ export class GraphValidator {
 		}
 
 		return conflictingEdges;
+	}
+
+	/**
+	 * Reverses the direction of all edges in a graph.
+	 * @param graph Graph to reverse
+	 * @returns Reversed graph
+	 */
+
+	private reverseGraph(graph: AbstractGraph): AbstractGraph {
+		const reversedGraph: AbstractGraph = new Map();
+		for (const node of graph.values()) {
+			reversedGraph.set(node.id, { id: node.id, neighbors: [] });
+		}
+
+		for (const node of graph.values()) {
+			const reversedNode = reversedGraph.get(node.id)!;
+			for (const neighbor of node.neighbors) {
+				const reversedNeighbor = reversedGraph.get(neighbor.id)!;
+				reversedNeighbor.neighbors.push(reversedNode);
+			}
+		}
+
+		return reversedGraph;
+	}
+
+	/**
+	 * Find all ancestors of a node in a graph.
+	 * @param graph The graph to search
+	 * @param node The node to find ancestors of
+	 * @returns An array of ancestor nodes
+	 */
+
+	private findAncestors(graph: AbstractGraph, node: AbstractNode): Set<AbstractNode> {
+		const reversedGraph = this.reverseGraph(graph);
+		const ancestors = new Set<AbstractNode>();
+		const visited = new Set<number>();
+		const stack: AbstractNode[] = [reversedGraph.get(node.id)!];
+
+		while (stack.length > 0) {
+			const current = stack.pop()!;
+			if (visited.has(current.id)) continue;
+			visited.add(current.id);
+
+			for (const neighbor of current.neighbors) {
+				if (!visited.has(neighbor.id)) {
+					stack.push(neighbor);
+					ancestors.add(graph.get(neighbor.id)!);
+				}
+			}
+		}
+
+		return ancestors;
 	}
 }
