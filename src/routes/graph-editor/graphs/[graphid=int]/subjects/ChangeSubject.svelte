@@ -39,11 +39,8 @@
 		id: 'change-subject-form-' + useId() + '-' + subject.id,
 		validators: zodClient(subjectSchema),
 		onResult: ({ result }) => {
-			// Guard for not success
 			if (result.type != 'success') return;
-
 			changeSubjectDialog = false;
-
 			toast.success('Subject changed successfully!');
 		}
 	});
@@ -76,7 +73,7 @@
 					variant="outline"
 					class="h-auto w-full justify-start rounded-sm border-0 px-2 py-1.5 hover:shadow-none"
 				>
-					{@render changeDomain()}
+					{@render changeSubject()}
 				</DialogButton>
 			</Menubar.Item>
 
@@ -90,8 +87,8 @@
 			</Menubar.Sub>
 
 			<Menubar.Separator />
-			<Menubar.Item class="justify-between">
-				<span>Highlight in preview</span>
+			<Menubar.Item class="justify-between" disabled>
+				<span>Find in graph</span>
 				<ArrowRight class="size-4" />
 			</Menubar.Item>
 			<Menubar.Separator />
@@ -124,7 +121,7 @@
 	{/if}
 {/snippet}
 
-{#snippet changeDomain()}
+{#snippet changeSubject()}
 	<form action="?/change-subject-in-graph" method="POST" use:enhance>
 		<input type="hidden" name="graphId" value={graph.id} />
 		<input type="hidden" name="subjectId" value={subject.id} />
@@ -160,6 +157,7 @@
 						</div>
 					{/snippet}
 				</Form.Control>
+
 				<Popover.Content>
 					<Command.Root>
 						<Command.Input autofocus placeholder="Search domain..." class="h-9" />
@@ -201,7 +199,6 @@
 				onclick={() => {
 					$formData.name = subject.name;
 					$formData.domainId = subject.domainId ?? 0;
-
 					tainted.set({ name: false, domainId: false, graphId: false });
 				}}
 			>
@@ -209,9 +206,9 @@
 			</Button>
 
 			<Form.FormButton
-				disabled={$submitting}
+				disabled={$submitting || !isTainted($tainted)}
 				loading={$delayed}
-				loadingMessage="Changing subjects..."
+				loadingMessage="Saving..."
 			>
 				Save
 			</Form.FormButton>

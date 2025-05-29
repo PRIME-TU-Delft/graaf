@@ -66,7 +66,7 @@
 		{@const subjectIssues = issues[subject.id] || []}
 
 		<div animate:flip={{ duration: flipDurationMs }} class="!outline-purple-50">
-			<div class="flex gap-2 p-2 w-full items-center rounded bg-purple-50/30 backdrop-blur-sm">
+			<div class="flex w-full items-center gap-2 rounded bg-purple-50/30 p-2 backdrop-blur-sm">
 				<div
 					class="rounded bg-purple-300 p-2 transition-colors hover:bg-purple-400"
 					use:dragHandle
@@ -75,8 +75,8 @@
 					<MoveVertical class="h-4 w-4" />
 				</div>
 
+				<span class="w-full"> {subject.name} </span>
 				<IssueIndicator issues={subjectIssues} />
-				{subject.name}
 			</div>
 		</div>
 	{:else}

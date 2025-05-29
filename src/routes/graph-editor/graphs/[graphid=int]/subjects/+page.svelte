@@ -131,7 +131,8 @@
 		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
 			{#snippet children({ sourceSubject, targetSubject })}
 				<Grid.Cell>
-					{@const issues = data.issues.subjectRelationIssues[sourceSubject.id]?.[targetSubject.id] || []}
+					{@const issues =
+						data.issues.subjectRelationIssues[sourceSubject.id]?.[targetSubject.id] || []}
 					<IssueIndicator {issues} />
 				</Grid.Cell>
 

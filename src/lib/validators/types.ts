@@ -37,6 +37,7 @@ export type PrismaSubjectPayload = Prisma.SubjectGetPayload<{
 }>;
 
 export type Issue = {
+	id: string;
 	title: string;
 	message: string;
 	severity: 'error' | 'warning';

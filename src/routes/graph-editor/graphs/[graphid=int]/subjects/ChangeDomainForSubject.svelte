@@ -31,7 +31,8 @@
 		class={cn(
 			'relative w-full',
 			buttonVariants({ variant: 'outline' }),
-			!subject.domain && '!bg-orange-300/20 text-orange-900 !hover:bg-orange-900 hover:text-orange-900'
+			!subject.domain &&
+				'!hover:bg-orange-900 !bg-orange-300/20 text-orange-900 hover:text-orange-900'
 		)}
 	>
 		<span class="grow text-left">

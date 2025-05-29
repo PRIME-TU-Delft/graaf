@@ -42,6 +42,7 @@ Conflicting edges
 
 */
 
+import { useId } from 'bits-ui';
 import type { PrismaGraphPayload, Issues, Issue } from './types';
 
 // Abstract graph representation
@@ -171,6 +172,7 @@ export class GraphValidator {
 			const name = domain.name.trim();
 			if (!domain.name)
 				issues.push({
+					id: useId(),
 					title: 'Domain without name',
 					message: 'Domains must have a name',
 					severity: 'error'
@@ -178,6 +180,7 @@ export class GraphValidator {
 
 			if (!domain.style)
 				issues.push({
+					id: useId(),
 					title: 'Domain without style',
 					message: 'Domains must have a style',
 					severity: 'error'
@@ -185,8 +188,9 @@ export class GraphValidator {
 
 			if (this.graph.domains.find((other) => other.name === name && other.id !== domain.id))
 				issues.push({
+					id: useId(),
 					title: 'Domain with duplicate name',
-					message: 'Domains must have unique names',
+					message: 'Domains should have unique names',
 					severity: 'warning'
 				});
 
@@ -194,15 +198,17 @@ export class GraphValidator {
 				this.graph.domains.find((other) => other.style === domain.style && other.id !== domain.id)
 			)
 				issues.push({
+					id: useId(),
 					title: 'Domain with duplicate style',
-					message: 'Domains must have unique styles',
+					message: 'Domains should have unique styles',
 					severity: 'warning'
 				});
 
 			if (!this.graph.subjects.find((subject) => subject.domainId === domain.id))
 				issues.push({
+					id: useId(),
 					title: 'Domain without subjects',
-					message: 'Domains must have at least one subject',
+					message: 'Domains should have at least one subject',
 					severity: 'warning'
 				});
 
@@ -222,6 +228,7 @@ export class GraphValidator {
 
 			if (!subject.name)
 				issues.push({
+					id: useId(),
 					title: 'Subject without name',
 					message: 'Subjects must have a name',
 					severity: 'error'
@@ -229,6 +236,7 @@ export class GraphValidator {
 
 			if (!subject.domainId)
 				issues.push({
+					id: useId(),
 					title: 'Subject without domain',
 					message: 'Subjects must have a domain',
 					severity: 'error'
@@ -238,8 +246,9 @@ export class GraphValidator {
 				this.graph.subjects.find((other) => other.name === subject.name && other.id !== subject.id)
 			)
 				issues.push({
+					id: useId(),
 					title: 'Subject with duplicate name',
-					message: 'Subjects must have unique names',
+					message: 'Subjects should have unique names',
 					severity: 'warning'
 				});
 
@@ -260,9 +269,7 @@ export class GraphValidator {
 		const domainCycles = this.findCycles(this.domains);
 		for (const cycle of domainCycles) {
 			const temp = [
-				this.graph.domains.find(
-					(domain) => domain.id === cycle[0].source
-				)?.name || 'Unknown Domain'
+				this.graph.domains.find((domain) => domain.id === cycle[0].source)?.name || 'Unknown Domain'
 			];
 
 			for (const edge of cycle) {
@@ -278,6 +285,7 @@ export class GraphValidator {
 			const issues = domainRelationIssues[backedge.source][backedge.target] || [];
 
 			issues.push({
+				id: useId(),
 				title: 'Cyclic domain relation',
 				message: message,
 				severity: 'error'
@@ -294,9 +302,8 @@ export class GraphValidator {
 		const subjectCycles = this.findCycles(this.subjects);
 		for (const cycle of subjectCycles) {
 			const temp = [
-				this.graph.subjects.find(
-					(subject) => subject.id === cycle[0].source
-				)?.name || 'Unknown Subject'
+				this.graph.subjects.find((subject) => subject.id === cycle[0].source)?.name ||
+					'Unknown Subject'
 			];
 
 			for (const edge of cycle) {
@@ -312,6 +319,7 @@ export class GraphValidator {
 			const issues = subjectRelationIssues[backedge.source][backedge.target] || [];
 
 			issues.push({
+				id: useId(),
 				title: 'Cyclic subject relation',
 				message: message,
 				severity: 'error'
@@ -335,6 +343,7 @@ export class GraphValidator {
 			const issues = subjectRelationIssues[edge.source][edge.target] || [];
 
 			issues.push({
+				id: useId(),
 				title: 'Conflicting subject relation',
 				message: `${source?.name} -> ${target?.name} is not represented in the domain graph`,
 				severity: 'warning'
@@ -364,6 +373,7 @@ export class GraphValidator {
 			const name = lecture.name.trim();
 			if (!lecture.name)
 				issues.push({
+					id: useId(),
 					title: 'Lecture without name',
 					message: 'Lectures must have a name',
 					severity: 'error'
@@ -371,6 +381,7 @@ export class GraphValidator {
 
 			if (lecture.subjects.length === 0)
 				issues.push({
+					id: useId(),
 					title: 'Lecture without subjects',
 					message: 'Lectures must have at least one subject',
 					severity: 'error'
@@ -378,8 +389,9 @@ export class GraphValidator {
 
 			if (this.graph.lectures.find((other) => other.name === name && other.id !== lecture.id))
 				issues.push({
+					id: useId(),
 					title: 'Lecture with duplicate name',
-					message: 'Lectures must have unique names',
+					message: 'Lectures should have unique names',
 					severity: 'warning'
 				});
 
@@ -425,6 +437,7 @@ export class GraphValidator {
 
 						lectureIssues[lecture.id].subjects[subject.id] = [
 							{
+								id: useId(),
 								title: 'Missing prerequisite',
 								message: `${subject.name} requires ${ancestor.name} as a prerequisite, but is not covered in previous lectures`,
 								severity: 'warning'

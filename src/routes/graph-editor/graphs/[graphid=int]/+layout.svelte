@@ -11,6 +11,7 @@
 
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
+	import { graphState } from '$lib/d3/GraphD3State.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
@@ -58,11 +59,12 @@
 										<Check />
 									</DropdownMenu.Item>
 								{:else}
-									<a href="./{tab.toLowerCase()}{searchParams}">
-										<DropdownMenu.Item>
-											{tab}
-										</DropdownMenu.Item>
-									</a>
+									<DropdownMenu.Item
+										disabled={graphState.isTransitioning()}
+										onclick={() => goto(`./${tab.toLowerCase()}${searchParams}`)}
+									>
+										{tab}
+									</DropdownMenu.Item>
 								{/if}
 							{/each}
 							<DropdownMenu.Separator />

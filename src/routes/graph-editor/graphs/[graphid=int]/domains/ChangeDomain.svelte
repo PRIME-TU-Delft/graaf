@@ -35,13 +35,14 @@
 	let { domain, graph }: Props = $props();
 
 	let changeDomainDialog = $state(false);
+	let domainStyleOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainForm, {
 		id: 'change-domain-form-' + useId() + domain.id,
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type != 'success') return;
-
+			changeDomainDialog = false;
 			toast.success('Domain changed successfully!');
 		}
 	});
@@ -97,8 +98,8 @@
 			</Menubar.Sub>
 
 			<Menubar.Separator />
-			<Menubar.Item class="justify-between">
-				<span>Highlight in preview</span>
+			<Menubar.Item class="justify-between" disabled>
+				<span>Find in graph</span>
 				<ArrowRight class="size-4" />
 			</Menubar.Item>
 			<Menubar.Separator />
@@ -156,7 +157,7 @@
 			</div>
 
 			<RadioGroup.Root name="style" bind:value={$formData.style} class="grid py-2">
-				<Popover.Root>
+				<Popover.Root bind:open={domainStyleOpen}>
 					<Popover.Trigger
 						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
 					>
@@ -169,11 +170,13 @@
 						{$formData.style.toLowerCase().replaceAll('_', ' ') || 'None'}
 						<ChevronDown />
 					</Popover.Trigger>
+
 					<Popover.Content>
 						<Form.Control>
 							{#snippet children({ props })}
 								<div class="flex items-center">
 									<RadioGroup.Item
+										onclick={() => (domainStyleOpen = false)}
 										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
 										class="h-6 w-6"
 										value=""
@@ -189,6 +192,7 @@
 								{#snippet children({ props })}
 									<div class="flex items-center">
 										<RadioGroup.Item
+											onclick={() => (domainStyleOpen = false)}
 											style="border-color: {settings.COLORS[style]}; background: {settings.COLORS[
 												style
 											]}50; border-width: 3px"
@@ -225,11 +229,17 @@
 				onclick={() => {
 					$formData.name = domain.name;
 					$formData.style = domain.style ?? '';
+					tainted.set({ name: false, style: false, domainId: false, graphId: false });
 				}}
 			>
 				<Undo2 /> Reset
 			</Button>
-			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Changing...">
+
+			<Form.FormButton
+				disabled={$submitting || !isTainted($tainted)}
+				loading={$delayed}
+				loadingMessage="Saving..."
+			>
 				Save
 			</Form.FormButton>
 		</div>
