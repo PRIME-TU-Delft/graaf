@@ -269,7 +269,10 @@ export class GraphValidator {
 			const message = temp.join(' -> ');
 
 			const backedge = cycle[cycle.length - 1];
+			const sourceIssues = domainRelationIssues[backedge.source];
+			if (!sourceIssues) domainRelationIssues[backedge.source] = {};
 			const issues = domainRelationIssues[backedge.source][backedge.target] || [];
+
 			issues.push({
 				title: 'Cyclic domain relation',
 				message: message,
@@ -296,7 +299,10 @@ export class GraphValidator {
 			const message = temp.join(' -> ');
 
 			const backedge = cycle[cycle.length - 1];
+			const sourceIssues = subjectRelationIssues[backedge.source];
+			if (!sourceIssues) subjectRelationIssues[backedge.source] = {};
 			const issues = subjectRelationIssues[backedge.source][backedge.target] || [];
+
 			issues.push({
 				title: 'Cyclic subject relation',
 				message: message,
@@ -316,7 +322,10 @@ export class GraphValidator {
 			const source = this.graph.subjects.find((subject) => subject.id === edge.source);
 			const target = this.graph.subjects.find((subject) => subject.id === edge.target);
 
+			const sourceIssues = subjectRelationIssues[edge.source];
+			if (!sourceIssues) subjectRelationIssues[edge.source] = {};
 			const issues = subjectRelationIssues[edge.source][edge.target] || [];
+
 			issues.push({
 				title: 'Conflicting subject relation',
 				message: `${source?.name} -> ${target?.name} is not represented in the domain graph`,
