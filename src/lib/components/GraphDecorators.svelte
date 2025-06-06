@@ -1,22 +1,28 @@
 <script lang="ts">
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Command from '$lib/components/ui/command/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 
 	import { GraphD3 } from '$lib/d3/GraphD3';
 	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import * as settings from '$lib/settings';
 
-	import { Check, ChevronDown, ChevronsUpDown, ChevronUp, Maximize, Minimize, Orbit, SearchSlash } from '@lucide/svelte';
+	import {
+		Check,
+		ChevronDown,
+		ChevronUp,
+		Maximize,
+		Minimize,
+		Orbit,
+		SearchSlash
+	} from '@lucide/svelte';
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
+	import { graphState } from '$lib/d3/GraphD3State.svelte';
+	import { cn } from '$lib/utils';
 	import screenfull from 'screenfull';
 	import { fade } from 'svelte/transition';
 	import { Button, buttonVariants } from './ui/button';
-	import { cn } from '$lib/utils';
-	import { graphState } from '$lib/d3/GraphD3State.svelte';
 
 	type Props = {
 		graphD3: GraphD3;
@@ -54,10 +60,7 @@
 </script>
 
 {#if !graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
-	<Accordion.Root
-		type="single"
-		class="absolute top-4 right-4 p-3 text-purple-900"
-	>
+	<Accordion.Root type="single" class="absolute top-4 right-4 p-3 text-purple-900">
 		<Accordion.Item class="border-none" value="item-1">
 			<Accordion.Trigger class="p-0">Domain Legend</Accordion.Trigger>
 			<Accordion.Content>
@@ -78,10 +81,7 @@
 <!-- Select Lecture -->
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger
-		class={cn(
-			buttonVariants({ variant: 'link' }),
-			"absolute top-4 left-4 p-3"
-		)}
+		class={cn(buttonVariants({ variant: 'link' }), 'absolute top-4 left-4 p-3')}
 	>
 		{chosenLecture?.name || 'Select a lecture'}
 		<ChevronDown />
@@ -89,27 +89,29 @@
 	<DropdownMenu.Content>
 		<DropdownMenu.Group>
 			<DropdownMenu.Item
+				onclick={() => {
+					chosenLecture = null;
+					graphD3.setLecture(null);
+				}}
+			>
+				Unselect
+				<Check class={cn('ml-auto w-auto', chosenLecture && 'w-0 text-transparent')} />
+			</DropdownMenu.Item>
+			<DropdownMenu.Separator />
+			{#each graphD3.data.lectures as lecture (lecture.id)}
+				<DropdownMenu.Item
 					onclick={() => {
-						chosenLecture = null;
-						graphD3.setLecture(null);
+						chosenLecture = lecture;
+						graphD3.setLecture(lecture);
+						isLecturePopoverOpen = false;
 					}}
 				>
-					Unselect
-					<Check class={cn('ml-auto w-auto', chosenLecture && 'w-0 text-transparent')} />
+					{lecture.name}
+					<Check
+						class={cn('ml-auto w-auto', lecture.id !== chosenLecture?.id && 'w-0 text-transparent')}
+					/>
 				</DropdownMenu.Item>
-				<DropdownMenu.Separator />
-				{#each graphD3.data.lectures as lecture (lecture.id)}
-					<DropdownMenu.Item
-						onclick={() => {
-							chosenLecture = lecture;
-							graphD3.setLecture(lecture);
-							isLecturePopoverOpen = false;
-						}}
-					>
-						{lecture.name}
-						<Check class={cn('ml-auto w-auto', lecture.id !== chosenLecture?.id && 'w-0 text-transparent')} />
-					</DropdownMenu.Item>
-				{/each}
+			{/each}
 		</DropdownMenu.Group>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

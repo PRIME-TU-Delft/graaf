@@ -22,7 +22,7 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	import type { PageData } from './$types';	
+	import type { PageData } from './$types';
 	import type { Prisma, Graph } from '@prisma/client';
 
 	type DuplicateGraphProps = {
@@ -41,7 +41,12 @@
 		isDuplicateOpen?: boolean;
 	};
 
-	let { graph, availableCourses, availableSandboxes, isDuplicateOpen = $bindable() }: DuplicateGraphProps = $props();
+	let {
+		graph,
+		availableCourses,
+		availableSandboxes,
+		isDuplicateOpen = $bindable()
+	}: DuplicateGraphProps = $props();
 
 	const triggerId = useId();
 	const data = page.data as PageData;
