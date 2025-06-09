@@ -1,18 +1,21 @@
 <script lang="ts">
+	import type { Issue } from '$lib/validators/types';
 	import { MoveVertical, Plus } from '@lucide/svelte';
 	import type { Lecture, Subject } from '@prisma/client';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import IssueIndicator from '../IssueIndicator.svelte';
 
 	type Props = {
+		issues: { [key: number]: Issue[] };
 		subjects: Subject[];
 		lecture: Lecture & {
 			subjects: Subject[];
 		};
 	};
 
-	const { subjects, lecture = $bindable() }: Props = $props();
+	const { subjects, issues, lecture = $bindable() }: Props = $props();
 
 	let subjectBackup = [...lecture.subjects];
 
@@ -46,7 +49,6 @@
 
 		if (!response.ok) {
 			lecture.subjects = subjectBackup;
-
 			toast.error('Error while reordering lectures');
 		} else {
 			subjectBackup = lecture.subjects;
@@ -61,19 +63,20 @@
 	onfinalize={handleDndFinalize}
 >
 	{#each lecture.subjects as subject (subject.id)}
+		{@const subjectIssues = issues[subject.id] || []}
+
 		<div animate:flip={{ duration: flipDurationMs }} class="!outline-purple-50">
-			<div class="flex w-full items-center rounded bg-purple-50/30 backdrop-blur-sm">
+			<div class="flex w-full items-center gap-2 rounded bg-purple-50/30 p-2 backdrop-blur-sm">
 				<div
-					class="m-2 rounded bg-purple-300 p-2 transition-colors hover:bg-purple-400"
+					class="rounded bg-purple-300 p-2 transition-colors hover:bg-purple-400"
 					use:dragHandle
 					aria-label="drag-handle for {lecture.id}"
 				>
 					<MoveVertical class="h-4 w-4" />
 				</div>
 
-				<p class="m-0 flex items-center gap-1">
-					{subject.name}
-				</p>
+				<span class="w-full"> {subject.name} </span>
+				<IssueIndicator issues={subjectIssues} />
 			</div>
 		</div>
 	{:else}

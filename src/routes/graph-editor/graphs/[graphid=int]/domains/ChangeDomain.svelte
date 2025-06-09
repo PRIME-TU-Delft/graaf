@@ -25,23 +25,24 @@
 
 	import type { PageData } from './$types';
 	import type { Domain } from '@prisma/client';
-	import type { DomainType, GraphType } from '$lib/validators/graphValidator';
+	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
-		domain: DomainType;
-		graph: GraphType;
+		domain: PrismaDomainPayload;
+		graph: PrismaGraphPayload;
 	};
 
 	let { domain, graph }: Props = $props();
 
 	let changeDomainDialog = $state(false);
+	let domainStyleOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainForm, {
 		id: 'change-domain-form-' + useId() + domain.id,
 		validators: zodClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type != 'success') return;
-
+			changeDomainDialog = false;
 			toast.success('Domain changed successfully!');
 		}
 	});
@@ -91,36 +92,32 @@
 				<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
 					Delete
 				</Menubar.SubTrigger>
-				<Menubar.SubContent class="ml-1 w-32">
+				<Menubar.SubContent>
 					<DeleteDomain {domain} {graph} />
 				</Menubar.SubContent>
 			</Menubar.Sub>
 
 			<Menubar.Separator />
-			<Menubar.Item class="justify-between">
-				<span>Highlight in preview</span>
+			<Menubar.Item class="justify-between" disabled>
+				<span>Find in graph</span>
 				<ArrowRight class="size-4" />
 			</Menubar.Item>
 			<Menubar.Separator />
 
-			{@render relations(domain.sourceDomains, 'Source')}
-			{@render relations(domain.targetDomains, 'Target')}
+			{@render relations(domain.sourceDomains, 'Sources')}
+			{@render relations(domain.targetDomains, 'Targets')}
 		</Menubar.Content>
 	</Menubar.Menu>
 </Menubar.Root>
 
-{#snippet relations(domains: Domain[], title: 'Source' | 'Target')}
+{#snippet relations(domains: Domain[], title: 'Sources' | 'Targets')}
 	{#if domains.length > 0}
 		<Menubar.Sub>
-			<Menubar.SubTrigger>{title} relations:</Menubar.SubTrigger>
+			<Menubar.SubTrigger>{title}</Menubar.SubTrigger>
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each domains as domain (domain.id)}
 					<div class="flex flex-col items-center gap-1">
-						<Button
-							class="w-full font-mono text-xs"
-							href="#{domain.id}-{domain.name}"
-							variant="ghost"
-						>
+						<Button class="w-full font-mono text-xs" href="#domain-{domain.id}" variant="ghost">
 							{domain.name}
 						</Button>
 					</div>
@@ -129,7 +126,7 @@
 		</Menubar.Sub>
 	{:else}
 		<Menubar.Item class="justify-between">
-			<span>{title} relations: </span>
+			<span>{title}</span>
 			<span class="text-gray-400">None</span>
 		</Menubar.Item>
 	{/if}
@@ -147,10 +144,6 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>
-				A common name for the domain, i.e:
-				<span class="font-mono text-xs">"Complex numbers"</span>
-			</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
@@ -160,12 +153,11 @@
 					Domain style
 					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 				</Form.Legend>
-				<Form.Description>the style the domain is visualised with</Form.Description>
 				<Form.FieldErrors />
 			</div>
 
 			<RadioGroup.Root name="style" bind:value={$formData.style} class="grid py-2">
-				<Popover.Root>
+				<Popover.Root bind:open={domainStyleOpen}>
 					<Popover.Trigger
 						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
 					>
@@ -178,11 +170,13 @@
 						{$formData.style.toLowerCase().replaceAll('_', ' ') || 'None'}
 						<ChevronDown />
 					</Popover.Trigger>
+
 					<Popover.Content>
 						<Form.Control>
 							{#snippet children({ props })}
 								<div class="flex items-center">
 									<RadioGroup.Item
+										onclick={() => (domainStyleOpen = false)}
 										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
 										class="h-6 w-6"
 										value=""
@@ -198,6 +192,7 @@
 								{#snippet children({ props })}
 									<div class="flex items-center">
 										<RadioGroup.Item
+											onclick={() => (domainStyleOpen = false)}
 											style="border-color: {settings.COLORS[style]}; background: {settings.COLORS[
 												style
 											]}50; border-width: 3px"
@@ -234,13 +229,18 @@
 				onclick={() => {
 					$formData.name = domain.name;
 					$formData.style = domain.style ?? '';
+					tainted.set({ name: false, style: false, domainId: false, graphId: false });
 				}}
 			>
 				<Undo2 /> Reset
 			</Button>
-			<Form.Button>Change</Form.Button>
-			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Changing...">
-				Change
+
+			<Form.FormButton
+				disabled={$submitting || !isTainted($tainted)}
+				loading={$delayed}
+				loadingMessage="Saving..."
+			>
+				Save
 			</Form.FormButton>
 		</div>
 	</form>

@@ -10,6 +10,12 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
+	import * as Popover from '$lib/components/ui/popover';
+	import { cn } from '$lib/utils';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { Undo2 } from '@lucide/svelte';
+	import DeleteLecture from './DeleteLecture.svelte';
 
 	type Props = {
 		lecture: Lecture;
@@ -33,7 +39,7 @@
 		}
 	});
 
-	const { form: formData, enhance, submitting, delayed } = form;
+	const { form: formData, enhance, submitting, delayed, tainted, isTainted } = form;
 
 	$effect(() => {
 		if (lecture) {
@@ -64,16 +70,35 @@
 				{/snippet}
 			</Form.Control>
 			<Form.FieldErrors class="mb-2" />
-			<Form.Description>Lecture Name</Form.Description>
 		</Form.Field>
 
-		<div class="mt-4 flex w-full justify-end">
-			<Form.FormButton
-				disabled={$submitting || $formData.name.length < 1 || $formData.name == lecture.name}
-				loading={$delayed}
-				loadingMessage="Changing lecture..."
+		<div class="mt-4 flex w-full justify-end gap-1">
+			<Popover.Root>
+				<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
+					Delete subject
+				</Popover.Trigger>
+				<Popover.Content>
+					<DeleteLecture {lecture} {graph} onSuccess={() => {}} />
+				</Popover.Content>
+			</Popover.Root>
+
+			<Button
+				variant="outline"
+				disabled={!isTainted($tainted)}
+				onclick={() => {
+					$formData.name = lecture.name;
+					tainted.set({ name: false, graphId: false });
+				}}
 			>
-				Change lecture
+				<Undo2 /> Reset
+			</Button>
+
+			<Form.FormButton
+				disabled={$submitting || !isTainted($tainted)}
+				loading={$delayed}
+				loadingMessage="Saving..."
+			>
+				Save
 			</Form.FormButton>
 		</div>
 	</form>

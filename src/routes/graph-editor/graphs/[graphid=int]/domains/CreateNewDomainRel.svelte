@@ -1,18 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover';
-	import { cn } from '$lib/utils';
 	import { domainRelSchema } from '$lib/zod/domainSchema';
-	import type { Domain, Graph } from '@prisma/client';
+	import type { Graph, Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Plus from 'lucide-svelte/icons/plus';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
@@ -20,20 +17,19 @@
 
 	const { graph }: Props = $props();
 
-	let popupOpen = $state(false);
-
+	let dialogOpen = $state(false);
 	const form = superForm((page.data as PageData).newDomainRelForm, {
-		id: 'newDomainRel' + useId(),
+		id: 'domainRelForm' + useId(),
 		validators: zodClient(domainRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain created successfully!');
-				popupOpen = false;
+				dialogOpen = false;
 			}
 		}
 	});
 
-	const { form: formData, enhance, submitting } = form;
+	const { form: formData, enhance, submitting, delayed } = form;
 
 	const isTheSameDomain = $derived(
 		$formData.sourceDomainId == $formData.targetDomainId && $formData.sourceDomainId != 0
@@ -41,32 +37,33 @@
 </script>
 
 <div class="sticky top-2 z-10 mt-12 flex justify-between">
-	<h2 class="m-0">Relationships</h2>
+	<h2 class="m-0 flex items-center">Relationships</h2>
+	<DialogButton
+		bind:open={dialogOpen}
+		icon="plus"
+		button="New Relationship"
+		title="Create Relationship"
+		description="Relationships connect domains to each other."
+	>
+		<form action="?/add-domain-rel" method="POST" use:enhance>
+			<input type="hidden" name="graphId" value={graph.id} />
 
-	<Popover.Root bind:open={popupOpen}>
-		<Popover.Trigger class={cn(buttonVariants({ variant: 'default' }), 'h-9')}>
-			<Plus /> Create Relationship
-		</Popover.Trigger>
-		<Popover.Content>
-			<form action="?/add-domain-rel" method="POST" use:enhance>
-				<p class="text-lg font-bold">Create Relationship</p>
+			<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
+			<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
 
-				<input type="hidden" name="graphId" value={graph.id} />
+			<Form.FormError {form} />
 
-				<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
-				<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
-
-				<Form.FormError {form} />
-
-				<div class="flex justify-between gap-1">
-					<Form.FormButton
-						loading={$submitting}
-						disabled={isTheSameDomain || !$formData.sourceDomainId || !$formData.targetDomainId}
-					>
-						Create relationship
-					</Form.FormButton>
-				</div>
-			</form>
-		</Popover.Content>
-	</Popover.Root>
+			<div class="flex w-full items-center justify-end">
+				<Form.FormButton
+					loading={$delayed}
+					disabled={$submitting ||
+						isTheSameDomain ||
+						!$formData.sourceDomainId ||
+						!$formData.targetDomainId}
+				>
+					Create relationship
+				</Form.FormButton>
+			</div>
+		</form>
+	</DialogButton>
 </div>
