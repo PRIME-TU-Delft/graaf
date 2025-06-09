@@ -6,8 +6,13 @@ class GraphD3Store {
 
 	constructor() {}
 
-	setGraphD3(d3Canvas: SVGSVGElement, payload: PrismaGraphPayload, editable: boolean) {
-		this.graphD3 = new GraphD3(d3Canvas, payload, editable);
+	setGraphD3(
+		d3Canvas: SVGSVGElement,
+		payload: PrismaGraphPayload,
+		editable: boolean,
+		lectureId: number | null = null
+	) {
+		this.graphD3 = new GraphD3(d3Canvas, payload, editable, lectureId);
 	}
 
 	clearGraphD3() {

@@ -24,7 +24,6 @@
 	const { graph }: Props = $props();
 
 	const triggerId = useId();
-
 	let dialogOpen = $state(false);
 	let domainIdOpen = $state(false);
 
@@ -47,11 +46,9 @@
 	icon="plus"
 	button="New Subject"
 	title="Create Subject"
-	description="A subject can be related to other subject."
+	description="A subject is a topic or concept within a domain."
 	class="sticky top-2 z-10 float-right -mt-14 h-9"
 >
-	<!-- For sumbitting a NEW PROGRAM
- 	It triggers an action that can be seen in +page.server.ts -->
 	<form action="?/add-subject-to-graph" method="POST" use:enhance>
 		<input type="hidden" name="graphId" value={graph.id} />
 
@@ -62,7 +59,6 @@
 					<Input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>A common name for a subject</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
@@ -72,10 +68,8 @@
 					{#snippet children({ props })}
 						<div class="mt-2 flex w-full items-center justify-between">
 							<Form.Label>
-								Link to domain (optional)
-								{#if graph.domains.length === 0}
-									<p class="text-xs text-orange-900">(No domains available; Create one first.)</p>
-								{/if}
+								Link to domain
+								<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 							</Form.Label>
 							<Popover.Trigger
 								disabled={graph.domains.length === 0}
@@ -83,7 +77,11 @@
 								role="combobox"
 								{...props}
 							>
-								{graph.domains.find((f) => f.id === $formData.domainId)?.name ?? 'Select domain'}
+								{#if graph.domains.length === 0}
+									No domains available
+								{:else}
+									{graph.domains.find((f) => f.id === $formData.domainId)?.name ?? 'Select domain'}
+								{/if}
 								<ChevronsUpDown class="opacity-50" />
 							</Popover.Trigger>
 							<input hidden value={$formData.domainId} name={props.name} />
@@ -116,7 +114,7 @@
 		</Form.Field>
 
 		<Form.Button disabled={$submitting} loading={$delayed} class="float-right mt-4">
-			Create Subject
+			Create subject
 		</Form.Button>
 	</form>
 </DialogButton>

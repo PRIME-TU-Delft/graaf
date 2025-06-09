@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { GraphType } from '$lib/validators/graphValidator';
 	import { Check, Replace } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -11,10 +10,11 @@
 	import type { PageData } from './$types';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import * as Form from '$lib/components/ui/form/index.js';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
 		subject: PageData['graph']['subjects'][0];
-		graph: GraphType;
+		graph: PrismaGraphPayload;
 		domain?: Domain;
 		onSuccess?: () => void;
 	};

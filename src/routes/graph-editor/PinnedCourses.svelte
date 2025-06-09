@@ -26,7 +26,7 @@
 	>
 		<Accordion.Root type="single" class="w-full" bind:value={collapsePinnedCourses}>
 			<Accordion.Item value="item">
-				<Accordion.Trigger open={collapsePinnedCourses == 'item'}>
+				<Accordion.Trigger>
 					<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">
 						My Pinned Courses
 					</h2>

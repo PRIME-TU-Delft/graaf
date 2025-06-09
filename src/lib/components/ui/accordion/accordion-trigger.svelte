@@ -7,12 +7,10 @@
 		ref = $bindable(null),
 		class: className,
 		level = 3,
-		open = false,
 		children,
 		...restProps
 	}: WithoutChild<AccordionPrimitive.TriggerProps> & {
 		level?: AccordionPrimitive.HeaderProps['level'];
-		open?: boolean;
 	} = $props();
 </script>
 
@@ -31,13 +29,5 @@
 		<ChevronDownIcon
 			class="text-primary pointer-events-none size-4 shrink-0 translate-y-0.5 transition-transform duration-200"
 		/>
-
-		<p class="text-primary">
-			{#if open}
-				Hide
-			{:else}
-				Show
-			{/if}
-		</p>
 	</AccordionPrimitive.Trigger>
 </AccordionPrimitive.Header>

@@ -24,21 +24,29 @@ export class EdgeToolbox {
 			.attr('d', 'M 0 0 L 10 5 L 0 10 Z');
 	}
 
-	static create(selection: EdgeSelection) {
-		const styleOf = (edge: EdgeData) =>
-			edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
+	private static styleOf(edge: EdgeData) {
+		return edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
+	}
 
+	static create(selection: EdgeSelection) {
 		selection
 			.attr('id', (edge) => edge.uuid)
 			.attr('class', 'edge')
 			.attr('stroke-width', settings.STROKE_WIDTH)
-			.attr('stroke', (edge) => styleOf(edge).stroke)
-			.attr('fill', (edge) => styleOf(edge).stroke)
+			.attr('stroke', (edge) => EdgeToolbox.styleOf(edge).stroke)
+			.attr('fill', (edge) => EdgeToolbox.styleOf(edge).stroke)
 			.attr('marker-end', 'url(#arrowhead)')
 			.call(EdgeToolbox.updatePosition);
 	}
 
 	static updatePosition(selection: EdgeSelection, transition: boolean = false) {
+		/* We are calculating the line connecting two nodes.
+		 * It should start at the center of the start node and end at the BOUNDS of the end node.
+		 * Said differently, we need to find the intersection of a line with a rectangle centered at the target node.
+		 * To do this, we split the plane in four using the two diagonals of the rectangle. We find in which quadrant
+		 * the source node is, then find the intersection with the corresponding side of the rectangle.
+		 */
+
 		// Lower edges
 		selection.lower();
 
@@ -74,13 +82,6 @@ export class EdgeToolbox {
 				return;
 			}
 
-			/* We are calculating the line connecting two nodes.
-			 * It should start at the center of the start node and end at the BOUNDS of the end node.
-			 * Said differently, we need to find the intersection of a line with a rectangle centered at the target node.
-			 * To do this, we split the plane in four using the two diagonals of the rectangle. We find in which quadrant
-			 * the source node is, then find the intersection with the corresponding side of the rectangle.
-			 */
-
 			// Bounds of our four quadrants
 			const ratio = halfHeight / halfWidth;
 			const posBound = ratio * dx + cySource; // positively angled diagonal
@@ -104,5 +105,11 @@ export class EdgeToolbox {
 				.attr('x2', x2 * settings.GRID_UNIT)
 				.attr('y2', y2 * settings.GRID_UNIT);
 		});
+	}
+
+	static updateStyle(selection: EdgeSelection) {
+		selection
+			.attr('stroke', (edge) => EdgeToolbox.styleOf(edge).stroke)
+			.attr('fill', (edge) => EdgeToolbox.styleOf(edge).stroke);
 	}
 }

@@ -72,6 +72,12 @@ class NodeToolbox {
 				.on('start', function () {
 					const selection = d3.select<SVGGElement, NodeData>(this);
 					selection.call(NodeToolbox.setFixed, graph, true);
+
+					// Stop simulation if there are no unfixed nodes
+					const unfixed = graph.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)');
+					if (unfixed.empty()) {
+						graph.stopSimulation();
+					}
 				})
 
 				.on('drag', function (event, node) {
@@ -83,6 +89,7 @@ class NodeToolbox {
 
 					NodeToolbox.updatePosition(selection, graph);
 
+					// Excite simulation if it is running
 					if (graphState.isSimulating()) {
 						graph.simulation.alpha(1).restart();
 					}
@@ -157,7 +164,7 @@ class NodeToolbox {
 		selection.each(function (node) {
 			graph.content
 				.selectAll<SVGLineElement, EdgeData>('.edge')
-				.filter((edge) => edge.source === node || edge.target === node)
+				.filter((edge) => edge.source.uuid === node.uuid || edge.target.uuid === node.uuid)
 				.call(EdgeToolbox.updatePosition, transition);
 		});
 	}
@@ -196,9 +203,8 @@ class NodeToolbox {
 	}
 
 	static setFixed(selection: NodeSelection, graph: GraphD3, fixed: boolean) {
-		if (selection.classed('fixed') === fixed) return;
-
 		selection
+			.filter(fixed ? ':not(.fixed)' : '.fixed')
 			.classed('fixed', fixed)
 			.attr('stroke-dasharray', fixed ? null : settings.STROKE_DASHARRAY)
 			.each((node) => {

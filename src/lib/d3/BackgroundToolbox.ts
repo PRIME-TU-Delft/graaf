@@ -32,12 +32,18 @@ export class BackgroundToolbox {
 
 	static clear(graph: GraphD3) {
 		graph.background.attr('class', null).selectAll('*').remove();
+
+		// Reset svg viewBox
+		graph.svg
+			.classed('h-full', true)
+			.classed('w-full', true)
+			.style('max-width', null)
+			.style('margin', null)
+			.attr('viewBox', null);
 	}
 
 	static lecture(graph: GraphD3) {
 		BackgroundToolbox.clear(graph);
-
-		graph.background.attr('class', 'lecture');
 
 		// Calculate table dimensions
 		const size = graph.lecture
@@ -51,28 +57,24 @@ export class BackgroundToolbox {
 		const column_left = settings.STROKE_WIDTH / 2;
 		const column_top =
 			settings.STROKE_WIDTH / 2 + settings.LECTURE_HEADER_HEIGHT * settings.GRID_UNIT;
+
 		const column_width = (2 * settings.LECTURE_PADDING + settings.NODE_WIDTH) * settings.GRID_UNIT;
 		const column_height =
 			(size * settings.NODE_HEIGHT + (size + 1) * settings.LECTURE_PADDING) * settings.GRID_UNIT;
 
 		const outer_width = 3 * column_width + settings.STROKE_WIDTH;
 		const outer_height =
-			(size * settings.NODE_HEIGHT +
-				(size + 1) * settings.LECTURE_PADDING +
-				settings.LECTURE_HEADER_HEIGHT) *
+			(settings.LECTURE_HEADER_HEIGHT +
+				size * settings.NODE_HEIGHT +
+				(size + 1) * settings.LECTURE_PADDING) *
 				settings.GRID_UNIT +
 			settings.STROKE_WIDTH;
-
-		// Note: if the background is bigger than the client, this will overflow
-		// TODO scale the background/content when overflowing
-		const dx = (graph.svg.node()!.clientWidth - outer_width) / 2;
-		const dy = (graph.svg.node()!.clientHeight - outer_height) / 2;
 
 		// Past subject colunm
 		graph.background
 			.append('text')
-			.attr('x', dx + (settings.STROKE_WIDTH + column_width) / 2)
-			.attr('y', dy)
+			.attr('x', (settings.STROKE_WIDTH + column_width) / 2)
+			.attr('y', 0)
 			.text('Past Topics')
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'hanging')
@@ -80,8 +82,8 @@ export class BackgroundToolbox {
 
 		graph.background
 			.append('rect')
-			.attr('x', dx + column_left)
-			.attr('y', dy + column_top)
+			.attr('x', column_left)
+			.attr('y', column_top)
 			.attr('width', column_width)
 			.attr('height', column_height)
 			.attr('stroke-width', settings.STROKE_WIDTH)
@@ -91,8 +93,8 @@ export class BackgroundToolbox {
 		// Present subject column
 		graph.background
 			.append('text')
-			.attr('x', dx + (settings.STROKE_WIDTH + 3 * column_width) / 2)
-			.attr('y', dy)
+			.attr('x', (settings.STROKE_WIDTH + 3 * column_width) / 2)
+			.attr('y', 0)
 			.text('This Lecture')
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'hanging')
@@ -100,8 +102,8 @@ export class BackgroundToolbox {
 
 		graph.background
 			.append('rect')
-			.attr('x', dx + column_left + column_width)
-			.attr('y', dy + column_top)
+			.attr('x', column_left + column_width)
+			.attr('y', column_top)
 			.attr('width', column_width)
 			.attr('height', column_height)
 			.attr('stroke-width', settings.STROKE_WIDTH)
@@ -111,8 +113,8 @@ export class BackgroundToolbox {
 		// Future subject column
 		graph.background
 			.append('text')
-			.attr('x', dx + (settings.STROKE_WIDTH + 5 * column_width) / 2)
-			.attr('y', dy)
+			.attr('x', (settings.STROKE_WIDTH + 5 * column_width) / 2)
+			.attr('y', 0)
 			.text('Future Topics')
 			.attr('text-anchor', 'middle')
 			.attr('dominant-baseline', 'hanging')
@@ -120,13 +122,23 @@ export class BackgroundToolbox {
 
 		graph.background
 			.append('rect')
-			.attr('x', dx + column_left + 2 * column_width)
-			.attr('y', dy + column_top)
+			.attr('x', column_left + 2 * column_width)
+			.attr('y', column_top)
 			.attr('width', column_width)
 			.attr('height', column_height)
 			.attr('stroke-width', settings.STROKE_WIDTH)
 			.attr('fill', 'transparent')
 			.attr('stroke', 'black');
+
+		// Configure svg to scale to the client size
+		graph.svg
+			.classed('h-full', false)
+			.classed('w-full', false)
+			.style('max-width', outer_width + 'px')
+			.style('margin', settings.LECTURE_PADDING * settings.GRID_UNIT + 'px')
+			.attr('viewBox', `0 0 ${outer_width} ${outer_height}`);
+
+		graph.background.attr('class', 'lecture');
 	}
 
 	static grid(graph: GraphD3) {

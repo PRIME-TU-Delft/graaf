@@ -113,6 +113,8 @@ type EdgeData = {
 
 // Abstraction for lectures
 type LectureData = {
+	id: number;
+	name: string;
 	past_nodes: NodeData[]; // Subjects required for this lecture
 	present_nodes: NodeData[]; // Subjects covered in this lecture
 	future_nodes: NodeData[]; // Subjects that will follow this lecture
