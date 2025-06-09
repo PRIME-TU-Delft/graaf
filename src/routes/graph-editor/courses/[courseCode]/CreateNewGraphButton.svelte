@@ -1,16 +1,28 @@
 <script lang="ts">
-	import DialogButton from '$lib/components/DialogButton.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { Input } from '$lib/components/ui/input';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { newGraphSchema } from '$lib/zod/graphSchema';
 	import { page } from '$app/state';
 
-	import type { PageData } from './$types';
+	// Components
+	import { Input } from '$lib/components/ui/input';
+	import DialogButton from '$lib/components/DialogButton.svelte';
+	import * as Form from '$lib/components/ui/form/index.js';
+	import { Button } from '$lib/components/ui/button';
 
-	let dialogOpen = $state(false);
+	// Icons
+	import { Plus, Undo2 } from '@lucide/svelte';
+
+	// Types
+	import type { PageData } from './$types';
+	import type { Course } from '@prisma/client';
+
+	type CreateNewGraphButtonProps = {
+		course: Course;
+	};
+
+	let { course }: CreateNewGraphButtonProps = $props();
 
 	const data = page.data as PageData;
 	const form = superForm(data.newGraphForm, {
@@ -24,6 +36,14 @@
 	});
 
 	const { form: formData, enhance, submitting, delayed } = form;
+
+	let dialogOpen = $state(false);
+
+	$effect(() => {
+		$formData.name = '';
+		$formData.parentId = course.id;
+		$formData.parentType = 'COURSE';
+	});
 </script>
 
 <DialogButton
@@ -31,7 +51,7 @@
 	icon="plus"
 	button="New Graph"
 	title="Create Graph"
-	description="Graphs are collections of Nodes and Edges, usually pertaining to the same field of study."
+	description="Graphs are collections of domains, subjects and lectures, usually pertaining to the same field of study."
 	class="w-full "
 >
 	<form action="?/new-graph" method="POST" use:enhance>
@@ -45,13 +65,29 @@
 					<Input {...props} bind:value={$formData['name']} />
 				{/snippet}
 			</Form.Control>
-			<Form.Description>A common name for the graph</Form.Description>
 			<Form.FieldErrors />
 		</Form.Field>
 
-		<div class="mt-4 flex w-full justify-end">
-			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Creating graph...">
-				Create new graph
+		<div class="mt-2 flex items-center justify-between gap-1">
+			<Form.FormError class="w-full text-right" {form} />
+			<Button
+				variant="outline"
+				onclick={() =>
+					form.reset({
+						newState: {
+							name: '',
+							parentId: data.course?.id,
+							parentType: 'COURSE'
+						}
+					})}
+			>
+				<Undo2 /> Reset
+			</Button>
+			<Form.FormButton disabled={$submitting} loading={$delayed}>
+				<Plus /> Create
+				{#snippet loadingMessage()}
+					<span>Creating graph...</span>
+				{/snippet}
 			</Form.FormButton>
 		</div>
 	</form>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { cn } from '$lib/utils';
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 
 	// Components
@@ -7,7 +6,6 @@
 	import EditGraph from './EditGraph.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
 	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import LinkEmbedGraph from './settings/graphLinks/LinkEmbedGraph.svelte';
 
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
@@ -17,74 +15,87 @@
 	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
 
 	let { data }: { data: PageData } = $props();
+	const hasAtLeastEditPermission = data.user != undefined && 
+									 data.course != undefined && 
+									 hasCoursePermissions(
+									 	data.user,
+									 	data.course,
+									 	'CourseAdminEditorORProgramAdminEditor'
+									 );
+
 </script>
 
-<section class="prose mx-auto p-4">
+<article class="my-6 mb-12 space-y-6">
 	{#if data.error != undefined}
 		<h1>Oops! Something went wrong</h1>
 		<p>{data.error}</p>
-	{:else if data.user != undefined}
-		<div class="flex justify-between">
-			<h1 class="shadow-blue-500/70">{data.course.code} {data.course.name}</h1>
+	{:else}
+		<section class="prose mx-auto p-4">
+			<div class="my-12 flex justify-between gap-4">
+				<div>
+					<h1 class="!m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
+						{data.course.code} {data.course.name}
+					</h1>
+				</div>
+				{#if hasAtLeastEditPermission}
+					<Button href="{data.course.code}/settings">Settings <ArrowRight /></Button>
+				{:else}
+					<ShowAdmins course={data.course} />
+				{/if}
+			</div>
 
-			{#if hasCoursePermissions(data.user, data.course, 'CourseAdminEditorORProgramAdminEditor')}
-				<Button href="{data.course.code}/settings">Settings <ArrowRight /></Button>
-			{:else}
-				<ShowAdmins course={data.course} />
+			<p>
+				{#if hasAtLeastEditPermission}
+					This is the overview of this course, where you can find and manage its properties.
+					You can also create new graphs, and edit or share them with others!
+				{:else}
+					This is the overview of this course, where you can find its graphs and admins. Do you need
+					editor permissions? Please contact one of the administrators of this course.
+				{/if}
+			</p>
+		</section>
+
+		<section class="mx-auto my-12 max-w-4xl gap-4 space-y-2 p-4">
+			{#if hasAtLeastEditPermission}
+				<CreateNewGraphButton course={data.course} />
 			{/if}
-		</div>
-		<p>
-			This is where you can find all the information about the course. You can also create a new
-			graph here.
-		</p>
+
+			<!-- MARK: GRAPHS -->
+			{#each data.graphs as graph (graph.id)}
+				<a
+					class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-shadow hover:shadow-lg"
+					href="/graph-editor/graphs/{graph.id}"
+				>
+					<div class="grow">
+						<h2 class="text-xl font-bold text-purple-950">{graph.name}</h2>
+						<div class="grid grid-cols-[max-content_auto] gap-x-3 text-gray-400">
+							<span>Domains</span> <span>{graph._count.domains}</span>
+							<span>Subjects</span> <span>{graph._count.subjects}</span>
+							<span>Links</span> <span>{graph.links.length}</span>
+						</div>
+					</div>
+
+					<div class="flex grow-0 flex-col gap-1">
+						<Button class="transition-colors group-hover:bg-purple-500">
+							View{#if hasAtLeastEditPermission}/Edit{/if}
+							<ArrowRight />
+						</Button>
+
+						{#if hasAtLeastEditPermission}
+							<GraphLinkSettings {graph} course={data.course} />
+						{/if}
+
+
+						{#if hasAtLeastEditPermission}
+							<EditGraph
+								{graph}
+								availableCourses={data.availableCourses}
+								availableSandboxes={data.availableSandboxes}
+							/>
+						{/if}
+					</div>
+				</a>
+			{/each}
+		</section>
 	{/if}
-</section>
-
-{#if data.course != null && data.user != undefined}
-	{@const hasAtLeastCourseEditPermissions = hasCoursePermissions(
-		data.user,
-		data.course,
-		'CourseAdminEditorORProgramAdminEditor'
-	)}
-	<section class={cn(['mx-auto my-12 max-w-4xl gap-4 space-y-2 p-4'])}>
-		{#if hasAtLeastCourseEditPermissions}
-			<CreateNewGraphButton />
-		{/if}
-
-		<!-- MARK: GRAPHS -->
-		{#each data.graphs as graph (graph.id)}
-			<a
-				class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-shadow hover:shadow-lg"
-				href="/graph-editor/graphs/{graph.id}"
-			>
-				<div class="grow">
-					<h2 class="text-xl font-bold text-purple-950">{graph.name}</h2>
-					<p>Domains: {graph._count.domains}</p>
-					<p>Subjects: {graph._count.subjects}</p>
-					<p>Links: {graph.links.length}</p>
-				</div>
-
-				<div class="flex grow-0 flex-col gap-1">
-					<Button class="transition-colors group-hover:bg-purple-500">
-						View{#if hasAtLeastCourseEditPermissions}/Edit{/if}
-						<ArrowRight />
-					</Button>
-
-					<LinkEmbedGraph {graph} course={data.course} longName {hasAtLeastCourseEditPermissions} />
-
-					{#if hasAtLeastCourseEditPermissions}
-						<GraphLinkSettings {graph} course={data.course} />
-					{/if}
-
-					{#if hasAtLeastCourseEditPermissions}
-						<EditGraph
-							{graph}
-							availableCourses={data.availableCourses}
-							availableSandboxes={data.availableSandboxes}
-						/>
-					{/if}
-				</div>
-			</a>
-		{/each}
-	</section>
-{/if}
+</article>

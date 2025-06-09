@@ -35,7 +35,7 @@
 						{graph.name}
 					</Table.Cell>
 					<Table.Cell class="p-1 text-right">
-						<LinkEmbedGraph {graph} {course} hasAtLeastCourseEditPermissions />
+						<LinkEmbedGraph {graph} {course} hasAtLeastEditPermission />
 					</Table.Cell>
 					<Table.Cell class="p-1 text-right">
 						<GraphLinkSettings {graph} {course} />

@@ -25,10 +25,10 @@
 				links: Link[];
 			};
 		longName?: boolean;
-		hasAtLeastCourseEditPermissions: boolean;
+		hasAtLeastEditPermission: boolean;
 	};
 
-	const { graph, course, hasAtLeastCourseEditPermissions }: GraphLinksProps = $props();
+	const { graph, course, hasAtLeastEditPermission }: GraphLinksProps = $props();
 
 	let links = $derived(graph.links.map((link) => link));
 
@@ -76,7 +76,7 @@
 	title="Graph link settings"
 	class="grow"
 >
-	{#if hasAtLeastCourseEditPermissions}
+	{#if hasAtLeastEditPermission}
 		<p class="text-sm"></p>
 		<div class="my-2 grid grid-cols-1 gap-x-4 gap-y-2">
 			{#each links as link (link.id || link.name)}
