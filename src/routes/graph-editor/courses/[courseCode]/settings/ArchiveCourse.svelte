@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
 	import { changeArchiveSchema } from '$lib/zod/courseSchema';
-	import type { Course } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
+
+	// Components
+	import * as Form from '$lib/components/ui/form/index.js';
+
+	// Icons
+	import { Archive, ArchiveRestore } from 'lucide-svelte';
+
+	// Types
+	import type { Course } from '@prisma/client';
 	import type { PageData } from './$types';
 
 	type ChangeRoleProps = {
@@ -20,7 +27,12 @@
 		validators: zodClient(changeArchiveSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
-				toast.success(`Changed to ${!course.isArchived ? 'Archived' : 'De-Archived'}!`);
+				if (!course.isArchived) {
+					toast.success(`Archived Course!`);
+				} else {
+					toast.success(`Restored Course!`);
+				}
+
 				onSuccess();
 			}
 		}
@@ -44,7 +56,12 @@
 		loading={$delayed}
 		class="justify-self-end"
 	>
-		{course.isArchived ? 'De-archive' : 'Archive'} course
+		{#if course.isArchived}
+			<ArchiveRestore /> Restore Course
+		{:else}
+			<Archive /> Archive Course
+		{/if}
+
 		{#snippet loadingMessage()}
 			<span>Changing state...</span>
 		{/snippet}

@@ -3,7 +3,6 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { newGraphSchema } from '$lib/zod/graphSchema';
-	import { page } from '$app/state';
 
 	// Components
 	import { Input } from '$lib/components/ui/input';
@@ -15,17 +14,17 @@
 	import { Plus, Undo2 } from '@lucide/svelte';
 
 	// Types
-	import type { PageData } from './$types';
-	import type { Course } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type CreateNewGraphButtonProps = {
-		course: Course;
+		parentType: 'COURSE' | 'SANDBOX';
+		parentId: number;
+		newGraphForm: SuperValidated<Infer<typeof newGraphSchema>>;
 	};
 
-	let { course }: CreateNewGraphButtonProps = $props();
+	let { parentType, parentId, newGraphForm }: CreateNewGraphButtonProps = $props();
 
-	const data = page.data as PageData;
-	const form = superForm(data.newGraphForm, {
+	const form = superForm(newGraphForm, {
 		validators: zodClient(newGraphSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -41,8 +40,8 @@
 
 	$effect(() => {
 		$formData.name = '';
-		$formData.parentId = course.id;
-		$formData.parentType = 'COURSE';
+		$formData.parentId = parentId;
+		$formData.parentType = parentType;
 	});
 </script>
 
@@ -55,8 +54,8 @@
 	class="w-full "
 >
 	<form action="?/new-graph" method="POST" use:enhance>
-		<input type="hidden" name="parentId" value={data.course?.id} />
-		<input type="hidden" name="parentType" value="COURSE" />
+		<input type="hidden" name="parentId" value={parentId} />
+		<input type="hidden" name="parentType" value={parentType} />
 
 		<Form.Field {form} name="name">
 			<Form.Control>
@@ -76,8 +75,8 @@
 					form.reset({
 						newState: {
 							name: '',
-							parentId: data.course?.id,
-							parentType: 'COURSE'
+							parentId: parentId,
+							parentType: parentType
 						}
 					})}
 			>

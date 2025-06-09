@@ -3,26 +3,28 @@
 
 	// Components
 	import Button from '$lib/components/ui/button/button.svelte';
-	import EditGraph from './EditGraph.svelte';
+	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
+	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
+	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
-	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
 
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 
 	// Types
 	import type { PageData } from './$types';
-	import GraphLinkSettings from './settings/graphLinks/GraphLinkSettings.svelte';
 
 	let { data }: { data: PageData } = $props();
-	const hasAtLeastEditPermission = data.user != undefined && 
-									 data.course != undefined && 
-									 hasCoursePermissions(
-									 	data.user,
-									 	data.course,
-									 	'CourseAdminEditorORProgramAdminEditor'
-									 );
 
+	const hasAtLeastEditPermission =
+		data.user != undefined &&
+		data.course != undefined &&
+		hasCoursePermissions(data.user, data.course, 'CourseAdminEditorORProgramAdminEditor');
+
+	const hasAtLeastAdminPermission =
+		data.user != undefined &&
+		data.course != undefined &&
+		hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor');
 </script>
 
 <article class="my-6 mb-12 space-y-6">
@@ -34,7 +36,8 @@
 			<div class="my-12 flex justify-between gap-4">
 				<div>
 					<h1 class="!m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
-						{data.course.code} {data.course.name}
+						{data.course.code}
+						{data.course.name}
 					</h1>
 				</div>
 				{#if hasAtLeastEditPermission}
@@ -46,8 +49,8 @@
 
 			<p>
 				{#if hasAtLeastEditPermission}
-					This is the overview of this course, where you can find and manage its properties.
-					You can also create new graphs, and edit or share them with others!
+					This is the overview of this course, where you can find and manage its properties. You can
+					also create new graphs, and edit or share them with others!
 				{:else}
 					This is the overview of this course, where you can find its graphs and admins. Do you need
 					editor permissions? Please contact one of the administrators of this course.
@@ -57,7 +60,11 @@
 
 		<section class="mx-auto my-12 max-w-4xl gap-4 space-y-2 p-4">
 			{#if hasAtLeastEditPermission}
-				<CreateNewGraphButton course={data.course} />
+				<CreateGraph
+					parentType="COURSE"
+					parentId={data.course.id}
+					newGraphForm={data.newGraphForm}
+				/>
 			{/if}
 
 			<!-- MARK: GRAPHS -->
@@ -82,15 +89,17 @@
 						</Button>
 
 						{#if hasAtLeastEditPermission}
-							<GraphLinkSettings {graph} course={data.course} />
-						{/if}
+							<GraphSettings
+								{graph}
+								canDelete={hasAtLeastAdminPermission}
+								editGraphForm={data.editGraphForm}
+							/>
 
-
-						{#if hasAtLeastEditPermission}
-							<EditGraph
+							<DuplicateGraph
 								{graph}
 								availableCourses={data.availableCourses}
 								availableSandboxes={data.availableSandboxes}
+								duplicateGraphForm={data.duplicateGraphForm}
 							/>
 						{/if}
 					</div>

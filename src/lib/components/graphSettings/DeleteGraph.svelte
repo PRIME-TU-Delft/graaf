@@ -1,33 +1,37 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { cn } from '$lib/utils';
 	import { graphSchemaWithId } from '$lib/zod/graphSchema';
-	import type { Course, Graph } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from '../$types';
+
+	// Components
+	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+
+	// Types
+	import type { Graph } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type GraphLinksProps = {
-		course: Course;
 		graph: Graph;
+		editGraphForm: SuperValidated<Infer<typeof graphSchemaWithId>>;
 		onSuccess?: () => void;
 	};
 
-	const { graph, course, onSuccess = () => {} }: GraphLinksProps = $props();
+	const { graph, editGraphForm, onSuccess = () => {} }: GraphLinksProps = $props();
 
 	const id = $props.id();
+	const parentType = graph.parentType;
+	const parentId = (parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number;
 
-	const form = superForm((page.data as PageData).editGraphForm, {
+	const form = superForm(editGraphForm, {
 		id: 'delete-graph-' + id,
 		validators: zodClient(graphSchemaWithId),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted graph!');
-
 				onSuccess();
 			}
 		}
@@ -37,8 +41,8 @@
 
 	$effect(() => {
 		$formData.graphId = graph.id;
-		$formData.parentId = course.id;
-		$formData.parentType = 'COURSE';
+		$formData.parentId = parentId;
+		$formData.parentType = parentType;
 		$formData.name = graph.name;
 	});
 </script>
@@ -50,8 +54,8 @@
 	<Popover.Content>
 		<form action="?/delete-graph" method="POST" use:enhance>
 			<input type="text" name="graphId" value={graph.id} hidden />
-			<input type="text" name="parentId" value={course.id} hidden />
-			<input type="text" name="parentType" value="COURSE" hidden />
+			<input type="text" name="parentId" value={parentId} hidden />
+			<input type="text" name="parentType" value={parentType} hidden />
 			<input type="text" name="name" value={graph.name} hidden />
 
 			<div class="grid grid-cols-2 items-center justify-between gap-1">
@@ -67,7 +71,7 @@
 					loading={$delayed}
 					loadingMessage="Deleting..."
 				>
-					Yes, delete graph
+					Delete
 				</Form.FormButton>
 			</div>
 		</form>

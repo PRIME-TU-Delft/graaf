@@ -35,7 +35,7 @@
 		validators: zodClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
-				toast.success('Successfully add user!');
+				toast.success('Successfully added user!');
 				dialogOpen = false;
 			}
 		}

@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
 	import ArchiveCourse from './ArchiveCourse.svelte';
 	import EditCourseName from './EditCourseName.svelte';
-	import GraphLinks from './graphLinks/GraphLinks.svelte';
-	import CourseAdmins from './superUsers/CourseAdmins.svelte';
+	import GraphTable from '$lib/components/graphSettings/GraphTable.svelte';
+	import DeleteCourse from './DeleteCourse.svelte';
+	import SuperUserTable from './superUsers/SuperUserTable.svelte';
 
 	import type { PageData } from './$types';
 
@@ -40,42 +42,96 @@
 	{/if}
 </section>
 
-<CourseAdmins course={data.course} user={data.user} />
+<section class="prose mx-auto p-4">
+	<h2>Super Users</h2>
+	<p>Super Users are the admins and editors of a course.</p>
+	<ul class="text-sm">
+		<li>
+			<b>Course Admins</b><br />
+			Course Admins are able to manage course settings, permanently delete graphs and links, and archive
+			the course.
+		</li>
+		<li>
+			<b>Course Editors</b><br />
+			Course Editors are able to create and edit graphs and links, but not delete them.
+		</li>
+		<li>
+			<b>Program Admins & Editors</b><br />
+			Program Admins and Editors implicitly have admin permissions for all courses in their program.
+		</li>
+	</ul>
 
-{#if hasCoursePermissions(data.user, data.course, 'ProgramAdminEditor')}
-	<section class="prose mx-auto p-4">
-		<h2>Linked programs</h2>
-		<p>
-			This course is linked to {data.course.programs.length} program(s), {programsYouCanEdit.length}
-			you are allowed to edit.
-		</p>
-		<ul>
-			{#each data.course.programs as program (program.id)}
-				<li>
-					{#if hasProgramPermissions(data.user, program, 'ProgramAdminEditor')}
-						<a href={`/graph-editor/programs/${program.id}/settings`}>{program.name}</a>
-					{:else}
-						<p>{program.name}</p>
-					{/if}
-				</li>
-			{/each}
-		</ul>
-	</section>
-{/if}
+	<SuperUserTable user={data.user} course={data.course} />
+</section>
 
-<GraphLinks course={data.course} graphs={data.course.graphs} />
+<section class="prose mx-auto p-4">
+	<h2>Graphs</h2>
+	<p>
+		Graphs are the bread and butter of the Graph Editor! Here you can structure the information in
+		your course using domains, subects, and lectures. Use <b>links</b> or <b>embeds</b> to share graphs
+		with your students or friends.
+	</p>
+
+	<GraphTable
+		graphs={data.course.graphs}
+		editGraphForm={data.editGraphForm}
+		newLinkForm={data.newLinkForm}
+		editLinkForm={data.editLinkForm}
+		getLinkURL={(link) => `${page.url.origin}/graph/${data.course.code}/${link.name}`}
+		hasAtLeastAdminPermission={hasCoursePermissions(
+			data.user,
+			data.course,
+			'CourseAdminORProgramAdminEditor'
+		)}
+	/>
+</section>
+
+<section class="prose mx-auto p-4">
+	<h2>Programs</h2>
+	<p>
+		This course is part of {data.course.programs.length} program{data.course.programs.length == 1
+			? ''
+			: 's'}, {programsYouCanEdit.length}
+		of which you have permissions for.
+	</p>
+	<ul>
+		{#each data.course.programs as program (program.id)}
+			<li>
+				{#if hasProgramPermissions(data.user, program, 'ProgramAdminEditor')}
+					<a href={`/graph-editor/programs/${program.id}/settings`}>{program.name}</a>
+				{:else}
+					<p>{program.name}</p>
+				{/if}
+			</li>
+		{/each}
+	</ul>
+</section>
 
 <!-- Only a program admin or super admin is able to archive/de-archive a  -->
 {#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 	<section
-		id="archive-course"
-		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+		id="danger-zone"
+		class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 	>
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">
-			<p>Archive program:</p>
-
+			<p class="!my-0">
+				{#if data.course.isArchived}
+					Restore Course
+				{:else}
+					Archive Course
+				{/if}
+			</p>
+			<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
 			<ArchiveCourse course={data.course} />
 		</div>
+
+		{#if data.course.isArchived && hasProgramPermissions(data.user, data.course.programs[0], 'ProgramAdminEditor')}
+			<div class="flex items-center gap-2">
+				<p class="!my-0">Delete Course</p>
+				<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
+				<DeleteCourse course={data.course} />
+			</div>
+		{/if}
 	</section>
 {/if}

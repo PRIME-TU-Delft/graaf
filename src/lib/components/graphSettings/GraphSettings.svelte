@@ -1,35 +1,36 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { hasCoursePermissions, type CoursePermissions } from '$lib/utils/permissions';
 	import { graphSchemaWithId } from '$lib/zod/graphSchema';
 	import { Undo2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
+	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import DeleteGraph from './DeleteGraph.svelte';
-
-	import type { Course, Graph, Lecture, Link } from '@prisma/client';
-	import type { PageData } from '../$types';
+	import DeleteGraph from '$lib/components/graphSettings/DeleteGraph.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 
+	// Types
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { Graph } from '@prisma/client';
+
 	type GraphLinksProps = {
-		course: Course & CoursePermissions & { links: Link[] };
-		graph: Graph & {
-			lectures: Lecture[];
-			links: Link[];
-		};
+		graph: Graph;
+		canDelete: boolean;
+		editGraphForm: SuperValidated<Infer<typeof graphSchemaWithId>>;
 	};
 
-	const { course, graph }: GraphLinksProps = $props();
+	const { graph, canDelete, editGraphForm }: GraphLinksProps = $props();
 
 	const id = $props.id();
+	const parentType = graph.parentType;
+	const parentId = (parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number;
+
 	let graphSettingsOpen = $state(false);
 
-	const form = superForm((page.data as PageData).editGraphForm, {
+	const form = superForm(editGraphForm, {
 		id: 'change-graph-' + id,
 		validators: zodClient(graphSchemaWithId),
 		onResult: ({ result }) => {
@@ -45,8 +46,8 @@
 
 	function resetForm() {
 		$formData.graphId = graph.id;
-		$formData.parentId = course.id;
-		$formData.parentType = 'COURSE';
+		$formData.parentId = parentId;
+		$formData.parentType = parentType;
 		$formData.name = graph.name;
 	}
 
@@ -56,8 +57,8 @@
 
 	$effect(() => {
 		$formData.graphId = graph.id;
-		$formData.parentId = course.id;
-		$formData.parentType = 'COURSE';
+		$formData.parentId = parentId;
+		$formData.parentType = parentType;
 		$formData.name = graph.name;
 	});
 </script>
@@ -76,13 +77,13 @@
 >
 	<form action="?/edit-graph" method="POST" use:formEnhance>
 		<input type="text" name="graphId" value={graph.id} hidden />
-		<input type="text" name="parentId" value={course.id} hidden />
-		<input type="text" name="parentType" value="COURSE" hidden />
+		<input type="text" name="parentId" value={parentId} hidden />
+		<input type="text" name="parentType" value={parentType} hidden />
 
 		<Form.Field {form} name="name">
 			<Form.Control>
 				{#snippet children({ props })}
-					<Form.Label for="name">Course name</Form.Label>
+					<Form.Label for="name">Graph name</Form.Label>
 					<Input {...props} bind:value={$formData['name']} />
 				{/snippet}
 			</Form.Control>
@@ -93,8 +94,8 @@
 		<div class="flex items-center justify-between gap-1">
 			<Form.FormError class="w-full text-right" {form} />
 
-			{#if hasCoursePermissions(page.data.user, course, 'CourseAdminORProgramAdminEditor')}
-				<DeleteGraph {course} {graph} onSuccess={() => (graphSettingsOpen = false)} />
+			{#if canDelete}
+				<DeleteGraph {graph} {editGraphForm} onSuccess={() => (graphSettingsOpen = false)} />
 			{/if}
 
 			<Button variant="outline" disabled={!hasChanges || $submitting} onclick={resetForm}>

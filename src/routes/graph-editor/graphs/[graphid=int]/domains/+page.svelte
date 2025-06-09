@@ -16,7 +16,7 @@
 
 	import { enhance } from '$app/forms';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
-	import { ChevronRight, Sparkles, Trash } from '@lucide/svelte';
+	import { ChevronRight, Sparkles, Trash2 } from '@lucide/svelte';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
@@ -297,7 +297,7 @@
 {#snippet deleteDomainRel(sourceDomain: Domain, targetDomain: Domain)}
 	<Popover.Root>
 		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-			<Trash />
+			<Trash2 />
 		</Popover.Trigger>
 		<Popover.Content side="right" class="space-y-1">
 			<form action="?/delete-domain-rel" method="POST" use:enhance>

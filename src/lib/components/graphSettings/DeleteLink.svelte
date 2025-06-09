@@ -1,29 +1,35 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { cn } from '$lib/utils';
 	import { editLinkSchema } from '$lib/zod/linkSchema';
-	import { Trash } from '@lucide/svelte';
-	import type { Course, Graph, Link } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from '../$types';
+
+	// Components
+	import * as Form from '$lib/components/ui/form';
+	import * as Popover from '$lib/components/ui/popover';
+	import { buttonVariants } from '$lib/components/ui/button';
+
+	// Icons
+	import { Trash2 } from '@lucide/svelte';
+
+	// Types
+	import type { Graph, Link } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type GraphLinksProps = {
-		course: Course;
 		graph: Graph;
 		link: Link;
+		editLinkForm: SuperValidated<Infer<typeof editLinkSchema>>;
 		onSuccess?: () => void;
 	};
 
-	const { graph, course, link, onSuccess = () => {} }: GraphLinksProps = $props();
+	const { graph, link, editLinkForm, onSuccess = () => {} }: GraphLinksProps = $props();
 
 	const id = $props.id();
+	const parentType = graph.parentType;
+	const parentId = (graph.parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number;
 
-	const form = superForm((page.data as PageData).editLinkForm, {
+	const form = superForm(editLinkForm, {
 		id: 'delete-graph-link-' + id,
 		validators: zodClient(editLinkSchema),
 		onResult: ({ result }) => {
@@ -39,21 +45,21 @@
 
 	$effect(() => {
 		$formData.graphId = graph.id;
-		$formData.parentId = course.id;
-		$formData.parentType = 'COURSE';
+		$formData.parentType = parentType;
+		$formData.parentId = parentId;
 		$formData.linkId = link.id;
 	});
 </script>
 
 <Popover.Root>
-	<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-		<Trash />
+	<Popover.Trigger class={buttonVariants({ variant: 'destructive' })}>
+		<Trash2 />
 	</Popover.Trigger>
 	<Popover.Content>
 		<form action="?/delete-link" method="POST" use:enhance>
 			<input type="text" name="graphId" value={graph.id} hidden />
-			<input type="text" name="parentId" value={course.id} hidden />
-			<input type="text" name="parentType" value="COURSE" hidden />
+			<input type="text" name="parentId" value={parentId} hidden />
+			<input type="text" name="parentType" value={parentType} hidden />
 			<input type="text" name="linkId" value={link.id} hidden />
 
 			<div class="grid grid-cols-2 items-center justify-between gap-1">

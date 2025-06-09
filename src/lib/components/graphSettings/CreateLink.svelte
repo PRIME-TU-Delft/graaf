@@ -2,8 +2,7 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { newGraphSchema } from '$lib/zod/graphSchema';
-	import { page } from '$app/state';
+	import { newLinkSchema } from '$lib/zod/linkSchema';
 
 	// Components
 	import { Input } from '$lib/components/ui/input';
@@ -15,21 +14,24 @@
 	import { Plus, Undo2 } from '@lucide/svelte';
 
 	// Types
-	import type { PageData } from './$types';
-	import type { Sandbox } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { Graph } from '@prisma/client';
 
 	type CreateNewGraphButtonProps = {
-		sandbox: Sandbox;
+		graph: Graph;
+		newLinkForm: SuperValidated<Infer<typeof newLinkSchema>>;
 	};
 
-	let { sandbox }: CreateNewGraphButtonProps = $props();
+	let { graph, newLinkForm }: CreateNewGraphButtonProps = $props();
 
-	const data = page.data as PageData;
-	const form = superForm(data.newGraphForm, {
-		validators: zodClient(newGraphSchema),
+	const parentType = graph.parentType;
+	const parentId = (graph.parentType == 'COURSE' ? graph.courseId : graph.sandboxId) as number;
+
+	const form = superForm(newLinkForm, {
+		validators: zodClient(newLinkSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
-				toast.success('Graph created successfully!');
+				toast.success('Link created successfully!');
 				dialogOpen = false;
 			}
 		}
@@ -41,27 +43,28 @@
 
 	$effect(() => {
 		$formData.name = '';
-		$formData.parentId = sandbox.id;
-		$formData.parentType = 'SANDBOX';
+		$formData.graphId = graph.id;
+		$formData.parentId = parentId;
+		$formData.parentType = parentType;
 	});
 </script>
 
 <DialogButton
 	bind:open={dialogOpen}
-	icon="plus"
-	button="New Graph"
-	title="Create Graph"
-	description="Graphs are collections of domains, subjects and lectures, usually pertaining to the same field of study."
-	class="w-full "
+	icon="link"
+	button="Link"
+	title="Create Link"
+	description="Links allow you to share graphs with others. Users with the link can view the graph, but not edit it."
 >
-	<form action="?/new-graph" method="POST" use:enhance>
-		<input type="hidden" name="parentId" value={sandbox.id} />
-		<input type="hidden" name="parentType" value="SANDBOX" />
+	<form action="?/new-link" method="POST" use:enhance>
+		<input type="hidden" name="graphId" value={graph.id} />
+		<input type="hidden" name="parentId" value={parentId} />
+		<input type="hidden" name="parentType" value={parentType} />
 
 		<Form.Field {form} name="name">
 			<Form.Control>
 				{#snippet children({ props })}
-					<Form.Label for="name">Graph name</Form.Label>
+					<Form.Label for="name">Link name</Form.Label>
 					<Input {...props} bind:value={$formData['name']} />
 				{/snippet}
 			</Form.Control>
@@ -76,8 +79,9 @@
 					form.reset({
 						newState: {
 							name: '',
-							parentId: sandbox.id,
-							parentType: 'SANDBOX'
+							graphId: graph.id,
+							parentId: parentId,
+							parentType: parentType
 						}
 					})}
 			>
@@ -86,7 +90,7 @@
 			<Form.FormButton disabled={$submitting} loading={$delayed}>
 				<Plus /> Create
 				{#snippet loadingMessage()}
-					<span>Creating graph...</span>
+					<span>Creating link...</span>
 				{/snippet}
 			</Form.FormButton>
 		</div>

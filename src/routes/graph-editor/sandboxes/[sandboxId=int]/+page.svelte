@@ -3,17 +3,28 @@
 
 	// Components
 	import Button from '$lib/components/ui/button/button.svelte';
-	import EditGraph from './EditGraph.svelte';
-	import CreateNewGraphButton from './CreateNewGraphButton.svelte';
-	import GraphLinkSettings from './settings/links/GraphLinkSettings.svelte';
+	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
+	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
+	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
 
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 
 	// Types
 	import type { PageData } from './$types';
+	import { hasSandboxPermissions } from '$lib/utils/permissions';
 
 	let { data }: { data: PageData } = $props();
+
+	const hasAtLeastEditPermission =
+		data.user != undefined &&
+		data.sandbox != undefined &&
+		hasSandboxPermissions(data.user, data.sandbox, 'OwnerOREditor');
+
+	const hasAtLeastAdminPermission =
+		data.user != undefined &&
+		data.sandbox != undefined &&
+		hasSandboxPermissions(data.user, data.sandbox, 'Owner');
 </script>
 
 <article class="my-6 mb-12 space-y-6">
@@ -31,7 +42,7 @@
 						{displayName(data.sandbox.owner)}
 					</h2>
 				</div>
-				{#if data.user.id == data.sandbox.ownerId}
+				{#if hasAtLeastAdminPermission}
 					<Button href="{data.sandbox.id}/settings">Settings <ArrowRight /></Button>
 				{/if}
 			</div>
@@ -48,8 +59,8 @@
 			<h2 class="text-xl font-bold text-amber-950">This is not a course</h2>
 			<p>
 				Sandboxes are used for personal projects or assignments. They should <b>not</b> be used to represent
-				a university course, nor should their content be posted publicly. Sandbox courses often become
-				difficult to locate over time.
+				a university course, nor should their content be posted publicly. Sandboxes are prone to get
+				lost or deleted over time.
 			</p>
 			<br />
 			<p>
@@ -60,7 +71,13 @@
 		</section>
 
 		<section class="mx-auto my-12 max-w-4xl gap-4 space-y-2 p-4">
-			<CreateNewGraphButton sandbox={data.sandbox} />
+			{#if hasAtLeastEditPermission}
+				<CreateGraph
+					parentType="SANDBOX"
+					parentId={data.sandbox.id}
+					newGraphForm={data.newGraphForm}
+				/>
+			{/if}
 
 			<!-- MARK: GRAPHS -->
 			{#each data.graphs as graph (graph.id)}
@@ -79,16 +96,24 @@
 
 					<div class="flex grow-0 flex-col gap-1">
 						<Button class="transition-colors group-hover:bg-purple-500">
-							View/Edit
+							View{#if hasAtLeastEditPermission}/Edit{/if}
 							<ArrowRight />
 						</Button>
 
-						<GraphLinkSettings {graph} />
-						<EditGraph
-							{graph}
-							availableCourses={data.availableCourses}
-							availableSandboxes={data.availableSandboxes}
-						/>
+						{#if hasAtLeastEditPermission}
+							<GraphSettings
+								{graph}
+								canDelete={hasAtLeastAdminPermission}
+								editGraphForm={data.editGraphForm}
+							/>
+
+							<DuplicateGraph
+								{graph}
+								availableCourses={data.availableCourses}
+								availableSandboxes={data.availableSandboxes}
+								duplicateGraphForm={data.duplicateGraphForm}
+							/>
+						{/if}
 					</div>
 				</a>
 			{/each}

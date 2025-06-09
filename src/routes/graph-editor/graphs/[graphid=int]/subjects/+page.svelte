@@ -8,7 +8,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
 	import { cn } from '$lib/utils';
-	import { ChevronRight, Sparkles, Trash } from '@lucide/svelte';
+	import { ChevronRight, Sparkles, Trash2 } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from 'lucide-svelte/icons/link';
 	import { toast } from 'svelte-sonner';
@@ -199,7 +199,7 @@
 {#snippet deleteSubjectRel(sourceSubject: Subject, targetSubject: Subject)}
 	<Popover.Root>
 		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-			<Trash />
+			<Trash2 />
 		</Popover.Trigger>
 		<Popover.Content side="right" class="space-y-1">
 			<form action="?/delete-subject-rel" method="POST" use:enhance>

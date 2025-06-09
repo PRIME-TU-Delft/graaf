@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { displayName } from '$lib/utils/displayUserName';
 	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
@@ -16,17 +15,24 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
+	import DialogButton from '$lib/components/DialogButton.svelte';
+
 	// Icons
 	import { Copy } from '@lucide/svelte';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	import type { PageData } from './$types';
 	import type { Prisma, Graph } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type DuplicateGraphProps = {
-		graph: Graph;
+		graph: Prisma.GraphGetPayload<{
+			include: {
+				lectures: true;
+				links: true;
+			};
+		}>;
 		availableCourses: Prisma.CourseGetPayload<{
 			include: {
 				graphs: { select: { name: true } };
@@ -38,19 +44,21 @@
 				graphs: { select: { name: true } };
 			};
 		}>[];
-		isDuplicateOpen?: boolean;
+		duplicateGraphForm: SuperValidated<Infer<typeof duplicateGraphSchema>>;
 	};
 
-	let {
-		graph,
-		availableCourses,
-		availableSandboxes,
-		isDuplicateOpen = $bindable()
-	}: DuplicateGraphProps = $props();
+	let { graph, availableCourses, availableSandboxes, duplicateGraphForm }: DuplicateGraphProps =
+		$props();
+
+	let isDuplicateOpen = $state(false);
+
+	function handleOpenDuplicate(e: MouseEvent) {
+		e.preventDefault();
+		isDuplicateOpen = true;
+	}
 
 	const triggerId = useId();
-	const data = page.data as PageData;
-	const form = superForm(data.duplicateGraphForm, {
+	const form = superForm(duplicateGraphForm, {
 		id: 'duplicate-graph-' + useId(),
 		validators: zodClient(duplicateGraphSchema),
 		onResult: ({ result }) => {
@@ -109,64 +117,76 @@
 	});
 </script>
 
-<form action="?/duplicate-graph" method="POST" use:enhance>
-	<input type="text" name="graphId" value={graph.id} hidden />
-	<input
-		type="text"
-		name="destinationType"
-		value={fromStore(formData).current.destinationType}
-		hidden
-	/>
+<div class="flex flex-col gap-1 lg:flex-row">
+	<DialogButton
+		onclick={(e) => handleOpenDuplicate(e)}
+		button="Duplicate"
+		icon="copy"
+		title="Duplicate Graph"
+		description="Copy this graph within this or another course. This will create a new graph with the same content in the selected course."
+		bind:open={isDuplicateOpen}
+		class="grow"
+	>
+		<form action="?/duplicate-graph" method="POST" use:enhance>
+			<input type="text" name="graphId" value={graph.id} hidden />
+			<input
+				type="text"
+				name="destinationType"
+				value={fromStore(formData).current.destinationType}
+				hidden
+			/>
 
-	<Form.Field {form} name="newName">
-		<Form.Control>
-			{#snippet children({ props })}
-				<Form.Label for="newName">Graph name</Form.Label>
-				<Input {...props} bind:value={$formData['newName']} />
-			{/snippet}
-		</Form.Control>
-		<Form.Description />
-		<Form.FieldErrors />
-	</Form.Field>
+			<Form.Field {form} name="newName">
+				<Form.Control>
+					{#snippet children({ props })}
+						<Form.Label for="newName">Graph name</Form.Label>
+						<Input {...props} bind:value={$formData['newName']} />
+					{/snippet}
+				</Form.Control>
+				<Form.Description />
+				<Form.FieldErrors />
+			</Form.Field>
 
-	{#if graphHasSameNameAsOriginal}
-		<div
-			in:fade={{ duration: 200 }}
-			class="mt-2 rounded border-2 border-amber-700 bg-amber-50 p-2 text-sm text-amber-700"
-		>
-			<h3 class="font-bold">Warning</h3>
-			The destination already has a graph with the same name. This may cause confusion.
-		</div>
-	{/if}
+			{#if graphHasSameNameAsOriginal}
+				<div
+					in:fade={{ duration: 200 }}
+					class="mt-2 rounded border-2 border-amber-700 bg-amber-50 p-2 text-sm text-amber-700"
+				>
+					<h3 class="font-bold">Warning</h3>
+					The destination already has a graph with the same name. This may cause confusion.
+				</div>
+			{/if}
 
-	{@render selectDestination()}
+			{@render selectDestination()}
 
-	<div class="mt-2 flex items-center justify-between gap-1">
-		<Form.FormError class="w-full text-right" {form} />
-		<Button
-			variant="outline"
-			onclick={() =>
-				form.reset({
-					newState: {
-						newName: graph.name + ' copy',
-						graphId: graph.id,
-						destinationType: graph.parentType,
-						destinationId: (graph.parentType === 'COURSE'
-							? graph.courseId
-							: graph.sandboxId) as number
-					}
-				})}
-		>
-			<Undo2 /> Reset
-		</Button>
-		<Form.FormButton disabled={$submitting} loading={$delayed}>
-			<Copy /> Duplicate
-			{#snippet loadingMessage()}
-				<span>Copying graph elements...</span>
-			{/snippet}
-		</Form.FormButton>
-	</div>
-</form>
+			<div class="mt-2 flex items-center justify-between gap-1">
+				<Form.FormError class="w-full text-right" {form} />
+				<Button
+					variant="outline"
+					onclick={() =>
+						form.reset({
+							newState: {
+								newName: graph.name + ' copy',
+								graphId: graph.id,
+								destinationType: graph.parentType,
+								destinationId: (graph.parentType === 'COURSE'
+									? graph.courseId
+									: graph.sandboxId) as number
+							}
+						})}
+				>
+					<Undo2 /> Reset
+				</Button>
+				<Form.FormButton disabled={$submitting} loading={$delayed}>
+					<Copy /> Duplicate
+					{#snippet loadingMessage()}
+						<span>Copying graph elements...</span>
+					{/snippet}
+				</Form.FormButton>
+			</div>
+		</form>
+	</DialogButton>
+</div>
 
 {#snippet selectDestination()}
 	<Form.Field {form} name="destinationId">
