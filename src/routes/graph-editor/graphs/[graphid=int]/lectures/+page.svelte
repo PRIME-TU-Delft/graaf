@@ -88,7 +88,7 @@
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 				<IssueIndicator issues={lectureIssues.lecture} />
 
-				<Button.Root variant={'outline'} href={`${page.url.pathname}?lectureID=${lecture.id}`}>
+				<Button.Root variant="outline" href={`${page.url.pathname}?lectureID=${lecture.id}`}>
 					<Sparkle /> Select in Preview
 				</Button.Root>
 
