@@ -1,24 +1,21 @@
 <script lang="ts">
-	import { buttonVariants } from '$lib/components/ui/button';
-
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Grid from '$lib/components/ui/grid/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 
+	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	import { ChevronRight, Sparkles, Trash2 } from '@lucide/svelte';
+	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from 'lucide-svelte/icons/link';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
+	import IssueIndicator from '../IssueIndicator.svelte';
 	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
 	import ChangeSubject from './ChangeSubject.svelte';
 	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
-	import IssueIndicator from '../IssueIndicator.svelte';
 	import DeleteSubjectRel from './DeleteSubjectRel.svelte';
 
 	let { data }: { data: PageData } = $props();

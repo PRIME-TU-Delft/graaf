@@ -10,17 +10,15 @@
 
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
-	import { enhance } from '$app/forms';
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
-	import { ChevronRight, Sparkles, Trash2 } from '@lucide/svelte';
+	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Domain, DomainStyle } from '@prisma/client';
+	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
-	import IssueIndicator from '../IssueIndicator.svelte';
 	import DeleteDomainRel from './DeleteDomainRel.svelte';
 
 	let { data }: { data: PageData } = $props();
