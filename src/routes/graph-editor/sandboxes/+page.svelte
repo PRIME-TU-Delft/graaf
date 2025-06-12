@@ -30,7 +30,7 @@
 <section class="mx-auto !my-6 max-w-4xl space-y-2">
 	<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">Your sandboxes</h2>
 
-	{#each data.sandboxes as sandbox, i (sandbox.id)}
+	{#each data.sandboxes as sandbox (sandbox.id)}
 		{@const superUsers = Array.from(new Set([sandbox.owner, ...sandbox.editors]))}
 
 		{@const hasAtLeastEditPermission =
