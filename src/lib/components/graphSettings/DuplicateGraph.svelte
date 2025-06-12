@@ -10,12 +10,12 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 
 	// Components
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import DialogButton from '$lib/components/DialogButton.svelte';
 
 	// Icons
 	import { Copy } from '@lucide/svelte';
@@ -23,8 +23,8 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	import type { Prisma, Graph } from '@prisma/client';
-	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { Prisma } from '@prisma/client';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 	type DuplicateGraphProps = {
 		graph: Prisma.GraphGetPayload<{

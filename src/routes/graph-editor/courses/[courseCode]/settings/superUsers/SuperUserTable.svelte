@@ -9,7 +9,6 @@
 	import type { User, Course, Program } from '@prisma/client';
 
 	type GraphLinksProps = {
-		user: User;
 		course: Course & {
 			admins: User[];
 			editors: User[];
@@ -17,7 +16,7 @@
 		};
 	};
 
-	const { user, course }: GraphLinksProps = $props();
+	const { course }: GraphLinksProps = $props();
 </script>
 
 <div class="rounded-md border">

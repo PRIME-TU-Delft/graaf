@@ -61,7 +61,7 @@
 		</li>
 	</ul>
 
-	<SuperUserTable user={data.user} course={data.course} />
+	<SuperUserTable course={data.course} />
 </section>
 
 <section class="prose mx-auto p-4">

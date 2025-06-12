@@ -57,7 +57,7 @@
 				</Table.Row>
 
 				{#each graph.links as link (link.id)}
-					<Table.Row class={'bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-100/30'}>
+					<Table.Row class="bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-100/30">
 						<Table.Cell class="pl-8 text-xs">
 							{getLinkURL(link)}
 						</Table.Cell>
