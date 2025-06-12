@@ -21,8 +21,7 @@ export const load = (async ({ params, locals }) => {
 	try {
 		const dbCourse = await prisma.course.findFirst({
 			where: {
-				code: params.courseCode,
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				code: params.courseCode
 			},
 			include: {
 				programs: {
@@ -77,6 +76,7 @@ export const load = (async ({ params, locals }) => {
 		});
 
 		return {
+			user,
 			course: dbCourse,
 			graphs: dbCourse.graphs,
 			availableCourses,
@@ -90,21 +90,8 @@ export const load = (async ({ params, locals }) => {
 			editLinkForm: await superValidate(zod(editLinkSchema)),
 			error: undefined
 		};
-	} catch (e: unknown) {
-		return {
-			course: undefined,
-			graphs: [],
-			availableCourses: [],
-			availableSandboxes: [],
-			newGraphForm: await superValidate(zod(newGraphSchema)),
-			editGraphForm: await superValidate(zod(graphSchemaWithId)),
-			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
-			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
-			deleteLinkForm: await superValidate(zod(editLinkSchema)),
-			newLinkForm: await superValidate(zod(newLinkSchema)),
-			editLinkForm: await superValidate(zod(editLinkSchema)),
-			error: e instanceof Error ? e.message : `${e}`
-		};
+	} catch {
+		throw redirect(303, '/graph-editor?error=Course not found');
 	}
 }) satisfies ServerLoad;
 

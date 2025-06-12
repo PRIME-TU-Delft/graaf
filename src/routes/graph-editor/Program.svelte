@@ -11,11 +11,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import CourseGrid from './CourseGrid.svelte';
-	import ShowAdmins from './ShowAdmins.svelte';
 	// Icons
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { MailOpen } from '@lucide/svelte';
 	import Settings from 'lucide-svelte/icons/settings';
-	import DialogButton from '$lib/components/DialogButton.svelte';
 
 	type Props = {
 		user: User;
