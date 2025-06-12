@@ -1,4 +1,5 @@
 import { SubjectActions } from '$lib/server/actions';
+import { getUser } from '$lib/server/actions/Users';
 import {
 	changeSubjectRelSchema,
 	deleteSubjectSchema,
@@ -20,11 +21,28 @@ export const load: ServerLoad = async () => {
 
 // ACTIONS
 export const actions = {
-	'add-subject-to-graph': SubjectActions.addSubjectToGraph,
-	'change-subject-in-graph': SubjectActions.changeSubject,
-	'delete-subject': SubjectActions.deleteSubject,
-
-	'add-subject-rel': SubjectActions.addSubjectRel,
-	'change-subject-rel': SubjectActions.changeSubjectRel,
-	'delete-subject-rel': SubjectActions.deleteSubjectRel
+	'add-subject-to-graph': async (event) => {
+		const form = await superValidate(event, zod(subjectSchema));
+		return SubjectActions.addSubjectToGraph(await getUser(event), form);
+	},
+	'change-subject-in-graph': async (event) => {
+		const form = await superValidate(event, zod(subjectSchema));
+		return SubjectActions.changeSubject(await getUser(event), form);
+	},
+	'delete-subject': async (event) => {
+		const form = await superValidate(event, zod(deleteSubjectSchema));
+		return SubjectActions.deleteSubject(await getUser(event), form);
+	},
+	'add-subject-rel': async (event) => {
+		const form = await superValidate(event, zod(subjectRelSchema));
+		return SubjectActions.addSubjectRel(await getUser(event), form);
+	},
+	'change-subject-rel': async (event) => {
+		const form = await superValidate(event, zod(changeSubjectRelSchema));
+		return SubjectActions.changeSubjectRel(await getUser(event), form);
+	},
+	'delete-subject-rel': async (event) => {
+		const form = await superValidate(event, zod(subjectRelSchema));
+		return SubjectActions.deleteSubjectRel(await getUser(event), form);
+	}
 };

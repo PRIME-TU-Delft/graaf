@@ -21,6 +21,7 @@
 	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
 	import IssueIndicator from '../IssueIndicator.svelte';
+	import DeleteDomainRel from './DeleteDomainRel.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -165,20 +166,21 @@
 		</div>
 
 		<Grid.Rows name="subject-rel" items={domainMapping} class="space-y-1">
-			{#snippet children({ domain, outDomain })}
+			{#snippet children({ domain: sourceDomain, outDomain: targetDomain })}
 				<Grid.Cell>
-					{@const issues = data.issues.domainRelationIssues[domain.id]?.[outDomain.id] || []}
+					{@const issues =
+						data.issues.domainRelationIssues[sourceDomain.id]?.[targetDomain.id] || []}
 					<IssueIndicator {issues} />
 				</Grid.Cell>
 
 				<Grid.Cell>
-					{@render domainRelation('sourceDomain', domain, outDomain)}
+					{@render domainRelation('sourceDomain', sourceDomain, targetDomain)}
 				</Grid.Cell>
 				<Grid.Cell>
-					{@render domainRelation('targetDomain', domain, outDomain)}
+					{@render domainRelation('targetDomain', sourceDomain, targetDomain)}
 				</Grid.Cell>
 				<Grid.Cell class="justify-end">
-					{@render deleteDomainRel(domain, outDomain)}
+					<DeleteDomainRel {graph} {sourceDomain} {targetDomain} />
 				</Grid.Cell>
 			{/snippet}
 		</Grid.Rows>
@@ -292,23 +294,4 @@
 			{/if}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
-{/snippet}
-
-{#snippet deleteDomainRel(sourceDomain: Domain, targetDomain: Domain)}
-	<Popover.Root>
-		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-			<Trash2 />
-		</Popover.Trigger>
-		<Popover.Content side="right" class="space-y-1">
-			<form action="?/delete-domain-rel" method="POST" use:enhance>
-				<input type="hidden" name="sourceDomainId" value={sourceDomain.id} />
-				<input type="hidden" name="targetDomainId" value={targetDomain.id} />
-
-				<p class="mb-2">Are you sure you would like to delete this relationship</p>
-				<Form.FormButton variant="destructive" loadingMessage="Deleting...">
-					Yes, delete
-				</Form.FormButton>
-			</form>
-		</Popover.Content>
-	</Popover.Root>
 {/snippet}

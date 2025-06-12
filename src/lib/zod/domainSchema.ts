@@ -12,6 +12,7 @@ export const domainSchema = z.object({
 });
 
 export const deleteDomainSchema = z.object({
+	graphId: z.number().nonnegative('Invalid graph id'),
 	domainId: z.number().min(1, 'Invalid domain id'),
 	sourceDomains: z.array(z.number()),
 	targetDomains: z.array(z.number()),
