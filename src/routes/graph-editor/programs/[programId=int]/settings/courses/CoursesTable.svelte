@@ -1,24 +1,24 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import {
-		getCoreRowModel,
-		getPaginationRowModel,
-		type ColumnDef,
-		type PaginationState,
-		type RowSelectionState,
-		type VisibilityState
-	} from '@tanstack/table-core';
+	import { hasProgramPermissions } from '$lib/utils/permissions';
+	import { getCoreRowModel, getPaginationRowModel } from '@tanstack/table-core';
 
+	// Components
 	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-
 	import UnlinkCourses from './UnlinkCourses.svelte';
 
-	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { Course, Program, User } from '@prisma/client';
+	// Types
 	import type { PageData } from '../$types';
+	import type { Course, Program, User } from '@prisma/client';
+	import type {
+		ColumnDef,
+		PaginationState,
+		RowSelectionState,
+		VisibilityState
+	} from '@tanstack/table-core'
 
 	type DataTableProps = {
 		columns: ColumnDef<Course, Course>[];
@@ -27,8 +27,7 @@
 		courses: Promise<Course[]>;
 	};
 
-	let { data, program, columns, courses }: DataTableProps = $props();
-
+	const { data, program, columns, courses }: DataTableProps = $props();
 	const { user, linkCoursesForm, createNewCourseForm } = page.data as PageData;
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
@@ -74,19 +73,6 @@
 	});
 </script>
 
-<div class="mt-2 flex items-center justify-between">
-	<h2 class="my-2">Courses</h2>
-
-	{#if Object.entries(rowSelection).filter(([, selected]) => selected == true).length > 0}
-		<UnlinkCourses bind:rowSelection {program} />
-	{/if}
-</div>
-
-<p class="my-1">
-	These are all the courses that are linked to this program. Click on the checkboxes to select a
-	course you would like to unlink.
-</p>
-
 <div class="rounded-md border">
 	<Table.Root class="!m-0">
 		<Table.Header>
@@ -127,8 +113,11 @@
 		</Table.Body>
 	</Table.Root>
 
-	<div class="flex items-center justify-end space-x-2 border-t px-4 py-2">
+	<div class="flex items-center justify-end space-x-2 border-t p-2">
 		{#key table.getRowModel().rows}
+			{#if Object.entries(rowSelection).filter(([, selected]) => selected == true).length > 0}
+				<UnlinkCourses bind:rowSelection {program} />
+			{/if}
 			<AddCourse {program} {user} {courses} {linkCoursesForm} {createNewCourseForm} />
 		{/key}
 

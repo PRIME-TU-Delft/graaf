@@ -2,7 +2,7 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import type { newCourseSchema } from '$lib/zod/courseSchema';
-	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
+	import type { linkingCoursesSchema } from '$lib/zod/programSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';

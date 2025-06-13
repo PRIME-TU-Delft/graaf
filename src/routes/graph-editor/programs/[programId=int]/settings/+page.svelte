@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import DialogButton from '$lib/components/DialogButton.svelte';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
-	import { buttonVariants } from '$lib/components/ui/button/index.js';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { PageData } from './$types';
 	import { columns } from './courses/course-columns';
-	import CoursesDataTable from './courses/CoursesDataTable.svelte';
+
+	import DialogButton from '$lib/components/DialogButton.svelte';
+	import SuperUserTable from './superUsers/SuperUserTable.svelte';
+	import CoursesTable from './courses/CoursesTable.svelte';
 	import EditProgramName from './EditProgramName.svelte';
-	import ProgramAdmins from './superUsers/ProgramAdmins.svelte';
+	import DeleteProgram from './DeleteProgram.svelte';
+
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -39,15 +39,34 @@
 </section>
 
 <section class="prose mx-auto p-4">
-	<p>
-		Manage program settings with program name: <span class="font-mono">{data.program.name}</span>.
-	</p>
+	<h2>Super Users</h2>
+	<p>Super Users are the admins and editors of a programme. Programme super users automatically become admins of any course part of this programme.</p>
+	<ul class="text-sm">
+		<li>
+			<b>Programme Admins</b><br />
+			Programme Admins are able to manage programme settings, delete programmmes, and manage its courses.
+		</li>
+		<li>
+			<b>Programme Editors</b><br />
+			Programme Editors are able to manage its courses.
+		</li>
+	</ul>
+
+	<SuperUserTable 
+		program={data.program}
+		allUsers={data.allUsers}
+		editSuperUserForm={data.editSuperUserForm}
+		canChangeRoles={
+			hasProgramPermissions(data.user, data.program, 'ProgramAdmin')
+		}
+	/>
 </section>
 
-<ProgramAdmins program={data.program} user={data.user} />
+<section class="prose mx-auto p-4">
+	<h2>Courses</h2>
+	<p>Courses can be assigned to one or more programmes. Program super users automatically gain admin rights to all courses in a programme.</p>
 
-<section class="prose container mx-auto p-4">
-	<CoursesDataTable
+	<CoursesTable
 		data={data.program?.courses}
 		program={data.program}
 		{columns}
@@ -58,33 +77,14 @@
 <!-- Only a super admin is able to delete a program -->
 {#if hasProgramPermissions(data.user, data.program, 'OnlySuperAdmin')}
 	<section
-		class="prose mx-auto my-12 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+		id="danger-zone"
+		class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 	>
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">
-			<p>Delete program:</p>
-
-			<AlertDialog.Root>
-				<AlertDialog.Trigger class={'ml-auto ' + buttonVariants({ variant: 'destructive' })}>
-					Delete
-				</AlertDialog.Trigger>
-				<AlertDialog.Content>
-					<AlertDialog.Header>
-						<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-						<AlertDialog.Description>
-							This action cannot be undone. This will permanently delete this program and remove the
-							data from our servers. It is also possible to archive this program.
-						</AlertDialog.Description>
-					</AlertDialog.Header>
-					<AlertDialog.Footer>
-						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-						<form action="?/delete-program" method="POST" use:enhance>
-							<input type="text" name="programId" value={data.program.id} hidden />
-							<AlertDialog.Action type="submit">Delete anyway</AlertDialog.Action>
-						</form>
-					</AlertDialog.Footer>
-				</AlertDialog.Content>
-			</AlertDialog.Root>
+			<p class="!my-0">Delete Program</p>
+			<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
+			<DeleteProgram program={data.program} />
 		</div>
 	</section>
 {/if}

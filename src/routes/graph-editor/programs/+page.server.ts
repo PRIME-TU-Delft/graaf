@@ -5,7 +5,7 @@ import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
 import { changePinSchema, newCourseSchema } from '$lib/zod/courseSchema.js';
 import { newProgramSchema } from '$lib/zod/programSchema.js';
-import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema.js';
+import { linkingCoursesSchema } from '$lib/zod/programSchema.js';
 import type { Course } from '@prisma/client';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
