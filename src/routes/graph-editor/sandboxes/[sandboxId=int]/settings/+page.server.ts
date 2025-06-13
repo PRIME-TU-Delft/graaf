@@ -53,11 +53,13 @@ export const load = (async ({ params, locals }) => {
 			user,
 			allUsers,
 			editSandboxForm: await superValidate(zod(editSandboxSchema)),
+			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			deleteSandboxForm: await superValidate(zod(deleteSandboxSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
+			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
 			newLinkForm: await superValidate(zod(newLinkSchema)),
 			editLinkForm: await superValidate(zod(editLinkSchema)),
-			editSuperUserForm: await superValidate(zod(editSuperUserSchema))
+			deleteLinkForm: await superValidate(zod(editLinkSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page
@@ -71,6 +73,10 @@ export const actions: Actions = {
 		const form = await superValidate(event, zod(editSandboxSchema));
 		return SandboxActions.editSandbox(await getUser(event), form);
 	},
+	'edit-super-user': async (event) => {
+		const form = await superValidate(event, zod(editSuperUserSchema));
+		return SandboxActions.editSuperUser(await getUser(event), form);
+	},
 	'delete-sandbox': async (event) => {
 		const form = await superValidate(event, zod(deleteSandboxSchema));
 		return SandboxActions.deleteSandbox(await getUser(event), form);
@@ -78,6 +84,10 @@ export const actions: Actions = {
 	'edit-graph': async (event) => {
 		const form = await superValidate(event, zod(graphSchemaWithId));
 		return GraphActions.editGraph(await getUser(event), form);
+	},
+	'delete-graph': async (event) => {
+		const form = await superValidate(event, zod(graphSchemaWithId));
+		return GraphActions.deleteGraph(await getUser(event), form);
 	},
 	'new-link': async (event) => {
 		const form = await superValidate(event, zod(newLinkSchema));
@@ -90,9 +100,5 @@ export const actions: Actions = {
 	'delete-link': async (event) => {
 		const form = await superValidate(event, zod(editLinkSchema));
 		return LinkActions.deleteLink(await getUser(event), form);
-	},
-	'edit-super-user': async (event) => {
-		const form = await superValidate(event, zod(editSuperUserSchema));
-		return SandboxActions.editSuperUser(await getUser(event), form);
 	}
 };

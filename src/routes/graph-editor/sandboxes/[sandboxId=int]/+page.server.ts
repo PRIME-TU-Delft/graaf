@@ -83,9 +83,9 @@ export const load = (async ({ params, locals }) => {
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
-			deleteLinkForm: await superValidate(zod(editLinkSchema)),
 			newLinkForm: await superValidate(zod(newLinkSchema)),
 			editLinkForm: await superValidate(zod(editLinkSchema)),
+			deleteLinkForm: await superValidate(zod(editLinkSchema)),
 			error: undefined
 		};
 	} catch (e: unknown) {

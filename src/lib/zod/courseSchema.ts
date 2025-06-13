@@ -39,3 +39,7 @@ export const changePinSchema = z.object({
 	courseId: z.number(),
 	pin: z.boolean()
 });
+
+export const deleteCourseSchema = z.object({
+	courseId: z.number().min(1)
+});

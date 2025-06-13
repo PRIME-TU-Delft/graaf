@@ -96,5 +96,15 @@ export const actions = {
 	'new-course': async (event) => {
 		const formData = await superValidate(event, zod(newCourseSchema));
 		return CourseActions.newCourse(await getUser(event), formData);
+	},
+
+	'link-courses': async (event) => {
+		const form = await superValidate(event, zod(linkingCoursesSchema));
+		return CourseActions.linkCourses(await getUser(event), form, { link: true });
+	},
+
+	'unlink-courses': async (event) => {
+		const form = await superValidate(event, zod(linkingCoursesSchema));
+		return CourseActions.linkCourses(await getUser(event), form, { link: false });
 	}
 } satisfies Actions;

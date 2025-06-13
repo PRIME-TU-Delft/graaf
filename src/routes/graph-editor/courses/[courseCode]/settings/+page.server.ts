@@ -10,10 +10,11 @@ import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
 import {
-	changeArchiveSchema,
 	newCourseSchema,
+	editCourseSchema,
 	editSuperUserSchema,
-	editCourseSchema
+	changeArchiveSchema,
+	deleteCourseSchema
 } from '$lib/zod/courseSchema';
 
 import type { Actions } from './$types';
@@ -58,6 +59,7 @@ export const load = (async ({ params, locals }) => {
 			editCourseForm: await superValidate(zod(newCourseSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			changeArchiveForm: await superValidate(zod(changeArchiveSchema)),
+			deleteCourseForm: await superValidate(zod(deleteCourseSchema)),
 			editGraphForm: await superValidate(zod(graphSchemaWithId)),
 			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
 			newLinkForm: await superValidate(zod(newLinkSchema)),
@@ -90,6 +92,10 @@ export const actions: Actions = {
 	'change-archive': async (event) => {
 		const form = await superValidate(event, zod(changeArchiveSchema));
 		return CourseActions.changeArchive(await getUser(event), form);
+	},
+	'delete-course': async (event) => {
+		const form = await superValidate(event, zod(deleteCourseSchema));
+		return CourseActions.deleteCourse(await getUser(event), form);
 	},
 	'new-link': async (event) => {
 		const form = await superValidate(event, zod(newLinkSchema));
