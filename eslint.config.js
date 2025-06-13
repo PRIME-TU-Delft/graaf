@@ -33,7 +33,7 @@ export default ts.config(
 			}
 		},
 		rules: {
-			'svelte/no-dupe-style-properties': 'warn'
+			'svelte/no-dupe-style-properties': 'off'
 		}
 	}
 );

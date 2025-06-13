@@ -35,7 +35,7 @@
 	let { graphD3, editable }: Props = $props();
 
 	let isFullscreen = $state(false);
-	let lectureID = $state(Number(page.url.searchParams.get('lectureID')) || null);
+	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
 
 	$effect(() => {

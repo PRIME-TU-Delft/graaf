@@ -24,7 +24,6 @@
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain successfully deleted!');
-				graph.subjects = graph.subjects.filter((s) => s.id !== subject.id);
 			}
 		}
 	});
@@ -34,6 +33,7 @@
 	$effect(() => {
 		// When the subject changes, update the form data
 		if (subject) {
+			$formData.graphId = graph.id;
 			$formData.subjectId = subject.id;
 			$formData.sourceSubjects = subject.sourceSubjects.map((d) => d.id);
 			$formData.targetSubjects = subject.targetSubjects.map((d) => d.id);
@@ -61,6 +61,7 @@
  -->
 
 <form class="text-xs" action="?/delete-subject" method="POST" use:enhance>
+	<input type="hidden" name="graphId" value={$formData.graphId} />
 	<input type="hidden" name="subjectId" value={$formData.subjectId} />
 
 	{@render formArray('sourceSubjects')}

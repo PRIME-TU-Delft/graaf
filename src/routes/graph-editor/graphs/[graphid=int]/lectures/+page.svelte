@@ -1,18 +1,20 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import * as Button from '$lib/components/ui/button';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { cn } from '$lib/utils';
-	import { Ellipsis, MoveVertical } from '@lucide/svelte';
+	import { Ellipsis, MoveVertical, Sparkle } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
 	import ChangeLecture from './ChangeLecture.svelte';
 	import CreateNewLecture from './CreateNewLecture.svelte';
 	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
-	import IssueIndicator from '../IssueIndicator.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -74,7 +76,7 @@
 			animate:flip={{ duration: flipDurationMs }}
 			class="rounded bg-purple-50/30 !backdrop-blur-lg"
 		>
-			<div class="flex w-full items-center justify-between gap-2 gap-2 p-2">
+			<div class="flex w-full items-center justify-between gap-2 p-2">
 				<div
 					class="rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
 					use:dragHandle
@@ -85,6 +87,10 @@
 
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 				<IssueIndicator issues={lectureIssues.lecture} />
+
+				<Button.Root variant="outline" href={`${page.url.pathname}?lectureID=${lecture.id}`}>
+					<Sparkle /> Select in Preview
+				</Button.Root>
 
 				{#if data.graph.subjects.length > 0}
 					{#key lecture.subjects}

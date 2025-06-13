@@ -12,6 +12,7 @@ export const subjectSchema = z.object({
 });
 
 export const deleteSubjectSchema = z.object({
+	graphId: z.number().min(1, 'Invalid graph id'),
 	subjectId: z.number().min(1, 'Invalid subject id'),
 	sourceSubjects: z.array(z.number()),
 	targetSubjects: z.array(z.number())

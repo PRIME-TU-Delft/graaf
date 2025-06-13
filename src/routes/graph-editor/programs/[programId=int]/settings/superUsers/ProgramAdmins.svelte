@@ -64,14 +64,25 @@
 </script>
 
 <section class="prose container mx-auto p-4">
-	<h2 class="mb-2">Program super users</h2>
-	<p>
-		A <span class="font-mono">Program Editor</span> is able to add or delete a course to this
-		program, they are also able to link new courses to this program. A
-		<span class="font-mono">Program Admin</span>
-		has the same permissions as an <span class="font-mono">Program Editor</span> except it is also able
-		to manage program permissions, attributes (name) and delete a program.
-	</p>
+	<h2>Super Users</h2>
+	<p>Super Users are the admins and editors of a program or course.</p>
+	<ul class="text-sm">
+		<li>
+			<b>Course Admins</b><br />
+			Course Admins are able to manage course settings, permanently delete graphs and links, and archive
+			the course.
+		</li>
+		<li>
+			<b>Course Editors</b><br />
+			Course Editors are able to create and edit graphs and links, but not delete them.
+		</li>
+		<li>
+			<b>Program Admins & Editors</b><br />
+			Program Admins and Editors implicitly have admin permissions for all courses in their program.
+			Program Admins can also manage the program settings, while Program Editors can only edit the name
+			of them.
+		</li>
+	</ul>
 
 	<DataTable data={users} {program} {columns} />
 </section>

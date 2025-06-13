@@ -75,7 +75,7 @@
 		<div class="mt-4 flex w-full justify-end gap-1">
 			<Popover.Root>
 				<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-					Delete subject
+					Delete lecture
 				</Popover.Trigger>
 				<Popover.Content>
 					<DeleteLecture {lecture} {graph} onSuccess={() => {}} />
