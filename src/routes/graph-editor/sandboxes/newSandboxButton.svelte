@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
@@ -11,10 +10,16 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 
-	import type { PageData } from './$types';
+	// Types
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
-	const data = page.data as PageData;
-	const form = superForm(data.newSandboxForm, {
+	type Props = {
+		newSandboxForm: SuperValidated<Infer<typeof newSandboxSchema>>;
+	};
+
+	const { newSandboxForm }: Props = $props();
+
+	const form = superForm(newSandboxForm, {
 		id: useId(),
 		validators: zodClient(newSandboxSchema),
 		onResult: ({ result }) => {
@@ -34,12 +39,8 @@
 	icon="plus"
 	button="Create Sandbox"
 	title="Create Sandbox"
-	variant="outline"
-	class="h-full w-full rounded border-2 border-purple-200 bg-purple-100/50 p-2 transition-colors hover:bg-purple-100 hover:shadow-none"
 	description="Sandboxes are collections of graphs, used for experimentation, personal projects, or assignments. They should not be used to represent a university course."
 >
-	<!-- For sumbitting a NEW SANDBOX
- 	It triggers an action that can be seen in +page.server.ts -->
 	<form action="?/new-sandbox" method="POST" use:enhance>
 		<Form.Field {form} name="name">
 			<Form.Control>

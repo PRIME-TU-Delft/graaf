@@ -1,6 +1,5 @@
 <script lang="ts">
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import { fly } from 'svelte/transition';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -14,7 +13,6 @@
 			<a
 				href="./courses/{course.code}"
 				class="flex items-center justify-between rounded bg-purple-50 p-2 shadow-none no-underline shadow-purple-300 transition-all hover:bg-purple-100 hover:shadow-lg"
-				transition:fly={{ x: -300, duration: 400, delay: 200 * i }}
 			>
 				<span>{course.code} {course.name}</span>
 				<ArrowRight />
