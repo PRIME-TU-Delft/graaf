@@ -7,7 +7,7 @@
 	import type { Sandbox, User } from '@prisma/client';
 
 	type PinnedCoursesProps = {
-		sandboxes: (Sandbox & { owner: User })[];
+		sandboxes: Promise<(Sandbox & { owner: User })[]>;
 	};
 
 	const { sandboxes }: PinnedCoursesProps = $props();
@@ -20,7 +20,15 @@
 			<Accordion.Trigger>
 				<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">My Sandboxes</h2>
 			</Accordion.Trigger>
-			<Accordion.Content><SandboxGrid {sandboxes} /></Accordion.Content>
+			<Accordion.Content>
+				{#await sandboxes}
+					<p class="text-center text-purple-950">Waiting for sandboxes...</p>
+				{:then sandboxes}
+					<SandboxGrid {sandboxes} />
+				{:catch error}
+					<p class="text-center text-red-500">Error loading sandboxes: {error.message}</p>
+				{/await}
+			</Accordion.Content>
 		</Accordion.Item>
 	</Accordion.Root>
 </section>
