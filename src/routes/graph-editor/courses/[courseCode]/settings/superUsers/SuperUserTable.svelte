@@ -14,16 +14,17 @@
 			editors: User[];
 			programs: (Program & { admins: User[]; editors: User[] })[];
 		};
+		canChangeRoles: boolean;
 	};
 
-	const { course }: GraphLinksProps = $props();
+	const { course, canChangeRoles }: GraphLinksProps = $props();
 </script>
 
 <div class="rounded-md border">
 	<Table.Root class="!m-0">
 		<Table.Header>
 			<Table.Row>
-				<Table.Head>Name</Table.Head>
+				<Table.Head class="w-full">Name</Table.Head>
 				<Table.Head>Role</Table.Head>
 			</Table.Row>
 		</Table.Header>
@@ -33,8 +34,8 @@
 					<Table.Cell>
 						{displayName(user)}
 					</Table.Cell>
-					<Table.Cell class="text-left">
-						<ChangeRole {user} {course} courseRole="Admin" />
+					<Table.Cell class="flex items-center justify-end gap-1">
+						<ChangeRole {user} {canChangeRoles} courseRole="Admin" />
 					</Table.Cell>
 				</Table.Row>
 			{/each}
@@ -44,8 +45,8 @@
 					<Table.Cell>
 						{displayName(user)}
 					</Table.Cell>
-					<Table.Cell>
-						<ChangeRole {user} {course} courseRole="Editor" />
+					<Table.Cell class="flex items-center gap-1">
+						<ChangeRole {user} {canChangeRoles} courseRole="Editor" />
 					</Table.Cell>
 				</Table.Row>
 			{/each}
