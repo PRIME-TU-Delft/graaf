@@ -11,7 +11,7 @@ import type {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema
-} from '$lib/zod/superUserProgramSchema';
+} from '$lib/zod/programSchema';
 
 export class ProgramActions {
 	/**

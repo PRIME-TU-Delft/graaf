@@ -8,7 +8,7 @@ import {
 	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
-} from '$lib/zod/superUserProgramSchema';
+} from '$lib/zod/programSchema';
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
@@ -48,8 +48,8 @@ export const load = (async ({ params, locals }) => {
 			user,
 			allUsers,
 			allCourses,
-			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
 			editProgramForm: await superValidate(zod(editProgramSchema)),
+			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
 			createNewCourseForm: await superValidate(zod(newCourseSchema))

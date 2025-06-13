@@ -1,32 +1,43 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { Button } from '$lib/components/ui/button';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { editSuperUserSchema } from '$lib/zod/superUserProgramSchema';
-	import Check from 'lucide-svelte/icons/check';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from '../$types';
+	import { editSuperUserSchema } from '$lib/zod/programSchema';
+	import { useId } from 'bits-ui';
+
+	// Components
+	import * as Form from '$lib/components/ui/form/index.js';
+	import { Button } from '$lib/components/ui/button';
+
+	// Icons
+	import Check from 'lucide-svelte/icons/check';
+
+	// Types
+	import type { User, Program } from '@prisma/client';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type ChangeRoleProps = {
-		userId: string;
+		user: User;
+		program: Program;
 		newRole: 'Admin' | 'Editor' | 'Revoke';
+		editSuperUserForm: SuperValidated<Infer<typeof editSuperUserSchema>>;
 		selected?: boolean;
 		disabled?: boolean;
 		onSuccess?: () => void;
 	};
 
 	let {
-		userId,
+		user,
+		program,
 		newRole,
+		editSuperUserForm,
 		selected = false,
 		disabled = false,
 		onSuccess = () => {}
 	}: ChangeRoleProps = $props();
 
-	const form = superForm((page.data as PageData).editSuperUserForm, {
-		id: 'editSuperUserForm' + userId + '-' + newRole,
+	const form = superForm(editSuperUserForm, {
+		id: 'edit-super-user-' + useId(),
 		validators: zodClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
@@ -37,11 +48,9 @@
 	});
 	const { form: formData, enhance, submitting, delayed } = form;
 
-	const { program } = page.data as PageData;
 	$effect(() => {
-		// When program.id or userId changes, update the form data
+		$formData.userId = user.id;
 		$formData.programId = program.id;
-		$formData.userId = userId;
 		$formData.role = newRole.toLowerCase() as 'admin' | 'editor' | 'revoke';
 	});
 </script>
@@ -53,7 +62,7 @@
 	</Button>
 {:else}
 	<form action="?/edit-super-user" method="POST" class="grow" use:enhance>
-		<input type="hidden" name="userId" value={userId} />
+		<input type="hidden" name="userId" value={user.id} />
 		<input type="hidden" name="programId" value={program.id} />
 		<input type="hidden" name="role" value={newRole.toLowerCase()} />
 

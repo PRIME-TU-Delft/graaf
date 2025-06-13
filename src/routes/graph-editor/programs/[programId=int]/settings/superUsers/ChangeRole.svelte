@@ -1,33 +1,39 @@
 <script lang="ts">
-	import * as Menubar from '$lib/components/ui/menubar/index.js';
-	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import type { Program, User } from '@prisma/client';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	// Components
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
+	import * as Menubar from '$lib/components/ui/menubar/index.js';
+	import { buttonVariants } from '$lib/components/ui/button';
 
-	type ChangeRoleProps = {
-		userId: string;
-		currentRole: 'Admin' | 'Editor';
-		superAdminCount: number;
-		program: Program & { admins: User[]; editors: User[] };
+	// Icons
+	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+
+	// Types
+	import type { User, Program } from '@prisma/client';
+	import type { editSuperUserSchema } from '$lib/zod/programSchema';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+
+	type CourseAdminProps = {
 		user: User;
+		program: Program;
+		canChangeRoles: boolean;
+		editSuperUserForm: SuperValidated<Infer<typeof editSuperUserSchema>>;
+		role?: 'Admin' | 'Editor';
 	};
 
-	let { userId, currentRole, superAdminCount, program, user }: ChangeRoleProps = $props();
+	const { user, program, canChangeRoles, editSuperUserForm, role }: CourseAdminProps = $props();
 
 	let menuIsFocusOn = $state('');
 </script>
 
-<!-- Only programAdmins and superUsers are allowed to change roles, otherwise just show the role name -->
-{#if hasProgramPermissions(user, program, 'ProgramAdmin')}
+{#if canChangeRoles}
 	<Menubar.Root
-		class="float-right w-fit p-0"
+		class="w-fit p-0"
 		value={menuIsFocusOn}
 		onValueChange={(value) => (menuIsFocusOn = value)}
 	>
 		<Menubar.Menu value="menu">
-			<Menubar.Trigger>
-				{currentRole}
+			<Menubar.Trigger class={buttonVariants({ variant: 'outline' })}>
+				{role}
 				<ChevronDown />
 			</Menubar.Trigger>
 			<Menubar.Content>
@@ -37,31 +43,39 @@
 					<Menubar.SubTrigger>Change role</Menubar.SubTrigger>
 					<Menubar.SubContent class="ml-1 flex w-32 flex-col gap-2">
 						<ChangeRoleForm
-							{userId}
+							{user}
+							{program}
+							{editSuperUserForm}
 							newRole="Editor"
-							selected={currentRole == 'Editor'}
-							disabled={superAdminCount <= 1}
+							selected={role == 'Editor'}
 							onSuccess={() => (menuIsFocusOn = '')}
 						/>
 						<ChangeRoleForm
-							{userId}
+							{user}
+							{program}
+							{editSuperUserForm}
 							newRole="Admin"
-							selected={currentRole == 'Admin'}
+							selected={role == 'Admin'}
 							onSuccess={() => (menuIsFocusOn = '')}
 						/>
 					</Menubar.SubContent>
 				</Menubar.Sub>
 
-				{#if superAdminCount > 1 || currentRole == 'Editor'}
+				{#if role != undefined}
 					<Menubar.Separator />
 
-					<!-- You are not the last user -->
 					<Menubar.Sub>
 						<Menubar.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
 							Remove user privilages
 						</Menubar.SubTrigger>
 						<Menubar.SubContent class="ml-1 w-32">
-							<ChangeRoleForm {userId} newRole="Revoke" onSuccess={() => (menuIsFocusOn = '')} />
+							<ChangeRoleForm
+								{user}
+								{program}
+								{editSuperUserForm}
+								newRole="Revoke"
+								onSuccess={() => (menuIsFocusOn = '')}
+							/>
 						</Menubar.SubContent>
 					</Menubar.Sub>
 				{/if}
@@ -69,7 +83,7 @@
 		</Menubar.Menu>
 	</Menubar.Root>
 {:else}
-	<p class="m-0 text-right">
-		{currentRole}
-	</p>
+	<span class="py-2 pr-4">
+		{role}
+	</span>
 {/if}

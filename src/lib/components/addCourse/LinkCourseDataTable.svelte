@@ -2,7 +2,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
+	import type { linkingCoursesSchema } from '$lib/zod/programSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import {
 		type ColumnDef,

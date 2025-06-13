@@ -20,8 +20,8 @@
 <div class="rounded-md border">
 	<Table.Root class="!m-0">
 		<Table.Header>
-			<Table.Head>Name</Table.Head>
-			<Table.Head class="text-right">Actions</Table.Head>
+			<Table.Head class="w-full">Name</Table.Head>
+			<Table.Head>Actions</Table.Head>
 		</Table.Header>
 		<Table.Body>
 			{#each sandbox.editors as editor (editor.id)}
@@ -29,7 +29,7 @@
 					<Table.Cell class="font-medium">
 						{displayName(editor)}
 					</Table.Cell>
-					<Table.Cell class="text-right">
+					<Table.Cell class="flex items-center justify-end gap-1">
 						<RemoveEditor {sandbox} user={editor} />
 					</Table.Cell>
 				</Table.Row>

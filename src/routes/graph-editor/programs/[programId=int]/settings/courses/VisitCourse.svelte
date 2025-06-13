@@ -6,5 +6,5 @@
 </script>
 
 <Button {href} variant="outline" class="float-right">
-	<ArrowRight />
+	Visit <ArrowRight />
 </Button>

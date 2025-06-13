@@ -39,6 +39,8 @@ export function hasProgramPermissions(
 
 	if (has == 'ProgramAdmin') return isProgramAdmin;
 	if (has == 'ProgramAdminEditor') return isProgramAdmin || isProgramEditor;
+
+	return false;
 }
 
 export function hasCoursePermissions(

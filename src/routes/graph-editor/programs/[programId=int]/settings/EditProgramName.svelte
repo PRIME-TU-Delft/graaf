@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { editProgramSchema } from '$lib/zod/superUserProgramSchema';
+	import { editProgramSchema } from '$lib/zod/programSchema';
 	import type { Program } from '@prisma/client';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';

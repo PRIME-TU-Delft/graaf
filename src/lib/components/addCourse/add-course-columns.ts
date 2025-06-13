@@ -17,11 +17,11 @@ export const columns: ColumnDef<Course>[] = [
 		enableHiding: false
 	},
 	{
-		accessorKey: 'name',
-		header: 'Name'
-	},
-	{
 		accessorKey: 'code',
 		header: 'Code'
+	},
+	{
+		accessorKey: 'name',
+		header: 'Name'
 	}
 ];

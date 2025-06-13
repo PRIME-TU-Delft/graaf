@@ -7,11 +7,13 @@ import {
 	editSuperUserSchema,
 	linkingCoursesSchema,
 	changePinSchema,
-	changeArchiveSchema
+	changeArchiveSchema,
+	deleteCourseSchema
 } from '$lib/zod/courseSchema';
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
+import { redirect } from '@sveltejs/kit';
 
 export class CourseActions {
 	/**
@@ -179,5 +181,24 @@ export class CourseActions {
 		} catch {
 			return setError(form, '', "You don't have permission to (de)archive this course");
 		}
+	}
+
+	static async deleteCourse(user: User, form: SuperValidated<Infer<typeof deleteCourseSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.course.delete({
+				where: {
+					id: form.data.courseId,
+					...whereHasCoursePermission(user, 'ProgramAdminEditor')
+				}
+			});
+		} catch (e: unknown) {
+			return {
+				error: e instanceof Error ? e.message : `${e}`
+			};
+		}
+
+		throw redirect(303, '/');
 	}
 }

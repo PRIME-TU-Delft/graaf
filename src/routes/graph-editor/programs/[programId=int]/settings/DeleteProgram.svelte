@@ -9,28 +9,29 @@
 	import { Trash2 } from '@lucide/svelte';
 
 	// Types
-	import type { Course } from '@prisma/client';
+	import type { Program } from '@prisma/client';
 
-	type Props = { course: Course };
-	let { course }: Props = $props();
+	type Props = { program: Program };
+	let { program }: Props = $props();
 </script>
 
 <AlertDialog.Root>
 	<AlertDialog.Trigger class={buttonVariants({ variant: 'destructive' })}>
-		<Trash2 /> Delete Course
+		<Trash2 /> Delete Program
 	</AlertDialog.Trigger>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This action cannot be undone. This will permanently delete this course, its graphs and
-				links. Embeds for this course will stop working.
+				This action cannot be undone. Courses assigned to this program will be unlinked, but <b
+					>not</b
+				> deleted.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-			<form action="?/delete-course" method="POST" use:enhance>
-				<input type="hidden" name="courseId" value={course.id} />
+			<form action="?/delete-program" method="POST" use:enhance>
+				<input type="hidden" name="programId" value={program.id} />
 				<AlertDialog.Action type="submit" class={buttonVariants({ variant: 'destructive' })}>
 					Delete anyway
 				</AlertDialog.Action>
