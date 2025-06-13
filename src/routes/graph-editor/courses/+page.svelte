@@ -9,7 +9,7 @@
 	<h1 class="text-purple-950 shadow-purple-500/70">All Courses</h1>
 
 	<div class="grid gap-2">
-		{#each data.courses as course, i (course.id)}
+		{#each data.courses as course (course.id)}
 			<a
 				href="./courses/{course.code}"
 				class="flex items-center justify-between rounded bg-purple-50 p-2 no-underline shadow-none shadow-purple-300 transition-all hover:bg-purple-100 hover:shadow-lg"

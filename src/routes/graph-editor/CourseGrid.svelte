@@ -3,14 +3,13 @@
 	import { fade } from 'svelte/transition';
 
 	// Components
-	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 
 	// Icons
-	import { Archive, Settings } from '@lucide/svelte';
+	import { Settings } from '@lucide/svelte';
+	import PinUnpin from './PinUnpin.svelte';
 
 	import type { Course, User } from '@prisma/client';
-	import PinUnpin from './PinUnpin.svelte';
 
 	type CourseGridProps = {
 		user: User | undefined;

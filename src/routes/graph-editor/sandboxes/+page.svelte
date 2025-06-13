@@ -15,7 +15,7 @@
 	</div>
 
 	<div class="grid gap-2">
-		{#each data.sandboxes as sandbox, i (sandbox.id)}
+		{#each data.sandboxes as sandbox (sandbox.id)}
 			<a
 				href="./sandboxes/{sandbox.id}"
 				class="flex items-center gap-2 rounded bg-purple-50 p-2 no-underline shadow-none shadow-purple-300 transition-all hover:bg-purple-100 hover:shadow-lg"
