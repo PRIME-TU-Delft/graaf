@@ -12,7 +12,11 @@ const testUsers = [
 	{ fn: 'Teun', ln: 'Janssen', admin: false },
 	{ fn: 'Dani', ln: 'Petrova', admin: false },
 	{ fn: 'Rens', ln: 'Dur', admin: false },
-	{ fn: 'Dennis', ln: 'den Ouden-van der Horst', admin: false }
+	{ fn: 'Dennis', ln: 'den Ouden-van der Horst', admin: false },
+	{ fn: 'Test User', ln: 'One', admin: false },
+	{ fn: 'Test User', ln: 'Two', admin: false },
+	{ fn: 'Test User', ln: 'Three', admin: false },
+	{ fn: 'Test User', ln: 'Four', admin: false }
 ];
 
 const prisma = new PrismaClient();

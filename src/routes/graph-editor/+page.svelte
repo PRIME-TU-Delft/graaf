@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-
 	// Components
+	import { page } from '$app/state';
 	import Help from '$lib/components/Help.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Archive, ArchiveX } from '@lucide/svelte';
+	import { untrack } from 'svelte';
 	import PinnedCourses from './PinnedCourses.svelte';
 	import Program from './Program.svelte';
 	import Sandboxes from './Sandboxes.svelte';
@@ -16,12 +17,13 @@
 	let showArchivedCourses = $state(false);
 
 	$effect(() => {
-		// When add 'course to program' form is submitted with an error
-		if (form?.error) toast.error(form.error);
+		let error = form?.error ?? page.url.searchParams.get('error');
 
-		// When you access a page you don't have access to, you get redirected to the home page with an error message
-		// onDismiss is used to redirect to the home page when the toast is dismissed
-		if (data?.error) toast.error(data.error, { onDismiss: () => goto('/') });
+		untrack(() => {
+			if (error) {
+				toast.error(error, { onDismiss: () => goto('/') });
+			}
+		});
 	});
 </script>
 
