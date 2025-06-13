@@ -42,4 +42,4 @@ export const changePinSchema = z.object({
 
 export const deleteCourseSchema = z.object({
 	courseId: z.number().min(1)
-})
+});

@@ -163,6 +163,6 @@ export class SandboxActions {
 			return setError(form, '', "You don't have permission to delete this sandbox");
 		}
 
-		throw redirect(303, '/')
+		throw redirect(303, '/');
 	}
 }

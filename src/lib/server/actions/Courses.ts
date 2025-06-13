@@ -192,7 +192,7 @@ export class CourseActions {
 					id: form.data.courseId,
 					...whereHasCoursePermission(user, 'ProgramAdminEditor')
 				}
-			})
+			});
 		} catch (e: unknown) {
 			return {
 				error: e instanceof Error ? e.message : `${e}`
