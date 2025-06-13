@@ -7,7 +7,7 @@
 	import { Button } from '$lib/components/ui/button';
 
 	// Icons
-	import { Archive } from '@lucide/svelte';
+	import { Archive, Settings } from '@lucide/svelte';
 
 	import type { Course, User } from '@prisma/client';
 	import PinUnpin from './PinUnpin.svelte';
@@ -54,16 +54,10 @@
 		<div class="flex items-center gap-1">
 			{#if course.isArchived}
 				<Button
-					type="submit"
 					variant="outline"
-					class="h-8 w-8 border-purple-600 bg-purple-200"
-					onclick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						goto(`/graph-editor/courses/${course.code}/settings#archive-course`);
-					}}
+					href="/graph-editor/courses/{course.code}/settings"
 				>
-					<Archive class="text-purple-600" />
+					<Settings class="text-gray-600" />
 				</Button>
 			{/if}
 
