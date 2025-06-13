@@ -5,28 +5,23 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import AddSuperUser from './AddSuperUser.svelte';
 	import ChangeRole from './ChangeRole.svelte';
-	
+
 	// Types
 	import type { User, Program } from '@prisma/client';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 	import type { editSuperUserSchema } from '$lib/zod/programSchema';
 
 	type GraphLinksProps = {
-		program: Program & { 
-			admins: User[]; 
+		program: Program & {
+			admins: User[];
 			editors: User[];
 		};
 		allUsers: User[];
 		canChangeRoles: boolean;
-		editSuperUserForm: SuperValidated<Infer<typeof editSuperUserSchema>>
+		editSuperUserForm: SuperValidated<Infer<typeof editSuperUserSchema>>;
 	};
 
-	const { 
-		program,
-		allUsers,
-		canChangeRoles,
-		editSuperUserForm
-	}: GraphLinksProps = $props();
+	const { program, allUsers, canChangeRoles, editSuperUserForm }: GraphLinksProps = $props();
 </script>
 
 <div class="rounded-md border">
@@ -44,13 +39,7 @@
 						{displayName(user)}
 					</Table.Cell>
 					<Table.Cell class="flex items-center justify-end gap-1">
-						<ChangeRole 
-							{user}
-							{program}
-							{canChangeRoles}
-							{editSuperUserForm} 
-							role="Admin" 
-						/>
+						<ChangeRole {user} {program} {canChangeRoles} {editSuperUserForm} role="Admin" />
 					</Table.Cell>
 				</Table.Row>
 			{/each}
@@ -61,24 +50,14 @@
 						{displayName(user)}
 					</Table.Cell>
 					<Table.Cell class="flex items-center gap-1">
-						<ChangeRole 
-							{user}
-							{program}
-							{canChangeRoles}
-							{editSuperUserForm} 
-							role="Editor" 
-						/>					
+						<ChangeRole {user} {program} {canChangeRoles} {editSuperUserForm} role="Editor" />
 					</Table.Cell>
 				</Table.Row>
 			{/each}
 
 			<Table.Row>
 				<Table.Cell colspan={2}>
-					<AddSuperUser 
-						{program}
-						{allUsers}
-						{editSuperUserForm}
-					/>
+					<AddSuperUser {program} {allUsers} {editSuperUserForm} />
 				</Table.Cell>
 			</Table.Row>
 		</Table.Body>

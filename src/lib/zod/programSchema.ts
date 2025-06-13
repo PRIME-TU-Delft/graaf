@@ -24,4 +24,3 @@ export const linkingCoursesSchema = z.object({
 	programId: z.number().min(1),
 	courseIds: z.array(z.number().min(1)).nonempty()
 });
-

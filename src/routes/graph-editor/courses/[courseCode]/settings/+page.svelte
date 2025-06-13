@@ -60,11 +60,9 @@
 		</li>
 	</ul>
 
-	<SuperUserTable 
+	<SuperUserTable
 		course={data.course}
-		canChangeRoles={
-			hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')
-		}
+		canChangeRoles={hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 	/>
 </section>
 

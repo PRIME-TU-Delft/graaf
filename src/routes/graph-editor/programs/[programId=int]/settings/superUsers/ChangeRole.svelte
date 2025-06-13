@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	// Components
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
@@ -10,7 +9,7 @@
 
 	// Types
 	import type { User, Program } from '@prisma/client';
-	import type { editSuperUserSchema } from '$lib/zod/programSchema'
+	import type { editSuperUserSchema } from '$lib/zod/programSchema';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type CourseAdminProps = {
@@ -21,13 +20,7 @@
 		role?: 'Admin' | 'Editor';
 	};
 
-	const { 
-		user, 
-		program, 
-		canChangeRoles, 
-		editSuperUserForm,
-		role
-	}: CourseAdminProps = $props();
+	const { user, program, canChangeRoles, editSuperUserForm, role }: CourseAdminProps = $props();
 
 	let menuIsFocusOn = $state('');
 </script>
@@ -40,7 +33,8 @@
 	>
 		<Menubar.Menu value="menu">
 			<Menubar.Trigger class={buttonVariants({ variant: 'outline' })}>
-				{role} <ChevronDown />
+				{role}
+				<ChevronDown />
 			</Menubar.Trigger>
 			<Menubar.Content>
 				<Menubar.Item class="p-0"></Menubar.Item>
@@ -89,7 +83,7 @@
 		</Menubar.Menu>
 	</Menubar.Root>
 {:else}
-	<span class="pr-4 py-2">
+	<span class="py-2 pr-4">
 		{role}
 	</span>
 {/if}

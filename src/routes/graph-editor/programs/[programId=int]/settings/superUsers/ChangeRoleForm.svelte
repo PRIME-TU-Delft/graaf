@@ -4,7 +4,7 @@
 	import { zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/programSchema';
 	import { useId } from 'bits-ui';
-	
+
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Button } from '$lib/components/ui/button';
@@ -13,7 +13,7 @@
 	import Check from 'lucide-svelte/icons/check';
 
 	// Types
-	import type { User, Program } from '@prisma/client'
+	import type { User, Program } from '@prisma/client';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type ChangeRoleProps = {

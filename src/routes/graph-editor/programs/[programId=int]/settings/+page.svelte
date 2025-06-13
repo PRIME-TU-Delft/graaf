@@ -40,7 +40,10 @@
 
 <section class="prose mx-auto p-4">
 	<h2>Super Users</h2>
-	<p>Super Users are the admins and editors of a programme. Programme super users automatically become admins of any course part of this programme.</p>
+	<p>
+		Super Users are the admins and editors of a programme. Programme super users automatically
+		become admins of any course part of this programme.
+	</p>
 	<ul class="text-sm">
 		<li>
 			<b>Programme Admins</b><br />
@@ -52,19 +55,20 @@
 		</li>
 	</ul>
 
-	<SuperUserTable 
+	<SuperUserTable
 		program={data.program}
 		allUsers={data.allUsers}
 		editSuperUserForm={data.editSuperUserForm}
-		canChangeRoles={
-			hasProgramPermissions(data.user, data.program, 'ProgramAdmin')
-		}
+		canChangeRoles={hasProgramPermissions(data.user, data.program, 'ProgramAdmin')}
 	/>
 </section>
 
 <section class="prose mx-auto p-4">
 	<h2>Courses</h2>
-	<p>Courses can be assigned to one or more programmes. Program super users automatically gain admin rights to all courses in a programme.</p>
+	<p>
+		Courses can be assigned to one or more programmes. Program super users automatically gain admin
+		rights to all courses in a programme.
+	</p>
 
 	<CoursesTable
 		data={data.program?.courses}

@@ -23,7 +23,9 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
-				This action cannot be undone. Courses assigned to this program will be unlinked, but <b>not</b> deleted.
+				This action cannot be undone. Courses assigned to this program will be unlinked, but <b
+					>not</b
+				> deleted.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

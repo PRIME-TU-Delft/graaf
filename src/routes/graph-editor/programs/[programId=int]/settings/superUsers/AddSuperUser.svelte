@@ -21,9 +21,9 @@
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
 
 	type AddNewUserProps = {
-		program: Program & { 
-			admins: User[]; 
-			editors: User[] 
+		program: Program & {
+			admins: User[];
+			editors: User[];
 		};
 		allUsers: User[];
 		editSuperUserForm: SuperValidated<Infer<typeof editSuperUserSchema>>;
@@ -50,7 +50,7 @@
 				!program.admins.some((u) => u.id == user.id) &&
 				!program.editors.some((u) => u.id == user.id)
 		)
-	)
+	);
 
 	let isAdmin = $state(false);
 	let dialogOpen = $state(false);

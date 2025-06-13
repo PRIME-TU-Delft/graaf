@@ -18,7 +18,7 @@
 		PaginationState,
 		RowSelectionState,
 		VisibilityState
-	} from '@tanstack/table-core'
+	} from '@tanstack/table-core';
 
 	type DataTableProps = {
 		columns: ColumnDef<Course, Course>[];

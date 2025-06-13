@@ -12,7 +12,7 @@
 		{#each data.courses as course, i (course.id)}
 			<a
 				href="./courses/{course.code}"
-				class="flex items-center justify-between rounded bg-purple-50 p-2 shadow-none no-underline shadow-purple-300 transition-all hover:bg-purple-100 hover:shadow-lg"
+				class="flex items-center justify-between rounded bg-purple-50 p-2 no-underline shadow-none shadow-purple-300 transition-all hover:bg-purple-100 hover:shadow-lg"
 			>
 				<span>{course.code} {course.name}</span>
 				<ArrowRight />

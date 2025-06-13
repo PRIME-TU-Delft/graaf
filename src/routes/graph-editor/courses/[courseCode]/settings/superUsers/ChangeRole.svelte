@@ -1,5 +1,4 @@
 <script lang="ts">
-
 	// Components
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
@@ -74,7 +73,7 @@
 		</Menubar.Menu>
 	</Menubar.Root>
 {:else}
-	<span class="pr-4 py-2">
+	<span class="py-2 pr-4">
 		{courseRole}
 	</span>
 {/if}

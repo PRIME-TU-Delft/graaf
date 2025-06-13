@@ -53,10 +53,7 @@
 
 		<div class="flex items-center gap-1">
 			{#if course.isArchived}
-				<Button
-					variant="outline"
-					href="/graph-editor/courses/{course.code}/settings"
-				>
+				<Button variant="outline" href="/graph-editor/courses/{course.code}/settings">
 					<Settings class="text-gray-600" />
 				</Button>
 			{/if}
