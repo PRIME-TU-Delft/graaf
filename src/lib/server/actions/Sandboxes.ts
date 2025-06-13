@@ -10,6 +10,7 @@ import type {
 	editSuperUserSchema,
 	newSandboxSchema
 } from '$lib/zod/sandboxSchema';
+import { redirect } from '@sveltejs/kit';
 
 export class SandboxActions {
 	static async newSandbox(user: User, form: SuperValidated<Infer<typeof newSandboxSchema>>) {
@@ -87,6 +88,7 @@ export class SandboxActions {
 
 	static async editSuperUser(user: User, form: SuperValidated<Infer<typeof editSuperUserSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
+		let doRedirect = false;
 
 		try {
 			const current = await prisma.sandbox.findUnique({
@@ -134,6 +136,8 @@ export class SandboxActions {
 				if (isEditor) {
 					data.editors.disconnect = { id: form.data.userId };
 				}
+
+				doRedirect = true;
 			}
 
 			await prisma.sandbox.update({
@@ -146,6 +150,10 @@ export class SandboxActions {
 		} catch (error) {
 			console.error(error);
 			return setError(form, '', 'Something went wrong');
+		}
+
+		if (doRedirect) {
+			throw redirect(303, '/');
 		}
 
 		return { form };
