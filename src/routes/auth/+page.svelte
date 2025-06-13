@@ -55,7 +55,7 @@
 
 <section class="prose mx-auto mt-12">
 	<h2>Contributors</h2>
-	{#each contributors as { name, title }}
+	{#each contributors as { name, title } (name)}
 		<div class="mb-2 flex gap-2">
 			<div class="not-prose w-24 overflow-hidden rounded">
 				<img
