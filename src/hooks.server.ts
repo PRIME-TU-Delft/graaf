@@ -7,20 +7,27 @@ import { env } from '$env/dynamic/private';
 async function authFunction(event: RequestEvent, user_id?: string) {
 	if (!user_id) return null;
 
-	const user = await prisma.user.findFirst({
-		where: {
-			id: user_id
-		}
-	});
+	try {
+		const user = await prisma.user.findFirst({
+			where: {
+				id: user_id
+			}
+		});
 
-	if (!user) return null;
+		if (!user) return null;
 
-	const session = {
-		user,
-		expires: new Date('2030-01-01T00:00:00.000Z').toDateString()
-	} satisfies Session;
+		const expires = new Date();
+		expires.setFullYear(expires.getFullYear() + 1);
 
-	return session;
+		const session = {
+			user,
+			expires: expires.toDateString()
+		} satisfies Session;
+
+		return session;
+	} catch {
+		return null;
+	}
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -43,7 +50,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			event.locals.auth = () => authFunction(event, user_id);
 			return await resolve(event);
 		} else if (!user_id) {
-			redirect(307, '/auth');
+			redirect(307, '/auth?error=No user found');
 		}
 
 		event.locals.auth = () => authFunction(event, user_id);
