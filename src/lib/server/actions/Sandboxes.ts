@@ -13,6 +13,11 @@ import type {
 import { redirect } from '@sveltejs/kit';
 
 export class SandboxActions {
+	/**
+	 * PERMISSIONS
+	 * - Any user can create sandboxes
+	 */
+
 	static async newSandbox(user: User, form: SuperValidated<Infer<typeof newSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -37,7 +42,7 @@ export class SandboxActions {
 	}
 
 	/**
-	 * PERMISSIONS:
+	 * PERMISSIONS
 	 * - Only OWNERS can edit sandboxes
 	 */
 
@@ -62,27 +67,7 @@ export class SandboxActions {
 	}
 
 	/**
-	 * PERMISSIONS:
-	 * - Only OWNERS can delete sandboxes
-	 */
-
-	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
-		if (!form.valid) return setError(form, '', 'Form is not valid');
-
-		try {
-			await prisma.sandbox.delete({
-				where: {
-					id: form.data.sandboxId,
-					...whereHasSandboxPermission(user, 'Owner')
-				}
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to delete this sandbox");
-		}
-	}
-
-	/**
-	 * PERMISSIONS:
+	 * PERMISSIONS
 	 * - Only OWNERS can edit super users
 	 */
 
@@ -157,5 +142,27 @@ export class SandboxActions {
 		}
 
 		return { form };
+	}
+
+	/**
+	 * PERMISSIONS
+	 * - Only OWNERS can delete sandboxes
+	 */
+
+	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.sandbox.delete({
+				where: {
+					id: form.data.sandboxId,
+					...whereHasSandboxPermission(user, 'Owner')
+				}
+			});
+		} catch {
+			return setError(form, '', "You don't have permission to delete this sandbox");
+		}
+
+		throw redirect(303, '/')
 	}
 }
