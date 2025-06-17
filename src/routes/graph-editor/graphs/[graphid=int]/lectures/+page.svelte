@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Button from '$lib/components/ui/button';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { cn } from '$lib/utils';
-	import { Ellipsis, MoveVertical, Sparkle } from '@lucide/svelte';
+	import { Ellipsis, MoveVertical } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';

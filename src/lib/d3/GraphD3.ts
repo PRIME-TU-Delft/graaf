@@ -58,12 +58,12 @@ export class GraphD3 {
 
 		// Format data
 		this.data = this.formatPayload(payload);
-		
+
 		switch (view) {
 			case GraphView.domains:
 				graphView.toDomains();
 				break;
-			case GraphView.subjects:	
+			case GraphView.subjects:
 				graphView.toSubjects();
 				break;
 			case GraphView.lectures:

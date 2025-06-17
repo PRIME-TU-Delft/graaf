@@ -14,7 +14,7 @@
 		Orbit,
 		SearchSlash
 	} from '@lucide/svelte';
-	
+
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
@@ -33,11 +33,7 @@
 		builtInViewDropdown?: boolean;
 	};
 
-	let { 
-		graphD3, 
-		editable,
-		builtInViewDropdown = false
-	}: Props = $props();
+	let { graphD3, editable, builtInViewDropdown = false }: Props = $props();
 
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
@@ -55,7 +51,7 @@
 		const params = new URLSearchParams({
 			view: view,
 			lectureID: lectureID ? String(lectureID) : ''
-		}).toString()
+		}).toString();
 
 		goto(`?${params}`);
 	});
@@ -85,7 +81,6 @@
 	function capitalize(str: string) {
 		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 	}
-	
 </script>
 
 <!-- Select View -->
@@ -106,7 +101,8 @@
 				{#each ['DOMAINS', 'SUBJECTS', 'LECTURES'] as tab (tab)}
 					{#if tab === graphView.state}
 						<DropdownMenu.Item class="justify-between" disabled>
-							{capitalize(tab)} <Check />
+							{capitalize(tab)}
+							<Check />
 						</DropdownMenu.Item>
 					{:else}
 						<DropdownMenu.Item
@@ -124,14 +120,14 @@
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
 {/if}
-	
+
 <!-- Select Lecture -->
 {#if !isFullscreen && graphD3.data.lectures.length > 0}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			class={cn(
 				buttonVariants({ variant: 'default', size: 'lg' }),
-				'fixed top-0 right-0 z-20 rounded-none rounded-es-2xl',
+				'fixed top-0 right-0 z-20 rounded-none rounded-es-2xl'
 			)}
 		>
 			{chosenLecture?.name || 'Select a lecture'}

@@ -33,7 +33,6 @@
 			graphD3Store.graphD3?.setView('DOMAINS');
 		}
 	});
-
 </script>
 
 <div class="mx-auto max-w-[100rem]">

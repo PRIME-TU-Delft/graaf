@@ -11,13 +11,7 @@
 		builtInViewDropdown?: boolean;
 	};
 
-	let {
-		data: payload,
-		editable,
-		view,
-		lectureID,
-		builtInViewDropdown = false
-	}: Props = $props();
+	let { data: payload, editable, view, lectureID, builtInViewDropdown = false }: Props = $props();
 
 	let d3Canvas = $state<SVGSVGElement>();
 

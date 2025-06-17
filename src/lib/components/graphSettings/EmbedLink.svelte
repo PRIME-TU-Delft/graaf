@@ -18,10 +18,10 @@
 	const { link, lectures, getLinkURL }: GraphLinksProps = $props();
 
 	const selectViewOptions = $derived.by(() => {
-		let options = ['Domains', 'Subjects'];
+		let options = ['DOMAINS', 'SUBJECTS'];
 
 		if (lectures.length > 0) {
-			options = [...options, 'Lecture'];
+			options = [...options, 'LECTURES'];
 		}
 
 		return options;
@@ -50,6 +50,10 @@
 	});
 
 	let dialogOpen = $state(false);
+
+	function capitalize(str: string): string {
+		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+	}
 </script>
 
 <DialogButton
@@ -105,9 +109,9 @@
 			{#each selectViewOptions as option (option)}
 				<DropdownMenu.Item
 					class="justify-between"
-					onSelect={() => (embedState.view = option as 'Lectures' | 'Domains' | 'Subjects')}
+					onSelect={() => (embedState.view = option as 'LECTURES' | 'DOMAINS' | 'SUBJECTS')}
 				>
-					{option}
+					{capitalize(option)}
 					<Check class={cn('size-4', option != embedState.view && 'text-transparent')} />
 				</DropdownMenu.Item>
 			{/each}
@@ -137,7 +141,7 @@
 					}}
 					class="justify-between"
 				>
-					{option}
+					{capitalize(option)}
 					<Check class={cn('size-4', option != embedState.lectureId && 'text-transparent')} />
 				</DropdownMenu.Item>
 			{/each}
