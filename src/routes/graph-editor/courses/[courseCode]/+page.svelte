@@ -43,7 +43,7 @@
 				{#if hasAtLeastEditPermission}
 					<Button href="{data.course.code}/settings">Settings <ArrowRight /></Button>
 				{:else}
-					<ShowAdmins course={data.course} />
+					<ShowAdmins user={data.user} course={data.course} />
 				{/if}
 			</div>
 

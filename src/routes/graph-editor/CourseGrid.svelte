@@ -28,9 +28,7 @@
 			{@render displayCourse(course)}
 		{/if}
 	{:else}
-		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
-			This program has no courses yet.
-		</p>
+		<p class="col-span-full text-center text-gray-500">No courses found.</p>
 	{/each}
 </div>
 

@@ -1,20 +1,18 @@
 import prisma from '$lib/server/db/prisma';
-import { zod } from 'sveltekit-superforms/adapters';
-import { fail, setError, superValidate } from 'sveltekit-superforms';
 import {
 	changeSubjectRelSchema,
 	deleteSubjectSchema,
 	subjectRelSchema,
 	subjectSchema
 } from '$lib/zod/subjectSchema';
-
-import type { RequestEvent } from '@sveltejs/kit';
+import type { User } from '@prisma/client';
+import { fail, setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { whereHasGraphCoursePermission } from '../permissions';
 
 export class SubjectActions {
 	/**
 	 * Adds a subject to the graph based on the provided event.
 	 *
-	 * @param event - The request event containing the form data for the subject.
 	 * @returns A promise that resolves to an error message if the form is invalid.
 	 * @throws Will throw an error if there is an issue with the database transaction.
 	 *
@@ -27,26 +25,30 @@ export class SubjectActions {
 	 * 5. If successful, returns the subject.
 	 **/
 
-	static async addSubjectToGraph(event: RequestEvent) {
-		const form = await superValidate(event, zod(subjectSchema));
-
-		if (!form.valid) {
-			return setError(form, 'name', 'Invalid subject');
-		}
-
+	static async addSubjectToGraph(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
 		try {
-			const subjectCount = await prisma.subject.count({
+			const lastSubject = await prisma.subject.findFirst({
 				where: {
 					graphId: form.data.graphId
+				},
+				orderBy: {
+					order: 'desc'
 				}
 			});
 
-			await prisma.subject.create({
+			await prisma.graph.update({
+				where: {
+					id: form.data.graphId,
+					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
 				data: {
-					name: form.data.name,
-					order: subjectCount,
-					graphId: form.data.graphId,
-					domainId: form.data.domainId > 0 ? form.data.domainId : null
+					subjects: {
+						create: {
+							name: form.data.name,
+							order: lastSubject ? lastSubject.order + 1 : 0,
+							domainId: form.data.domainId > 0 ? form.data.domainId : null
+						}
+					}
 				}
 			});
 		} catch (e: unknown) {
@@ -54,11 +56,7 @@ export class SubjectActions {
 		}
 	}
 
-	static async deleteSubject(event: RequestEvent) {
-		const form = await superValidate(event, zod(deleteSubjectSchema));
-
-		if (!form.valid) return setError(form, '', 'Invalid subject');
-
+	static async deleteSubject(user: User, form: SuperValidated<Infer<typeof deleteSubjectSchema>>) {
 		const removeTargetFromSource = form.data.sourceSubjects.map((id) => {
 			return prisma.subject.update({
 				where: { id },
@@ -81,8 +79,17 @@ export class SubjectActions {
 			});
 		});
 
-		const deleteSubject = prisma.subject.delete({
-			where: { id: form.data.subjectId }
+		// When permissions fail for this query all other queries will fail as well and rollback
+		const deleteSubject = prisma.graph.update({
+			where: {
+				id: form.data.graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: {
+				subjects: {
+					delete: { id: form.data.subjectId }
+				}
+			}
 		});
 
 		try {
@@ -96,20 +103,28 @@ export class SubjectActions {
 		}
 	}
 
-	static async changeSubject(event: RequestEvent) {
-		const form = await superValidate(event, zod(subjectSchema));
-
+	static async changeSubject(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid subject');
 		if (form.data.subjectId === 0) {
 			return setError(form, 'name', 'Invalid subject id, cannot be 0');
 		}
 
 		try {
-			await prisma.subject.update({
-				where: { id: form.data.subjectId },
+			await prisma.graph.update({
+				where: {
+					id: form.data.graphId,
+					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
 				data: {
-					name: form.data.name,
-					domainId: form.data.domainId > 0 ? form.data.domainId : null
+					subjects: {
+						update: {
+							where: { id: form.data.subjectId },
+							data: {
+								name: form.data.name,
+								domainId: form.data.domainId > 0 ? form.data.domainId : null
+							}
+						}
+					}
 				}
 			});
 		} catch (e: unknown) {
@@ -117,7 +132,7 @@ export class SubjectActions {
 		}
 	}
 
-	private static async connectSubjects(inId: number, outId: number) {
+	private static async connectSubjects(graphId: number, user: User, inId: number, outId: number) {
 		// Check if the subjecs are already connected
 		const isConnected = await prisma.subject.findFirst({
 			where: {
@@ -130,31 +145,36 @@ export class SubjectActions {
 			throw new Error('Subjects are already connected');
 		}
 
-		const addTargetToSource = prisma.subject.update({
+		return await prisma.graph.update({
 			where: {
-				id: inId
+				// Assuming both subjects belong to the same graph, use the graphId from one of the domains
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			},
 			data: {
-				targetSubjects: { connect: { id: outId } }
+				subjects: {
+					update: [
+						{
+							where: { id: inId },
+							data: {
+								targetSubjects: { connect: { id: outId } }
+							}
+						},
+						{
+							where: { id: outId },
+							data: {
+								sourceSubjects: { connect: { id: inId } }
+							}
+						}
+					]
+				}
 			}
 		});
-
-		const addSourceToTarget = prisma.subject.update({
-			where: {
-				id: outId
-			},
-			data: {
-				sourceSubjects: { connect: { id: inId } }
-			}
-		});
-
-		await prisma.$transaction([addTargetToSource, addSourceToTarget]);
 	}
 
 	/**
 	 * Adds a relationship between two subjects based on the provided event.
 	 *
-	 * @param event - The request event containing the form data for the subject relationship.
 	 * @returns A promise that resolves to an error message if the form is invalid or if the subjects are already connected.
 	 * @throws Will throw an error if there is an issue with the database transaction.
 	 *
@@ -165,117 +185,87 @@ export class SubjectActions {
 	 * 4. Executes the updates within a database transaction.
 	 */
 
-	static async addSubjectRel(event: RequestEvent) {
-		const form = await superValidate(event, zod(subjectRelSchema));
-
-		if (!form.valid) {
-			return setError(form, '', 'Invalid subject relationship');
-		}
+	static async addSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
 		try {
-			// Check if the subjects are already connected
-			const isConnected = await prisma.subject.findFirst({
-				where: {
-					id: form.data.sourceSubjectId,
-					targetSubjects: {
-						some: {
-							id: form.data.targetSubjectId
-						}
-					}
-				}
-			});
-
-			if (isConnected) {
-				return setError(form, '', 'Subjects are already connected');
-			}
-
-			const addTargetToSource = prisma.subject.update({
-				where: {
-					id: form.data.sourceSubjectId
-				},
-				data: {
-					targetSubjects: {
-						connect: {
-							id: form.data.targetSubjectId
-						}
-					}
-				}
-			});
-
-			const addSourceToTarget = prisma.subject.update({
-				where: {
-					id: form.data.targetSubjectId
-				},
-				data: {
-					sourceSubjects: {
-						connect: {
-							id: form.data.sourceSubjectId
-						}
-					}
-				}
-			});
-
-			await prisma.$transaction([addTargetToSource, addSourceToTarget]);
+			const sourceId = form.data.sourceSubjectId;
+			const targetId = form.data.targetSubjectId;
+			await SubjectActions.connectSubjects(form.data.graphId, user, sourceId, targetId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 
-	private static async disconnectSubjects(sourceId: number, targetId: number) {
-		const removeTargetFromSource = prisma.subject.update({
-			where: { id: sourceId },
+	private static async disconnectSubjects(
+		graphId: number,
+		user: User,
+		inId: number,
+		outId: number
+	) {
+		return await prisma.graph.update({
+			where: {
+				// Assuming both subjects belong to the same graph, use the graphId from one of the domains
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
 			data: {
-				targetSubjects: {
-					disconnect: { id: targetId }
+				subjects: {
+					update: [
+						{
+							where: { id: inId },
+							data: {
+								targetSubjects: { disconnect: { id: outId } }
+							}
+						},
+						{
+							where: { id: outId },
+							data: {
+								sourceSubjects: { disconnect: { id: inId } }
+							}
+						}
+					]
 				}
 			}
 		});
-
-		const removeSourceFromTarget = prisma.subject.update({
-			where: { id: targetId },
-			data: {
-				sourceSubjects: {
-					disconnect: { id: sourceId }
-				}
-			}
-		});
-
-		await prisma.$transaction([removeTargetFromSource, removeSourceFromTarget]);
 	}
 
-	static async deleteSubjectRel(event: RequestEvent) {
-		const form = await event.request.formData();
-		const sourceSubjectId = parseInt(form.get('sourceSubjectId') as string);
-		const targetSubjectId = parseInt(form.get('targetSubjectId') as string);
+	static async deleteSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
-		if (isNaN(sourceSubjectId) || isNaN(targetSubjectId)) {
-			return fail(400, {
-				inputSubjectId: sourceSubjectId,
-				targetSubjectId: targetSubjectId,
-				errorMessage: 'Invalid relationship id'
-			});
-		}
+		console.log(form);
 
 		try {
-			await SubjectActions.disconnectSubjects(sourceSubjectId, targetSubjectId);
+			await SubjectActions.disconnectSubjects(
+				form.data.graphId,
+				user,
+				form.data.sourceSubjectId,
+				form.data.targetSubjectId
+			);
 		} catch (e: unknown) {
 			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
 		}
 	}
 
-	static async changeSubjectRel(event: RequestEvent) {
-		const form = await superValidate(event, zod(changeSubjectRelSchema));
-
-		if (!form.valid) {
-			return setError(form, '', form.message);
-		}
+	static async changeSubjectRel(
+		user: User,
+		form: SuperValidated<Infer<typeof changeSubjectRelSchema>>
+	) {
+		if (!form.valid) return setError(form, '', form.message);
 
 		try {
 			await SubjectActions.disconnectSubjects(
+				form.data.graphId,
+				user,
 				form.data.oldSourceSubjectId,
 				form.data.oldTargetSubjectId
 			);
-			await SubjectActions.connectSubjects(form.data.sourceSubjectId, form.data.targetSubjectId);
+			await SubjectActions.connectSubjects(
+				form.data.graphId,
+				user,
+				form.data.sourceSubjectId,
+				form.data.targetSubjectId
+			);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}

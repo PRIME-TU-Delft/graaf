@@ -34,6 +34,7 @@
 	$effect(() => {
 		// When the domain changes, update the form data
 		if (domain) {
+			$formData.graphId = graph.id;
 			$formData.domainId = domain.id;
 			$formData.sourceDomains = domain.sourceDomains.map((d) => d.id);
 			$formData.targetDomains = domain.targetDomains.map((d) => d.id);
@@ -62,6 +63,7 @@
  -->
 
 <form class="text-sm" action="?/delete-domain" method="POST" use:enhance>
+	<input type="hidden" name="graphId" value={$formData.graphId} />
 	<input type="hidden" name="domainId" value={$formData.domainId} />
 
 	{@render formArray('sourceDomains')}

@@ -1,27 +1,20 @@
 import prisma from '$lib/server/db/prisma';
-import { setError, superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { fail } from '@sveltejs/kit';
-
+import { whereHasGraphCoursePermission } from '$lib/server/permissions';
 import {
-	domainRelSchema,
-	domainSchema,
 	changeDomainRelSchema,
-	deleteDomainSchema
+	deleteDomainSchema,
+	domainRelSchema,
+	domainSchema
 } from '$lib/zod/domainSchema';
-
-import type { DomainStyle } from '@prisma/client';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { DomainStyle, User } from '@prisma/client';
+import { fail } from '@sveltejs/kit';
+import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 
 export class DomainActions {
 	// MARK: - Domain
 
-	static async addDomainToGraph(event: RequestEvent) {
-		const form = await superValidate(event, zod(domainSchema));
-
-		if (!form.valid) {
-			return setError(form, 'name', 'Invalid graph name');
-		}
+	static async addDomainToGraph(user: User, form: SuperValidated<Infer<typeof domainSchema>>) {
+		if (!form.valid) return setError(form, 'name', 'Invalid graph name');
 
 		try {
 			// Find the last domain added value in the database.
@@ -35,12 +28,19 @@ export class DomainActions {
 				}
 			});
 
-			await prisma.domain.create({
+			await prisma.graph.update({
+				where: {
+					id: form.data.graphId,
+					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
 				data: {
-					name: form.data.name,
-					style: form.data.style == '' ? null : (form.data.style as DomainStyle),
-					order: lastDomains ? lastDomains.order + 1 : 0,
-					graphId: form.data.graphId
+					domains: {
+						create: {
+							name: form.data.name,
+							style: form.data.style == '' ? null : (form.data.style as DomainStyle),
+							order: lastDomains ? lastDomains.order + 1 : 0
+						}
+					}
 				}
 			});
 		} catch (e: unknown) {
@@ -48,12 +48,8 @@ export class DomainActions {
 		}
 	}
 
-	static async deleteDomain(event: RequestEvent) {
-		const form = await superValidate(event, zod(deleteDomainSchema));
-
-		if (!form.valid) {
-			return setError(form, '', 'Invalid form data');
-		}
+	static async deleteDomain(user: User, form: SuperValidated<Infer<typeof deleteDomainSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form data');
 
 		const removeTargetFromSourceDomain = form.data.sourceDomains.map((id) => {
 			return prisma.domain.update({
@@ -88,8 +84,16 @@ export class DomainActions {
 			});
 		});
 
-		const deleteDomain = prisma.domain.delete({
-			where: { id: form.data.domainId }
+		const deleteDomain = prisma.graph.update({
+			where: {
+				id: form.data.graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: {
+				domains: {
+					delete: { id: form.data.domainId }
+				}
+			}
 		});
 
 		try {
@@ -104,20 +108,28 @@ export class DomainActions {
 		}
 	}
 
-	static async changeDomain(event: RequestEvent) {
-		const form = await superValidate(event, zod(domainSchema));
-
-		if (!form.valid) return setError(form, 'name', form.message);
+	static async changeDomain(user: User, form: SuperValidated<Infer<typeof domainSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form data');
 		if (form.data.domainId === 0) {
 			return setError(form, 'name', 'Invalid domain id, cannot be 0');
 		}
 
 		try {
-			await prisma.domain.update({
-				where: { id: form.data.domainId },
+			await prisma.graph.update({
+				where: {
+					id: form.data.graphId,
+					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+				},
 				data: {
-					name: form.data.name,
-					style: form.data.style == '' ? null : (form.data.style as DomainStyle)
+					domains: {
+						update: {
+							where: { id: form.data.domainId },
+							data: {
+								name: form.data.name,
+								style: form.data.style == '' ? null : (form.data.style as DomainStyle)
+							}
+						}
+					}
 				}
 			});
 		} catch (e: unknown) {
@@ -127,7 +139,7 @@ export class DomainActions {
 
 	// MARK: - Domain Relationships
 
-	private static async connectDomains(inId: number, outId: number) {
+	private static async connectDomains(graphId: number, user: User, inId: number, outId: number) {
 		// Check if the domains are already connected
 		const isConnected = await prisma.domain.findFirst({
 			where: {
@@ -140,98 +152,110 @@ export class DomainActions {
 			throw new Error('Domains are already connected');
 		}
 
-		const addTargetToSource = prisma.domain.update({
+		return await prisma.graph.update({
 			where: {
-				id: inId
+				// Assuming both domains belong to the same graph, use the graphId from one of the domains
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			},
 			data: {
-				targetDomains: { connect: { id: outId } }
+				domains: {
+					update: [
+						{
+							where: { id: inId },
+							data: {
+								targetDomains: { connect: { id: outId } }
+							}
+						},
+						{
+							where: { id: outId },
+							data: {
+								sourceDomains: { connect: { id: inId } }
+							}
+						}
+					]
+				}
 			}
 		});
-
-		const addSourceToTarget = prisma.domain.update({
-			where: {
-				id: outId
-			},
-			data: {
-				sourceDomains: { connect: { id: inId } }
-			}
-		});
-
-		await prisma.$transaction([addTargetToSource, addSourceToTarget]);
 	}
 
-	static async addDomainRel(event: RequestEvent) {
-		const form = await superValidate(event, zod(domainRelSchema));
-
-		if (!form.valid) {
-			return setError(form, '', 'Invalid domain relationship');
-		}
-
+	static async addDomainRel(user: User, form: SuperValidated<Infer<typeof domainRelSchema>>) {
 		try {
 			const sourceId = form.data.sourceDomainId;
 			const targetId = form.data.targetDomainId;
-			await DomainActions.connectDomains(sourceId, targetId);
+			await DomainActions.connectDomains(form.data.graphId, user, sourceId, targetId);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 
-	private static async disconnectDomains(sourceId: number, targetId: number) {
-		const removeTargetFromSource = prisma.domain.update({
-			where: { id: sourceId },
+	private static async disconnectDomains(
+		graphId: number,
+		user: User,
+		sourceId: number,
+		targetId: number
+	) {
+		return await prisma.graph.update({
+			where: {
+				// Assuming both domains belong to the same graph, use the graphId from one of the domains
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
 			data: {
-				targetDomains: {
-					disconnect: { id: targetId }
+				domains: {
+					update: [
+						{
+							where: { id: sourceId },
+							data: {
+								targetDomains: { disconnect: { id: targetId } }
+							}
+						},
+						{
+							where: { id: targetId },
+							data: {
+								sourceDomains: { disconnect: { id: sourceId } }
+							}
+						}
+					]
 				}
 			}
 		});
-
-		const removeSourceFromTarget = prisma.domain.update({
-			where: { id: targetId },
-			data: {
-				sourceDomains: {
-					disconnect: { id: sourceId }
-				}
-			}
-		});
-
-		await prisma.$transaction([removeTargetFromSource, removeSourceFromTarget]);
 	}
 
-	static async deleteDomainRel(event: RequestEvent) {
-		const form = await event.request.formData();
-		const sourceDomainId = parseInt(form.get('sourceDomainId') as string);
-		const targetDomainId = parseInt(form.get('targetDomainId') as string);
-
-		if (isNaN(sourceDomainId) || isNaN(targetDomainId)) {
-			return fail(400, {
-				inputDomainId: sourceDomainId,
-				targetDomainId: targetDomainId,
-				errorMessage: 'Invalid relationship id'
-			});
-		}
+	static async deleteDomainRel(user: User, form: SuperValidated<Infer<typeof domainRelSchema>>) {
+		if (!form.valid) return setError(form, '', 'Invalid form data');
 
 		try {
-			await DomainActions.disconnectDomains(sourceDomainId, targetDomainId);
+			await DomainActions.disconnectDomains(
+				form.data.graphId,
+				user,
+				form.data.sourceDomainId,
+				form.data.targetDomainId
+			);
 		} catch (e: unknown) {
 			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
 		}
 	}
 
-	static async changeDomainRel(event: RequestEvent) {
-		const form = await superValidate(event, zod(changeDomainRelSchema));
-
-		if (!form.valid) {
-			return setError(form, '', form.message);
-		}
+	static async changeDomainRel(
+		user: User,
+		form: SuperValidated<Infer<typeof changeDomainRelSchema>>
+	) {
+		if (!form.valid) return setError(form, '', 'Invalid form data');
 
 		try {
 			await DomainActions.disconnectDomains(
+				form.data.graphId,
+				user,
 				form.data.oldSourceDomainId,
 				form.data.oldTargetDomainId
 			);
-			await DomainActions.connectDomains(form.data.sourceDomainId, form.data.targetDomainId);
+			await DomainActions.connectDomains(
+				form.data.graphId,
+				user,
+				form.data.sourceDomainId,
+				form.data.targetDomainId
+			);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}

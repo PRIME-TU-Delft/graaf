@@ -9,9 +9,12 @@
 	let isSuperAdmin = $derived((data.session?.user as User)?.role === 'ADMIN');
 </script>
 
-<section class="prose mx-auto mt-12 p-4 text-purple-900">
-	<h1>Programmes</h1>
-	<p>Here you can find all programmes</p>
+<section class="prose mx-auto mt-12 p-4">
+	<h1 class="text-purple-950 shadow-purple-500/70">Programmes</h1>
+	<p>
+		Here you can find all programmes in the Graph Editor. Programmes are collections of courses,
+		usually pertaining to the same faculty.
+	</p>
 </section>
 
 <section class="mx-auto grid max-w-4xl gap-4 p-4">

@@ -50,7 +50,7 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		const pinnedCourses = await prisma.course.findMany({
+		const pinnedCourses = prisma.course.findMany({
 			where: {
 				pinnedBy: {
 					some: {
@@ -67,7 +67,7 @@ export const load = (async ({ url, locals }) => {
 			}
 		});
 
-		const sandboxes = await prisma.sandbox.findMany({
+		const sandboxes = prisma.sandbox.findMany({
 			where: {
 				OR: [
 					{ ownerId: user.id },
@@ -109,8 +109,8 @@ export const load = (async ({ url, locals }) => {
 			user,
 			programs: [],
 			courses: emptyPrismaPromise([] as Course[]),
-			sandboxes: [],
-			pinnedCourses: [],
+			sandboxes: new Promise<[]>((resolve) => resolve([])),
+			pinnedCourses: new Promise<[]>((resolve) => resolve([])),
 			error: e instanceof Error ? e.message : `${e}`,
 			newProgramForm: await superValidate(zod(newProgramSchema)),
 			newSandboxForm: await superValidate(zod(newSandboxSchema)),

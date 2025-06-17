@@ -25,7 +25,7 @@
 		<Table.Header>
 			<Table.Row>
 				<Table.Head class="w-full">Name</Table.Head>
-				<Table.Head>Role</Table.Head>
+				<Table.Head>Course Role</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>

@@ -1,25 +1,22 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import { buttonVariants } from '$lib/components/ui/button';
-
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Grid from '$lib/components/ui/grid/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 
+	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	import { ChevronRight, Sparkles, Trash2 } from '@lucide/svelte';
+	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from 'lucide-svelte/icons/link';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
+	import IssueIndicator from '../IssueIndicator.svelte';
 	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
 	import ChangeSubject from './ChangeSubject.svelte';
 	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
-	import IssueIndicator from '../IssueIndicator.svelte';
+	import DeleteSubjectRel from './DeleteSubjectRel.svelte';
 
 	let { data }: { data: PageData } = $props();
 
@@ -143,7 +140,7 @@
 					{@render subjectRelation('targetSubject', sourceSubject, targetSubject)}
 				</Grid.Cell>
 				<Grid.Cell class="justify-end">
-					{@render deleteSubjectRel(sourceSubject, targetSubject)}
+					<DeleteSubjectRel {graph} {sourceSubject} {targetSubject} />
 				</Grid.Cell>
 			{/snippet}
 		</Grid.Rows>
@@ -194,21 +191,4 @@
 			{/if}
 		</DropdownMenu.Content>
 	</DropdownMenu.Root>
-{/snippet}
-
-{#snippet deleteSubjectRel(sourceSubject: Subject, targetSubject: Subject)}
-	<Popover.Root>
-		<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-			<Trash2 />
-		</Popover.Trigger>
-		<Popover.Content side="right" class="space-y-1">
-			<form action="?/delete-subject-rel" method="POST" use:enhance>
-				<input type="hidden" name="sourceSubjectId" value={sourceSubject.id} />
-				<input type="hidden" name="targetSubjectId" value={targetSubject.id} />
-
-				<p class="mb-2">Are you sure you would like to delete this relationship</p>
-				<Form.Button variant="destructive" type="submit">Yes, delete</Form.Button>
-			</form>
-		</Popover.Content>
-	</Popover.Root>
 {/snippet}

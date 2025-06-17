@@ -23,7 +23,14 @@ export const load = (async ({ locals }) => {
 			]
 		},
 		include: {
-			owner: true
+			owner: true,
+			editors: true,
+			_count: {
+				select: {
+					graphs: true,
+					links: true
+				}
+			}
 		}
 	});
 

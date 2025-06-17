@@ -37,7 +37,8 @@
 </script>
 
 <div class="sticky top-2 z-10 mt-12 flex justify-between">
-	<h2 class="m-0 flex items-center">Relationships</h2>
+	<h2 class="prose m-0 flex items-center font-bold">Subject Relationships</h2>
+
 	<DialogButton
 		bind:open={dialogOpen}
 		icon="plus"
