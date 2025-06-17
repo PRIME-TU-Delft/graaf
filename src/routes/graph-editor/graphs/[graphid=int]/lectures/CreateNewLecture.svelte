@@ -31,6 +31,10 @@
 	});
 
 	const { form: formData, enhance, submitting, delayed } = form;
+
+	$effect(() => {
+		$formData.graphId = graph.id;
+	});
 </script>
 
 <DialogButton

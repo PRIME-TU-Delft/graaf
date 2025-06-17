@@ -31,7 +31,7 @@ export class LectureActions {
 			await prisma.graph.update({
 				where: {
 					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 				},
 				data: {
 					lectures: {
