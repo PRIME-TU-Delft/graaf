@@ -28,17 +28,17 @@
 	});
 
 	const embedState = $state({
-		show: 'Subjects' as 'Lectures' | 'Domains' | 'Subjects',
-		showLecture: undefined as string | undefined,
+		view: 'SUBJECTS' as 'LECTURES' | 'DOMAINS' | 'SUBJECTS',
+		lectureId: undefined as string | undefined,
 		iframeHeight: 500
 	});
 
 	const embed = $derived.by(() => {
 		const url = new URL(getLinkURL(link));
 
-		url.searchParams.set('show', embedState.show);
-		if (embedState.showLecture) {
-			url.searchParams.set('lecture', embedState.showLecture);
+		url.searchParams.set('view', embedState.view.toUpperCase());
+		if (embedState.lectureId) {
+			url.searchParams.set('lectureId', embedState.lectureId);
 		} else {
 			url.searchParams.delete('lecture');
 		}
@@ -98,17 +98,17 @@
 		<DropdownMenu.Trigger
 			class={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-between')}
 		>
-			<p>View: <span class="font-mono text-xs">{embedState.show}</span></p>
+			<p>View: <span class="font-mono text-xs">{embedState.view}</span></p>
 			<ChevronDown />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="w-80">
 			{#each selectViewOptions as option (option)}
 				<DropdownMenu.Item
 					class="justify-between"
-					onSelect={() => (embedState.show = option as 'Lectures' | 'Domains' | 'Subjects')}
+					onSelect={() => (embedState.view = option as 'Lectures' | 'Domains' | 'Subjects')}
 				>
 					{option}
-					<Check class={cn('size-4', option != embedState.show && 'text-transparent')} />
+					<Check class={cn('size-4', option != embedState.view && 'text-transparent')} />
 				</DropdownMenu.Item>
 			{/each}
 		</DropdownMenu.Content>
@@ -121,7 +121,7 @@
 			class={cn(buttonVariants({ variant: 'outline' }), 'w-full justify-between')}
 		>
 			<p>
-				Lecture: <span class="font-mono text-xs">{embedState.showLecture ?? '(Optional)'}</span>
+				Lecture: <span class="font-mono text-xs">{embedState.lectureId ?? '(Optional)'}</span>
 			</p>
 			<ChevronDown />
 		</DropdownMenu.Trigger>
@@ -129,16 +129,16 @@
 			{#each lectures.map((l) => l.name) as option (option)}
 				<DropdownMenu.Item
 					onSelect={() => {
-						if (embedState.showLecture === option) {
-							embedState.showLecture = undefined;
+						if (embedState.lectureId === option) {
+							embedState.lectureId = undefined;
 						} else {
-							embedState.showLecture = option;
+							embedState.lectureId = option;
 						}
 					}}
 					class="justify-between"
 				>
 					{option}
-					<Check class={cn('size-4', option != embedState.showLecture && 'text-transparent')} />
+					<Check class={cn('size-4', option != embedState.lectureId && 'text-transparent')} />
 				</DropdownMenu.Item>
 			{/each}
 		</DropdownMenu.Content>

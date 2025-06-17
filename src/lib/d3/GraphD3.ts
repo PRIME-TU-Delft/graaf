@@ -46,6 +46,7 @@ export class GraphD3 {
 		element: SVGSVGElement,
 		payload: PrismaGraphPayload,
 		editable: boolean,
+		view: GraphView = GraphView.domains,
 		lectureId: number | null = null
 	) {
 		this.editable = editable;
@@ -57,6 +58,18 @@ export class GraphD3 {
 
 		// Format data
 		this.data = this.formatPayload(payload);
+		
+		switch (view) {
+			case GraphView.domains:
+				graphView.toDomains();
+				break;
+			case GraphView.subjects:	
+				graphView.toSubjects();
+				break;
+			case GraphView.lectures:
+				graphView.toLectures();
+				break;
+		}
 
 		if (lectureId !== null) {
 			this.lecture = this.data.lectures.find((l) => l.id === lectureId) ?? null;

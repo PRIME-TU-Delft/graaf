@@ -10,9 +10,10 @@ class GraphD3Store {
 		d3Canvas: SVGSVGElement,
 		payload: PrismaGraphPayload,
 		editable: boolean,
+		view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES' = 'DOMAINS',
 		lectureId: number | null = null
 	) {
-		this.graphD3 = new GraphD3(d3Canvas, payload, editable, lectureId);
+		this.graphD3 = new GraphD3(d3Canvas, payload, editable, view, lectureId);
 	}
 
 	clearGraphD3() {

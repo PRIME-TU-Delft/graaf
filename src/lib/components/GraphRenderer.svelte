@@ -3,17 +3,27 @@
 	import type { PrismaGraphPayload } from '$lib/d3/types';
 	import GraphDecorators from './GraphDecorators.svelte';
 
+	type Props = {
+		data: PrismaGraphPayload;
+		editable: boolean;
+		view?: 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+		lectureID: number | null;
+		builtInViewDropdown?: boolean;
+	};
+
 	let {
 		data: payload,
 		editable,
-		lectureID
-	}: { data: PrismaGraphPayload; editable: boolean; lectureID: number | null } = $props();
+		view,
+		lectureID,
+		builtInViewDropdown = false
+	}: Props = $props();
 
 	let d3Canvas = $state<SVGSVGElement>();
 
 	$effect(() => {
 		if (d3Canvas == null) return;
-		graphD3Store.setGraphD3(d3Canvas, payload, editable, lectureID);
+		graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);
 	});
 </script>
 
@@ -25,6 +35,6 @@
 	<svg class="block h-full w-full" bind:this={d3Canvas} />
 
 	{#if graphD3Store.graphD3}
-		<GraphDecorators graphD3={graphD3Store.graphD3} {editable} />
+		<GraphDecorators graphD3={graphD3Store.graphD3} {editable} {builtInViewDropdown} />
 	{/if}
 </div>
