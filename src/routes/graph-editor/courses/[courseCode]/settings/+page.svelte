@@ -13,7 +13,6 @@
 	let { data }: { data: PageData } = $props();
 
 	let editCourseDialogOpen = $state(false);
-
 	let programsYouCanEdit = data.course.programs.filter((program) =>
 		hasProgramPermissions(data.user, program, 'ProgramAdminEditor')
 	);
@@ -61,7 +60,10 @@
 		</li>
 	</ul>
 
-	<SuperUserTable course={data.course} />
+	<SuperUserTable
+		course={data.course}
+		canChangeRoles={hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
+	/>
 </section>
 
 <section class="prose mx-auto p-4">

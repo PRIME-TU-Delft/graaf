@@ -8,7 +8,7 @@ import {
 	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
-} from '$lib/zod/superUserProgramSchema';
+} from '$lib/zod/programSchema';
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';

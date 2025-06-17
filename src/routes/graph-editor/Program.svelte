@@ -3,14 +3,16 @@
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 
 	import type { newCourseSchema } from '$lib/zod/courseSchema';
-	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
+	import type { linkingCoursesSchema } from '$lib/zod/programSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+
 	// Components
 	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import CourseGrid from './CourseGrid.svelte';
+
 	// Icons
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { MailOpen } from '@lucide/svelte';
@@ -60,9 +62,10 @@
 				</Button>
 			{:else if program.admins.length + program.editors.length > 0}
 				<DialogButton
-					title="Users with admin or editor permissions"
-					button="Permissions"
+					button="Super Users"
 					icon="admins"
+					title="{program.name} Super Users"
+					description="View and contact the admins & editors of this program."
 				>
 					{@render superUsersSnippet()}
 				</DialogButton>
@@ -79,7 +82,7 @@
 			<Table.Header>
 				<Table.Row>
 					<Table.Head>Name</Table.Head>
-					<Table.Head>Course Role</Table.Head>
+					<Table.Head>Programme Role</Table.Head>
 					<Table.Head></Table.Head>
 				</Table.Row>
 			</Table.Header>
@@ -119,7 +122,7 @@
 				{#if program.admins.length + program.editors.length === 0}
 					<Table.Row>
 						<Table.Cell colspan={3} class="text-center text-gray-500">
-							This course has no programs with admins or editors.
+							This course has no programmes with admins or editors
 						</Table.Cell>
 					</Table.Row>
 				{/if}

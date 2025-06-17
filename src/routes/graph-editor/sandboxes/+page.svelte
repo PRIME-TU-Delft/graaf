@@ -1,34 +1,38 @@
 <script lang="ts">
+	import { displayName } from '$lib/utils/displayUserName';
+
 	// Components
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import NewSandboxButton from './newSandboxButton.svelte';
 
 	// Icons
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 
 	// Types
 	import type { PageData } from './$types';
-	import { displayName } from '$lib/utils/displayUserName';
-	import { MailOpen } from '@lucide/svelte';
-	import type { Sandbox, User } from '@prisma/client';
 
 	let { data }: { data: PageData } = $props();
 
 	class SuperUserOpenClass {
 		open = $state(false);
 	}
-
-	function generateMailToLink(user: User, sandbox: Sandbox) {
-		const senderName = displayName(data.user);
-		const receiverName = displayName(user);
-
-		return `mailto:${user.email}?subject=${senderName}%20wants%20access%20to%20${sandbox.name}&body=Dear%20${receiverName}%2C%0A%0AI%20would%20like%20to%20receive%20editor%20access%20to%20the%20sandbox%20with%20the%20name%20${sandbox.name}%0A%0AWith%20kind%20regards%2C%0A${senderName}`;
-	}
 </script>
 
-<section class="mx-auto !my-6 max-w-4xl space-y-2">
-	<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">Your sandboxes</h2>
+<section class="prose mx-auto mt-12 p-4">
+	<h1 class="text-purple-950 shadow-purple-500/70">Sandboxes</h1>
+	<p>
+		Here you can find all sandboxes you have access to. Sandboxes are private spaces where you can
+		create graphs for any purpose!
+	</p>
+</section>
+
+<section class="mx-auto grid max-w-4xl gap-4 p-4">
+	<div class="flex w-full items-center justify-between gap-2">
+		<h2 class="w-full grow text-xl font-bold whitespace-nowrap">Your Sandboxes</h2>
+		<NewSandboxButton newSandboxForm={data.newSandboxForm} />
+	</div>
 
 	{#each data.sandboxes as sandbox (sandbox.id)}
 		{@const superUsers = Array.from(new Set([sandbox.owner, ...sandbox.editors]))}
@@ -44,8 +48,8 @@
 			<div class="grow">
 				<h2 class="text-xl font-bold text-purple-950">{sandbox.name}</h2>
 				<div class="grid grid-cols-[max-content_auto] gap-x-3 text-gray-400">
-					<span>Owner:</span> <span>{displayName(sandbox.owner)}</span>
-					<span>Graphs:</span> <span>{sandbox._count.graphs}</span>
+					<span>Owner</span> <span>{displayName(sandbox.owner)}</span>
+					<span>Graphs</span> <span>{sandbox._count.graphs}</span>
 					<span>Links</span> <span>{sandbox._count.links}</span>
 				</div>
 			</div>
@@ -64,9 +68,10 @@
 							e.stopPropagation();
 							superUsersOpen.open = true;
 						}}
-						title="Users with admin or editor permissions"
-						button="Permissions"
+						button="Super Users"
 						icon="admins"
+						title="{sandbox.name} Super Users"
+						description="View and contact the admins & editors of this sandbox."
 					>
 						{@render superUsersSnippet(sandbox)}
 					</DialogButton>
@@ -91,15 +96,8 @@
 					<Table.Cell>
 						{displayName(sandbox.owner)}
 					</Table.Cell>
-					<Table.Cell class="text-left">Owner</Table.Cell>
 
-					<Table.Cell class="text-right">
-						<Button
-							disabled={data.user?.id == sandbox.owner.id}
-							variant="outline"
-							href={generateMailToLink(sandbox.owner, sandbox)}><MailOpen /></Button
-						>
-					</Table.Cell>
+					<Table.Cell class="text-left">Owner</Table.Cell>
 				</Table.Row>
 
 				{#each sandbox.editors as user (user.id)}
@@ -109,14 +107,6 @@
 						</Table.Cell>
 
 						<Table.Cell>Editor</Table.Cell>
-
-						<Table.Cell class="text-right">
-							<Button
-								disabled={data.user?.id == user.id}
-								variant="outline"
-								href={generateMailToLink(user, sandbox)}><MailOpen /></Button
-							>
-						</Table.Cell>
 					</Table.Row>
 				{/each}
 			</Table.Body>

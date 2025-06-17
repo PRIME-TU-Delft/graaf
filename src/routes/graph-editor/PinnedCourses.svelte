@@ -28,7 +28,11 @@
 				{#await pinnedCourses}
 					<p class="text-center text-purple-950">Waiting for pinned courses...</p>
 				{:then pinnedCourses}
-					<CourseGrid {user} {showArchivedCourses} courses={pinnedCourses} />
+					{#if pinnedCourses.length === 0}
+						<p class="text-center text-gray-500">No pinned courses found.</p>
+					{:else}
+						<CourseGrid {user} {showArchivedCourses} courses={pinnedCourses} />
+					{/if}
 				{:catch error}
 					<p class="text-center text-red-500">Error loading pinned courses: {error.message}</p>
 				{/await}

@@ -3,14 +3,13 @@
 	import { fade } from 'svelte/transition';
 
 	// Components
-	import { goto } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 
 	// Icons
-	import { Archive } from '@lucide/svelte';
+	import { Settings } from '@lucide/svelte';
+	import PinUnpin from './PinUnpin.svelte';
 
 	import type { Course, User } from '@prisma/client';
-	import PinUnpin from './PinUnpin.svelte';
 
 	type CourseGridProps = {
 		user: User | undefined;
@@ -29,9 +28,7 @@
 			{@render displayCourse(course)}
 		{/if}
 	{:else}
-		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
-			This program has no courses yet.
-		</p>
+		<p class="col-span-full text-center text-gray-500">No courses found.</p>
 	{/each}
 </div>
 
@@ -53,17 +50,8 @@
 
 		<div class="flex items-center gap-1">
 			{#if course.isArchived}
-				<Button
-					type="submit"
-					variant="outline"
-					class="h-8 w-8 border-purple-600 bg-purple-200"
-					onclick={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						goto(`/graph-editor/courses/${course.code}/settings#archive-course`);
-					}}
-				>
-					<Archive class="text-purple-600" />
+				<Button variant="outline" href="/graph-editor/courses/{course.code}/settings">
+					<Settings class="text-gray-600" />
 				</Button>
 			{/if}
 

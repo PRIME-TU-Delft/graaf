@@ -80,7 +80,7 @@
 				{#if course.admins.length === 0 && course.editors.length === 0}
 					<Table.Row>
 						<Table.Cell colspan={3} class="text-center text-gray-500">
-							This course has no admins or editors.
+							This course has no admins or editors
 						</Table.Cell>
 					</Table.Row>
 				{/if}
@@ -134,11 +134,11 @@
 				{/each}
 
 				{#if Array.from(new Set(course.programs
-							.map((p) => [...p.admins, p.editors])
+							.map((p) => [...p.admins, ...p.editors])
 							.flat())).length === 0}
 					<Table.Row>
 						<Table.Cell colspan={3} class="text-center text-gray-500">
-							This course has no programs with admins or editors.
+							This course has no programs with admins or editors
 						</Table.Cell>
 					</Table.Row>
 				{/if}

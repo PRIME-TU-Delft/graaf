@@ -65,7 +65,7 @@
 			<br />
 			<p>
 				Looking to create a course? Please contact a programme administrator. You can find all
-				administrator at the <a class="underline" href="/graph-editor/programs">programmes</a> page.
+				administrators at the <a class="underline" href="/graph-editor/programs">programmes</a> page.
 				You can also copy graphs from your sandbox to a course, if you already have one.
 			</p>
 		</section>

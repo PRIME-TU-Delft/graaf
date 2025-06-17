@@ -1,15 +1,23 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
+	import { hasCoursePermissions } from '$lib/utils/permissions';
+
+	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button';
-	import * as Table from '$lib/components/ui/table/index.js';
-	import { ArrowRight } from 'lucide-svelte';
-	import CourseGrid from '../CourseGrid.svelte';
-	import type { PageData } from './$types';
 	import { displayName } from '$lib/utils/displayUserName';
-	import { goto } from '$app/navigation';
-	import type { Course, User } from '@prisma/client';
+	import * as Table from '$lib/components/ui/table/index.js';
+	import SearchCourses from '../SearchCourses.svelte';
+	import CourseGrid from '../CourseGrid.svelte';
+
+	// Icons
+	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import { MailOpen } from '@lucide/svelte';
+
+	// Types
+	import type { Course, User } from '@prisma/client';
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -34,9 +42,13 @@
 	}
 </script>
 
-<section class="prose mx-auto mt-12 p-4 text-purple-900">
-	<h1>Courses</h1>
-	<p>Here you can find all courses</p>
+<section class="prose mx-auto mt-12 p-4">
+	<h1 class="text-purple-950 shadow-purple-500/70">Courses</h1>
+	<p>
+		Here you can find all courses in the Graph Editor. Courses are representations of university
+		courses. They contain graphs, and links to said graphs. To get access to a course, contact one
+		of their super users (admins or editors).
+	</p>
 </section>
 
 {#if pinnedCourses.length > 0}
@@ -59,7 +71,13 @@
 {/if}
 
 <section class="mx-auto !my-6 max-w-4xl space-y-2">
-	<h2 class="w-full text-xl font-bold whitespace-nowrap text-purple-950">All Courses</h2>
+	<div class="flex w-full items-center justify-between gap-2">
+		<h2 class="w-full grow text-xl font-bold whitespace-nowrap">All Courses</h2>
+
+		{#await data.courses then courses}
+			<SearchCourses {courses} />
+		{/await}
+	</div>
 
 	{#each data.courses as course (course.code)}
 		{@const superUsers = Array.from(
@@ -75,7 +93,7 @@
 		)}
 
 		{@const hasAtLeastEditPermission =
-			data.user != undefined && superUsers.some((u) => u.id == data.user?.id)}
+			data.user && hasCoursePermissions(data.user, course, 'CourseAdminEditorORProgramAdminEditor')}
 		{@const superUsersOpen = new SuperUserOpenClass()}
 
 		<a
@@ -83,10 +101,9 @@
 			href="/graph-editor/courses/{course.code}"
 		>
 			<div class="grow">
-				<h2 class="text-xl font-bold text-purple-950">{course.name}</h2>
+				<h2 class="text-xl font-bold text-purple-950">{course.code} {course.name}</h2>
 				<div class="grid grid-cols-[max-content_auto] gap-x-3 text-gray-400">
-					<span>Code:</span> <span>{course.code}</span>
-					<span>Graphs:</span> <span>{course._count.graphs}</span>
+					<span>Graphs</span> <span>{course._count.graphs}</span>
 					<span>Links</span> <span>{course._count.links}</span>
 				</div>
 			</div>
@@ -105,9 +122,10 @@
 							e.stopPropagation();
 							superUsersOpen.open = true;
 						}}
-						title="Users with admin or editor permissions"
-						button="Permissions"
+						button="Super Users"
 						icon="admins"
+						title="{course.code} {course.name} Super Users"
+						description="View and contact the admins & editors of this course."
 					>
 						{@render superUsersSnippet(course)}
 					</DialogButton>
@@ -196,7 +214,7 @@
 				{#if course.admins.length === 0 && course.editors.length === 0}
 					<Table.Row>
 						<Table.Cell colspan={3} class="text-center text-gray-500">
-							This course has no admins or editors.
+							This course has no admins or editors
 						</Table.Cell>
 					</Table.Row>
 				{/if}
@@ -248,11 +266,11 @@
 				{/each}
 
 				{#if Array.from(new Set(course.programs
-							.map((p) => [...p.admins, p.editors])
+							.map((p) => [...p.admins, ...p.editors])
 							.flat())).length === 0}
 					<Table.Row>
 						<Table.Cell colspan={3} class="text-center text-gray-500">
-							This course has no programs with admins or editors.
+							This course has no programs with admins or editors
 						</Table.Cell>
 					</Table.Row>
 				{/if}

@@ -1,34 +1,27 @@
 <script lang="ts">
-	import { hasCoursePermissions } from '$lib/utils/permissions';
-
 	// Components
 	import ChangeRoleForm from './ChangeRoleForm.svelte';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
+	import { buttonVariants } from '$lib/components/ui/button';
 
 	// Icons
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 
 	// Types
-	import type { Course, Program, User } from '@prisma/client';
-	import { buttonVariants } from '$lib/components/ui/button';
+	import type { User } from '@prisma/client';
 
 	type CourseAdminProps = {
 		user: User;
-		course: Course & {
-			admins: User[];
-			editors: User[];
-			programs: (Program & { admins: User[]; editors: User[] })[];
-		};
+		canChangeRoles: boolean;
 		courseRole?: 'Admin' | 'Editor';
 	};
 
-	let { user, course, courseRole }: CourseAdminProps = $props();
+	let { user, canChangeRoles, courseRole }: CourseAdminProps = $props();
 
 	let menuIsFocusOn = $state('');
 </script>
 
-<!-- Only programAdmins and superUsers are allowed to change roles, otherwise just show the role name -->
-{#if hasCoursePermissions(user, course, 'CourseAdminORProgramAdminEditor')}
+{#if canChangeRoles}
 	<Menubar.Root
 		class="w-fit p-0"
 		value={menuIsFocusOn}
@@ -80,7 +73,7 @@
 		</Menubar.Menu>
 	</Menubar.Root>
 {:else}
-	<p class="m-0 text-right">
+	<span class="py-2 pr-4">
 		{courseRole}
-	</p>
+	</span>
 {/if}

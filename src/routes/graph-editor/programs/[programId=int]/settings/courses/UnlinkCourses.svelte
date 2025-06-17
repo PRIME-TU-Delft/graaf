@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
+	import { linkingCoursesSchema } from '$lib/zod/programSchema';
 	import type { Course, Program } from '@prisma/client';
 	import type { RowSelectionState } from '@tanstack/table-core';
 	import { toast } from 'svelte-sonner';

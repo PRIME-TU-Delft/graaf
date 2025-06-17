@@ -7,7 +7,7 @@
 	import NewCourseForm from './NewCourseForm.svelte';
 	import { columns } from './add-course-columns';
 
-	import type { linkingCoursesSchema } from '$lib/zod/superUserProgramSchema';
+	import type { linkingCoursesSchema } from '$lib/zod/programSchema';
 	import type { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
