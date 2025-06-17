@@ -1,10 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Button from '$lib/components/ui/button';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { cn } from '$lib/utils';
-	import { Ellipsis, MoveVertical, Sparkle } from '@lucide/svelte';
+	import { Ellipsis, MoveVertical } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
@@ -87,10 +85,6 @@
 
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 				<IssueIndicator issues={lectureIssues.lecture} />
-
-				<Button.Root variant="outline" href={`${page.url.pathname}?lectureID=${lecture.id}`}>
-					<Sparkle /> Select in Preview
-				</Button.Root>
 
 				{#if data.graph.subjects.length > 0}
 					{#key lecture.subjects}

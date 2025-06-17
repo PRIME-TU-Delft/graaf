@@ -1,5 +1,4 @@
 <script lang="ts">
-	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
 	import { GraphD3 } from '$lib/d3/GraphD3';
@@ -15,6 +14,7 @@
 		Orbit,
 		SearchSlash
 	} from '@lucide/svelte';
+
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
@@ -30,13 +30,31 @@
 	type Props = {
 		graphD3: GraphD3;
 		editable: boolean;
+		builtInViewDropdown?: boolean;
 	};
 
-	let { graphD3, editable }: Props = $props();
+	let { graphD3, editable, builtInViewDropdown = false }: Props = $props();
 
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
+	let view = $derived.by(() => {
+		const param = page.url.searchParams.get('view')?.toUpperCase();
+		if (param && ['DOMAINS', 'SUBJECTS', 'LECTURES'].includes(param))
+			return param as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+		return 'DOMAINS';
+	});
+
+	$effect(() => {
+		if (graphState.isTransitioning()) return;
+
+		const params = new URLSearchParams({
+			view: view,
+			lectureID: lectureID ? String(lectureID) : ''
+		}).toString();
+
+		goto(`?${params}`);
+	});
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -59,32 +77,58 @@
 
 		screenfull.toggle(svgParent);
 	}
+
+	function capitalize(str: string) {
+		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+	}
 </script>
 
-{#if !graphView.isDomains() && graphD3.data.domain_nodes.length > 0}
-	<Accordion.Root type="single" class="absolute top-4 right-4 p-3 text-purple-900">
-		<Accordion.Item class="border-none" value="item-1">
-			<Accordion.Trigger class="p-0">Domain Legend</Accordion.Trigger>
-			<Accordion.Content>
-				{#each graphD3.data.domain_nodes as domain (domain.id)}
-					<div class="flex w-full items-center justify-between gap-3">
-						<span class="w-full text-right text-gray-900"> {domain.text} </span>
-						<div
-							class="size-4"
-							style:background={domain.style == null ? '#ffffff' : settings.COLORS[domain.style]}
-						></div>
-					</div>
+<!-- Select View -->
+{#if !isFullscreen && builtInViewDropdown}
+	<DropdownMenu.Root>
+		<DropdownMenu.Trigger
+			class={cn(
+				buttonVariants({ variant: 'default', size: 'lg' }),
+				'fixed top-0 left-0 z-20 rounded-none rounded-ee-2xl'
+			)}
+		>
+			{capitalize(graphView.state)}
+			<ChevronDown />
+		</DropdownMenu.Trigger>
+		<DropdownMenu.Content>
+			<DropdownMenu.Group>
+				<DropdownMenu.GroupHeading>Change view</DropdownMenu.GroupHeading>
+				{#each ['DOMAINS', 'SUBJECTS', 'LECTURES'] as tab (tab)}
+					{#if tab === graphView.state}
+						<DropdownMenu.Item class="justify-between" disabled>
+							{capitalize(tab)}
+							<Check />
+						</DropdownMenu.Item>
+					{:else}
+						<DropdownMenu.Item
+							disabled={graphState.isTransitioning()}
+							onclick={() => {
+								view = tab as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+								graphD3.setView(view);
+							}}
+						>
+							{capitalize(tab)}
+						</DropdownMenu.Item>
+					{/if}
 				{/each}
-			</Accordion.Content>
-		</Accordion.Item>
-	</Accordion.Root>
+			</DropdownMenu.Group>
+		</DropdownMenu.Content>
+	</DropdownMenu.Root>
 {/if}
 
 <!-- Select Lecture -->
 {#if !isFullscreen && graphD3.data.lectures.length > 0}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
-			class={cn(buttonVariants({ variant: 'link' }), 'absolute top-4 left-4 p-3')}
+			class={cn(
+				buttonVariants({ variant: 'default', size: 'lg' }),
+				'fixed top-0 right-0 z-20 rounded-none rounded-es-2xl'
+			)}
 		>
 			{chosenLecture?.name || 'Select a lecture'}
 			<ChevronDown />
@@ -105,7 +149,6 @@
 					<DropdownMenu.Item
 						onclick={() => {
 							lectureID = lecture.id;
-							goto(`${page.url.pathname}?lectureID=${lecture.id}`);
 							graphD3.setLecture(lecture);
 						}}
 					>
