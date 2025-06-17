@@ -137,9 +137,14 @@ export const actions = {
 		return SandboxActions.newSandbox(await getUser(event), form);
 	},
 
-	'link-course': async (event) => {
+	'link-courses': async (event) => {
 		const form = await superValidate(event, zod(linkingCoursesSchema));
-		return CourseActions.linkCourses(await getUser(event), form);
+		return CourseActions.linkCourses(await getUser(event), form, { link: true });
+	},
+
+	'unlink-courses': async (event) => {
+		const form = await superValidate(event, zod(linkingCoursesSchema));
+		return CourseActions.linkCourses(await getUser(event), form, { link: false });
 	},
 
 	'change-course-pin': async (event) => {

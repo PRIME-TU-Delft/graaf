@@ -24,7 +24,7 @@
 			<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 			<AlertDialog.Description>
 				This action cannot be undone. This will permanently delete this course, its graphs and
-				links.
+				links. Embeds for this course will stop working.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

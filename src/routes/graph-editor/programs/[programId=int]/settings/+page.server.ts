@@ -48,8 +48,8 @@ export const load = (async ({ params, locals }) => {
 			user,
 			allUsers,
 			allCourses,
-			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
 			editProgramForm: await superValidate(zod(editProgramSchema)),
+			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
 			createNewCourseForm: await superValidate(zod(newCourseSchema))

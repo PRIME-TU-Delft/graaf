@@ -10,8 +10,14 @@ import type {
 	editSuperUserSchema,
 	newSandboxSchema
 } from '$lib/zod/sandboxSchema';
+import { redirect } from '@sveltejs/kit';
 
 export class SandboxActions {
+	/**
+	 * PERMISSIONS
+	 * - Any user can create sandboxes
+	 */
+
 	static async newSandbox(user: User, form: SuperValidated<Infer<typeof newSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -36,7 +42,7 @@ export class SandboxActions {
 	}
 
 	/**
-	 * PERMISSIONS:
+	 * PERMISSIONS
 	 * - Only OWNERS can edit sandboxes
 	 */
 
@@ -61,32 +67,13 @@ export class SandboxActions {
 	}
 
 	/**
-	 * PERMISSIONS:
-	 * - Only OWNERS can delete sandboxes
-	 */
-
-	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
-		if (!form.valid) return setError(form, '', 'Form is not valid');
-
-		try {
-			await prisma.sandbox.delete({
-				where: {
-					id: form.data.sandboxId,
-					...whereHasSandboxPermission(user, 'Owner')
-				}
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to delete this sandbox");
-		}
-	}
-
-	/**
-	 * PERMISSIONS:
+	 * PERMISSIONS
 	 * - Only OWNERS can edit super users
 	 */
 
 	static async editSuperUser(user: User, form: SuperValidated<Infer<typeof editSuperUserSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
+		let doRedirect = false;
 
 		try {
 			const current = await prisma.sandbox.findUnique({
@@ -134,6 +121,8 @@ export class SandboxActions {
 				if (isEditor) {
 					data.editors.disconnect = { id: form.data.userId };
 				}
+
+				doRedirect = true;
 			}
 
 			await prisma.sandbox.update({
@@ -148,6 +137,32 @@ export class SandboxActions {
 			return setError(form, '', 'Something went wrong');
 		}
 
+		if (doRedirect) {
+			throw redirect(303, '/');
+		}
+
 		return { form };
+	}
+
+	/**
+	 * PERMISSIONS
+	 * - Only OWNERS can delete sandboxes
+	 */
+
+	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.sandbox.delete({
+				where: {
+					id: form.data.sandboxId,
+					...whereHasSandboxPermission(user, 'Owner')
+				}
+			});
+		} catch {
+			return setError(form, '', "You don't have permission to delete this sandbox");
+		}
+
+		throw redirect(303, '/');
 	}
 }
