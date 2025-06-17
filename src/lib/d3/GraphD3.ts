@@ -375,6 +375,7 @@ export class GraphD3 {
 		// Extract subject edge data
 		const forward_edge_map = new Map<number, EdgeData[]>(); // Forward and reverse edges are mapped so lectures can find…
 		const reverse_edge_map = new Map<number, EdgeData[]>(); // …past and future subjects more easily
+
 		for (const source of data.subjects) {
 			for (const target of source.targetSubjects) {
 				// Get source and target nodes
@@ -392,22 +393,14 @@ export class GraphD3 {
 				};
 
 				// Update subject edge map
-				let forward_edges = forward_edge_map.get(source.id);
-				if (!forward_edges) {
-					forward_edges = [];
-					forward_edge_map.set(source.id, forward_edges);
-				}
-
+				const forward_edges = forward_edge_map.get(source.id) || [];
 				forward_edges.push(edge);
+				forward_edge_map.set(source.id, forward_edges);
 
 				// Update reverse subject edge map
-				let reverse_edges = reverse_edge_map.get(target.id);
-				if (!reverse_edges) {
-					reverse_edges = [];
-					reverse_edge_map.set(target.id, reverse_edges);
-				}
-
+				const reverse_edges = reverse_edge_map.get(target.id) || [];
 				reverse_edges.push(edge);
+				reverse_edge_map.set(target.id, reverse_edges);
 
 				// Add edge to graph and edge map
 				graph.subject_edges.push(edge);
@@ -464,9 +457,9 @@ export class GraphD3 {
 				if (target_edges) {
 					for (const edge of target_edges.values()) {
 						if (
-							lecture_data.past_nodes.includes(edge.source) ||
-							lecture_data.present_nodes.includes(edge.source) ||
-							lecture_data.future_nodes.includes(edge.source)
+							lecture_data.past_nodes.includes(edge.target) ||
+							lecture_data.present_nodes.includes(edge.target) ||
+							lecture_data.future_nodes.includes(edge.target)
 						)
 							continue; // Avoid duplicates
 
