@@ -17,11 +17,19 @@ export const load = async ({ locals }) => {
 				course_editors: true,
 				program_admins: true,
 				program_editors: true
+			},
+			orderBy: {
+				role: 'desc' // ADMIN first then USER
 			}
 		});
 
 		return {
-			users: allUsers,
+			// Make sure the logged-in user is always first in the list
+			users: allUsers.toSorted((a, b) => {
+				if (a.id === user.id) return -1;
+				if (b.id === user.id) return 1;
+				return 0;
+			}),
 			user
 		};
 	} catch {
