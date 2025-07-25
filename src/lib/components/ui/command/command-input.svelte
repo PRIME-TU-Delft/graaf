@@ -7,15 +7,11 @@
 		ref = $bindable(null),
 		class: className,
 		value = $bindable(''),
-		hasBorder = true,
 		...restProps
-	}: CommandPrimitive.InputProps & { hasBorder?: boolean } = $props();
+	}: CommandPrimitive.InputProps = $props();
 </script>
 
-<div
-	class={cn('flex h-9 items-center gap-2 px-3', hasBorder && 'border-b')}
-	data-slot="command-input-wrapper"
->
+<div class="flex h-9 items-center gap-2 border-b px-3" data-slot="command-input-wrapper">
 	<SearchIcon class="size-4 shrink-0 opacity-50" />
 	<CommandPrimitive.Input
 		data-slot="command-input"
