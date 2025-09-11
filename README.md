@@ -9,7 +9,26 @@ https://graaf--preview.netlify.app
 Create an .env file in the root of the project with the following content:
 
 ```env
-DATABASE_URL="postgres://root:mysecretpassword@localhost:5432/local"
+DATABASE_URL="postgres://user:wachtwoord@localhost:5432/db"
+
+SURFCONEXT_ISSUER="https://connect.test.surfconext.nl"
+SURFCONEXT_CLIENT_ID="beta.prime-applets.ewi.tudelft.nl"
+SURFCONEXT_CLIENT_SECRET="[ASK YOUR ADMIN TO GET THIS]"
+
+NETLIFY_CONTEXT="DEPLOY_PREVIEW"
+```
+
+Then run the following commands:
+
+```bash
+npx auth
+```
+
+Optional parameters for logging:
+
+```env
+DEBUG="true" # for printing server debug info to the console
+PRISMA_LOG="none" # or "info", "warn", "error"
 ```
 
 ```bash

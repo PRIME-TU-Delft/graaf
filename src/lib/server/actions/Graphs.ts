@@ -5,7 +5,11 @@ import { redirect } from '@sveltejs/kit';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 
-import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
+import type {
+	newGraphSchema,
+	graphSchemaWithId,
+	duplicateGraphSchema
+} from '$lib/valibot/graphSchema';
 
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';

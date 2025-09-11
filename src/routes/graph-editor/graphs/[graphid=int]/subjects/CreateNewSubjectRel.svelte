@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { subjectRelSchema } from '$lib/zod/subjectSchema';
+	import { subjectRelSchema } from '$lib/valibot/subjectSchema';
 	import type { Graph, Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import SubjectRelField from './SubjectRelField.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
@@ -20,7 +20,7 @@
 	let dialogOpen = $state(false);
 	const form = superForm((page.data as PageData).newSubjectRelForm, {
 		id: 'subjectRelForm' + useId(),
-		validators: zodClient(subjectRelSchema),
+		validators: valibotClient(subjectRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Subject created successfully!');

@@ -2,13 +2,17 @@ import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
 import { GraphActions } from '$lib/server/actions';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { valibot } from 'sveltekit-superforms/adapters';
 import { getUser } from '$lib/server/actions/Users.js';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '$lib/server/permissions';
-import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema.js';
+import { newLinkSchema, editLinkSchema } from '$lib/valibot/linkSchema.js';
 import { LinkActions } from '$lib/server/actions/Links';
 
-import { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema.js';
+import {
+	newGraphSchema,
+	graphSchemaWithId,
+	duplicateGraphSchema
+} from '$lib/valibot/graphSchema.js';
 
 import type { Actions } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';
@@ -81,13 +85,13 @@ export const load = (async ({ params, locals }) => {
 			graphs: dbCourse.graphs,
 			availableCourses,
 			availableSandboxes,
-			newGraphForm: await superValidate(zod(newGraphSchema)),
-			editGraphForm: await superValidate(zod(graphSchemaWithId)),
-			duplicateGraphForm: await superValidate(zod(duplicateGraphSchema)),
-			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
-			deleteLinkForm: await superValidate(zod(editLinkSchema)),
-			newLinkForm: await superValidate(zod(newLinkSchema)),
-			editLinkForm: await superValidate(zod(editLinkSchema)),
+			newGraphForm: await superValidate(valibot(newGraphSchema)),
+			editGraphForm: await superValidate(valibot(graphSchemaWithId)),
+			duplicateGraphForm: await superValidate(valibot(duplicateGraphSchema)),
+			deleteGraphForm: await superValidate(valibot(graphSchemaWithId)),
+			deleteLinkForm: await superValidate(valibot(editLinkSchema)),
+			newLinkForm: await superValidate(valibot(newLinkSchema)),
+			editLinkForm: await superValidate(valibot(editLinkSchema)),
 			error: undefined
 		};
 	} catch {
@@ -97,31 +101,31 @@ export const load = (async ({ params, locals }) => {
 
 export const actions: Actions = {
 	'new-graph': async (event) => {
-		const formData = await superValidate(event, zod(newGraphSchema));
+		const formData = await superValidate(event, valibot(newGraphSchema));
 		return GraphActions.newGraph(await getUser(event), formData);
 	},
 	'edit-graph': async (event) => {
-		const form = await superValidate(event, zod(graphSchemaWithId));
+		const form = await superValidate(event, valibot(graphSchemaWithId));
 		return GraphActions.editGraph(await getUser(event), form);
 	},
 	'delete-graph': async (event) => {
-		const form = await superValidate(event, zod(graphSchemaWithId));
+		const form = await superValidate(event, valibot(graphSchemaWithId));
 		return GraphActions.deleteGraph(await getUser(event), form);
 	},
 	'duplicate-graph': async (event) => {
-		const form = await superValidate(event, zod(duplicateGraphSchema));
+		const form = await superValidate(event, valibot(duplicateGraphSchema));
 		return GraphActions.duplicateGraph(await getUser(event), form);
 	},
 	'new-link': async (event) => {
-		const form = await superValidate(event, zod(newLinkSchema));
+		const form = await superValidate(event, valibot(newLinkSchema));
 		return LinkActions.newLink(await getUser(event), form);
 	},
 	'move-link': async (event) => {
-		const form = await superValidate(event, zod(editLinkSchema));
+		const form = await superValidate(event, valibot(editLinkSchema));
 		return LinkActions.moveLink(await getUser(event), form);
 	},
 	'delete-link': async (event) => {
-		const form = await superValidate(event, zod(editLinkSchema));
+		const form = await superValidate(event, valibot(editLinkSchema));
 		return LinkActions.deleteLink(await getUser(event), form);
 	}
 };

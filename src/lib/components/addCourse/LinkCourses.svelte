@@ -1,12 +1,12 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { linkingCoursesSchema } from '$lib/zod/programSchema';
+	import { linkingCoursesSchema } from '$lib/valibot/programSchema';
 	import type { Course, Program } from '@prisma/client';
 	import type { RowSelectionState } from '@tanstack/table-core';
 	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	type DataTableProps = {
 		program: Program;
@@ -34,7 +34,7 @@
 
 	const form = superForm(linkCoursesForm, {
 		id: 'link-courses-form',
-		validators: zodClient(linkingCoursesSchema),
+		validators: valibotClient(linkingCoursesSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully linked courses!');

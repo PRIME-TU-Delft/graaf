@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { graphSchemaWithId } from '$lib/zod/graphSchema';
+	import { graphSchemaWithId } from '$lib/valibot/graphSchema';
 	import { Undo2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import { Button } from '$lib/components/ui/button';
@@ -32,7 +32,7 @@
 
 	const form = superForm(editGraphForm, {
 		id: 'change-graph-' + id,
-		validators: zodClient(graphSchemaWithId),
+		validators: valibotClient(graphSchemaWithId),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully changed graph!');

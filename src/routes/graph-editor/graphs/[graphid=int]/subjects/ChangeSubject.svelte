@@ -9,12 +9,12 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import type { PrismaGraphPayload } from '$lib/validators/types';
-	import { subjectSchema } from '$lib/zod/subjectSchema';
+	import { subjectSchema } from '$lib/valibot/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DeleteSubject from './DeleteSubject.svelte';
 
@@ -37,7 +37,7 @@
 	const triggerId = useId();
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'change-subject-form-' + useId() + '-' + subject.id,
-		validators: zodClient(subjectSchema),
+		validators: valibotClient(subjectSchema),
 		onResult: ({ result }) => {
 			if (result.type != 'success') return;
 			changeSubjectDialog = false;

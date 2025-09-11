@@ -8,12 +8,12 @@
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 	import { cn } from '$lib/utils';
 	import * as settings from '$lib/settings';
-	import { domainSchema } from '$lib/zod/domainSchema';
+	import { domainSchema } from '$lib/valibot/domainSchema';
 	import type { Graph } from '@prisma/client';
 	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import { fromStore } from 'svelte/store';
 
@@ -27,7 +27,7 @@
 	let stylePopoverOpen = $state(false);
 
 	const form = superForm((page.data as PageData).newDomainForm, {
-		validators: zodClient(domainSchema),
+		validators: valibotClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain created successfully!');

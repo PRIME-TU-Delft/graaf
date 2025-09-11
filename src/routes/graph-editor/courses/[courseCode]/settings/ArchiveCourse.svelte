@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { changeArchiveSchema } from '$lib/zod/courseSchema';
+	import { changeArchiveSchema } from '$lib/valibot/courseSchema';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -24,7 +24,7 @@
 
 	const form = superForm((page.data as PageData).changeArchiveForm, {
 		id: 'changeArchive',
-		validators: zodClient(changeArchiveSchema),
+		validators: valibotClient(changeArchiveSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				if (!course.isArchived) {

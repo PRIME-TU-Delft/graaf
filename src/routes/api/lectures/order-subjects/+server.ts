@@ -3,8 +3,9 @@ import { json } from '@sveltejs/kit';
 
 import { getUserResponse } from '$lib/server/actions/Users';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
-import { lectureSchema } from '$lib/zod/lectureSchema';
+import { lectureSchema } from '$lib/valibot/lectureSchema';
 import type { RequestHandler } from '@sveltejs/kit';
+import { safeParse } from 'valibot';
 
 /*
  * Reorder the subjects in a graph
@@ -14,8 +15,8 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const PATCH: RequestHandler = async ({ request, locals }) => {
 	// Validate the request body
 	const body = await request.json();
-	const parsed = lectureSchema.safeParse(body);
-	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
+	const parsed = safeParse(lectureSchema, body);
+	if (!parsed.success) return json({ error: parsed.issues }, { status: 400 });
 
 	// Authenticate the request
 	const user = await getUserResponse({ locals });
@@ -25,15 +26,15 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 	try {
 		const newLecture = await prisma.lecture.update({
 			where: {
-				id: parsed.data.lectureId,
+				id: parsed.output.lectureId,
 				graph: {
-					id: parsed.data.graphId,
+					id: parsed.output.graphId,
 					...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
 				}
 			},
 			data: {
 				subjects: {
-					set: parsed.data.subjectIds.map((id) => ({ id }))
+					set: parsed.output.subjectIds.map((id) => ({ id }))
 				}
 			}
 		});

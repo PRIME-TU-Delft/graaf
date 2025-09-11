@@ -9,7 +9,7 @@ import type {
 	editSandboxSchema,
 	editSuperUserSchema,
 	newSandboxSchema
-} from '$lib/zod/sandboxSchema';
+} from '$lib/valibot/sandboxSchema';
 import { redirect } from '@sveltejs/kit';
 
 export class SandboxActions {

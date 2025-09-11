@@ -6,9 +6,9 @@
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
-	import { subjectSchema } from '$lib/zod/subjectSchema';
+	import { subjectSchema } from '$lib/valibot/subjectSchema';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import type { PrismaGraphPayload } from '$lib/validators/types';
 
@@ -23,7 +23,7 @@
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'change-domain-form-1-' + useId() + (domain?.id ?? 'none'),
-		validators: zodClient(subjectSchema),
+		validators: valibotClient(subjectSchema),
 		onResult: ({ result }) => {
 			// Guard for not success
 			if (result.type != 'success') {

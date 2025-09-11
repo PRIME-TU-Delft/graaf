@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { editSuperUserSchema } from '$lib/zod/programSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { editSuperUserSchema } from '$lib/valibot/programSchema';
 	import { useId } from 'bits-ui';
 
 	// Components
@@ -38,7 +38,7 @@
 
 	const form = superForm(editSuperUserForm, {
 		id: 'edit-super-user-' + useId(),
-		validators: zodClient(editSuperUserSchema),
+		validators: valibotClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Role successfully changed!');

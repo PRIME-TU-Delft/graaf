@@ -2,16 +2,16 @@ import { ProgramActions } from '$lib/server/actions';
 import { whereHasProgramPermission } from '$lib/server/permissions';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
-import { newCourseSchema } from '$lib/zod/courseSchema';
+import { newCourseSchema } from '$lib/valibot/courseSchema';
 import {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema,
 	linkingCoursesSchema
-} from '$lib/zod/programSchema';
+} from '$lib/valibot/programSchema';
 import { redirect, type Actions, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { valibot } from 'sveltekit-superforms/adapters';
 import { CourseActions } from '$lib/server/actions/Courses';
 
 export const load = (async ({ params, locals }) => {
@@ -48,11 +48,11 @@ export const load = (async ({ params, locals }) => {
 			user,
 			allUsers,
 			allCourses,
-			editProgramForm: await superValidate(zod(editProgramSchema)),
-			deleteProgramForm: await superValidate(zod(deleteProgramSchema)),
-			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			createNewCourseForm: await superValidate(zod(newCourseSchema))
+			editProgramForm: await superValidate(valibot(editProgramSchema)),
+			deleteProgramForm: await superValidate(valibot(deleteProgramSchema)),
+			editSuperUserForm: await superValidate(valibot(editSuperUserSchema)),
+			linkCoursesForm: await superValidate(valibot(linkingCoursesSchema)),
+			createNewCourseForm: await superValidate(valibot(newCourseSchema))
 		};
 	} catch (e) {
 		if (e instanceof Error) throw redirect(303, `/graph-editor/?error=${e.message}`);
@@ -62,27 +62,27 @@ export const load = (async ({ params, locals }) => {
 
 export const actions: Actions = {
 	'edit-program': async (event) => {
-		const form = await superValidate(event, zod(editProgramSchema));
+		const form = await superValidate(event, valibot(editProgramSchema));
 		return ProgramActions.editProgram(await getUser(event), form);
 	},
 	'delete-program': async (event) => {
-		const form = await superValidate(event, zod(deleteProgramSchema));
+		const form = await superValidate(event, valibot(deleteProgramSchema));
 		return ProgramActions.deleteProgram(await getUser(event), form);
 	},
 	'edit-super-user': async (event) => {
-		const form = await superValidate(event, zod(editSuperUserSchema));
+		const form = await superValidate(event, valibot(editSuperUserSchema));
 		return ProgramActions.editSuperUser(await getUser(event), form);
 	},
 	'link-courses': async (event) => {
-		const form = await superValidate(event, zod(linkingCoursesSchema));
+		const form = await superValidate(event, valibot(linkingCoursesSchema));
 		return CourseActions.linkCourses(await getUser(event), form, { link: true });
 	},
 	'unlink-courses': async (event) => {
-		const form = await superValidate(event, zod(linkingCoursesSchema));
+		const form = await superValidate(event, valibot(linkingCoursesSchema));
 		return CourseActions.linkCourses(await getUser(event), form, { link: false });
 	},
 	'new-course': async (event) => {
-		const form = await superValidate(event, zod(newCourseSchema));
+		const form = await superValidate(event, valibot(newCourseSchema));
 		return CourseActions.newCourse(await getUser(event), form);
 	}
 };

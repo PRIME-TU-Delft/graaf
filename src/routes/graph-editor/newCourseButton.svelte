@@ -2,8 +2,8 @@
 	import { useId } from 'bits-ui';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import { superForm } from 'sveltekit-superforms';
-	import { newCourseSchema } from '$lib/zod/courseSchema';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { newCourseSchema } from '$lib/valibot/courseSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
@@ -32,7 +32,7 @@
 
 	const form = superForm(courseForm, {
 		id: useId(),
-		validators: zodClient(newCourseSchema),
+		validators: valibotClient(newCourseSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				dialogOpen = false;

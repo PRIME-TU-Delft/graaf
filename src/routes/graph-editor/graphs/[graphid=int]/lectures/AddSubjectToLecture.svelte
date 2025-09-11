@@ -3,13 +3,13 @@
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Label from '$lib/components/ui/label/index.js';
-	import { lectureSchema } from '$lib/zod/lectureSchema';
+	import { lectureSchema } from '$lib/valibot/lectureSchema';
 	import { Check } from '@lucide/svelte';
 	import type { Graph, Lecture, Subject } from '@prisma/client';
 	import { Checkbox, useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 
 	type Props = {
@@ -26,7 +26,7 @@
 
 	const form = superForm((page.data as PageData).newLectureForm, {
 		id: 'linking-subject-to-lecture-form-' + useId(),
-		validators: zodClient(lectureSchema),
+		validators: valibotClient(lectureSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('lectures successfully (un-)linked!');

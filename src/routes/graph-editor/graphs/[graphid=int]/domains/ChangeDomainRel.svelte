@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { changeDomainRelSchema } from '$lib/zod/domainSchema';
+	import { changeDomainRelSchema } from '$lib/valibot/domainSchema';
 	import { Replace } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import type { PrismaGraphPayload } from '$lib/validators/types';
 
@@ -24,7 +24,7 @@
 
 	const form = superForm((page.data as PageData).changeDomainRelForm, {
 		id: `change-${type}-rel-form-${useId()}`,
-		validators: zodClient(changeDomainRelSchema),
+		validators: valibotClient(changeDomainRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Successfully changed relationship!');

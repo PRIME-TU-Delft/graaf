@@ -9,8 +9,8 @@
 	// Types
 	import type { Prisma, Link } from '@prisma/client';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
-	import type { graphSchemaWithId } from '$lib/zod/graphSchema';
-	import type { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
+	import type { graphSchemaWithId } from '$lib/valibot/graphSchema';
+	import type { editLinkSchema, newLinkSchema } from '$lib/valibot/linkSchema';
 
 	type GraphLinksProps = {
 		graphs: Prisma.GraphGetPayload<{

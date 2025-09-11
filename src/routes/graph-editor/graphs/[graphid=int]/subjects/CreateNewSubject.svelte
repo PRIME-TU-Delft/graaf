@@ -7,14 +7,14 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { subjectSchema } from '$lib/zod/subjectSchema';
+	import { subjectSchema } from '$lib/valibot/subjectSchema';
 	import type { Domain, Graph } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Check from 'lucide-svelte/icons/check';
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 
 	type Props = {
@@ -29,7 +29,7 @@
 
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'create-subject-form-' + useId(),
-		validators: zodClient(subjectSchema),
+		validators: valibotClient(subjectSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Subject created successfully!');

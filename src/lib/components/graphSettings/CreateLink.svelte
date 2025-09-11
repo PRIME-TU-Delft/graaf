@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { newLinkSchema } from '$lib/zod/linkSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { newLinkSchema } from '$lib/valibot/linkSchema';
 
 	// Components
 	import { Input } from '$lib/components/ui/input';
@@ -28,7 +28,7 @@
 	const parentId = (graph.parentType == 'COURSE' ? graph.courseId : graph.sandboxId) as number;
 
 	const form = superForm(newLinkForm, {
-		validators: zodClient(newLinkSchema),
+		validators: valibotClient(newLinkSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Link created successfully!');

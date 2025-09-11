@@ -7,11 +7,11 @@
 	import { cn } from '$lib/utils';
 	import { Trash2 } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { type PageData } from './$types';
 	import { toast } from 'svelte-sonner';
-	import { subjectRelSchema } from '$lib/zod/subjectSchema';
+	import { subjectRelSchema } from '$lib/valibot/subjectSchema';
 
 	type Props = {
 		sourceSubject: Subject;
@@ -25,7 +25,7 @@
 
 	const form = superForm((page.data as PageData).newSubjectRelForm, {
 		id: id,
-		validators: zodClient(subjectRelSchema),
+		validators: valibotClient(subjectRelSchema),
 		onResult: ({ result }) => {
 			console.log({ result });
 			if (result.type == 'success') {

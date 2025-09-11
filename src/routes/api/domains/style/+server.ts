@@ -1,10 +1,11 @@
-import { json } from '@sveltejs/kit';
 import prisma from '$lib/server/db/prisma';
+import { json } from '@sveltejs/kit';
 import { patchStyleSchema } from '../schemas';
 
+import { whereHasCoursePermission } from '$lib/server/permissions';
 import type { DomainStyle, User } from '@prisma/client';
 import type { RequestHandler } from '@sveltejs/kit';
-import { whereHasCoursePermission } from '$lib/server/permissions';
+import { safeParse } from 'valibot';
 
 /*
  * Restyle a domain
@@ -15,8 +16,8 @@ import { whereHasCoursePermission } from '$lib/server/permissions';
 export const PATCH: RequestHandler = async ({ request, locals }) => {
 	// Validate the request body
 	const body = await request.json();
-	const parsed = patchStyleSchema.safeParse(body);
-	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
+	const parsed = safeParse(patchStyleSchema, body);
+	if (!parsed.success) return json({ error: parsed.issues }, { status: 400 });
 
 	// Authenticate the request
 	const session = await locals.auth();
@@ -27,7 +28,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 	try {
 		const newDomain = await prisma.domain.update({
 			where: {
-				id: parsed.data.domainId,
+				id: parsed.output.domainId,
 				graph: {
 					course: {
 						...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
@@ -35,7 +36,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				}
 			},
 			data: {
-				style: parsed.data.style as DomainStyle
+				style: parsed.output.style as DomainStyle
 			}
 		});
 

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { editLinkSchema } from '$lib/zod/linkSchema';
+	import { editLinkSchema } from '$lib/valibot/linkSchema';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import * as Form from '$lib/components/ui/form';
@@ -31,7 +31,7 @@
 
 	const form = superForm(editLinkForm, {
 		id: 'delete-graph-link-' + id,
-		validators: zodClient(editLinkSchema),
+		validators: valibotClient(editLinkSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted link!');

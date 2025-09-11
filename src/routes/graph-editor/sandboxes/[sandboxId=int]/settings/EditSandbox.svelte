@@ -2,8 +2,8 @@
 	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { editSandboxSchema } from '$lib/zod/sandboxSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { editSandboxSchema } from '$lib/valibot/sandboxSchema';
 
 	// Components
 	import * as Form from '$lib/components/ui/form';
@@ -21,7 +21,7 @@
 
 	// Build the form
 	const form = superForm(data.editSandboxForm, {
-		validators: zodClient(editSandboxSchema),
+		validators: valibotClient(editSandboxSchema),
 		id: `edit-sandbox`,
 		onResult: ({ result }) => {
 			if (result.type == 'success') {

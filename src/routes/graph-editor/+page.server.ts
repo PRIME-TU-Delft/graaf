@@ -1,15 +1,15 @@
-import prisma from '$lib/server/db/prisma';
-import { emptyPrismaPromise } from '$lib/utils';
-import { getUser } from '$lib/server/actions/Users';
-import { ProgramActions } from '$lib/server/actions/Programs';
 import { CourseActions } from '$lib/server/actions/Courses';
+import { ProgramActions } from '$lib/server/actions/Programs';
 import { SandboxActions } from '$lib/server/actions/Sandboxes';
+import { getUser } from '$lib/server/actions/Users';
+import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions';
-import { zod } from 'sveltekit-superforms/adapters';
-import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema';
-import { newProgramSchema } from '$lib/zod/programSchema';
-import { newSandboxSchema } from '$lib/zod/sandboxSchema';
+import { emptyPrismaPromise } from '$lib/utils';
+import { changePinSchema, linkingCoursesSchema, newCourseSchema } from '$lib/valibot/courseSchema';
+import { newProgramSchema } from '$lib/valibot/programSchema';
+import { newSandboxSchema } from '$lib/valibot/sandboxSchema';
 import { superValidate } from 'sveltekit-superforms';
+import { valibot } from 'sveltekit-superforms/adapters';
 
 import type { Course } from '@prisma/client';
 import type { PageServerLoad } from '../$types.js';
@@ -98,11 +98,11 @@ export const load = (async ({ url, locals }) => {
 			sandboxes,
 			pinnedCourses,
 			error: url.searchParams.get('error'),
-			newProgramForm: await superValidate(zod(newProgramSchema)),
-			newSandboxForm: await superValidate(zod(newSandboxSchema)),
-			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			coursePinnedForm: await superValidate(zod(changePinSchema))
+			newProgramForm: await superValidate(valibot(newProgramSchema)),
+			newSandboxForm: await superValidate(valibot(newSandboxSchema)),
+			newCourseForm: await superValidate(valibot(newCourseSchema)),
+			linkCoursesForm: await superValidate(valibot(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(valibot(changePinSchema))
 		};
 	} catch (e: unknown) {
 		return {
@@ -112,43 +112,43 @@ export const load = (async ({ url, locals }) => {
 			sandboxes: new Promise<[]>((resolve) => resolve([])),
 			pinnedCourses: new Promise<[]>((resolve) => resolve([])),
 			error: e instanceof Error ? e.message : `${e}`,
-			newProgramForm: await superValidate(zod(newProgramSchema)),
-			newSandboxForm: await superValidate(zod(newSandboxSchema)),
-			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			coursePinnedForm: await superValidate(zod(changePinSchema))
+			newProgramForm: await superValidate(valibot(newProgramSchema)),
+			newSandboxForm: await superValidate(valibot(newSandboxSchema)),
+			newCourseForm: await superValidate(valibot(newCourseSchema)),
+			linkCoursesForm: await superValidate(valibot(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(valibot(changePinSchema))
 		};
 	}
 }) satisfies PageServerLoad;
 
 export const actions = {
 	'new-program': async (event) => {
-		const form = await superValidate(event, zod(newProgramSchema));
+		const form = await superValidate(event, valibot(newProgramSchema));
 		return ProgramActions.newProgram(await getUser(event), form);
 	},
 
 	'new-course': async (event) => {
-		const form = await superValidate(event, zod(newCourseSchema));
+		const form = await superValidate(event, valibot(newCourseSchema));
 		return CourseActions.newCourse(await getUser(event), form);
 	},
 
 	'new-sandbox': async (event) => {
-		const form = await superValidate(event, zod(newSandboxSchema));
+		const form = await superValidate(event, valibot(newSandboxSchema));
 		return SandboxActions.newSandbox(await getUser(event), form);
 	},
 
 	'link-courses': async (event) => {
-		const form = await superValidate(event, zod(linkingCoursesSchema));
+		const form = await superValidate(event, valibot(linkingCoursesSchema));
 		return CourseActions.linkCourses(await getUser(event), form, { link: true });
 	},
 
 	'unlink-courses': async (event) => {
-		const form = await superValidate(event, zod(linkingCoursesSchema));
+		const form = await superValidate(event, valibot(linkingCoursesSchema));
 		return CourseActions.linkCourses(await getUser(event), form, { link: false });
 	},
 
 	'change-course-pin': async (event) => {
-		const form = await superValidate(event, zod(changePinSchema));
+		const form = await superValidate(event, valibot(changePinSchema));
 		return CourseActions.changePin(await getUser(event), form);
 	}
 };

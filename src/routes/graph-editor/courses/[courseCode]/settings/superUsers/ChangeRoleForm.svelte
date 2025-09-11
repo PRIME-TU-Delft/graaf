@@ -5,9 +5,9 @@
 	import Check from 'lucide-svelte/icons/check';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
-	import { editSuperUserSchema } from '$lib/zod/courseSchema';
+	import { editSuperUserSchema } from '$lib/valibot/courseSchema';
 
 	type ChangeRoleProps = {
 		userId: string;
@@ -27,7 +27,7 @@
 
 	const form = superForm((page.data as PageData).editSuperUserForm, {
 		id: 'editSuperUserForm' + userId + '-' + newRole,
-		validators: zodClient(editSuperUserSchema),
+		validators: valibotClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Role successfully changed!');

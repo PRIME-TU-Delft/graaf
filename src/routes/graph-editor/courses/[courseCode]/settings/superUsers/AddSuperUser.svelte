@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { editSuperUserSchema } from '$lib/zod/courseSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { editSuperUserSchema } from '$lib/valibot/courseSchema';
 	import { useId } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
@@ -33,7 +33,7 @@
 
 	const form = superForm((page.data as PageData).editSuperUserForm, {
 		id: 'add-user-to-course-form-' + useId(),
-		validators: zodClient(editSuperUserSchema),
+		validators: valibotClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Successfully added super user!');

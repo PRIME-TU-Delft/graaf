@@ -4,18 +4,18 @@ import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions';
 import { CourseActions } from '$lib/server/actions/Courses';
 import { LinkActions } from '$lib/server/actions/Links';
-import { graphSchemaWithId } from '$lib/zod/graphSchema';
-import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema';
+import { graphSchemaWithId } from '$lib/valibot/graphSchema';
+import { newLinkSchema, editLinkSchema } from '$lib/valibot/linkSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { valibot } from 'sveltekit-superforms/adapters';
 import {
 	newCourseSchema,
 	editCourseSchema,
 	editSuperUserSchema,
 	changeArchiveSchema,
 	deleteCourseSchema
-} from '$lib/zod/courseSchema';
+} from '$lib/valibot/courseSchema';
 
 import type { Actions } from './$types';
 
@@ -56,14 +56,14 @@ export const load = (async ({ params, locals }) => {
 			course: dbCourse,
 			user,
 			allUsers,
-			editCourseForm: await superValidate(zod(newCourseSchema)),
-			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
-			changeArchiveForm: await superValidate(zod(changeArchiveSchema)),
-			deleteCourseForm: await superValidate(zod(deleteCourseSchema)),
-			editGraphForm: await superValidate(zod(graphSchemaWithId)),
-			deleteGraphForm: await superValidate(zod(graphSchemaWithId)),
-			newLinkForm: await superValidate(zod(newLinkSchema)),
-			editLinkForm: await superValidate(zod(editLinkSchema))
+			editCourseForm: await superValidate(valibot(newCourseSchema)),
+			editSuperUserForm: await superValidate(valibot(editSuperUserSchema)),
+			changeArchiveForm: await superValidate(valibot(changeArchiveSchema)),
+			deleteCourseForm: await superValidate(valibot(deleteCourseSchema)),
+			editGraphForm: await superValidate(valibot(graphSchemaWithId)),
+			deleteGraphForm: await superValidate(valibot(graphSchemaWithId)),
+			newLinkForm: await superValidate(valibot(newLinkSchema)),
+			editLinkForm: await superValidate(valibot(editLinkSchema))
 		};
 	} catch (e) {
 		// TODO: redirect to course page
@@ -74,39 +74,39 @@ export const load = (async ({ params, locals }) => {
 
 export const actions: Actions = {
 	'edit-graph': async (event) => {
-		const form = await superValidate(event, zod(graphSchemaWithId));
+		const form = await superValidate(event, valibot(graphSchemaWithId));
 		return GraphActions.editGraph(await getUser(event), form);
 	},
 	'delete-graph': async (event) => {
-		const form = await superValidate(event, zod(graphSchemaWithId));
+		const form = await superValidate(event, valibot(graphSchemaWithId));
 		return GraphActions.deleteGraph(await getUser(event), form);
 	},
 	'edit-course': async (event) => {
-		const form = await superValidate(event, zod(editCourseSchema));
+		const form = await superValidate(event, valibot(editCourseSchema));
 		return CourseActions.editCourse(await getUser(event), form);
 	},
 	'edit-super-user': async (event) => {
-		const form = await superValidate(event, zod(editSuperUserSchema));
+		const form = await superValidate(event, valibot(editSuperUserSchema));
 		return CourseActions.editSuperUser(await getUser(event), form);
 	},
 	'change-archive': async (event) => {
-		const form = await superValidate(event, zod(changeArchiveSchema));
+		const form = await superValidate(event, valibot(changeArchiveSchema));
 		return CourseActions.changeArchive(await getUser(event), form);
 	},
 	'delete-course': async (event) => {
-		const form = await superValidate(event, zod(deleteCourseSchema));
+		const form = await superValidate(event, valibot(deleteCourseSchema));
 		return CourseActions.deleteCourse(await getUser(event), form);
 	},
 	'new-link': async (event) => {
-		const form = await superValidate(event, zod(newLinkSchema));
+		const form = await superValidate(event, valibot(newLinkSchema));
 		return LinkActions.newLink(await getUser(event), form);
 	},
 	'move-link': async (event) => {
-		const form = await superValidate(event, zod(editLinkSchema));
+		const form = await superValidate(event, valibot(editLinkSchema));
 		return LinkActions.moveLink(await getUser(event), form);
 	},
 	'delete-link': async (event) => {
-		const form = await superValidate(event, zod(editLinkSchema));
+		const form = await superValidate(event, valibot(editLinkSchema));
 		return LinkActions.deleteLink(await getUser(event), form);
 	}
 };

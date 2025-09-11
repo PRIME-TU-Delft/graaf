@@ -7,11 +7,11 @@
 	import { cn } from '$lib/utils';
 	import { Trash2 } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { type PageData } from './$types';
 	import { toast } from 'svelte-sonner';
-	import { domainRelSchema } from '$lib/zod/domainSchema';
+	import { domainRelSchema } from '$lib/valibot/domainSchema';
 
 	type Props = {
 		sourceDomain: Domain;
@@ -25,7 +25,7 @@
 
 	const form = superForm((page.data as PageData).newDomainRelForm, {
 		id: id,
-		validators: zodClient(domainRelSchema),
+		validators: valibotClient(domainRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain relationship deleted successfully!');

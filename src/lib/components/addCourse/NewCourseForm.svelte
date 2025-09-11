@@ -1,11 +1,11 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import { newCourseSchema } from '$lib/zod/courseSchema';
+	import { newCourseSchema } from '$lib/valibot/courseSchema';
 	import type { Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	type Props = {
 		createNewCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;
@@ -18,7 +18,7 @@
 	const id = useId();
 
 	const form = superForm(createNewCourseForm, {
-		validators: zodClient(newCourseSchema),
+		validators: valibotClient(newCourseSchema),
 		id: `new-course-${id}`,
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
