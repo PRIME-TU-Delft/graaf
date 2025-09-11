@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
-	import type { PrismaGraphPayload } from '$lib/d3/types';
+	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import GraphDecorators from './GraphDecorators.svelte';
+
+	import type { PrismaGraphPayload } from '$lib/d3/types';
 
 	type Props = {
 		data: PrismaGraphPayload;
@@ -12,13 +14,20 @@
 	};
 
 	let { data: payload, editable, view, lectureID, builtInViewDropdown = false }: Props = $props();
-
-	let d3Canvas = $state<SVGSVGElement>();
+	let d3Canvas: SVGSVGElement;
 
 	$effect(() => {
-		if (d3Canvas == null) return;
-		graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);
-	});
+		if (view === undefined) {
+			view = 'DOMAINS';
+		}
+
+		if (view != graphView.state) {
+			graphD3Store.graphD3?.setView(view);
+		} else {
+			graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);
+		}
+	})
+
 </script>
 
 <!-- Markup -->

@@ -33,28 +33,13 @@
 		builtInViewDropdown?: boolean;
 	};
 
+	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
+
 	let { graphD3, editable, builtInViewDropdown = false }: Props = $props();
 
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
-	let view = $derived.by(() => {
-		const param = page.url.searchParams.get('view')?.toUpperCase();
-		if (param && ['DOMAINS', 'SUBJECTS', 'LECTURES'].includes(param))
-			return param as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
-		return 'DOMAINS';
-	});
-
-	$effect(() => {
-		if (graphState.isTransitioning()) return;
-
-		const params = new URLSearchParams({
-			view: view,
-			lectureID: lectureID ? String(lectureID) : ''
-		}).toString();
-
-		goto(`?${params}`);
-	});
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -64,6 +49,28 @@
 			});
 		}
 	});
+
+	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
+		const params = new URLSearchParams();
+		for (const [key, value] of page.url.searchParams.entries())
+			params.set(key, value);
+		params.set('view', view);
+
+		goto(`?${params.toString()}`);
+	}
+
+	function gotoLecture(lectureID: number | null) {
+		const params = new URLSearchParams();
+		for (const [key, value] of page.url.searchParams.entries())
+			params.set(key, value);
+		if (lectureID === null) {
+			params.delete('lectureID')
+		} else {
+			params.set('lectureID', String(lectureID));
+		}
+
+		goto(`?${params.toString()}`);
+	}
 
 	function toggleFullscreen() {
 		if (!screenfull.isEnabled || !document) return;
@@ -98,7 +105,7 @@
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
 				<DropdownMenu.GroupHeading>Change view</DropdownMenu.GroupHeading>
-				{#each ['DOMAINS', 'SUBJECTS', 'LECTURES'] as tab (tab)}
+				{#each tabs as tab (tab)}
 					{#if tab === graphView.state}
 						<DropdownMenu.Item class="justify-between" disabled>
 							{capitalize(tab)}
@@ -108,8 +115,8 @@
 						<DropdownMenu.Item
 							disabled={graphState.isTransitioning()}
 							onclick={() => {
-								view = tab as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
-								graphD3.setView(view);
+								gotoView(tab);
+								graphD3.setView(tab);
 							}}
 						>
 							{capitalize(tab)}
@@ -137,7 +144,7 @@
 			<DropdownMenu.Group>
 				<DropdownMenu.Item
 					onclick={() => {
-						lectureID = null;
+						gotoLecture(null);
 						graphD3.setLecture(null);
 					}}
 				>
@@ -148,7 +155,7 @@
 				{#each graphD3.data.lectures as lecture (lecture.id)}
 					<DropdownMenu.Item
 						onclick={() => {
-							lectureID = lecture.id;
+							gotoLecture(lecture.id);
 							graphD3.setLecture(lecture);
 						}}
 					>

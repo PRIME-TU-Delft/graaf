@@ -1,38 +1,52 @@
 <script lang="ts">
-	import { afterNavigate, goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 	import { cn } from '$lib/utils';
 	import { Check, ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
+	import { graphState } from '$lib/d3/GraphD3State.svelte';
 
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
-	import { graphState } from '$lib/d3/GraphD3State.svelte';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	let tabs = ['Domains', 'Subjects', 'Lectures'];
+	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
 
-	let hidePreview = $state(page.url.searchParams.get('hidePreview') === 'true');
+	const hidePreview = $derived(page.url.searchParams.get('hidePreview') === 'true');
 	const lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
-	const currentTab = $derived(page.url.pathname.split('/').pop());
-	const searchParams = $derived(
-		'?hidePreview=' + String(hidePreview) + (lectureID ? '&lectureID=' + lectureID : '')
-	);
-
-	afterNavigate(() => {
-		const pathname = currentTab?.toUpperCase();
-
-		if (pathname == 'DOMAINS' || pathname == 'SUBJECTS' || pathname == 'LECTURES') {
-			graphD3Store.graphD3?.setView(pathname);
-		} else {
-			graphD3Store.graphD3?.setView('DOMAINS');
-		}
+	const view = $derived.by(() => {
+		const param = page.url.searchParams.get('view')?.toUpperCase();
+		if (param && ['DOMAINS', 'SUBJECTS', 'LECTURES'].includes(param))
+			return param as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+		return 'DOMAINS';
 	});
+
+	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
+		const params = new URLSearchParams();
+		for (const [key, value] of page.url.searchParams.entries())
+			params.set(key, value);
+		params.set('view', view);
+	
+		goto(`./${view.toLowerCase()}?${params.toString()}`);
+	}
+
+	function togglePreview() {
+		const params = new URLSearchParams();
+		for (const [key, value] of page.url.searchParams.entries())
+			params.set(key, value);
+		params.set('hidePreview', hidePreview ? 'false' : 'true');
+
+		goto(`?${params.toString()}`);
+	}
+
+	function capitalize(str: string) {
+		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+	}
+
 </script>
 
 <div class="mx-auto max-w-[100rem]">
@@ -53,26 +67,26 @@
 						<DropdownMenu.Group>
 							<DropdownMenu.GroupHeading>Change view</DropdownMenu.GroupHeading>
 							{#each tabs as tab (tab)}
-								{#if tab.toLowerCase() === currentTab?.toLowerCase()}
+								{#if tab.toLowerCase() === view?.toLowerCase()}
 									<DropdownMenu.Item class="justify-between" disabled>
-										{tab}
+										{capitalize(tab)}
 										<Check />
 									</DropdownMenu.Item>
 								{:else}
 									<DropdownMenu.Item
 										disabled={graphState.isTransitioning()}
-										onclick={() => goto(`./${tab.toLowerCase()}${searchParams}`)}
+										onclick={() => gotoView(tab)}
 									>
-										{tab}
+										{capitalize(tab)}
 									</DropdownMenu.Item>
 								{/if}
 							{/each}
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item
-								onclick={() => {
-									hidePreview = !hidePreview;
-									goto(page.url.pathname + searchParams);
-								}}>{hidePreview ? 'Show' : 'Hide'} Preview</DropdownMenu.Item
+								onclick={() => togglePreview() }
+							>
+								{hidePreview ? 'Show' : 'Hide'} Preview
+							</DropdownMenu.Item
 							>
 							<DropdownMenu.Item disabled>View preview in other tab</DropdownMenu.Item>
 						</DropdownMenu.Group>
@@ -96,7 +110,7 @@
 
 			<Pane defaultSize={50}>
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
-					<GraphRenderer data={data.graph} editable={true} {lectureID} />
+					<GraphRenderer data={data.graph} editable={true} {view} {lectureID} />
 				</div>
 			</Pane>
 		{/if}

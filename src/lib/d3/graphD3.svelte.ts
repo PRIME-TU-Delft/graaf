@@ -15,12 +15,6 @@ class GraphD3Store {
 	) {
 		this.graphD3 = new GraphD3(d3Canvas, payload, editable, view, lectureId);
 	}
-
-	clearGraphD3() {
-		if (this.graphD3) {
-			this.graphD3.clear();
-		}
-	}
 }
 
 export const graphD3Store = new GraphD3Store();
