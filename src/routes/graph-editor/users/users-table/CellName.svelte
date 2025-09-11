@@ -1,9 +1,8 @@
 <script lang="ts">
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { displayName } from '$lib/utils/displayUserName';
 	import { ShieldUser } from '@lucide/svelte';
 	import type { DataUser } from './userTableColumns';
-	import * as HoverCard from '$lib/components/ui/hover-card';
-	import * as Tooltip from '$lib/components/ui/tooltip';
 
 	type Props = {
 		row: DataUser;

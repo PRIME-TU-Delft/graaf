@@ -33,7 +33,9 @@ export default ts.config(
 			}
 		},
 		rules: {
-			'svelte/no-dupe-style-properties': 'off'
+			'svelte/no-dupe-style-properties': 'off',
+			'svelte/no-navigation-without-resolve': 'off',
+			'svelte/prefer-writable-derived': 'warn'
 		}
 	}
 );

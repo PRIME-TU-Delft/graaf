@@ -1,4 +1,4 @@
-<script lang="ts" generics="TData, TValue">
+<script lang="ts">
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table/index.js';
@@ -13,12 +13,12 @@
 	import type { PageData } from '../$types';
 	import type { DataUser } from './userTableColumns';
 
-	type DataTableProps<TData, TValue> = {
+	type DataTableProps = {
 		columns: ColumnDef<DataUser>[];
 		data: DataUser[];
 	};
 
-	let { data, columns }: DataTableProps<TData, TValue> = $props();
+	let { data, columns }: DataTableProps = $props();
 
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 

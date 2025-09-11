@@ -20,6 +20,7 @@
 	// Types
 	import type { Course, Program, User } from '@prisma/client';
 	import type { PageData } from '../$types';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	type AddNewUserProps = {
 		course: Course & {
@@ -45,7 +46,7 @@
 	const { form: formData, enhance, submitting, delayed } = form;
 
 	const programUserRoles = $derived.by(() => {
-		const userRoles = new Map<string, string>();
+		const userRoles = new SvelteMap<string, string>();
 
 		course.programs.forEach((program) => {
 			program.editors.forEach((editor) => {
