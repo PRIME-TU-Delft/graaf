@@ -40,6 +40,9 @@
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
+	
+	console.log(graphD3.data.lectures)
+	console.log(isFullscreen)
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -96,7 +99,7 @@
 		<DropdownMenu.Trigger
 			class={cn(
 				buttonVariants({ variant: 'default', size: 'lg' }),
-				'fixed top-0 left-0 z-20 rounded-none rounded-ee-2xl'
+				'absolute top-0 left-0 z-20 rounded-none rounded-ee-2xl'
 			)}
 		>
 			{capitalize(graphView.state)}
@@ -134,7 +137,7 @@
 		<DropdownMenu.Trigger
 			class={cn(
 				buttonVariants({ variant: 'default', size: 'lg' }),
-				'fixed top-0 right-0 z-20 rounded-none rounded-es-2xl'
+				'absolute top-0 right-0 z-20 rounded-none rounded-es-2xl'
 			)}
 		>
 			{chosenLecture?.name || 'Select a lecture'}

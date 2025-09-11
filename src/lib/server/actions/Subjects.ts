@@ -233,8 +233,6 @@ export class SubjectActions {
 	static async deleteSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
-		console.log(form);
-
 		try {
 			await SubjectActions.disconnectSubjects(
 				form.data.graphId,

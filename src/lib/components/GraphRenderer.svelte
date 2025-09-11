@@ -1,4 +1,5 @@
 <script lang="ts">
+
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import GraphDecorators from './GraphDecorators.svelte';
@@ -17,11 +18,8 @@
 	let d3Canvas: SVGSVGElement;
 
 	$effect(() => {
-		if (view === undefined) {
-			view = 'DOMAINS';
-		}
-
 		if (view != graphView.state) {
+			if (view === undefined) view = 'DOMAINS';
 			graphD3Store.graphD3?.setView(view);
 		} else {
 			graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);

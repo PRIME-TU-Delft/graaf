@@ -27,7 +27,6 @@
 		id: id,
 		validators: zodClient(subjectRelSchema),
 		onResult: ({ result }) => {
-			console.log({ result });
 			if (result.type == 'success') {
 				toast.success('Subject relationship deleted successfully!');
 			}
