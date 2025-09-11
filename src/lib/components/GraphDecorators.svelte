@@ -40,9 +40,6 @@
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
-	
-	console.log(graphD3.data.lectures)
-	console.log(isFullscreen)
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -55,8 +52,7 @@
 
 	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
 		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries())
-			params.set(key, value);
+		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
 		params.set('view', view);
 
 		goto(`?${params.toString()}`);
@@ -64,10 +60,9 @@
 
 	function gotoLecture(lectureID: number | null) {
 		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries())
-			params.set(key, value);
+		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
 		if (lectureID === null) {
-			params.delete('lectureID')
+			params.delete('lectureID');
 		} else {
 			params.set('lectureID', String(lectureID));
 		}

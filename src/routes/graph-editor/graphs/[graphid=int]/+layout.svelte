@@ -27,17 +27,15 @@
 
 	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
 		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries())
-			params.set(key, value);
+		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
 		params.set('view', view);
-	
+
 		goto(`./${view.toLowerCase()}?${params.toString()}`);
 	}
 
 	function togglePreview() {
 		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries())
-			params.set(key, value);
+		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
 		params.set('hidePreview', hidePreview ? 'false' : 'true');
 
 		goto(`?${params.toString()}`);
@@ -46,7 +44,6 @@
 	function capitalize(str: string) {
 		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 	}
-
 </script>
 
 <div class="mx-auto max-w-[100rem]">
@@ -82,12 +79,9 @@
 								{/if}
 							{/each}
 							<DropdownMenu.Separator />
-							<DropdownMenu.Item
-								onclick={() => togglePreview() }
-							>
+							<DropdownMenu.Item onclick={() => togglePreview()}>
 								{hidePreview ? 'Show' : 'Hide'} Preview
-							</DropdownMenu.Item
-							>
+							</DropdownMenu.Item>
 							<DropdownMenu.Item disabled>View preview in other tab</DropdownMenu.Item>
 						</DropdownMenu.Group>
 					</DropdownMenu.Content>
