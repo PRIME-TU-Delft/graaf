@@ -12,7 +12,7 @@ Conflicting edge: 					An edge in the subject graph that conflicts with an edge 
 
 /* Algorithm breakdown
 
-So we want to achieve two things:
+So we want to achieve three things:
   1) Find every simple cycle in both domains and subjects
   2) Find all edges in subjects that conflict with edges in domains
   3) Find lectures with subjects with missing prerequisites
@@ -178,6 +178,14 @@ export class GraphValidator {
 					severity: 'error'
 				});
 
+			else if (this.graph.domains.find((other) => other.name === name && other.id !== domain.id))
+				issues.push({
+					id: useId(),
+					title: 'Domain with duplicate name',
+					message: 'Domains should have unique names',
+					severity: 'warning'
+				});
+
 			if (!domain.style)
 				issues.push({
 					id: useId(),
@@ -186,15 +194,7 @@ export class GraphValidator {
 					severity: 'error'
 				});
 
-			if (this.graph.domains.find((other) => other.name === name && other.id !== domain.id))
-				issues.push({
-					id: useId(),
-					title: 'Domain with duplicate name',
-					message: 'Domains should have unique names',
-					severity: 'warning'
-				});
-
-			if (
+			else if (
 				this.graph.domains.find((other) => other.style === domain.style && other.id !== domain.id)
 			)
 				issues.push({
@@ -234,15 +234,7 @@ export class GraphValidator {
 					severity: 'error'
 				});
 
-			if (!subject.domainId)
-				issues.push({
-					id: useId(),
-					title: 'Subject without domain',
-					message: 'Subjects must have a domain',
-					severity: 'error'
-				});
-
-			if (
+			else if (
 				this.graph.subjects.find((other) => other.name === subject.name && other.id !== subject.id)
 			)
 				issues.push({
@@ -250,6 +242,14 @@ export class GraphValidator {
 					title: 'Subject with duplicate name',
 					message: 'Subjects should have unique names',
 					severity: 'warning'
+				});
+			
+			if (!subject.domainId)
+				issues.push({
+					id: useId(),
+					title: 'Subject without domain',
+					message: 'Subjects must have a domain',
+					severity: 'error'
 				});
 
 			subjectIssues[subject.id] = issues;
