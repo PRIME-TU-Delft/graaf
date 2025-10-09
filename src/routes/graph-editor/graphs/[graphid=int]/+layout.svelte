@@ -96,7 +96,7 @@
 		{#if !hidePreview}
 			<PaneResizer class="bg-background relative flex w-2 items-center justify-center">
 				<div
-					class="absolute z-10 flex h-7 w-5 items-center justify-center rounded-sm border bg-purple-500"
+					class="absolute z-10 flex h-7 w-5 items-center justify-center rounded-sm bg-purple-700 text-white"
 				>
 					<GripVertical />
 				</div>
