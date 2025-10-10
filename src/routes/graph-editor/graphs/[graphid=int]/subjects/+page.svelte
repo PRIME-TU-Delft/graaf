@@ -17,6 +17,7 @@
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import DeleteSubjectRel from './DeleteSubjectRel.svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -63,13 +64,9 @@
 		if (!response.ok) {
 			// Reset the order of the domains
 			graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
-
 			toast.error('Failed to update subject order, try again later!');
 		} else {
-			// Update the order of the domains in the graph
-			graph.subjects.forEach((domain, index) => {
-				domain.order = index;
-			});
+			await invalidateAll()
 		}
 	}
 </script>

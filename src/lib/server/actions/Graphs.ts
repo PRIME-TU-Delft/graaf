@@ -202,7 +202,7 @@ export class GraphActions {
 
 			if (!destination)
 				return setError(form, '', 'Destination course not found or you do not have access to it');
-			destinationUrl = `/graph-editor/courses/${destination.code}`;
+			destinationUrl = `/graph-editor/courses/${destination.uriCode}`;
 		} else if (form.data.destinationType === 'SANDBOX') {
 			const destination = await prisma.sandbox.findFirst({
 				where: {

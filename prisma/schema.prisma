@@ -95,6 +95,7 @@ model Program {
 model Course {
 	id         Int     @id @default(autoincrement())
 	code       String  @unique
+	uriCode    String  @unique
 	name       String
 	isArchived Boolean @default(false)
 
@@ -132,6 +133,7 @@ enum ParentType {
 model Link {
 	id         Int     @id @default(autoincrement())
 	name       String
+	uriName    String
 	isArchived Boolean @default(false)
 
 	course  Course?  @relation("CourseLink", fields: [courseId], references: [id])
