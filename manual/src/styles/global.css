@@ -33,3 +33,8 @@
 	--sl-color-gray-7: #f5f6f8;
 	--sl-color-black: #ffffff;
 }
+
+.content-panel img {
+	border-radius: 0.5rem;
+	border: var(--sl-color-accent) 3px solid;
+}
