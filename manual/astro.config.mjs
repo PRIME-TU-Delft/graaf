@@ -15,7 +15,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: 'Programmes',
-					items: [{ label: 'Create', slug: 'programmes/create' }]
+					slug: 'programmes'
 				}
 			],
 			customCss: [

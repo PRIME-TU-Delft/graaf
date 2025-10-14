@@ -37,4 +37,5 @@
 .content-panel img {
 	border-radius: 0.5rem;
 	border: var(--sl-color-accent) 3px solid;
+	box-shadow: #9700d750 0px 4px 8px;
 }
