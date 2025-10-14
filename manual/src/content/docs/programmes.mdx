@@ -1,0 +1,88 @@
+---
+title: Programmes
+description: Create a new graph programme. Only available for super admins.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Programmes are collections of courses, usually pertaining to the same faculty. Looking to try out the Graph editor?
+Try making a sandbox environment instead!
+
+## Creating a new programme
+
+<Aside type="caution">
+	Only super admins can create new graph programmes. If you are not a super admin, ask one of the
+	admins for help.
+</Aside>
+
+If you are a super admin, you can create a new programme by clicking the "Add Programme" button on
+the <a href={import.meta.env.HOST + '/graph-editor/programs'}>Programs page</a>.
+
+When creating a new programme, you will need to provide the following information:
+
+- Programme name
+
+![Create Programme](../../assets/programmes/create%20programme.png)
+_Figure 1: Create Programme_
+
+## Editing a programme
+
+<Aside type="note">
+	Only program admins and editors can edit programme details. If you are not a program admin or
+	editor, ask one of the admins for help.
+</Aside>
+
+If you are a program admin or editor, you can edit a programme by navigating to the <a href={import.meta.env.HOST + '/graph-editor/programs'}>
+Programs page</a> and click the "Settings" button next to the programme you want to edit.
+
+![Create Programme](../../assets/programmes/edit%20programme.png)
+_Figure 2: edit Programme hello this is a test hello this is a test_
+
+### Add admins or editors
+
+Once you are on the programme settings page, you can add or remove admins and editors by
+clicking the "Add Super Users" button.
+
+![Add super users](../../assets/programmes/add%20super%20user.png)
+_Figure 3: Add super users_
+
+Select one of the users from the searchbar. Choose if the user is allowed admin permissions.
+
+**Programme Admins:**
+Programme Admins are able to manage programme settings, delete programmes, and manage its courses.
+
+**Programme Editors:**
+Programme Editors are able to manage its courses.
+
+### Change role of an admin or editor
+
+To change the role of an admin or editor, click on the button "admin" or "editor" in the Role column.
+![Change role](../..//assets/programmes/Change%20role.png)
+_Figure 4: Change role_
+
+With the same button, you can also remove the user from the programme.
+
+### Add or (un)link a course to a programme
+
+To add or link a course to a programme, navigate to the Courses section in the programme settings page.
+
+1. Click on the "Add course" button.
+2. Choose a course code (e.g. WBMT1050) corresponding to the course you want to add or link.
+3. Choose a course name (e.g. "Introduction to Calculus") that accurately reflects the course content.
+4. Click create new course
+
+![AddOrLinkCourse](../../assets/programmes/Add%20link%20course.png)
+_Figure 5: Add or link course_
+
+Alternatively, you can link one or more existing courses by clicking on one of the courses in the table below.
+
+To unlink a course from a programme, select it from the table and click the "Unlink courses" button.
+
+![Unlink Course](../../assets/programmes/Unlink%20course.png)
+_Figure 6: Unlink course_
+
+<Aside type="note">
+	This will not delete the course from the system, only unlink it from the programme. It will still
+	be accessible from a website like Brightspace. To delete a course, you need to go to the course
+	settings page and delete it from there.
+</Aside>
