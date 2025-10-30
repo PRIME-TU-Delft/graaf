@@ -1,18 +1,14 @@
 <script lang="ts">
-	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-
-	import { page } from '$app/state';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils';
-	import { domainRelSchema } from '$lib/valibot/domainSchema';
 	import type { PrismaGraphPayload } from '$lib/validators/types';
-	import { Trash2 } from '@lucide/svelte';
+	import * as Popover from '$lib/components/ui/popover/index.js';
 	import type { Domain } from '@prisma/client';
+	import { cn } from '$lib/utils';
+	import * as Field from '$lib/components/ui/field/index.js';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import { Trash2 } from '@lucide/svelte';
+	import { deleteDomainRel } from './domain.remote';
+	import { getGraph } from '../../graph.remote';
 	import { toast } from 'svelte-sonner';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import { superForm } from 'sveltekit-superforms/client';
-	import { type PageData } from './$types';
 
 	type Props = {
 		sourceDomain: Domain;
@@ -22,48 +18,52 @@
 
 	let { graph, sourceDomain, targetDomain }: Props = $props();
 
-	const id = $props.id();
-
-	const form = superForm((page.data as PageData).newDomainRelForm, {
-		id: id,
-		validators: valibotClient(domainRelSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Domain relationship deleted successfully!');
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		if (sourceDomain && targetDomain) {
-			$formData.sourceDomainId = sourceDomain.id;
-			$formData.targetDomainId = targetDomain.id;
-			$formData.graphId = graph.id;
-		}
-	});
+	let popoverOpen = $state(false);
+	let formRef = $state<HTMLFormElement>();
 </script>
 
-<Popover.Root>
+<Popover.Root bind:open={popoverOpen}>
 	<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
 		<Trash2 />
 	</Popover.Trigger>
 	<Popover.Content side="right" class="space-y-1">
-		<form action="?/delete-domain-rel" method="POST" use:enhance>
-			<input type="hidden" name="graphId" value={graph.id} />
-			<input type="hidden" name="sourceDomainId" value={sourceDomain.id} />
-			<input type="hidden" name="targetDomainId" value={targetDomain.id} />
+		<form
+			{...deleteDomainRel.enhance(async ({ form, submit }) => {
+				try {
+					await submit().updates(getGraph(graph.id));
+					if (deleteDomainRel.fields.allIssues()?.length) return;
+
+					form.reset();
+					popoverOpen = false;
+					toast.success('Domain relationship successfully deleted!');
+				} catch (e) {
+					toast.error(JSON.stringify(e));
+				}
+			})}
+			bind:this={formRef}
+		>
+			<input hidden {...deleteDomainRel.fields.graphId.as('number')} value={graph.id} />
+			<input
+				hidden
+				{...deleteDomainRel.fields.sourceDomainId.as('number')}
+				value={sourceDomain.id}
+			/>
+			<input
+				hidden
+				{...deleteDomainRel.fields.targetDomainId.as('number')}
+				value={targetDomain.id}
+			/>
 
 			<p class="mb-2">Are you sure you would like to delete this domain relationship?</p>
-			<Form.FormButton
-				variant="destructive"
-				disabled={$submitting}
-				loading={$delayed}
-				loadingMessage="Delete relationship..."
-			>
-				Yes, delete
-			</Form.FormButton>
+			<Field.Submit
+				pending={deleteDomainRel.pending}
+				oncancel={() => {
+					popoverOpen = false;
+					formRef?.reset();
+				}}
+				submitTitle="Yes, delete"
+				loadingTitle="Deleting relationship..."
+			/>
 		</form>
 	</Popover.Content>
 </Popover.Root>

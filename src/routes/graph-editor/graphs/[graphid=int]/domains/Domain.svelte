@@ -261,8 +261,9 @@
 	targetDomain: Domain
 )}
 	{@const thisDomain = type == 'sourceDomain' ? sourceDomain : targetDomain}
+	{@const changeDomainOpen = new ChangeStyleOpenState()}
 
-	<DropdownMenu.Root>
+	<DropdownMenu.Root bind:open={changeDomainOpen.isOpen}>
 		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
 			<span class="w-full text-left">{thisDomain.name}</span>
 			<ChevronRight />
@@ -298,6 +299,9 @@
 								{sourceDomain}
 								{targetDomain}
 								{type}
+								onclose={() => {
+									changeDomainOpen.isOpen = false;
+								}}
 							/>
 						</DropdownMenu.Item>
 					{/each}

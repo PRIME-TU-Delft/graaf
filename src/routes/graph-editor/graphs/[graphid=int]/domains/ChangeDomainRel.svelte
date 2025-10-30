@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { changeDomainRelSchema } from '$lib/valibot/domainSchema';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { Replace } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
-	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
-	import { fromStore } from 'svelte/store';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import { getGraph } from '../../graph.remote';
+	import { changeDomainRel } from './domain.remote';
 
 	type Props = {
 		graph: PrismaGraphPayload;
@@ -18,59 +14,55 @@
 		sourceDomain: Domain;
 		targetDomain: Domain;
 		type: 'sourceDomain' | 'targetDomain';
+		onclose: () => void;
 	};
 
-	const { graph, domain, sourceDomain, targetDomain, type }: Props = $props();
+	const { graph, domain, sourceDomain, targetDomain, type, onclose }: Props = $props();
 
-	const form = superForm((page.data as PageData).changeDomainRelForm, {
-		id: `change-${type}-rel-form-${useId()}`,
-		validators: valibotClient(changeDomainRelSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Successfully changed relationship!');
-			} else if (result.type == 'error') {
-				toast.error('Error changing domain relationship', {
-					description: 'The relationship probably already exists. Try refreshing the page.'
-				});
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		formData.set({
-			graphId: graph.id,
-			sourceDomainId: type == 'sourceDomain' ? domain.id : sourceDomain.id,
-			targetDomainId: type == 'targetDomain' ? domain.id : targetDomain.id,
-			oldSourceDomainId: sourceDomain.id,
-			oldTargetDomainId: targetDomain.id
-		});
-	});
+	let changeRel = changeDomainRel.for(domain.id);
 </script>
 
-<form class="w-full" action="?/change-domain-rel" method="POST" use:enhance>
-	<input type="hidden" name="graphId" value={graph.id} />
-	<input type="hidden" name="oldSourceDomainId" value={sourceDomain.id} />
-	<input type="hidden" name="oldTargetDomainId" value={targetDomain.id} />
+<form
+	class="w-full"
+	{...changeRel.enhance(async ({ form, submit }) => {
+		try {
+			await submit().updates(getGraph(graph.id));
+			if (changeRel.fields.allIssues()?.length) return;
+
+			form.reset();
+			onclose();
+			toast.success('Domain created successfully!');
+		} catch (_) {
+			console.log(_);
+			toast.error('Error changing domain relationship', {
+				description: 'The relationship probably already exists. Try refreshing the page.'
+			});
+		}
+	})}
+>
+	<input hidden {...changeRel.fields.graphId.as('number')} value={graph.id} />
+
+	<input hidden {...changeRel.fields.oldSourceDomainId.as('number')} value={sourceDomain.id} />
+	<input hidden {...changeRel.fields.oldTargetDomainId.as('number')} value={targetDomain.id} />
+
 	<input
-		type="hidden"
-		name="sourceDomainId"
-		value={type == 'sourceDomain' ? domain.id : sourceDomain.id}
-	/>
-	<input
-		type="hidden"
-		name="targetDomainId"
+		hidden
+		{...changeRel.fields.targetDomainId.as('number')}
 		value={type == 'targetDomain' ? domain.id : targetDomain.id}
 	/>
-	<Form.FormButton
-		class="w-full justify-start"
-		variant="ghost"
-		disabled={fromStore(submitting).current}
-		loading={fromStore(delayed).current}
-		loadingMessage="Changing to {domain.name} relationship..."
-	>
-		<Replace />
-		{domain.name}
-	</Form.FormButton>
+	<input
+		hidden
+		{...changeRel.fields.sourceDomainId.as('number')}
+		value={type == 'sourceDomain' ? domain.id : sourceDomain.id}
+	/>
+
+	<Button type="submit" disabled={!!changeRel.pending} variant="ghost" class="w-full text-start">
+		{#if changeRel.pending}
+			<Spinner />
+			Changing to {domain.name} relationship...
+		{:else}
+			<Replace />
+			{domain.name}
+		{/if}
+	</Button>
 </form>

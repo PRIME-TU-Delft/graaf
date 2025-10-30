@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { domainRelSchema } from '$lib/valibot/domainSchema';
-	import type { Graph, Domain } from '@prisma/client';
-	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import DomainRelField from './DomainRelField.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import * as Field from '$lib/components/ui/field/index.js';
+	import type { Domain, Graph } from '@prisma/client';
+	import { toast } from 'svelte-sonner';
+	import { getGraph } from '../../graph.remote';
+	import DomainRelField from './DomainRelField.svelte';
+	import { createDomainRel } from './domain.remote';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
@@ -18,21 +14,12 @@
 	const { graph }: Props = $props();
 
 	let dialogOpen = $state(false);
-	const form = superForm((page.data as PageData).newDomainRelForm, {
-		id: 'domainRelForm' + useId(),
-		validators: valibotClient(domainRelSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Domain created successfully!');
-				dialogOpen = false;
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
+	let formRef = $state<HTMLFormElement>();
 
 	const isTheSameDomain = $derived(
-		$formData.sourceDomainId == $formData.targetDomainId && $formData.sourceDomainId != 0
+		createDomainRel.fields.sourceDomainId.value() ==
+			createDomainRel.fields.targetDomainId.value() &&
+			createDomainRel.fields.sourceDomainId.value() !== 0
 	);
 </script>
 
@@ -46,25 +33,38 @@
 		title="Create Relationship"
 		description="Relationships connect domains to each other."
 	>
-		<form action="?/add-domain-rel" method="POST" use:enhance>
-			<input type="hidden" name="graphId" value={graph.id} />
+		<form
+			{...createDomainRel.enhance(async ({ form, submit }) => {
+				try {
+					await submit().updates(getGraph(graph.id));
+					if (createDomainRel.fields.allIssues()?.length) return;
 
-			<DomainRelField id="sourceDomainId" domains={graph.domains} {form} {formData} />
-			<DomainRelField id="targetDomainId" domains={graph.domains} {form} {formData} />
+					form.reset();
+					dialogOpen = false;
+					toast.success('Domain created successfully!');
+				} catch (e) {
+					toast.error(JSON.stringify(e));
+				}
+			})}
+			bind:this={formRef}
+		>
+			<input hidden {...createDomainRel.fields.graphId.as('number')} value={graph.id} />
 
-			<Form.FormError {form} />
+			<DomainRelField id="sourceDomainId" domains={graph.domains} />
+			<DomainRelField id="targetDomainId" domains={graph.domains} />
 
-			<div class="flex w-full items-center justify-end">
-				<Form.FormButton
-					loading={$delayed}
-					disabled={$submitting ||
-						isTheSameDomain ||
-						!$formData.sourceDomainId ||
-						!$formData.targetDomainId}
-				>
-					Create relationship
-				</Form.FormButton>
-			</div>
+			<Field.Submit
+				pending={createDomainRel.pending}
+				oncancel={() => {
+					dialogOpen = false;
+					formRef?.reset();
+				}}
+				disabled={isTheSameDomain ||
+					!createDomainRel.fields.sourceDomainId.value() ||
+					!createDomainRel.fields.targetDomainId.value()}
+				submitTitle="Create Domain relationship"
+				loadingTitle="Creating relationship..."
+			/>
 		</form>
 	</DialogButton>
 </div>

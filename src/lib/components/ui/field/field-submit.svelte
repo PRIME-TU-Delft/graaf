@@ -12,6 +12,7 @@
 		submitTitle?: string;
 		cancelTitle?: string;
 		loadingTitle?: string;
+		disabled?: boolean;
 		children?: Snippet;
 		before?: Snippet;
 	};
@@ -23,6 +24,7 @@
 		submitTitle,
 		cancelTitle,
 		loadingTitle,
+		disabled,
 		children,
 		before
 	}: Props = $props();
@@ -66,7 +68,7 @@
 		{cancelTitle || 'Cancel'}
 	</Button>
 
-	<Button type="submit" disabled={!!pending} onclick={onsubmit}>
+	<Button type="submit" disabled={!!pending || disabled} onclick={onsubmit}>
 		{#if children}
 			{@render children()}
 		{:else}
