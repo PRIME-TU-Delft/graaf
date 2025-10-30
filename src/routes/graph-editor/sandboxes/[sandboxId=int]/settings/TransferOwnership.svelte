@@ -3,8 +3,8 @@
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { editSuperUserSchema } from '$lib/zod/sandboxSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { editSuperUserSchema } from '$lib/valibot/sandboxSchema';
 
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -21,7 +21,7 @@
 	const data = page.data as PageData;
 	const form = superForm(data.editSuperUserForm, {
 		id: 'edit-super-user-' + useId(),
-		validators: zodClient(editSuperUserSchema),
+		validators: valibotClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Successfully transferred ownership!');

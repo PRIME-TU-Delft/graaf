@@ -1,22 +1,22 @@
-import { z } from 'zod';
 import * as settings from '$lib/settings';
+import * as v from 'valibot';
 
-export const patchOrderSchema = z.array(
-	z.object({
-		domainId: z.number(),
-		newOrder: z.number()
+export const patchOrderSchema = v.array(
+	v.object({
+		domainId: v.number(),
+		newOrder: v.number()
 	})
 );
 
-export const patchPositionSchema = z.array(
-	z.object({
-		domainId: z.number(),
-		x: z.number(),
-		y: z.number()
+export const patchPositionSchema = v.array(
+	v.object({
+		domainId: v.number(),
+		x: v.number(),
+		y: v.number()
 	})
 );
 
-export const patchStyleSchema = z.object({
-	domainId: z.number(),
-	style: z.enum(settings.COLOR_KEYS as [string, ...string[]]).nullable()
+export const patchStyleSchema = v.object({
+	domainId: v.number(),
+	style: v.optional(v.pipe(v.picklist(settings.COLOR_KEYS as [string, ...string[]])))
 });

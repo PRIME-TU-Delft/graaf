@@ -1,5 +1,5 @@
 import prisma from '$lib/server/db/prisma';
-import { deleteLectureSchema, lectureSchema } from '$lib/zod/lectureSchema';
+import { deleteLectureSchema, lectureSchema } from '$lib/valibot/lectureSchema';
 import type { User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
@@ -13,7 +13,7 @@ export class LectureActions {
 	 * @throws Will throw an error if there is an issue with the database transaction.
 	 *
 	 * The function performs the following steps:
-	 * 1. Validates the form data using `superValidate` and `zod(lectureSchema)`.
+	 * 1. Validates the form data using `superValidate` and `valibot(lectureSchema)`.
 	 * 2. Adds the lecture to the graph
 	 * 3. If there is an error, returns the error message.
 	 * 4. If successful, returns the lecture.

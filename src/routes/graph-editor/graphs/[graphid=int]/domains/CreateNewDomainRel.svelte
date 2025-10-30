@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { domainRelSchema } from '$lib/zod/domainSchema';
+	import { domainRelSchema } from '$lib/valibot/domainSchema';
 	import type { Graph, Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DomainRelField from './DomainRelField.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
@@ -20,7 +20,7 @@
 	let dialogOpen = $state(false);
 	const form = superForm((page.data as PageData).newDomainRelForm, {
 		id: 'domainRelForm' + useId(),
-		validators: zodClient(domainRelSchema),
+		validators: valibotClient(domainRelSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain created successfully!');

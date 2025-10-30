@@ -2,8 +2,8 @@
 	import { displayName } from '$lib/utils/displayUserName';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 
-	import type { newCourseSchema } from '$lib/zod/courseSchema';
-	import type { linkingCoursesSchema } from '$lib/zod/programSchema';
+	import type { newCourseSchema } from '$lib/valibot/courseSchema';
+	import type { linkingCoursesSchema } from '$lib/valibot/programSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 

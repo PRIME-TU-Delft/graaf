@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { changePinSchema } from '$lib/zod/courseSchema';
+	import { changePinSchema } from '$lib/valibot/courseSchema';
 	import type { Course, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import Pin from 'lucide-svelte/icons/pin';
 	import Unpin from 'lucide-svelte/icons/pin-off';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import { Loader } from '@lucide/svelte';
 	import { cn } from '$lib/utils';
@@ -22,7 +22,7 @@
 
 	const form = superForm((page.data as PageData).coursePinnedForm, {
 		id: 'change-lecture-form-' + useId(),
-		validators: zodClient(changePinSchema),
+		validators: valibotClient(changePinSchema),
 		onResult: ({ result }) => {
 			if (result.type !== 'success') {
 				toast.error('Error changing pin status');

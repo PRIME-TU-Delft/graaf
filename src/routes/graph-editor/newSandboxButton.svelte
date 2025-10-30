@@ -3,8 +3,8 @@
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { newSandboxSchema } from '$lib/zod/sandboxSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { newSandboxSchema } from '$lib/valibot/sandboxSchema';
 
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
@@ -16,7 +16,7 @@
 	const data = page.data as PageData;
 	const form = superForm(data.newSandboxForm, {
 		id: useId(),
-		validators: zodClient(newSandboxSchema),
+		validators: valibotClient(newSandboxSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Sandbox created successfully!');

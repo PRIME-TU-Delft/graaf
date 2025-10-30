@@ -1,16 +1,16 @@
-import { z } from 'zod';
+import * as v from 'valibot';
 
-export const patchOrderSchema = z.array(
-	z.object({
-		subjectId: z.number(),
-		newOrder: z.number()
+export const patchOrderSchema = v.array(
+	v.object({
+		subjectId: v.number(),
+		newOrder: v.number()
 	})
 );
 
-export const patchPositionSchema = z.array(
-	z.object({
-		subjectId: z.number(),
-		x: z.number(),
-		y: z.number()
+export const patchPositionSchema = v.array(
+	v.object({
+		subjectId: v.number(),
+		x: v.number(),
+		y: v.number()
 	})
 );

@@ -3,8 +3,8 @@
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { newProgramSchema } from '$lib/zod/programSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { newProgramSchema } from '$lib/valibot/programSchema';
 
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
@@ -16,7 +16,7 @@
 	const data = page.data as PageData;
 	const form = superForm(data.newProgramForm, {
 		id: useId(),
-		validators: zodClient(newProgramSchema),
+		validators: valibotClient(newProgramSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Program created successfully!');

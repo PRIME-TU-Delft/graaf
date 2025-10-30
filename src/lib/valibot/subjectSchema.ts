@@ -1,0 +1,37 @@
+import * as settings from '$lib/settings';
+import * as v from 'valibot';
+
+// This is a Zod schema for validating forms this cannot be automatically generated
+// from the database schema because that is not accessible from the client
+
+export const subjectSchema = v.object({
+	subjectId: v.number(),
+	graphId: v.number(),
+	name: v.pipe(
+		v.string(),
+		v.minLength(1, 'Subject name must be at least 1 character long'),
+		v.maxLength(
+			settings.MAX_SUBJECT_NAME_LENGTH,
+			`Subject name must be at most ${settings.MAX_SUBJECT_NAME_LENGTH} characters long`
+		)
+	),
+	domainId: v.number()
+});
+export const deleteSubjectSchema = v.object({
+	graphId: v.pipe(v.number(), v.minValue(1, 'Invalid graph id')),
+	subjectId: v.pipe(v.number(), v.minValue(1, 'Invalid subject id')),
+	sourceSubjects: v.array(v.number()),
+	targetSubjects: v.array(v.number())
+});
+
+export const subjectRelSchema = v.object({
+	graphId: v.number(),
+	sourceSubjectId: v.pipe(v.number(), v.minValue(0, 'Please select a source subject')),
+	targetSubjectId: v.pipe(v.number(), v.minValue(0, 'Please select a target domain'))
+});
+
+export const changeSubjectRelSchema = v.object({
+	...subjectRelSchema.entries,
+	oldSourceSubjectId: v.pipe(v.number(), v.minValue(0, 'Please select a source subject')),
+	oldTargetSubjectId: v.pipe(v.number(), v.minValue(0, 'Please select a target subject'))
+});

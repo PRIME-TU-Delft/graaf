@@ -3,12 +3,12 @@ import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
-import { changePinSchema, newCourseSchema } from '$lib/zod/courseSchema.js';
-import { newProgramSchema } from '$lib/zod/programSchema.js';
-import { linkingCoursesSchema } from '$lib/zod/programSchema.js';
+import { changePinSchema, newCourseSchema } from '$lib/valibot/courseSchema.js';
+import { newProgramSchema } from '$lib/valibot/programSchema.js';
+import { linkingCoursesSchema } from '$lib/valibot/programSchema.js';
 import type { Course } from '@prisma/client';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { valibot } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
 
 export const load = (async ({ url, locals }) => {
@@ -67,10 +67,10 @@ export const load = (async ({ url, locals }) => {
 			programs,
 			courses,
 			user,
-			newProgramForm: await superValidate(zod(newProgramSchema)),
-			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			coursePinnedForm: await superValidate(zod(changePinSchema))
+			newProgramForm: await superValidate(valibot(newProgramSchema)),
+			newCourseForm: await superValidate(valibot(newCourseSchema)),
+			linkCoursesForm: await superValidate(valibot(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(valibot(changePinSchema))
 		};
 	} catch (e: unknown) {
 		return {
@@ -79,32 +79,32 @@ export const load = (async ({ url, locals }) => {
 			programs: [],
 			user,
 			courses: emptyPrismaPromise([] as Course[]),
-			newProgramForm: await superValidate(zod(newProgramSchema)),
-			newCourseForm: await superValidate(zod(newCourseSchema)),
-			linkCoursesForm: await superValidate(zod(linkingCoursesSchema)),
-			coursePinnedForm: await superValidate(zod(changePinSchema))
+			newProgramForm: await superValidate(valibot(newProgramSchema)),
+			newCourseForm: await superValidate(valibot(newCourseSchema)),
+			linkCoursesForm: await superValidate(valibot(linkingCoursesSchema)),
+			coursePinnedForm: await superValidate(valibot(changePinSchema))
 		};
 	}
 }) satisfies PageServerLoad;
 
 export const actions = {
 	'new-program': async (event) => {
-		const formData = await superValidate(event, zod(newProgramSchema));
+		const formData = await superValidate(event, valibot(newProgramSchema));
 		return ProgramActions.newProgram(await getUser(event), formData);
 	},
 
 	'new-course': async (event) => {
-		const formData = await superValidate(event, zod(newCourseSchema));
+		const formData = await superValidate(event, valibot(newCourseSchema));
 		return CourseActions.newCourse(await getUser(event), formData);
 	},
 
 	'link-courses': async (event) => {
-		const form = await superValidate(event, zod(linkingCoursesSchema));
+		const form = await superValidate(event, valibot(linkingCoursesSchema));
 		return CourseActions.linkCourses(await getUser(event), form, { link: true });
 	},
 
 	'unlink-courses': async (event) => {
-		const form = await superValidate(event, zod(linkingCoursesSchema));
+		const form = await superValidate(event, valibot(linkingCoursesSchema));
 		return CourseActions.linkCourses(await getUser(event), form, { link: false });
 	}
 } satisfies Actions;

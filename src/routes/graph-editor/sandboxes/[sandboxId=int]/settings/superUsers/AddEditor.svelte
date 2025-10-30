@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { editSuperUserSchema } from '$lib/zod/sandboxSchema';
+	import { editSuperUserSchema } from '$lib/valibot/sandboxSchema';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import { Button } from '$lib/components/ui/button';
@@ -31,7 +31,7 @@
 	const data = page.data as PageData;
 	const form = superForm(data.editSuperUserForm, {
 		id: 'edit-super-user-' + useId(),
-		validators: zodClient(editSuperUserSchema),
+		validators: valibotClient(editSuperUserSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Successfully added editor!');

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { newGraphSchema } from '$lib/zod/graphSchema';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
+	import { newGraphSchema } from '$lib/valibot/graphSchema';
 
 	// Components
 	import { Input } from '$lib/components/ui/input';
@@ -25,7 +25,7 @@
 	let { parentType, parentId, newGraphForm }: CreateNewGraphButtonProps = $props();
 
 	const form = superForm(newGraphForm, {
-		validators: zodClient(newGraphSchema),
+		validators: valibotClient(newGraphSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Graph created successfully!');

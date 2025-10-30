@@ -5,7 +5,7 @@ import {
 	deleteDomainSchema,
 	domainRelSchema,
 	domainSchema
-} from '$lib/zod/domainSchema';
+} from '$lib/valibot/domainSchema';
 import type { DomainStyle, User } from '@prisma/client';
 import { fail } from '@sveltejs/kit';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';

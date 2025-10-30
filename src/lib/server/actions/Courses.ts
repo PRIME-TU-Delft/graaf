@@ -9,7 +9,7 @@ import {
 	changePinSchema,
 	changeArchiveSchema,
 	deleteCourseSchema
-} from '$lib/zod/courseSchema';
+} from '$lib/valibot/courseSchema';
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';

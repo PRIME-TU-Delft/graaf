@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { editProgramSchema } from '$lib/zod/programSchema';
+	import { editProgramSchema } from '$lib/valibot/programSchema';
 	import type { Program } from '@prisma/client';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 
@@ -15,7 +15,7 @@
 	let { program, editProgramForm, onSuccess }: EditProgramNameProps = $props();
 
 	const form = superForm(editProgramForm, {
-		validators: zodClient(editProgramSchema),
+		validators: valibotClient(editProgramSchema),
 		id: 'edit-program-name',
 		onResult: ({ result }) => {
 			if (result.type == 'success') onSuccess();

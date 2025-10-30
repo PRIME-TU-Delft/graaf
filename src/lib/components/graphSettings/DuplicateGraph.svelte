@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { displayName } from '$lib/utils/displayUserName';
-	import { duplicateGraphSchema } from '$lib/zod/graphSchema';
+	import { duplicateGraphSchema } from '$lib/valibot/graphSchema';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
@@ -60,7 +60,7 @@
 	const triggerId = useId();
 	const form = superForm(duplicateGraphForm, {
 		id: 'duplicate-graph-' + useId(),
-		validators: zodClient(duplicateGraphSchema),
+		validators: valibotClient(duplicateGraphSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Graph successfully copied!');

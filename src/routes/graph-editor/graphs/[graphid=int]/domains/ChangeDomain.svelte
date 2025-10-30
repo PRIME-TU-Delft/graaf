@@ -1,12 +1,12 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
-	import { domainSchema } from '$lib/zod/domainSchema';
+	import { domainSchema } from '$lib/valibot/domainSchema';
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	import DeleteDomain from './DeleteDomain.svelte';
 
@@ -39,7 +39,7 @@
 
 	const form = superForm((page.data as PageData).newDomainForm, {
 		id: 'change-domain-form-' + useId() + domain.id,
-		validators: zodClient(domainSchema),
+		validators: valibotClient(domainSchema),
 		onResult: ({ result }) => {
 			if (result.type != 'success') return;
 			changeDomainDialog = false;

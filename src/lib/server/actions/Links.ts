@@ -4,7 +4,7 @@ import { setError } from '$lib/utils/setError';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 
-import type { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
+import type { editLinkSchema, newLinkSchema } from '$lib/valibot/linkSchema';
 
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';

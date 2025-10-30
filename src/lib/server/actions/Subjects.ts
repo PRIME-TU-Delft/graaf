@@ -4,7 +4,7 @@ import {
 	deleteSubjectSchema,
 	subjectRelSchema,
 	subjectSchema
-} from '$lib/zod/subjectSchema';
+} from '$lib/valibot/subjectSchema';
 import type { User } from '@prisma/client';
 import { fail, setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
@@ -17,7 +17,7 @@ export class SubjectActions {
 	 * @throws Will throw an error if there is an issue with the database transaction.
 	 *
 	 * The function performs the following steps:
-	 * 1. Validates the form data using `superValidate` and `zod(subjectSchema)`.
+	 * 1. Validates the form data using `superValidate` and `valibot(subjectSchema)`.
 	 * 2. Adds the subject to the graph
 	 * 3. If the domainId is greater than 0 (0 means no value was given in the form),
 	 *      adds the subject to the domain.
@@ -179,7 +179,7 @@ export class SubjectActions {
 	 * @throws Will throw an error if there is an issue with the database transaction.
 	 *
 	 * The function performs the following steps:
-	 * 1. Validates the form data using `superValidate` and `zod(subjectRelSchema)`.
+	 * 1. Validates the form data using `superValidate` and `valibot(subjectRelSchema)`.
 	 * 2. Checks if the subjects are already connected.
 	 * 3. If not connected, updates the subjects to connect them in both directions.
 	 * 4. Executes the updates within a database transaction.

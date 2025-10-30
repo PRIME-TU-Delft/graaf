@@ -9,7 +9,7 @@
 	// Types
 	import type { User, Program } from '@prisma/client';
 	import type { SuperValidated, Infer } from 'sveltekit-superforms';
-	import type { editSuperUserSchema } from '$lib/zod/programSchema';
+	import type { editSuperUserSchema } from '$lib/valibot/programSchema';
 
 	type GraphLinksProps = {
 		program: Program & {

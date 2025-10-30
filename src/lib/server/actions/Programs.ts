@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import { newProgramSchema } from '$lib/zod/programSchema';
+import { newProgramSchema } from '$lib/valibot/programSchema';
 import { whereHasProgramPermission } from '../permissions';
 import { redirect } from '@sveltejs/kit';
 
@@ -11,7 +11,7 @@ import type {
 	deleteProgramSchema,
 	editProgramSchema,
 	editSuperUserSchema
-} from '$lib/zod/programSchema';
+} from '$lib/valibot/programSchema';
 
 export class ProgramActions {
 	/**

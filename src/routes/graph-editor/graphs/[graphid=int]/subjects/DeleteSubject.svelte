@@ -2,11 +2,11 @@
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
 	import type { PrismaGraphPayload, PrismaSubjectPayload } from '$lib/validators/types';
-	import { deleteSubjectSchema } from '$lib/zod/subjectSchema';
+	import { deleteSubjectSchema } from '$lib/valibot/subjectSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 
 	type Props = {
@@ -20,7 +20,7 @@
 
 	const form = superForm((page.data as PageData).deleteSubjectForm, {
 		id: 'delete-subject-form-' + subject.id,
-		validators: zodClient(deleteSubjectSchema),
+		validators: valibotClient(deleteSubjectSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Domain successfully deleted!');

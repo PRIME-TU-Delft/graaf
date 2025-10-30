@@ -4,6 +4,7 @@ import { patchPositionSchema } from '../schemas';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import type { User } from '@prisma/client';
+import { safeParse } from 'valibot';
 
 /*
  * Reposition the subjects in a graph
@@ -14,8 +15,8 @@ import type { User } from '@prisma/client';
 export const PATCH: RequestHandler = async ({ request, locals }) => {
 	// Validate the request body
 	const body = await request.json();
-	const parsed = patchPositionSchema.safeParse(body);
-	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
+	const parsed = safeParse(patchPositionSchema, body);
+	if (!parsed.success) return json({ error: parsed.issues }, { status: 400 });
 
 	// Authenticate the request
 	const session = await locals.auth();
@@ -24,7 +25,7 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 
 	// Update the position of the subjects
 	try {
-		const changes = parsed.data.map(({ subjectId, x, y }) => {
+		const changes = parsed.output.map(({ subjectId, x, y }) => {
 			return prisma.subject.update({
 				where: {
 					id: subjectId

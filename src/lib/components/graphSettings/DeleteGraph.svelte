@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	import { graphSchemaWithId } from '$lib/zod/graphSchema';
+	import { graphSchemaWithId } from '$lib/valibot/graphSchema';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -28,7 +28,7 @@
 
 	const form = superForm(editGraphForm, {
 		id: 'delete-graph-' + id,
-		validators: zodClient(graphSchemaWithId),
+		validators: valibotClient(graphSchemaWithId),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Succesfully deleted graph!');

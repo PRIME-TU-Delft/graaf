@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import { deleteLectureSchema } from '$lib/zod/lectureSchema';
+	import { deleteLectureSchema } from '$lib/valibot/lectureSchema';
 	import type { Graph, Lecture } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 
 	type Props = {
@@ -19,7 +19,7 @@
 
 	const form = superForm((page.data as PageData).deleteLectureForm, {
 		id: 'change-lecture-form-' + useId(),
-		validators: zodClient(deleteLectureSchema),
+		validators: valibotClient(deleteLectureSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('lectures successfully deleted!');
