@@ -4,6 +4,19 @@ import * as v from 'valibot';
 // This is a Valibot schema for validating forms this cannot be automatically generated
 // from the database schema because that is not accessible from the client
 
+export const createDomainSchema = v.object({
+	graphId: v.pipe(v.number(), v.minValue(0, 'Invalid graph id')),
+	name: v.pipe(
+		v.string(),
+		v.minLength(1, 'Please enter a name'),
+		v.maxLength(
+			settings.MAX_DOMAIN_NAME_LENGTH,
+			`Name is too long, max ${settings.MAX_DOMAIN_NAME_LENGTH} characters`
+		)
+	),
+	style: v.picklist(['', ...settings.COLOR_KEYS] as [string, ...string[]])
+});
+
 export const domainSchema = v.object({
 	domainId: v.number(),
 	graphId: v.pipe(v.number(), v.minValue(0, 'Invalid graph id')),

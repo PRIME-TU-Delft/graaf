@@ -21,7 +21,7 @@
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
 >
-	<h1 class="!m-0">{data.course.name}</h1>
+	<h1 class="m-0!">{data.course.name}</h1>
 
 	{#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 		<DialogButton
@@ -117,21 +117,21 @@
 	>
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">
-			<p class="!my-0">
+			<p class="my-0!">
 				{#if data.course.isArchived}
 					Restore Course
 				{:else}
 					Archive Course
 				{/if}
 			</p>
-			<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
+			<div class="mx-2 grow border-t-2 border-dotted border-red-400"></div>
 			<ArchiveCourse course={data.course} />
 		</div>
 
 		{#if data.course.isArchived && hasProgramPermissions(data.user, data.course.programs[0], 'ProgramAdminEditor')}
 			<div class="flex items-center gap-2">
-				<p class="!my-0">Delete Course</p>
-				<div class="mx-2 flex-grow border-t-2 border-dotted border-red-400"></div>
+				<p class="my-0!">Delete Course</p>
+				<div class="mx-2 grow border-t-2 border-dotted border-red-400"></div>
 				<DeleteCourse course={data.course} />
 			</div>
 		{/if}

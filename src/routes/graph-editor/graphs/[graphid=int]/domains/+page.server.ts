@@ -21,10 +21,6 @@ export const load: ServerLoad = async () => {
 
 // ACTIONS
 export const actions = {
-	'add-domain-to-graph': async (event) => {
-		const form = await superValidate(event, valibot(domainSchema));
-		return DomainActions.addDomainToGraph(await getUser(event), form);
-	},
 	'change-domain-in-graph': async (event) => {
 		const form = await superValidate(event, valibot(domainSchema));
 		return DomainActions.changeDomain(await getUser(event), form);

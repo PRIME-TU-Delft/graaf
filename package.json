@@ -27,7 +27,7 @@
 		"@eslint/compat": "^1.4.1",
 		"@eslint/js": "^9.38.0",
 		"@internationalized/date": "^3.10.0",
-		"@lucide/svelte": "^0.482.0",
+		"@lucide/svelte": "^0.544.0",
 		"@sveltejs/adapter-netlify": "^4.4.2",
 		"@sveltejs/adapter-node": "^5.4.0",
 		"@sveltejs/kit": "^2.48.3",
@@ -45,7 +45,6 @@
 		"globals": "^15.15.0",
 		"lucide-svelte": "^0.469.0",
 		"mode-watcher": "^1.1.0",
-		"mode-watcher": "^1.1.0",
 		"paneforge": "1.0.0-next.5",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
@@ -62,8 +61,7 @@
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.46.2",
 		"vite": "^6.4.1",
-		"vitest": "^3.2.4",
-		"zod": "^3.25.76"
+		"vitest": "^3.2.4"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.11.1",
@@ -77,10 +75,10 @@
 		"@types/d3": "^7.4.3",
 		"d3": "^7.9.0",
 		"postgres": "^3.4.7",
-		"postgres": "^3.4.7",
 		"screenfull": "^6.0.2",
 		"svelte-dnd-action": "^0.9.66",
-		"tsx": "^4.20.6"
+		"tsx": "^4.20.6",
+		"valibot": "^1.1.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

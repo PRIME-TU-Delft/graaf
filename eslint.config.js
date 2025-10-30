@@ -35,7 +35,20 @@ export default ts.config(
 		rules: {
 			'svelte/no-dupe-style-properties': 'off',
 			'svelte/no-navigation-without-resolve': 'off',
-			'svelte/prefer-writable-derived': 'warn'
+			'svelte/prefer-writable-derived': 'warn',
+			'svelte/experimental_async': 'off',
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					args: 'all',
+					argsIgnorePattern: '^_',
+					caughtErrors: 'all',
+					caughtErrorsIgnorePattern: '^_',
+					destructuredArrayIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					ignoreRestSiblings: true
+				}
+			]
 		}
 	}
 );

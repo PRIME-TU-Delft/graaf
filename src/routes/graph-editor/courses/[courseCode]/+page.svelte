@@ -35,7 +35,7 @@
 		<section class="prose mx-auto p-4">
 			<div class="my-12 flex justify-between gap-4">
 				<div>
-					<h1 class="!m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
+					<h1 class="m-0! text-4xl font-bold text-purple-950 shadow-purple-500/70">
 						{data.course.code}
 						{data.course.name}
 					</h1>

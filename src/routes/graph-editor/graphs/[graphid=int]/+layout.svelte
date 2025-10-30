@@ -46,8 +46,8 @@
 	}
 </script>
 
-<div class="mx-auto max-w-[100rem]">
-	<PaneGroup direction="horizontal" autoSaveId="panels" class="w-full !overflow-visible">
+<div class="mx-auto max-w-400">
+	<PaneGroup direction="horizontal" autoSaveId="panels" class="w-full overflow-visible!">
 		<Pane defaultSize={50} class="h-[calc(100dvh-8rem)] rounded-lg">
 			<div class="h-full scroll-p-16 overflow-y-auto scroll-smooth rounded-lg bg-purple-100/50">
 				<DropdownMenu.Root>
@@ -88,7 +88,7 @@
 				</DropdownMenu.Root>
 
 				<div class="relative p-4">
-					{@render children()}
+					<svelte:boundary>{@render children()}</svelte:boundary>
 				</div>
 			</div>
 		</Pane>

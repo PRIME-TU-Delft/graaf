@@ -1,21 +1,13 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
-	import { cn } from '$lib/utils';
+	import * as Select from '$lib/components/ui/select/index.js';
 	import * as settings from '$lib/settings';
-	import { domainSchema } from '$lib/valibot/domainSchema';
 	import type { Graph } from '@prisma/client';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import { fromStore } from 'svelte/store';
+	import { createDomain } from './domain.remote';
+	import { getGraph } from '../../graph.remote';
 
 	type Props = {
 		graph: Graph;
@@ -24,27 +16,16 @@
 	const { graph }: Props = $props();
 
 	let dialogOpen = $state(false);
-	let stylePopoverOpen = $state(false);
+	let formRef = $state<HTMLFormElement>();
+	let domainStyle: string = $state('');
 
-	const form = superForm((page.data as PageData).newDomainForm, {
-		validators: valibotClient(domainSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Domain created successfully!');
-				dialogOpen = false;
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	const domainStyles = settings.COLOR_KEYS;
+	const styles = settings.COLOR_KEYS.map((c) => ({
+		label: c.toLowerCase().replaceAll('_', ' '),
+		value: c
+	}));
 
 	$effect(() => {
-		// When the style is changed, close its popover
-		fromStore(formData).current.style; // eslint-disable-line @typescript-eslint/no-unused-expressions
-
-		stylePopoverOpen = false;
+		createDomain.fields.graphId.set(graph.id); // Set the graphId
 	});
 </script>
 
@@ -56,92 +37,94 @@
 	description="A domain is a collection of subjects that are related to each other."
 	class="sticky top-2 z-10 float-right -mt-14 h-9"
 >
-	<!-- For sumbitting a NEW PROGRAM
- 	It triggers an action that can be seen in +page.server.ts -->
-	<form action="?/add-domain-to-graph" method="POST" use:enhance>
-		<input type="hidden" name="graphId" value={graph.id} />
+	<!-- For sumbitting a NEW DOMAIM. It triggers an action that can be seen in domain.remote.ts -->
+	<form
+		{...createDomain.enhance(async ({ form, submit }) => {
+			try {
+				await submit().updates(getGraph(graph.id));
+				if (createDomain.fields.allIssues()?.length) return;
 
-		<Form.Field {form} name="name">
-			<Form.Control>
-				{#snippet children({ props })}
-					<Form.Label for="name">Domain name</Form.Label>
-					<Input {...props} bind:value={$formData.name} />
-				{/snippet}
-			</Form.Control>
-			<Form.FieldErrors />
-		</Form.Field>
+				form.reset();
+				dialogOpen = false;
+				toast.success('Domain created successfully!');
+			} catch (e) {
+				toast.error(JSON.stringify(e));
+			}
+		})}
+		bind:this={formRef}
+	>
+		<Field.Set>
+			<input hidden {...createDomain.fields.graphId.as('number')} />
 
-		<Form.Fieldset {form} name="style" class="flex items-center justify-between">
-			<div>
-				<Form.Legend>
+			<Field.Field>
+				<Field.Label for="name">Domain name</Field.Label>
+				<Input {...createDomain.fields.name.as('text')} />
+				<Field.Error
+					>{createDomain.fields.name
+						.issues()
+						?.map((i) => i.message)
+						.join(', ')}</Field.Error
+				>
+			</Field.Field>
+
+			<Field.Field>
+				<Field.Label for="domain-style">
 					Domain style
 					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
-				</Form.Legend>
-				<Form.FieldErrors />
-			</div>
-
-			<RadioGroup.Root name="style" bind:value={$formData.style} class="grid py-2">
-				<Popover.Root bind:open={stylePopoverOpen}>
-					<Popover.Trigger
-						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
-					>
+				</Field.Label>
+				<Select.Root
+					type="single"
+					bind:value={domainStyle}
+					onValueChange={() => {
+						createDomain.fields.style.set(domainStyle);
+					}}
+				>
+					<input hidden {...createDomain.fields.style.as('text')} />
+					<Select.Trigger id="domain-style">
 						<div
-							class="h-6 w-6 rounded-full"
-							style="background: {$formData.style
-								? settings.COLORS[$formData.style as keyof typeof settings.COLORS]
+							class="size-6 rounded-full border-2"
+							style="background: {domainStyle in settings.COLORS
+								? settings.COLORS[domainStyle as keyof typeof settings.COLORS]
 								: '#ccc'}"
 						></div>
-						{$formData.style.toLowerCase().replaceAll('_', ' ') || 'None'}
-						<ChevronDown />
-					</Popover.Trigger>
-					<Popover.Content>
-						<Form.Control>
-							{#snippet children({ props })}
-								<div class="flex items-center">
-									<RadioGroup.Item
-										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
-										class="h-6 w-6"
-										value=""
-										{...props}
-									/>
-									<Form.Label class="w-full cursor-pointer p-2">None</Form.Label>
-								</div>
-							{/snippet}
-						</Form.Control>
 
-						{#each domainStyles as style (style)}
-							<Form.Control>
-								{#snippet children({ props })}
-									<div class="flex items-center">
-										<RadioGroup.Item
-											style="border-color: {settings.COLORS[style]}; background: {settings.COLORS[
-												style
-											]}50; border-width: 3px"
-											class="h-6 w-6"
-											value={style}
-											{...props}
-										/>
-										<Form.Label class="w-full cursor-pointer p-2">
-											{style.replaceAll('_', ' ').toLowerCase()}
-										</Form.Label>
-									</div>
-									{#if $formData.style === style}{/if}
-								{/snippet}
-							</Form.Control>
+						<p class="grow text-start">
+							{domainStyle.toLowerCase().replaceAll('_', ' ') || 'None'}
+						</p>
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="">
+							<div class="h-6 w-6 rounded-full border-2" style="background: #ccc"></div>
+							None
+						</Select.Item>
+						{#each styles as style (style.label)}
+							<Select.Item {...style}>
+								<div
+									class="h-6 w-6 rounded-full border-2"
+									style="background: {settings.COLORS[style.value]}"
+								></div>
+								{style.label}
+							</Select.Item>
 						{/each}
-					</Popover.Content>
-				</Popover.Root>
-			</RadioGroup.Root>
-		</Form.Fieldset>
+					</Select.Content>
+				</Select.Root>
+				<Field.Error>
+					{createDomain.fields.style
+						.issues()
+						?.map((i) => i.message)
+						.join(', ')}
+				</Field.Error>
+			</Field.Field>
 
-		<div class="mt-4 flex w-full justify-end">
-			<Form.FormButton
-				disabled={$submitting}
-				loading={$delayed}
-				loadingMessage="Creating domain..."
-			>
-				Create domain
-			</Form.FormButton>
-		</div>
+			<Field.Submit
+				pending={createDomain.pending}
+				oncancel={() => {
+					dialogOpen = false;
+					formRef?.reset();
+				}}
+				submitTitle="Create Domain"
+				loadingTitle="Creating Domain..."
+			></Field.Submit>
+		</Field.Set>
 	</form>
 </DialogButton>

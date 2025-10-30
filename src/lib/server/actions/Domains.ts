@@ -13,41 +13,6 @@ import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms'
 export class DomainActions {
 	// MARK: - Domain
 
-	static async addDomainToGraph(user: User, form: SuperValidated<Infer<typeof domainSchema>>) {
-		if (!form.valid) return setError(form, 'name', 'Invalid graph name');
-
-		try {
-			// Find the last domain added value in the database.
-			// Where creation data is the latest
-			const lastDomains = await prisma.domain.findFirst({
-				where: {
-					graphId: form.data.graphId
-				},
-				orderBy: {
-					order: 'desc'
-				}
-			});
-
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					domains: {
-						create: {
-							name: form.data.name,
-							style: form.data.style == '' ? null : (form.data.style as DomainStyle),
-							order: lastDomains ? lastDomains.order + 1 : 0
-						}
-					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
-	}
-
 	static async deleteDomain(user: User, form: SuperValidated<Infer<typeof deleteDomainSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid form data');
 
