@@ -23,10 +23,6 @@
 		label: c.toLowerCase().replaceAll('_', ' '),
 		value: c
 	}));
-
-	$effect(() => {
-		createDomain.fields.graphId.set(graph.id); // Set the graphId
-	});
 </script>
 
 <DialogButton
@@ -54,7 +50,7 @@
 		bind:this={formRef}
 	>
 		<Field.Set>
-			<input hidden {...createDomain.fields.graphId.as('number')} />
+			<input hidden {...createDomain.fields.graphId.as('number')} value={graph.id} />
 
 			<Field.Field>
 				<Field.Label for="name">Domain name</Field.Label>

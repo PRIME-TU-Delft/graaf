@@ -1,18 +1,16 @@
 import { DomainActions } from '$lib/server/actions';
-import { superValidate } from 'sveltekit-superforms';
-import { valibot } from 'sveltekit-superforms/adapters';
 import { getUser } from '$lib/server/actions/Users';
 import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
-	domainRelSchema,
-	domainSchema
+	domainRelSchema
 } from '$lib/valibot/domainSchema.js';
 import type { ServerLoad } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { valibot } from 'sveltekit-superforms/adapters';
 
 export const load: ServerLoad = async () => {
 	return {
-		newDomainForm: await superValidate(valibot(domainSchema)),
 		deleteDomainForm: await superValidate(valibot(deleteDomainSchema)),
 		newDomainRelForm: await superValidate(valibot(domainRelSchema)),
 		changeDomainRelForm: await superValidate(valibot(changeDomainRelSchema))
@@ -21,10 +19,6 @@ export const load: ServerLoad = async () => {
 
 // ACTIONS
 export const actions = {
-	'change-domain-in-graph': async (event) => {
-		const form = await superValidate(event, valibot(domainSchema));
-		return DomainActions.changeDomain(await getUser(event), form);
-	},
 	'delete-domain': async (event) => {
 		const form = await superValidate(event, valibot(deleteDomainSchema));
 		return DomainActions.deleteDomain(await getUser(event), form);

@@ -46,9 +46,6 @@ export const getGraph = query(v.number(), async (graphId) => {
 		const graphValidator = new GraphValidator(graph);
 		const issues = graphValidator.validate();
 
-		// Wait 10 seconds
-		await new Promise((resolve) => setTimeout(resolve, 3000));
-
 		// Happy path
 		return {
 			graph: graph,

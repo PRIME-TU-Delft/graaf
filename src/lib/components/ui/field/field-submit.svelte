@@ -13,10 +13,19 @@
 		cancelTitle?: string;
 		loadingTitle?: string;
 		children?: Snippet;
+		before?: Snippet;
 	};
 
-	const { pending, oncancel, onsubmit, submitTitle, cancelTitle, loadingTitle, children }: Props =
-		$props();
+	const {
+		pending,
+		oncancel,
+		onsubmit,
+		submitTitle,
+		cancelTitle,
+		loadingTitle,
+		children,
+		before
+	}: Props = $props();
 
 	let loading = $state(false);
 	let timedOut = $state(false);
@@ -33,8 +42,10 @@
 			}, 8000);
 		} else {
 			clearTimeout(loadingTimeout);
-			clearTimeout(timedOutTimeout);
 			loading = false;
+
+			clearTimeout(timedOutTimeout);
+			timedOut = false;
 		}
 	});
 </script>
@@ -45,6 +56,10 @@
 	{:else if loading}
 		<Spinner class="size-4" />
 		<p class="text-sm text-gray-500">{loadingTitle || 'Loading...'}</p>
+	{/if}
+
+	{#if before}
+		{@render before()}
 	{/if}
 
 	<Button type="button" variant="outline" disabled={!!pending} onclick={oncancel}>

@@ -1,31 +1,25 @@
 <script lang="ts">
-	import * as settings from '$lib/settings';
-	import { domainSchema } from '$lib/valibot/domainSchema';
-	import { page } from '$app/state';
-	import { cn } from '$lib/utils';
-	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-
-	import DeleteDomain from './DeleteDomain.svelte';
-
-	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
+	import * as Select from '$lib/components/ui/select/index.js';
 
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import * as settings from '$lib/settings';
+	import { cn } from '$lib/utils';
+	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
+
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import Ellipsis from 'lucide-svelte/icons/ellipsis';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
 
-	import type { PageData } from './$types';
 	import type { Domain } from '@prisma/client';
-	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
+	import { toast } from 'svelte-sonner';
+
+	import { getGraph } from '../../graph.remote';
+	import DeleteDomain from './DeleteDomain.svelte';
+	import { changeDomain } from './domain.remote';
 
 	type Props = {
 		domain: PrismaDomainPayload;
@@ -34,32 +28,15 @@
 
 	let { domain, graph }: Props = $props();
 
+	let changeDomainMenu = $state<string | undefined>(undefined);
 	let changeDomainDialog = $state(false);
-	let domainStyleOpen = $state(false);
+	let changeDomainForm = $state<HTMLFormElement>();
+	let domainStyle = $state(domain.style as string);
 
-	const form = superForm((page.data as PageData).newDomainForm, {
-		id: 'change-domain-form-' + useId() + domain.id,
-		validators: valibotClient(domainSchema),
-		onResult: ({ result }) => {
-			if (result.type != 'success') return;
-			changeDomainDialog = false;
-			toast.success('Domain changed successfully!');
-		}
-	});
-
-	const { form: formData, enhance, tainted, isTainted, submitting, delayed } = form;
-
-	const domainStyles = settings.COLOR_KEYS;
-
-	$effect(() => {
-		if (domain) {
-			$formData.name = domain.name;
-			$formData.style = domain.style ?? '';
-
-			// Set the form as untainted
-			tainted.set({ name: false, style: false, domainId: false, graphId: false });
-		}
-	});
+	const styles = settings.COLOR_KEYS.map((c) => ({
+		label: c.toLowerCase().replaceAll('_', ' '),
+		value: c
+	}));
 </script>
 
 <!-- @component
@@ -69,7 +46,13 @@
   @props { domain: DomainType, graph: GraphType }
 -->
 
-<Menubar.Root class="ml-auto max-w-10 p-0">
+<Menubar.Root
+	class="ml-auto max-w-10 p-0"
+	value={changeDomainMenu}
+	onValueChange={(value) => {
+		changeDomainMenu = value;
+	}}
+>
 	<Menubar.Menu value="menu">
 		<Menubar.Trigger class={cn(buttonVariants({ variant: 'outline', size: 'icon' }))}>
 			<Ellipsis class="size-4 w-full" />
@@ -84,7 +67,7 @@
 					variant="outline"
 					class="h-auto w-full justify-start rounded-sm border-0 px-2 py-1.5 hover:shadow-none"
 				>
-					{@render changeDomain()}
+					{@render editDomainSnippet()}
 				</DialogButton>
 			</Menubar.Item>
 
@@ -132,116 +115,106 @@
 	{/if}
 {/snippet}
 
-{#snippet changeDomain()}
-	<form action="?/change-domain-in-graph" method="POST" use:enhance>
-		<input type="hidden" name="graphId" value={graph.id} />
-		<input type="hidden" name="domainId" value={domain.id} />
+{#snippet editDomainSnippet()}
+	<form
+		{...changeDomain.enhance(async ({ form, submit }) => {
+			try {
+				await submit().updates(getGraph(graph.id));
+				if (changeDomain.fields.allIssues()?.length) return;
 
-		<Form.Field {form} name="name">
-			<Form.Control>
-				{#snippet children({ props })}
-					<Form.Label for="name">Domain name</Form.Label>
-					<Input {...props} bind:value={$formData.name} />
-				{/snippet}
-			</Form.Control>
-			<Form.FieldErrors />
-		</Form.Field>
+				form.reset();
+				changeDomainDialog = false;
+				changeDomainMenu = undefined;
+				toast.success('Domain created successfully!');
+			} catch (e) {
+				toast.error(JSON.stringify(e));
+			}
+		})}
+		bind:this={changeDomainForm}
+	>
+		<input hidden {...changeDomain.fields.graphId.as('number')} value={graph.id} />
+		<input hidden {...changeDomain.fields.domainId.as('number')} value={domain.id} />
 
-		<Form.Fieldset {form} name="style" class="flex items-center justify-between">
-			<div>
-				<Form.Legend>
-					Domain style
-					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
-				</Form.Legend>
-				<Form.FieldErrors />
-			</div>
+		<Field.Field>
+			<Field.Label for="name">Domain name</Field.Label>
+			<Input {...changeDomain.fields.name.as('text')} value={domain.name} />
+			<Field.Error
+				>{changeDomain.fields.name
+					.issues()
+					?.map((i) => i.message)
+					.join(', ')}</Field.Error
+			>
+		</Field.Field>
 
-			<RadioGroup.Root name="style" bind:value={$formData.style} class="grid py-2">
-				<Popover.Root bind:open={domainStyleOpen}>
-					<Popover.Trigger
-						class={cn(buttonVariants({ variant: 'outline' }), 'w-64 justify-between p-2')}
-					>
-						<div
-							class="h-6 w-6 rounded-full"
-							style="background: {$formData.style
-								? settings.COLORS[$formData.style as keyof typeof settings.COLORS]
-								: '#ccc'}"
-						></div>
-						{$formData.style.toLowerCase().replaceAll('_', ' ') || 'None'}
-						<ChevronDown />
-					</Popover.Trigger>
-
-					<Popover.Content>
-						<Form.Control>
-							{#snippet children({ props })}
-								<div class="flex items-center">
-									<RadioGroup.Item
-										onclick={() => (domainStyleOpen = false)}
-										style="border-color: #ccc; background: #cccccc50; border-width: 3px;"
-										class="h-6 w-6"
-										value=""
-										{...props}
-									/>
-									<Form.Label class="w-full cursor-pointer p-2">None</Form.Label>
-								</div>
-							{/snippet}
-						</Form.Control>
-
-						{#each domainStyles as style (style)}
-							<Form.Control>
-								{#snippet children({ props })}
-									<div class="flex items-center">
-										<RadioGroup.Item
-											onclick={() => (domainStyleOpen = false)}
-											style="border-color: {settings.COLORS[style]}; background: {settings.COLORS[
-												style
-											]}50; border-width: 3px"
-											class="h-6 w-6"
-											value={style}
-											{...props}
-										/>
-										<Form.Label class="w-full cursor-pointer p-2">
-											{style.replaceAll('_', ' ').toLowerCase()}
-										</Form.Label>
-									</div>
-									{#if $formData.style === style}{/if}
-								{/snippet}
-							</Form.Control>
-						{/each}
-					</Popover.Content>
-				</Popover.Root>
-			</RadioGroup.Root>
-		</Form.Fieldset>
-
-		<div class="mt-4 flex justify-end gap-1">
-			<Popover.Root>
-				<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-					Delete domain
-				</Popover.Trigger>
-				<Popover.Content>
-					<DeleteDomain {domain} {graph} />
-				</Popover.Content>
-			</Popover.Root>
-
-			<Button
-				variant="outline"
-				disabled={!isTainted($tainted)}
-				onclick={() => {
-					$formData.name = domain.name;
-					$formData.style = domain.style ?? '';
-					tainted.set({ name: false, style: false, domainId: false, graphId: false });
+		<Field.Field>
+			<Field.Label for="domain-style">
+				Domain style
+				<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
+			</Field.Label>
+			<Select.Root
+				type="single"
+				bind:value={domainStyle}
+				onValueChange={() => {
+					changeDomain.fields.style.set(domainStyle);
 				}}
 			>
-				<Undo2 /> Reset
-			</Button>
+				<input hidden {...changeDomain.fields.style.as('text')} />
+				<Select.Trigger id="domain-style">
+					<div
+						class="size-6 rounded-full border-2"
+						style="background: {domainStyle in settings.COLORS
+							? settings.COLORS[domainStyle as keyof typeof settings.COLORS]
+							: '#ccc'}"
+					></div>
 
-			<Form.FormButton
-				disabled={$submitting || !isTainted($tainted)}
-				loading={$delayed}
-				loadingMessage="Saving..."
-			>
-				Save
-			</Form.FormButton>
-		</div>
+					<p class="grow text-start">
+						{domainStyle?.toLowerCase().replaceAll('_', ' ') || 'None'}
+					</p>
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Item value="">
+						<div class="h-6 w-6 rounded-full border-2" style="background: #ccc"></div>
+						None
+					</Select.Item>
+					{#each styles as style (style.label)}
+						<Select.Item {...style}>
+							<div
+								class="h-6 w-6 rounded-full border-2"
+								style="background: {settings.COLORS[style.value]}"
+							></div>
+							{style.label}
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+			<Field.Error>
+				{changeDomain.fields.style
+					.issues()
+					?.map((i) => i.message)
+					.join(', ')}
+			</Field.Error>
+		</Field.Field>
+
+		<Field.Submit
+			pending={changeDomain.pending}
+			oncancel={() => {
+				changeDomainDialog = false;
+				changeDomainMenu = undefined;
+				changeDomainForm?.reset();
+			}}
+			submitTitle="Change Domain"
+			loadingTitle="Changing Domain..."
+		>
+			{#snippet before()}
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
+						Delete domain
+					</Popover.Trigger>
+					<Popover.Content>
+						<DeleteDomain {domain} {graph} />
+					</Popover.Content>
+				</Popover.Root>
+			{/snippet}
+		</Field.Submit>
 	</form>
 {/snippet}

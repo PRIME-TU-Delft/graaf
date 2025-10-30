@@ -3,10 +3,9 @@ import { whereHasGraphCoursePermission } from '$lib/server/permissions';
 import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
-	domainRelSchema,
-	domainSchema
+	domainRelSchema
 } from '$lib/valibot/domainSchema';
-import type { DomainStyle, User } from '@prisma/client';
+import type { User } from '@prisma/client';
 import { fail } from '@sveltejs/kit';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 
@@ -70,35 +69,6 @@ export class DomainActions {
 			]);
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
-	}
-
-	static async changeDomain(user: User, form: SuperValidated<Infer<typeof domainSchema>>) {
-		if (!form.valid) return setError(form, '', 'Invalid form data');
-		if (form.data.domainId === 0) {
-			return setError(form, 'name', 'Invalid domain id, cannot be 0');
-		}
-
-		try {
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					domains: {
-						update: {
-							where: { id: form.data.domainId },
-							data: {
-								name: form.data.name,
-								style: form.data.style == '' ? null : (form.data.style as DomainStyle)
-							}
-						}
-					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 
