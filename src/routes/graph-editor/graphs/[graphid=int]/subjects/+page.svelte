@@ -66,7 +66,7 @@
 			graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
 			toast.error('Failed to update subject order, try again later!');
 		} else {
-			await invalidateAll()
+			await invalidateAll();
 		}
 	}
 </script>

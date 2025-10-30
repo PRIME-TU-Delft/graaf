@@ -177,7 +177,6 @@ export class GraphValidator {
 					message: 'Domains must have a name',
 					severity: 'error'
 				});
-
 			else if (this.graph.domains.find((other) => other.name === name && other.id !== domain.id))
 				issues.push({
 					id: useId(),
@@ -193,7 +192,6 @@ export class GraphValidator {
 					message: 'Domains must have a style',
 					severity: 'error'
 				});
-
 			else if (
 				this.graph.domains.find((other) => other.style === domain.style && other.id !== domain.id)
 			)
@@ -233,7 +231,6 @@ export class GraphValidator {
 					message: 'Subjects must have a name',
 					severity: 'error'
 				});
-
 			else if (
 				this.graph.subjects.find((other) => other.name === subject.name && other.id !== subject.id)
 			)
@@ -243,7 +240,7 @@ export class GraphValidator {
 					message: 'Subjects should have unique names',
 					severity: 'warning'
 				});
-			
+
 			if (!subject.domainId)
 				issues.push({
 					id: useId(),
