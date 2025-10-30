@@ -27,19 +27,23 @@ export const graph = [
 
 export const courses = [
 	{
-		code: 'CS1000',
+		code: 'Hello wörld',
+		uriCode: 'Hello%20w%C3%B6rld',
 		name: 'CourseOne'
 	},
 	{
 		code: 'CS2000',
+		uriCode: 'CS2000',
 		name: 'CourseTwo'
 	},
 	{
 		code: 'WBMT1050',
+		uriCode: 'WBMT1050',
 		name: 'CourseThree'
 	},
 	{
 		code: 'BK1100',
+		uriCode: 'BK1100',
 		name: 'CourseFour'
 	}
 ];

@@ -86,6 +86,7 @@ export class LinkActions {
 					links: {
 						create: {
 							name: form.data.name,
+							uriName: encodeURIComponent(form.data.name),
 							graphId: form.data.graphId,
 							parentType: form.data.parentType
 						}

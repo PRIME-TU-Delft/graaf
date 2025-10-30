@@ -34,6 +34,6 @@ export const columns: ColumnDef<Course>[] = [
 	{
 		id: 'visit',
 		cell: ({ row }) =>
-			renderComponent(VisitCourse, { href: `/graph-editor/courses/${row.original.code}` })
+			renderComponent(VisitCourse, { href: `/graph-editor/courses/${row.original.uriCode}` })
 	}
 ];

@@ -13,6 +13,7 @@
 	import CreateNewLecture from './CreateNewLecture.svelte';
 	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -48,12 +49,9 @@
 
 		if (!response.ok) {
 			lectures = lectures.toSorted((a, b) => a.order - b.order);
-
 			toast.error('Error while reordering lectures');
 		} else {
-			lectures.forEach((lecture, index) => {
-				lecture.order = index;
-			});
+			await invalidateAll();
 		}
 	}
 </script>

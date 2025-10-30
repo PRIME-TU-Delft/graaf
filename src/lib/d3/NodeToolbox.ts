@@ -1,13 +1,15 @@
 import * as d3 from 'd3';
+import { toast } from 'svelte-sonner';
 import * as settings from '$lib/settings';
+import { invalidateAll } from '$app/navigation';
 
+import { NodeType } from './types';
 import { EdgeToolbox } from './EdgeToolbox';
 import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
 
+import type { EdgeData, NodeData, NodeSelection } from './types';
 import type { GraphD3 } from './GraphD3';
-import { NodeType, type EdgeData, type NodeData, type NodeSelection } from './types';
-import { toast } from 'svelte-sonner';
 
 export { NodeToolbox };
 
@@ -140,6 +142,8 @@ class NodeToolbox {
 		const responses = await Promise.all(requests);
 		if (responses.some((response) => !response.ok)) {
 			toast.error('Failed to save node positions', { duration: 2000 });
+		} else if (!graphState.isSimulating()) {
+			await invalidateAll();
 		}
 	}
 

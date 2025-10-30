@@ -20,6 +20,7 @@
 	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
 	import DeleteDomainRel from './DeleteDomainRel.svelte';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
@@ -72,7 +73,7 @@
 			toast.error('Failed to update domain style, try again later');
 			return;
 		} else {
-			graphD3Store.graphD3?.setDomainStyle(domain.id, key);
+			await invalidateAll();
 			closeAndFocusTrigger(triggerId, () => {
 				isOpenState.isOpen = false;
 			});
