@@ -8,6 +8,7 @@ import Title from './field-title.svelte';
 import Description from './field-description.svelte';
 import Separator from './field-separator.svelte';
 import Error from './field-error.svelte';
+import Submit from './field-submit.svelte';
 
 export {
 	Field,
@@ -20,6 +21,7 @@ export {
 	Description,
 	Separator,
 	Error,
+	Submit,
 	//
 	Set as FieldSet,
 	Legend as FieldLegend,
@@ -29,5 +31,6 @@ export {
 	Title as FieldTitle,
 	Description as FieldDescription,
 	Separator as FieldSeparator,
-	Error as FieldError
+	Error as FieldError,
+	Submit as FieldSubmit
 };
