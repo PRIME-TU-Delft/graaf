@@ -24,10 +24,7 @@ export const editDomainSchema = v.intersect([
 
 export const deleteDomainSchema = v.object({
 	graphId: v.pipe(v.number(), v.minValue(0, 'Invalid graph id')),
-	domainId: v.pipe(v.number(), v.minValue(1, 'Invalid domain id')),
-	sourceDomains: v.array(v.number()),
-	targetDomains: v.array(v.number()),
-	connectedSubjects: v.array(v.number())
+	domainId: v.pipe(v.number(), v.minValue(1, 'Invalid domain id'))
 });
 
 //

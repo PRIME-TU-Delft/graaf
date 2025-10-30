@@ -1,59 +1,20 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
-	import { deleteDomainSchema } from '$lib/valibot/domainSchema';
 	import { toast } from 'svelte-sonner';
-	import { fromStore } from 'svelte/store';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
+	import { getGraph } from '../../graph.remote';
+	import { deleteDomain } from './domain.remote';
 
 	type Props = {
 		domain: PrismaDomainPayload;
 		graph: PrismaGraphPayload;
+		oncancel: () => void;
 	};
 
-	let { domain, graph }: Props = $props();
+	let { domain, graph, oncancel }: Props = $props();
 
 	const connectedSubjects = $derived(graph.subjects.filter((s) => s.domainId == domain.id));
 	const relationCount = $derived(domain.sourceDomains.length + domain.targetDomains.length);
-
-	const form = superForm((page.data as PageData).deleteDomainForm, {
-		id: 'delete-domain-form-' + domain.id,
-		validators: valibotClient(deleteDomainSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Domain successfully deleted!');
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		// When the domain changes, update the form data
-		if (domain) {
-			$formData.graphId = graph.id;
-			$formData.domainId = domain.id;
-			$formData.sourceDomains = domain.sourceDomains.map((d) => d.id);
-			$formData.targetDomains = domain.targetDomains.map((d) => d.id);
-			$formData.connectedSubjects = connectedSubjects.map((s) => s.id);
-		}
-	});
-
-	$effect(() => {
-		// When there is an unexpected error, show a toast
-		const deleteErrors = fromStore(form.allErrors).current;
-
-		if (deleteErrors.length > 0) {
-			toast.error('Could not delete domain', {
-				description: 'Someone else has updated the graph since you loaded the page.',
-				action: { label: 'Reload graph', onClick: () => location.reload() },
-				duration: 5000
-			});
-		}
-	});
 </script>
 
 <!-- @component
@@ -62,13 +23,21 @@
 @props { domain: DomainType, graph: GraphType }
  -->
 
-<form class="text-sm" action="?/delete-domain" method="POST" use:enhance>
-	<input type="hidden" name="graphId" value={$formData.graphId} />
-	<input type="hidden" name="domainId" value={$formData.domainId} />
+<form
+	class="text-sm"
+	{...deleteDomain.enhance(async ({ submit }) => {
+		try {
+			await submit().updates(getGraph(graph.id));
+			if (deleteDomain.fields.allIssues()?.length) return;
 
-	{@render formArray('sourceDomains')}
-	{@render formArray('targetDomains')}
-	{@render formArray('connectedSubjects')}
+			toast.success('Domain deleted successfully!');
+		} catch (e) {
+			toast.error(JSON.stringify(e));
+		}
+	})}
+>
+	<input hidden {...deleteDomain.fields.graphId.as('number')} value={graph.id} />
+	<input hidden {...deleteDomain.fields.domainId.as('number')} value={domain.id} />
 
 	<p class="pt-1 pl-1 font-bold">Are you sure?</p>
 
@@ -91,27 +60,10 @@
 		</p>
 	{/if}
 
-	<Form.FormButton
-		class="mt-1 w-full"
-		variant="destructive"
-		disabled={$submitting}
-		loading={$delayed}
-		loadingMessage="Deleting..."
-	>
-		Yes, delete domain
-	</Form.FormButton>
+	<Field.Submit
+		pending={deleteDomain.pending}
+		{oncancel}
+		submitTitle="Delete Domain"
+		loadingTitle=""
+	></Field.Submit>
 </form>
-
-{#snippet formArray(name: 'sourceDomains' | 'targetDomains' | 'connectedSubjects')}
-	<Form.Fieldset {form} {name} class="h-0">
-		{#each $formData[name], i}
-			<Form.ElementField {form} name="{name}[{i}]">
-				<Form.Control>
-					{#snippet children({ props })}
-						<input hidden type="number" bind:value={$formData[name][i]} {...props} />
-					{/snippet}
-				</Form.Control>
-			</Form.ElementField>
-		{/each}
-	</Form.Fieldset>
-{/snippet}

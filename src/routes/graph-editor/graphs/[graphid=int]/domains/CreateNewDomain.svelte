@@ -6,8 +6,8 @@
 	import * as settings from '$lib/settings';
 	import type { Graph } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
-	import { createDomain } from './domain.remote';
 	import { getGraph } from '../../graph.remote';
+	import { createDomain } from './domain.remote';
 
 	type Props = {
 		graph: Graph;

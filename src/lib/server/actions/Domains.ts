@@ -1,77 +1,11 @@
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
-import {
-	changeDomainRelSchema,
-	deleteDomainSchema,
-	domainRelSchema
-} from '$lib/valibot/domainSchema';
+import { changeDomainRelSchema, domainRelSchema } from '$lib/valibot/domainSchema';
 import type { User } from '@prisma/client';
 import { fail } from '@sveltejs/kit';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 
 export class DomainActions {
-	// MARK: - Domain
-
-	static async deleteDomain(user: User, form: SuperValidated<Infer<typeof deleteDomainSchema>>) {
-		if (!form.valid) return setError(form, '', 'Invalid form data');
-
-		const removeTargetFromSourceDomain = form.data.sourceDomains.map((id) => {
-			return prisma.domain.update({
-				where: { id },
-				data: {
-					sourceDomains: {
-						disconnect: { id: form.data.domainId }
-					}
-				}
-			});
-		});
-
-		const removeSourceFromTargetDomain = form.data.targetDomains.map((id) => {
-			return prisma.domain.update({
-				where: { id },
-				data: {
-					sourceDomains: {
-						disconnect: { id: form.data.domainId }
-					}
-				}
-			});
-		});
-
-		const removeDomainFromSubjects = form.data.connectedSubjects.map((id) => {
-			return prisma.subject.update({
-				where: { id },
-				data: {
-					domain: {
-						disconnect: true
-					}
-				}
-			});
-		});
-
-		const deleteDomain = prisma.graph.update({
-			where: {
-				id: form.data.graphId,
-				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			},
-			data: {
-				domains: {
-					delete: { id: form.data.domainId }
-				}
-			}
-		});
-
-		try {
-			await prisma.$transaction([
-				...removeTargetFromSourceDomain,
-				...removeSourceFromTargetDomain,
-				...removeDomainFromSubjects,
-				deleteDomain
-			]);
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
-	}
-
 	// MARK: - Domain Relationships
 
 	private static async connectDomains(graphId: number, user: User, inId: number, outId: number) {

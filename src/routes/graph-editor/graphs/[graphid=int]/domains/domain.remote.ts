@@ -2,7 +2,11 @@ import { form, getRequestEvent } from '$app/server';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
-import { createDomainSchema, editDomainSchema } from '$lib/valibot/domainSchema';
+import {
+	createDomainSchema,
+	deleteDomainSchema,
+	editDomainSchema
+} from '$lib/valibot/domainSchema';
 import type { DomainStyle } from '@prisma/client';
 import { error } from '@sveltejs/kit';
 
@@ -66,6 +70,34 @@ export const changeDomain = form(editDomainSchema, async ({ graphId, domainId, n
 							name: name,
 							style: style == '' ? null : (style as DomainStyle)
 						}
+					}
+				}
+			}
+		});
+
+		return { success: true };
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			return error(401, e.message);
+		} else {
+			return error(401, `${e}`);
+		}
+	}
+});
+
+export const deleteDomain = form(deleteDomainSchema, async ({ graphId, domainId }) => {
+	const user = await getUser(getRequestEvent());
+
+	try {
+		await prisma.graph.update({
+			where: {
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: {
+				domains: {
+					delete: {
+						id: domainId
 					}
 				}
 			}

@@ -76,7 +76,13 @@
 					Delete
 				</Menubar.SubTrigger>
 				<Menubar.SubContent>
-					<DeleteDomain {domain} {graph} />
+					<DeleteDomain
+						{domain}
+						{graph}
+						oncancel={() => {
+							changeDomainMenu = undefined;
+						}}
+					/>
 				</Menubar.SubContent>
 			</Menubar.Sub>
 
@@ -125,7 +131,7 @@
 				form.reset();
 				changeDomainDialog = false;
 				changeDomainMenu = undefined;
-				toast.success('Domain created successfully!');
+				toast.success('Domain changed successfully!');
 			} catch (e) {
 				toast.error(JSON.stringify(e));
 			}
@@ -211,7 +217,13 @@
 						Delete domain
 					</Popover.Trigger>
 					<Popover.Content>
-						<DeleteDomain {domain} {graph} />
+						<DeleteDomain
+							{domain}
+							{graph}
+							oncancel={() => {
+								changeDomainMenu = undefined;
+							}}
+						/>
 					</Popover.Content>
 				</Popover.Root>
 			{/snippet}
