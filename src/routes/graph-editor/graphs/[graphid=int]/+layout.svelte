@@ -33,14 +33,6 @@
 	const hidePreview = $derived(page.url.searchParams.get('hidePreview') === 'true');
 	const lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 
-	function togglePreview() {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
-		params.set('hidePreview', hidePreview ? 'false' : 'true');
-
-		goto(`?${params.toString()}`);
-	}
-
 	function capitalize(str: string) {
 		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 	}
@@ -67,7 +59,7 @@
 								<DropdownMenu.Item
 									disabled={tab == currentTab}
 									onclick={() => {
-										goto(`./${tab.toLowerCase()}`);
+										goto(`./${tab.toLowerCase() + (hidePreview ? '?hidePreview=true' : '')}`);
 									}}
 									class={cn({ 'bg-gray-100 font-bold': tab == currentTab })}
 								>
@@ -75,7 +67,11 @@
 								</DropdownMenu.Item>
 							{/each}
 							<DropdownMenu.Separator />
-							<DropdownMenu.Item onclick={() => togglePreview()}>
+							<DropdownMenu.Item
+								onclick={() => {
+									goto(`./${currentTab.toLowerCase() + '?hidePreview=' + !hidePreview}`);
+								}}
+							>
 								{hidePreview ? 'Show' : 'Hide'} Preview
 							</DropdownMenu.Item>
 							<DropdownMenu.Item disabled>View preview in other tab</DropdownMenu.Item>
