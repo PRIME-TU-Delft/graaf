@@ -4,14 +4,12 @@
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { graphState } from '$lib/d3/GraphD3State.svelte';
+	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import { cn } from '$lib/utils';
 	import { ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
-
 	import type { Snippet } from 'svelte';
 	import { getGraph } from '../graph.remote';
-	import { graphView } from '$lib/d3/GraphD3View.svelte';
 
 	let { children }: { children: Snippet } = $props();
 	const graphId = Number(page.params.graphid);

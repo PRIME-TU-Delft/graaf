@@ -58,7 +58,7 @@
 </script>
 
 <div
-	class="min-h-8 space-y-2 rounded bg-purple-100 p-1 !outline-purple-400"
+	class="min-h-8 space-y-2 rounded bg-purple-100 p-1 outline-purple-400!"
 	use:dragHandleZone={{ items: lecture.subjects, flipDurationMs, type: 'subject' }}
 	onconsider={handleDndConsider}
 	onfinalize={handleDndFinalize}
@@ -66,7 +66,7 @@
 	{#each lecture.subjects as subject (subject.id)}
 		{@const subjectIssues = issues[subject.id] || []}
 
-		<div animate:flip={{ duration: flipDurationMs }} class="!outline-purple-50">
+		<div animate:flip={{ duration: flipDurationMs }} class="outline-purple-50!">
 			<div class="flex w-full items-center gap-2 rounded bg-purple-50/30 p-2 backdrop-blur-sm">
 				<div
 					class="rounded bg-purple-300 p-2 transition-colors hover:bg-purple-400"
