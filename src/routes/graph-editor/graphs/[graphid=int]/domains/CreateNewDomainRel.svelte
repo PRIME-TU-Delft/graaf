@@ -41,7 +41,7 @@
 
 					form.reset();
 					dialogOpen = false;
-					toast.success('Domain created successfully!');
+					toast.success('Domains linked successfully!');
 				} catch (e) {
 					toast.error(JSON.stringify(e));
 				}
@@ -52,6 +52,13 @@
 
 			<DomainRelField id="sourceDomainId" domains={graph.domains} />
 			<DomainRelField id="targetDomainId" domains={graph.domains} />
+
+			<Field.Error
+				>{createDomainRel.fields
+					.allIssues()
+					?.map((issue) => issue.message)
+					.join(', ')}</Field.Error
+			>
 
 			<Field.Submit
 				pending={createDomainRel.pending}

@@ -31,7 +31,7 @@
 
 			form.reset();
 			onclose();
-			toast.success('Domain created successfully!');
+			toast.success('Domain changed successfully!');
 		} catch (_) {
 			console.log(_);
 			toast.error('Error changing domain relationship', {

@@ -70,6 +70,10 @@
 			await invalidateAll();
 		}
 	}
+
+	class OpenState {
+		isOpen = $state(false);
+	}
 </script>
 
 <CreateNewSubject graph={graphValidator.graph} />
@@ -151,8 +155,9 @@
 	targetSubject: Subject
 )}
 	{@const thisSubject = type == 'sourceSubject' ? sourceSubject : targetSubject}
+	{@const changeSubjectOpen = new OpenState()}
 
-	<DropdownMenu.Root>
+	<DropdownMenu.Root bind:open={changeSubjectOpen.isOpen}>
 		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
 			<span class="w-full text-left">{thisSubject.name}</span>
 			<ChevronRight />
@@ -188,6 +193,9 @@
 								{sourceSubject}
 								{targetSubject}
 								{type}
+								onclose={() => {
+									changeSubjectOpen.isOpen = false;
+								}}
 							/>
 						</DropdownMenu.Item>
 					{/each}

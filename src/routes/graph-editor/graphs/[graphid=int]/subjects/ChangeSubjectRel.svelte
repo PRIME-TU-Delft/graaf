@@ -1,16 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { changeSubjectRelSchema } from '$lib/valibot/subjectSchema';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { Replace } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
-	import { fromStore } from 'svelte/store';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import { getGraph } from '../../graph.remote';
+	import { changeSubjectRel } from './subjects.remote';
 
 	type Props = {
 		graph: PrismaGraphPayload;
@@ -18,59 +14,55 @@
 		sourceSubject: Subject;
 		targetSubject: Subject;
 		type: 'sourceSubject' | 'targetSubject';
+		onclose: () => void;
 	};
 
-	const { graph, subject, sourceSubject, targetSubject, type }: Props = $props();
+	const { graph, subject, sourceSubject, targetSubject, type, onclose }: Props = $props();
 
-	const form = superForm((page.data as PageData).changeSubjectRelForm, {
-		id: `change-${type}-rel-form-${useId()}`,
-		validators: valibotClient(changeSubjectRelSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Successfully changed relationship!');
-			} else if (result.type == 'error') {
-				toast.error('Error changing subject relationship', {
-					description: 'The relationship probably already exists. Try refreshing the page.'
-				});
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		formData.set({
-			graphId: graph.id,
-			sourceSubjectId: type == 'sourceSubject' ? subject.id : sourceSubject.id,
-			targetSubjectId: type == 'targetSubject' ? subject.id : targetSubject.id,
-			oldSourceSubjectId: sourceSubject.id,
-			oldTargetSubjectId: targetSubject.id
-		});
-	});
+	let changeRel = changeSubjectRel.for(subject.id);
 </script>
 
-<form class="w-full" action="?/change-subject-rel" method="POST" use:enhance>
-	<input type="hidden" name="graphId" value={graph.id} />
-	<input type="hidden" name="oldSourceSubjectId" value={sourceSubject.id} />
-	<input type="hidden" name="oldTargetSubjectId" value={targetSubject.id} />
+<form
+	class="w-full"
+	{...changeRel.enhance(async ({ form, submit }) => {
+		try {
+			await submit().updates(getGraph(graph.id));
+			if (changeRel.fields.allIssues()?.length) return;
+
+			form.reset();
+			onclose();
+			toast.success('Subject changed successfully!');
+		} catch (_) {
+			console.log(_);
+			toast.error('Error changing subject relationship', {
+				description: 'The relationship probably already exists. Try refreshing the page.'
+			});
+		}
+	})}
+>
+	<input hidden {...changeRel.fields.graphId.as('number')} value={graph.id} />
+
+	<input hidden {...changeRel.fields.oldSourceSubjectId.as('number')} value={sourceSubject.id} />
+	<input hidden {...changeRel.fields.oldTargetSubjectId.as('number')} value={targetSubject.id} />
+
 	<input
-		type="hidden"
-		name="sourceSubjectId"
-		value={type == 'sourceSubject' ? subject.id : sourceSubject.id}
-	/>
-	<input
-		type="hidden"
-		name="targetSubjectId"
+		hidden
+		{...changeRel.fields.targetSubjectId.as('number')}
 		value={type == 'targetSubject' ? subject.id : targetSubject.id}
 	/>
-	<Form.FormButton
-		class="w-full justify-start"
-		variant="ghost"
-		disabled={fromStore(submitting).current}
-		loading={fromStore(delayed).current}
-		loadingMessage="Changing to {subject.name} relationship..."
-	>
-		<Replace />
-		{subject.name}
-	</Form.FormButton>
+	<input
+		hidden
+		{...changeRel.fields.sourceSubjectId.as('number')}
+		value={type == 'sourceSubject' ? subject.id : sourceSubject.id}
+	/>
+
+	<Button type="submit" disabled={!!changeRel.pending} variant="ghost" class="w-full justify-start">
+		{#if changeRel.pending}
+			<Spinner />
+			Changing to {subject.name} relationship...
+		{:else}
+			<Replace />
+			{subject.name}
+		{/if}
+	</Button>
 </form>

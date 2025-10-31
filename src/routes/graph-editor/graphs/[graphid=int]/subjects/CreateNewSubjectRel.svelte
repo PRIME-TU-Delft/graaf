@@ -1,15 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { subjectRelSchema } from '$lib/valibot/subjectSchema';
-	import type { Graph, Subject } from '@prisma/client';
-	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import SubjectRelField from './SubjectRelField.svelte';
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import * as Field from '$lib/components/ui/field/index.js';
+	import type { Graph, Subject } from '@prisma/client';
+	import { toast } from 'svelte-sonner';
+	import { getGraph } from '../../graph.remote';
+	import SubjectRelField from './SubjectRelField.svelte';
+	import { createSubjectRel } from './subjects.remote';
 
 	type Props = {
 		graph: Graph & { subjects: Subject[] };
@@ -18,21 +14,12 @@
 	const { graph }: Props = $props();
 
 	let dialogOpen = $state(false);
-	const form = superForm((page.data as PageData).newSubjectRelForm, {
-		id: 'subjectRelForm' + useId(),
-		validators: valibotClient(subjectRelSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('Subject created successfully!');
-				dialogOpen = false;
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
+	let formRef = $state<HTMLFormElement>();
 
 	const isTheSameSubject = $derived(
-		$formData.sourceSubjectId == $formData.targetSubjectId && $formData.sourceSubjectId != 0
+		createSubjectRel.fields.sourceSubjectId.value() ==
+			createSubjectRel.fields.targetSubjectId.value() &&
+			createSubjectRel.fields.sourceSubjectId.value() !== 0
 	);
 </script>
 
@@ -46,25 +33,46 @@
 		title="Create Relationship"
 		description="Relationships connect subjects to each other."
 	>
-		<form action="?/add-subject-rel" method="POST" use:enhance>
-			<input type="hidden" name="graphId" value={graph.id} />
+		<form
+			{...createSubjectRel.enhance(async ({ form, submit }) => {
+				try {
+					await submit().updates(getGraph(graph.id));
+					if (createSubjectRel.fields.allIssues()?.length) return;
 
-			<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} {form} {formData} />
-			<SubjectRelField id="targetSubjectId" subjects={graph.subjects} {form} {formData} />
+					form.reset();
+					dialogOpen = false;
+					toast.success('Subjects linked successfully!');
+				} catch (e) {
+					toast.error(JSON.stringify(e));
+				}
+			})}
+			oninput={() => createSubjectRel.validate()}
+			bind:this={formRef}
+		>
+			<input hidden {...createSubjectRel.fields.graphId.as('number')} value={graph.id} />
 
-			<Form.FormError {form} />
+			<SubjectRelField id="sourceSubjectId" subjects={graph.subjects} />
+			<SubjectRelField id="targetSubjectId" subjects={graph.subjects} />
 
-			<div class="flex w-full items-center justify-end">
-				<Form.FormButton
-					loading={$delayed}
-					disabled={$submitting ||
-						isTheSameSubject ||
-						!$formData.sourceSubjectId ||
-						!$formData.targetSubjectId}
-				>
-					Create relationship
-				</Form.FormButton>
-			</div>
+			<Field.Error
+				>{createSubjectRel.fields
+					.allIssues()
+					?.map((issue) => issue.message)
+					.join(', ')}</Field.Error
+			>
+
+			<Field.Submit
+				pending={createSubjectRel.pending}
+				oncancel={() => {
+					dialogOpen = false;
+					formRef?.reset();
+				}}
+				disabled={isTheSameSubject ||
+					!createSubjectRel.fields.sourceSubjectId.value() ||
+					!createSubjectRel.fields.targetSubjectId.value()}
+				submitTitle="Create Subject relationship"
+				loadingTitle="Creating relationship..."
+			/>
 		</form>
 	</DialogButton>
 </div>
