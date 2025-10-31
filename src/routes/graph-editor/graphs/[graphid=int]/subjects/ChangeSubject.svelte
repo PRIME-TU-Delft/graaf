@@ -25,7 +25,7 @@
 	import Undo2 from 'lucide-svelte/icons/undo-2';
 
 	type Props = {
-		subject: PageData['graph']['subjects'][0];
+		subject: PrismaGraphPayload['subjects'][0];
 		graph: PrismaGraphPayload;
 	};
 

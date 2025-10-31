@@ -12,6 +12,7 @@ export type PrismaGraphPayload = Prisma.GraphGetPayload<{
 			include: {
 				sourceSubjects: true;
 				targetSubjects: true;
+				domain: true;
 			};
 		};
 		lectures: {

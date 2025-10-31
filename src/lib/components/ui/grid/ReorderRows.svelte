@@ -25,7 +25,7 @@
 </script>
 
 <div
-	class={cn('col-span-full grid w-full grid-cols-subgrid divide-y-2 !outline-none', classes)}
+	class={cn('col-span-full grid w-full grid-cols-subgrid divide-y-2 outline-none!', classes)}
 	use:dragHandleZone={{ items, flipDurationMs: 300 }}
 	{onconsider}
 	{onfinalize}

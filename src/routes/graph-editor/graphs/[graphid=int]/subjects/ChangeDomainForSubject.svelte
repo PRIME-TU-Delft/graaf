@@ -2,14 +2,13 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { ChevronRight, Sparkles, TriangleAlert } from '@lucide/svelte';
 	import { useId } from 'bits-ui';
-	import type { PageData } from './$types';
 	import ChangeSubjectInGraph from './ChangeSubjectInGraph.svelte';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
 
 	type Props = {
-		subject: PageData['graph']['subjects'][0];
+		subject: PrismaGraphPayload['subjects'][0];
 		graph: PrismaGraphPayload;
 	};
 
@@ -32,7 +31,7 @@
 			'relative w-full',
 			buttonVariants({ variant: 'outline' }),
 			!subject.domain &&
-				'!hover:bg-orange-900 !bg-orange-300/20 text-orange-900 hover:text-orange-900'
+				'!hover:bg-orange-900 bg-orange-300/20! text-orange-900 hover:text-orange-900'
 		)}
 	>
 		<span class="grow text-left">

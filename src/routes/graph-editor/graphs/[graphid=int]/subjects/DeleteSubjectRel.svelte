@@ -5,18 +5,19 @@
 	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
+	import { subjectRelSchema } from '$lib/valibot/subjectSchema';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { Trash2 } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
+	import { toast } from 'svelte-sonner';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { type PageData } from './$types';
-	import { toast } from 'svelte-sonner';
-	import { subjectRelSchema } from '$lib/valibot/subjectSchema';
 
 	type Props = {
 		sourceSubject: Subject;
 		targetSubject: Subject;
-		graph: PageData['graph'];
+		graph: PrismaGraphPayload;
 	};
 
 	let { graph, sourceSubject, targetSubject }: Props = $props();

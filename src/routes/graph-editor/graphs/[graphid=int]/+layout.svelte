@@ -6,33 +6,32 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
 	import { cn } from '$lib/utils';
-	import { Check, ChevronDown, GripVertical } from '@lucide/svelte';
+	import { ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 
 	import type { Snippet } from 'svelte';
 	import { getGraph } from '../graph.remote';
+	import { graphView } from '$lib/d3/GraphD3View.svelte';
 
 	let { children }: { children: Snippet } = $props();
 	const graphId = Number(page.params.graphid);
 
-	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
+	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as const;
 
-	const hidePreview = $derived(page.url.searchParams.get('hidePreview') === 'true');
-	const lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
-	const view = $derived.by(() => {
-		const param = page.url.searchParams.get('view')?.toUpperCase();
-		if (param && ['DOMAINS', 'SUBJECTS', 'LECTURES'].includes(param))
-			return param as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+	const currentTab = $derived.by(() => {
+		const tab = page.url.pathname.split('/').at(-1)?.toUpperCase();
+		if (tab && (tabs as readonly string[]).includes(tab))
+			return tab as 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+
 		return 'DOMAINS';
 	});
 
-	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
-		params.set('view', view);
+	$effect(() => {
+		graphView.changeView(currentTab);
+	});
 
-		goto(`./${view.toLowerCase()}?${params.toString()}`);
-	}
+	const hidePreview = $derived(page.url.searchParams.get('hidePreview') === 'true');
+	const lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 
 	function togglePreview() {
 		const params = new URLSearchParams();
@@ -65,19 +64,15 @@
 						<DropdownMenu.Group>
 							<DropdownMenu.GroupHeading>Change view</DropdownMenu.GroupHeading>
 							{#each tabs as tab (tab)}
-								{#if tab.toLowerCase() === view?.toLowerCase()}
-									<DropdownMenu.Item class="justify-between" disabled>
-										{capitalize(tab)}
-										<Check />
-									</DropdownMenu.Item>
-								{:else}
-									<DropdownMenu.Item
-										disabled={graphState.isTransitioning()}
-										onclick={() => gotoView(tab)}
-									>
-										{capitalize(tab)}
-									</DropdownMenu.Item>
-								{/if}
+								<DropdownMenu.Item
+									disabled={tab == currentTab}
+									onclick={() => {
+										goto(`./${tab.toLowerCase()}`);
+									}}
+									class={cn({ 'bg-gray-100 font-bold': tab == currentTab })}
+								>
+									{capitalize(tab)}
+								</DropdownMenu.Item>
 							{/each}
 							<DropdownMenu.Separator />
 							<DropdownMenu.Item onclick={() => togglePreview()}>
@@ -107,7 +102,11 @@
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
 					<svelte:boundary>
 						{#await getGraph(graphId) then graph}
-							<GraphRenderer data={graph.graph} editable={true} {view} {lectureID} />
+							<GraphRenderer data={graph.graph} editable={true} view={currentTab} {lectureID} />
+						{:catch error}
+							<div class="flex h-full items-center justify-center">
+								<p class="text-center text-sm text-red-500">Error loading graph: {error.message}</p>
+							</div>
 						{/await}
 					</svelte:boundary>
 				</div>

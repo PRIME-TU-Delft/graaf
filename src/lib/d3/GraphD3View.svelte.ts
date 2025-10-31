@@ -33,6 +33,23 @@ class GraphViewState {
 	toLectures() {
 		this.view = GraphView.lectures;
 	}
+
+	changeView(view: string) {
+		switch (view) {
+			case 'DOMAINS':
+				this.toDomains();
+				break;
+			case 'SUBJECTS':
+				this.toSubjects();
+				break;
+			case 'LECTURES':
+				this.toLectures();
+				break;
+			default:
+				this.toDomains();
+				break;
+		}
+	}
 }
 
 export const graphView = new GraphViewState();

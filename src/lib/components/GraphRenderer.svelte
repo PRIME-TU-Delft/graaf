@@ -1,28 +1,32 @@
 <script lang="ts">
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
-	import { graphView } from '$lib/d3/GraphD3View.svelte';
 	import GraphDecorators from './GraphDecorators.svelte';
 
 	import type { PrismaGraphPayload } from '$lib/d3/types';
+	import { untrack } from 'svelte';
 
 	type Props = {
 		data: PrismaGraphPayload;
+		view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
 		editable: boolean;
-		view?: 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
 		lectureID: number | null;
 		builtInViewDropdown?: boolean;
 	};
 
-	let { data: payload, editable, view, lectureID, builtInViewDropdown = false }: Props = $props();
+	let { data: payload, view, editable, lectureID, builtInViewDropdown = false }: Props = $props();
 	let d3Canvas: SVGSVGElement;
 
 	$effect(() => {
-		if (view != graphView.state) {
-			if (view === undefined) view = 'DOMAINS';
-			graphD3Store.graphD3?.setView(view);
-		} else {
-			graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);
+		// TODO apply lecture id change
+		if (d3Canvas && payload) {
+			untrack(() => {
+				graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);
+			});
 		}
+	});
+
+	$effect(() => {
+		graphD3Store.graphD3?.setView(view);
 	});
 </script>
 
@@ -33,7 +37,9 @@
 >
 	<svg class="block h-full w-full" bind:this={d3Canvas} />
 
-	{#if graphD3Store.graphD3}
-		<GraphDecorators graphD3={graphD3Store.graphD3} {editable} {builtInViewDropdown} />
-	{/if}
+	{#key graphD3Store.graphD3}
+		{#if graphD3Store.graphD3}
+			<GraphDecorators graphD3={graphD3Store.graphD3} {editable} {builtInViewDropdown} />
+		{/if}
+	{/key}
 </div>
