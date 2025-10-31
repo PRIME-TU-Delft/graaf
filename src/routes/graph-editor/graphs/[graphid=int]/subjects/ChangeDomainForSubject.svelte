@@ -45,9 +45,9 @@
 		<ChevronRight />
 	</DropdownMenu.Trigger>
 
-	<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
+	<DropdownMenu.Content class="max-h-96 max-w-64  p-0">
 		{#if subject.domain}
-			<DropdownMenu.Group class="sticky top-0 z-10">
+			<DropdownMenu.Group class="sticky top-0 z-10 bg-white">
 				<a href="./domains/#domain-{subject.domain.id}">
 					<DropdownMenu.Item
 						class={cn('w-full justify-start', buttonVariants({ variant: 'ghost' }))}
@@ -69,8 +69,10 @@
 </DropdownMenu.Root>
 
 {#snippet domainList()}
-	<ChangeSubjectInGraph {subject} {graph} {onSuccess} />
-	{#each graph.domains as domain (domain.id)}
+	{#if subject.domain}
+		<ChangeSubjectInGraph {subject} {graph} {onSuccess} />
+	{/if}
+	{#each graph.domains.filter((domain) => domain.id !== (subject.domain?.id ?? 0)) as domain (domain.id)}
 		<ChangeSubjectInGraph {subject} {graph} {domain} {onSuccess} />
 	{:else}
 		<a href="./domains">

@@ -78,7 +78,10 @@ export class GraphD3 {
 		// SVG setup
 		this.svg = d3
 			.select<SVGSVGElement, unknown>(element)
-			.attr('preserveAspectRatio', 'xMinYMin meet');
+			.attr('preserveAspectRatio', 'xMinYMin meet')
+			// Explicitly set pixel width/height so d3 can read absolute SVGLength values
+			.attr('width', element.getBoundingClientRect().width)
+			.attr('height', element.getBoundingClientRect().height);
 
 		this.svg.selectAll('*').remove(); // Clear SVG
 

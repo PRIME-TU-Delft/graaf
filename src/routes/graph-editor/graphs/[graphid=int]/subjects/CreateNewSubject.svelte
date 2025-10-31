@@ -8,6 +8,7 @@
 	import { toast } from 'svelte-sonner';
 	import { getGraph } from '../../graph.remote';
 	import { createSubject } from './subjects.remote';
+	import { Unlink } from '@lucide/svelte';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
@@ -65,6 +66,11 @@
 						'Select Domain'}
 				</Select.Trigger>
 				<Select.Content>
+					<Select.Item value="0">
+						<Unlink />
+						Detached
+					</Select.Item>
+					<hr />
 					{#each graph.domains as domain (domain.id)}
 						<Select.Item label={domain.name} value={String(domain.id)} />
 					{/each}

@@ -1,28 +1,22 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import * as Command from '$lib/components/ui/command/index.js';
-	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import * as Select from '$lib/components/ui/select/index.js';
+	import { cn } from '$lib/utils';
+	import { fieldToIssueString } from '$lib/utils/issues';
 	import type { PrismaGraphPayload } from '$lib/validators/types';
-	import { subjectSchema } from '$lib/valibot/subjectSchema';
+	import { Unlink } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import DeleteSubject from './DeleteSubject.svelte';
-
 	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Ellipsis from 'lucide-svelte/icons/ellipsis';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
+	import { toast } from 'svelte-sonner';
+	import { getGraph } from '../../graph.remote';
+	import DeleteSubject from './DeleteSubject.svelte';
+	import { changeSubject } from './subjects.remote';
 
 	type Props = {
 		subject: PrismaGraphPayload['subjects'][0];
@@ -31,34 +25,20 @@
 
 	let { subject, graph }: Props = $props();
 
+	let changeSubjectMenu = $state<string | undefined>(undefined);
 	let changeSubjectDialog = $state(false);
-	let domainIdOpen = $state(false);
+	let changeSubjectForm = $state<HTMLFormElement>();
 
-	const triggerId = useId();
-	const form = superForm((page.data as PageData).newSubjectForm, {
-		id: 'change-subject-form-' + useId() + '-' + subject.id,
-		validators: valibotClient(subjectSchema),
-		onResult: ({ result }) => {
-			if (result.type != 'success') return;
-			changeSubjectDialog = false;
-			toast.success('Subject changed successfully!');
-		}
-	});
-
-	const { form: formData, enhance, tainted, isTainted, submitting, delayed } = form;
-
-	$effect(() => {
-		if (subject) {
-			$formData.name = subject.name;
-			$formData.domainId = subject.domainId ?? 0;
-
-			// Set the form as untainted
-			tainted.set({ name: false, domainId: false, graphId: false });
-		}
-	});
+	let subjectDomain = $state(String(subject.domain?.id ?? 0));
 </script>
 
-<Menubar.Root class="interactive ml-auto max-w-10 p-0">
+<Menubar.Root
+	class="interactive ml-auto max-w-10 p-0"
+	value={changeSubjectMenu}
+	onValueChange={(value) => {
+		changeSubjectMenu = value;
+	}}
+>
 	<Menubar.Menu value="menu">
 		<Menubar.Trigger class="h-full w-full">
 			<Ellipsis class="size-4 w-full" />
@@ -73,7 +53,7 @@
 					variant="outline"
 					class="h-auto w-full justify-start rounded-sm border-0 px-2 py-1.5 hover:shadow-none"
 				>
-					{@render changeSubject()}
+					{@render editSubjectSnippet()}
 				</DialogButton>
 			</Menubar.Item>
 
@@ -82,7 +62,13 @@
 					Delete
 				</Menubar.SubTrigger>
 				<Menubar.SubContent>
-					<DeleteSubject {subject} {graph} />
+					<DeleteSubject
+						{subject}
+						{graph}
+						oncancel={() => {
+							changeSubjectMenu = undefined;
+						}}
+					/>
 				</Menubar.SubContent>
 			</Menubar.Sub>
 
@@ -121,97 +107,86 @@
 	{/if}
 {/snippet}
 
-{#snippet changeSubject()}
-	<form action="?/change-subject-in-graph" method="POST" use:enhance>
-		<input type="hidden" name="graphId" value={graph.id} />
-		<input type="hidden" name="subjectId" value={subject.id} />
+{#snippet editSubjectSnippet()}
+	<form
+		{...changeSubject.enhance(async ({ form, submit }) => {
+			try {
+				await submit().updates(getGraph(graph.id));
+				if (changeSubject.fields.allIssues()?.length) return;
 
-		<Form.Field {form} name="name">
-			<Form.Control>
-				{#snippet children({ props })}
-					<Form.Label for="name">Subject name</Form.Label>
-					<Input {...props} bind:value={$formData.name} />
-				{/snippet}
-			</Form.Control>
-			<Form.FieldErrors />
-		</Form.Field>
+				form.reset();
+				changeSubjectDialog = false;
+				changeSubjectMenu = undefined;
+				toast.success('Subject changed successfully!');
+			} catch (e) {
+				toast.error(JSON.stringify(e));
+			}
+		})}
+		bind:this={changeSubjectForm}
+	>
+		<input hidden {...changeSubject.fields.graphId.as('number')} value={graph.id} />
+		<input hidden {...changeSubject.fields.subjectId.as('number')} value={subject.id} />
 
-		<Form.Field {form} name="domainId">
-			<Popover.Root bind:open={domainIdOpen}>
-				<Form.Control id={triggerId}>
-					{#snippet children({ props })}
-						<div class="mt-2 flex w-full items-center justify-between">
-							<Form.Label>
-								Link to Domain
-								<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
-							</Form.Label>
-							<Popover.Trigger
-								class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
-								role="combobox"
-								{...props}
-							>
-								{graph.domains.find((f) => f.id === $formData.domainId)?.name ?? 'Select domain'}
-								<ChevronsUpDown class="opacity-50" />
-							</Popover.Trigger>
-							<input hidden value={$formData.domainId} name={props.name} />
-						</div>
-					{/snippet}
-				</Form.Control>
+		<Field.Field>
+			<Field.Label for="name">Domain name</Field.Label>
+			<Input {...changeSubject.fields.name.as('text')} value={subject.name} />
+			<Field.Error>{fieldToIssueString(changeSubject.fields.name)}</Field.Error>
+		</Field.Field>
 
-				<Popover.Content>
-					<Command.Root>
-						<Command.Input autofocus placeholder="Search domain..." class="h-9" />
-						<Command.Empty>No domain found.</Command.Empty>
-						<Command.Group>
-							{#each graph.domains as domain (domain.id)}
-								<Command.Item
-									value={domain.id.toString()}
-									onSelect={() => {
-										$formData.domainId = domain.id;
-										closeAndFocusTrigger(triggerId, () => (domainIdOpen = false));
-									}}
-								>
-									{domain.name}
-									<Check
-										class={cn('ml-auto', domain.id !== $formData.domainId && 'text-transparent')}
-									/>
-								</Command.Item>
-							{/each}
-						</Command.Group>
-					</Command.Root>
-				</Popover.Content>
-			</Popover.Root>
-		</Form.Field>
+		<Field.Field>
+			<Field.Label for="subject-domain">Link to domain</Field.Label>
+			<Select.Root type="single" bind:value={subjectDomain}>
+				<input
+					hidden
+					{...changeSubject.fields.domainId.as('number')}
+					value={Number(subjectDomain)}
+				/>
+				<Select.Trigger id="subject-domain">
+					{graph.domains.find((domain) => domain.id === Number(subjectDomain))?.name ||
+						'Select Domain'}
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Item value="0">
+						<Unlink />
+						Detached
+					</Select.Item>
+					<hr />
+					{#each graph.domains as domain (domain.id)}
+						<Select.Item label={domain.name} value={String(domain.id)} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+			<Field.Error>
+				{fieldToIssueString(changeSubject.fields.domainId)}
+			</Field.Error>
+		</Field.Field>
 
-		<div class="mt-4 flex justify-end gap-1">
-			<Popover.Root>
-				<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-					Delete subject
-				</Popover.Trigger>
-				<Popover.Content>
-					<DeleteSubject {subject} {graph} />
-				</Popover.Content>
-			</Popover.Root>
-
-			<Button
-				variant="outline"
-				disabled={!isTainted($tainted)}
-				onclick={() => {
-					$formData.name = subject.name;
-					$formData.domainId = subject.domainId ?? 0;
-					tainted.set({ name: false, domainId: false, graphId: false });
-				}}
-			>
-				<Undo2 /> Reset
-			</Button>
-
-			<Form.FormButton
-				disabled={$submitting || !isTainted($tainted)}
-				loading={$delayed}
-				loadingMessage="Saving..."
-			>
-				Save
-			</Form.FormButton>
-		</div>
+		<Field.Submit
+			pending={changeSubject.pending}
+			oncancel={() => {
+				changeSubjectDialog = false;
+				changeSubjectMenu = undefined;
+				changeSubjectForm?.reset();
+			}}
+			submitTitle="Change Domain"
+			loadingTitle="Changing Domain..."
+		>
+			{#snippet before()}
+				<Popover.Root>
+					<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
+						Delete domain
+					</Popover.Trigger>
+					<Popover.Content>
+						<DeleteSubject
+							{subject}
+							{graph}
+							oncancel={() => {
+								changeSubjectMenu = undefined;
+							}}
+						/>
+					</Popover.Content>
+				</Popover.Root>
+			{/snippet}
+		</Field.Submit>
 	</form>
 {/snippet}

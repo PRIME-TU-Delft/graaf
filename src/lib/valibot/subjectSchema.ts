@@ -26,9 +26,7 @@ export const subjectSchema = v.intersect([
 
 export const deleteSubjectSchema = v.object({
 	graphId: v.pipe(v.number(), v.minValue(1, 'Invalid graph id')),
-	subjectId: v.pipe(v.number(), v.minValue(1, 'Invalid subject id')),
-	sourceSubjects: v.array(v.number()),
-	targetSubjects: v.array(v.number())
+	subjectId: v.pipe(v.number(), v.minValue(1, 'Invalid subject id'))
 });
 
 export const subjectRelSchema = v.object({

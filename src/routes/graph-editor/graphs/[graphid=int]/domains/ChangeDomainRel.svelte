@@ -56,7 +56,7 @@
 		value={type == 'sourceDomain' ? domain.id : sourceDomain.id}
 	/>
 
-	<Button type="submit" disabled={!!changeRel.pending} variant="ghost" class="w-full text-start">
+	<Button type="submit" disabled={!!changeRel.pending} variant="ghost" class="w-full justify-start">
 		{#if changeRel.pending}
 			<Spinner />
 			Changing to {domain.name} relationship...

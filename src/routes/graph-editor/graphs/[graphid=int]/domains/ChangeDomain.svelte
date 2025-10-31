@@ -20,6 +20,7 @@
 	import { getGraph } from '../../graph.remote';
 	import DeleteDomain from './DeleteDomain.svelte';
 	import { changeDomain } from './domain.remote';
+	import { fieldToIssueString } from '$lib/utils/issues';
 
 	type Props = {
 		domain: PrismaDomainPayload;
@@ -144,12 +145,7 @@
 		<Field.Field>
 			<Field.Label for="name">Domain name</Field.Label>
 			<Input {...changeDomain.fields.name.as('text')} value={domain.name} />
-			<Field.Error
-				>{changeDomain.fields.name
-					.issues()
-					?.map((i) => i.message)
-					.join(', ')}</Field.Error
-			>
+			<Field.Error>{fieldToIssueString(changeDomain.fields.name)}</Field.Error>
 		</Field.Field>
 
 		<Field.Field>

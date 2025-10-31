@@ -1,19 +1,15 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { Check, Replace } from '@lucide/svelte';
-	import type { Domain } from '@prisma/client';
-	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
-	import { fromStore } from 'svelte/store';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
-	import { subjectSchema } from '$lib/valibot/subjectSchema';
-	import * as Form from '$lib/components/ui/form/index.js';
+	import { Button } from '$lib/components/ui/button';
+	import { Spinner } from '$lib/components/ui/spinner';
 	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import { Replace } from '@lucide/svelte';
+	import type { Domain } from '@prisma/client';
+	import { toast } from 'svelte-sonner';
+	import { getGraph } from '../../graph.remote';
+	import { changeSubject } from './subjects.remote';
 
 	type Props = {
-		subject: PageData['graph']['subjects'][0];
+		subject: PrismaGraphPayload['subjects'][0];
 		graph: PrismaGraphPayload;
 		domain?: Domain;
 		onSuccess?: () => void;
@@ -21,50 +17,35 @@
 
 	let { subject, graph, domain, onSuccess }: Props = $props();
 
-	const form = superForm((page.data as PageData).newSubjectForm, {
-		id: 'change-domain-form-1-' + useId() + (domain?.id ?? 'none'),
-		validators: valibotClient(subjectSchema),
-		onResult: ({ result }) => {
-			// Guard for not success
-			if (result.type != 'success') {
-				toast.error('Error changing subject');
-				return;
-			}
-
-			onSuccess?.();
-			toast.success('Subject changed successfully!');
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		if (subject) {
-			$formData.graphId = graph.id;
-			$formData.subjectId = subject.id;
-			$formData.name = subject.name;
-			$formData.domainId = domain?.id ?? 0;
-		}
-	});
+	let changeRel = changeSubject.for(domain?.id ?? 0);
 </script>
 
-<form action="?/change-subject-in-graph" method="POST" use:enhance>
-	<input type="hidden" name="graphId" value={graph.id} />
-	<input type="hidden" name="subjectId" value={subject.id} />
-	<input type="hidden" name="name" value={subject.name} />
-	<input type="hidden" name="domainId" value={domain?.id ?? 0} />
+<form
+	{...changeRel.enhance(async ({ form, submit }) => {
+		try {
+			await submit().updates(getGraph(graph.id));
+			if (changeRel.fields.allIssues()?.length) return;
 
-	<Form.Button
-		class="w-full justify-start"
-		variant="ghost"
-		disabled={domain?.id === subject.domain?.id || fromStore(submitting).current}
-		loading={fromStore(delayed).current}
-	>
-		<Replace />
-		{domain?.name ?? 'None'}
+			form.reset();
+			onSuccess?.();
+			toast.success('Subject changed successfully!');
+		} catch (e) {
+			toast.error(JSON.stringify(e));
+		}
+	})}
+>
+	<input hidden {...changeRel.fields.graphId.as('number')} value={graph.id} />
+	<input hidden {...changeRel.fields.subjectId.as('number')} value={subject.id} />
+	<input hidden {...changeRel.fields.name.as('text')} value={subject.name} />
+	<input hidden {...changeRel.fields.domainId.as('number')} value={domain?.id ?? 0} />
 
-		{#if domain?.id === subject.domain?.id}
-			<Check class="ml-auto" />
+	<Button type="submit" disabled={!!changeRel.pending} variant="ghost" class="w-full justify-start">
+		{#if changeRel.pending}
+			<Spinner />
+			Changing to {subject.name} relationship...
+		{:else}
+			<Replace />
+			{domain?.name ?? 'Unlink Domain'}
 		{/if}
-	</Form.Button>
+	</Button>
 </form>
