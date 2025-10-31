@@ -1,4 +1,4 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import type {
 	FormPathLeavesWithErrors,
 	SuperValidated,
@@ -104,4 +104,12 @@ export function setError<
 	}
 
 	return fail(options.status ?? 400, { form });
+}
+
+export function svelteError(e: unknown) {
+	if (e instanceof Error) {
+		return error(401, e.message);
+	} else {
+		return error(401, JSON.stringify(e));
+	}
 }

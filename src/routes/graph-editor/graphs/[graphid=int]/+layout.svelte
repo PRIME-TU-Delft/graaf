@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import { graphState } from '$lib/d3/GraphD3State.svelte';
 	import { cn } from '$lib/utils';
 	import { Check, ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
-	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
-	import { graphState } from '$lib/d3/GraphD3State.svelte';
 
 	import type { Snippet } from 'svelte';
-	import type { LayoutData } from './$types';
+	import { getGraph } from '../graph.remote';
 
-	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+	let { children }: { children: Snippet } = $props();
+	const graphId = Number(page.params.graphid);
 
 	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
 
@@ -104,7 +105,11 @@
 
 			<Pane defaultSize={50}>
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
-					<GraphRenderer data={data.graph} editable={true} {view} {lectureID} />
+					<svelte:boundary>
+						{#await getGraph(graphId) then graph}
+							<GraphRenderer data={graph.graph} editable={true} {view} {lectureID} />
+						{/await}
+					</svelte:boundary>
 				</div>
 			</Pane>
 		{/if}

@@ -2,6 +2,7 @@ import { form, getRequestEvent } from '$app/server';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
+import { svelteError } from '$lib/utils/setError';
 import {
 	changeDomainRelSchema,
 	createDomainSchema,
@@ -45,11 +46,7 @@ export const createDomain = form(createDomainSchema, async ({ graphId, name, sty
 
 		return { success: true };
 	} catch (e: unknown) {
-		if (e instanceof Error) {
-			return error(401, e.message);
-		} else {
-			return error(401, `${e}`);
-		}
+		svelteError(e);
 	}
 });
 
@@ -107,11 +104,7 @@ export const deleteDomain = form(deleteDomainSchema, async ({ graphId, domainId 
 
 		return { success: true };
 	} catch (e: unknown) {
-		if (e instanceof Error) {
-			return error(401, e.message);
-		} else {
-			return error(401, `${e}`);
-		}
+		svelteError(e);
 	}
 });
 
@@ -196,7 +189,7 @@ export const createDomainRel = form(
 			await connectDomains(graphId, user, sourceDomainId, targetDomainId);
 			return { success: true };
 		} catch (e: unknown) {
-			return error(401, e instanceof Error ? e.message : `${e}`);
+			svelteError(e);
 		}
 	}
 );
@@ -225,7 +218,7 @@ export const changeDomainRel = form(
 			await connectDomains(graphId, user, sourceDomainId, targetDomainId);
 			return { success: true };
 		} catch (e: unknown) {
-			return error(401, e instanceof Error ? e.message : `${e}`);
+			svelteError(e);
 		}
 	}
 );

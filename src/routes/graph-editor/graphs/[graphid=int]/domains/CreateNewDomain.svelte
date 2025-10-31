@@ -8,6 +8,7 @@
 	import { toast } from 'svelte-sonner';
 	import { getGraph } from '../../graph.remote';
 	import { createDomain } from './domain.remote';
+	import { fieldToIssueString } from '$lib/utils/issues';
 
 	type Props = {
 		graph: Graph;
@@ -55,12 +56,7 @@
 			<Field.Field>
 				<Field.Label for="name">Domain name</Field.Label>
 				<Input {...createDomain.fields.name.as('text')} />
-				<Field.Error
-					>{createDomain.fields.name
-						.issues()
-						?.map((i) => i.message)
-						.join(', ')}</Field.Error
-				>
+				<Field.Error>{fieldToIssueString(createDomain.fields.name)}</Field.Error>
 			</Field.Field>
 
 			<Field.Field>
@@ -68,14 +64,8 @@
 					Domain style
 					<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 				</Field.Label>
-				<Select.Root
-					type="single"
-					bind:value={domainStyle}
-					onValueChange={() => {
-						createDomain.fields.style.set(domainStyle);
-					}}
-				>
-					<input hidden {...createDomain.fields.style.as('text')} />
+				<Select.Root type="single" bind:value={domainStyle}>
+					<input hidden {...createDomain.fields.style.as('text')} value={domainStyle} />
 					<Select.Trigger id="domain-style">
 						<div
 							class="size-6 rounded-full border-2"
@@ -120,7 +110,7 @@
 				}}
 				submitTitle="Create Domain"
 				loadingTitle="Creating Domain..."
-			></Field.Submit>
+			/>
 		</Field.Set>
 	</form>
 </DialogButton>

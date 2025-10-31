@@ -4,9 +4,8 @@ import * as v from 'valibot';
 // This is a Zod schema for validating forms this cannot be automatically generated
 // from the database schema because that is not accessible from the client
 
-export const subjectSchema = v.object({
-	subjectId: v.number(),
-	graphId: v.number(),
+export const createSubjectSchema = v.object({
+	graphId: v.pipe(v.number(), v.minValue(1, 'Invalid graph id')),
 	name: v.pipe(
 		v.string(),
 		v.minLength(1, 'Subject name must be at least 1 character long'),
@@ -17,6 +16,14 @@ export const subjectSchema = v.object({
 	),
 	domainId: v.number()
 });
+
+export const subjectSchema = v.intersect([
+	createSubjectSchema,
+	v.object({
+		subjectId: v.number()
+	})
+]);
+
 export const deleteSubjectSchema = v.object({
 	graphId: v.pipe(v.number(), v.minValue(1, 'Invalid graph id')),
 	subjectId: v.pipe(v.number(), v.minValue(1, 'Invalid subject id')),
