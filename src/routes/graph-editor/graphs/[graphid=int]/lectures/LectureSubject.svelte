@@ -16,7 +16,7 @@
 		};
 	};
 
-	const { subjects, issues, lecture = $bindable() }: Props = $props();
+	const { subjects, issues, lecture }: Props = $props();
 
 	let subjectBackup = [...lecture.subjects];
 

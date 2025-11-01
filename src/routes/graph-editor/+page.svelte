@@ -57,7 +57,7 @@
 			{#await data.courses then courses}
 				<SearchCourses {courses} />
 
-				{#if data.programs.length && courses.some((course) => course.isArchived)}
+				{#if data.programs?.length && courses.some((course) => course.isArchived)}
 					<Button
 						variant="outline"
 						class="border-2 p-3"

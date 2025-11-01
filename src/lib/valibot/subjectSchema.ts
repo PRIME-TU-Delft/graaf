@@ -56,3 +56,16 @@ export const changeSubjectRelSchema = v.pipe(
 		'Source and target subject must not be the same'
 	)
 );
+
+export const reorderSubjectsSchema = v.pipe(
+	v.object({
+		graphId: v.number(),
+		subjects: v.array(
+			v.object({
+				id: v.number(),
+				order: v.number()
+			})
+		)
+	}),
+	v.check((data) => data.subjects.length > 1, 'At least two subjects are required')
+);

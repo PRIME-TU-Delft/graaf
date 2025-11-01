@@ -1,4 +1,4 @@
-import { form, getRequestEvent } from '$app/server';
+import { command, form, getRequestEvent } from '$app/server';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
@@ -7,6 +7,7 @@ import {
 	changeSubjectRelSchema,
 	createSubjectSchema,
 	deleteSubjectSchema,
+	reorderSubjectsSchema,
 	subjectRelSchema,
 	subjectSchema
 } from '$lib/valibot/subjectSchema';
@@ -205,3 +206,26 @@ export const changeSubjectRel = form(
 		}
 	}
 );
+
+export const reorderSubjects = command(reorderSubjectsSchema, async ({ graphId, subjects }) => {
+	const user = await getUser(getRequestEvent());
+
+	try {
+		return await prisma.graph.update({
+			where: {
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: {
+				subjects: {
+					updateMany: subjects.map((subject, index) => ({
+						where: { id: subject.id },
+						data: { order: index }
+					}))
+				}
+			}
+		});
+	} catch (e: unknown) {
+		return svelteError(e);
+	}
+});

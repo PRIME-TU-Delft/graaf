@@ -33,7 +33,7 @@
 </script>
 
 <Menubar.Root
-	class="interactive ml-auto max-w-10 p-0"
+	class="w-10 shrink-0 p-0"
 	value={changeSubjectMenu}
 	onValueChange={(value) => {
 		changeSubjectMenu = value;

@@ -6,18 +6,14 @@
 	import { cn } from '$lib/utils';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import Link from 'lucide-svelte/icons/link';
-	import { toast } from 'svelte-sonner';
 
-	import { invalidateAll } from '$app/navigation';
 	import type { Issues, PrismaGraphPayload } from '$lib/validators/types';
 	import IssueIndicator from '../IssueIndicator.svelte';
-	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
-	import ChangeSubject from './ChangeSubject.svelte';
 	import ChangeSubjectRel from './ChangeSubjectRel.svelte';
 	import CreateNewSubject from './CreateNewSubject.svelte';
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import DeleteSubjectRel from './DeleteSubjectRel.svelte';
+	import SubjectList from './SubjectList.svelte';
 
 	type Props = {
 		graphValidator: {
@@ -42,35 +38,6 @@
 		return map;
 	});
 
-	function handleDndConsider(e: CustomEvent<{ items: PrismaGraphPayload['subjects'] }>) {
-		graphValidator.graph.subjects = e.detail.items;
-	}
-
-	async function handleDndFinalize(e: CustomEvent<{ items: PrismaGraphPayload['subjects'] }>) {
-		graphValidator.graph.subjects = e.detail.items;
-
-		const body = graphValidator.graph.subjects.map((subject, index) => ({
-			subjectId: subject.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/subjects/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graphValidator.graph.subjects = graphValidator.graph.subjects.toSorted(
-				(a, b) => a.order - b.order
-			);
-			toast.error('Failed to update subject order, try again later!');
-		} else {
-			await invalidateAll();
-		}
-	}
-
 	class OpenState {
 		isOpen = $state(false);
 	}
@@ -78,48 +45,14 @@
 
 <CreateNewSubject graph={graphValidator.graph} />
 
-<Grid.Root columnTemplate={['3rem', '3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
-	<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
-		<div class="p-2"></div>
-		<div class="p-2"></div>
-		<div class="p-2">Name</div>
-		<div class="flex gap-2 p-2"><Link class="size-4" />Domain</div>
-		<div class="p-2 text-right">Edit</div>
-	</div>
-
-	<Grid.ReorderRows
-		name="subject"
-		items={graphValidator.graph.subjects}
-		onconsider={handleDndConsider}
-		onfinalize={handleDndFinalize}
-	>
-		{#snippet children(subject)}
-			<Grid.Cell>
-				{@const issues = graphValidator.issues.subjectIssues[subject.id] || []}
-				<IssueIndicator {issues} />
-			</Grid.Cell>
-
-			<Grid.Cell>
-				{subject.name}
-			</Grid.Cell>
-
-			<Grid.Cell>
-				<ChangeDomainForSubject {subject} graph={graphValidator.graph} />
-			</Grid.Cell>
-
-			<Grid.Cell>
-				<ChangeSubject {subject} graph={graphValidator.graph} />
-			</Grid.Cell>
-		{/snippet}
-	</Grid.ReorderRows>
-</Grid.Root>
+<SubjectList graph={graphValidator.graph} issues={graphValidator.issues} />
 
 {#if graphValidator.graph.subjects.length == 0}
 	<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">No subjects found</p>
 {:else}
 	<CreateNewSubjectRel graph={graphValidator.graph} />
 
-	<Grid.Root columnTemplate={['3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
+	<Grid.Root columnTemplate={['3rem', 'minmax(10rem, 1fr)', 'minmax(10rem, 1fr)', '5rem']}>
 		<div class="col-span-full grid grid-cols-subgrid border-b font-mono text-sm font-bold">
 			<div class="p-2"></div>
 			<div class="p-2">Source</div>
@@ -127,7 +60,7 @@
 			<div class="p-2 text-right">Delete</div>
 		</div>
 
-		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
+		<Grid.Rows name="subject-rel" items={subjectMapping} class="mt-2 space-y-1">
 			{#snippet children({ sourceSubject, targetSubject })}
 				<Grid.Cell>
 					{@const issues =
@@ -158,8 +91,10 @@
 	{@const changeSubjectOpen = new OpenState()}
 
 	<DropdownMenu.Root bind:open={changeSubjectOpen.isOpen}>
-		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
-			<span class="w-full text-left">{thisSubject.name}</span>
+		<DropdownMenu.Trigger class={cn('relative w-full ', buttonVariants({ variant: 'outline' }))}>
+			<span class="w-full overflow-hidden text-left text-ellipsis whitespace-nowrap"
+				>{thisSubject.name}</span
+			>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">

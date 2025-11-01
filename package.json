@@ -66,6 +66,8 @@
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.11.1",
 		"@auth/sveltekit": "^1.11.1",
+		"@dnd-kit-svelte/core": "^0.0.11",
+		"@dnd-kit-svelte/sortable": "^0.0.11",
 		"@fontsource-variable/noto-sans": "^5.2.10",
 		"@prisma/client": "^6.18.0",
 		"@tailwindcss/forms": "^0.5.10",

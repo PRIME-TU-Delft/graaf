@@ -28,13 +28,13 @@
 	<DropdownMenu.Trigger
 		id={triggerId}
 		class={cn(
-			'relative w-full',
+			'relative w-fit max-w-40 ',
 			buttonVariants({ variant: 'outline' }),
 			!subject.domain &&
 				'!hover:bg-orange-900 bg-orange-300/20! text-orange-900 hover:text-orange-900'
 		)}
 	>
-		<span class="grow text-left">
+		<span class="grow overflow-hidden text-left text-ellipsis whitespace-nowrap">
 			{#if subject.domain}
 				{subject.domain.name}
 			{:else}

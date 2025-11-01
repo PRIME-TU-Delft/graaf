@@ -33,7 +33,6 @@
 			onclose();
 			toast.success('Subject changed successfully!');
 		} catch (_) {
-			console.log(_);
 			toast.error('Error changing subject relationship', {
 				description: 'The relationship probably already exists. Try refreshing the page.'
 			});

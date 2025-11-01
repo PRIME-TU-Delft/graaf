@@ -18,14 +18,15 @@
 	import ZoomIn from 'lucide-svelte/icons/zoom-in';
 	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
-	import screenfull from 'screenfull';
-	import { fade } from 'svelte/transition';
-	import { Button, buttonVariants } from './ui/button';
-	import { cn } from '$lib/utils';
-	import { graphState } from '$lib/d3/GraphD3State.svelte';
-	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+	import { graphState } from '$lib/d3/GraphD3State.svelte';
+	import { cn } from '$lib/utils';
+	import screenfull from 'screenfull';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { fade } from 'svelte/transition';
 	import DialogButton from './DialogButton.svelte';
+	import { Button, buttonVariants } from './ui/button';
 
 	type Props = {
 		graphD3: GraphD3;
@@ -33,9 +34,9 @@
 		builtInViewDropdown?: boolean;
 	};
 
-	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
-
 	let { graphD3, editable, builtInViewDropdown = false }: Props = $props();
+
+	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as const;
 
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
@@ -50,16 +51,8 @@
 		}
 	});
 
-	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
-		params.set('view', view);
-
-		goto(`?${params.toString()}`);
-	}
-
 	function gotoLecture(lectureID: number | null) {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
 		if (lectureID === null) {
 			params.delete('lectureID');
@@ -113,7 +106,7 @@
 						<DropdownMenu.Item
 							disabled={graphState.isTransitioning()}
 							onclick={() => {
-								gotoView(tab);
+								goto(`./${tab.toLowerCase()}`);
 								graphD3.setView(tab);
 							}}
 						>
