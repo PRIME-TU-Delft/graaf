@@ -8,6 +8,7 @@
 	type Props = {
 		pending: number;
 		oncancel?: () => void;
+		hideCancel?: boolean;
 		onsubmit?: () => void;
 		submitTitle?: string;
 		cancelTitle?: string;
@@ -20,6 +21,7 @@
 	const {
 		pending,
 		oncancel,
+		hideCancel,
 		onsubmit,
 		submitTitle,
 		cancelTitle,
@@ -64,9 +66,11 @@
 		{@render before()}
 	{/if}
 
-	<Button type="button" variant="outline" disabled={!!pending} onclick={oncancel}>
-		{cancelTitle || 'Cancel'}
-	</Button>
+	{#if !hideCancel}
+		<Button type="button" variant="outline" disabled={!!pending} onclick={oncancel}>
+			{cancelTitle || 'Cancel'}
+		</Button>
+	{/if}
 
 	<Button type="submit" disabled={!!pending || disabled} onclick={onsubmit}>
 		{#if children}

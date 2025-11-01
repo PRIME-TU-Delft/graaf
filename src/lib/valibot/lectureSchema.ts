@@ -20,9 +20,19 @@ export const deleteLectureSchema = v.object({
 	lectureId: v.number()
 });
 
-export const reorderLecturesSchema = v.array(
-	v.object({
-		lectureId: v.number(),
-		newOrder: v.number()
-	})
-);
+export const reorderLecturesSchema = v.object({
+	graphId: v.number(),
+	lectures: v.array(
+		v.object({
+			lectureId: v.number(),
+			newOrder: v.number()
+		})
+	)
+});
+
+export const moveSubjectToLectureSchema = v.object({
+	graphId: v.number(),
+	subjectId: v.number(),
+	lectureId: v.number(),
+	newLectureId: v.number()
+});
