@@ -7,11 +7,11 @@
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		subject: PrismaGraphPayload['subjects'][number];
+		domain: PrismaGraphPayload['domains'][number];
 		children: Snippet;
 	};
 
-	let { subject, children }: Props = $props();
+	let { domain, children }: Props = $props();
 
 	const {
 		attributes,
@@ -23,7 +23,7 @@
 		isDragging,
 		isSorting
 	} = useSortable({
-		id: subject.id,
+		id: domain.id,
 		data: { type: 'item' }
 	});
 
@@ -34,7 +34,7 @@
 </script>
 
 <div
-	id="subject-{subject.id}"
+	id="domain-{domain.id}"
 	class="relative transition-transform select-none"
 	bind:this={node.current}
 	{style}
@@ -45,7 +45,7 @@
 			'flex items-center gap-2 rounded px-2 transition-colors delay-300 focus-within:bg-amber-400/10',
 			{
 				invisible: isDragging.current,
-				'bg-purple-100': page.url.hash == `#subject-${subject.id}`
+				'bg-purple-100': page.url.hash == `#domain-${domain.id}`
 			}
 		)}
 	>

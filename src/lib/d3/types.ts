@@ -79,6 +79,7 @@ type PrismaLecturePayload = Prisma.LectureGetPayload<{
 
 // Abstraction for graphs
 type GraphData = {
+	id: number;
 	domain_nodes: NodeData[];
 	domain_edges: EdgeData[];
 	subject_nodes: NodeData[];

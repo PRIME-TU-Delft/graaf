@@ -1,14 +1,17 @@
-import { form, getRequestEvent } from '$app/server';
+import { command, form, getRequestEvent } from '$app/server';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
 import { svelteError } from '$lib/utils/setError';
 import {
+	changeColorSchema,
 	changeDomainRelSchema,
+	changePositionSchema,
 	createDomainSchema,
 	deleteDomainSchema,
 	domainRelSchema,
-	editDomainSchema
+	editDomainSchema,
+	reorderDomainsSchema
 } from '$lib/valibot/domainSchema';
 import type { DomainStyle, User } from '@prisma/client';
 import { error } from '@sveltejs/kit';
@@ -222,3 +225,43 @@ export const changeDomainRel = form(
 		}
 	}
 );
+
+export const reorderDomains = command(reorderDomainsSchema, async ({ graphId, domains }) => {
+	const user = await getUser(getRequestEvent());
+
+	try {
+		return await prisma.graph.update({
+			where: {
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: {
+				domains: {
+					updateMany: domains.map((domain, index) => ({
+						where: { id: domain.id },
+						data: { order: index }
+					}))
+				}
+			}
+		});
+	} catch (e: unknown) {
+		return svelteError(e);
+	}
+});
+
+export const changeColor = command(changeColorSchema, async ({ graphId, domainId, style }) => {
+	const user = await getUser(getRequestEvent());
+
+	try {
+		return await prisma.domain.update({
+			where: {
+				id: domainId,
+				graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: { style: style as DomainStyle | null }
+		});
+	} catch (e: unknown) {
+		return svelteError(e);
+	}
+});

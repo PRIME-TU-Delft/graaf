@@ -1,15 +1,15 @@
+import * as settings from '$lib/settings';
 import * as d3 from 'd3';
 import { toast } from 'svelte-sonner';
-import * as settings from '$lib/settings';
-import { invalidateAll } from '$app/navigation';
 
-import { NodeType } from './types';
 import { EdgeToolbox } from './EdgeToolbox';
 import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
+import { NodeType } from './types';
 
-import type { EdgeData, NodeData, NodeSelection } from './types';
 import type { GraphD3 } from './GraphD3';
+import type { EdgeData, NodeData, NodeSelection } from './types';
+import { changePosition } from '../../routes/graph-editor/graphs/graph.remote';
 
 export { NodeToolbox };
 
@@ -105,12 +105,12 @@ class NodeToolbox {
 					node.fy = node.y;
 
 					NodeToolbox.updatePosition(selection, graph);
-					NodeToolbox.save(selection);
+					await NodeToolbox.save(graph.data.id, selection);
 				})
 		);
 	}
 
-	static async save(selection: NodeSelection) {
+	static async save(graphId: number, selection: NodeSelection) {
 		// We are not guaranteed to select only domains, or only subjects, so we have two options:
 		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
 		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
@@ -125,25 +125,14 @@ class NodeToolbox {
 		const domainBody = domains.map((node) => ({ domainId: node.id, x: node.x, y: node.y }));
 		const subjectBody = subjects.map((node) => ({ subjectId: node.id, x: node.x, y: node.y }));
 
-		const requests = [
-			fetch('/api/domains/position', {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(domainBody)
-			}),
-
-			fetch('/api/subjects/position', {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(subjectBody)
-			})
-		];
-
-		const responses = await Promise.all(requests);
-		if (responses.some((response) => !response.ok)) {
+		try {
+			await changePosition({
+				graphId: graphId,
+				domains: domainBody,
+				subjects: subjectBody
+			});
+		} catch {
 			toast.error('Failed to save node positions', { duration: 2000 });
-		} else if (!graphState.isSimulating()) {
-			await invalidateAll();
 		}
 	}
 

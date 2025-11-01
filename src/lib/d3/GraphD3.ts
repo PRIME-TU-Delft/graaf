@@ -315,6 +315,7 @@ export class GraphD3 {
 		//       It would be wonderful if the prisma schema would more closely match the required format.
 
 		const graph: GraphData = {
+			id: data.id,
 			domain_nodes: [],
 			domain_edges: [],
 			subject_nodes: [],

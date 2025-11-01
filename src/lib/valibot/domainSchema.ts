@@ -62,3 +62,25 @@ export const changeDomainRelSchema = v.pipe(
 		'This is the original relationship, change either one'
 	)
 );
+
+export const reorderDomainsSchema = v.pipe(
+	v.object({
+		graphId: v.number(),
+		domains: v.array(
+			v.object({
+				id: v.number(),
+				order: v.number()
+			})
+		)
+	}),
+	v.check((data) => data.domains.length > 1, 'At least two domains are required')
+);
+
+export const changeColorSchema = v.pipe(
+	v.object({
+		graphId: v.number(),
+		domainId: v.number(),
+		style: v.nullable(v.picklist([...settings.COLOR_KEYS] as [string, ...string[]]))
+	}),
+	v.check((data) => data.domainId > 0, 'Invalid domain id')
+);
