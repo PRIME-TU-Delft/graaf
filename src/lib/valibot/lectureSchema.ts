@@ -1,9 +1,8 @@
 import { MAX_LECTURE_NAME_LENGTH } from '$lib/settings';
 import * as v from 'valibot';
 
-export const lectureSchema = v.object({
+export const createLectureSchema = v.object({
 	graphId: v.number(),
-	lectureId: v.number(),
 	name: v.pipe(
 		v.string(),
 		v.minLength(1),
@@ -11,7 +10,17 @@ export const lectureSchema = v.object({
 			MAX_LECTURE_NAME_LENGTH,
 			`Lecture name cannot be longer than ${MAX_LECTURE_NAME_LENGTH} characters`
 		)
-	),
+	)
+});
+
+export const changeLectureNameSchema = v.object({
+	...createLectureSchema.entries,
+	lectureId: v.number()
+});
+
+export const lectureSchema = v.object({
+	...createLectureSchema.entries,
+	lectureId: v.number(),
 	subjectIds: v.array(v.number())
 });
 

@@ -98,7 +98,7 @@
 							</Select.Root>
 
 							<Field.Submit
-								pending={moveSubjectToLecture.pending}
+								form={moveSubjectToLecture}
 								disabled={!moveToLecture.lecture}
 								submitTitle="Change to Lecture"
 								loadingTitle="Changing Subject..."

@@ -1,13 +1,9 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import { deleteLectureSchema } from '$lib/valibot/lectureSchema';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import type { Graph, Lecture } from '@prisma/client';
-	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
+	import { getGraph } from '../../graph.remote';
+	import { deleteLecture } from './lecture.remote';
 
 	type Props = {
 		lecture: Lecture;
@@ -16,43 +12,30 @@
 	};
 
 	const { lecture, graph, onSuccess }: Props = $props();
-
-	const form = superForm((page.data as PageData).deleteLectureForm, {
-		id: 'change-lecture-form-' + useId(),
-		validators: valibotClient(deleteLectureSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('lectures successfully deleted!');
-				onSuccess();
-			}
-		}
-	});
-
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		if (lecture) {
-			$formData.lectureId = lecture.id;
-			$formData.graphId = graph.id;
-		}
-	});
 </script>
 
-<form action="?/delete-lecture" method="POST" use:enhance>
-	<input type="hidden" name="lectureId" value={lecture.id} />
-	<input type="hidden" name="graphId" value={graph.id} />
+<form
+	{...deleteLecture.enhance(async ({ submit }) => {
+		try {
+			await submit().updates(getGraph(graph.id));
+			if (deleteLecture.fields.allIssues()?.length) return;
+			onSuccess();
+
+			toast.success('Lecture deleted successfully!');
+		} catch (e) {
+			toast.error(JSON.stringify(e));
+		}
+	})}
+>
+	<input hidden {...deleteLecture.fields.graphId.as('number')} value={graph.id} />
+	<input hidden {...deleteLecture.fields.lectureId.as('number')} value={lecture.id} />
 
 	<p class="px-2 font-bold">Are you sure?</p>
 
-	<div class="mt-4 flex w-full justify-end">
-		<Form.FormButton
-			class="w-full"
-			variant="destructive"
-			disabled={$submitting}
-			loading={$delayed}
-			loadingMessage="Changing lecture..."
-		>
-			Yes delete lecture
-		</Form.FormButton>
-	</div>
+	<Field.Submit
+		form={deleteLecture}
+		oncancel={onSuccess}
+		submitTitle="Delete Lecture"
+		loadingTitle=""
+	/>
 </form>

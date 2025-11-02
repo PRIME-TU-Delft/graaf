@@ -16,8 +16,8 @@
 	import { toast } from 'svelte-sonner';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
-	import CreateNewLecture from './CreateNewLecture.svelte';
 	import ChangeLecture from './ChangeLecture.svelte';
+	import CreateNewLecture from './CreateNewLecture.svelte';
 	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
 	import { reorderLectures } from './lecture.remote';
@@ -144,7 +144,7 @@
 				<DropdownMenu.SubTrigger class="font-bold text-red-700 hover:bg-red-100">
 					Delete
 				</DropdownMenu.SubTrigger>
-				<DropdownMenu.SubContent class="ml-1 w-40">
+				<DropdownMenu.SubContent class="ml-1">
 					<DeleteLecture
 						{lecture}
 						graph={graphValidator.graph}

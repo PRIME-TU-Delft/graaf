@@ -3,7 +3,87 @@ import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
 import { svelteError } from '$lib/utils/setError';
-import { moveSubjectToLectureSchema, reorderLecturesSchema } from '$lib/valibot/lectureSchema';
+import {
+	changeLectureNameSchema,
+	createLectureSchema,
+	deleteLectureSchema,
+	moveSubjectToLectureSchema,
+	reorderLecturesSchema
+} from '$lib/valibot/lectureSchema';
+
+export const createLecture = form(createLectureSchema, async ({ graphId, name }) => {
+	const user = await getUser(getRequestEvent());
+
+	try {
+		const lastLecture = await prisma.lecture.findFirst({
+			where: {
+				graphId: graphId
+			},
+			orderBy: {
+				order: 'desc'
+			}
+		});
+
+		return await prisma.graph.update({
+			where: {
+				id: graphId,
+				...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			data: {
+				lectures: {
+					create: {
+						name,
+						order: lastLecture ? lastLecture.order + 1 : 0
+					}
+				}
+			}
+		});
+	} catch (e: unknown) {
+		return svelteError(e);
+	}
+});
+
+export const deleteLecture = form(deleteLectureSchema, async ({ graphId, lectureId }) => {
+	const user = await getUser(getRequestEvent());
+
+	try {
+		await prisma.lecture.delete({
+			where: {
+				id: lectureId,
+				graph: {
+					id: graphId,
+					...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+				}
+			}
+		});
+	} catch (e) {
+		svelteError(e);
+	}
+});
+
+export const changeLectureName = form(
+	changeLectureNameSchema,
+	async ({ graphId, lectureId, name }) => {
+		const user = await getUser(getRequestEvent());
+
+		try {
+			await prisma.lecture.update({
+				where: {
+					id: lectureId,
+					graph: {
+						id: graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					}
+				},
+				data: {
+					name: name
+				}
+			});
+		} catch (e) {
+			svelteError(e);
+		}
+	}
+);
 
 export const reorderLectures = command(reorderLecturesSchema, async ({ graphId, lectures }) => {
 	const user = await getUser(getRequestEvent());
