@@ -1,16 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/state';
 	import DialogButton from '$lib/components/DialogButton.svelte';
-	import * as Form from '$lib/components/ui/form/index.js';
-	import * as Label from '$lib/components/ui/label/index.js';
-	import { lectureSchema } from '$lib/valibot/lectureSchema';
-	import { Check } from '@lucide/svelte';
+	import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import type { Graph, Lecture, Subject } from '@prisma/client';
-	import { Checkbox, useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { valibotClient } from 'sveltekit-superforms/adapters';
-	import type { PageData } from './$types';
+	import { getGraph } from '../../graph.remote';
+	import { changeLectureSubjects } from './lecture.remote';
 
 	type Props = {
 		lecture: Lecture & {
@@ -22,101 +17,84 @@
 	const { lecture, graph }: Props = $props();
 
 	let dialogOpen = $state(false);
-	let subjectsLinked: string[] = $state(lecture.subjects.map((s) => s.id.toString()));
+	let formRef = $state<HTMLFormElement>();
 
-	const form = superForm((page.data as PageData).newLectureForm, {
-		id: 'linking-subject-to-lecture-form-' + useId(),
-		validators: valibotClient(lectureSchema),
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('lectures successfully (un-)linked!');
-				dialogOpen = false;
-			}
+	class SubjectItem {
+		id: number;
+		name: string;
+		enabled = $state(false);
+
+		constructor(id: number, name: string) {
+			this.id = id;
+			this.name = name;
+			this.enabled = lecture.subjects.find((subject) => subject.id === id)?.id === id;
 		}
-	});
+	}
 
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	$effect(() => {
-		if (lecture) {
-			$formData.lectureId = lecture.id;
-			$formData.name = lecture.name;
-			$formData.graphId = graph.id;
-		}
-	});
+	let subjectItems = $derived(
+		graph.subjects.map((subject) => new SubjectItem(subject.id, subject.name))
+	);
 </script>
 
 <DialogButton
 	bind:open={dialogOpen}
-	icon={subjectsLinked.length > 0 ? 'edit' : 'plus'}
-	button={subjectsLinked.length > 0 ? 'Edit subjects' : 'Add subjects'}
+	icon={lecture.subjects.length > 0 ? 'edit' : 'plus'}
+	button={lecture.subjects.length > 0 ? 'Edit subjects' : 'Add subjects'}
 	title="Link/Unlink Subjects to Lecture"
 	description="A lecture can have zero or more subjects."
 >
-	<form action="?/link-subject-to-lecture" method="POST" use:enhance>
-		<input type="hidden" name="lectureId" value={lecture.id} />
-		<input type="hidden" name="graphId" value={graph.id} />
-		<input type="hidden" name="name" value={lecture.name} />
+	<form
+		{...changeLectureSubjects.enhance(async ({ form, submit }) => {
+			try {
+				await submit().updates(getGraph(graph.id));
 
-		<Checkbox.Group class="flex flex-col gap-3" bind:value={subjectsLinked} name="Subjects">
-			<div class="flex flex-col gap-4">
-				{#each graph.subjects.toSorted( (a, b) => (a.name > b.name ? -1 : 1) ) as subject (subject.id)}
-					{@render MyCheckbox({ label: subject.name, value: subject.id.toString() })}
-				{/each}
-			</div>
-		</Checkbox.Group>
+				console.log(changeLectureSubjects.fields.allIssues());
+				if (changeLectureSubjects.fields.allIssues()?.length) return;
 
-		<Form.Fieldset {form} name="subjectIds" class="h-0">
-			{#each subjectsLinked, i}
-				<Form.ElementField {form} name="subjectIds[{i}]">
-					<Form.Control>
-						{#snippet children({ props })}
-							<input
-								hidden
-								bind:value={() => subjectsLinked[i], (v) => ($formData.subjectIds[i] = Number(v))}
-								{...props}
-							/>
-						{/snippet}
-					</Form.Control>
-				</Form.ElementField>
+				form.reset();
+				dialogOpen = false;
+				toast.success('Lecture changed successfully!');
+			} catch (e) {
+				toast.error(JSON.stringify(e));
+			}
+		})}
+		bind:this={formRef}
+	>
+		<input hidden {...changeLectureSubjects.fields.graphId.as('number')} value={graph.id} />
+		<input hidden {...changeLectureSubjects.fields.lectureId.as('number')} value={lecture.id} />
+
+		<Field.Group class="gap-3">
+			{#each subjectItems as subjectItem (subjectItem.id)}
+				<Field.Field orientation="horizontal">
+					<Checkbox
+						id="checkbox-{subjectItem.name}-{subjectItem.id}"
+						bind:checked={subjectItem.enabled}
+					/>
+					<Field.Label for="checkbox-{subjectItem.name}-{subjectItem.id}" class="font-normal">
+						{subjectItem.name}
+					</Field.Label>
+				</Field.Field>
 			{/each}
-			<Form.FieldErrors />
-		</Form.Fieldset>
+		</Field.Group>
 
-		<div
-			class="sticky bottom-0 mt-4 flex w-full justify-end bg-gradient-to-b from-white/0 to-white/100 py-4 backdrop-blur-sm"
-		>
-			<Form.FormButton disabled={$submitting} loading={$delayed} loadingMessage="Unlinking...">
-				(Un-)link Subjects
-			</Form.FormButton>
-		</div>
+		{#each subjectItems.filter((s) => s.enabled) as subjectItem, index (subjectItem.id)}
+			{#if subjectItem.enabled}
+				<input
+					hidden
+					{...changeLectureSubjects.fields.subjects[index].as('number')}
+					value={subjectItem.id}
+				/>
+			{/if}
+		{/each}
+
+		<Field.Submit
+			form={changeLectureSubjects}
+			oncancel={() => {
+				formRef?.reset();
+				dialogOpen = false;
+			}}
+			submitTitle="Change Lecture"
+			loadingTitle="Changing Lecture..."
+		/>
 	</form>
 </DialogButton>
-
-{#snippet MyCheckbox({ value, label }: { value: string; label: string })}
-	{@const id = useId()}
-	<div class="flex items-center">
-		<Checkbox.Root
-			{id}
-			aria-labelledby="{id}-label"
-			class="data-[state=unchecked]:border-border-input data-[state=unchecked]:hover:border-dark-40 peer border-muted bg-foreground data-[state=unchecked]:bg-background inline-flex size-[25px] items-center justify-center rounded-md border transition-all duration-150 ease-in-out active:scale-[0.98]"
-			name="hello"
-			{value}
-		>
-			{#snippet children({ checked })}
-				<div class="text-background inline-flex items-center justify-center">
-					{#if checked}
-						<Check class="size-[15px]" />
-					{/if}
-				</div>
-			{/snippet}
-		</Checkbox.Root>
-		<Label.Root
-			id="{id}-label"
-			for={id}
-			class="pl-3 text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-		>
-			{label}
-		</Label.Root>
-	</div>
-{/snippet}

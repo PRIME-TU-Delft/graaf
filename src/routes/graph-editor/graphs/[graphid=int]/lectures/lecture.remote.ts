@@ -5,6 +5,7 @@ import { whereHasGraphCoursePermission } from '$lib/server/permissions';
 import { svelteError } from '$lib/utils/setError';
 import {
 	changeLectureNameSchema,
+	changeLectureSubjectsSchema,
 	createLectureSchema,
 	deleteLectureSchema,
 	moveSubjectToLectureSchema,
@@ -77,6 +78,32 @@ export const changeLectureName = form(
 				},
 				data: {
 					name: name
+				}
+			});
+		} catch (e) {
+			svelteError(e);
+		}
+	}
+);
+
+export const changeLectureSubjects = form(
+	changeLectureSubjectsSchema,
+	async ({ graphId, lectureId, subjects }) => {
+		const user = await getUser(getRequestEvent());
+
+		try {
+			await prisma.lecture.update({
+				where: {
+					id: lectureId,
+					graph: {
+						id: graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					}
+				},
+				data: {
+					subjects: {
+						set: subjects.map((id) => ({ id }))
+					}
 				}
 			});
 		} catch (e) {

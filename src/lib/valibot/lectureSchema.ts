@@ -18,10 +18,10 @@ export const changeLectureNameSchema = v.object({
 	lectureId: v.number()
 });
 
-export const lectureSchema = v.object({
-	...createLectureSchema.entries,
+export const changeLectureSubjectsSchema = v.object({
+	graphId: v.number(),
 	lectureId: v.number(),
-	subjectIds: v.array(v.number())
+	subjects: v.array(v.number())
 });
 
 export const deleteLectureSchema = v.object({
