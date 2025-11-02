@@ -12,11 +12,10 @@
 		Maximize,
 		Minimize,
 		Orbit,
-		SearchSlash
+		SearchSlash,
+		ZoomIn,
+		ZoomOut
 	} from '@lucide/svelte';
-
-	import ZoomIn from 'lucide-svelte/icons/zoom-in';
-	import ZoomOut from 'lucide-svelte/icons/zoom-out';
 
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';

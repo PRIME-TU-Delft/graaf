@@ -5,11 +5,10 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { displayName } from '$lib/utils/displayUserName';
+	import { Check } from '@lucide/svelte';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import type { User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
-
 	type AddNewUserProps = {
 		value?: string;
 		users: User[];

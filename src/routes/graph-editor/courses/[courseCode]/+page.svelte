@@ -2,14 +2,13 @@
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 
 	// Components
-	import Button from '$lib/components/ui/button/button.svelte';
 	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
 	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
 	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import ShowAdmins from './ShowAdmins.svelte';
-
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
 	// Types
 	import type { PageData } from './$types';

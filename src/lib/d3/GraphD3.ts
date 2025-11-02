@@ -151,6 +151,7 @@ export class GraphD3 {
 	clear() {
 		this.svg.selectAll('*').remove(); // Clear SVG
 		this.data = {
+			id: 0,
 			domain_nodes: [],
 			domain_edges: [],
 			subject_nodes: [],

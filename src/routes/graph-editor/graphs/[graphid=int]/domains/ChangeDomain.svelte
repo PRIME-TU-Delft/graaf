@@ -11,8 +11,8 @@
 	import { cn } from '$lib/utils';
 	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
 
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 
 	import type { Domain } from '@prisma/client';
 	import { toast } from 'svelte-sonner';

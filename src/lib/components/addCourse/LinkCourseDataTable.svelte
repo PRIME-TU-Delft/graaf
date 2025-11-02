@@ -14,7 +14,7 @@
 	import { fade } from 'svelte/transition';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 	import LinkCourses from './LinkCourses.svelte';
-	import Undo_2 from 'lucide-svelte/icons/undo-2';
+	import Undo_2 from '@lucide/svelte/icons/undo-2';
 
 	type DataTableProps = {
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;

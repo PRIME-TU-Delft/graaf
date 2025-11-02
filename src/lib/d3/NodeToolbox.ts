@@ -10,6 +10,7 @@ import { NodeType } from './types';
 import type { GraphD3 } from './GraphD3';
 import type { EdgeData, NodeData, NodeSelection } from './types';
 import { changePosition } from '../../routes/graph-editor/graphs/graph.remote';
+import { graphD3Store } from './graphD3.svelte';
 
 export { NodeToolbox };
 
@@ -105,17 +106,19 @@ class NodeToolbox {
 					node.fy = node.y;
 
 					NodeToolbox.updatePosition(selection, graph);
-					await NodeToolbox.save(graph.data.id, selection);
+					await NodeToolbox.save(selection);
 				})
 		);
 	}
 
-	static async save(graphId: number, selection: NodeSelection) {
+	static async save(selection: NodeSelection) {
 		// We are not guaranteed to select only domains, or only subjects, so we have two options:
 		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
 		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
 		// We will go with option 2 for now, as save isnt called often (only on drag-end and simulation-end)
 		// and this offloads some work from the server
+
+		const graphId = graphD3Store.graphD3?.data.id ?? 0;
 
 		// Group nodes by type
 		const domains = selection.filter((node) => node.type === NodeType.DOMAIN).data();

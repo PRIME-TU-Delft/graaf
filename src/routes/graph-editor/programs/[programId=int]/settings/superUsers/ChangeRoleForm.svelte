@@ -10,7 +10,7 @@
 	import { Button } from '$lib/components/ui/button';
 
 	// Icons
-	import Check from 'lucide-svelte/icons/check';
+	import Check from '@lucide/svelte/icons/check';
 
 	// Types
 	import type { User, Program } from '@prisma/client';

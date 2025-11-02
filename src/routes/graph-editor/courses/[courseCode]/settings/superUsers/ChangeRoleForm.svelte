@@ -2,12 +2,12 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import Check from 'lucide-svelte/icons/check';
+	import { editSuperUserSchema } from '$lib/valibot/courseSchema';
+	import Check from '@lucide/svelte/icons/check';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
-	import { editSuperUserSchema } from '$lib/valibot/courseSchema';
 
 	type ChangeRoleProps = {
 		userId: string;

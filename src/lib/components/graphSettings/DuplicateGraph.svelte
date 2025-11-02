@@ -8,7 +8,6 @@
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
-
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
@@ -16,12 +15,11 @@
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { Input } from '$lib/components/ui/input';
 	import * as Popover from '$lib/components/ui/popover/index.js';
-
 	// Icons
 	import { Copy } from '@lucide/svelte';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
 
 	import type { Prisma } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';

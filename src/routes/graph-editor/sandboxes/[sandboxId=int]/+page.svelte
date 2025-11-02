@@ -2,17 +2,16 @@
 	import { displayName } from '$lib/utils/displayUserName';
 
 	// Components
-	import Button from '$lib/components/ui/button/button.svelte';
 	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
 	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
 	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
-
+	import Button from '$lib/components/ui/button/button.svelte';
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
 	// Types
-	import type { PageData } from './$types';
 	import { hasSandboxPermissions } from '$lib/utils/permissions';
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
@@ -35,10 +34,10 @@
 		<section class="prose mx-auto p-4">
 			<div class="my-12 flex justify-between gap-4">
 				<div>
-					<h1 class="!m-0 text-4xl font-bold text-purple-950 shadow-purple-500/70">
+					<h1 class="m-0! text-4xl font-bold text-purple-950 shadow-purple-500/70">
 						{data.sandbox.name}
 					</h1>
-					<h2 class="!m-0 text-2xl font-bold text-purple-950 shadow-purple-500/70">
+					<h2 class="m-0! text-2xl font-bold text-purple-950 shadow-purple-500/70">
 						{displayName(data.sandbox.owner)}
 					</h2>
 				</div>

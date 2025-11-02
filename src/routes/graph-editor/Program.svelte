@@ -6,17 +6,15 @@
 	import type { linkingCoursesSchema } from '$lib/valibot/programSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
-
 	// Components
 	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import CourseGrid from './CourseGrid.svelte';
-
 	// Icons
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { MailOpen } from '@lucide/svelte';
-	import Settings from 'lucide-svelte/icons/settings';
+	import Settings from '@lucide/svelte/icons/settings';
 
 	type Props = {
 		user: User;
@@ -78,7 +76,7 @@
 
 {#snippet superUsersSnippet()}
 	<div class="rounded-md border">
-		<Table.Root class="!m-0">
+		<Table.Root class="m-0!">
 			<Table.Header>
 				<Table.Row>
 					<Table.Head>Name</Table.Head>

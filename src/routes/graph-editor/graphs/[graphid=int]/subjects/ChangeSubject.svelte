@@ -11,8 +11,8 @@
 	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { Unlink } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
 	import { toast } from 'svelte-sonner';
 	import { getGraph } from '../../graph.remote';
 	import DeleteSubject from './DeleteSubject.svelte';

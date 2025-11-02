@@ -1,16 +1,15 @@
 <script lang="ts">
 	// Components
-	import ChangeRoleForm from './ChangeRoleForm.svelte';
-	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import { buttonVariants } from '$lib/components/ui/button';
-
+	import * as Menubar from '$lib/components/ui/menubar/index.js';
+	import ChangeRoleForm from './ChangeRoleForm.svelte';
 	// Icons
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 
 	// Types
-	import type { User, Program } from '@prisma/client';
 	import type { editSuperUserSchema } from '$lib/valibot/programSchema';
-	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { Program, User } from '@prisma/client';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 	type CourseAdminProps = {
 		user: User;

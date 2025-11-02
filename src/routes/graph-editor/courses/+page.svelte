@@ -1,20 +1,17 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { hasCoursePermissions } from '$lib/utils/permissions';
-
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button';
-	import { displayName } from '$lib/utils/displayUserName';
 	import * as Table from '$lib/components/ui/table/index.js';
-	import SearchCourses from '../SearchCourses.svelte';
+	import { displayName } from '$lib/utils/displayUserName';
 	import CourseGrid from '../CourseGrid.svelte';
-
+	import SearchCourses from '../SearchCourses.svelte';
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
 	import { MailOpen } from '@lucide/svelte';
-
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	// Types
 	import type { Course, User } from '@prisma/client';
 	import type { PageData } from './$types';
@@ -53,7 +50,7 @@
 
 {#if pinnedCourses.length > 0}
 	<section
-		class="mx-auto !mt-3 max-w-4xl rounded-lg border-2 border-purple-200 bg-purple-50/50 p-2"
+		class="mx-auto mt-3! max-w-4xl rounded-lg border-2 border-purple-200 bg-purple-50/50 p-2"
 	>
 		<Accordion.Root type="single" class="w-full" bind:value={collapsePinnedCourses}>
 			<Accordion.Item value="item">
@@ -70,7 +67,7 @@
 	</section>
 {/if}
 
-<section class="mx-auto !my-6 max-w-4xl space-y-2">
+<section class="mx-auto my-6! max-w-4xl space-y-2">
 	<div class="flex w-full items-center justify-between gap-2">
 		<h2 class="w-full grow text-xl font-bold whitespace-nowrap">All Courses</h2>
 
@@ -150,7 +147,7 @@
 
 {#if archivedCourses.length > 0}
 	<section
-		class="mx-auto !mt-3 max-w-4xl rounded-lg border-2 border-purple-200 bg-purple-50/50 p-2"
+		class="mx-auto mt-3! max-w-4xl rounded-lg border-2 border-purple-200 bg-purple-50/50 p-2"
 	>
 		<Accordion.Root type="single" class="w-full" bind:value={collapseArchivedCourses}>
 			<Accordion.Item value="item">
@@ -170,7 +167,7 @@
 {#snippet superUsersSnippet(course: (typeof data.courses)[0])}
 	<h2 class="mb-1 text-xl font-bold">Course</h2>
 	<div class="rounded-md border">
-		<Table.Root class="!m-0">
+		<Table.Root class="m-0!">
 			<Table.Header>
 				<Table.Row>
 					<Table.Head>Name</Table.Head>
@@ -224,7 +221,7 @@
 
 	<h2 class="mt-3 mb-1 text-xl font-bold">Program</h2>
 	<div class="rounded-md border">
-		<Table.Root class="!m-0">
+		<Table.Root class="m-0!">
 			<Table.Header>
 				<Table.Row>
 					<Table.Head>Name</Table.Head>

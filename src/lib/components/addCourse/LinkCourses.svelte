@@ -26,7 +26,7 @@
 
 	const selectedCourses = $derived(
 		Object.entries(rowSelection)
-			.filter(([_, selected]) => selected) // eslint-disable-line @typescript-eslint/no-unused-vars
+			.filter(([_, selected]) => selected)
 			.map(([i]) => i)
 			.map(Number)
 			.map((i) => courses[i])

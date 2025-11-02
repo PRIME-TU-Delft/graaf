@@ -1,24 +1,22 @@
 <script lang="ts">
-	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/valibot/programSchema';
 	import { useId } from 'bits-ui';
-	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
-
+	import { superForm } from 'sveltekit-superforms';
+	import { valibotClient } from 'sveltekit-superforms/adapters';
 	// Components
-	import * as Form from '$lib/components/ui/form/index.js';
+	import DialogButton from '$lib/components/DialogButton.svelte';
 	import SelectUsers from '$lib/components/SelectUsers.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { Checkbox } from '$lib/components/ui/checkbox';
+	import * as Form from '$lib/components/ui/form/index.js';
 	import { Label } from '$lib/components/ui/label';
-
 	// Icons
-	import Undo_2 from 'lucide-svelte/icons/undo-2';
+	import Undo_2 from '@lucide/svelte/icons/undo-2';
 
 	// Types
 	import type { Program, User } from '@prisma/client';
-	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 	type AddNewUserProps = {
 		program: Program & {

@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { fade } from 'svelte/transition';
 	import type { Course } from '@prisma/client';
-
+	import { fade } from 'svelte/transition';
 	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Command from '$lib/components/ui/command/index.js';
-
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Close from 'lucide-svelte/icons/circle-x';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Close from '@lucide/svelte/icons/circle-x';
 
 	type Props = { courses: Course[] };
 	const { courses }: Props = $props();
@@ -21,7 +19,7 @@
 	class="relative h-9 overflow-visible border-2 border-gray-200 focus-within:border-purple-500"
 >
 	<Command.Input
-		class="h-8 !border-0 p-0 !shadow-none !ring-0 !outline-none"
+		class="h-8 border-0! p-0 shadow-none! ring-0! outline-none!"
 		placeholder="Search courses..."
 		hasBorder={false}
 		bind:value={courseValue}

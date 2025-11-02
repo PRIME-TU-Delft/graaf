@@ -8,7 +8,7 @@
 	import NewSandboxButton from './newSandboxButton.svelte';
 
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 
 	// Types
 	import type { PageData } from './$types';
@@ -83,7 +83,7 @@
 
 {#snippet superUsersSnippet(sandbox: (typeof data.sandboxes)[0])}
 	<div class="rounded-md border">
-		<Table.Root class="!m-0">
+		<Table.Root class="m-0!">
 			<Table.Header>
 				<Table.Row>
 					<Table.Head>Name</Table.Head>

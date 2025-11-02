@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
+	import { cn } from '$lib/utils';
 	import { changePinSchema } from '$lib/valibot/courseSchema';
+	import { Loader } from '@lucide/svelte';
 	import type { Course, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Pin from 'lucide-svelte/icons/pin';
-	import Unpin from 'lucide-svelte/icons/pin-off';
+	import Pin from '@lucide/svelte/icons/pin';
+	import Unpin from '@lucide/svelte/icons/pin-off';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
-	import { Loader } from '@lucide/svelte';
-	import { cn } from '$lib/utils';
 
 	type Props = {
 		user: User;

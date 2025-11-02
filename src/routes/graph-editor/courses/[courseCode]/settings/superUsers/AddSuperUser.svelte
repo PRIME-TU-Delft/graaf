@@ -15,7 +15,7 @@
 	import { Label } from '$lib/components/ui/label';
 
 	// Icons
-	import Undo_2 from 'lucide-svelte/icons/undo-2';
+	import Undo_2 from '@lucide/svelte/icons/undo-2';
 
 	// Types
 	import type { Course, Program, User } from '@prisma/client';

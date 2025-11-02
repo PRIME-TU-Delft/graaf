@@ -4,12 +4,11 @@
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { valibotClient } from 'sveltekit-superforms/adapters';
-
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
 
 	// Icons
-	import { Archive, ArchiveRestore } from 'lucide-svelte';
+	import { Archive, ArchiveRestore } from '@lucide/svelte';
 
 	// Types
 	import type { Course } from '@prisma/client';

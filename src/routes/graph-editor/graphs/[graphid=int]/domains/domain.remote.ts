@@ -6,7 +6,6 @@ import { svelteError } from '$lib/utils/setError';
 import {
 	changeColorSchema,
 	changeDomainRelSchema,
-	changePositionSchema,
 	createDomainSchema,
 	deleteDomainSchema,
 	domainRelSchema,
