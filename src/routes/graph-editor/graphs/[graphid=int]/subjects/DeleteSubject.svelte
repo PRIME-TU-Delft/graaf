@@ -50,10 +50,5 @@
 		</p>
 	{/if}
 
-	<Field.Submit
-		pending={deleteSubject.pending}
-		{oncancel}
-		submitTitle="Delete Subject"
-		loadingTitle=""
-	/>
+	<Field.Submit form={deleteSubject} {oncancel} submitTitle="Delete Subject" loadingTitle="" />
 </form>

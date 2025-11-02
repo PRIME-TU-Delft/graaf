@@ -162,7 +162,7 @@
 		</Field.Field>
 
 		<Field.Submit
-			pending={changeSubject.pending}
+			form={changeSubject}
 			oncancel={() => {
 				changeSubjectDialog = false;
 				changeSubjectMenu = undefined;

@@ -62,7 +62,7 @@
 			>
 
 			<Field.Submit
-				pending={createSubjectRel.pending}
+				form={createSubjectRel}
 				oncancel={() => {
 					dialogOpen = false;
 					formRef?.reset();

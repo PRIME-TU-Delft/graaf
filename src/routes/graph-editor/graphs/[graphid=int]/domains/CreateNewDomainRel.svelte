@@ -61,7 +61,7 @@
 			>
 
 			<Field.Submit
-				pending={createDomainRel.pending}
+				form={createDomainRel}
 				oncancel={() => {
 					dialogOpen = false;
 					formRef?.reset();

@@ -56,7 +56,7 @@
 
 			<p class="mb-2">Are you sure you would like to delete this subject relationship?</p>
 			<Field.Submit
-				pending={deleteSubjectRel.pending}
+				form={deleteSubjectRel}
 				oncancel={() => {
 					popoverOpen = false;
 					formRef?.reset();

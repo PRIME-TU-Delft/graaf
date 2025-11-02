@@ -60,10 +60,6 @@
 		</p>
 	{/if}
 
-	<Field.Submit
-		pending={deleteDomain.pending}
-		{oncancel}
-		submitTitle="Delete Domain"
-		loadingTitle=""
+	<Field.Submit form={deleteDomain} {oncancel} submitTitle="Delete Domain" loadingTitle=""
 	></Field.Submit>
 </form>

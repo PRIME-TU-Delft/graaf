@@ -4,11 +4,11 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import { fieldToIssueString } from '$lib/utils/issues';
+	import { Unlink } from '@lucide/svelte';
 	import type { Domain, Graph } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { getGraph } from '../../graph.remote';
 	import { createSubject } from './subjects.remote';
-	import { Unlink } from '@lucide/svelte';
 
 	type Props = {
 		graph: Graph & { domains: Domain[] };
@@ -82,7 +82,7 @@
 		</Field.Field>
 
 		<Field.Submit
-			pending={createSubject.pending}
+			form={createSubject}
 			oncancel={() => {
 				dialogOpen = false;
 				formRef?.reset();

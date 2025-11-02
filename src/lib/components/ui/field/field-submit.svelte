@@ -1,12 +1,13 @@
-<script lang="ts">
-	import * as Field from '$lib/components/ui/field/index.js';
+<script lang="ts" generics="Input extends RemoteFormInput | void, Output">
 	import { Button } from '$lib/components/ui/button';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { Spinner } from '$lib/components/ui/spinner/index.js';
 
+	import type { RemoteForm, RemoteFormInput } from '@sveltejs/kit';
 	import type { Snippet } from 'svelte';
 
 	type Props = {
-		pending: number;
+		form: RemoteForm<Input, Output>;
 		oncancel?: () => void;
 		hideCancel?: boolean;
 		onsubmit?: () => void;
@@ -19,7 +20,7 @@
 	};
 
 	const {
-		pending,
+		form,
 		oncancel,
 		hideCancel,
 		onsubmit,
@@ -37,7 +38,7 @@
 	let timedOutTimeout = $state<ReturnType<typeof setTimeout>>();
 
 	$effect(() => {
-		if (pending > 0) {
+		if (form.pending > 0) {
 			loadingTimeout = setTimeout(() => {
 				loading = true;
 			}, 500);
@@ -45,6 +46,16 @@
 				loading = false;
 			}, 8000);
 		} else {
+			clearTimeout(loadingTimeout);
+			loading = false;
+
+			clearTimeout(timedOutTimeout);
+			timedOut = false;
+		}
+	});
+
+	$effect(() => {
+		if (form.fields.issues()) {
 			clearTimeout(loadingTimeout);
 			loading = false;
 
@@ -67,12 +78,12 @@
 	{/if}
 
 	{#if !hideCancel}
-		<Button type="button" variant="outline" disabled={!!pending} onclick={oncancel}>
+		<Button type="button" variant="outline" disabled={!!form.pending} onclick={oncancel}>
 			{cancelTitle || 'Cancel'}
 		</Button>
 	{/if}
 
-	<Button type="submit" disabled={!!pending || disabled} onclick={onsubmit}>
+	<Button type="submit" disabled={!!form.pending || disabled} onclick={onsubmit}>
 		{#if children}
 			{@render children()}
 		{:else}

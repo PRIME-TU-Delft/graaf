@@ -17,10 +17,10 @@
 	import type { Domain } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 
+	import { fieldToIssueString } from '$lib/utils/issues';
 	import { getGraph } from '../../graph.remote';
 	import DeleteDomain from './DeleteDomain.svelte';
 	import { changeDomain } from './domain.remote';
-	import { fieldToIssueString } from '$lib/utils/issues';
 
 	type Props = {
 		domain: PrismaDomainPayload;
@@ -198,7 +198,7 @@
 		</Field.Field>
 
 		<Field.Submit
-			pending={changeDomain.pending}
+			form={changeDomain}
 			oncancel={() => {
 				changeDomainDialog = false;
 				changeDomainMenu = undefined;

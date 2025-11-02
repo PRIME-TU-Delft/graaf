@@ -1,14 +1,14 @@
 <script lang="ts">
-	import type { PrismaGraphPayload } from '$lib/validators/types';
-	import * as Popover from '$lib/components/ui/popover/index.js';
-	import type { Domain } from '@prisma/client';
-	import { cn } from '$lib/utils';
-	import * as Field from '$lib/components/ui/field/index.js';
 	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Field from '$lib/components/ui/field/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { cn } from '$lib/utils';
+	import type { PrismaGraphPayload } from '$lib/validators/types';
 	import { Trash2 } from '@lucide/svelte';
-	import { deleteDomainRel } from './domain.remote';
-	import { getGraph } from '../../graph.remote';
+	import type { Domain } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
+	import { getGraph } from '../../graph.remote';
+	import { deleteDomainRel } from './domain.remote';
 
 	type Props = {
 		sourceDomain: Domain;
@@ -56,7 +56,7 @@
 
 			<p class="mb-2">Are you sure you would like to delete this domain relationship?</p>
 			<Field.Submit
-				pending={deleteDomainRel.pending}
+				form={deleteDomainRel}
 				oncancel={() => {
 					popoverOpen = false;
 					formRef?.reset();

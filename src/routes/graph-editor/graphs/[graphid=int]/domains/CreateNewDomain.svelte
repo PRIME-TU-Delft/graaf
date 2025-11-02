@@ -4,11 +4,11 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Select from '$lib/components/ui/select/index.js';
 	import * as settings from '$lib/settings';
+	import { fieldToIssueString } from '$lib/utils/issues';
 	import type { Graph } from '@prisma/client';
 	import { toast } from 'svelte-sonner';
 	import { getGraph } from '../../graph.remote';
 	import { createDomain } from './domain.remote';
-	import { fieldToIssueString } from '$lib/utils/issues';
 
 	type Props = {
 		graph: Graph;
@@ -103,7 +103,7 @@
 			</Field.Field>
 
 			<Field.Submit
-				pending={createDomain.pending}
+				form={createDomain}
 				oncancel={() => {
 					dialogOpen = false;
 					formRef?.reset();
