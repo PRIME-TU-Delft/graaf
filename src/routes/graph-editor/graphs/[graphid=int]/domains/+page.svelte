@@ -3,6 +3,7 @@
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
+	import { invalidate } from '$app/navigation';
 
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
@@ -76,6 +77,7 @@
 			closeAndFocusTrigger(triggerId, () => {
 				isOpenState.isOpen = false;
 			});
+			await invalidate('app:graph');
 		}
 	}
 
@@ -106,6 +108,7 @@
 			graph.domains.forEach((domain, index) => {
 				domain.order = index;
 			});
+			await invalidate('app:graph');
 		}
 	}
 </script>

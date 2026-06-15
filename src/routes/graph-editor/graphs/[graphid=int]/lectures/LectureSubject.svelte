@@ -6,6 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
 	import IssueIndicator from '../IssueIndicator.svelte';
+	import { invalidate } from '$app/navigation';
 
 	type Props = {
 		issues: { [key: number]: Issue[] };
@@ -26,12 +27,6 @@
 	}
 
 	async function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
-		// When there is a internal change of subject reorder
-		if (subjectBackup.length === e.detail.items.length) {
-			lecture.subjects = subjectBackup;
-			return;
-		}
-
 		lecture.subjects = e.detail.items;
 
 		const body = {
@@ -52,6 +47,7 @@
 			toast.error('Error while reordering lectures');
 		} else {
 			subjectBackup = lecture.subjects;
+			await invalidate('app:graph');
 		}
 	}
 </script>

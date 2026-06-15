@@ -6,6 +6,7 @@
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import { invalidate } from '$app/navigation';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
@@ -54,6 +55,7 @@
 			lectures.forEach((lecture, index) => {
 				lecture.order = index;
 			});
+			await invalidate('app:graph');
 		}
 	}
 </script>

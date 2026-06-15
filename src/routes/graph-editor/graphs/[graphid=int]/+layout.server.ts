@@ -3,7 +3,8 @@ import { GraphValidator } from '$lib/validators/graphValidator';
 import { error } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = async ({ params }) => {
+export const load: LayoutServerLoad = async ({ params, depends }) => {
+	depends('app:graph');
 	if (!params.graphid) {
 		error(400, { message: 'Graph ID is required' });
 	}

@@ -4,6 +4,7 @@
 	import GraphDecorators from './GraphDecorators.svelte';
 
 	import type { PrismaGraphPayload } from '$lib/d3/types';
+	import { untrack } from 'svelte';
 
 	type Props = {
 		data: PrismaGraphPayload;
@@ -17,7 +18,9 @@
 	let d3Canvas: SVGSVGElement;
 
 	$effect(() => {
-		if (view != graphView.state) {
+		// Read graphView.state via untrack so that setView() updating it doesn't
+		// re-trigger this effect and cause a spurious full reinitialisation.
+		if (view != untrack(() => graphView.state)) {
 			if (view === undefined) view = 'DOMAINS';
 			graphD3Store.graphD3?.setView(view);
 		} else {
