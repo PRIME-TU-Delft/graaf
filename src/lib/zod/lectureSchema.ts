@@ -19,3 +19,9 @@ export const reorderLecturesSchema = z.array(
 		newOrder: z.number()
 	})
 );
+
+export const orderSubjectsSchema = z.object({
+	graphId: z.number(),
+	lectureId: z.number(),
+	subjectIds: z.array(z.number())
+});

@@ -53,6 +53,28 @@ export const load: LayoutServerLoad = async ({ params, depends }) => {
 
 		if (!graph) error(404, { message: 'Graph not found' });
 
+		// Fetch subjectOrder via raw SQL — Prisma client may not include this column
+		// if prisma generate hasn't run since the schema migration that added it.
+		type OrderRow = { id: number; subjectOrder: string };
+		const orderRows = await prisma.$queryRaw<OrderRow[]>`
+			SELECT id, "subjectOrder" FROM "Lecture" WHERE "graphId" = ${graphId}
+		`;
+		const orderMap = new Map(orderRows.map((r) => [r.id, r.subjectOrder]));
+
+		// Sort subjects within each lecture by subjectOrder (persisted ordering)
+		for (const lecture of graph.lectures) {
+			const orderJson = orderMap.get(lecture.id) ?? '[]';
+			const order: number[] = JSON.parse(orderJson);
+			if (order.length > 0) {
+				lecture.subjects.sort((a, b) => {
+					const ai = order.indexOf(a.id);
+					const bi = order.indexOf(b.id);
+					// Subjects not in the order array go to the end
+					return (ai === -1 ? Infinity : ai) - (bi === -1 ? Infinity : bi);
+				});
+			}
+		}
+
 		const graphValidator = new GraphValidator(graph);
 		const issues = graphValidator.validate();
 

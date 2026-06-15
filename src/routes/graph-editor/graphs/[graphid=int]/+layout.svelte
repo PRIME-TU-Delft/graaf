@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
@@ -25,11 +25,12 @@
 		return 'DOMAINS';
 	});
 
-	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
+	async function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
 		const params = new URLSearchParams();
 		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
 		params.set('view', view);
 
+		await invalidate('app:graph');
 		goto(`./${view.toLowerCase()}?${params.toString()}`);
 	}
 
@@ -104,7 +105,9 @@
 
 			<Pane defaultSize={50}>
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
-					<GraphRenderer data={data.graph} editable={true} {view} {lectureID} />
+					{#key view}
+						<GraphRenderer data={data.graph} editable={true} {view} {lectureID} />
+					{/key}
 				</div>
 			</Pane>
 		{/if}

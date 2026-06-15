@@ -6,8 +6,6 @@
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
 	import IssueIndicator from '../IssueIndicator.svelte';
-	import { invalidate } from '$app/navigation';
-
 	type Props = {
 		issues: { [key: number]: Issue[] };
 		subjects: Subject[];
@@ -46,8 +44,10 @@
 			lecture.subjects = subjectBackup;
 			toast.error('Error while reordering lectures');
 		} else {
-			subjectBackup = lecture.subjects;
-			await invalidate('app:graph');
+			subjectBackup = [...lecture.subjects];
+			// Subject-within-lecture order cannot persist across remounts (no order column
+			// on the join table). We skip invalidate here to avoid the parent $effect.pre
+			// overwriting the local subject order before the user navigates away.
 		}
 	}
 </script>

@@ -17,15 +17,31 @@
 	let { data: payload, editable, view, lectureID, builtInViewDropdown = false }: Props = $props();
 	let d3Canvas: SVGSVGElement;
 
+	// Effect 1: reinitialise D3 whenever data-related props change (payload, editable,
+	// lectureID, d3Canvas). View is read via untrack so navigation never triggers a
+	// full reinit — only Effect 2 handles that.
 	$effect(() => {
-		// Read graphView.state via untrack so that setView() updating it doesn't
-		// re-trigger this effect and cause a spurious full reinitialisation.
-		if (view != untrack(() => graphView.state)) {
-			if (view === undefined) view = 'DOMAINS';
-			graphD3Store.graphD3?.setView(view);
-		} else {
-			graphD3Store.setGraphD3(d3Canvas, payload, editable, view, lectureID);
-		}
+		graphD3Store.setGraphD3(
+			d3Canvas,
+			payload,
+			editable,
+			untrack(() => view) ?? 'DOMAINS',
+			lectureID
+		);
+	});
+
+	// Effect 2: transition between views when the user navigates.
+	// Both `view` and `graphView.state` are tracked so the effect re-runs when the
+	// D3 animation callback eventually updates graphView.state (fixes the race where
+	// setView is called before the prior animation has finished updating graphView.state).
+	$effect(() => {
+		const targetView = view;
+		const currentView = graphView.state; // tracked — re-runs when animation callback fires
+		untrack(() => {
+			if (graphD3Store.graphD3 && currentView !== targetView) {
+				graphD3Store.graphD3.setView(targetView ?? 'DOMAINS');
+			}
+		});
 	});
 </script>
 

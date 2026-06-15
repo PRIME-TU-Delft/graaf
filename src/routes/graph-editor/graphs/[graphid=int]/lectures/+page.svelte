@@ -6,7 +6,8 @@
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
-	import { invalidate } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
@@ -23,42 +24,50 @@
 
 	const flipDurationMs = 300;
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering from the svelte-dnd-action library
+	let isLocalUpdate = false;
 	let lectures = $state(data.graph.lectures);
-	$effect(() => {
-		lectures = data.graph.lectures;
+	$effect.pre(() => {
+		const fresh = data.graph.lectures;
+		if (!isLocalUpdate) {
+			lectures = fresh;
+		}
 	});
+
+	let reorderForm: HTMLFormElement;
+	let reorderOrderInput: HTMLInputElement;
+
+	const reorderEnhancer: SubmitFunction = () => {
+		isLocalUpdate = true;
+		return async ({ result, update }) => {
+			if (result.type === 'success') {
+				lectures.forEach((l, i) => {
+					l.order = i;
+				});
+				await update({ reset: false });
+			} else {
+				lectures = lectures.toSorted((a, b) => a.order - b.order);
+				toast.error('Failed to reorder lectures');
+			}
+			isLocalUpdate = false;
+		};
+	};
 
 	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
 	}
 
-	async function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
+	function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
-
-		const body = lectures.map((lecture, index) => ({
-			lectureId: lecture.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/lectures/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			lectures = lectures.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Error while reordering lectures');
-		} else {
-			lectures.forEach((lecture, index) => {
-				lecture.order = index;
-			});
-			await invalidate('app:graph');
-		}
+		reorderOrderInput.value = JSON.stringify(
+			lectures.map((lecture, index) => ({ lectureId: lecture.id, newOrder: index }))
+		);
+		reorderForm.requestSubmit();
 	}
 </script>
+
+<form bind:this={reorderForm} method="POST" action="?/reorderLectures" use:enhance={reorderEnhancer} hidden>
+	<input bind:this={reorderOrderInput} type="hidden" name="order" />
+</form>
 
 <CreateNewLecture graph={data.graph} />
 

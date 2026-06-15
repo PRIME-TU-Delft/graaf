@@ -3,7 +3,7 @@ import { json } from '@sveltejs/kit';
 
 import { getUserResponse } from '$lib/server/actions/Users';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
-import { lectureSchema } from '$lib/zod/lectureSchema';
+import { orderSubjectsSchema } from '$lib/zod/lectureSchema';
 import type { RequestHandler } from '@sveltejs/kit';
 
 /*
@@ -14,7 +14,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const PATCH: RequestHandler = async ({ request, locals }) => {
 	// Validate the request body
 	const body = await request.json();
-	const parsed = lectureSchema.safeParse(body);
+	const parsed = orderSubjectsSchema.safeParse(body);
 	if (!parsed.success) return json({ error: parsed.error }, { status: 400 });
 
 	// Authenticate the request
@@ -37,6 +37,15 @@ export const PATCH: RequestHandler = async ({ request, locals }) => {
 				}
 			}
 		});
+
+		// Persist the display order using raw SQL — Prisma client may not yet include
+		// the subjectOrder column if generate hasn't run since the schema migration.
+		const orderJson = JSON.stringify(parsed.data.subjectIds);
+		try {
+			await prisma.$executeRaw`UPDATE "Lecture" SET "subjectOrder" = ${orderJson} WHERE id = ${parsed.data.lectureId}`;
+		} catch {
+			// Non-fatal: subjects are still reordered, order just won't persist across reloads
+		}
 
 		return json(newLecture);
 	} catch (e: unknown) {

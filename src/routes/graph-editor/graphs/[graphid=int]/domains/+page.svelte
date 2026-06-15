@@ -3,7 +3,9 @@
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
-	import { invalidate } from '$app/navigation';
+	import { invalidateAll } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
@@ -24,11 +26,33 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering
+	let isLocalUpdate = false;
 	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
+	$effect.pre(() => {
+		const fresh = data.graph;
+		if (!isLocalUpdate) {
+			graph = fresh;
+		}
 	});
+
+	let reorderForm: HTMLFormElement;
+	let reorderOrderInput: HTMLInputElement;
+
+	const reorderEnhancer: SubmitFunction = () => {
+		isLocalUpdate = true;
+		return async ({ result, update }) => {
+			if (result.type === 'success') {
+				graph.domains.forEach((d, i) => {
+					d.order = i;
+				});
+				await update({ reset: false });
+			} else {
+				graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
+				toast.error('Failed to reorder domains');
+			}
+			isLocalUpdate = false;
+		};
+	};
 
 	const domainMapping = $derived.by(() => {
 		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
@@ -74,44 +98,28 @@
 			return;
 		} else {
 			graphD3Store.graphD3?.setDomainStyle(domain.id, key);
+			await invalidateAll();
 			closeAndFocusTrigger(triggerId, () => {
 				isOpenState.isOpen = false;
 			});
-			await invalidate('app:graph');
 		}
 	}
 
 	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
 		graph.domains = e.detail.items;
 	}
-	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
+	function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
 		graph.domains = e.detail.items;
-
-		const body = graph.domains.map((domain, index) => ({
-			domainId: domain.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/domains/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Failed to update domain order, try again later!');
-		} else {
-			// Update the order of the domains in the graph
-			graph.domains.forEach((domain, index) => {
-				domain.order = index;
-			});
-			await invalidate('app:graph');
-		}
+		reorderOrderInput.value = JSON.stringify(
+			graph.domains.map((domain, index) => ({ domainId: domain.id, newOrder: index }))
+		);
+		reorderForm.requestSubmit();
 	}
 </script>
+
+<form bind:this={reorderForm} method="POST" action="?/reorderDomains" use:enhance={reorderEnhancer} hidden>
+	<input bind:this={reorderOrderInput} type="hidden" name="order" />
+</form>
 
 <CreateNewDomain {graph} />
 

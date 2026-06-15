@@ -8,6 +8,8 @@
 	import type { Subject } from '@prisma/client';
 	import Link from 'lucide-svelte/icons/link';
 	import { toast } from 'svelte-sonner';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 	import type { PageData } from './$types';
 
 	import IssueIndicator from '../IssueIndicator.svelte';
@@ -21,10 +23,33 @@
 	let { data }: { data: PageData } = $props();
 
 	// This is a workaround for the fact that we can't use $derived due to the reordering
+	let isLocalUpdate = false;
 	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
+	$effect.pre(() => {
+		const fresh = data.graph;
+		if (!isLocalUpdate) {
+			graph = fresh;
+		}
 	});
+
+	let reorderForm: HTMLFormElement;
+	let reorderOrderInput: HTMLInputElement;
+
+	const reorderEnhancer: SubmitFunction = () => {
+		isLocalUpdate = true;
+		return async ({ result, update }) => {
+			if (result.type === 'success') {
+				graph.subjects.forEach((s, i) => {
+					s.order = i;
+				});
+				await update({ reset: false });
+			} else {
+				graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
+				toast.error('Failed to reorder subjects');
+			}
+			isLocalUpdate = false;
+		};
+	};
 
 	type Graph = PageData['graph'];
 
@@ -46,33 +71,18 @@
 		graph.subjects = e.detail.items;
 	}
 
-	async function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
+	function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
 		graph.subjects = e.detail.items;
-
-		const body = graph.subjects.map((subject, index) => ({
-			subjectId: subject.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/subjects/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Failed to update subject order, try again later!');
-		} else {
-			// Update the order of the domains in the graph
-			graph.subjects.forEach((domain, index) => {
-				domain.order = index;
-			});
-		}
+		reorderOrderInput.value = JSON.stringify(
+			graph.subjects.map((subject, index) => ({ subjectId: subject.id, newOrder: index }))
+		);
+		reorderForm.requestSubmit();
 	}
 </script>
+
+<form bind:this={reorderForm} method="POST" action="?/reorderSubjects" use:enhance={reorderEnhancer} hidden>
+	<input bind:this={reorderOrderInput} type="hidden" name="order" />
+</form>
 
 <CreateNewSubject {graph} />
 
