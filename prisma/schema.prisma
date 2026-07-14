@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
 	provider = "postgresql"
-	url      = env("DATABASE_URL")
 }
 
 // MARK: BEGIN AUTH THINGS
@@ -78,7 +77,7 @@ model VerificationToken {
 	@@id([identifier, token])
 }
 
-// MARK: END AUTH THINGS 
+// MARK: END AUTH THINGS
 
 model Program {
 	id   Int    @id @default(autoincrement())
@@ -137,7 +136,7 @@ model Link {
 	course  Course?  @relation("CourseLink", fields: [courseId], references: [id])
 	sandbox Sandbox? @relation("SandboxLink", fields: [sandboxId], references: [id])
 	graph   Graph    @relation("GraphLink", fields: [graphId], references: [id], onDelete: Cascade)
-  
+
 	parentType ParentType
 	courseId  Int?
 	sandboxId Int?
@@ -163,7 +162,7 @@ model Graph {
 	parentType ParentType
 	courseId   Int?
 	sandboxId  Int?
-	
+
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
 
