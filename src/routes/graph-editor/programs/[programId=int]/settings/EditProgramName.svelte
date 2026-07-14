@@ -2,7 +2,7 @@
 	import { editProgramSchema } from '$lib/zod/programSchema';
 	import type { Program } from '@prisma/client';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 

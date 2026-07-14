@@ -8,8 +8,8 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Close from 'lucide-svelte/icons/circle-x';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Close from '@lucide/svelte/icons/circle-x';
 
 	type Props = { courses: Course[] };
 	const { courses }: Props = $props();

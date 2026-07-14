@@ -6,7 +6,7 @@
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	import DeleteDomain from './DeleteDomain.svelte';
 
@@ -18,10 +18,10 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
 
 	import type { PageData } from './$types';
 	import type { Domain } from '@prisma/client';

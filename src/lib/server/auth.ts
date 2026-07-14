@@ -4,8 +4,6 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { SvelteKitAuth } from '@auth/sveltekit';
 import { error } from '@sveltejs/kit';
 
-import type { OIDCConfig } from '@auth/sveltekit/providers';
-
 interface SurfConextProfile extends Record<string, string> {
 	nickname: string;
 	firstName: string;
@@ -30,18 +28,18 @@ async function fetchUserInfo(accessToken: string | undefined) {
 	return await res.json();
 }
 
-function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
+function SurfConextProvider<P extends SurfConextProfile>() {
 	return {
 		id: 'surfconext',
 		name: 'SURFconext',
-		type: 'oidc',
+		type: 'oidc' as const,
 		issuer: env.SURFCONEXT_ISSUER,
 		wellKnown: `${env.SURFCONEXT_ISSUER}/.well-known/openid-configuration`,
 		clientId: env.SURFCONEXT_CLIENT_ID,
 		clientSecret: env.SURFCONEXT_CLIENT_SECRET,
 		allowDangerousEmailAccountLinking: true, // Not sure if this is safe @juliavdkris
 
-		async profile(profile, tokens): Promise<SurfConextProfile> {
+		async profile(profile: P, tokens: { access_token?: string }): Promise<SurfConextProfile> {
 			const userInfo = await fetchUserInfo(tokens.access_token);
 			const res = {
 				nickname: userInfo.nickname,
@@ -55,7 +53,7 @@ function SurfConextProvider<P extends SurfConextProfile>(): OIDCConfig<P> {
 }
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
-	providers: [SurfConextProvider],
+	providers: env.SURFCONEXT_ISSUER ? [SurfConextProvider] : [],
 	adapter: PrismaAdapter(prisma),
 	secret: env.AUTH_SECRET,
 	debug: Boolean(env.DEBUG),

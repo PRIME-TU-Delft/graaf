@@ -6,7 +6,7 @@
 	import { cn } from '$lib/utils';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
-	import Link from 'lucide-svelte/icons/link';
+	import Link from '@lucide/svelte/icons/link';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 

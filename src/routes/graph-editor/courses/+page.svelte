@@ -12,7 +12,7 @@
 	import CourseGrid from '../CourseGrid.svelte';
 
 	// Icons
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
 	import { MailOpen } from '@lucide/svelte';
 
 	// Types

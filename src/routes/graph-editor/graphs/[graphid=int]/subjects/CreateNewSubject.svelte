@@ -10,11 +10,11 @@
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Domain, Graph } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 
 	type Props = {

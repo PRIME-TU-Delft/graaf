@@ -4,7 +4,7 @@ import prisma from '$lib/server/db/prisma';
 import { changePinSchema } from '$lib/zod/courseSchema';
 import type { Actions, ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 
 export const load = (async () => {
 	const courses = await prisma.course.findMany({

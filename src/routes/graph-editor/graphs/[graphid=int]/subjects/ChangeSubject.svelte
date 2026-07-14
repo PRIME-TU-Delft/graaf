@@ -14,15 +14,15 @@
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import DeleteSubject from './DeleteSubject.svelte';
 
-	import ArrowRight from 'lucide-svelte/icons/arrow-right';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
-	import Ellipsis from 'lucide-svelte/icons/ellipsis';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
+	import ArrowRight from '@lucide/svelte/icons/arrow-right';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
+	import Ellipsis from '@lucide/svelte/icons/ellipsis';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
 
 	type Props = {
 		subject: PageData['graph']['subjects'][0];

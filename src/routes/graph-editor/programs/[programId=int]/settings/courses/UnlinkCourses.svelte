@@ -7,7 +7,7 @@
 	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from '../$types';
 
 	type DataTableProps = {

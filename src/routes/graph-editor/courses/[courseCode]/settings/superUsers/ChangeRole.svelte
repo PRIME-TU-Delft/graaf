@@ -5,7 +5,7 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 
 	// Icons
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 
 	// Types
 	import type { User } from '@prisma/client';

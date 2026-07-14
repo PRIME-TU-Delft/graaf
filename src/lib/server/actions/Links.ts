@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 
 import type { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
@@ -21,7 +21,7 @@ export class LinkActions {
 			if (env.DEBUG) console.error(e);
 
 			if (
-				e instanceof PrismaClientKnownRequestError &&
+				e instanceof Prisma.PrismaClientKnownRequestError &&
 				e.meta &&
 				'cause' in e.meta &&
 				e.meta.cause instanceof String &&
@@ -51,7 +51,7 @@ export class LinkActions {
 			if (env.DEBUG) console.error(e);
 
 			if (
-				e instanceof PrismaClientKnownRequestError &&
+				e instanceof Prisma.PrismaClientKnownRequestError &&
 				e.meta &&
 				'cause' in e.meta &&
 				e.meta.cause instanceof String &&

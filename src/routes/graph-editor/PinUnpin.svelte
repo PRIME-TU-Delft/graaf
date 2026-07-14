@@ -4,11 +4,11 @@
 	import { changePinSchema } from '$lib/zod/courseSchema';
 	import type { Course, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Pin from 'lucide-svelte/icons/pin';
-	import Unpin from 'lucide-svelte/icons/pin-off';
+	import Pin from '@lucide/svelte/icons/pin';
+	import Unpin from '@lucide/svelte/icons/pin-off';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import { Loader } from '@lucide/svelte';
 	import { cn } from '$lib/utils';

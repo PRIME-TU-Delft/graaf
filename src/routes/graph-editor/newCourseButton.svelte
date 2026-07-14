@@ -3,7 +3,7 @@
 	import { hasProgramPermissions } from '$lib/utils/permissions';
 	import { superForm } from 'sveltekit-superforms';
 	import { newCourseSchema } from '$lib/zod/courseSchema';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
 

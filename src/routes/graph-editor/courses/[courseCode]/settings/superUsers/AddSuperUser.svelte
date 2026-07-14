@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/courseSchema';
 	import { useId } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms';
@@ -15,7 +15,7 @@
 	import { Label } from '$lib/components/ui/label';
 
 	// Icons
-	import Undo_2 from 'lucide-svelte/icons/undo-2';
+	import Undo_2 from '@lucide/svelte/icons/undo-2';
 
 	// Types
 	import type { Course, Program, User } from '@prisma/client';

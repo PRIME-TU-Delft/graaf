@@ -7,7 +7,7 @@
 	import { cn } from '$lib/utils';
 	import { Trash2 } from '@lucide/svelte';
 	import type { Domain } from '@prisma/client';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { type PageData } from './$types';
 	import { toast } from 'svelte-sonner';

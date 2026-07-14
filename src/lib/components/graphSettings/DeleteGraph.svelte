@@ -4,7 +4,7 @@
 	import { graphSchemaWithId } from '$lib/zod/graphSchema';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';

@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
 import { GraphActions } from '$lib/server/actions';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import { getUser } from '$lib/server/actions/Users.js';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '$lib/server/permissions';
 import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema.js';

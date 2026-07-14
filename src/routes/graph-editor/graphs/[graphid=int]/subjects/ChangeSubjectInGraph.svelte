@@ -6,7 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import * as Form from '$lib/components/ui/form/index.js';

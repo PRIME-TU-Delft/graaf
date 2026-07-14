@@ -3,7 +3,7 @@ import prisma from '$lib/server/db/prisma';
 import { whereHasSandboxPermission } from '$lib/server/permissions';
 import { redirect } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import { SandboxActions } from '$lib/server/actions/Sandboxes';
 import { GraphActions } from '$lib/server/actions/Graphs';
 import { graphSchemaWithId } from '$lib/zod/graphSchema';

@@ -8,7 +8,7 @@ import { newProgramSchema } from '$lib/zod/programSchema.js';
 import { linkingCoursesSchema } from '$lib/zod/programSchema.js';
 import type { Course } from '@prisma/client';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import type { Actions, PageServerLoad } from '../$types.js';
 
 export const load = (async ({ url, locals }) => {

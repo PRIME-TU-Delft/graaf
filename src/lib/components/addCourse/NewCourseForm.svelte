@@ -5,7 +5,7 @@
 	import type { Program, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	type Props = {
 		createNewCourseForm: SuperValidated<Infer<typeof newCourseSchema>>;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/programSchema';
 	import { useId } from 'bits-ui';
 
@@ -10,7 +10,7 @@
 	import { Button } from '$lib/components/ui/button';
 
 	// Icons
-	import Check from 'lucide-svelte/icons/check';
+	import Check from '@lucide/svelte/icons/check';
 
 	// Types
 	import type { User, Program } from '@prisma/client';
