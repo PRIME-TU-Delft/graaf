@@ -20,7 +20,10 @@
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:studio": "prisma studio"
 	},
-	"prisma": {
+	  "engines": {
+			"node": ">=24"
+		},
+		"prisma": {
 		"seed": "tsx prisma/seed.ts"
 	},
 	"devDependencies": {
