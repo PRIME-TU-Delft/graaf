@@ -1,6 +1,15 @@
 import { Course, Subject, PrismaClient, ParentType } from '@prisma/client';
 import { courses, domains, programs, subjects } from './init';
 import { env } from 'process';
+import 'dotenv/config';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
+
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
 
 const testUsers = [
 	{ fn: 'Abel', ln: 'de Bruijn', admin: true },
@@ -18,8 +27,6 @@ const testUsers = [
 	{ fn: 'Test User', ln: 'Three', admin: false },
 	{ fn: 'Test User', ln: 'Four', admin: false }
 ];
-
-const prisma = new PrismaClient();
 
 async function main() {
 	console.log('Start seeding ...');

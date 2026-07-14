@@ -1,16 +1,22 @@
 import { env } from '$env/dynamic/private';
-import { PrismaClient } from '@prisma/client';
-import type { PrismaClientOptions } from '@prisma/client/runtime/library';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-function debugLevel(): PrismaClientOptions['log'] {
-	if (env.TESTING || env.PRISMA_LOG == 'none') return [];
-	if (env.DEBUG || env.PRISMA_LOG == 'info') return ['query', 'info', 'warn', 'error'];
+function debugLevel(): Prisma.PrismaClientOptions['log'] {
+    if (env.TESTING || env.PRISMA_LOG == 'none') return [];
+    if (env.DEBUG || env.PRISMA_LOG == 'info') return ['query', 'info', 'warn', 'error'];
 
-	return ['error'];
+    return ['error'];
 }
 
+const connectionString = env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+
 const prisma = new PrismaClient({
-	log: debugLevel()
+    adapter,
+    log: debugLevel()
 });
 
 export default prisma;

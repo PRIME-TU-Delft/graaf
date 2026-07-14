@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/private';
 import { setError } from '$lib/utils/setError';
 import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 
 import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
@@ -22,7 +22,7 @@ export class GraphActions {
 			if (env.DEBUG) console.error(e);
 
 			if (
-				e instanceof PrismaClientKnownRequestError &&
+				e instanceof Prisma.PrismaClientKnownRequestError &&
 				e.meta &&
 				'cause' in e.meta &&
 				e.meta.cause instanceof String &&
@@ -52,7 +52,7 @@ export class GraphActions {
 			if (env.DEBUG) console.error(e);
 
 			if (
-				e instanceof PrismaClientKnownRequestError &&
+				e instanceof Prisma.PrismaClientKnownRequestError &&
 				e.meta &&
 				'cause' in e.meta &&
 				e.meta.cause instanceof String &&
