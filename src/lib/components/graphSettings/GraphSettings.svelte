@@ -3,7 +3,7 @@
 	import { Undo2 } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import { Button } from '$lib/components/ui/button';

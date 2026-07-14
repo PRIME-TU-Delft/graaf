@@ -6,7 +6,7 @@
 	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	type DataTableProps = {
 		program: Program;

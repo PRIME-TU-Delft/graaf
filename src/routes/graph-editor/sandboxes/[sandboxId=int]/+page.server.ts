@@ -1,7 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { error } from '@sveltejs/kit';
 import { GraphActions } from '$lib/server/actions';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';
 import { getUser } from '$lib/server/actions/Users.js';
 import { duplicateGraphSchema, graphSchemaWithId, newGraphSchema } from '$lib/zod/graphSchema.js';

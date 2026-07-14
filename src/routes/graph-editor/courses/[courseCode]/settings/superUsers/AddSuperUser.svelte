@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/courseSchema';
 	import { useId } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms';

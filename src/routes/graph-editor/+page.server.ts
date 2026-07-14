@@ -5,7 +5,7 @@ import { ProgramActions } from '$lib/server/actions/Programs';
 import { CourseActions } from '$lib/server/actions/Courses';
 import { SandboxActions } from '$lib/server/actions/Sandboxes';
 import { whereHasCoursePermission } from '$lib/server/permissions';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import { newCourseSchema, changePinSchema, linkingCoursesSchema } from '$lib/zod/courseSchema';
 import { newProgramSchema } from '$lib/zod/programSchema';
 import { newSandboxSchema } from '$lib/zod/sandboxSchema';

@@ -3,7 +3,7 @@ import { getUser } from '$lib/server/actions/Users.js';
 import { deleteLectureSchema, lectureSchema } from '$lib/zod/lectureSchema';
 import type { ServerLoad } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 
 export const load: ServerLoad = async () => {
 	return {

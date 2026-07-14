@@ -7,7 +7,7 @@
 	import { fromStore } from 'svelte/store';
 	import { fade } from 'svelte/transition';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';

@@ -13,7 +13,7 @@
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
 	import { fromStore } from 'svelte/store';
 

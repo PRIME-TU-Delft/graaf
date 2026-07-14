@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { getUser } from '$lib/server/actions/Users';
-import { zod } from 'sveltekit-superforms/adapters';
+import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import { newSandboxSchema } from '$lib/zod/sandboxSchema';
 import { superValidate } from 'sveltekit-superforms';
 import { SandboxActions } from '$lib/server/actions/Sandboxes';

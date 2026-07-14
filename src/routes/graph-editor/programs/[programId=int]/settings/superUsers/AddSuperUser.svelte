@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { editSuperUserSchema } from '$lib/zod/programSchema';
 	import { useId } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms';

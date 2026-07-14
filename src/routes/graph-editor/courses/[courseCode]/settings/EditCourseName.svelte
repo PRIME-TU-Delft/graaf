@@ -4,7 +4,7 @@
 	import { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { Course } from '@prisma/client';
 	import { superForm, type Infer, type SuperValidated } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
+	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 
 	type EditCourseNameProps = {
 		course: Course;
