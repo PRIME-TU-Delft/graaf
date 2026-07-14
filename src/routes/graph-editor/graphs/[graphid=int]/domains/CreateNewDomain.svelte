@@ -10,7 +10,7 @@
 	import * as settings from '$lib/settings';
 	import { domainSchema } from '$lib/zod/domainSchema';
 	import type { Graph } from '@prisma/client';
-	import ChevronDown from 'lucide-svelte/icons/chevron-down';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';

@@ -19,9 +19,9 @@
 
 	// Icons
 	import { Copy } from '@lucide/svelte';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
-	import Undo2 from 'lucide-svelte/icons/undo-2';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
+	import Undo2 from '@lucide/svelte/icons/undo-2';
 
 	import type { Prisma } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';

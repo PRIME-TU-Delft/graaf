@@ -15,8 +15,8 @@
 		SearchSlash
 	} from '@lucide/svelte';
 
-	import ZoomIn from 'lucide-svelte/icons/zoom-in';
-	import ZoomOut from 'lucide-svelte/icons/zoom-out';
+	import ZoomIn from '@lucide/svelte/icons/zoom-in';
+	import ZoomOut from '@lucide/svelte/icons/zoom-out';
 
 	import screenfull from 'screenfull';
 	import { fade } from 'svelte/transition';

@@ -6,8 +6,8 @@
 	import { cn } from '$lib/utils';
 	import type { Domain } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Check from 'lucide-svelte/icons/check';
-	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
+	import Check from '@lucide/svelte/icons/check';
+	import ChevronsUpDown from '@lucide/svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import type { Infer, SuperForm, SuperFormData } from 'sveltekit-superforms/client';
 	import type { domainRelSchema } from '$lib/zod/domainSchema';

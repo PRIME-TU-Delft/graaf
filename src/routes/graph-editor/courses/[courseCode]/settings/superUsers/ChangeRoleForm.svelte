@@ -2,7 +2,7 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import Check from 'lucide-svelte/icons/check';
+	import Check from '@lucide/svelte/icons/check';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';

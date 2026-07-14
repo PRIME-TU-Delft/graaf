@@ -4,8 +4,8 @@
 	import { changePinSchema } from '$lib/zod/courseSchema';
 	import type { Course, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
-	import Pin from 'lucide-svelte/icons/pin';
-	import Unpin from 'lucide-svelte/icons/pin-off';
+	import Pin from '@lucide/svelte/icons/pin';
+	import Unpin from '@lucide/svelte/icons/pin-off';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zodClient } from 'sveltekit-superforms/adapters';

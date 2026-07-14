@@ -16,7 +16,7 @@
 	// Icons
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { MailOpen } from '@lucide/svelte';
-	import Settings from 'lucide-svelte/icons/settings';
+	import Settings from '@lucide/svelte/icons/settings';
 
 	type Props = {
 		user: User;
