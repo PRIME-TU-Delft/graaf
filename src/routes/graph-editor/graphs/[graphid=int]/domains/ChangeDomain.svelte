@@ -37,6 +37,7 @@
 	let changeDomainDialog = $state(false);
 	let domainStyleOpen = $state(false);
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).newDomainForm, {
 		id: 'change-domain-form-' + useId() + domain.id,
 		validators: zodClient(domainSchema),

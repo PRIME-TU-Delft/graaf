@@ -17,15 +17,17 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const hasAtLeastEditPermission =
+	const hasAtLeastEditPermission = $derived(
 		data.user != undefined &&
-		data.sandbox != undefined &&
-		hasSandboxPermissions(data.user, data.sandbox, 'OwnerOREditor');
+			data.sandbox != undefined &&
+			hasSandboxPermissions(data.user, data.sandbox, 'OwnerOREditor')
+	);
 
-	const hasAtLeastAdminPermission =
+	const hasAtLeastAdminPermission = $derived(
 		data.user != undefined &&
-		data.sandbox != undefined &&
-		hasSandboxPermissions(data.user, data.sandbox, 'Owner');
+			data.sandbox != undefined &&
+			hasSandboxPermissions(data.user, data.sandbox, 'Owner')
+	);
 </script>
 
 <article class="my-6 mb-12 space-y-6">

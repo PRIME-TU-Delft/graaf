@@ -24,6 +24,7 @@
 
 	let { parentType, parentId, newGraphForm }: CreateNewGraphButtonProps = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(newGraphForm, {
 		validators: zodClient(newGraphSchema),
 		onResult: ({ result }) => {

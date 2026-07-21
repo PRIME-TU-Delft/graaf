@@ -14,6 +14,7 @@
 
 	let { program, editProgramForm, onSuccess }: EditProgramNameProps = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(editProgramForm, {
 		validators: zodClient(editProgramSchema),
 		id: 'edit-program-name',
