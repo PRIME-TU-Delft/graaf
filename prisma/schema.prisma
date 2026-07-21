@@ -94,6 +94,7 @@ model Program {
 model Course {
 	id         Int     @id @default(autoincrement())
 	code       String  @unique
+	uriCode    String  @unique
 	name       String
 	isArchived Boolean @default(false)
 

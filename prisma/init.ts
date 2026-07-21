@@ -28,18 +28,22 @@ export const graph = [
 export const courses = [
 	{
 		code: 'CS1000',
+		uriCode: 'CS1000',
 		name: 'CourseOne'
 	},
 	{
 		code: 'CS2000',
+		uriCode: 'CS2000',
 		name: 'CourseTwo'
 	},
 	{
 		code: 'WBMT1050',
+		uriCode: 'WBMT1050',
 		name: 'CourseThree'
 	},
 	{
 		code: 'BK1100',
+		uriCode: 'BK1100',
 		name: 'CourseFour'
 	}
 ];

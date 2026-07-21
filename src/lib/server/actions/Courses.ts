@@ -37,6 +37,7 @@ export class CourseActions {
 						create: {
 							name: form.data.name,
 							code: form.data.code,
+							uriCode: encodeURIComponent(form.data.code),
 							pinnedBy: {
 								connect: {
 									id: user.id
