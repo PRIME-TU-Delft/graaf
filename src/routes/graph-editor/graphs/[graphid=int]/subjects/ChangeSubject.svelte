@@ -35,6 +35,7 @@
 	let domainIdOpen = $state(false);
 
 	const triggerId = useId();
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'change-subject-form-' + useId() + '-' + subject.id,
 		validators: zodClient(subjectSchema),

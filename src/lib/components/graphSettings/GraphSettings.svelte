@@ -25,11 +25,12 @@
 	const { graph, canDelete, editGraphForm }: GraphLinksProps = $props();
 
 	const id = $props.id();
-	const parentType = graph.parentType;
-	const parentId = (parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number;
+	const parentType = $derived(graph.parentType);
+	const parentId = $derived((parentType === 'COURSE' ? graph.courseId : graph.sandboxId) as number);
 
 	let graphSettingsOpen = $state(false);
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(editGraphForm, {
 		id: 'change-graph-' + id,
 		validators: zodClient(graphSchemaWithId),

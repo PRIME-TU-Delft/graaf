@@ -14,8 +14,10 @@
 	let { data }: { data: PageData } = $props();
 
 	let editCourseDialogOpen = $state(false);
-	let programsYouCanEdit = data.course.programs.filter((program) =>
-		hasProgramPermissions(data.user, program, 'ProgramAdminEditor')
+	let programsYouCanEdit = $derived(
+		data.course.programs.filter((program) =>
+			hasProgramPermissions(data.user, program, 'ProgramAdminEditor')
+		)
 	);
 </script>
 

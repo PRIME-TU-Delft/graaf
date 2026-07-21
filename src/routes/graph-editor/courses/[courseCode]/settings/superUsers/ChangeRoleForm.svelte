@@ -25,6 +25,7 @@
 		onSuccess = () => {}
 	}: ChangeRoleProps = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).editSuperUserForm, {
 		id: 'editSuperUserForm' + userId + '-' + newRole,
 		validators: zodClient(editSuperUserSchema),

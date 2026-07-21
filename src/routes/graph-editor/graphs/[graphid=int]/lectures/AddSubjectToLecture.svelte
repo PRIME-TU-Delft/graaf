@@ -22,6 +22,7 @@
 	const { lecture, graph }: Props = $props();
 
 	let dialogOpen = $state(false);
+	// svelte-ignore state_referenced_locally
 	let subjectsLinked: string[] = $state(lecture.subjects.map((s) => s.id.toString()));
 
 	const form = superForm((page.data as PageData).newLectureForm, {

@@ -19,6 +19,7 @@
 
 	const { newSandboxForm }: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(newSandboxForm, {
 		id: useId(),
 		validators: zodClient(newSandboxSchema),
