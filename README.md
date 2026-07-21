@@ -36,6 +36,12 @@ podman compose up # Or docker compose up
 pnpm dev
 ```
 
+### Running with test users
+
+```bash
+NETLIFY_CONTEXT=DEPLOY_PREVIEW pnpm run dev
+```
+
 ## Testing
 
 ```bash
