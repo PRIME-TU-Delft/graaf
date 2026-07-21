@@ -5,7 +5,17 @@ export { OverlayToolbox };
 
 // -----------------------------> Classes
 
+/**
+ * Renders full-canvas overlays shown above the graph content: an error state, and the transient
+ * "Shift + Scroll to zoom" hint shown when a user scrolls on a locked (non-editable) graph.
+ */
 class OverlayToolbox {
+	/**
+	 * Remove any current overlay content and reset the overlay layer to its default (fully
+	 * opaque, interactive) state. Interrupts any in-progress overlay transition first.
+	 *
+	 * @param graph - The graph instance to clear the overlay of
+	 */
 	static clear(graph: GraphD3) {
 		graph.overlay
 			.interrupt()
@@ -16,6 +26,12 @@ class OverlayToolbox {
 			.remove();
 	}
 
+	/**
+	 * Show a persistent full-canvas error overlay, covering the graph content. Does not clear
+	 * itself automatically; call clear to dismiss it.
+	 *
+	 * @param graph - The graph instance to show the error overlay on
+	 */
 	static error(graph: GraphD3) {
 		OverlayToolbox.clear(graph);
 
@@ -50,6 +66,14 @@ class OverlayToolbox {
 			.attr('fill', 'white');
 	}
 
+	/**
+	 * Show (or re-trigger) the "Shift + Scroll to zoom" hint overlay, offering a click target
+	 * that permanently disables the wheel zoom lock for this graph instance. The overlay fades
+	 * itself out and clears automatically after lingering for a moment; calling this again while
+	 * it's already showing restarts that fade-out without re-creating the DOM.
+	 *
+	 * @param graph - The graph instance to show the hint overlay on
+	 */
 	static zoom(graph: GraphD3) {
 		if (!graph.overlay.classed('zoom')) {
 			OverlayToolbox.clear(graph);

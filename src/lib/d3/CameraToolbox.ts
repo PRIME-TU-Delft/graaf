@@ -5,7 +5,21 @@ import { graphState } from './GraphD3State.svelte';
 import { graphView } from './GraphD3View.svelte';
 import type { CameraTransform, NodeData } from './types';
 
+/**
+ * Computes and applies camera transforms (pan/zoom): where the origin should sit for the current
+ * background (grid vs. lecture), the transform needed to frame a set of nodes, and the
+ * animated moves used to get there.
+ */
 export class CameraToolbox {
+	/**
+	 * Whether zoom/pan is currently allowed at all. Only in the domains or subjects view, only
+	 * while idle or already simulating, and for wheel events specifically, only when the wheel
+	 * zoom lock is off or the user is holding Shift.
+	 *
+	 * @param graph - The graph instance to check
+	 * @param event - The zoom event triggering the check, if any; omit to check outside of an
+	 * event (e.g. before a programmatic zoom)
+	 */
 	static allowZoomAndPan(graph: GraphD3, event?: d3.D3ZoomEvent<SVGSVGElement, unknown>): boolean {
 		return (
 			(graphView.isDomains() || graphView.isSubjects()) &&
@@ -14,15 +28,21 @@ export class CameraToolbox {
 		);
 	}
 
-	/** Contains a bunch of handy knickknacks
+	/**
+	 * Contains a bunch of handy knickknacks.
 	 *
-	 * **x** and **y** are the offsets to center the origin. When the background is a lecture, or mode is explicitly set to 'lecture',
-	 * the offsets are calculated based on the lecture size. Otherwise they are set to the center of the svg.
+	 * **x** and **y** are the offsets to center the origin. When the background is a lecture, or
+	 * mode is explicitly set to 'lecture', the offsets are calculated based on the lecture size.
+	 * Otherwise they are set to the center of the svg.
 	 *
-	 * **k** is used to scale the graph to fit the lecture background. Said differently, it contains the ratio between the client size and the lecture background size.
-	 * When the background is a grid, or mode is 'graph' or undefined, **k** is set to 1.
+	 * **k** is used to scale the graph to fit the lecture background. Said differently, it
+	 * contains the ratio between the client size and the lecture background size. When the
+	 * background is a grid, or mode is 'graph' or undefined, **k** is set to 1.
+	 *
+	 * @param graph - The graph instance to compute the transform for
+	 * @param mode - Force 'graph' or 'lecture' sizing rather than inferring it from the current
+	 * background
 	 */
-
 	static clientTransform(graph: GraphD3, mode?: 'graph' | 'lecture'): CameraTransform {
 		if (mode !== 'graph' && (graph.background.classed('lecture') || mode === 'lecture')) {
 			const size = graph.lecture
@@ -62,6 +82,13 @@ export class CameraToolbox {
 		}
 	}
 
+	/**
+	 * Compute the transform that centers the camera on and frames the given nodes, with padding,
+	 * clamped to the app's min/max zoom. Falls back to clientTransform if there are no nodes.
+	 *
+	 * @param graph - The graph instance to compute the transform for
+	 * @param nodes - The nodes to frame
+	 */
 	static centralTransform(graph: GraphD3, nodes: NodeData[]): CameraTransform {
 		if (nodes.length === 0) {
 			return this.clientTransform(graph);
@@ -98,6 +125,15 @@ export class CameraToolbox {
 		};
 	}
 
+	/**
+	 * Animate the camera to a given CameraTransform (typically from centralTransform or
+	 * clientTransform), translated relative to the current clientTransform origin.
+	 *
+	 * @param graph - The graph instance to move the camera for
+	 * @param transform - The target transform
+	 * @param callback - If provided, animates the move and calls this once the animation
+	 * duration has elapsed; if omitted, the move is instant and no callback is scheduled
+	 */
 	static moveCamera(graph: GraphD3, transform: CameraTransform, callback?: () => void) {
 		const client = CameraToolbox.clientTransform(graph);
 
@@ -122,6 +158,15 @@ export class CameraToolbox {
 		}
 	}
 
+	/**
+	 * Animate the camera to translate to a given grid position, without changing zoom.
+	 *
+	 * @param graph - The graph instance to move the camera for
+	 * @param x - The target x position, in grid units
+	 * @param y - The target y position, in grid units
+	 * @param callback - If provided, animates the move and calls this once the animation
+	 * duration has elapsed; if omitted, the move is instant and no callback is scheduled
+	 */
 	static panCamera(graph: GraphD3, x: number, y: number, callback?: () => void) {
 		graph.svg
 			.transition()
@@ -136,6 +181,14 @@ export class CameraToolbox {
 		}
 	}
 
+	/**
+	 * Animate the camera to a given zoom scale, without changing position.
+	 *
+	 * @param graph - The graph instance to zoom
+	 * @param k - The target scale factor
+	 * @param callback - If provided, animates the zoom and calls this once the animation
+	 * duration has elapsed; if omitted, the zoom is instant and no callback is scheduled
+	 */
 	static zoomCamera(graph: GraphD3, k: number, callback?: () => void) {
 		graph.svg
 			.transition()
