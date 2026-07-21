@@ -21,7 +21,7 @@ export const load = (async ({ params, locals }) => {
 	try {
 		const dbCourse = await prisma.course.findFirst({
 			where: {
-				code: params.courseCode
+				uriCode: encodeURIComponent(params.courseCode)
 			},
 			include: {
 				programs: {

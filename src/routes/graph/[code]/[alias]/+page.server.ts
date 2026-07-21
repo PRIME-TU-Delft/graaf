@@ -13,7 +13,7 @@ export const load: ServerLoad = async ({ params }) => {
 		const graph = await prisma.graph.findFirst({
 			where: {
 				course: {
-					code: courseCode
+					uriCode: encodeURIComponent(courseCode)
 				},
 				links: {
 					some: {

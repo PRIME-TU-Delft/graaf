@@ -44,7 +44,7 @@
 				{#if hasAtLeastEditPermission}
 					<Button
 						href={resolve('/graph-editor/courses/[courseCode]/settings', {
-							courseCode: data.course.code
+							courseCode: data.course.uriCode
 						})}>Settings <ArrowRight /></Button
 					>
 				{:else}

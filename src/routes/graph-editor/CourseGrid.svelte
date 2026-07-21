@@ -35,7 +35,7 @@
 
 {#snippet displayCourse(course: CourseGridProps['courses'][number])}
 	<a
-		href={resolve('/graph-editor/courses/[courseCode]', { courseCode: course.code })}
+		href={resolve('/graph-editor/courses/[courseCode]', { courseCode: course.uriCode })}
 		class={cn([
 			'flex w-full items-center justify-between gap-3 rounded border-2 border-transparent p-2 transition-colors hover:border-purple-200 hover:bg-purple-50/50',
 			course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
@@ -54,7 +54,7 @@
 				<Button
 					variant="outline"
 					href={resolve('/graph-editor/courses/[courseCode]/settings', {
-						courseCode: course.code
+						courseCode: course.uriCode
 					})}
 				>
 					<Settings class="text-gray-600" />
