@@ -4,20 +4,19 @@ import type { User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
 
+/** Server actions for creating, renaming, and deleting lectures within a graph, and for
+ * linking subjects to them. Called from form actions in `+page.server.ts` route files, one
+ * static method per operation. */
 export class LectureActions {
 	/**
-	 * Adds a lecture to the graph based on the provided event.
+	 * Create a new lecture in a graph, appended to the end of the existing lecture order, and
+	 * link it to the given subjects.
 	 *
-	 * @param event - The request event containing the form data for the lecture.
-	 * @returns A promise that resolves to an error message if the form is invalid.
-	 * @throws Will throw an error if there is an issue with the database transaction.
-	 *
-	 * The function performs the following steps:
-	 * 1. Validates the form data using `superValidate` and `zod(lectureSchema)`.
-	 * 2. Adds the lecture to the graph
-	 * 3. If there is an error, returns the error message.
-	 * 4. If successful, returns the lecture.
-	 **/
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, lecture name, and subjectIds to link
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * a `name`-field error via setError instead of throwing.
+	 */
 	static async addLectureToGraph(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
@@ -50,6 +49,14 @@ export class LectureActions {
 		}
 	}
 
+	/**
+	 * Rename a lecture.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, lectureId, and the new name
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * a `name`-field error via setError instead of throwing.
+	 */
 	static async changeLectureName(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
@@ -71,6 +78,16 @@ export class LectureActions {
 		}
 	}
 
+	/**
+	 * Replace a lecture's linked subjects with the given set. Unlike addLectureToGraph, this
+	 * sets the full list rather than adding to it, so subjects omitted from subjectIds are
+	 * unlinked.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, lectureId, and the full subjectIds list
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * a `subjectIds._errors`-field error via setError instead of throwing.
+	 */
 	static async linkSubjectsToLecture(
 		user: User,
 		form: SuperValidated<Infer<typeof lectureSchema>>
@@ -97,6 +114,14 @@ export class LectureActions {
 		}
 	}
 
+	/**
+	 * Delete a lecture. Does not renumber the order of the remaining lectures in the graph.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId and lectureId
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * an error via setError instead of throwing.
+	 */
 	static async deleteLecture(user: User, form: SuperValidated<Infer<typeof deleteLectureSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid lecture');
 

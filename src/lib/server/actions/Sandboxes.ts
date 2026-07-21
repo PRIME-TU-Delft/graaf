@@ -12,12 +12,22 @@ import type {
 } from '$lib/zod/sandboxSchema';
 import { redirect } from '@sveltejs/kit';
 
+/** Server actions for creating, editing, and deleting sandboxes, and for managing their
+ * owner/editor roles. Called from form actions in `+page.server.ts` route files, one static
+ * method per operation. */
 export class SandboxActions {
 	/**
+	 * Create a new sandbox, owned by the creating user.
+	 *
 	 * PERMISSIONS
 	 * - Any user can create sandboxes
+	 *
+	 * @param user - The user performing the action, becomes the sandbox's owner
+	 * @param form - Validated form data with the sandbox name
+	 * @returns `{ form }` on success. On invalid input or a failed create, returns the form with
+	 * a `name`-field error via setError instead of throwing. Note the error message here says
+	 * "create a new course", left over from a copy-paste of CourseActions.newCourse.
 	 */
-
 	static async newSandbox(user: User, form: SuperValidated<Infer<typeof newSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -42,10 +52,16 @@ export class SandboxActions {
 	}
 
 	/**
+	 * Rename a sandbox.
+	 *
 	 * PERMISSIONS
 	 * - Only OWNERS can edit sandboxes
+	 *
+	 * @param user - The user performing the action, must be the sandbox owner
+	 * @param form - Validated form data with the sandboxId and the new name
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with an error via setError instead of throwing.
 	 */
-
 	static async editSandbox(user: User, form: SuperValidated<Infer<typeof editSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -67,10 +83,23 @@ export class SandboxActions {
 	}
 
 	/**
+	 * Add, revoke, or transfer ownership of a sandbox editor/owner role. Only the current owner
+	 * can call this, including to transfer ownership away from themselves: setting role 'owner'
+	 * makes the target user the new owner and demotes the previous owner to an editor, then
+	 * redirects the caller to the home page since they no longer have owner access to this
+	 * sandbox's settings page.
+	 *
 	 * PERMISSIONS
 	 * - Only OWNERS can edit super users
+	 *
+	 * @param user - The user performing the action, must be the sandbox owner
+	 * @param form - Validated form data with the sandboxId, target userId, and new role
+	 * ('editor' | 'owner' | 'revoke')
+	 * @returns `{ form }` on success for editor/revoke changes. On an ownership transfer, throws
+	 * a redirect to `/` instead of returning. On invalid input, missing permission, or a
+	 * disallowed transition (e.g. revoking a non-editor, or re-assigning an already-held role),
+	 * returns the form with an error via setError.
 	 */
-
 	static async editSuperUser(user: User, form: SuperValidated<Infer<typeof editSuperUserSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 		let doRedirect = false;
@@ -145,10 +174,16 @@ export class SandboxActions {
 	}
 
 	/**
+	 * Permanently delete a sandbox, then redirect the caller to the home page.
+	 *
 	 * PERMISSIONS
 	 * - Only OWNERS can delete sandboxes
+	 *
+	 * @param user - The user performing the action, must be the sandbox owner
+	 * @param form - Validated form data with the sandboxId to delete
+	 * @returns Never returns normally: on success it throws a redirect to `/`. On invalid input
+	 * or missing permission, returns the form with an error via setError instead of throwing.
 	 */
-
 	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 

@@ -2,6 +2,7 @@ import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
+import jsdoc from 'eslint-plugin-jsdoc';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript-eslint';
 import svelteConfig from './svelte.config.js';
@@ -34,6 +35,27 @@ export default ts.config(
 		},
 		rules: {
 			'svelte/no-dupe-style-properties': 'off'
+		}
+	},
+	{
+		files: [
+			'src/lib/d3/**/*.ts',
+			'src/lib/server/actions/**/*.ts',
+			'src/lib/server/permissions.ts'
+		],
+		plugins: { jsdoc },
+		rules: {
+			'jsdoc/require-jsdoc': [
+				'error',
+				{
+					publicOnly: true,
+					require: {
+						FunctionDeclaration: true,
+						MethodDefinition: true,
+						ClassDeclaration: true
+					}
+				}
+			]
 		}
 	}
 );

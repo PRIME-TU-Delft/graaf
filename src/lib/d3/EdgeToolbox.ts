@@ -3,7 +3,18 @@ import * as settings from '$lib/settings';
 import type { GraphD3 } from './GraphD3';
 import type { EdgeData, EdgeSelection } from './types';
 
+/**
+ * Renders and positions the directed edges connecting graph nodes: the arrowhead marker
+ * definition, edge creation, style, and the geometry that clips each edge line to the border of
+ * its target node rather than drawing into the node itself.
+ */
 export class EdgeToolbox {
+	/**
+	 * Register the arrowhead marker used at the end of every edge, in the graph's `<defs>`, if
+	 * it hasn't been added already. Safe to call multiple times.
+	 *
+	 * @param graph - The graph instance whose defs the marker is added to
+	 */
 	static init(graph: GraphD3) {
 		const marker = graph.definitions.select('marker#arrowhead');
 		if (!marker.empty()) {
@@ -24,10 +35,22 @@ export class EdgeToolbox {
 			.attr('d', 'M 0 0 L 10 5 L 0 10 Z');
 	}
 
+	/**
+	 * Get the style to render an edge with, taken from its source node's style (edges have no
+	 * style of their own).
+	 *
+	 * @param edge - The edge to style
+	 */
 	private static styleOf(edge: EdgeData) {
 		return edge.source.style ? settings.STYLES[edge.source.style] : settings.DEFAULT_STYLE;
 	}
 
+	/**
+	 * Render a selection of newly-entered edges: stroke/fill from the source node's style, the
+	 * arrowhead marker, and initial position.
+	 *
+	 * @param selection - The D3 selection of newly-entered edge elements to render into
+	 */
 	static create(selection: EdgeSelection) {
 		selection
 			.attr('id', (edge) => edge.uuid)
@@ -39,6 +62,15 @@ export class EdgeToolbox {
 			.call(EdgeToolbox.updatePosition);
 	}
 
+	/**
+	 * Recompute and apply each edge's line coordinates from its source/target node positions,
+	 * clipping the endpoint to the border of the target node's bounding box (rather than its
+	 * center) so the arrowhead lands on the node's edge, not inside it. If the two nodes
+	 * overlap, draws center to center instead, since the line wouldn't be visible either way.
+	 *
+	 * @param selection - The edges to reposition
+	 * @param transition - Whether to animate the move, or snap instantly
+	 */
 	static updatePosition(selection: EdgeSelection, transition: boolean = false) {
 		/* We are calculating the line connecting two nodes.
 		 * It should start at the center of the start node and end at the BOUNDS of the end node.
@@ -107,6 +139,12 @@ export class EdgeToolbox {
 		});
 	}
 
+	/**
+	 * Re-render each edge's stroke/fill from its current source node style, without touching
+	 * position. Used when a domain's style changes.
+	 *
+	 * @param selection - The edges to update
+	 */
 	static updateStyle(selection: EdgeSelection) {
 		selection
 			.attr('stroke', (edge) => EdgeToolbox.styleOf(edge).stroke)

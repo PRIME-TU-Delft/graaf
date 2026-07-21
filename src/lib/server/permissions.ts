@@ -15,7 +15,6 @@ import type { User } from '@prisma/client';
  * const permissions = whereHasProgramPermission(user, "ProgramAdminEditor");
  * const program = await prisma.program.findFirst({ where: { id: 1, ...permissions } });
  */
-
 export function whereHasProgramPermission(user: User, has: ProgramPermissionsOptions) {
 	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
 	if (user.role == 'ADMIN') return {};
@@ -40,7 +39,6 @@ export function whereHasProgramPermission(user: User, has: ProgramPermissionsOpt
  * const adminPermissions = whereHasCoursePermission(user, {  courseAdmin: true, courseEditor: false });
  * const program = await prisma.program.findFirst({ where: { id: 1, ...adminPermissions } }); // Only program admins, editors,
  */
-
 export function whereHasCoursePermission(user: User, has: CoursePermissionsOptions) {
 	// If the user is a super-admin, they can edit any program. Thus no special where permission is required
 	if (user.role == 'ADMIN') return {};
@@ -77,7 +75,6 @@ export function whereHasCoursePermission(user: User, has: CoursePermissionsOptio
  * @param has - CoursePermissionsOptions
  * @returns A json object that can be used in a Prisma grap where query
  */
-
 export function whereHasGraphCoursePermission(user: User, has: CoursePermissionsOptions) {
 	if (user.role == 'ADMIN') return {};
 	else if (has === 'OnlySuperAdmin') throw new Error('Only super admins can do this action');
@@ -89,6 +86,16 @@ export function whereHasGraphCoursePermission(user: User, has: CoursePermissions
 	};
 }
 
+/**
+ * Check if the user has permissions to edit the sandbox
+ * @param user - User
+ * @param has - SandboxPermissionOptions, 'Owner' restricts to the sandbox owner only,
+ * anything else also allows sandbox editors
+ * @returns A json object that can be used in a Prisma where query
+ * @example
+ * const permissions = whereHasSandboxPermission(user, 'OwnerOREditor');
+ * const sandbox = await prisma.sandbox.findFirst({ where: { id: 1, ...permissions } });
+ */
 export function whereHasSandboxPermission(user: User, has: SandboxPermissionOptions) {
 	const hasOwnerPermission = { ownerId: user.id };
 	const hasEditorPermission = { editors: { some: { id: user.id } } };

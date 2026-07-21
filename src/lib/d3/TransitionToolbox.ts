@@ -12,7 +12,28 @@ import type { EdgeData, NodeData } from './types';
 
 // -----------------------------> Classes
 
+/**
+ * Drives every animated move between the graph's three views (domains, subjects, lectures):
+ * fading nodes/edges in and out as the visible dataset changes, moving nodes between their
+ * domain-grouped and lecture-table positions, and panning/zooming the camera to match. The
+ * private helpers (clearContent/setContent/moveContent/restoreContentPosition and the two
+ * transform builders) are the building blocks; the public snapToX and XToY methods compose them
+ * into the actual transitions used by GraphD3.setView and the initial view on construction.
+ *
+ * Every public transition sets graphState to 'transitioning' at the start and back to 'idle'
+ * once its animation (or chain of animations) completes, so GraphD3 and the Toolboxes can tell
+ * when it's safe to start another transition or interaction.
+ */
 export class TransitionToolbox {
+	/**
+	 * Fade out and remove all current content (nodes and edges), used as the base case when a
+	 * view has nothing to show (e.g. an empty lecture) and as the final step of setContent when
+	 * a data update leaves no nodes or edges.
+	 *
+	 * @param graph - The graph instance to clear content from
+	 * @param callback - If provided, animates the fade and calls this once it completes; if
+	 * omitted, content is removed instantly and no callback is scheduled
+	 */
 	private static clearContent(graph: GraphD3, callback?: () => void) {
 		graph.content
 			.selectAll('*')
@@ -31,6 +52,18 @@ export class TransitionToolbox {
 		}
 	}
 
+	/**
+	 * Reconcile the rendered nodes/edges with a new target set, using D3's data join: entering
+	 * nodes/edges are created and faded in, updating ones are repositioned/restyled in place,
+	 * and exiting ones are faded out and removed. Also rebinds the force simulation to the new
+	 * node/edge arrays. Delegates to clearContent if the target set is empty.
+	 *
+	 * @param graph - The graph instance to update content for
+	 * @param nodes - The full set of nodes that should be rendered after this call
+	 * @param edges - The full set of edges that should be rendered after this call
+	 * @param callback - If provided, animates the join and calls this once it completes; if
+	 * omitted, the join is instant and no callback is scheduled
+	 */
 	private static setContent(
 		graph: GraphD3,
 		nodes: NodeData[],
@@ -114,6 +147,19 @@ export class TransitionToolbox {
 		}
 	}
 
+	/**
+	 * Animate the given nodes to new positions computed by `transform`, then restore each node's
+	 * `x`/`y` back to what it was before the call. The restore means this only affects the
+	 * rendered position, not the underlying data, which is intentional: it's used to animate a
+	 * node visually into a domain-grouped or lecture-table layout without mutating the graph's
+	 * actual stored positions.
+	 *
+	 * @param graph - The graph instance to move content for
+	 * @param nodes - The nodes to move; mutated in place during the call, then restored
+	 * @param transform - Sets a node's `x`/`y` to its target position; called once per node
+	 * @param callback - If provided, animates the move and calls this once it completes; if
+	 * omitted, the move is instant and no callback is scheduled
+	 */
 	private static moveContent(
 		graph: GraphD3,
 		nodes: NodeData[],
@@ -145,6 +191,15 @@ export class TransitionToolbox {
 		}
 	}
 
+	/**
+	 * Animate the rendered nodes back to their actual stored (data) positions, undoing a prior
+	 * moveContent call. Used to transition out of a domain-grouped or lecture-table layout back
+	 * to each node's real position.
+	 *
+	 * @param graph - The graph instance to restore content positions for
+	 * @param callback - If provided, animates the move and calls this once it completes; if
+	 * omitted, the move is instant and no callback is scheduled
+	 */
 	private static restoreContentPosition(graph: GraphD3, callback?: () => void) {
 		// Update nodes
 		graph.content
@@ -161,11 +216,28 @@ export class TransitionToolbox {
 
 	// -----------------------------> Transformations
 
+	/**
+	 * A moveContent transform that collapses a subject node onto its parent domain's position
+	 * (used when transitioning into the domains view or grouping subjects by domain), leaving
+	 * nodes without a parent domain where they are.
+	 *
+	 * @param node - The node to reposition in place
+	 */
 	private static domainTransform(node: NodeData): void {
 		node.x = node.parent ? node.parent.x : node.x;
 		node.y = node.parent ? node.parent.y : node.y;
 	}
 
+	/**
+	 * Build a moveContent transform that places each of a lecture's nodes into its
+	 * past/present/future column of the lecture table background, centered at (x, y). Nodes not
+	 * in any of the lecture's past/present/future lists are left untouched.
+	 *
+	 * @param graph - The graph instance, used to read the focused lecture's node groupings
+	 * @param x - The horizontal center to lay the three columns out around
+	 * @param y - The vertical center to lay the columns out around
+	 * @returns A transform function suitable for passing to moveContent
+	 */
 	private static lectureTransform(graph: GraphD3, x: number, y: number): (node: NodeData) => void {
 		const past = graph.lecture ? graph.lecture.past_nodes : [];
 		const present = graph.lecture ? graph.lecture.present_nodes : [];
@@ -232,6 +304,14 @@ export class TransitionToolbox {
 
 	// -----------------------------> Transitions
 
+	/**
+	 * Switch directly to the domains view, instantly, without an entry/exit animation for the
+	 * content (only the camera move optionally animates). Used for the initial view on
+	 * construction and by GraphD3.setData.
+	 *
+	 * @param graph - The graph instance to transition
+	 * @param animateCamera - Whether the camera move should animate, or snap instantly
+	 */
 	static snapToDomains(graph: GraphD3, animateCamera = false) {
 		graphState.toTransitioning();
 
@@ -249,6 +329,14 @@ export class TransitionToolbox {
 		graphView.toDomains();
 	}
 
+	/**
+	 * Switch directly to the subjects view, instantly, without an entry/exit animation for the
+	 * content (only the camera move optionally animates). Used for the initial view on
+	 * construction and by GraphD3.setData.
+	 *
+	 * @param graph - The graph instance to transition
+	 * @param animateCamera - Whether the camera move should animate, or snap instantly
+	 */
 	static snapToSubjects(graph: GraphD3, animateCamera = false) {
 		graphState.toTransitioning();
 
@@ -266,6 +354,13 @@ export class TransitionToolbox {
 		graphView.toSubjects();
 	}
 
+	/**
+	 * Switch directly to the lectures view, instantly, showing the currently focused lecture (or
+	 * nothing, if none is focused). Used for the initial view on construction, by
+	 * GraphD3.setLecture, and by GraphD3.setData.
+	 *
+	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture to show
+	 */
 	static snapToLectures(graph: GraphD3) {
 		graphState.toTransitioning();
 
@@ -284,6 +379,13 @@ export class TransitionToolbox {
 		graphView.toLectures();
 	}
 
+	/**
+	 * Animate from the domains view to the subjects view: pans/zooms the camera to frame the
+	 * subject nodes, fades in the subject content collapsed onto domain positions, then animates
+	 * it out to each subject's real position.
+	 *
+	 * @param graph - The graph instance to transition
+	 */
 	static domainsToSubjects(graph: GraphD3) {
 		graphState.toTransitioning();
 
@@ -302,6 +404,14 @@ export class TransitionToolbox {
 		});
 	}
 
+	/**
+	 * Animate from the domains view to the lectures view: pans/zooms the camera toward the
+	 * lecture table's scale while staying centered on the domain nodes for minimal movement,
+	 * fades in the focused lecture's content at domain positions, then animates it into the
+	 * lecture table layout. Falls back to snapToLectures if no lecture is focused.
+	 *
+	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture to show
+	 */
 	static domainsToLectures(graph: GraphD3) {
 		// Validate lecture
 		if (graph.lecture === null) {
@@ -332,6 +442,13 @@ export class TransitionToolbox {
 		);
 	}
 
+	/**
+	 * Animate from the subjects view to the domains view: pans/zooms the camera to frame the
+	 * domain nodes, animates the current subject content collapsed onto domain positions, then
+	 * fades it out and fades in the domain content.
+	 *
+	 * @param graph - The graph instance to transition
+	 */
 	static subjectsToDomains(graph: GraphD3) {
 		graphState.toTransitioning();
 
@@ -348,6 +465,14 @@ export class TransitionToolbox {
 		});
 	}
 
+	/**
+	 * Animate from the subjects view to the lectures view: pans/zooms the camera toward the
+	 * lecture table's scale while staying centered on the subject nodes for minimal movement,
+	 * fades in the focused lecture's content at its subject positions, then animates it into the
+	 * lecture table layout. Falls back to snapToLectures if no lecture is focused.
+	 *
+	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture to show
+	 */
 	static subjectsToLectures(graph: GraphD3) {
 		// Validate lecture
 		if (graph.lecture === null) {
@@ -377,6 +502,16 @@ export class TransitionToolbox {
 		});
 	}
 
+	/**
+	 * Animate from the lectures view to the domains view: switches the background to the grid
+	 * ahead of time, snaps the camera/content to the lecture-table pov for the domains-node
+	 * framing, zooms out to that framing, animates the lecture's content into domain positions,
+	 * then fades it out and fades in the domain content. Falls back to snapToDomains if no
+	 * lecture is focused.
+	 *
+	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture
+	 * being left
+	 */
 	static lecturesToDomains(graph: GraphD3) {
 		// Validate lecture
 		if (graph.lecture === null) {
@@ -411,6 +546,16 @@ export class TransitionToolbox {
 		});
 	}
 
+	/**
+	 * Animate from the lectures view to the subjects view: switches the background to the grid
+	 * ahead of time, snaps the camera/content to the lecture-table pov for the subject-node
+	 * framing, zooms out to that framing, animates the lecture's content back to its real
+	 * positions, then fades it out and fades in the subject content. Falls back to
+	 * snapToSubjects if no lecture is focused.
+	 *
+	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture
+	 * being left
+	 */
 	static lecturesToSubjects(graph: GraphD3) {
 		// Validate lecture
 		if (graph.lecture === null) {

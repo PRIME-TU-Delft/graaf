@@ -13,7 +13,18 @@ export { NodeToolbox };
 
 // -----------------------------> Classes
 
+/**
+ * Renders and manages the interactive behavior of graph nodes (domains and subjects): creation,
+ * drag-to-reposition, position/style/text updates, highlighting, and saving positions back to
+ * the server. Used by GraphD3 and the other Toolboxes rather than driving the canvas directly.
+ */
 class NodeToolbox {
+	/**
+	 * Register the SVG filter used for node highlighting (a drop-shadow) in the graph's `<defs>`,
+	 * if it hasn't been added already. Safe to call multiple times.
+	 *
+	 * @param graph - The graph instance whose defs the filter is added to
+	 */
 	static init(graph: GraphD3) {
 		const filter = graph.definitions.select('filter#highlight');
 		if (!filter.empty()) {
@@ -31,6 +42,14 @@ class NodeToolbox {
 			.attr('flood-color', settings.NODE_HIGHLIGHT_COLOR);
 	}
 
+	/**
+	 * Render a selection of newly-entered nodes: outline, text, and drag behavior. Nodes start
+	 * fixed at their given position; dragging unfixes and repositions them, snapping to whole
+	 * grid units and saving the new position on drag end.
+	 *
+	 * @param selection - The D3 selection of newly-entered node groups to render into
+	 * @param graph - The owning graph instance, used to check drag permissions and re-simulate
+	 */
 	static create(selection: NodeSelection, graph: GraphD3) {
 		const styleOf = (node: NodeData) =>
 			node.style ? settings.STYLES[node.style] : settings.DEFAULT_STYLE;
@@ -108,6 +127,14 @@ class NodeToolbox {
 		);
 	}
 
+	/**
+	 * Persist the current x/y position of every node in the selection to the server, batched
+	 * into one PATCH request for domains and one for subjects (regardless of how many nodes of
+	 * each type are in the selection). Shows an error toast if either request fails.
+	 *
+	 * @param selection - The nodes whose positions should be saved; may contain a mix of domain
+	 * and subject nodes
+	 */
 	static async save(selection: NodeSelection) {
 		// We are not guaranteed to select only domains, or only subjects, so we have two options:
 		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
@@ -143,6 +170,15 @@ class NodeToolbox {
 		}
 	}
 
+	/**
+	 * Move a selection of nodes to their current data-bound x/y position, and reposition every
+	 * edge attached to any of them to follow. Called on every simulation tick as well as after
+	 * drags and view transitions.
+	 *
+	 * @param selection - The nodes to reposition
+	 * @param graph - The owning graph instance, used to find attached edges
+	 * @param transition - Whether to animate the move, or snap instantly
+	 */
 	static updatePosition(selection: NodeSelection, graph: GraphD3, transition: boolean = false) {
 		// Raise nodes
 		selection.raise();
@@ -169,6 +205,14 @@ class NodeToolbox {
 		});
 	}
 
+	/**
+	 * Apply or remove the highlight filter on each node in the selection, based on whether it's
+	 * part of the graph's currently focused lecture (either one of its domains, or one of its
+	 * present-lecture nodes).
+	 *
+	 * @param selection - The nodes to update
+	 * @param graph - The owning graph instance, used to read the focused lecture
+	 */
 	static updateHighlight(selection: NodeSelection, graph: GraphD3) {
 		selection.each(function (node) {
 			const highlight =
@@ -178,6 +222,12 @@ class NodeToolbox {
 		});
 	}
 
+	/**
+	 * Re-render each node's outline (stroke/fill/path) from its current `style`, without
+	 * touching text or position. Used when a domain's style changes.
+	 *
+	 * @param selection - The nodes to update
+	 */
 	static updateStyle(selection: NodeSelection) {
 		const styleOf = (node: NodeData) =>
 			node.style ? settings.STYLES[node.style] : settings.DEFAULT_STYLE;
@@ -190,6 +240,11 @@ class NodeToolbox {
 			.attr('d', (node) => styleOf(node).path);
 	}
 
+	/**
+	 * Remove and re-render each node's text label from its current `text`, re-wrapping it to fit.
+	 *
+	 * @param selection - The nodes to update
+	 */
 	static updateText(selection: NodeSelection) {
 		selection.select('text').remove();
 
@@ -202,6 +257,16 @@ class NodeToolbox {
 			.call(NodeToolbox.wrapText);
 	}
 
+	/**
+	 * Fix or unfix a selection of nodes in the force simulation. Fixing rounds the node's
+	 * position to whole grid units and pins it there (`fx`/`fy` set); unfixing clears the pin so
+	 * the simulation can move it freely. Also updates the selection's rendered position and the
+	 * dashed-outline styling used to indicate an unfixed node.
+	 *
+	 * @param selection - The nodes to fix or unfix
+	 * @param graph - The owning graph instance, passed through to updatePosition
+	 * @param fixed - True to fix the nodes in place, false to release them
+	 */
 	static setFixed(selection: NodeSelection, graph: GraphD3, fixed: boolean) {
 		selection
 			.filter(fixed ? ':not(.fixed)' : '.fixed')
@@ -217,6 +282,14 @@ class NodeToolbox {
 		NodeToolbox.updatePosition(selection, graph);
 	}
 
+	/**
+	 * Wrap a node's text content across multiple `<tspan>` lines to fit within the node's width,
+	 * scaling the font size down first if even the single longest word would overflow, then
+	 * vertically centering the resulting lines within the node.
+	 *
+	 * @param selection - The text elements to wrap; expected to currently contain plain text
+	 * content that will be replaced with wrapped tspans
+	 */
 	static wrapText(selection: d3.Selection<SVGTextElement, NodeData, d3.BaseType, unknown>) {
 		// WARNING this function does not limit vertical text overflow.
 		// It will keep adding lines until all text is displayed.
@@ -271,6 +344,13 @@ class NodeToolbox {
 		});
 	}
 
+	/**
+	 * Whether nodes may currently be dragged: only in the editable (authenticated) editor, only
+	 * in the domains or subjects view, and only while idle or already simulating (not mid
+	 * transition).
+	 *
+	 * @param graph - The graph instance to check
+	 */
 	static allowNodeDrag(graph: GraphD3): boolean {
 		return (
 			graph.editable &&
