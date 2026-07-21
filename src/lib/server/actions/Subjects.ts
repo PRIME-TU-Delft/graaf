@@ -9,22 +9,21 @@ import type { User } from '@prisma/client';
 import { fail, setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
 
+/** Server actions for creating, editing, and deleting subjects within a graph, and for
+ * creating/removing relations between subjects. Called from form actions in `+page.server.ts`
+ * route files, one static method per operation. */
 export class SubjectActions {
 	/**
-	 * Adds a subject to the graph based on the provided event.
+	 * Create a new subject in a graph, appended to the end of the existing subject order, and
+	 * optionally assign it to a domain. Unlike most other actions in this file, this does not
+	 * check `form.valid` before using `form.data`.
 	 *
-	 * @returns A promise that resolves to an error message if the form is invalid.
-	 * @throws Will throw an error if there is an issue with the database transaction.
-	 *
-	 * The function performs the following steps:
-	 * 1. Validates the form data using `superValidate` and `zod(subjectSchema)`.
-	 * 2. Adds the subject to the graph
-	 * 3. If the domainId is greater than 0 (0 means no value was given in the form),
-	 *      adds the subject to the domain.
-	 * 4. If there is an error, returns the error message.
-	 * 5. If successful, returns the subject.
-	 **/
-
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, subject name, and domainId (0 means no
+	 * domain)
+	 * @returns Nothing on success. On a failed create, returns the form with a `name`-field error
+	 * via setError instead of throwing.
+	 */
 	static async addSubjectToGraph(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
 		try {
 			const lastSubject = await prisma.subject.findFirst({
@@ -56,6 +55,18 @@ export class SubjectActions {
 		}
 	}
 
+	/**
+	 * Delete a subject, first disconnecting it from every subject relation it participates in,
+	 * all in a single transaction. Unlike most other actions in this file, this does not check
+	 * `form.valid` before using `form.data`. The permission check happens on the delete query
+	 * itself, so if it fails, the whole transaction (including the disconnects) is rolled back.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, subjectId to delete, and the ids of its
+	 * source/target subject relations that need to be cleaned up
+	 * @returns Nothing on success. On a failed transaction, returns the form with an error via
+	 * setError instead of throwing.
+	 */
 	static async deleteSubject(user: User, form: SuperValidated<Infer<typeof deleteSubjectSchema>>) {
 		const removeTargetFromSource = form.data.sourceSubjects.map((id) => {
 			return prisma.subject.update({
@@ -103,6 +114,15 @@ export class SubjectActions {
 		}
 	}
 
+	/**
+	 * Rename a subject and/or reassign its domain.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, subjectId (must be non-zero), new name,
+	 * and domainId (0 means no domain)
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * a `name`-field error via setError instead of throwing.
+	 */
 	static async changeSubject(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid subject');
 		if (form.data.subjectId === 0) {
@@ -132,6 +152,17 @@ export class SubjectActions {
 		}
 	}
 
+	/**
+	 * Create a directed relation between two subjects in the same graph (inId -> outId), used by
+	 * both addSubjectRel and changeSubjectRel.
+	 *
+	 * @param graphId - The graph both subjects belong to
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param inId - The source subject id
+	 * @param outId - The target subject id
+	 * @returns The updated graph
+	 * @throws If the subjects are already connected, or if the user lacks permission
+	 */
 	private static async connectSubjects(graphId: number, user: User, inId: number, outId: number) {
 		// Check if the subjecs are already connected
 		const isConnected = await prisma.subject.findFirst({
@@ -173,18 +204,13 @@ export class SubjectActions {
 	}
 
 	/**
-	 * Adds a relationship between two subjects based on the provided event.
+	 * Create a directed relation between two subjects.
 	 *
-	 * @returns A promise that resolves to an error message if the form is invalid or if the subjects are already connected.
-	 * @throws Will throw an error if there is an issue with the database transaction.
-	 *
-	 * The function performs the following steps:
-	 * 1. Validates the form data using `superValidate` and `zod(subjectRelSchema)`.
-	 * 2. Checks if the subjects are already connected.
-	 * 3. If not connected, updates the subjects to connect them in both directions.
-	 * 4. Executes the updates within a database transaction.
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, sourceSubjectId, and targetSubjectId
+	 * @returns Nothing on success. If the subjects are already connected or the user lacks
+	 * permission, returns the form with an error via setError instead of throwing.
 	 */
-
 	static async addSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
@@ -197,6 +223,17 @@ export class SubjectActions {
 		}
 	}
 
+	/**
+	 * Remove the directed relation between two subjects in the same graph, used by both
+	 * deleteSubjectRel and changeSubjectRel.
+	 *
+	 * @param graphId - The graph both subjects belong to
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param inId - The source subject id
+	 * @param outId - The target subject id
+	 * @returns The updated graph
+	 * @throws If the user lacks permission
+	 */
 	private static async disconnectSubjects(
 		graphId: number,
 		user: User,
@@ -230,6 +267,15 @@ export class SubjectActions {
 		});
 	}
 
+	/**
+	 * Remove the relation between two subjects.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, sourceSubjectId, and targetSubjectId
+	 * @returns Nothing on success. On invalid input, returns the form with an error via setError.
+	 * On a failed disconnect (e.g. missing permission), returns a SvelteKit `fail(500, ...)`
+	 * response instead, unlike most other actions in this class.
+	 */
 	static async deleteSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
@@ -241,16 +287,30 @@ export class SubjectActions {
 				form.data.targetSubjectId
 			);
 		} catch (e: unknown) {
+			// TODO: use setError here like the rest of this class, instead of fail(500, ...)
 			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
 		}
 	}
 
+	/**
+	 * Move a subject relation by disconnecting its old source/target pair and connecting the new
+	 * one. Not atomic: if the connect step fails after the disconnect step succeeds, the old
+	 * relation is not restored.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, oldSourceSubjectId, oldTargetSubjectId,
+	 * and the new sourceSubjectId/targetSubjectId
+	 * @returns Nothing on success. On invalid input or a failed step, returns the form with an
+	 * error via setError instead of throwing.
+	 */
 	static async changeSubjectRel(
 		user: User,
 		form: SuperValidated<Infer<typeof changeSubjectRelSchema>>
 	) {
 		if (!form.valid) return setError(form, '', form.message);
 
+		// TODO: not atomic, if connectSubjects fails after disconnectSubjects succeeds the old
+		// relation is not restored. Wrap both steps in a transaction.
 		try {
 			await SubjectActions.disconnectSubjects(
 				form.data.graphId,

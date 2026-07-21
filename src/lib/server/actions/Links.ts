@@ -9,7 +9,21 @@ import type { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
 
+/** Server actions for creating, moving, and deleting shareable graph links under a course or
+ * sandbox. Called from form actions in `+page.server.ts` route files, one static method per
+ * operation. */
 export class LinkActions {
+	/**
+	 * Await a course-scoped Prisma write and translate a permission failure into a form error.
+	 * Shared by every action in this class that mutates a link through its parent course.
+	 *
+	 * @param query - The in-flight Prisma query (e.g. `prisma.course.update(...)`) to await
+	 * @param form - The form to attach an error to if the query fails
+	 * @param path - The form field to attach the error to
+	 * @returns `{ form }` on success. If the query fails because the course wasn't found under
+	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
+	 * underlying error message. Either way returns the form via setError instead of throwing.
+	 */
 	private static async updateCourse<T, S extends Record<string, unknown>>(
 		query: T,
 		form: SuperValidated<S>,
@@ -40,6 +54,17 @@ export class LinkActions {
 		return { form };
 	}
 
+	/**
+	 * Await a sandbox-scoped Prisma write and translate a permission failure into a form error.
+	 * The sandbox equivalent of updateCourse.
+	 *
+	 * @param query - The in-flight Prisma query (e.g. `prisma.sandbox.update(...)`) to await
+	 * @param form - The form to attach an error to if the query fails
+	 * @param path - The form field to attach the error to
+	 * @returns `{ form }` on success. If the query fails because the sandbox wasn't found under
+	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
+	 * underlying error message. Either way returns the form via setError instead of throwing.
+	 */
 	private static async updateSandbox<T, S extends Record<string, unknown>>(
 		query: T,
 		form: SuperValidated<S>,
@@ -70,6 +95,16 @@ export class LinkActions {
 		return { form };
 	}
 
+	/**
+	 * Create a new shareable link for a graph, under a course or a sandbox. The link name is
+	 * lowercased before saving, and must be unique within its parent (enforced by the schema).
+	 *
+	 * @param user - The user performing the action, must have course or sandbox edit rights
+	 * on the chosen parent
+	 * @param form - Validated form data with parentType, parentId, graphId, and name
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `name`-field error via setError instead of throwing.
+	 */
 	static async newLink(user: User, form: SuperValidated<Infer<typeof newLinkSchema>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
@@ -115,6 +150,15 @@ export class LinkActions {
 		}
 	}
 
+	/**
+	 * Repoint an existing link at a different graph within the same course or sandbox.
+	 *
+	 * @param user - The user performing the action, must have course or sandbox edit rights
+	 * on the link's parent
+	 * @param form - Validated form data with parentType, parentId, linkId, and the new graphId
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `parentId`-field error via setError instead of throwing.
+	 */
 	static async moveLink(user: User, form: SuperValidated<Infer<typeof editLinkSchema>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
@@ -159,6 +203,16 @@ export class LinkActions {
 		}
 	}
 
+	/**
+	 * Delete a link. Anyone still holding the link URL will no longer be able to use it to view
+	 * the graph.
+	 *
+	 * @param user - The user performing the action, must have course or sandbox edit rights
+	 * on the link's parent
+	 * @param form - Validated form data with parentType, parentId, and linkId
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `parentId`-field error via setError instead of throwing.
+	 */
 	static async deleteLink(user: User, form: SuperValidated<Infer<typeof editLinkSchema>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
