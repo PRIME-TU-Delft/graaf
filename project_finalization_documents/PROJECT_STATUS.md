@@ -32,16 +32,17 @@ Specific confirmed bugs from [src/routes/graph-editor/graphs/\[graphid=int\]/dom
 ### #66 — Breadcrumbs Broken/Inconsistent (Bug)
 
 **What the code shows:** [src/lib/components/NavigationBar.svelte](src/lib/components/NavigationBar.svelte) generates breadcrumbs by splitting `page.url.pathname` on `/` and capitalizing each segment. It has hardcoded heuristics:
+
 - Numbers after `courses` → "Graph N"
 - Numbers after `programs` → "Program N"
 
 No actual entity names (course name, graph name, sandbox name) are ever fetched. This produces:
 
-| Path | Actual output | Should be |
-|---|---|---|
-| `/graph-editor/programs/5/settings` | Home > Programs > Program 5 > Settings | Home > Programs > [program name] > Settings |
-| `/graph-editor/sandboxes/3/settings` | Home > Sandboxes > 3 > Settings | Home > Sandboxes > [sandbox name] > Settings |
-| `/graph-editor/graphs/12/domains` | Home > Graphs > Graph 12 > Domains | Home > Courses > [course code] > [graph name] > Domains |
+| Path                                 | Actual output                          | Should be                                               |
+| ------------------------------------ | -------------------------------------- | ------------------------------------------------------- |
+| `/graph-editor/programs/5/settings`  | Home > Programs > Program 5 > Settings | Home > Programs > [program name] > Settings             |
+| `/graph-editor/sandboxes/3/settings` | Home > Sandboxes > 3 > Settings        | Home > Sandboxes > [sandbox name] > Settings            |
+| `/graph-editor/graphs/12/domains`    | Home > Graphs > Graph 12 > Domains     | Home > Courses > [course code] > [graph name] > Domains |
 
 Fixing this requires either passing entity names down via layout data and making `NavigationBar` prop-aware, or using a store/context populated by each layout's `load()`.
 
@@ -55,7 +56,7 @@ Fixing this requires either passing entity names down via layout data and making
 
 ### #26 — Link Permissions Bug (Bug + Missing Feature)
 
-**What the code shows:** The `duplicateGraph` action checks permissions on the *destination* (where you're copying *to*) and `availableCourses` / `availableSandboxes` are filtered by user permissions, so you can only duplicate *to* places you have admin/editor rights. However, there is no explanation shown in the UI when a course cannot be moved into a program. **No "why can't I do this" feedback exists anywhere.** The linking table shows courses with no indication of which are already linked or why certain operations are unavailable.
+**What the code shows:** The `duplicateGraph` action checks permissions on the _destination_ (where you're copying _to_) and `availableCourses` / `availableSandboxes` are filtered by user permissions, so you can only duplicate _to_ places you have admin/editor rights. However, there is no explanation shown in the UI when a course cannot be moved into a program. **No "why can't I do this" feedback exists anywhere.** The linking table shows courses with no indication of which are already linked or why certain operations are unavailable.
 
 ---
 
@@ -78,6 +79,7 @@ Fixing this requires either passing entity names down via layout data and making
 **What the code shows:** [src/routes/graph-editor/users/+page.svelte](src/routes/graph-editor/users/+page.svelte) is a bare skeleton — it only renders a numbered list of user nicknames. There are no actions, no role management, no search. The server load at [users/+page.server.ts](src/routes/graph-editor/users/+page.server.ts) fetches all users with their course/program relations but the page does nothing with that data.
 
 The full admin panel per issue #84 is **entirely missing**:
+
 - Promote user to admin / demote to user — no form, no action
 - Search users — no search bar
 - Add/remove users from a program directly from the admin panel — no form
@@ -173,25 +175,25 @@ No JSDoc, no inline comments beyond occasional `TODO` markers. The D3 toolbox cl
 
 ## Summary Table
 
-| # | Issue | Severity | Status in Code |
-|---|---|---|---|
-| #62 | Graph D3 reactivity / stale state after API calls | High | Partially mitigated (node style), still broken for edges, reorder, revalidation |
-| #63 | Can only add one link per session | High | Bug in superforms reset pattern in `CreateLink.svelte` |
-| — | Sandbox public graph links not working | High | Hardcoded `"SANDBOX LINKS ARE NOT SUPPORTED YET"` string |
-| #84 | Admin panel | High | Skeleton page only — no functionality implemented |
-| Embed URL | `lectureId` vs `lectureID` param mismatch | Medium | Generated embed URLs silently ignore lecture selection |
-| #26 | Link permission / table UX feedback | Medium | No "why can't you" UI; permissions logic itself is correct |
-| #66 | Breadcrumbs broken | Medium | URL-splitting heuristic, no entity names ever shown |
-| #81 | AddCourses stale after linking | Medium | Missing `invalidate()` call after successful form submit |
-| #79 | Cannot leave sandbox as editor | Medium | No self-service leave action for non-owners |
-| #83 | Course graph status badges | Medium | Issues computed in editor but not surfaced on course overview |
-| #75 | Archived course indicator | Low | `isArchived` field exists but never shown in course cards or overview |
-| #17 | Form loading/delayed states | Low | Inconsistently applied — missing on most form components |
-| #53 | Tooltips on icon buttons | Low | Tooltip component exists in UI library, never used in app |
-| #95 | Super user picker not a searchbar | Low | `SelectUsers.svelte` is ready, not wired everywhere |
-| #89 | Help page content | Low | Shell component exists, content missing on all pages except home |
-| #93 | 404 / error pages | Low | No `+error.svelte` files exist anywhere in the route tree |
-| #94 | Spaces in course codes/link URLs | Low | Regex hard-blocks spaces; needs schema change + migration |
-| #85 | Database migration strategy | Infra | No `migrations/` folder in repo |
-| #90 | Integration tests | Infra | Config stubs only, zero tests written |
-| #91 | Code documentation | Infra | No docs; D3 toolboxes and validator are entirely undocumented |
+| #         | Issue                                             | Severity | Status in Code                                                                  |
+| --------- | ------------------------------------------------- | -------- | ------------------------------------------------------------------------------- |
+| #62       | Graph D3 reactivity / stale state after API calls | High     | Partially mitigated (node style), still broken for edges, reorder, revalidation |
+| #63       | Can only add one link per session                 | High     | Bug in superforms reset pattern in `CreateLink.svelte`                          |
+| —         | Sandbox public graph links not working            | High     | Hardcoded `"SANDBOX LINKS ARE NOT SUPPORTED YET"` string                        |
+| #84       | Admin panel                                       | High     | Skeleton page only — no functionality implemented                               |
+| Embed URL | `lectureId` vs `lectureID` param mismatch         | Medium   | Generated embed URLs silently ignore lecture selection                          |
+| #26       | Link permission / table UX feedback               | Medium   | No "why can't you" UI; permissions logic itself is correct                      |
+| #66       | Breadcrumbs broken                                | Medium   | URL-splitting heuristic, no entity names ever shown                             |
+| #81       | AddCourses stale after linking                    | Medium   | Missing `invalidate()` call after successful form submit                        |
+| #79       | Cannot leave sandbox as editor                    | Medium   | No self-service leave action for non-owners                                     |
+| #83       | Course graph status badges                        | Medium   | Issues computed in editor but not surfaced on course overview                   |
+| #75       | Archived course indicator                         | Low      | `isArchived` field exists but never shown in course cards or overview           |
+| #17       | Form loading/delayed states                       | Low      | Inconsistently applied — missing on most form components                        |
+| #53       | Tooltips on icon buttons                          | Low      | Tooltip component exists in UI library, never used in app                       |
+| #95       | Super user picker not a searchbar                 | Low      | `SelectUsers.svelte` is ready, not wired everywhere                             |
+| #89       | Help page content                                 | Low      | Shell component exists, content missing on all pages except home                |
+| #93       | 404 / error pages                                 | Low      | No `+error.svelte` files exist anywhere in the route tree                       |
+| #94       | Spaces in course codes/link URLs                  | Low      | Regex hard-blocks spaces; needs schema change + migration                       |
+| #85       | Database migration strategy                       | Infra    | No `migrations/` folder in repo                                                 |
+| #90       | Integration tests                                 | Infra    | Config stubs only, zero tests written                                           |
+| #91       | Code documentation                                | Infra    | No docs; D3 toolboxes and validator are entirely undocumented                   |

@@ -59,8 +59,8 @@
 			<h2 class="text-xl font-bold text-amber-950">This is not a course</h2>
 			<p>
 				Sandboxes are used for personal projects or assignments. They should <b>not</b> be used to represent
-				a university course, nor should their content be posted publicly. Sandboxes are prone to get
-				lost or deleted over time.
+				a university course, nor should their content be posted publicly. Sandboxes are prone to get lost
+				or deleted over time.
 			</p>
 			<br />
 			<p>
