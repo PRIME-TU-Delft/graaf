@@ -50,7 +50,7 @@
 					class="h-full w-full p-2"
 					value={course.code + ' ' + course.name}
 					onclick={() =>
-						goto(resolve('/graph-editor/courses/[courseCode]', { courseCode: course.code }))}
+						goto(resolve('/graph-editor/courses/[courseCode]', { courseCode: course.uriCode }))}
 				>
 					<p class="grow font-medium text-gray-900">
 						{course.code}

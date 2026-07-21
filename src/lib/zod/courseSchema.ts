@@ -7,9 +7,10 @@ import * as settings from '$lib/settings';
 export const newCourseSchema = z.object({
 	code: z
 		.string()
+		.trim()
 		.nonempty()
 		.max(settings.MAX_COURSE_CODE_LENGTH)
-		.regex(settings.COURSE_CODE_REGEX, 'Course code must be alphanumeric without any spaces'),
+		.regex(settings.COURSE_CODE_REGEX, 'Course code must be alphanumeric, spaces are allowed'),
 	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH),
 	programId: z.number()
 });
