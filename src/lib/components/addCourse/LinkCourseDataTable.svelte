@@ -31,6 +31,7 @@
 		program,
 		columns,
 		loading,
+		// eslint-disable-next-line no-useless-assignment -- write-only, closes the dialog via bind:dialogOpen in the parent
 		dialogOpen = $bindable()
 	}: DataTableProps = $props();
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { fade } from 'svelte/transition';
 	import { displayName } from '$lib/utils/displayUserName';
 	import NewSandboxButton from './newSandboxButton.svelte';
@@ -23,7 +24,7 @@
 
 {#snippet displaySandbox(sandbox: SandboxGridProps['sandboxes'][number])}
 	<a
-		href="/graph-editor/sandboxes/{sandbox.id}"
+		href={resolve('/graph-editor/sandboxes/[sandboxId=int]', { sandboxId: String(sandbox.id) })}
 		class="rounded border-2 border-purple-200 bg-purple-100/50 p-2 transition-colors hover:bg-purple-100"
 		in:fade={{ duration: 200 }}
 	>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	// Components
 	import { page } from '$app/state';
@@ -21,7 +22,7 @@
 
 		untrack(() => {
 			if (error) {
-				toast.error(error, { onDismiss: () => goto('/') });
+				toast.error(error, { onDismiss: () => goto(resolve('/')) });
 			}
 		});
 	});
@@ -88,7 +89,7 @@
 			<p class="text-muted-foreground">
 				You do not have access to any course. Go to the <a
 					class="underline"
-					href="./graph-editor/programs">Programmes</a
+					href={resolve('/graph-editor/programs')}>Programmes</a
 				> page to see all programmes and courses.
 			</p>
 		{/each}

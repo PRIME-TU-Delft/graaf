@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { cn } from '$lib/utils';
 	import { fade } from 'svelte/transition';
 
@@ -34,7 +35,7 @@
 
 {#snippet displayCourse(course: CourseGridProps['courses'][number])}
 	<a
-		href="/graph-editor/courses/{course.code}"
+		href={resolve('/graph-editor/courses/[courseCode]', { courseCode: course.code })}
 		class={cn([
 			'flex w-full items-center justify-between gap-3 rounded border-2 border-transparent p-2 transition-colors hover:border-purple-200 hover:bg-purple-50/50',
 			course.isArchived && 'border-dashed border-amber-600 bg-amber-50'
@@ -50,7 +51,12 @@
 
 		<div class="flex items-center gap-1">
 			{#if course.isArchived}
-				<Button variant="outline" href="/graph-editor/courses/{course.code}/settings">
+				<Button
+					variant="outline"
+					href={resolve('/graph-editor/courses/[courseCode]/settings', {
+						courseCode: course.code
+					})}
+				>
 					<Settings class="text-gray-600" />
 				</Button>
 			{/if}

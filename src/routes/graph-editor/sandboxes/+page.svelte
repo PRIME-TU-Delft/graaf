@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { displayName } from '$lib/utils/displayUserName';
 
 	// Components
@@ -43,7 +44,7 @@
 
 		<a
 			class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-all hover:bg-purple-100 hover:shadow-lg"
-			href="/graph-editor/sandboxes/{sandbox.id}"
+			href={resolve('/graph-editor/sandboxes/[sandboxId=int]', { sandboxId: String(sandbox.id) })}
 		>
 			<div class="grow">
 				<h2 class="text-xl font-bold text-purple-950">{sandbox.name}</h2>

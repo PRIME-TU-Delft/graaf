@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { cn } from '$lib/utils';
@@ -8,6 +9,7 @@
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
@@ -25,20 +27,28 @@
 		return 'DOMAINS';
 	});
 
-	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
-		params.set('view', view);
+	function pathForView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES', search: string) {
+		// This layout only ever renders under /graph-editor/graphs/[graphid=int], so the param is always set
+		const graphid = page.params.graphid!;
+		return view === 'DOMAINS'
+			? resolve(`/graph-editor/graphs/[graphid=int]/domains?${search}`, { graphid })
+			: view === 'SUBJECTS'
+				? resolve(`/graph-editor/graphs/[graphid=int]/subjects?${search}`, { graphid })
+				: resolve(`/graph-editor/graphs/[graphid=int]/lectures?${search}`, { graphid });
+	}
 
-		goto(`./${view.toLowerCase()}?${params.toString()}`);
+	function gotoView(newView: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
+		const params = new SvelteURLSearchParams(page.url.searchParams);
+		params.set('view', newView);
+
+		goto(pathForView(newView, params.toString()));
 	}
 
 	function togglePreview() {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
+		const params = new SvelteURLSearchParams(page.url.searchParams);
 		params.set('hidePreview', hidePreview ? 'false' : 'true');
 
-		goto(`?${params.toString()}`);
+		goto(pathForView(view, params.toString()));
 	}
 
 	function capitalize(str: string) {

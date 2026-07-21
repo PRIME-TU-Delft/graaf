@@ -23,7 +23,10 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering
+	// This is a workaround for the fact that we can't use $derived due to the reordering.
+	// A writable $derived would not be re-proxied on reassignment, so mutations like
+	// `graph.domains = ...` or `domain.style = ...` below would stop being reactive.
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let graph = $state(data.graph);
 	$effect(() => {
 		graph = data.graph;

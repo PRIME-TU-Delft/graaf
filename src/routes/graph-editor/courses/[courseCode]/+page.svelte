@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { hasCoursePermissions } from '$lib/utils/permissions';
 
 	// Components
@@ -41,7 +42,11 @@
 					</h1>
 				</div>
 				{#if hasAtLeastEditPermission}
-					<Button href="{data.course.code}/settings">Settings <ArrowRight /></Button>
+					<Button
+						href={resolve('/graph-editor/courses/[courseCode]/settings', {
+							courseCode: data.course.code
+						})}>Settings <ArrowRight /></Button
+					>
 				{:else}
 					<ShowAdmins user={data.user} course={data.course} />
 				{/if}
@@ -71,7 +76,7 @@
 			{#each data.graphs as graph (graph.id)}
 				<a
 					class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-shadow hover:shadow-lg"
-					href="/graph-editor/graphs/{graph.id}"
+					href={resolve('/graph-editor/graphs/[graphid=int]', { graphid: String(graph.id) })}
 				>
 					<div class="grow">
 						<h2 class="text-xl font-bold text-purple-950">{graph.name}</h2>

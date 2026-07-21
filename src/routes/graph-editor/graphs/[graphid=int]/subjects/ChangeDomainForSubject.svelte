@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
@@ -17,6 +19,8 @@
 
 	let dropdownOpen = $state(false);
 	const triggerId = useId();
+	// This component only ever renders under /graph-editor/graphs/[graphid=int], so the param is always set
+	const graphid = page.params.graphid!;
 
 	function onSuccess() {
 		closeAndFocusTrigger(triggerId, () => {
@@ -49,7 +53,11 @@
 	<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
 		{#if subject.domain}
 			<DropdownMenu.Group class="sticky top-0 z-10">
-				<a href="./domains/#domain-{subject.domain.id}">
+				<a
+					href={resolve(`/graph-editor/graphs/[graphid=int]/domains#domain-${subject.domain.id}`, {
+						graphid
+					})}
+				>
 					<DropdownMenu.Item
 						class={cn('w-full justify-start', buttonVariants({ variant: 'ghost' }))}
 					>
@@ -74,7 +82,7 @@
 	{#each graph.domains as domain (domain.id)}
 		<ChangeSubjectInGraph {subject} {graph} {domain} {onSuccess} />
 	{:else}
-		<a href="./domains">
+		<a href={resolve('/graph-editor/graphs/[graphid=int]/domains', { graphid })}>
 			<DropdownMenu.Item>
 				<TriangleAlert />
 				No domains found, First make a domain in the Domains panel.
