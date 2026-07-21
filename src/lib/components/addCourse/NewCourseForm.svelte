@@ -13,7 +13,7 @@
 		dialogOpen: boolean;
 	};
 
-	// eslint-disable-next-line svelte/no-unused-props
+	// eslint-disable-next-line svelte/no-unused-props, no-useless-assignment -- write-only, closes the dialog via bind:dialogOpen in the parent
 	let { createNewCourseForm, program, dialogOpen = $bindable() }: Props = $props();
 	const id = useId();
 

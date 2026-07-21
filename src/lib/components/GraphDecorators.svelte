@@ -25,6 +25,8 @@
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
+	import type { ResolvedPathname } from '$app/types';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import DialogButton from './DialogButton.svelte';
 
 	type Props = {
@@ -50,24 +52,25 @@
 		}
 	});
 
+	// GraphDecorators is rendered on multiple, unrelated routes (graph editor pages and the
+	// public embed page), so the destination route can't be resolved statically here. These
+	// calls only ever update search params on whatever route is currently active.
 	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
+		const params = new SvelteURLSearchParams(page.url.searchParams);
 		params.set('view', view);
 
-		goto(`?${params.toString()}`);
+		goto(`?${params}` as ResolvedPathname);
 	}
 
 	function gotoLecture(lectureID: number | null) {
-		const params = new URLSearchParams();
-		for (const [key, value] of page.url.searchParams.entries()) params.set(key, value);
+		const params = new SvelteURLSearchParams(page.url.searchParams);
 		if (lectureID === null) {
 			params.delete('lectureID');
 		} else {
 			params.set('lectureID', String(lectureID));
 		}
 
-		goto(`?${params.toString()}`);
+		goto(`?${params}` as ResolvedPathname);
 	}
 
 	function toggleFullscreen() {

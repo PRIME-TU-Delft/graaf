@@ -22,7 +22,10 @@
 
 	const flipDurationMs = 300;
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering from the svelte-dnd-action library
+	// This is a workaround for the fact that we can't use $derived due to the reordering from the
+	// svelte-dnd-action library. A writable $derived would not be re-proxied on reassignment, so
+	// mutations like `lecture.order = index` below would stop being reactive.
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let lectures = $state(data.graph.lectures);
 	$effect(() => {
 		lectures = data.graph.lectures;

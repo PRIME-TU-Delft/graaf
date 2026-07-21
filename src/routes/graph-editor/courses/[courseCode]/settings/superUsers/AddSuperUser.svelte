@@ -5,6 +5,7 @@
 	import { useId } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	// Components
 	import * as Form from '$lib/components/ui/form/index.js';
@@ -45,7 +46,7 @@
 	const { form: formData, enhance, submitting, delayed } = form;
 
 	const programUserRoles = $derived.by(() => {
-		const userRoles = new Map<string, string>();
+		const userRoles = new SvelteMap<string, string>();
 
 		course.programs.forEach((program) => {
 			program.editors.forEach((editor) => {

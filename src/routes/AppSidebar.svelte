@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import Logo from '$lib/components/Logo.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip';
@@ -28,13 +29,13 @@
 
 	let menuItems = $derived.by(() => {
 		const items = [
-			{ name: 'Home', path: '/graph-editor', icon: Home },
-			{ name: 'Programmes', path: '/graph-editor/programs', icon: LibraryBig },
-			{ name: 'Courses', path: '/graph-editor/courses', icon: Notebook },
-			{ name: 'Sandboxes', path: '/graph-editor/sandboxes', icon: FlaskRound }
+			{ name: 'Home', path: resolve('/graph-editor'), icon: Home },
+			{ name: 'Programmes', path: resolve('/graph-editor/programs'), icon: LibraryBig },
+			{ name: 'Courses', path: resolve('/graph-editor/courses'), icon: Notebook },
+			{ name: 'Sandboxes', path: resolve('/graph-editor/sandboxes'), icon: FlaskRound }
 		];
 		if (user?.role === 'ADMIN') {
-			items.push({ name: 'Users', path: '/graph-editor/users', icon: UserIcon });
+			items.push({ name: 'Users', path: resolve('/graph-editor/users'), icon: UserIcon });
 		}
 
 		return items;

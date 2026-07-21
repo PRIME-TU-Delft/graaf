@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { cn } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
@@ -156,7 +157,7 @@
 	});
 </script>
 
-<a href="/">
+<a href={resolve('/')}>
 	<!-- SVG Logo -->
 	<svg viewBox="0 0 {viewboxSize} {viewboxSize}" class={twClasses}>
 		<!-- Edges -->

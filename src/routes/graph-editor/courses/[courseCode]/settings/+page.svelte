@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
 	import ArchiveCourse from './ArchiveCourse.svelte';
@@ -100,7 +101,11 @@
 		{#each data.course.programs as program (program.id)}
 			<li>
 				{#if hasProgramPermissions(data.user, program, 'ProgramAdminEditor')}
-					<a href={`/graph-editor/programs/${program.id}/settings`}>{program.name}</a>
+					<a
+						href={resolve('/graph-editor/programs/[programId=int]/settings', {
+							programId: String(program.id)
+						})}>{program.name}</a
+					>
 				{:else}
 					<p>{program.name}</p>
 				{/if}

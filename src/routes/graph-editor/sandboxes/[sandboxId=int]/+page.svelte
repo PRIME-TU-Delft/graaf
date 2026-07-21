@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { displayName } from '$lib/utils/displayUserName';
 
 	// Components
@@ -43,7 +44,11 @@
 					</h2>
 				</div>
 				{#if hasAtLeastAdminPermission}
-					<Button href="{data.sandbox.id}/settings">Settings <ArrowRight /></Button>
+					<Button
+						href={resolve('/graph-editor/sandboxes/[sandboxId=int]/settings', {
+							sandboxId: String(data.sandbox.id)
+						})}>Settings <ArrowRight /></Button
+					>
 				{/if}
 			</div>
 
@@ -59,14 +64,15 @@
 			<h2 class="text-xl font-bold text-amber-950">This is not a course</h2>
 			<p>
 				Sandboxes are used for personal projects or assignments. They should <b>not</b> be used to represent
-				a university course, nor should their content be posted publicly. Sandboxes are prone to get
-				lost or deleted over time.
+				a university course, nor should their content be posted publicly. Sandboxes are prone to get lost
+				or deleted over time.
 			</p>
 			<br />
 			<p>
 				Looking to create a course? Please contact a programme administrator. You can find all
-				administrators at the <a class="underline" href="/graph-editor/programs">programmes</a> page.
-				You can also copy graphs from your sandbox to a course, if you already have one.
+				administrators at the <a class="underline" href={resolve('/graph-editor/programs')}
+					>programmes</a
+				> page. You can also copy graphs from your sandbox to a course, if you already have one.
 			</p>
 		</section>
 
@@ -83,7 +89,7 @@
 			{#each data.graphs as graph (graph.id)}
 				<a
 					class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-shadow hover:shadow-lg"
-					href="/graph-editor/graphs/{graph.id}"
+					href={resolve('/graph-editor/graphs/[graphid=int]', { graphid: String(graph.id) })}
 				>
 					<div class="grow">
 						<h2 class="text-xl font-bold text-purple-950">{graph.name}</h2>

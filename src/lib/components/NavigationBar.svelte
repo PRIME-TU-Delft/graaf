@@ -1,19 +1,23 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import type { ResolvedPathname } from '$app/types';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 
 	let mouseState: number = $state(-1); // eslint-disable-line @typescript-eslint/no-unused-vars
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
 
+	// The breadcrumb trail is built from arbitrary segments of the current path, so the
+	// destination isn't a statically resolvable route - it's always a slice of the already
+	// resolved current pathname.
 	let urls = $derived.by(() => {
 		const parts = page.url?.pathname?.split('/') ?? [];
-		let result: { name: string; url: string }[] = [];
+		let result: { name: string; url: ResolvedPathname }[] = [];
 
 		return parts.reduce((acc, part, index) => {
 			if (part === '') return acc;
 
-			const url = '/' + parts.slice(1, index + 1).join('/');
+			const url = ('/' + parts.slice(1, index + 1).join('/')) as ResolvedPathname;
 			const name = part.charAt(0).toUpperCase() + part.slice(1);
 
 			if (!isNaN(Number(name))) {
