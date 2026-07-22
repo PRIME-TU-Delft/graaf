@@ -51,29 +51,31 @@
 	<Popover.Content>
 		<Command.Root loop>
 			<Command.Input autofocus placeholder="Search users..." class="my-1 h-9" />
-			<Command.Empty>No user found.</Command.Empty>
-			<Command.Group>
-				{#each users as user (user.id)}
-					<Command.Item
-						value={user.email + ' ' + user.nickname || user.firstName + ' ' + user.lastName || ''}
-						onSelect={() => {
-							closeAndFocusTrigger(id, () => (isSuperUserPopoverOpen = false));
-							value = user.id;
-							onSelect(user);
-						}}
-						class="flex items-center justify-between"
-					>
-						{displayName(user)}
+			<Command.List>
+				<Command.Empty>No user found.</Command.Empty>
+				<Command.Group>
+					{#each users as user (user.id)}
+						<Command.Item
+							value={user.email + ' ' + user.nickname || user.firstName + ' ' + user.lastName || ''}
+							onSelect={() => {
+								closeAndFocusTrigger(id, () => (isSuperUserPopoverOpen = false));
+								value = user.id;
+								onSelect(user);
+							}}
+							class="flex items-center justify-between"
+						>
+							{displayName(user)}
 
-						<div class="flex items-center gap-1">
-							{#if userRoles.has(user.id)}
-								<p class="ml-auto text-xs">Program {userRoles.get(user.id)}</p>
-							{/if}
-							<Check class={cn('ml-auto w-auto', user.id !== value && 'w-0 text-transparent')} />
-						</div>
-					</Command.Item>
-				{/each}
-			</Command.Group>
+							<div class="flex items-center gap-1">
+								{#if userRoles.has(user.id)}
+									<p class="ml-auto text-xs">Program {userRoles.get(user.id)}</p>
+								{/if}
+								<Check class={cn('ml-auto w-auto', user.id !== value && 'w-0 text-transparent')} />
+							</div>
+						</Command.Item>
+					{/each}
+				</Command.Group>
+			</Command.List>
 		</Command.Root>
 	</Popover.Content>
 </Popover.Root>

@@ -217,52 +217,54 @@
 			<Popover.Content>
 				<Command.Root loop>
 					<Command.Input autofocus placeholder="Search destinations..." class="my-1 h-9" />
-					<Command.Empty>No course found.</Command.Empty>
-					<Command.Group heading="Sandboxes">
-						{#each destinationSandboxes as sandbox (sandbox.id)}
-							<Command.Item
-								value={sandbox.name}
-								onSelect={() => {
-									$formData.destinationId = sandbox.id;
-									$formData.destinationType = 'SANDBOX';
-									closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
-								}}
-							>
-								{sandbox.name}
-								<Check
-									class={cn(
-										'ml-auto',
-										($formData.destinationType !== 'SANDBOX' ||
-											$formData.destinationId !== sandbox.id) &&
-											'text-transparent'
-									)}
-								/>
-							</Command.Item>
-						{/each}
-					</Command.Group>
+					<Command.List>
+						<Command.Empty>No course found.</Command.Empty>
+						<Command.Group heading="Sandboxes">
+							{#each destinationSandboxes as sandbox (sandbox.id)}
+								<Command.Item
+									value={sandbox.name}
+									onSelect={() => {
+										$formData.destinationId = sandbox.id;
+										$formData.destinationType = 'SANDBOX';
+										closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
+									}}
+								>
+									{sandbox.name}
+									<Check
+										class={cn(
+											'ml-auto',
+											($formData.destinationType !== 'SANDBOX' ||
+												$formData.destinationId !== sandbox.id) &&
+												'text-transparent'
+										)}
+									/>
+								</Command.Item>
+							{/each}
+						</Command.Group>
 
-					<Command.Group heading="Courses">
-						{#each destinationCourses as course (course.id)}
-							<Command.Item
-								value={course.name}
-								onSelect={() => {
-									$formData.destinationId = course.id;
-									$formData.destinationType = 'COURSE';
-									closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
-								}}
-							>
-								{course.name}
-								<Check
-									class={cn(
-										'ml-auto',
-										($formData.destinationType !== 'COURSE' ||
-											$formData.destinationId !== course.id) &&
-											'text-transparent'
-									)}
-								/>
-							</Command.Item>
-						{/each}
-					</Command.Group>
+						<Command.Group heading="Courses">
+							{#each destinationCourses as course (course.id)}
+								<Command.Item
+									value={course.name}
+									onSelect={() => {
+										$formData.destinationId = course.id;
+										$formData.destinationType = 'COURSE';
+										closeAndFocusTrigger(triggerId, () => (isDestinationCourseOpen = false));
+									}}
+								>
+									{course.name}
+									<Check
+										class={cn(
+											'ml-auto',
+											($formData.destinationType !== 'COURSE' ||
+												$formData.destinationId !== course.id) &&
+												'text-transparent'
+										)}
+									/>
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.List>
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
