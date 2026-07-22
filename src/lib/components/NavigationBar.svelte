@@ -1,24 +1,37 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { ResolvedPathname } from '$app/types';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import type { Breadcrumb as Crumb } from '$lib/utils/breadcrumbs';
 
 	let mouseState: number = $state(-1); // eslint-disable-line @typescript-eslint/no-unused-vars
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
 
-	// The breadcrumb trail is built from arbitrary segments of the current path, so the
-	// destination isn't a statically resolvable route - it's always a slice of the already
-	// resolved current pathname.
-	let urls = $derived.by(() => {
+	// URL-encoded segments (spaces, non-ASCII) should read as their decoded name. A malformed
+	// escape sequence would throw, so fall back to the raw segment in that case.
+	function safeDecode(segment: string): string {
+		try {
+			return decodeURIComponent(segment);
+		} catch {
+			return segment;
+		}
+	}
+
+	// A route that knows its own entities supplies a `breadcrumbs` trail through page data
+	// (see src/lib/utils/breadcrumbs.ts). When it does, we trust it. Otherwise we fall back
+	// to building the trail from the raw path segments, which can only title-case each part.
+	let urls = $derived.by<Crumb[]>(() => {
+		if (page.data?.breadcrumbs) return page.data.breadcrumbs;
+
 		const parts = page.url?.pathname?.split('/') ?? [];
-		let result: { name: string; url: ResolvedPathname }[] = [];
+		let result: Crumb[] = [];
 
 		return parts.reduce((acc, part, index) => {
 			if (part === '') return acc;
 
-			const url = ('/' + parts.slice(1, index + 1).join('/')) as ResolvedPathname;
-			const name = part.charAt(0).toUpperCase() + part.slice(1);
+			const url = '/' + parts.slice(1, index + 1).join('/');
+			const decoded = safeDecode(part);
+			const name = decoded.charAt(0).toUpperCase() + decoded.slice(1);
 
 			if (!isNaN(Number(name))) {
 				if (acc[acc.length - 1]?.url.includes('courses')) {
@@ -90,6 +103,7 @@
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content align="start">
 								{#each urls.slice(1, urls.length - 2) as { name, url } (url)}
+									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- breadcrumb urls are already-resolved runtime paths -->
 									<a href={url}>
 										<DropdownMenu.Item>
 											{name}

@@ -4,7 +4,9 @@ declare global {
 	namespace App {
 		// interface Error {}
 		// interface Locals {}
-		// interface PageData {}
+		interface PageData {
+			breadcrumbs?: import('$lib/utils/breadcrumbs').Breadcrumb[];
+		}
 		// interface PageState {}
 		// interface Platform {}
 	}
