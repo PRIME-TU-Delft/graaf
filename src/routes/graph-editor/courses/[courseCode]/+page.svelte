@@ -17,15 +17,17 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const hasAtLeastEditPermission =
+	const hasAtLeastEditPermission = $derived(
 		data.user != undefined &&
-		data.course != undefined &&
-		hasCoursePermissions(data.user, data.course, 'CourseAdminEditorORProgramAdminEditor');
+			data.course != undefined &&
+			hasCoursePermissions(data.user, data.course, 'CourseAdminEditorORProgramAdminEditor')
+	);
 
-	const hasAtLeastAdminPermission =
+	const hasAtLeastAdminPermission = $derived(
 		data.user != undefined &&
-		data.course != undefined &&
-		hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor');
+			data.course != undefined &&
+			hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')
+	);
 </script>
 
 <article class="my-6 mb-12 space-y-6">

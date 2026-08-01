@@ -7,7 +7,7 @@
 
 	let { mouseState, class: classes }: { mouseState: number; class: string } = $props();
 
-	const twClasses = cn(classes);
+	const twClasses = $derived(cn(classes));
 
 	// Define constants
 	const viewboxSize = 100;

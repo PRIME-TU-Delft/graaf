@@ -32,6 +32,7 @@
 			.map((i) => courses[i])
 	);
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(linkCoursesForm, {
 		id: 'link-courses-form',
 		validators: zodClient(linkingCoursesSchema),

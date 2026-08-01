@@ -19,6 +19,7 @@
 	const connectedSubjects = $derived(graph.subjects.filter((s) => s.domainId == domain.id));
 	const relationCount = $derived(domain.sourceDomains.length + domain.targetDomains.length);
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).deleteDomainForm, {
 		id: 'delete-domain-form-' + domain.id,
 		validators: zodClient(deleteDomainSchema),

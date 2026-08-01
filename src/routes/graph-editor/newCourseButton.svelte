@@ -30,6 +30,7 @@
 		errorMessage = 'You do not have the permissions to create a new course'
 	}: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(courseForm, {
 		id: useId(),
 		validators: zodClient(newCourseSchema),

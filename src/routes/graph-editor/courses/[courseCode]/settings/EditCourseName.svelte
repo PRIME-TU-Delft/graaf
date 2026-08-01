@@ -14,6 +14,7 @@
 
 	let { course, editCourseForm, onSuccess }: EditCourseNameProps = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(editCourseForm, {
 		validators: zodClient(newCourseSchema),
 		id: `edit-course-name`,

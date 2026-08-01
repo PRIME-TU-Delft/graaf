@@ -58,6 +58,7 @@
 	}
 
 	const triggerId = useId();
+	// svelte-ignore state_referenced_locally
 	const form = superForm(duplicateGraphForm, {
 		id: 'duplicate-graph-' + useId(),
 		validators: zodClient(duplicateGraphSchema),

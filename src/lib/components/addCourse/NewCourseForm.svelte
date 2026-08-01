@@ -17,6 +17,7 @@
 	let { createNewCourseForm, program, dialogOpen = $bindable() }: Props = $props();
 	const id = useId();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(createNewCourseForm, {
 		validators: zodClient(newCourseSchema),
 		id: `new-course-${id}`,

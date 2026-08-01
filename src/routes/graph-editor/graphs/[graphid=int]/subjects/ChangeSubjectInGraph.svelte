@@ -21,6 +21,7 @@
 
 	let { subject, graph, domain, onSuccess }: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).newSubjectForm, {
 		id: 'change-domain-form-1-' + useId() + (domain?.id ?? 'none'),
 		validators: zodClient(subjectSchema),

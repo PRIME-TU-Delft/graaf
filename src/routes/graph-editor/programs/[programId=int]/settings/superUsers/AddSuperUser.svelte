@@ -31,6 +31,7 @@
 
 	let { program, allUsers, editSuperUserForm }: AddNewUserProps = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(editSuperUserForm, {
 		id: 'add-super-user-' + useId(),
 		validators: zodClient(editSuperUserSchema),

@@ -18,6 +18,7 @@
 
 	const relationCount = $derived(subject.sourceSubjects.length + subject.targetSubjects.length);
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).deleteSubjectForm, {
 		id: 'delete-subject-form-' + subject.id,
 		validators: zodClient(deleteSubjectSchema),

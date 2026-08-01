@@ -22,6 +22,7 @@
 
 	const { graph, domain, sourceDomain, targetDomain, type }: Props = $props();
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).changeDomainRelForm, {
 		id: `change-${type}-rel-form-${useId()}`,
 		validators: zodClient(changeDomainRelSchema),

@@ -24,9 +24,12 @@
 
 	let { graph, newLinkForm }: CreateNewGraphButtonProps = $props();
 
-	const parentType = graph.parentType;
-	const parentId = (graph.parentType == 'COURSE' ? graph.courseId : graph.sandboxId) as number;
+	const parentType = $derived(graph.parentType);
+	const parentId = $derived(
+		(graph.parentType == 'COURSE' ? graph.courseId : graph.sandboxId) as number
+	);
 
+	// svelte-ignore state_referenced_locally
 	const form = superForm(newLinkForm, {
 		validators: zodClient(newLinkSchema),
 		onResult: ({ result }) => {
