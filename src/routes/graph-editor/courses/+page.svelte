@@ -99,7 +99,7 @@
 
 		<a
 			class="group grid w-full grid-cols-2 items-center gap-1 rounded border-2 border-purple-100 bg-purple-50/10 p-4 shadow-none transition-all hover:bg-purple-100 hover:shadow-lg"
-			href={resolve('/graph-editor/courses/[courseCode]', { courseCode: course.code })}
+			href={resolve('/graph-editor/courses/[courseCode]', { courseCode: course.uriCode })}
 		>
 			<div class="grow">
 				<h2 class="text-xl font-bold text-purple-950">{course.code} {course.name}</h2>
@@ -138,7 +138,9 @@
 							e.preventDefault();
 							e.stopPropagation();
 							goto(
-								resolve('/graph-editor/courses/[courseCode]/settings', { courseCode: course.code })
+								resolve('/graph-editor/courses/[courseCode]/settings', {
+									courseCode: course.uriCode
+								})
 							);
 						}}
 					>

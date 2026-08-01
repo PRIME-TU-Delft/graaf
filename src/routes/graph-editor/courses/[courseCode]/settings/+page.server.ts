@@ -26,7 +26,7 @@ export const load = (async ({ params, locals }) => {
 		const user = await getUser({ locals });
 		const dbCourse = await prisma.course.findFirst({
 			where: {
-				code: params.courseCode,
+				uriCode: encodeURIComponent(params.courseCode),
 				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
 			},
 			include: {
