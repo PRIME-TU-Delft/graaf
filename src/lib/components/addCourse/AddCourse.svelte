@@ -1,7 +1,6 @@
 <script lang="ts">
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import { hasProgramPermissions } from '$lib/utils/permissions';
-	import { onMount } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import LinkCourseDataTable from './LinkCourseDataTable.svelte';
 	import NewCourseForm from './NewCourseForm.svelte';
@@ -23,19 +22,17 @@
 	let { user, program, courses, linkCoursesForm, createNewCourseForm }: AddCourseProps = $props();
 
 	let loading = $state(true);
-	let data: Course[] = $state([]);
+	let allCourses: Course[] = $state([]);
 	let dialogOpen = $state(false);
 
 	const hasAdminRights = $derived(hasProgramPermissions(user, program, 'ProgramAdmin'));
 
-	onMount(() => {
+	// Re-await whenever the streamed promise changes (e.g. after invalidateAll on link)
+	$effect(() => {
+		loading = true;
 		courses
-			.then((courses) => {
-				// Data is all the courses that are not already linked to the program
-				data = courses.filter((c) => {
-					return !program.courses.some((course) => c.code === course.code);
-				});
-
+			.then((resolved) => {
+				allCourses = resolved;
 				loading = false;
 			})
 			.catch(() => {
@@ -43,6 +40,12 @@
 				toast.error('Failed to load courses');
 			});
 	});
+
+	// Linkable courses = all courses not already linked to the program. Derived so it
+	// recomputes when program.courses updates after a link.
+	const data = $derived(
+		allCourses.filter((c) => !program.courses.some((course) => c.code === course.code))
+	);
 </script>
 
 <DialogButton
