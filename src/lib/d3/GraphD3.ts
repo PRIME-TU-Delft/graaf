@@ -24,6 +24,13 @@ import type {
 } from './types';
 import type { DomainStyle } from '@prisma/client';
 
+/**
+ * Orchestrates the interactive D3 graph canvas: owns the SVG selections, the force simulation,
+ * zoom/pan behavior, and the current graph data, and delegates rendering/interaction concerns to
+ * the various Toolbox modules (BackgroundToolbox, NodeToolbox, EdgeToolbox, OverlayToolbox,
+ * CameraToolbox, TransitionToolbox). One instance is created per mounted graph canvas; the
+ * Svelte 5 bridge in GraphD3State.svelte.ts / graphD3.svelte.ts exposes it to component code.
+ */
 export class GraphD3 {
 	data: GraphData;
 	editable: boolean;
@@ -42,6 +49,20 @@ export class GraphD3 {
 	keys: Record<string, boolean> = {};
 	data_backup: GraphData | null = null;
 
+	/**
+	 * Build a new graph canvas: formats the Prisma payload into simulation-ready data, sets up
+	 * the SVG layer structure (defs/background/content/overlay), the force simulation, and
+	 * zoom/pan, then snaps the camera into the requested initial view. Clears any existing
+	 * content in `element` first.
+	 *
+	 * @param element - The `<svg>` element to render into
+	 * @param payload - The raw Prisma graph payload (domains, subjects, lectures and their
+	 * relations) to format and render
+	 * @param editable - Whether the graph is being viewed in the authenticated editor (enables
+	 * dragging/editing interactions) or the read-only public viewer
+	 * @param view - Which of domains/subjects/lectures to open on
+	 * @param lectureId - If provided, the lecture to focus when `view` is `lectures`
+	 */
 	constructor(
 		element: SVGSVGElement,
 		payload: PrismaGraphPayload,
@@ -145,6 +166,7 @@ export class GraphD3 {
 
 	// -----------------------------> Public methods
 
+	/** Remove all rendered content from the SVG and reset the in-memory graph data to empty. */
 	clear() {
 		this.svg.selectAll('*').remove(); // Clear SVG
 		this.data = {
@@ -156,6 +178,14 @@ export class GraphD3 {
 		};
 	}
 
+	/**
+	 * Replace the current graph data and re-render the active view. No-op while a view
+	 * transition is in progress; stops any running simulation first.
+	 *
+	 * @param data - The new graph data to render
+	 * @param animateCamera - Whether the camera should animate to the new layout (domains/
+	 * subjects views only) rather than snapping instantly
+	 */
 	setData(data: GraphData, animateCamera: boolean) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
@@ -170,6 +200,14 @@ export class GraphD3 {
 		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.save);
 	}
 
+	/**
+	 * Transition the canvas from the current view (domains/subjects/lectures) to `targetView`,
+	 * using the matching TransitionToolbox animation for that pair. No-op while a view
+	 * transition is already in progress; stops any running simulation first. Transitioning to
+	 * the current view (a same-to-same target) is a no-op, since no case matches.
+	 *
+	 * @param targetView - The view to transition to
+	 */
 	setView(targetView: GraphView) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
@@ -201,6 +239,13 @@ export class GraphD3 {
 		}
 	}
 
+	/**
+	 * Set (or clear) the focused lecture. When the lectures view is active, re-snaps to reflect
+	 * the new lecture's past/present/future node grouping. Always refreshes node highlighting
+	 * regardless of the active view.
+	 *
+	 * @param lecture - The lecture to focus, or null to clear the focused lecture
+	 */
 	setLecture(lecture: LectureData | null) {
 		this.lecture = lecture;
 
@@ -211,6 +256,14 @@ export class GraphD3 {
 		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.updateHighlight, this);
 	}
 
+	/**
+	 * Update the rendered style of a single domain node in place, without a full data refresh.
+	 * Matches on the node's DOM id (`#domain-{id}`), so this affects the currently rendered
+	 * element directly rather than going through `data`.
+	 *
+	 * @param id - The domain's id
+	 * @param style - The new style, or null to clear it
+	 */
 	setDomainStyle(id: number, style: DomainStyle | null) {
 		this.content
 			.selectAll<SVGGElement, NodeData>(`#domain-${id}`)
@@ -220,6 +273,10 @@ export class GraphD3 {
 			.call(NodeToolbox.updateStyle);
 	}
 
+	/**
+	 * Animate the camera one zoom step in (by `settings.ZOOM_STEP`). No-op if zoom/pan is
+	 * currently disallowed.
+	 */
 	zoomIn() {
 		if (!CameraToolbox.allowZoomAndPan(this)) {
 			return;
@@ -232,6 +289,10 @@ export class GraphD3 {
 			.call(this.zoom.scaleBy, settings.ZOOM_STEP);
 	}
 
+	/**
+	 * Animate the camera one zoom step out (the inverse of `settings.ZOOM_STEP`). No-op if
+	 * zoom/pan is currently disallowed.
+	 */
 	zoomOut() {
 		if (!CameraToolbox.allowZoomAndPan(this)) {
 			return;
@@ -244,6 +305,11 @@ export class GraphD3 {
 			.call(this.zoom.scaleBy, 1 / settings.ZOOM_STEP);
 	}
 
+	/**
+	 * Start the force simulation, releasing all fixed nodes so they can move freely. No-op
+	 * unless the graph is currently idle. Backs up the current data first so resetSimulation
+	 * can restore it.
+	 */
 	startSimulation() {
 		if (!graphState.isIdle()) return;
 
@@ -261,6 +327,12 @@ export class GraphD3 {
 		graphState.toSimulating();
 	}
 
+	/**
+	 * Discard the in-progress simulation and restore the data captured by startSimulation.
+	 * No-op unless the graph is currently simulating.
+	 *
+	 * @throws If no backup data exists (should not happen if startSimulation always ran first)
+	 */
 	resetSimulation() {
 		if (!graphState.isSimulating()) return;
 
@@ -273,6 +345,10 @@ export class GraphD3 {
 		}
 	}
 
+	/**
+	 * Stop the force simulation, fixing every node at its current position and persisting the
+	 * result. No-op unless the graph is currently simulating.
+	 */
 	stopSimulation() {
 		if (!graphState.isSimulating()) return;
 
@@ -291,10 +367,15 @@ export class GraphD3 {
 		graphState.toIdle();
 	}
 
+	/** Whether any rendered node is currently unfixed (free to move in the simulation). */
 	hasFreeNodes() {
 		return this.content.selectAll<SVGGElement, NodeData>('.node:not(.fixed)').size() > 0;
 	}
 
+	/**
+	 * Animate the camera to frame every currently rendered node. No-op if zoom/pan is currently
+	 * disallowed.
+	 */
 	centerOnGraph() {
 		if (!CameraToolbox.allowZoomAndPan(this)) {
 			return;
@@ -307,6 +388,19 @@ export class GraphD3 {
 
 	// -----------------------------> Private methods
 
+	/**
+	 * Convert a raw Prisma graph payload into the flat, id-linked GraphData shape the D3
+	 * simulation and renderers work with: domain/subject nodes get a `uuid` (prefixed to keep
+	 * domain and subject ids from colliding), relations become edge objects referencing the
+	 * actual node objects (not just ids), and each lecture gets its subjects partitioned into
+	 * past/present/future by walking the subject edge graph outward from that lecture's subjects.
+	 *
+	 * @param data - The raw payload, as loaded from Prisma with domains/subjects/lectures and
+	 * their relations included
+	 * @returns The formatted GraphData
+	 * @throws If a relation or lecture references a domain/subject id that isn't present in
+	 * `data` (indicates corrupt or incomplete input data)
+	 */
 	private formatPayload(data: PrismaGraphPayload): GraphData {
 		// NOTE: This function is a bit of a mess, but it's the best way I could think of to format the data.
 		//       It would be wonderful if the prisma schema would more closely match the required format.

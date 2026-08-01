@@ -1,7 +1,18 @@
 import * as settings from '$lib/settings';
 import type { GraphD3 } from './GraphD3';
 
+/**
+ * Renders the graph canvas's background: the panning/zooming grid pattern used in the
+ * domains/subjects views, and the three-column past/present/future table used in the lectures
+ * view, along with switching the SVG's sizing behavior (fluid vs. fixed viewBox) between them.
+ */
 export class BackgroundToolbox {
+	/**
+	 * Register the grid line pattern used by the grid background, in the graph's `<defs>`, if it
+	 * hasn't been added already. Safe to call multiple times.
+	 *
+	 * @param graph - The graph instance whose defs the pattern is added to
+	 */
 	static init(graph: GraphD3) {
 		const pattern = graph.definitions.select('pattern#grid');
 		if (!pattern.empty()) return;
@@ -30,6 +41,12 @@ export class BackgroundToolbox {
 			.attr('stroke', settings.GRID_COLOR);
 	}
 
+	/**
+	 * Remove the current background content and reset the SVG's sizing back to fluid (fill its
+	 * container), undoing anything the lecture background's fixed viewBox set up.
+	 *
+	 * @param graph - The graph instance to clear the background of
+	 */
 	static clear(graph: GraphD3) {
 		graph.background.attr('class', null).selectAll('*').remove();
 
@@ -42,6 +59,13 @@ export class BackgroundToolbox {
 			.attr('viewBox', null);
 	}
 
+	/**
+	 * Render the three-column past/present/future lecture table background, sized to fit the
+	 * currently focused lecture's largest column, and switch the SVG to a fixed viewBox sized to
+	 * match so the table isn't stretched to fill the container.
+	 *
+	 * @param graph - The graph instance to render the lecture background for, using `graph.lecture`
+	 */
 	static lecture(graph: GraphD3) {
 		BackgroundToolbox.clear(graph);
 
@@ -141,6 +165,11 @@ export class BackgroundToolbox {
 		graph.background.attr('class', 'lecture');
 	}
 
+	/**
+	 * Render the panning/zooming grid background used in the domains and subjects views.
+	 *
+	 * @param graph - The graph instance to render the grid background for
+	 */
 	static grid(graph: GraphD3) {
 		BackgroundToolbox.clear(graph);
 
@@ -152,6 +181,13 @@ export class BackgroundToolbox {
 			.attr('height', '100%');
 	}
 
+	/**
+	 * Reposition and rescale the grid pattern to follow the camera's current pan/zoom transform,
+	 * fading the grid lines out as the graph zooms out.
+	 *
+	 * @param graph - The graph instance whose grid should follow the transform
+	 * @param transform - The current zoom transform (x/y translation and k scale)
+	 */
 	static transformGrid(graph: GraphD3, transform: { x: number; y: number; k: number }) {
 		graph.svg
 			.select('#grid')

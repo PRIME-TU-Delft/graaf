@@ -15,13 +15,22 @@ import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import { redirect } from '@sveltejs/kit';
 
+/** Server actions for creating, editing, archiving, and deleting courses, linking/unlinking
+ * them to programs, and managing their admin/editor super users. Called from form actions in
+ * `+page.server.ts` route files, one static method per operation. */
 export class CourseActions {
 	/**
+	 * Create a new course under a program and pin it for the creating user.
+	 *
 	 * PERMISSIONS:
 	 * - https://github.com/PRIME-TU-Delft/graaf/wiki/Permissions#c1
 	 * - Either PROGRAM_ADMINS, PROGRAM_EDITOR and SUPER_ADMIN can add new courses
+	 *
+	 * @param user - The user performing the action
+	 * @param form - Validated form data with the course name, code, and destination programId
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `name`-field error via setError instead of throwing.
 	 */
-
 	static async newCourse(user: User, form: SuperValidated<Infer<typeof newCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -56,6 +65,15 @@ export class CourseActions {
 		};
 	}
 
+	/**
+	 * Set, change, or revoke a course-level admin/editor role for a user.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with courseId, the target userId, and the new role
+	 * ('admin' | 'editor' | 'revoke')
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * an error via setError instead of throwing.
+	 */
 	static async editSuperUser(user: User, form: SuperValidated<Infer<typeof editSuperUserSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -92,6 +110,16 @@ export class CourseActions {
 		}
 	}
 
+	/**
+	 * Link or unlink one or more courses to/from a program.
+	 *
+	 * @param user - The user performing the action, must have program admin rights
+	 * @param form - Validated form data with the target programId and the list of courseIds
+	 * @param options - `{ link: true }` (default) connects the courses to the program,
+	 * `{ link: false }` disconnects them
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * an error via setError instead of throwing.
+	 */
 	static async linkCourses(
 		user: User,
 		form: SuperValidated<Infer<typeof linkingCoursesSchema>>,
@@ -119,8 +147,15 @@ export class CourseActions {
 	}
 
 	/**
+	 * Rename a course.
+	 *
 	 * PERMISSIONS:
 	 * - Only PROGRAM_ADMINS and SUPER_ADMIN can edit programs
+	 *
+	 * @param user - The user performing the action
+	 * @param form - Validated form data with the courseId and the new name
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with an error via setError instead of throwing.
 	 */
 	static async editCourse(user: User, form: SuperValidated<Infer<typeof editCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
@@ -142,6 +177,14 @@ export class CourseActions {
 		return { form };
 	}
 
+	/**
+	 * Pin or unpin a course for the current user. Any authenticated user may pin any course
+	 * for themselves; there is no course-permission check.
+	 *
+	 * @param user - The user performing the action, courses are pinned for this user specifically
+	 * @param form - Validated form data with the courseId and whether to pin or unpin
+	 * @returns `{ form }` on success, or `{ error }` if the update fails
+	 */
 	static async changePin(user: User, form: SuperValidated<Infer<typeof changePinSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -166,6 +209,14 @@ export class CourseActions {
 		return { form };
 	}
 
+	/**
+	 * Archive or restore a course.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the courseId and the desired archive state
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * an error via setError instead of throwing.
+	 */
 	static async changeArchive(user: User, form: SuperValidated<Infer<typeof changeArchiveSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
@@ -184,6 +235,14 @@ export class CourseActions {
 		}
 	}
 
+	/**
+	 * Permanently delete a course, then redirect the caller to the home page.
+	 *
+	 * @param user - The user performing the action, must have program admin/editor rights
+	 * @param form - Validated form data with the courseId to delete
+	 * @returns Never returns normally: on success it throws a redirect to `/`. On invalid input
+	 * it returns the form with an error via setError; on a failed delete it returns `{ error }`.
+	 */
 	static async deleteCourse(user: User, form: SuperValidated<Infer<typeof deleteCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 

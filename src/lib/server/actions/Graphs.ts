@@ -10,7 +10,21 @@ import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$l
 import type { User } from '@prisma/client';
 import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
 
+/** Server actions for creating, renaming, deleting, and duplicating graphs under a course or
+ * sandbox. Called from form actions in `+page.server.ts` route files, one static method per
+ * operation. */
 export class GraphActions {
+	/**
+	 * Await a course-scoped Prisma write and translate a permission failure into a form error.
+	 * Shared by every action in this class that mutates a graph through its parent course.
+	 *
+	 * @param query - The in-flight Prisma query (e.g. `prisma.course.update(...)`) to await
+	 * @param form - The form to attach an error to if the query fails
+	 * @param path - The form field to attach the error to
+	 * @returns `{ form }` on success. If the query fails because the course wasn't found under
+	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
+	 * underlying error message. Either way returns the form via setError instead of throwing.
+	 */
 	private static async updateCourse<T, S extends Record<string, unknown>>(
 		query: T,
 		form: SuperValidated<S>,
@@ -41,6 +55,17 @@ export class GraphActions {
 		return { form };
 	}
 
+	/**
+	 * Await a sandbox-scoped Prisma write and translate a permission failure into a form error.
+	 * The sandbox equivalent of updateCourse.
+	 *
+	 * @param query - The in-flight Prisma query (e.g. `prisma.sandbox.update(...)`) to await
+	 * @param form - The form to attach an error to if the query fails
+	 * @param path - The form field to attach the error to
+	 * @returns `{ form }` on success. If the query fails because the sandbox wasn't found under
+	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
+	 * underlying error message. Either way returns the form via setError instead of throwing.
+	 */
 	private static async updateSandbox<T, S extends Record<string, unknown>>(
 		query: T,
 		form: SuperValidated<S>,
@@ -71,6 +96,15 @@ export class GraphActions {
 		return { form };
 	}
 
+	/**
+	 * Create a new empty graph under a course or a sandbox.
+	 *
+	 * @param user - The user performing the action, must have course or sandbox edit rights
+	 * on the chosen parent
+	 * @param form - Validated form data with parentType ('COURSE' | 'SANDBOX'), parentId, and name
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `name`-field error via setError instead of throwing.
+	 */
 	static async newGraph(user: User, form: SuperValidated<Infer<typeof newGraphSchema>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
@@ -111,6 +145,15 @@ export class GraphActions {
 		}
 	}
 
+	/**
+	 * Rename a graph belonging to a course or a sandbox.
+	 *
+	 * @param user - The user performing the action, must have course or sandbox edit rights
+	 * on the graph's parent
+	 * @param form - Validated form data with parentType, parentId, graphId, and the new name
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `name`-field error via setError instead of throwing.
+	 */
 	static async editGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
@@ -151,6 +194,15 @@ export class GraphActions {
 		}
 	}
 
+	/**
+	 * Delete a graph belonging to a course or a sandbox.
+	 *
+	 * @param user - The user performing the action, must have course or sandbox edit rights
+	 * on the graph's parent
+	 * @param form - Validated form data with parentType, parentId, and graphId
+	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
+	 * with a `name`-field error via setError instead of throwing.
+	 */
 	static async deleteGraph(user: User, form: SuperValidated<Infer<typeof graphSchemaWithId>>) {
 		if (!form.valid) return setError(form, '', form.errors._errors?.[0] ?? 'Invalid form');
 
@@ -185,6 +237,25 @@ export class GraphActions {
 		}
 	}
 
+	/**
+	 * Deep-copy a graph (its domains, subjects, lectures, and all relations between them) into a
+	 * new graph under a chosen course or sandbox destination.
+	 *
+	 * Works in two passes because the copied domains/subjects/lectures need new ids before their
+	 * relations can be recreated: first every node is bulk-created and an old-id -> new-id map is
+	 * built for each entity type, then every relation is recreated in a single transaction using
+	 * those maps. If that relation transaction fails, the newly created graph and its nodes are
+	 * not rolled back, only the relations are incomplete.
+	 *
+	 * @param user - The user performing the action, must have edit rights on both the source
+	 * graph's parent (implicitly, via the graph lookup) and the chosen destination
+	 * @param form - Validated form data with graphId (source), destinationType, destinationId,
+	 * and newName
+	 * @returns `{ form }` on success when the destination is the same course/sandbox as the
+	 * source. When the destination differs, throws a redirect to the destination's page instead
+	 * of returning. On invalid input, a missing/inaccessible source or destination, or a failed
+	 * relation transaction, returns the form with an error via setError.
+	 */
 	static async duplicateGraph(
 		user: User,
 		form: SuperValidated<Infer<typeof duplicateGraphSchema>>
