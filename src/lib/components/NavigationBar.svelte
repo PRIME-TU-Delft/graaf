@@ -93,7 +93,20 @@
 						<Breadcrumb.Item class="sm:text-md text-sm">
 							<Breadcrumb.Page>{urls[2].name}</Breadcrumb.Page>
 						</Breadcrumb.Item>
-					{:else if urls.length > 3}
+					{:else if urls.length == 4}
+						<Breadcrumb.Separator />
+						<Breadcrumb.Item class="sm:text-md text-sm">
+							<Breadcrumb.Link href={urls[1].url}>{urls[1].name}</Breadcrumb.Link>
+						</Breadcrumb.Item>
+						<Breadcrumb.Separator />
+						<Breadcrumb.Item class="text-xs sm:text-base">
+							<Breadcrumb.Link href={urls[2].url}>{urls[2].name}</Breadcrumb.Link>
+						</Breadcrumb.Item>
+						<Breadcrumb.Separator />
+						<Breadcrumb.Item class="text-xs sm:text-base">
+							<Breadcrumb.Page>{urls[3].name}</Breadcrumb.Page>
+						</Breadcrumb.Item>
+					{:else if urls.length > 4}
 						<Breadcrumb.Separator />
 
 						<DropdownMenu.Root>
