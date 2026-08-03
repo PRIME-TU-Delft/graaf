@@ -74,6 +74,11 @@ export const load = (async ({ params, locals }) => {
 		});
 
 		return {
+			breadcrumbs: [
+				{ name: 'Home', url: '/graph-editor' },
+				{ name: 'Sandboxes', url: '/graph-editor/sandboxes' },
+				{ name: dbSandbox.name, url: `/graph-editor/sandboxes/${dbSandbox.id}` }
+			],
 			user,
 			sandbox: dbSandbox,
 			graphs: dbSandbox.graphs,
@@ -90,6 +95,10 @@ export const load = (async ({ params, locals }) => {
 		};
 	} catch (e: unknown) {
 		return {
+			breadcrumbs: [
+				{ name: 'Home', url: '/graph-editor' },
+				{ name: 'Sandboxes', url: '/graph-editor/sandboxes' }
+			],
 			user,
 			sandbox: undefined,
 			graphs: [],

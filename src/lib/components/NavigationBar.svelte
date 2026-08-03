@@ -1,24 +1,37 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import type { ResolvedPathname } from '$app/types';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import type { Breadcrumb as Crumb } from '$lib/utils/breadcrumbs';
 
 	let mouseState: number = $state(-1); // eslint-disable-line @typescript-eslint/no-unused-vars
 	let clearState: ReturnType<typeof setTimeout> | undefined = undefined;
 
-	// The breadcrumb trail is built from arbitrary segments of the current path, so the
-	// destination isn't a statically resolvable route - it's always a slice of the already
-	// resolved current pathname.
-	let urls = $derived.by(() => {
+	// URL-encoded segments (spaces, non-ASCII) should read as their decoded name. A malformed
+	// escape sequence would throw, so fall back to the raw segment in that case.
+	function safeDecode(segment: string): string {
+		try {
+			return decodeURIComponent(segment);
+		} catch {
+			return segment;
+		}
+	}
+
+	// A route that knows its own entities supplies a `breadcrumbs` trail through page data
+	// (see src/lib/utils/breadcrumbs.ts). When it does, we trust it. Otherwise we fall back
+	// to building the trail from the raw path segments, which can only title-case each part.
+	let urls = $derived.by<Crumb[]>(() => {
+		if (page.data?.breadcrumbs) return page.data.breadcrumbs;
+
 		const parts = page.url?.pathname?.split('/') ?? [];
-		let result: { name: string; url: ResolvedPathname }[] = [];
+		let result: Crumb[] = [];
 
 		return parts.reduce((acc, part, index) => {
 			if (part === '') return acc;
 
-			const url = ('/' + parts.slice(1, index + 1).join('/')) as ResolvedPathname;
-			const name = part.charAt(0).toUpperCase() + part.slice(1);
+			const url = '/' + parts.slice(1, index + 1).join('/');
+			const decoded = safeDecode(part);
+			const name = decoded.charAt(0).toUpperCase() + decoded.slice(1);
 
 			if (!isNaN(Number(name))) {
 				if (acc[acc.length - 1]?.url.includes('courses')) {
@@ -33,6 +46,17 @@
 			return acc;
 		}, result);
 	});
+
+	// Show Home plus up to 4 more crumbs uncollapsed. Beyond that, collapse the
+	// middle into an ellipsis dropdown and keep only the last 4 visible.
+	const MAX_VISIBLE_TAIL = 4;
+
+	let hidden = $derived(
+		urls.length > MAX_VISIBLE_TAIL + 1 ? urls.slice(1, urls.length - MAX_VISIBLE_TAIL) : []
+	);
+	let tail = $derived(
+		urls.length > MAX_VISIBLE_TAIL + 1 ? urls.slice(-MAX_VISIBLE_TAIL) : urls.slice(1)
+	);
 
 	function handleNavClick() {
 		mouseState = Math.random();
@@ -66,21 +90,7 @@
 						</Breadcrumb.Item>
 					{/if}
 
-					{#if urls.length == 2}
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Page>{urls[1].name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
-					{:else if urls.length == 3}
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Link href={urls[1].url}>{urls[1].name}</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Page>{urls[2].name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
-					{:else if urls.length > 3}
+					{#if hidden.length > 0}
 						<Breadcrumb.Separator />
 
 						<DropdownMenu.Root>
@@ -89,7 +99,8 @@
 								<span class="sr-only">Toggle menu</span>
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content align="start">
-								{#each urls.slice(1, urls.length - 2) as { name, url } (url)}
+								{#each hidden as { name, url } (url)}
+									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- breadcrumb urls are already-resolved runtime paths -->
 									<a href={url}>
 										<DropdownMenu.Item>
 											{name}
@@ -98,16 +109,18 @@
 								{/each}
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
-
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="text-xs sm:text-base">
-							<Breadcrumb.Link href={urls.at(-2)!.url}>{urls.at(-2)!.name}</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="text-xs sm:text-base">
-							<Breadcrumb.Page>{urls.at(-1)!.name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
 					{/if}
+
+					{#each tail as { name, url }, index (url)}
+						<Breadcrumb.Separator />
+						<Breadcrumb.Item class="text-xs sm:text-base">
+							{#if index == tail.length - 1}
+								<Breadcrumb.Page>{name}</Breadcrumb.Page>
+							{:else}
+								<Breadcrumb.Link href={url}>{name}</Breadcrumb.Link>
+							{/if}
+						</Breadcrumb.Item>
+					{/each}
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</div>
