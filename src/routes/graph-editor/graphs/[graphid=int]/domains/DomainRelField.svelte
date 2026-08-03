@@ -60,23 +60,25 @@
 		<Popover.Content>
 			<Command.Root>
 				<Command.Input autofocus placeholder="Search domains..." class="h-9" />
-				<Command.Empty>No domain found.</Command.Empty>
-				<Command.Group>
-					{#each domains as domain (domain.id)}
-						<Command.Item
-							value={domain.id.toString()}
-							onSelect={() => {
-								$formData[id] = domain.id;
-								closeAndFocusTrigger(triggerId);
-							}}
-						>
-							{domain.name}
-							<Check class={cn('ml-auto', domain.id !== $formData[id] && 'text-transparent')} />
-						</Command.Item>
-					{:else}
-						<p>No domain found.</p>
-					{/each}
-				</Command.Group>
+				<Command.List>
+					<Command.Empty>No domain found.</Command.Empty>
+					<Command.Group>
+						{#each domains as domain (domain.id)}
+							<Command.Item
+								value={domain.id.toString()}
+								onSelect={() => {
+									$formData[id] = domain.id;
+									closeAndFocusTrigger(triggerId);
+								}}
+							>
+								{domain.name}
+								<Check class={cn('ml-auto', domain.id !== $formData[id] && 'text-transparent')} />
+							</Command.Item>
+						{:else}
+							<p>No domain found.</p>
+						{/each}
+					</Command.Group>
+				</Command.List>
 			</Command.Root>
 		</Popover.Content>
 	</Popover.Root>

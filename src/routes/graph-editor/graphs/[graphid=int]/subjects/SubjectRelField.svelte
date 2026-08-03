@@ -60,23 +60,25 @@
 		<Popover.Content>
 			<Command.Root>
 				<Command.Input autofocus placeholder="Search subjects..." class="h-9" />
-				<Command.Empty>No subject found.</Command.Empty>
-				<Command.Group>
-					{#each subjects as subject (subject.id)}
-						<Command.Item
-							value={subject.id.toString()}
-							onSelect={() => {
-								$formData[id] = subject.id;
-								closeAndFocusTrigger(triggerId);
-							}}
-						>
-							{subject.name}
-							<Check class={cn('ml-auto', subject.id !== $formData[id] && 'text-transparent')} />
-						</Command.Item>
-					{:else}
-						<p>No subject found.</p>
-					{/each}
-				</Command.Group>
+				<Command.List>
+					<Command.Empty>No subject found.</Command.Empty>
+					<Command.Group>
+						{#each subjects as subject (subject.id)}
+							<Command.Item
+								value={subject.id.toString()}
+								onSelect={() => {
+									$formData[id] = subject.id;
+									closeAndFocusTrigger(triggerId);
+								}}
+							>
+								{subject.name}
+								<Check class={cn('ml-auto', subject.id !== $formData[id] && 'text-transparent')} />
+							</Command.Item>
+						{:else}
+							<p>No subject found.</p>
+						{/each}
+					</Command.Group>
+				</Command.List>
 			</Command.Root>
 		</Popover.Content>
 	</Popover.Root>
