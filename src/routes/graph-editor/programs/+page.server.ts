@@ -2,6 +2,7 @@ import { CourseActions } from '$lib/server/actions/Courses.js';
 import { ProgramActions } from '$lib/server/actions/Programs.js';
 import { getUser } from '$lib/server/actions/Users.js';
 import prisma from '$lib/server/db/prisma.js';
+import { whereHasCoursePermission } from '$lib/server/permissions.js';
 import { emptyPrismaPromise } from '$lib/utils.js';
 import { changePinSchema, newCourseSchema } from '$lib/zod/courseSchema.js';
 import { newProgramSchema } from '$lib/zod/programSchema.js';
@@ -56,6 +57,7 @@ export const load = (async ({ url, locals }) => {
 
 		// TODO: Check if we need pagination here
 		const courses = prisma.course.findMany({
+			where: whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor'),
 			orderBy: {
 				updatedAt: 'desc'
 			}

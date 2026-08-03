@@ -1,5 +1,5 @@
 import { ProgramActions } from '$lib/server/actions';
-import { whereHasProgramPermission } from '$lib/server/permissions';
+import { whereHasCoursePermission, whereHasProgramPermission } from '$lib/server/permissions';
 import { getUser } from '$lib/server/actions/Users';
 import prisma from '$lib/server/db/prisma';
 import { newCourseSchema } from '$lib/zod/courseSchema';
@@ -36,6 +36,7 @@ export const load = (async ({ params, locals }) => {
 		// TODO: Check if we need pagination here
 		const allUsers = await prisma.user.findMany();
 		const allCourses = prisma.course.findMany({
+			where: whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor'),
 			orderBy: {
 				updatedAt: 'desc'
 			}

@@ -113,11 +113,13 @@ export class CourseActions {
 	/**
 	 * Link or unlink one or more courses to/from a program.
 	 *
-	 * @param user - The user performing the action, must have program admin rights
+	 * @param user - The user performing the action, must have program admin or editor rights,
+	 * and course admin/editor (or program admin/editor on a program the course already belongs to)
+	 * rights on every course in the request
 	 * @param form - Validated form data with the target programId and the list of courseIds
 	 * @param options - `{ link: true }` (default) connects the courses to the program,
 	 * `{ link: false }` disconnects them
-	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * @returns The form on success. On invalid input or missing permission, returns the form with
 	 * an error via setError instead of throwing.
 	 */
 	static async linkCourses(
@@ -133,17 +135,40 @@ export class CourseActions {
 			else return { courses: { disconnect: courseIds } };
 		}
 
+		const program = await prisma.program.findFirst({
+			where: {
+				id: form.data.programId,
+				...whereHasProgramPermission(user, 'ProgramAdminEditor')
+			},
+			select: { id: true }
+		});
+		if (!program) {
+			return setError(form, '', "You don't have permission to link/unlink courses in this program");
+		}
+
+		const permittedCourses = await prisma.course.findMany({
+			where: {
+				id: { in: form.data.courseIds },
+				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			select: { id: true }
+		});
+		if (permittedCourses.length !== form.data.courseIds.length) {
+			const permitted = new Set(permittedCourses.map((c) => c.id));
+			const missing = form.data.courseIds.length - permitted.size;
+			return setError(form, '', `You don't have permission on ${missing} of the selected courses`);
+		}
+
 		try {
 			await prisma.program.update({
-				where: {
-					id: form.data.programId,
-					...whereHasProgramPermission(user, 'ProgramAdmin') // Only admins can link/unlink courses
-				},
+				where: { id: form.data.programId },
 				data: getData()
 			});
 		} catch {
-			return setError(form, '', "You don't have permission to link/unlink courses");
+			return setError(form, '', 'Failed to link/unlink courses');
 		}
+
+		return { form };
 	}
 
 	/**
