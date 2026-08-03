@@ -47,6 +47,17 @@
 		}, result);
 	});
 
+	// Show Home plus up to 4 more crumbs uncollapsed. Beyond that, collapse the
+	// middle into an ellipsis dropdown and keep only the last 4 visible.
+	const MAX_VISIBLE_TAIL = 4;
+
+	let hidden = $derived(
+		urls.length > MAX_VISIBLE_TAIL + 1 ? urls.slice(1, urls.length - MAX_VISIBLE_TAIL) : []
+	);
+	let tail = $derived(
+		urls.length > MAX_VISIBLE_TAIL + 1 ? urls.slice(-MAX_VISIBLE_TAIL) : urls.slice(1)
+	);
+
 	function handleNavClick() {
 		mouseState = Math.random();
 
@@ -79,34 +90,7 @@
 						</Breadcrumb.Item>
 					{/if}
 
-					{#if urls.length == 2}
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Page>{urls[1].name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
-					{:else if urls.length == 3}
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Link href={urls[1].url}>{urls[1].name}</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Page>{urls[2].name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
-					{:else if urls.length == 4}
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="sm:text-md text-sm">
-							<Breadcrumb.Link href={urls[1].url}>{urls[1].name}</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="text-xs sm:text-base">
-							<Breadcrumb.Link href={urls[2].url}>{urls[2].name}</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="text-xs sm:text-base">
-							<Breadcrumb.Page>{urls[3].name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
-					{:else if urls.length > 4}
+					{#if hidden.length > 0}
 						<Breadcrumb.Separator />
 
 						<DropdownMenu.Root>
@@ -115,7 +99,7 @@
 								<span class="sr-only">Toggle menu</span>
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content align="start">
-								{#each urls.slice(1, urls.length - 2) as { name, url } (url)}
+								{#each hidden as { name, url } (url)}
 									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- breadcrumb urls are already-resolved runtime paths -->
 									<a href={url}>
 										<DropdownMenu.Item>
@@ -125,16 +109,18 @@
 								{/each}
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
-
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="text-xs sm:text-base">
-							<Breadcrumb.Link href={urls.at(-2)!.url}>{urls.at(-2)!.name}</Breadcrumb.Link>
-						</Breadcrumb.Item>
-						<Breadcrumb.Separator />
-						<Breadcrumb.Item class="text-xs sm:text-base">
-							<Breadcrumb.Page>{urls.at(-1)!.name}</Breadcrumb.Page>
-						</Breadcrumb.Item>
 					{/if}
+
+					{#each tail as { name, url }, index (url)}
+						<Breadcrumb.Separator />
+						<Breadcrumb.Item class="text-xs sm:text-base">
+							{#if index == tail.length - 1}
+								<Breadcrumb.Page>{name}</Breadcrumb.Page>
+							{:else}
+								<Breadcrumb.Link href={url}>{name}</Breadcrumb.Link>
+							{/if}
+						</Breadcrumb.Item>
+					{/each}
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</div>
