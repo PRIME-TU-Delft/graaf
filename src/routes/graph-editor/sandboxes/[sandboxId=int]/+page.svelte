@@ -7,6 +7,7 @@
 	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
 	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
 	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
+	import LeaveSandbox from './LeaveSandbox.svelte';
 
 	// Icons
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -51,6 +52,8 @@
 							sandboxId: String(data.sandbox.id)
 						})}>Settings <ArrowRight /></Button
 					>
+				{:else if hasAtLeastEditPermission}
+					<LeaveSandbox sandbox={data.sandbox} />
 				{/if}
 			</div>
 
