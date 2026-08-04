@@ -5,7 +5,9 @@
 	// Components
 	import { page } from '$app/state';
 	import Help from '$lib/components/Help.svelte';
-	import { Button } from '$lib/components/ui/button';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import { cn } from '$lib/utils';
 	import { Archive, ArchiveX } from '@lucide/svelte';
 	import { untrack } from 'svelte';
 	import PinnedCourses from './PinnedCourses.svelte';
@@ -59,19 +61,27 @@
 				<SearchCourses {courses} />
 
 				{#if data.programs.length && courses.some((course) => course.isArchived)}
-					<Button
-						variant="outline"
-						class="border-2 p-3"
-						onclick={() => {
-							showArchivedCourses = !showArchivedCourses;
-						}}
-					>
-						{#if showArchivedCourses}
-							<ArchiveX />
-						{:else}
-							<Archive />
-						{/if}
-					</Button>
+					<Tooltip.Provider>
+						<Tooltip.Root>
+							<Tooltip.Trigger
+								class={cn(buttonVariants({ variant: 'outline' }), 'border-2 p-3')}
+								onclick={() => {
+									showArchivedCourses = !showArchivedCourses;
+								}}
+							>
+								{#if showArchivedCourses}
+									<ArchiveX />
+								{:else}
+									<Archive />
+								{/if}
+							</Tooltip.Trigger>
+							<Tooltip.Content
+								><p>
+									{showArchivedCourses ? 'Hide archived courses' : 'Show archived courses'}
+								</p></Tooltip.Content
+							>
+						</Tooltip.Root>
+					</Tooltip.Provider>
 				{/if}
 			{/await}
 		</div>
