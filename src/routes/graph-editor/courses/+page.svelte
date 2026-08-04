@@ -192,7 +192,7 @@
 						</Table.Cell>
 						<Table.Cell class="text-left">Admin</Table.Cell>
 						<Table.Cell class="text-right">
-							<Tooltip.Provider>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
 								<Tooltip.Root>
 									<Tooltip.Trigger>
 										{#snippet child({ props })}
@@ -218,7 +218,7 @@
 						</Table.Cell>
 						<Table.Cell>Editor</Table.Cell>
 						<Table.Cell class="text-right">
-							<Tooltip.Provider>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
 								<Tooltip.Root>
 									<Tooltip.Trigger>
 										{#snippet child({ props })}
@@ -266,7 +266,7 @@
 						</Table.Cell>
 						<Table.Cell class="text-left">Admin</Table.Cell>
 						<Table.Cell class="text-right">
-							<Tooltip.Provider>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
 								<Tooltip.Root>
 									<Tooltip.Trigger>
 										{#snippet child({ props })}
@@ -292,7 +292,7 @@
 						</Table.Cell>
 						<Table.Cell>Editor</Table.Cell>
 						<Table.Cell class="text-right">
-							<Tooltip.Provider>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
 								<Tooltip.Root>
 									<Tooltip.Trigger>
 										{#snippet child({ props })}
