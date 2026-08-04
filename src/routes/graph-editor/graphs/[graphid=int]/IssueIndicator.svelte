@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { cn } from '$lib/utils';
 	import { TriangleAlert, CircleAlert } from '@lucide/svelte';
 	import type { Issue } from '$lib/validators/types';
 
@@ -15,19 +16,18 @@
 
 {#if severity !== 'none'}
 	<Popover.Root>
-		{#if severity === 'error'}
-			<Popover.Trigger
-				class="cursor-pointer rounded bg-red-300/35 p-1 text-red-900 transition-colors hover:bg-red-300"
-			>
+		<Popover.Trigger
+			class={cn('cursor-pointer rounded p-1 transition-colors', {
+				'bg-red-300/35 text-red-900 hover:bg-red-300': severity === 'error',
+				'bg-yellow-300/35 text-yellow-900 hover:bg-yellow-300': severity === 'warning'
+			})}
+		>
+			{#if severity === 'error'}
 				<TriangleAlert />
-			</Popover.Trigger>
-		{:else if severity === 'warning'}
-			<Popover.Trigger
-				class="cursor-pointer rounded bg-yellow-300/35 p-1 text-yellow-900 transition-colors hover:bg-yellow-300"
-			>
+			{:else}
 				<CircleAlert />
-			</Popover.Trigger>
-		{/if}
+			{/if}
+		</Popover.Trigger>
 
 		<Popover.Content side="right" class="divide-y divide-gray-200 px-4 py-0">
 			{#each issues as issue (issue.id)}
