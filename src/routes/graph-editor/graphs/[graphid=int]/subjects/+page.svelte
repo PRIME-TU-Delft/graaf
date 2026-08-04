@@ -187,9 +187,7 @@
 					</DropdownMenu.GroupHeading>
 
 					{#each otherSubjects as subject (subject.id)}
-						<DropdownMenu.Item class="p-0">
-							<ChangeSubjectRel {graph} {subject} {sourceSubject} {targetSubject} {type} />
-						</DropdownMenu.Item>
+						<ChangeSubjectRel {graph} {subject} {sourceSubject} {targetSubject} {type} />
 					{/each}
 				</DropdownMenu.Group>
 			{/if}
