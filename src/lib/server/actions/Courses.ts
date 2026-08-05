@@ -1,6 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasCoursePermission, whereHasProgramPermission } from '../permissions';
+import { withPermissionCheck } from './permissionError';
 import {
 	newCourseSchema,
 	editCourseSchema,
@@ -34,35 +35,33 @@ export class CourseActions {
 	static async newCourse(user: User, form: SuperValidated<Infer<typeof newCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		try {
-			await prisma.program.update({
-				where: {
-					id: form.data.programId,
-					...whereHasProgramPermission(user, 'ProgramAdminEditor') // All super users can create a new course
-				},
-				data: {
-					updatedAt: new Date(),
-					courses: {
-						create: {
-							name: form.data.name,
-							code: form.data.code,
-							uriCode: encodeURIComponent(form.data.code),
-							pinnedBy: {
-								connect: {
-									id: user.id
+		return await withPermissionCheck(
+			() =>
+				prisma.program.update({
+					where: {
+						id: form.data.programId,
+						...whereHasProgramPermission(user, 'ProgramAdminEditor') // All super users can create a new course
+					},
+					data: {
+						updatedAt: new Date(),
+						courses: {
+							create: {
+								name: form.data.name,
+								code: form.data.code,
+								uriCode: encodeURIComponent(form.data.code),
+								pinnedBy: {
+									connect: {
+										id: user.id
+									}
 								}
 							}
 						}
 					}
-				}
-			});
-		} catch {
-			return setError(form, 'name', "You don't have permission to create a new course");
-		}
-
-		return {
-			form
-		};
+				}),
+			form,
+			'name',
+			{ entity: 'Program', message: "You don't have permission to create a new course" }
+		);
 	}
 
 	/**
@@ -97,17 +96,19 @@ export class CourseActions {
 			}
 		}
 
-		try {
-			await prisma.course.update({
-				where: {
-					id: form.data.courseId,
-					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
-				},
-				data: getData()
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to edit super users");
-		}
+		return await withPermissionCheck(
+			() =>
+				prisma.course.update({
+					where: {
+						id: form.data.courseId,
+						...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					},
+					data: getData()
+				}),
+			form,
+			'',
+			{ entity: 'Course', message: "You don't have permission to edit super users" }
+		);
 	}
 
 	/**
@@ -133,17 +134,19 @@ export class CourseActions {
 			else return { courses: { disconnect: courseIds } };
 		}
 
-		try {
-			await prisma.program.update({
-				where: {
-					id: form.data.programId,
-					...whereHasProgramPermission(user, 'ProgramAdmin') // Only admins can link/unlink courses
-				},
-				data: getData()
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to link/unlink courses");
-		}
+		return await withPermissionCheck(
+			() =>
+				prisma.program.update({
+					where: {
+						id: form.data.programId,
+						...whereHasProgramPermission(user, 'ProgramAdmin') // Only admins can link/unlink courses
+					},
+					data: getData()
+				}),
+			form,
+			'',
+			{ entity: 'Program', message: "You don't have permission to link/unlink courses" }
+		);
 	}
 
 	/**
@@ -160,21 +163,21 @@ export class CourseActions {
 	static async editCourse(user: User, form: SuperValidated<Infer<typeof editCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		try {
-			await prisma.course.update({
-				where: {
-					id: form.data.courseId,
-					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
-				},
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to edit this course");
-		}
-
-		return { form };
+		return await withPermissionCheck(
+			() =>
+				prisma.course.update({
+					where: {
+						id: form.data.courseId,
+						...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					},
+					data: {
+						name: form.data.name
+					}
+				}),
+			form,
+			'',
+			{ entity: 'Course', message: "You don't have permission to edit this course" }
+		);
 	}
 
 	/**
@@ -220,19 +223,21 @@ export class CourseActions {
 	static async changeArchive(user: User, form: SuperValidated<Infer<typeof changeArchiveSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		try {
-			await prisma.course.update({
-				where: {
-					id: form.data.courseId,
-					...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
-				},
-				data: {
-					isArchived: form.data.archive
-				}
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to (de)archive this course");
-		}
+		return await withPermissionCheck(
+			() =>
+				prisma.course.update({
+					where: {
+						id: form.data.courseId,
+						...whereHasCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+					},
+					data: {
+						isArchived: form.data.archive
+					}
+				}),
+			form,
+			'',
+			{ entity: 'Course', message: "You don't have permission to (de)archive this course" }
+		);
 	}
 
 	/**

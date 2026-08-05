@@ -1,5 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
+import { withPermissionCheck } from './permissionError';
 import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
@@ -27,36 +28,39 @@ export class DomainActions {
 	static async addDomainToGraph(user: User, form: SuperValidated<Infer<typeof domainSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid graph name');
 
-		try {
-			// Find the last domain added value in the database.
-			// Where creation data is the latest
-			const lastDomains = await prisma.domain.findFirst({
-				where: {
-					graphId: form.data.graphId
-				},
-				orderBy: {
-					order: 'desc'
-				}
-			});
+		return await withPermissionCheck(
+			async () => {
+				// Find the last domain added value in the database.
+				// Where creation data is the latest
+				const lastDomains = await prisma.domain.findFirst({
+					where: {
+						graphId: form.data.graphId
+					},
+					orderBy: {
+						order: 'desc'
+					}
+				});
 
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					domains: {
-						create: {
-							name: form.data.name,
-							style: form.data.style == '' ? null : (form.data.style as DomainStyle),
-							order: lastDomains ? lastDomains.order + 1 : 0
+				return prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						domains: {
+							create: {
+								name: form.data.name,
+								style: form.data.style == '' ? null : (form.data.style as DomainStyle),
+								order: lastDomains ? lastDomains.order + 1 : 0
+							}
 						}
 					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+				});
+			},
+			form,
+			'name',
+			{ entity: 'Graph', message: "You don't have permission to edit this domain" }
+		);
 	}
 
 	/**
@@ -117,16 +121,18 @@ export class DomainActions {
 			}
 		});
 
-		try {
-			await prisma.$transaction([
-				...removeTargetFromSourceDomain,
-				...removeSourceFromTargetDomain,
-				...removeDomainFromSubjects,
-				deleteDomain
-			]);
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withPermissionCheck(
+			() =>
+				prisma.$transaction([
+					...removeTargetFromSourceDomain,
+					...removeSourceFromTargetDomain,
+					...removeDomainFromSubjects,
+					deleteDomain
+				]),
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to delete this domain" }
+		);
 	}
 
 	/**
@@ -144,27 +150,29 @@ export class DomainActions {
 			return setError(form, 'name', 'Invalid domain id, cannot be 0');
 		}
 
-		try {
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					domains: {
-						update: {
-							where: { id: form.data.domainId },
-							data: {
-								name: form.data.name,
-								style: form.data.style == '' ? null : (form.data.style as DomainStyle)
+		return await withPermissionCheck(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						domains: {
+							update: {
+								where: { id: form.data.domainId },
+								data: {
+									name: form.data.name,
+									style: form.data.style == '' ? null : (form.data.style as DomainStyle)
+								}
 							}
 						}
 					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+				}),
+			form,
+			'name',
+			{ entity: 'Graph', message: "You don't have permission to edit this domain" }
+		);
 	}
 
 	// MARK: - Domain Relationships
@@ -229,13 +237,16 @@ export class DomainActions {
 	 * permission, returns the form with an error via setError instead of throwing.
 	 */
 	static async addDomainRel(user: User, form: SuperValidated<Infer<typeof domainRelSchema>>) {
-		try {
-			const sourceId = form.data.sourceDomainId;
-			const targetId = form.data.targetDomainId;
-			await DomainActions.connectDomains(form.data.graphId, user, sourceId, targetId);
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withPermissionCheck(
+			() => {
+				const sourceId = form.data.sourceDomainId;
+				const targetId = form.data.targetDomainId;
+				return DomainActions.connectDomains(form.data.graphId, user, sourceId, targetId);
+			},
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to edit this domain relation" }
+		);
 	}
 
 	/**
@@ -326,21 +337,24 @@ export class DomainActions {
 
 		// TODO: not atomic, if connectDomains fails after disconnectDomains succeeds the old
 		// relation is not restored. Wrap both steps in a transaction.
-		try {
-			await DomainActions.disconnectDomains(
-				form.data.graphId,
-				user,
-				form.data.oldSourceDomainId,
-				form.data.oldTargetDomainId
-			);
-			await DomainActions.connectDomains(
-				form.data.graphId,
-				user,
-				form.data.sourceDomainId,
-				form.data.targetDomainId
-			);
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withPermissionCheck(
+			async () => {
+				await DomainActions.disconnectDomains(
+					form.data.graphId,
+					user,
+					form.data.oldSourceDomainId,
+					form.data.oldTargetDomainId
+				);
+				await DomainActions.connectDomains(
+					form.data.graphId,
+					user,
+					form.data.sourceDomainId,
+					form.data.targetDomainId
+				);
+			},
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to edit this domain relation" }
+		);
 	}
 }
