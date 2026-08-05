@@ -27,12 +27,10 @@ workflows.
 - **[D3](https://d3js.org/)** for rendering and laying out the graphs themselves.
 - **Tailwind CSS** + **[bits-ui](https://www.bits-ui.com/)** for styling and UI primitives.
 - **Zod** + `sveltekit-superforms` for form validation.
-- Deployed via the SvelteKit Netlify adapter, with a Docker/Node adapter build also available (see
-  `.github/workflows/docker-build-push.yml`) for self-hosting.
 
 ## Links
 
-- **App (beta):** https://beta.prime-applets.ewi.tudelft.nl
+- **App:** https://beta.prime-applets.ewi.tudelft.nl
 - **Manual:** https://prime-tu-delft.github.io/graaf/, a how-to guide for course staff, programme
   staff and TAs
 - **Issues:** https://github.com/PRIME-TU-Delft/graaf/issues
