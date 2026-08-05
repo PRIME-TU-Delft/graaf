@@ -1,4 +1,4 @@
-# Issue #89 — Course-staff/TA manual
+# Issue #89: course-staff/TA manual
 
 Continuing PR #96 (`manual` branch, rebased on `main`). Astro Starlight site under `manual/`.
 

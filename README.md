@@ -4,7 +4,7 @@
 
 ## What this is
 
-Course material rarely fits a single linear syllabus — topics depend on each other, get reused
+Course material rarely fits a single linear syllabus. Topics depend on each other, get reused
 across courses, and get taught in a different order every year. The Graph Editor lets course staff
 model that structure explicitly as a graph instead of a document: **domains** (broad topic areas)
 connect to each other to show prerequisites, **subjects** live inside a domain, and **lectures**
@@ -33,7 +33,7 @@ workflows.
 ## Links
 
 - **App (beta):** https://beta.prime-applets.ewi.tudelft.nl
-- **Manual:** https://prime-tu-delft.github.io/graaf/ — how-to guide for course staff, programme
+- **Manual:** https://prime-tu-delft.github.io/graaf/, a how-to guide for course staff, programme
   staff and TAs
 - **Issues:** https://github.com/PRIME-TU-Delft/graaf/issues
 
