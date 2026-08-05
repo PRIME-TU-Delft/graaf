@@ -78,6 +78,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{graph.name} Subjects | PRIME Graph Editor</title>
+</svelte:head>
+
 <CreateNewSubject {graph} />
 
 <Grid.Root columnTemplate={['3rem', '3rem', 'minmax(12rem, 1fr)', 'minmax(12rem, 1fr)', '5rem']}>
