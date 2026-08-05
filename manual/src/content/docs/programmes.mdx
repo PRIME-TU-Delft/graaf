@@ -4,6 +4,7 @@ description: Create a new graph programme. Only available for super admins.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import { APP_HOST } from '../../consts';
 
 Programmes are collections of courses, usually pertaining to the same faculty. Looking to try out the Graph editor?
 Try making a sandbox environment instead!
@@ -16,7 +17,7 @@ Try making a sandbox environment instead!
 </Aside>
 
 If you are a super admin, you can create a new programme by clicking the "Add Programme" button on
-the <a href={import.meta.env.HOST + '/graph-editor/programs'}>Programs page</a>.
+the <a href={APP_HOST + '/graph-editor/programs'}>Programs page</a>.
 
 When creating a new programme, you will need to provide the following information:
 
@@ -32,7 +33,7 @@ _Figure 1: Create Programme_
 	editor, ask one of the admins for help.
 </Aside>
 
-If you are a program admin or editor, you can edit a programme by navigating to the <a href={import.meta.env.HOST + '/graph-editor/programs'}>
+If you are a program admin or editor, you can edit a programme by navigating to the <a href={APP_HOST + '/graph-editor/programs'}>
 Programs page</a> and click the "Settings" button next to the programme you want to edit.
 
 ![Create Programme](../../assets/programmes/edit%20programme.png)

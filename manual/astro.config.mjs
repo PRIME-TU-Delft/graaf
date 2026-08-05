@@ -6,8 +6,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
+	site: 'https://prime-tu-delft.github.io',
+	base: '/graaf',
+	// Astro's `redirects` targets aren't automatically prefixed with `base`, unlike other internal links.
 	redirects: {
-		'/': '/about'
+		'/': '/graaf/about'
 	},
 	integrations: [
 		starlight({
