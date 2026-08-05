@@ -16,6 +16,30 @@ export default defineConfig({
 				{
 					label: 'Programmes',
 					slug: 'programmes'
+				},
+				{
+					label: 'Courses',
+					slug: 'courses'
+				},
+				{
+					label: 'Graphs',
+					slug: 'graphs'
+				},
+				{
+					label: 'Domains',
+					slug: 'domains'
+				},
+				{
+					label: 'Subjects',
+					slug: 'subjects'
+				},
+				{
+					label: 'Lectures',
+					slug: 'lectures'
+				},
+				{
+					label: 'Links',
+					slug: 'links'
 				}
 			],
 			customCss: [
