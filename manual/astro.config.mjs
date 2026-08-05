@@ -6,6 +6,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
+	redirects: {
+		'/': '/about'
+	},
 	integrations: [
 		starlight({
 			title: 'My Docs',
@@ -13,6 +16,10 @@ export default defineConfig({
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/PRIME-TU-Delft/graaf' }
 			],
 			sidebar: [
+				{
+					label: 'About',
+					slug: 'about'
+				},
 				{
 					label: 'Programmes',
 					slug: 'programmes'
