@@ -1,8 +1,17 @@
-# PRIME Grpah Editor
+# PRIME Graph Editor
 
-## Preview
+[![Check](https://github.com/PRIME-TU-Delft/graaf/actions/workflows/check.yml/badge.svg)](https://github.com/PRIME-TU-Delft/graaf/actions/workflows/check.yml)
 
-https://graaf--preview.netlify.app
+A SvelteKit app for building and sharing course knowledge graphs (domains, subjects and lectures)
+for TU Delft courses and programmes.
+
+## Links
+
+- **App (beta):** https://beta.prime-applets.ewi.tudelft.nl
+- **Preview deploy:** https://graaf--preview.netlify.app
+- **Manual:** https://prime-tu-delft.github.io/graaf/ — how-to guide for course staff, programme
+  staff and TAs
+- **Issues:** https://github.com/PRIME-TU-Delft/graaf/issues
 
 ## Installation
 
