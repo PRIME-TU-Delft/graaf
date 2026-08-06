@@ -85,7 +85,7 @@
 		{/await}
 	</div>
 
-	{#each data.courses as course (course.code)}
+	{#each data.courses.filter((course) => !course.isArchived) as course (course.code)}
 		{@const superUsers = Array.from(
 			new Set([
 				...course.admins,
