@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { TriangleAlert, CircleAlert } from '@lucide/svelte';
 	import type { Issue } from '$lib/validators/types';
 
@@ -15,19 +16,32 @@
 
 {#if severity !== 'none'}
 	<Popover.Root>
-		{#if severity === 'error'}
-			<Popover.Trigger
-				class="cursor-pointer rounded bg-red-300/35 p-1 text-red-900 transition-colors hover:bg-red-300"
-			>
-				<TriangleAlert />
-			</Popover.Trigger>
-		{:else if severity === 'warning'}
-			<Popover.Trigger
-				class="cursor-pointer rounded bg-yellow-300/35 p-1 text-yellow-900 transition-colors hover:bg-yellow-300"
-			>
-				<CircleAlert />
-			</Popover.Trigger>
-		{/if}
+		<Tooltip.Provider>
+			<Tooltip.Root>
+				<Tooltip.Trigger>
+					{#snippet child({ props })}
+						{#if severity === 'error'}
+							<Popover.Trigger
+								{...props}
+								class="cursor-pointer rounded bg-red-300/35 p-1 text-red-900 transition-colors hover:bg-red-300"
+							>
+								<TriangleAlert />
+							</Popover.Trigger>
+						{:else if severity === 'warning'}
+							<Popover.Trigger
+								{...props}
+								class="cursor-pointer rounded bg-yellow-300/35 p-1 text-yellow-900 transition-colors hover:bg-yellow-300"
+							>
+								<CircleAlert />
+							</Popover.Trigger>
+						{/if}
+					{/snippet}
+				</Tooltip.Trigger>
+				<Tooltip.Content
+					><p>{severity === 'error' ? 'View errors' : 'View warnings'}</p></Tooltip.Content
+				>
+			</Tooltip.Root>
+		</Tooltip.Provider>
 
 		<Popover.Content side="right" class="divide-y divide-gray-200 px-4 py-0">
 			{#each issues as issue (issue.id)}

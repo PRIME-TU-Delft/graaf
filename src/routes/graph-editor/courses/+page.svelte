@@ -9,6 +9,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { displayName } from '$lib/utils/displayUserName';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import SearchCourses from '../SearchCourses.svelte';
 	import CourseGrid from '../CourseGrid.svelte';
 
@@ -195,11 +196,21 @@
 						</Table.Cell>
 						<Table.Cell class="text-left">Admin</Table.Cell>
 						<Table.Cell class="text-right">
-							<Button
-								disabled={data.user?.id == user.id}
-								variant="outline"
-								href={generateMailToLink(user, course)}><MailOpen /></Button
-							>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												disabled={data.user?.id == user.id}
+												variant="outline"
+												href={generateMailToLink(user, course)}><MailOpen /></Button
+											>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content><p>Email user</p></Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
 						</Table.Cell>
 					</Table.Row>
 				{/each}
@@ -211,11 +222,21 @@
 						</Table.Cell>
 						<Table.Cell>Editor</Table.Cell>
 						<Table.Cell class="text-right">
-							<Button
-								disabled={data.user?.id == user.id}
-								variant="outline"
-								href={generateMailToLink(user, course)}><MailOpen /></Button
-							>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												disabled={data.user?.id == user.id}
+												variant="outline"
+												href={generateMailToLink(user, course)}><MailOpen /></Button
+											>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content><p>Email user</p></Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
 						</Table.Cell>
 					</Table.Row>
 				{/each}
@@ -249,11 +270,21 @@
 						</Table.Cell>
 						<Table.Cell class="text-left">Admin</Table.Cell>
 						<Table.Cell class="text-right">
-							<Button
-								disabled={data.user?.id == user.id}
-								variant="outline"
-								href={generateMailToLink(user, course)}><MailOpen /></Button
-							>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												disabled={data.user?.id == user.id}
+												variant="outline"
+												href={generateMailToLink(user, course)}><MailOpen /></Button
+											>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content><p>Email user</p></Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
 						</Table.Cell>
 					</Table.Row>
 				{/each}
@@ -265,11 +296,21 @@
 						</Table.Cell>
 						<Table.Cell>Editor</Table.Cell>
 						<Table.Cell class="text-right">
-							<Button
-								disabled={data.user?.id == user.id}
-								variant="outline"
-								href={generateMailToLink(user, course)}><MailOpen /></Button
-							>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												disabled={data.user?.id == user.id}
+												variant="outline"
+												href={generateMailToLink(user, course)}><MailOpen /></Button
+											>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content><p>Email user</p></Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
 						</Table.Cell>
 					</Table.Row>
 				{/each}
