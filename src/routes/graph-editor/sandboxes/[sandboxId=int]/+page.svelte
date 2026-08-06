@@ -30,6 +30,10 @@
 	);
 </script>
 
+<svelte:head>
+	<title>{data.sandbox ? data.sandbox.name : 'Sandbox'} | PRIME Graph Editor</title>
+</svelte:head>
+
 <article class="my-6 mb-12 space-y-6">
 	{#if data.error != undefined}
 		<h1>Oops! Something went wrong</h1>
