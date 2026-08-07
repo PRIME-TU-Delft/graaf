@@ -4,6 +4,7 @@
 
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
+	import { GraphValidator } from '$lib/validators/graphValidator';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from '@lucide/svelte/icons/link';
@@ -29,6 +30,8 @@
 	$effect(() => {
 		graph = data.graph;
 	});
+
+	const issues = $derived(new GraphValidator(graph).validate());
 
 	type Graph = PageData['graph'];
 
@@ -101,8 +104,8 @@
 	>
 		{#snippet children(subject)}
 			<Grid.Cell>
-				{@const issues = data.issues.subjectIssues[subject.id] || []}
-				<IssueIndicator {issues} />
+				{@const subjectIssues = issues.subjectIssues[subject.id] || []}
+				<IssueIndicator issues={subjectIssues} />
 			</Grid.Cell>
 
 			<Grid.Cell>
@@ -136,9 +139,9 @@
 		<Grid.Rows name="subject-rel" items={subjectMapping} class="space-y-1">
 			{#snippet children({ sourceSubject, targetSubject })}
 				<Grid.Cell>
-					{@const issues =
-						data.issues.subjectRelationIssues[sourceSubject.id]?.[targetSubject.id] || []}
-					<IssueIndicator {issues} />
+					{@const relationIssues =
+						issues.subjectRelationIssues[sourceSubject.id]?.[targetSubject.id] || []}
+					<IssueIndicator issues={relationIssues} />
 				</Grid.Cell>
 
 				<Grid.Cell>
