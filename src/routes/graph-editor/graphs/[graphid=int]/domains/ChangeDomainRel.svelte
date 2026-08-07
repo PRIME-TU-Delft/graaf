@@ -29,6 +29,12 @@
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Successfully changed relationship!');
+			} else if (result.type == 'failure') {
+				const errors = (result.data?.form as { errors?: { _errors?: string[] } } | undefined)
+					?.errors?._errors;
+				toast.error('Could not change relationship', {
+					description: errors?.join(' ') ?? 'The relationship probably already exists.'
+				});
 			} else if (result.type == 'error') {
 				toast.error('Error changing domain relationship', {
 					description: 'The relationship probably already exists. Try refreshing the page.'

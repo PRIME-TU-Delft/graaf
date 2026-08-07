@@ -292,9 +292,7 @@
 					</DropdownMenu.GroupHeading>
 
 					{#each otherDomains as domain (domain.id)}
-						<DropdownMenu.Item class="p-0">
-							<ChangeDomainRel {graph} {domain} {sourceDomain} {targetDomain} {type} />
-						</DropdownMenu.Item>
+						<ChangeDomainRel {graph} {domain} {sourceDomain} {targetDomain} {type} />
 					{/each}
 				</DropdownMenu.Group>
 			{/if}

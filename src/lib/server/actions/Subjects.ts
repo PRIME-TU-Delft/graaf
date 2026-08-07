@@ -5,7 +5,7 @@ import {
 	subjectRelSchema,
 	subjectSchema
 } from '$lib/zod/subjectSchema';
-import type { User } from '@prisma/client';
+import type { Prisma, User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
 
@@ -160,12 +160,20 @@ export class SubjectActions {
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param inId - The source subject id
 	 * @param outId - The target subject id
+	 * @param tx - The Prisma client or transaction client to run the queries against, defaults to
+	 * the shared client
 	 * @returns The updated graph
 	 * @throws If the subjects are already connected, or if the user lacks permission
 	 */
-	private static async connectSubjects(graphId: number, user: User, inId: number, outId: number) {
+	private static async connectSubjects(
+		graphId: number,
+		user: User,
+		inId: number,
+		outId: number,
+		tx: Prisma.TransactionClient = prisma
+	) {
 		// Check if the subjecs are already connected
-		const isConnected = await prisma.subject.findFirst({
+		const isConnected = await tx.subject.findFirst({
 			where: {
 				id: inId,
 				targetSubjects: { some: { id: outId } }
@@ -176,7 +184,7 @@ export class SubjectActions {
 			throw new Error('Subjects are already connected');
 		}
 
-		return await prisma.graph.update({
+		return await tx.graph.update({
 			where: {
 				// Assuming both subjects belong to the same graph, use the graphId from one of the domains
 				id: graphId,
@@ -231,6 +239,8 @@ export class SubjectActions {
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param inId - The source subject id
 	 * @param outId - The target subject id
+	 * @param tx - The Prisma client or transaction client to run the query against, defaults to
+	 * the shared client
 	 * @returns The updated graph
 	 * @throws If the user lacks permission
 	 */
@@ -238,9 +248,10 @@ export class SubjectActions {
 		graphId: number,
 		user: User,
 		inId: number,
-		outId: number
+		outId: number,
+		tx: Prisma.TransactionClient = prisma
 	) {
-		return await prisma.graph.update({
+		return await tx.graph.update({
 			where: {
 				// Assuming both subjects belong to the same graph, use the graphId from one of the domains
 				id: graphId,
@@ -292,14 +303,14 @@ export class SubjectActions {
 
 	/**
 	 * Move a subject relation by disconnecting its old source/target pair and connecting the new
-	 * one. Not atomic: if the connect step fails after the disconnect step succeeds, the old
-	 * relation is not restored.
+	 * one, both in a single transaction. If the connect step fails, the disconnect is rolled back
+	 * and the old relation remains intact.
 	 *
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, oldSourceSubjectId, oldTargetSubjectId,
 	 * and the new sourceSubjectId/targetSubjectId
-	 * @returns Nothing on success. On invalid input or a failed step, returns the form with an
-	 * error via setError instead of throwing.
+	 * @returns Nothing on success. On invalid input or a failed transaction, returns the form with
+	 * an error via setError instead of throwing.
 	 */
 	static async changeSubjectRel(
 		user: User,
@@ -307,21 +318,23 @@ export class SubjectActions {
 	) {
 		if (!form.valid) return setError(form, '', form.message);
 
-		// TODO: not atomic, if connectSubjects fails after disconnectSubjects succeeds the old
-		// relation is not restored. Wrap both steps in a transaction.
 		try {
-			await SubjectActions.disconnectSubjects(
-				form.data.graphId,
-				user,
-				form.data.oldSourceSubjectId,
-				form.data.oldTargetSubjectId
-			);
-			await SubjectActions.connectSubjects(
-				form.data.graphId,
-				user,
-				form.data.sourceSubjectId,
-				form.data.targetSubjectId
-			);
+			await prisma.$transaction(async (tx) => {
+				await SubjectActions.disconnectSubjects(
+					form.data.graphId,
+					user,
+					form.data.oldSourceSubjectId,
+					form.data.oldTargetSubjectId,
+					tx
+				);
+				await SubjectActions.connectSubjects(
+					form.data.graphId,
+					user,
+					form.data.sourceSubjectId,
+					form.data.targetSubjectId,
+					tx
+				);
+			});
 		} catch (e: unknown) {
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
