@@ -6,7 +6,7 @@ import {
 	subjectSchema
 } from '$lib/zod/subjectSchema';
 import type { Prisma, User } from '@prisma/client';
-import { fail, setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
 
 /** Server actions for creating, editing, and deleting subjects within a graph, and for
@@ -283,9 +283,8 @@ export class SubjectActions {
 	 *
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, sourceSubjectId, and targetSubjectId
-	 * @returns Nothing on success. On invalid input, returns the form with an error via setError.
-	 * On a failed disconnect (e.g. missing permission), returns a SvelteKit `fail(500, ...)`
-	 * response instead, unlike most other actions in this class.
+	 * @returns Nothing on success. On invalid input or a failed disconnect (e.g. missing
+	 * permission), returns the form with an error via setError.
 	 */
 	static async deleteSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
@@ -298,8 +297,7 @@ export class SubjectActions {
 				form.data.targetSubjectId
 			);
 		} catch (e: unknown) {
-			// TODO: use setError here like the rest of this class, instead of fail(500, ...)
-			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 

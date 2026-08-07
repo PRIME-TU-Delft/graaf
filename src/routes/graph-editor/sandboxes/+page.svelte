@@ -21,6 +21,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Sandboxes | PRIME Graph Editor</title>
+</svelte:head>
+
 <section class="prose mx-auto mt-12 p-4">
 	<h1 class="text-purple-950 shadow-purple-500/70">Sandboxes</h1>
 	<p>

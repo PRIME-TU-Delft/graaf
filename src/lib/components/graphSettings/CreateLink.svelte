@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
@@ -31,11 +32,20 @@
 
 	// svelte-ignore state_referenced_locally
 	const form = superForm(newLinkForm, {
+		id: 'create-link-' + graph.id,
 		validators: zodClient(newLinkSchema),
 		onResult: ({ result }) => {
 			if (result.type == 'success') {
 				toast.success('Link created successfully!');
 				dialogOpen = false;
+				form.reset({
+					newState: {
+						name: '',
+						graphId: graph.id,
+						parentId: parentId,
+						parentType: parentType
+					}
+				});
 			}
 		}
 	});
@@ -45,10 +55,15 @@
 	let dialogOpen = $state(false);
 
 	$effect(() => {
-		$formData.name = '';
-		$formData.graphId = graph.id;
-		$formData.parentId = parentId;
-		$formData.parentType = parentType;
+		const id = graph.id;
+		const pId = parentId;
+		const pType = parentType;
+		untrack(() => {
+			$formData.name = '';
+			$formData.graphId = id;
+			$formData.parentId = pId;
+			$formData.parentType = pType;
+		});
 	});
 </script>
 

@@ -47,7 +47,7 @@ export const load = (async ({ params, locals }) => {
 			breadcrumbs: [
 				{ name: 'Home', url: '/graph-editor' },
 				{ name: 'Programs', url: '/graph-editor/programs' },
-				{ name: dbProgram.name, url: `/graph-editor/programs/${programId}/settings` },
+				{ name: dbProgram.name },
 				{ name: 'Settings', url: `/graph-editor/programs/${programId}/settings` }
 			],
 			program: dbProgram,

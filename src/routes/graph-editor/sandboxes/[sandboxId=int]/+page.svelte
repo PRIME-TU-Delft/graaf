@@ -7,6 +7,7 @@
 	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
 	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
 	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
+	import LeaveSandbox from './LeaveSandbox.svelte';
 
 	// Icons
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -30,6 +31,10 @@
 	);
 </script>
 
+<svelte:head>
+	<title>{data.sandbox ? data.sandbox.name : 'Sandbox'} | PRIME Graph Editor</title>
+</svelte:head>
+
 <article class="my-6 mb-12 space-y-6">
 	{#if data.error != undefined}
 		<h1>Oops! Something went wrong</h1>
@@ -51,6 +56,8 @@
 							sandboxId: String(data.sandbox.id)
 						})}>Settings <ArrowRight /></Button
 					>
+				{:else if hasAtLeastEditPermission}
+					<LeaveSandbox sandbox={data.sandbox} />
 				{/if}
 			</div>
 

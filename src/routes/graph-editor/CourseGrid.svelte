@@ -5,6 +5,7 @@
 
 	// Components
 	import { Button } from '$lib/components/ui/button';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	// Icons
 	import { Settings } from '@lucide/svelte';
@@ -51,14 +52,24 @@
 
 		<div class="flex items-center gap-1">
 			{#if course.isArchived}
-				<Button
-					variant="outline"
-					href={resolve('/graph-editor/courses/[courseCode]/settings', {
-						courseCode: course.uriCode
-					})}
-				>
-					<Settings class="text-gray-600" />
-				</Button>
+				<Tooltip.Provider>
+					<Tooltip.Root>
+						<Tooltip.Trigger>
+							{#snippet child({ props })}
+								<Button
+									{...props}
+									variant="outline"
+									href={resolve('/graph-editor/courses/[courseCode]/settings', {
+										courseCode: course.uriCode
+									})}
+								>
+									<Settings class="text-gray-600" />
+								</Button>
+							{/snippet}
+						</Tooltip.Trigger>
+						<Tooltip.Content><p>Course settings</p></Tooltip.Content>
+					</Tooltip.Root>
+				</Tooltip.Provider>
 			{/if}
 
 			{#if user}

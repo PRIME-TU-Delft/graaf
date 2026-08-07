@@ -11,6 +11,7 @@
 	import AddCourse from '$lib/components/addCourse/AddCourse.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import CourseGrid from './CourseGrid.svelte';
 
 	// Icons
@@ -94,11 +95,21 @@
 						</Table.Cell>
 						<Table.Cell class="text-left">Admin</Table.Cell>
 						<Table.Cell class="text-right">
-							<Button
-								disabled={user.id == admin.id}
-								variant="outline"
-								href={generateMailToLink(admin, program)}><MailOpen /></Button
-							>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												disabled={user.id == admin.id}
+												variant="outline"
+												href={generateMailToLink(admin, program)}><MailOpen /></Button
+											>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content><p>Email admin</p></Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
 						</Table.Cell>
 					</Table.Row>
 				{/each}
@@ -110,11 +121,21 @@
 						</Table.Cell>
 						<Table.Cell>Editor</Table.Cell>
 						<Table.Cell class="text-right">
-							<Button
-								disabled={user.id == editor.id}
-								variant="outline"
-								href={generateMailToLink(editor, program)}><MailOpen /></Button
-							>
+							<Tooltip.Provider ignoreNonKeyboardFocus>
+								<Tooltip.Root>
+									<Tooltip.Trigger>
+										{#snippet child({ props })}
+											<Button
+												{...props}
+												disabled={user.id == editor.id}
+												variant="outline"
+												href={generateMailToLink(editor, program)}><MailOpen /></Button
+											>
+										{/snippet}
+									</Tooltip.Trigger>
+									<Tooltip.Content><p>Email editor</p></Tooltip.Content>
+								</Tooltip.Root>
+							</Tooltip.Provider>
 						</Table.Cell>
 					</Table.Row>
 				{/each}

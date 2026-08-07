@@ -9,7 +9,7 @@ export const actions: Actions = {
 				path: '/'
 			});
 		} else {
-			signOut(event);
+			return signOut(event);
 		}
 	}
 };

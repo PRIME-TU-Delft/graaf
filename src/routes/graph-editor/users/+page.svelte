@@ -6,6 +6,10 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
+<svelte:head>
+	<title>Users | PRIME Graph Editor</title>
+</svelte:head>
+
 <section class="prose mx-auto mt-12 p-4 text-purple-900">
 	<h1>All Users</h1>
 	<p>Here you can find all users</p>

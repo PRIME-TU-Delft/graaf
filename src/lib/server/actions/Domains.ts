@@ -7,7 +7,6 @@ import {
 	domainSchema
 } from '$lib/zod/domainSchema';
 import type { DomainStyle, Prisma, User } from '@prisma/client';
-import { fail } from '@sveltejs/kit';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 
 /** Server actions for creating, editing, and deleting domains within a graph, and for
@@ -298,9 +297,8 @@ export class DomainActions {
 	 *
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, sourceDomainId, and targetDomainId
-	 * @returns Nothing on success. On invalid input, returns the form with an error via setError.
-	 * On a failed disconnect (e.g. missing permission), returns a SvelteKit `fail(500, ...)`
-	 * response instead, unlike most other actions in this class.
+	 * @returns Nothing on success. On invalid input or a failed disconnect (e.g. missing
+	 * permission), returns the form with an error via setError.
 	 */
 	static async deleteDomainRel(user: User, form: SuperValidated<Infer<typeof domainRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid form data');
@@ -313,8 +311,7 @@ export class DomainActions {
 				form.data.targetDomainId
 			);
 		} catch (e: unknown) {
-			// TODO: use setError here like the rest of this class, instead of fail(500, ...)
-			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 
