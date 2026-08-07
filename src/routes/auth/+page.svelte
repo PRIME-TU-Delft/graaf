@@ -27,6 +27,10 @@
 	];
 </script>
 
+<svelte:head>
+	<title>Sign in | PRIME Graph Editor</title>
+</svelte:head>
+
 <section class="prose prose-lg mx-auto mt-24">
 	<h2>What is the course graph?</h2>
 	Welcome to the graph editor, here you can assemble your own course graph! Sign-in to get started. The

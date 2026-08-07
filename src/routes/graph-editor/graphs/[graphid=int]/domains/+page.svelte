@@ -117,6 +117,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{graph.name} Domains | PRIME Graph Editor</title>
+</svelte:head>
+
 <CreateNewDomain {graph} />
 
 <Grid.Root columnTemplate={['3rem', '3rem', 'minmax(12rem, 1fr)', '5rem', '5rem']}>

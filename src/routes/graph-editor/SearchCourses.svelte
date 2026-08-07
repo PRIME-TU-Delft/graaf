@@ -7,6 +7,7 @@
 	// Components
 	import { Button } from '$lib/components/ui/button';
 	import * as Command from '$lib/components/ui/command/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	// Icons
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -30,17 +31,27 @@
 
 	{#if courseValue}
 		<div class="absolute top-1/2 right-0 h-fit w-fit -translate-y-1/2" in:fade>
-			<Button
-				onclick={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					courseValue = '';
-				}}
-				class="size-8 p-0"
-				variant="ghost"
-			>
-				<Close class="size-3" />
-			</Button>
+			<Tooltip.Provider>
+				<Tooltip.Root>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								onclick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									courseValue = '';
+								}}
+								class="size-8 p-0"
+								variant="ghost"
+							>
+								<Close class="size-3" />
+							</Button>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content><p>Clear search</p></Tooltip.Content>
+				</Tooltip.Root>
+			</Tooltip.Provider>
 		</div>
 		<Command.List
 			class="absolute top-10 left-0 max-h-96 w-full rounded-lg border-2 border-gray-200 bg-white shadow-lg"

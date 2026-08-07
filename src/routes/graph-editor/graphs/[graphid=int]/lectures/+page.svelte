@@ -65,6 +65,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.graph.name} Lectures | PRIME Graph Editor</title>
+</svelte:head>
+
 <CreateNewLecture graph={data.graph} />
 
 <div

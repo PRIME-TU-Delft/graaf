@@ -13,6 +13,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{data.graph.name} | PRIME Graph Editor</title>
+</svelte:head>
+
 <div class="sticky h-[calc(100dvh)] w-full rounded-lg bg-purple-200/50 p-2">
 	<GraphRenderer data={data.graph} editable={false} builtInViewDropdown={true} {view} {lectureID} />
 </div>
