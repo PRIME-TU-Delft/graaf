@@ -55,11 +55,13 @@
 				</Table.Row>
 			{/each}
 
-			<Table.Row>
-				<Table.Cell colspan={2}>
-					<AddSuperUser {program} {allUsers} {editSuperUserForm} />
-				</Table.Cell>
-			</Table.Row>
+			{#if canChangeRoles}
+				<Table.Row>
+					<Table.Cell colspan={2}>
+						<AddSuperUser {program} {allUsers} {editSuperUserForm} />
+					</Table.Cell>
+				</Table.Row>
+			{/if}
 		</Table.Body>
 	</Table.Root>
 </div>

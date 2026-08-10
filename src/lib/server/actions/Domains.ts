@@ -7,8 +7,7 @@ import {
 	domainRelSchema,
 	domainSchema
 } from '$lib/zod/domainSchema';
-import type { DomainStyle, User } from '@prisma/client';
-import { fail } from '@sveltejs/kit';
+import type { DomainStyle, Prisma, User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 
 /** Server actions for creating, editing, and deleting domains within a graph, and for
@@ -185,12 +184,20 @@ export class DomainActions {
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param inId - The source domain id
 	 * @param outId - The target domain id
+	 * @param tx - The Prisma client or transaction client to run the queries against, defaults to
+	 * the shared client
 	 * @returns The updated graph
 	 * @throws If the domains are already connected, or if the user lacks permission
 	 */
-	private static async connectDomains(graphId: number, user: User, inId: number, outId: number) {
+	private static async connectDomains(
+		graphId: number,
+		user: User,
+		inId: number,
+		outId: number,
+		tx: Prisma.TransactionClient = prisma
+	) {
 		// Check if the domains are already connected
-		const isConnected = await prisma.domain.findFirst({
+		const isConnected = await tx.domain.findFirst({
 			where: {
 				id: inId,
 				targetDomains: { some: { id: outId } }
@@ -201,7 +208,7 @@ export class DomainActions {
 			throw new Error('Domains are already connected');
 		}
 
-		return await prisma.graph.update({
+		return await tx.graph.update({
 			where: {
 				// Assuming both domains belong to the same graph, use the graphId from one of the domains
 				id: graphId,
@@ -257,6 +264,8 @@ export class DomainActions {
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param sourceId - The source domain id
 	 * @param targetId - The target domain id
+	 * @param tx - The Prisma client or transaction client to run the query against, defaults to
+	 * the shared client
 	 * @returns The updated graph
 	 * @throws If the user lacks permission
 	 */
@@ -264,9 +273,10 @@ export class DomainActions {
 		graphId: number,
 		user: User,
 		sourceId: number,
-		targetId: number
+		targetId: number,
+		tx: Prisma.TransactionClient = prisma
 	) {
-		return await prisma.graph.update({
+		return await tx.graph.update({
 			where: {
 				// Assuming both domains belong to the same graph, use the graphId from one of the domains
 				id: graphId,
@@ -298,9 +308,8 @@ export class DomainActions {
 	 *
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, sourceDomainId, and targetDomainId
-	 * @returns Nothing on success. On invalid input, returns the form with an error via setError.
-	 * On a failed disconnect (e.g. missing permission), returns a SvelteKit `fail(500, ...)`
-	 * response instead, unlike most other actions in this class.
+	 * @returns Nothing on success. On invalid input or a failed disconnect (e.g. missing
+	 * permission), returns the form with an error via setError.
 	 */
 	static async deleteDomainRel(user: User, form: SuperValidated<Infer<typeof domainRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid form data');
@@ -313,21 +322,20 @@ export class DomainActions {
 				form.data.targetDomainId
 			);
 		} catch (e: unknown) {
-			// TODO: use setError here like the rest of this class, instead of fail(500, ...)
-			return fail(500, { errorMessage: e instanceof Error ? e.message : `${e}` });
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
 
 	/**
 	 * Move a domain relation by disconnecting its old source/target pair and connecting the new
-	 * one. Not atomic: if the connect step fails after the disconnect step succeeds, the old
-	 * relation is not restored.
+	 * one, both in a single transaction. If the connect step fails, the disconnect is rolled back
+	 * and the old relation remains intact.
 	 *
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, oldSourceDomainId, oldTargetDomainId,
 	 * and the new sourceDomainId/targetDomainId
-	 * @returns Nothing on success. On invalid input or a failed step, returns the form with an
-	 * error via setError instead of throwing.
+	 * @returns Nothing on success. On invalid input or a failed transaction, returns the form with
+	 * an error via setError instead of throwing.
 	 */
 	static async changeDomainRel(
 		user: User,
@@ -335,23 +343,24 @@ export class DomainActions {
 	) {
 		if (!form.valid) return setError(form, '', 'Invalid form data');
 
-		// TODO: not atomic, if connectDomains fails after disconnectDomains succeeds the old
-		// relation is not restored. Wrap both steps in a transaction.
 		return await withPermissionCheck(
-			async () => {
-				await DomainActions.disconnectDomains(
-					form.data.graphId,
-					user,
-					form.data.oldSourceDomainId,
-					form.data.oldTargetDomainId
-				);
-				await DomainActions.connectDomains(
-					form.data.graphId,
-					user,
-					form.data.sourceDomainId,
-					form.data.targetDomainId
-				);
-			},
+			() =>
+				prisma.$transaction(async (tx) => {
+					await DomainActions.disconnectDomains(
+						form.data.graphId,
+						user,
+						form.data.oldSourceDomainId,
+						form.data.oldTargetDomainId,
+						tx
+					);
+					await DomainActions.connectDomains(
+						form.data.graphId,
+						user,
+						form.data.sourceDomainId,
+						form.data.targetDomainId,
+						tx
+					);
+				}),
 			form,
 			'',
 			{ entity: 'Graph', message: "You don't have permission to edit this domain relation" }

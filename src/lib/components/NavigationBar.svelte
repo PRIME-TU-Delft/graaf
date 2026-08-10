@@ -99,7 +99,7 @@
 								<span class="sr-only">Toggle menu</span>
 							</DropdownMenu.Trigger>
 							<DropdownMenu.Content align="start">
-								{#each hidden as { name, url } (url)}
+								{#each hidden as { name, url }, index (`${url}:${index}`)}
 									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- breadcrumb urls are already-resolved runtime paths -->
 									<a href={url}>
 										<DropdownMenu.Item>
@@ -111,7 +111,7 @@
 						</DropdownMenu.Root>
 					{/if}
 
-					{#each tail as { name, url }, index (url)}
+					{#each tail as { name, url }, index (`${url}:${index}`)}
 						<Breadcrumb.Separator />
 						<Breadcrumb.Item class="text-xs sm:text-base">
 							{#if index == tail.length - 1}

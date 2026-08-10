@@ -9,6 +9,7 @@ import type {
 	deleteSandboxSchema,
 	editSandboxSchema,
 	editSuperUserSchema,
+	leaveSandboxSchema,
 	newSandboxSchema
 } from '$lib/zod/sandboxSchema';
 import { redirect } from '@sveltejs/kit';
@@ -202,6 +203,38 @@ export class SandboxActions {
 		);
 
 		if ('status' in result) return result;
+
+		throw redirect(303, '/');
+	}
+
+	/**
+	 * Remove the acting user as an editor of a sandbox, then redirect them to the home page
+	 * since they no longer have access to this sandbox's page.
+	 *
+	 * PERMISSIONS
+	 * - Any user who is an EDITOR (not owner) of the sandbox can remove themselves
+	 *
+	 * @param user - The user performing the action, must be an editor of the sandbox
+	 * @param form - Validated form data with the sandboxId to leave
+	 * @returns Never returns normally: on success it throws a redirect to `/`. On invalid input
+	 * or missing permission, returns the form with an error via setError instead of throwing.
+	 */
+	static async leaveSandbox(user: User, form: SuperValidated<Infer<typeof leaveSandboxSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		try {
+			await prisma.sandbox.update({
+				where: {
+					id: form.data.sandboxId,
+					editors: { some: { id: user.id } }
+				},
+				data: {
+					editors: { disconnect: { id: user.id } }
+				}
+			});
+		} catch {
+			return setError(form, '', "You don't have permission to leave this sandbox");
+		}
 
 		throw redirect(303, '/');
 	}

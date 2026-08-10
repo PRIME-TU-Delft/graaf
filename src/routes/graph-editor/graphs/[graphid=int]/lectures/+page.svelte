@@ -2,6 +2,7 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { cn } from '$lib/utils';
+	import { GraphValidator } from '$lib/validators/graphValidator';
 	import { Ellipsis, MoveVertical } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
@@ -31,6 +32,8 @@
 	$effect(() => {
 		lectures = data.graph.lectures;
 	});
+
+	const issues = $derived(new GraphValidator({ ...data.graph, lectures }).validate());
 
 	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
@@ -62,6 +65,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.graph.name} Lectures | PRIME Graph Editor</title>
+</svelte:head>
+
 <CreateNewLecture graph={data.graph} />
 
 <div
@@ -72,7 +79,7 @@
 >
 	{#each lectures as lecture, index (lecture.id)}
 		{@const changeLecture = new ChangeLectureClass()}
-		{@const lectureIssues = data.issues.lectureIssues[lecture.id] || { lecture: [], subjects: {} }}
+		{@const lectureIssues = issues.lectureIssues[lecture.id] || { lecture: [], subjects: {} }}
 
 		<div
 			animate:flip={{ duration: flipDurationMs }}
