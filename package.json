@@ -6,6 +6,7 @@
 	"scripts": {
 		"setup": "./scripts/setup.sh",
 		"dev": "vite dev",
+		"dev:testusers": "NETLIFY_CONTEXT=DEPLOY_PREVIEW pnpm run dev",
 		"build": "vite build",
 		"build:netlify": "prisma generate && prisma db push --accept-data-loss --force-reset && prisma db seed && vite build",
 		"preview": "vite preview",
