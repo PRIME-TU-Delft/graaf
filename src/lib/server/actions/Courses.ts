@@ -146,6 +146,7 @@ export class CourseActions {
 			return setError(form, '', "You don't have permission to link/unlink courses in this program");
 		}
 
+		const requestedCourseIds = new Set(form.data.courseIds);
 		const permittedCourses = await prisma.course.findMany({
 			where: {
 				id: { in: form.data.courseIds },
@@ -153,9 +154,9 @@ export class CourseActions {
 			},
 			select: { id: true }
 		});
-		if (permittedCourses.length !== form.data.courseIds.length) {
+		if (permittedCourses.length !== requestedCourseIds.size) {
 			const permitted = new Set(permittedCourses.map((c) => c.id));
-			const missing = form.data.courseIds.length - permitted.size;
+			const missing = requestedCourseIds.size - permitted.size;
 			return setError(form, '', `You don't have permission on ${missing} of the selected courses`);
 		}
 
