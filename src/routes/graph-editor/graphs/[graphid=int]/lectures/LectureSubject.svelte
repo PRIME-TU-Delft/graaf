@@ -83,7 +83,7 @@
 		<p class="m-0 items-center">
 			{#if subjects.length > 0}
 				Add subject by clicking the <span
-					class="border-sm h-6 gap-1 text-xs rounded bg-purple-200 p-1 inline-flex items-center"
+					class="border-sm inline-flex h-6 items-center gap-1 rounded bg-purple-200 p-1 text-xs"
 					><Plus class="size-3" /> Edit Subjects</span
 				>, or by dragging another lecture's subject into this field
 			{:else}
