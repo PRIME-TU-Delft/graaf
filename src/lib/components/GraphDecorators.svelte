@@ -21,6 +21,7 @@
 	import screenfull from 'screenfull';
 	import { fade } from 'svelte/transition';
 	import { Button, buttonVariants } from './ui/button';
+	import * as Tooltip from './ui/tooltip';
 	import { cn } from '$lib/utils';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
 	import { page } from '$app/state';
@@ -176,33 +177,57 @@
 	class="absolute right-1 bottom-1 flex flex-col gap-1"
 	transition:fade={{ duration: settings.GRAPH_ANIMATION_DURATION }}
 >
-	{#if !graphView.isLectures()}
-		<Button
-			class="size-8 rounded-xl"
-			onclick={() => {
-				graphD3.centerOnGraph();
-			}}
-			size="icon"
-		>
-			<SearchSlash />
-		</Button>
-		<Button class="size-8 rounded-xl" onclick={() => graphD3.zoomIn()} size="icon">
-			<ZoomIn />
-		</Button>
-		<Button class="size-8 rounded-xl" onclick={() => graphD3.zoomOut()} size="icon">
-			<ZoomOut />
-		</Button>
-	{/if}
+	<Tooltip.Provider>
+		{#if !graphView.isLectures()}
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					class={cn(buttonVariants({ size: 'icon' }), 'size-8 rounded-xl')}
+					onclick={() => {
+						graphD3.centerOnGraph();
+					}}
+				>
+					<SearchSlash />
+				</Tooltip.Trigger>
+				<Tooltip.Content><p>Center graph</p></Tooltip.Content>
+			</Tooltip.Root>
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					class={cn(buttonVariants({ size: 'icon' }), 'size-8 rounded-xl')}
+					onclick={() => graphD3.zoomIn()}
+				>
+					<ZoomIn />
+				</Tooltip.Trigger>
+				<Tooltip.Content><p>Zoom in</p></Tooltip.Content>
+			</Tooltip.Root>
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					class={cn(buttonVariants({ size: 'icon' }), 'size-8 rounded-xl')}
+					onclick={() => graphD3.zoomOut()}
+				>
+					<ZoomOut />
+				</Tooltip.Trigger>
+				<Tooltip.Content><p>Zoom out</p></Tooltip.Content>
+			</Tooltip.Root>
+		{/if}
 
-	{#if screenfull.isEnabled && document}
-		<Button class="size-8 rounded-xl" onclick={toggleFullscreen}>
-			{#if isFullscreen}
-				<Minimize class="h-5 w-5" />
-			{:else}
-				<Maximize class="h-5 w-5" />
-			{/if}
-		</Button>
-	{/if}
+		{#if screenfull.isEnabled && document}
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					class={cn(buttonVariants(), 'size-8 rounded-xl')}
+					onclick={toggleFullscreen}
+				>
+					{#if isFullscreen}
+						<Minimize class="h-5 w-5" />
+					{:else}
+						<Maximize class="h-5 w-5" />
+					{/if}
+				</Tooltip.Trigger>
+				<Tooltip.Content
+					><p>{isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}</p></Tooltip.Content
+				>
+			</Tooltip.Root>
+		{/if}
+	</Tooltip.Provider>
 </div>
 
 <!-- AutoLayout buttons -->

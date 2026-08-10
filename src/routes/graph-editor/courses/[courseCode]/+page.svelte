@@ -30,6 +30,12 @@
 	);
 </script>
 
+<svelte:head>
+	<title
+		>{data.course ? `${data.course.code} ${data.course.name}` : 'Course'} | PRIME Graph Editor</title
+	>
+</svelte:head>
+
 <article class="my-6 mb-12 space-y-6">
 	{#if data.error != undefined}
 		<h1>Oops! Something went wrong</h1>
@@ -42,6 +48,13 @@
 						{data.course.code}
 						{data.course.name}
 					</h1>
+					{#if data.course.isArchived}
+						<span
+							class="mt-2 inline-block rounded border border-dashed border-amber-600 bg-amber-50 px-2 py-0.5 text-sm text-amber-800"
+						>
+							Archived
+						</span>
+					{/if}
 				</div>
 				{#if hasAtLeastEditPermission}
 					<Button

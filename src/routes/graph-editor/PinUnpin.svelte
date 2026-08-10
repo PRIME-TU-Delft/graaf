@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { changePinSchema } from '$lib/zod/courseSchema';
 	import type { Course, User } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -43,25 +44,35 @@
 	<input type="text" name="courseId" value={course.id} hidden />
 	<input type="text" name="pin" value={!pinned} hidden />
 
-	<Form.FormButton
-		variant={pinned ? 'default' : 'outline'}
-		disabled={$submitting}
-		loading={$delayed}
-		onclick={(e) => {
-			e.stopPropagation();
-		}}
-		onsubmit={(e) => {
-			e.stopPropagation();
-		}}
-	>
-		{#if !pinned}
-			<Pin class="text-gray-600" />
-		{:else}
-			<Unpin class="text-white" />
-		{/if}
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{#snippet child({ props })}
+					<Form.FormButton
+						{...props}
+						variant={pinned ? 'default' : 'outline'}
+						disabled={$submitting}
+						loading={$delayed}
+						onclick={(e) => {
+							e.stopPropagation();
+						}}
+						onsubmit={(e) => {
+							e.stopPropagation();
+						}}
+					>
+						{#if !pinned}
+							<Pin class="text-gray-600" />
+						{:else}
+							<Unpin class="text-white" />
+						{/if}
 
-		{#snippet loadingMessage()}
-			<Loader class={cn('animate-spin', pinned ? 'text-gray-300' : 'text-gray-600')} />
-		{/snippet}
-	</Form.FormButton>
+						{#snippet loadingMessage()}
+							<Loader class={cn('animate-spin', pinned ? 'text-gray-300' : 'text-gray-600')} />
+						{/snippet}
+					</Form.FormButton>
+				{/snippet}
+			</Tooltip.Trigger>
+			<Tooltip.Content><p>{pinned ? 'Unpin course' : 'Pin course'}</p></Tooltip.Content>
+		</Tooltip.Root>
+	</Tooltip.Provider>
 </form>

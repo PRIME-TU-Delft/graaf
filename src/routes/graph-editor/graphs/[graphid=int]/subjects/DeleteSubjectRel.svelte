@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	import { page } from '$app/state';
 	import { buttonVariants } from '$lib/components/ui/button';
@@ -46,9 +47,18 @@
 </script>
 
 <Popover.Root>
-	<Popover.Trigger class={cn(buttonVariants({ variant: 'destructive' }))}>
-		<Trash2 />
-	</Popover.Trigger>
+	<Tooltip.Provider>
+		<Tooltip.Root>
+			<Tooltip.Trigger>
+				{#snippet child({ props })}
+					<Popover.Trigger {...props} class={cn(buttonVariants({ variant: 'destructive' }))}>
+						<Trash2 />
+					</Popover.Trigger>
+				{/snippet}
+			</Tooltip.Trigger>
+			<Tooltip.Content><p>Delete relationship</p></Tooltip.Content>
+		</Tooltip.Root>
+	</Tooltip.Provider>
 	<Popover.Content side="right" class="space-y-1">
 		<form action="?/delete-subject-rel" method="POST" use:enhance>
 			<input type="hidden" name="graphId" value={graph.id} />

@@ -16,6 +16,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import * as Menubar from '$lib/components/ui/menubar/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group/index.js';
 
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
@@ -72,9 +73,21 @@
 
 <Menubar.Root class="ml-auto max-w-10 p-0">
 	<Menubar.Menu value="menu">
-		<Menubar.Trigger class={cn(buttonVariants({ variant: 'outline', size: 'icon' }))}>
-			<Ellipsis class="size-4 w-full" />
-		</Menubar.Trigger>
+		<Tooltip.Provider>
+			<Tooltip.Root>
+				<Tooltip.Trigger>
+					{#snippet child({ props })}
+						<Menubar.Trigger
+							{...props}
+							class={cn(buttonVariants({ variant: 'outline', size: 'icon' }))}
+						>
+							<Ellipsis class="size-4 w-full" />
+						</Menubar.Trigger>
+					{/snippet}
+				</Tooltip.Trigger>
+				<Tooltip.Content><p>Domain options</p></Tooltip.Content>
+			</Tooltip.Root>
+		</Tooltip.Provider>
 		<Menubar.Content>
 			<Menubar.Item class="p-0">
 				<DialogButton
