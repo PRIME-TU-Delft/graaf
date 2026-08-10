@@ -1,5 +1,5 @@
 import prisma from '$lib/server/db/prisma';
-import { error, type ServerLoad } from '@sveltejs/kit';
+import { error, isHttpError, type ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = async ({ params }) => {
 	const courseCode = params.code;
@@ -9,8 +9,9 @@ export const load: ServerLoad = async ({ params }) => {
 		throw new Error('Course code and alias are required');
 	}
 
+	let graph;
 	try {
-		const graph = await prisma.graph.findFirst({
+		graph = await prisma.graph.findFirst({
 			where: {
 				course: {
 					uriCode: encodeURIComponent(courseCode)
@@ -48,14 +49,15 @@ export const load: ServerLoad = async ({ params }) => {
 				}
 			}
 		});
-
-		if (!graph) error(404, { message: 'Graph not found' });
-
-		// Happy path
-		return {
-			graph: graph
-		};
 	} catch (e: unknown) {
+		if (isHttpError(e)) throw e;
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
+
+	if (!graph) error(404, { message: 'Graph not found' });
+
+	// Happy path
+	return {
+		graph: graph
+	};
 };
