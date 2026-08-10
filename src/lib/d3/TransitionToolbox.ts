@@ -318,15 +318,19 @@ export class TransitionToolbox {
 		// Set camera pov and background - Background must be set before moving camera
 		BackgroundToolbox.grid(graph);
 		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
-		CameraToolbox.moveCamera(graph, transform, animateCamera ? () => {} : undefined);
+
+		// Cleanup
+		const finish = () => {
+			graphState.toIdle();
+			graphView.toDomains();
+		};
+		CameraToolbox.moveCamera(graph, transform, animateCamera ? finish : undefined);
 
 		// Set content
 		this.setContent(graph, graph.data.domain_nodes, graph.data.domain_edges);
 		this.restoreContentPosition(graph);
 
-		// Cleanup
-		graphState.toIdle();
-		graphView.toDomains();
+		if (!animateCamera) finish();
 	}
 
 	/**
@@ -343,15 +347,19 @@ export class TransitionToolbox {
 		// Set camera pov and background - Background must be set before moving camera
 		BackgroundToolbox.grid(graph);
 		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
-		CameraToolbox.moveCamera(graph, transform, animateCamera ? () => {} : undefined);
+
+		// Cleanup
+		const finish = () => {
+			graphState.toIdle();
+			graphView.toSubjects();
+		};
+		CameraToolbox.moveCamera(graph, transform, animateCamera ? finish : undefined);
 
 		// Set content
 		this.setContent(graph, graph.data.subject_nodes, graph.data.subject_edges);
 		this.restoreContentPosition(graph);
 
-		// Cleanup
-		graphState.toIdle();
-		graphView.toSubjects();
+		if (!animateCamera) finish();
 	}
 
 	/**
