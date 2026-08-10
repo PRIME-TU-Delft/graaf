@@ -1,4 +1,4 @@
-import prisma from '$lib/server/db/prisma';
+import { GraphActions } from '$lib/server/actions/Graphs';
 import { error, type ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = async ({ params }) => {
@@ -10,41 +10,13 @@ export const load: ServerLoad = async ({ params }) => {
 	}
 
 	try {
-		const graph = await prisma.graph.findFirst({
-			where: {
-				course: {
-					uriCode: encodeURIComponent(courseCode)
-				},
-				links: {
-					some: {
-						name: alias
-					}
-				}
+		const graph = await GraphActions.getRenderablePayload({
+			course: {
+				uriCode: encodeURIComponent(courseCode)
 			},
-			include: {
-				domains: {
-					include: {
-						sourceDomains: true,
-						targetDomains: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				},
-				subjects: {
-					include: {
-						sourceSubjects: true,
-						targetSubjects: true,
-						domain: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				},
-				lectures: {
-					include: {
-						subjects: true
-					}
+			links: {
+				some: {
+					name: alias
 				}
 			}
 		});
