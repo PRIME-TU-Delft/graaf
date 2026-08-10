@@ -35,8 +35,8 @@ export async function withPermissionCheck<T, S extends Record<string, unknown>>(
 			e instanceof Prisma.PrismaClientKnownRequestError &&
 			e.meta &&
 			'cause' in e.meta &&
-			e.meta.cause instanceof String &&
-			(e.meta.cause as string).includes(`No '${opts.entity}' record`)
+			typeof e.meta.cause === 'string' &&
+			e.meta.cause.includes(`No '${opts.entity}' record`)
 		) {
 			return setError(form, path, opts.message);
 		}
