@@ -49,6 +49,12 @@ export const load = (async ({ params, locals }) => {
 		const allUsers = await prisma.user.findMany();
 
 		return {
+			breadcrumbs: [
+				{ name: 'Home', url: '/graph-editor' },
+				{ name: 'Sandboxes', url: '/graph-editor/sandboxes' },
+				{ name: dbSandbox.name, url: `/graph-editor/sandboxes/${dbSandbox.id}` },
+				{ name: 'Settings', url: `/graph-editor/sandboxes/${dbSandbox.id}/settings` }
+			],
 			sandbox: dbSandbox,
 			user,
 			allUsers,

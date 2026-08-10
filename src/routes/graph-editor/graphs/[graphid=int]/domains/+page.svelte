@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import { GraphValidator } from '$lib/validators/graphValidator';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 
@@ -32,6 +33,8 @@
 	$effect(() => {
 		graph = data.graph;
 	});
+
+	const issues = $derived(new GraphValidator(graph).validate());
 
 	const domainMapping = $derived.by(() => {
 		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
@@ -114,6 +117,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{graph.name} Domains | PRIME Graph Editor</title>
+</svelte:head>
+
 <CreateNewDomain {graph} />
 
 <Grid.Root columnTemplate={['3rem', '3rem', 'minmax(12rem, 1fr)', '5rem', '5rem']}>
@@ -133,8 +140,8 @@
 	>
 		{#snippet children(domain, index)}
 			<Grid.Cell>
-				{@const issues = data.issues.domainIssues[domain.id] || []}
-				<IssueIndicator {issues} />
+				{@const domainIssues = issues.domainIssues[domain.id] || []}
+				<IssueIndicator issues={domainIssues} />
 			</Grid.Cell>
 
 			<Grid.Cell>
@@ -170,9 +177,9 @@
 		<Grid.Rows name="subject-rel" items={domainMapping} class="space-y-1">
 			{#snippet children({ domain: sourceDomain, outDomain: targetDomain })}
 				<Grid.Cell>
-					{@const issues =
-						data.issues.domainRelationIssues[sourceDomain.id]?.[targetDomain.id] || []}
-					<IssueIndicator {issues} />
+					{@const relationIssues =
+						issues.domainRelationIssues[sourceDomain.id]?.[targetDomain.id] || []}
+					<IssueIndicator issues={relationIssues} />
 				</Grid.Cell>
 
 				<Grid.Cell>
@@ -288,9 +295,7 @@
 					</DropdownMenu.GroupHeading>
 
 					{#each otherDomains as domain (domain.id)}
-						<DropdownMenu.Item class="p-0">
-							<ChangeDomainRel {graph} {domain} {sourceDomain} {targetDomain} {type} />
-						</DropdownMenu.Item>
+						<ChangeDomainRel {graph} {domain} {sourceDomain} {targetDomain} {type} />
 					{/each}
 				</DropdownMenu.Group>
 			{/if}

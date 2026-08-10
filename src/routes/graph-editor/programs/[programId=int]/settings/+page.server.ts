@@ -45,6 +45,12 @@ export const load = (async ({ params, locals }) => {
 		if (!dbProgram) throw Error('You do not have permissions to access this program setting page');
 
 		return {
+			breadcrumbs: [
+				{ name: 'Home', url: '/graph-editor' },
+				{ name: 'Programs', url: '/graph-editor/programs' },
+				{ name: dbProgram.name },
+				{ name: 'Settings', url: `/graph-editor/programs/${programId}/settings` }
+			],
 			program: dbProgram,
 			user,
 			allUsers,

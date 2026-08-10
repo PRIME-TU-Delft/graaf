@@ -4,6 +4,7 @@
 	import type { Snippet } from 'svelte';
 	import { dragHandle, dragHandleZone } from 'svelte-dnd-action';
 	import { Cell, Rows } from '.';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	type Props = {
 		class?: string;
@@ -33,13 +34,23 @@
 	<Rows {items} {name}>
 		{#snippet children(domain, index)}
 			<Cell class="p-0">
-				<div
-					class="m-2 rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
-					use:dragHandle
-					aria-label="drag-handle for {domain.id}"
-				>
-					<MoveVertical class="h-4 w-4" />
-				</div>
+				<Tooltip.Provider>
+					<Tooltip.Root>
+						<Tooltip.Trigger>
+							{#snippet child({ props })}
+								<div
+									{...props}
+									class="m-2 rounded bg-purple-200 p-2 transition-colors hover:bg-purple-400"
+									use:dragHandle
+									aria-label="drag-handle for {domain.id}"
+								>
+									<MoveVertical class="h-4 w-4" />
+								</div>
+							{/snippet}
+						</Tooltip.Trigger>
+						<Tooltip.Content><p>Drag to reorder</p></Tooltip.Content>
+					</Tooltip.Root>
+				</Tooltip.Provider>
 			</Cell>
 
 			{@render resizeChildren(domain, index)}

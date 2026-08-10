@@ -1,6 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { error } from '@sveltejs/kit';
 import { GraphActions } from '$lib/server/actions';
+import { SandboxActions } from '$lib/server/actions/Sandboxes';
 import { zod4 as zod } from 'sveltekit-superforms/adapters';
 import { superValidate } from 'sveltekit-superforms';
 import { getUser } from '$lib/server/actions/Users.js';
@@ -8,6 +9,7 @@ import { duplicateGraphSchema, graphSchemaWithId, newGraphSchema } from '$lib/zo
 import { whereHasCoursePermission, whereHasSandboxPermission } from '$lib/server/permissions';
 import { LinkActions } from '$lib/server/actions/Links';
 import { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
+import { leaveSandboxSchema } from '$lib/zod/sandboxSchema';
 
 import type { Actions } from '@sveltejs/kit';
 import type { ServerLoad } from '@sveltejs/kit';
@@ -74,6 +76,11 @@ export const load = (async ({ params, locals }) => {
 		});
 
 		return {
+			breadcrumbs: [
+				{ name: 'Home', url: '/graph-editor' },
+				{ name: 'Sandboxes', url: '/graph-editor/sandboxes' },
+				{ name: dbSandbox.name, url: `/graph-editor/sandboxes/${dbSandbox.id}` }
+			],
 			user,
 			sandbox: dbSandbox,
 			graphs: dbSandbox.graphs,
@@ -86,10 +93,15 @@ export const load = (async ({ params, locals }) => {
 			newLinkForm: await superValidate(zod(newLinkSchema)),
 			editLinkForm: await superValidate(zod(editLinkSchema)),
 			deleteLinkForm: await superValidate(zod(editLinkSchema)),
+			leaveSandboxForm: await superValidate(zod(leaveSandboxSchema)),
 			error: undefined
 		};
 	} catch (e: unknown) {
 		return {
+			breadcrumbs: [
+				{ name: 'Home', url: '/graph-editor' },
+				{ name: 'Sandboxes', url: '/graph-editor/sandboxes' }
+			],
 			user,
 			sandbox: undefined,
 			graphs: [],
@@ -102,6 +114,7 @@ export const load = (async ({ params, locals }) => {
 			deleteLinkForm: await superValidate(zod(editLinkSchema)),
 			newLinkForm: await superValidate(zod(newLinkSchema)),
 			editLinkForm: await superValidate(zod(editLinkSchema)),
+			leaveSandboxForm: await superValidate(zod(leaveSandboxSchema)),
 			error: e instanceof Error ? e.message : `${e}`
 		};
 	}
@@ -135,5 +148,9 @@ export const actions: Actions = {
 	'delete-link': async (event) => {
 		const form = await superValidate(event, zod(editLinkSchema));
 		return LinkActions.deleteLink(await getUser(event), form);
+	},
+	'leave-sandbox': async (event) => {
+		const form = await superValidate(event, zod(leaveSandboxSchema));
+		return SandboxActions.leaveSandbox(await getUser(event), form);
 	}
 };
