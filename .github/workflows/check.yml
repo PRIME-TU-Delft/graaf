@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   formatting:
     runs-on: ubuntu-latest
@@ -135,6 +138,9 @@ jobs:
 
       - name: Push prisma schema to test database
         run: pnpm prisma db push
+
+      - name: Generate svelte-kit types
+        run: pnpm svelte-kit sync
 
       - name: Run integration tests
         run: npx vitest run -c ./vitest.config.integration.ts
