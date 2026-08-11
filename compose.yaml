@@ -30,7 +30,21 @@ services:
     healthcheck:
       test: pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}
 
+  db-test:
+    image: docker.io/postgres:16
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: local
+    healthcheck:
+      test: pg_isready -d local -U testuser
+
 volumes:
   postgres_data:
+  postgres_test_data:
   caddy_data:
   caddy_config:

@@ -2,15 +2,15 @@ import { env } from '$env/dynamic/private';
 import { setError } from '$lib/utils/setError';
 import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
-import { Prisma } from '@prisma/client';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
+import { withPermissionCheck } from './permissionError';
 import { GraphValidator } from '$lib/validators/graphValidator';
 
 import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
 import type { PrismaGraphPayload, Issues } from '$lib/validators/types';
 
-import type { User } from '@prisma/client';
-import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
+import type { Prisma, User } from '@prisma/client';
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 /** Server actions for creating, renaming, deleting, and duplicating graphs under a course or
  * sandbox. Called from form actions in `+page.server.ts` route files, one static method per
@@ -82,88 +82,6 @@ export class GraphActions {
 	}
 
 	/**
-	 * Await a course-scoped Prisma write and translate a permission failure into a form error.
-	 * Shared by every action in this class that mutates a graph through its parent course.
-	 *
-	 * @param query - The in-flight Prisma query (e.g. `prisma.course.update(...)`) to await
-	 * @param form - The form to attach an error to if the query fails
-	 * @param path - The form field to attach the error to
-	 * @returns `{ form }` on success. If the query fails because the course wasn't found under
-	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
-	 * underlying error message. Either way returns the form via setError instead of throwing.
-	 */
-	private static async updateCourse<T, S extends Record<string, unknown>>(
-		query: T,
-		form: SuperValidated<S>,
-		path: FormPathLeavesWithErrors<S>
-	) {
-		try {
-			await query;
-		} catch (e: unknown) {
-			if (env.DEBUG) console.error(e);
-
-			if (
-				e instanceof Prisma.PrismaClientKnownRequestError &&
-				e.meta &&
-				'cause' in e.meta &&
-				e.meta.cause instanceof String &&
-				(e.meta.cause as string).includes("No 'Course' record")
-			) {
-				return setError(
-					form,
-					path,
-					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
-				);
-			}
-
-			return setError(form, path, e instanceof Error ? e.message : `${e}`);
-		}
-
-		return { form };
-	}
-
-	/**
-	 * Await a sandbox-scoped Prisma write and translate a permission failure into a form error.
-	 * The sandbox equivalent of updateCourse.
-	 *
-	 * @param query - The in-flight Prisma query (e.g. `prisma.sandbox.update(...)`) to await
-	 * @param form - The form to attach an error to if the query fails
-	 * @param path - The form field to attach the error to
-	 * @returns `{ form }` on success. If the query fails because the sandbox wasn't found under
-	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
-	 * underlying error message. Either way returns the form via setError instead of throwing.
-	 */
-	private static async updateSandbox<T, S extends Record<string, unknown>>(
-		query: T,
-		form: SuperValidated<S>,
-		path: FormPathLeavesWithErrors<S>
-	) {
-		try {
-			await query;
-		} catch (e: unknown) {
-			if (env.DEBUG) console.error(e);
-
-			if (
-				e instanceof Prisma.PrismaClientKnownRequestError &&
-				e.meta &&
-				'cause' in e.meta &&
-				e.meta.cause instanceof String &&
-				(e.meta.cause as string).includes("No 'Sandbox' record")
-			) {
-				return setError(
-					form,
-					path,
-					'You are not allowed to edit this sandbox. You are not an owner or editor'
-				);
-			}
-
-			return setError(form, path, e instanceof Error ? e.message : `${e}`);
-		}
-
-		return { form };
-	}
-
-	/**
 	 * Create a new empty graph under a course or a sandbox.
 	 *
 	 * @param user - The user performing the action, must have course or sandbox edit rights
@@ -191,7 +109,11 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateCourse(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Course',
+				message:
+					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
+			});
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -208,7 +130,10 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateSandbox(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Sandbox',
+				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
+			});
 		}
 	}
 
@@ -240,7 +165,11 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateCourse(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Course',
+				message:
+					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
+			});
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -257,7 +186,10 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateSandbox(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Sandbox',
+				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
+			});
 		}
 	}
 
@@ -286,7 +218,11 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateCourse(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Course',
+				message:
+					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
+			});
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -300,7 +236,10 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateSandbox(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Sandbox',
+				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
+			});
 		}
 	}
 
