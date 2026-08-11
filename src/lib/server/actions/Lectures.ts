@@ -3,6 +3,7 @@ import { deleteLectureSchema, lectureSchema } from '$lib/zod/lectureSchema';
 import type { User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
+import { withPermissionCheck } from './permissionError';
 
 /** Server actions for creating, renaming, and deleting lectures within a graph, and for
  * linking subjects to them. Called from form actions in `+page.server.ts` route files, one
@@ -20,33 +21,36 @@ export class LectureActions {
 	static async addLectureToGraph(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
-		try {
-			const lectureCount = await prisma.lecture.count({
-				where: {
-					graphId: form.data.graphId
-				}
-			});
+		return await withPermissionCheck(
+			async () => {
+				const lectureCount = await prisma.lecture.count({
+					where: {
+						graphId: form.data.graphId
+					}
+				});
 
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					lectures: {
-						create: {
-							name: form.data.name,
-							order: lectureCount,
-							subjects: {
-								connect: form.data.subjectIds.map((id) => ({ id }))
+				return prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						lectures: {
+							create: {
+								name: form.data.name,
+								order: lectureCount,
+								subjects: {
+									connect: form.data.subjectIds.map((id) => ({ id }))
+								}
 							}
 						}
 					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+				});
+			},
+			form,
+			'name',
+			{ entity: 'Graph', message: "You don't have permission to edit this lecture" }
+		);
 	}
 
 	/**
@@ -60,22 +64,24 @@ export class LectureActions {
 	static async changeLectureName(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
-		try {
-			await prisma.lecture.update({
-				where: {
-					id: form.data.lectureId,
-					graph: {
-						id: form.data.graphId,
-						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+		return await withPermissionCheck(
+			() =>
+				prisma.lecture.update({
+					where: {
+						id: form.data.lectureId,
+						graph: {
+							id: form.data.graphId,
+							...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+						}
+					},
+					data: {
+						name: form.data.name
 					}
-				},
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+				}),
+			form,
+			'name',
+			{ entity: 'Lecture', message: "You don't have permission to edit this lecture" }
+		);
 	}
 
 	/**
@@ -94,24 +100,26 @@ export class LectureActions {
 	) {
 		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid lecture');
 
-		try {
-			await prisma.lecture.update({
-				where: {
-					id: form.data.lectureId,
-					graph: {
-						id: form.data.graphId,
-						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+		return await withPermissionCheck(
+			() =>
+				prisma.lecture.update({
+					where: {
+						id: form.data.lectureId,
+						graph: {
+							id: form.data.graphId,
+							...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+						}
+					},
+					data: {
+						subjects: {
+							set: form.data.subjectIds.map((id) => ({ id }))
+						}
 					}
-				},
-				data: {
-					subjects: {
-						set: form.data.subjectIds.map((id) => ({ id }))
-					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'subjectIds._errors', e instanceof Error ? e.message : `${e}`);
-		}
+				}),
+			form,
+			'subjectIds._errors',
+			{ entity: 'Lecture', message: "You don't have permission to edit this lecture" }
+		);
 	}
 
 	/**
@@ -125,18 +133,20 @@ export class LectureActions {
 	static async deleteLecture(user: User, form: SuperValidated<Infer<typeof deleteLectureSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid lecture');
 
-		try {
-			await prisma.lecture.delete({
-				where: {
-					id: form.data.lectureId,
-					graph: {
-						id: form.data.graphId,
-						...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+		return await withPermissionCheck(
+			() =>
+				prisma.lecture.delete({
+					where: {
+						id: form.data.lectureId,
+						graph: {
+							id: form.data.graphId,
+							...whereHasGraphCoursePermission(user, 'CourseAdminORProgramAdminEditor')
+						}
 					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+				}),
+			form,
+			'',
+			{ entity: 'Lecture', message: "You don't have permission to delete this lecture" }
+		);
 	}
 }
