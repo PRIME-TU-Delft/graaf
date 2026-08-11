@@ -1,5 +1,5 @@
-import prisma from '$lib/server/db/prisma';
-import { error, type ServerLoad } from '@sveltejs/kit';
+import { GraphActions } from '$lib/server/actions/Graphs';
+import { error, isHttpError, type ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = async ({ params }) => {
 	const courseCode = params.code;
@@ -9,53 +9,27 @@ export const load: ServerLoad = async ({ params }) => {
 		throw new Error('Course code and alias are required');
 	}
 
+	let graph;
 	try {
-		const graph = await prisma.graph.findFirst({
-			where: {
-				course: {
-					uriCode: encodeURIComponent(courseCode)
-				},
-				links: {
-					some: {
-						name: alias
-					}
-				}
+		graph = await GraphActions.getRenderablePayload({
+			course: {
+				uriCode: encodeURIComponent(courseCode)
 			},
-			include: {
-				domains: {
-					include: {
-						sourceDomains: true,
-						targetDomains: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				},
-				subjects: {
-					include: {
-						sourceSubjects: true,
-						targetSubjects: true,
-						domain: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				},
-				lectures: {
-					include: {
-						subjects: true
-					}
+			links: {
+				some: {
+					name: alias
 				}
 			}
 		});
-
-		if (!graph) error(404, { message: 'Graph not found' });
-
-		// Happy path
-		return {
-			graph: graph
-		};
 	} catch (e: unknown) {
+		if (isHttpError(e)) throw e;
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
+
+	if (!graph) error(404, { message: 'Graph not found' });
+
+	// Happy path
+	return {
+		graph: graph
+	};
 };

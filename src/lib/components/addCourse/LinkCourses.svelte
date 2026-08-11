@@ -1,7 +1,8 @@
 <script lang="ts">
 	import * as Form from '$lib/components/ui/form/index.js';
 	import { linkingCoursesSchema } from '$lib/zod/programSchema';
-	import type { Course, Program } from '@prisma/client';
+	import type { Program } from '@prisma/client';
+	import type { LinkCandidate } from './add-course-columns';
 	import type { RowSelectionState } from '@tanstack/table-core';
 	import { toast } from 'svelte-sonner';
 	import { fly } from 'svelte/transition';
@@ -10,7 +11,7 @@
 
 	type DataTableProps = {
 		program: Program;
-		courses: Course[];
+		courses: LinkCandidate[];
 		rowSelection: RowSelectionState;
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
 		onSuccess?: () => void;

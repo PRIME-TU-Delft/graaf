@@ -4,6 +4,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import type { linkingCoursesSchema } from '$lib/zod/programSchema';
 	import type { Course, Program, User } from '@prisma/client';
+	import type { LinkCandidate } from './add-course-columns';
 	import {
 		type ColumnDef,
 		getCoreRowModel,
@@ -18,9 +19,9 @@
 
 	type DataTableProps = {
 		linkCoursesForm: SuperValidated<Infer<typeof linkingCoursesSchema>>;
-		columns: ColumnDef<Course, Course>[];
+		columns: ColumnDef<LinkCandidate, LinkCandidate>[];
 		program: Program & { courses: Course[]; admins: User[]; editors: User[] };
-		data: Course[];
+		data: LinkCandidate[];
 		loading: boolean;
 		dialogOpen: boolean;
 	};
@@ -67,6 +68,7 @@
 				rowSelection = updater;
 			}
 		},
+		enableRowSelection: (row) => row.original.linkable,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel()
 	});
@@ -101,7 +103,9 @@
 				{#each table.getRowModel().rows as row (row.id)}
 					<Table.Row
 						data-state={row.getIsSelected() && 'selected'}
+						class={!row.original.linkable ? 'opacity-50' : ''}
 						onclick={() => {
+							if (!row.original.linkable) return;
 							const isSelected = rowSelection[row.id];
 							rowSelection = {
 								...rowSelection,

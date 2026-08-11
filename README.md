@@ -85,6 +85,11 @@ them with their own separate roles, and one graph (`GraphOne`) that's copied int
 courses to check that a graph's content is independent once copied. The diagram below shows that
 seed structure:
 
+Spins up a `db-test` service (via podman/docker compose), pushes the Prisma schema, seeds
+the fixture below, then runs `src/lib/server/actions/tests/**/*.test.ts` against it. Runs
+in CI on every push and pull request (`.github/workflows/check.yml`, `integration-tests` job)
+against a Postgres service container instead of compose.
+
 ```mermaid
 flowchart LR;
 	TEST_DB[(Test Database)]

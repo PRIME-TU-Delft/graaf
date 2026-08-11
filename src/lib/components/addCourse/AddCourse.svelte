@@ -10,6 +10,7 @@
 	import type { newCourseSchema } from '$lib/zod/courseSchema';
 	import type { Course, Program, User } from '@prisma/client';
 	import type { Infer, SuperValidated } from 'sveltekit-superforms';
+	import type { LinkCandidate } from './add-course-columns';
 
 	type AddCourseProps = {
 		user: User;
@@ -25,7 +26,7 @@
 	let allCourses: Course[] = $state([]);
 	let dialogOpen = $state(false);
 
-	const hasAdminRights = $derived(hasProgramPermissions(user, program, 'ProgramAdmin'));
+	const hasLinkRights = $derived(hasProgramPermissions(user, program, 'ProgramAdminEditor'));
 
 	// Re-await whenever the streamed promise changes (e.g. after invalidateAll on link)
 	$effect(() => {
@@ -41,22 +42,29 @@
 			});
 	});
 
-	// Linkable courses = all courses not already linked to the program. Derived so it
-	// recomputes when program.courses updates after a link.
-	const data = $derived(
-		allCourses.filter((c) => !program.courses.some((course) => c.code === course.code))
+	// Candidates are every course the user has rights on (already scoped server-side); courses
+	// already in the program are still shown, but marked non-linkable with a reason.
+	const data = $derived<LinkCandidate[]>(
+		allCourses.map((c) => {
+			const alreadyLinked = program.courses.some((course) => course.id === c.id);
+			return {
+				...c,
+				linkable: !alreadyLinked,
+				reason: alreadyLinked ? 'Already in this program' : undefined
+			};
+		})
 	);
 </script>
 
 <DialogButton
 	bind:open={dialogOpen}
 	button="Add course"
-	title="Create new course {hasAdminRights && data.length > 0 ? 'or link one' : ''}"
+	title="Create new course {hasLinkRights && data.length > 0 ? 'or link one' : ''}"
 	icon="plus"
 >
 	<NewCourseForm bind:dialogOpen {program} {createNewCourseForm} />
 
-	{#if hasAdminRights && data.length > 0}
+	{#if hasLinkRights && data.length > 0}
 		<div class="flex items-center gap-2 p-4">
 			<div class="h-1 w-full rounded-l bg-slate-300"></div>
 			<p class="font-medium text-nowrap text-slate-600">Or link existing</p>

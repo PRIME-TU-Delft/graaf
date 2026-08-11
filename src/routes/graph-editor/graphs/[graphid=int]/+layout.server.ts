@@ -1,7 +1,6 @@
-import prisma from '$lib/server/db/prisma';
-import { GraphValidator } from '$lib/validators/graphValidator';
+import { GraphActions } from '$lib/server/actions/Graphs';
 import type { Breadcrumb } from '$lib/utils/breadcrumbs';
-import { error } from '@sveltejs/kit';
+import { error, redirect, isRedirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 const leafLabels: Record<string, string> = {
@@ -22,47 +21,17 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 	}
 
 	try {
-		const graph = await prisma.graph.findFirst({
-			where: {
-				id: graphId
-			},
-			include: {
+		const graph = await GraphActions.getRenderablePayload(
+			{ id: graphId },
+			{
 				course: { select: { code: true } },
-				sandbox: { select: { id: true, name: true } },
-				domains: {
-					include: {
-						sourceDomains: true,
-						targetDomains: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				},
-				subjects: {
-					include: {
-						sourceSubjects: true,
-						targetSubjects: true,
-						domain: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				},
-				lectures: {
-					include: {
-						subjects: true
-					},
-					orderBy: {
-						order: 'asc'
-					}
-				}
+				sandbox: { select: { id: true, name: true } }
 			}
-		});
+		);
 
-		if (!graph) error(404, { message: 'Graph not found' });
+		if (!graph) redirect(303, '/graph-editor?error=Graph not found');
 
-		const graphValidator = new GraphValidator(graph);
-		const issues = graphValidator.validate();
+		const issues = GraphActions.validate(graph);
 
 		// Build the breadcrumb trail from the graph's real parent (course or sandbox) and the
 		// active leaf tab, so the nav bar shows names instead of guessing from the URL path.
@@ -94,6 +63,7 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 			breadcrumbs
 		};
 	} catch (e: unknown) {
+		if (isRedirect(e)) throw e;
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
 };
