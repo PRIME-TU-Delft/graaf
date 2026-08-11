@@ -33,10 +33,10 @@
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10 });
 	let rowSelection = $state<RowSelectionState>({});
 
-	const isAdmin = $derived(hasProgramPermissions(user, program, 'ProgramAdmin'));
+	const canManageCourses = $derived(hasProgramPermissions(user, program, 'ProgramAdminEditor'));
 
-	// Hide the "select" column if the user is not an admin, otherwise show all columns
-	const columnVisibility = $derived<VisibilityState>(isAdmin ? {} : { select: false });
+	// Hide the "select" column if the user can't link/unlink, otherwise show all columns
+	const columnVisibility = $derived<VisibilityState>(canManageCourses ? {} : { select: false });
 
 	const table = createSvelteTable({
 		get data() {

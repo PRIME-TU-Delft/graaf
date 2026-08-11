@@ -27,6 +27,7 @@ fi
 
 pnpm prisma generate
 pnpm prisma db push
+pnpm svelte-kit sync
 
 if [ "$#" -eq  "0" ]
   then

@@ -2,98 +2,83 @@ import { env } from '$env/dynamic/private';
 import { setError } from '$lib/utils/setError';
 import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
-import { Prisma } from '@prisma/client';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
+import { withPermissionCheck } from './permissionError';
+import { GraphValidator } from '$lib/validators/graphValidator';
 
 import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
+import type { PrismaGraphPayload, Issues } from '$lib/validators/types';
 
-import type { User } from '@prisma/client';
-import type { FormPathLeavesWithErrors, Infer, SuperValidated } from 'sveltekit-superforms';
+import type { Prisma, User } from '@prisma/client';
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 /** Server actions for creating, renaming, deleting, and duplicating graphs under a course or
  * sandbox. Called from form actions in `+page.server.ts` route files, one static method per
  * operation. */
 export class GraphActions {
 	/**
-	 * Await a course-scoped Prisma write and translate a permission failure into a form error.
-	 * Shared by every action in this class that mutates a graph through its parent course.
-	 *
-	 * @param query - The in-flight Prisma query (e.g. `prisma.course.update(...)`) to await
-	 * @param form - The form to attach an error to if the query fails
-	 * @param path - The form field to attach the error to
-	 * @returns `{ form }` on success. If the query fails because the course wasn't found under
-	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
-	 * underlying error message. Either way returns the form via setError instead of throwing.
+	 * The `include` shape needed to render a graph: domains and subjects with their relation
+	 * edges, ordered for display, plus lectures with their subjects. Shared by every loader that
+	 * needs a full renderable graph, so a schema change to what "renderable" means only needs
+	 * updating here.
 	 */
-	private static async updateCourse<T, S extends Record<string, unknown>>(
-		query: T,
-		form: SuperValidated<S>,
-		path: FormPathLeavesWithErrors<S>
-	) {
-		try {
-			await query;
-		} catch (e: unknown) {
-			if (env.DEBUG) console.error(e);
-
-			if (
-				e instanceof Prisma.PrismaClientKnownRequestError &&
-				e.meta &&
-				'cause' in e.meta &&
-				e.meta.cause instanceof String &&
-				(e.meta.cause as string).includes("No 'Course' record")
-			) {
-				return setError(
-					form,
-					path,
-					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
-				);
-			}
-
-			return setError(form, path, e instanceof Error ? e.message : `${e}`);
+	private static readonly renderablePayloadInclude = {
+		domains: {
+			include: {
+				sourceDomains: true,
+				targetDomains: true
+			},
+			orderBy: { order: 'asc' as const }
+		},
+		subjects: {
+			include: {
+				sourceSubjects: true,
+				targetSubjects: true,
+				domain: true
+			},
+			orderBy: { order: 'asc' as const }
+		},
+		lectures: {
+			include: {
+				subjects: true
+			},
+			orderBy: { order: 'asc' as const }
 		}
+	} satisfies Prisma.GraphInclude;
 
-		return { form };
+	/**
+	 * Fetch a graph with the full shape needed to render and validate it: domains, subjects, and
+	 * lectures with their relations, in display order. Used by both the graph-editor loader and
+	 * the public graph viewer loader so the query shape is defined once.
+	 *
+	 * @param where - Prisma where clause identifying the graph (by id, or by course/link for the
+	 * public viewer)
+	 * @param extraInclude - Additional relations to include alongside the renderable shape, e.g.
+	 * the parent course/sandbox for breadcrumbs
+	 * @returns The matching graph, or `null` if none matches
+	 */
+	static async getRenderablePayload<Extra extends Prisma.GraphInclude = object>(
+		where: Prisma.GraphWhereInput,
+		extraInclude?: Extra
+	): Promise<Prisma.GraphGetPayload<{
+		include: typeof GraphActions.renderablePayloadInclude & Extra;
+	}> | null> {
+		return prisma.graph.findFirst({
+			where,
+			include: { ...this.renderablePayloadInclude, ...extraInclude }
+		}) as Promise<Prisma.GraphGetPayload<{
+			include: typeof GraphActions.renderablePayloadInclude & Extra;
+		}> | null>;
 	}
 
 	/**
-	 * Await a sandbox-scoped Prisma write and translate a permission failure into a form error.
-	 * The sandbox equivalent of updateCourse.
+	 * Run domain/subject/lecture validation on a renderable graph payload.
 	 *
-	 * @param query - The in-flight Prisma query (e.g. `prisma.sandbox.update(...)`) to await
-	 * @param form - The form to attach an error to if the query fails
-	 * @param path - The form field to attach the error to
-	 * @returns `{ form }` on success. If the query fails because the sandbox wasn't found under
-	 * the permission-scoped where clause, sets a permission-denied message; otherwise sets the
-	 * underlying error message. Either way returns the form via setError instead of throwing.
+	 * @param graph - A graph fetched via getRenderablePayload (or any structurally compatible payload)
+	 * @returns The list of validation issues, indexable by domain/subject/lecture id
 	 */
-	private static async updateSandbox<T, S extends Record<string, unknown>>(
-		query: T,
-		form: SuperValidated<S>,
-		path: FormPathLeavesWithErrors<S>
-	) {
-		try {
-			await query;
-		} catch (e: unknown) {
-			if (env.DEBUG) console.error(e);
-
-			if (
-				e instanceof Prisma.PrismaClientKnownRequestError &&
-				e.meta &&
-				'cause' in e.meta &&
-				e.meta.cause instanceof String &&
-				(e.meta.cause as string).includes("No 'Sandbox' record")
-			) {
-				return setError(
-					form,
-					path,
-					'You are not allowed to edit this sandbox. You are not an owner or editor'
-				);
-			}
-
-			return setError(form, path, e instanceof Error ? e.message : `${e}`);
-		}
-
-		return { form };
+	static validate(graph: PrismaGraphPayload): Issues {
+		return new GraphValidator(graph).validate();
 	}
 
 	/**
@@ -124,7 +109,11 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateCourse(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Course',
+				message:
+					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
+			});
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -141,7 +130,10 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateSandbox(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Sandbox',
+				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
+			});
 		}
 	}
 
@@ -173,7 +165,11 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateCourse(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Course',
+				message:
+					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
+			});
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -190,7 +186,10 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateSandbox(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Sandbox',
+				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
+			});
 		}
 	}
 
@@ -219,7 +218,11 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateCourse(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Course',
+				message:
+					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
+			});
 		} else if (form.data.parentType === 'SANDBOX') {
 			const query = prisma.sandbox.update({
 				where: {
@@ -233,7 +236,10 @@ export class GraphActions {
 				}
 			});
 
-			return await this.updateSandbox(query, form, 'name');
+			return await withPermissionCheck(() => query, form, 'name', {
+				entity: 'Sandbox',
+				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
+			});
 		}
 	}
 

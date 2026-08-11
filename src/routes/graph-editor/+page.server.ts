@@ -86,6 +86,7 @@ export const load = (async ({ url, locals }) => {
 		});
 
 		const courses = prisma.course.findMany({
+			where: whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor'),
 			orderBy: {
 				updatedAt: 'desc'
 			}
