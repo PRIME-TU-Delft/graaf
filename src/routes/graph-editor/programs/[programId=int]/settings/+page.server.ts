@@ -44,6 +44,23 @@ export const load = (async ({ params, locals }) => {
 
 		if (!dbProgram) throw Error('You do not have permissions to access this program setting page');
 
+		const permittedCourseIds = await prisma.course.findMany({
+			where: {
+				id: { in: dbProgram.courses.map((c) => c.id) },
+				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			select: { id: true }
+		});
+		const permittedIds = new Set(permittedCourseIds.map((c) => c.id));
+
+		const programCourses = dbProgram.courses.map((c) => ({
+			...c,
+			linkable: permittedIds.has(c.id),
+			reason: permittedIds.has(c.id)
+				? undefined
+				: 'You do not have permission to unlink this course'
+		}));
+
 		return {
 			breadcrumbs: [
 				{ name: 'Home', url: '/graph-editor' },
@@ -52,6 +69,7 @@ export const load = (async ({ params, locals }) => {
 				{ name: 'Settings', url: `/graph-editor/programs/${programId}/settings` }
 			],
 			program: dbProgram,
+			programCourses,
 			user,
 			allUsers,
 			allCourses,
