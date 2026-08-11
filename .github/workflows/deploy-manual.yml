@@ -21,6 +21,28 @@ jobs:
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v7
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 10
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: 'pnpm'
+
+      - name: Install root dependencies
+        run: pnpm install
+
+      # root tsconfig.json extends .svelte-kit/tsconfig.json; without this,
+      # the manual build's tsconfig resolution reaches into the repo root
+      # and fails since that file is gitignored/generated.
+      - name: Generate root .svelte-kit types
+        run: pnpm exec svelte-kit sync
+
       - name: Install, build, and upload your site
         uses: withastro/action@v6
         with:
