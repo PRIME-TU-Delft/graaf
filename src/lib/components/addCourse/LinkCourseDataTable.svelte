@@ -52,7 +52,7 @@
 
 	$effect(() => {
 		void search;
-		pagination = { ...pagination, pageIndex: 0 };
+		pagination = { pageIndex: 0, pageSize: 4 };
 		rowSelection = {};
 	});
 
