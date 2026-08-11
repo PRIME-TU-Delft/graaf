@@ -4,16 +4,83 @@ import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
 import { withPermissionCheck } from './permissionError';
+import { GraphValidator } from '$lib/validators/graphValidator';
 
 import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
+import type { PrismaGraphPayload, Issues } from '$lib/validators/types';
 
-import type { User } from '@prisma/client';
+import type { Prisma, User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 /** Server actions for creating, renaming, deleting, and duplicating graphs under a course or
  * sandbox. Called from form actions in `+page.server.ts` route files, one static method per
  * operation. */
 export class GraphActions {
+	/**
+	 * The `include` shape needed to render a graph: domains and subjects with their relation
+	 * edges, ordered for display, plus lectures with their subjects. Shared by every loader that
+	 * needs a full renderable graph, so a schema change to what "renderable" means only needs
+	 * updating here.
+	 */
+	private static readonly renderablePayloadInclude = {
+		domains: {
+			include: {
+				sourceDomains: true,
+				targetDomains: true
+			},
+			orderBy: { order: 'asc' as const }
+		},
+		subjects: {
+			include: {
+				sourceSubjects: true,
+				targetSubjects: true,
+				domain: true
+			},
+			orderBy: { order: 'asc' as const }
+		},
+		lectures: {
+			include: {
+				subjects: true
+			},
+			orderBy: { order: 'asc' as const }
+		}
+	} satisfies Prisma.GraphInclude;
+
+	/**
+	 * Fetch a graph with the full shape needed to render and validate it: domains, subjects, and
+	 * lectures with their relations, in display order. Used by both the graph-editor loader and
+	 * the public graph viewer loader so the query shape is defined once.
+	 *
+	 * @param where - Prisma where clause identifying the graph (by id, or by course/link for the
+	 * public viewer)
+	 * @param extraInclude - Additional relations to include alongside the renderable shape, e.g.
+	 * the parent course/sandbox for breadcrumbs
+	 * @returns The matching graph, or `null` if none matches
+	 */
+	static async getRenderablePayload<Extra extends Prisma.GraphInclude = object>(
+		where: Prisma.GraphWhereInput,
+		extraInclude?: Extra
+	): Promise<Prisma.GraphGetPayload<{
+		include: typeof GraphActions.renderablePayloadInclude & Extra;
+	}> | null> {
+		return prisma.graph.findFirst({
+			where,
+			include: { ...this.renderablePayloadInclude, ...extraInclude }
+		}) as Promise<Prisma.GraphGetPayload<{
+			include: typeof GraphActions.renderablePayloadInclude & Extra;
+		}> | null>;
+	}
+
+	/**
+	 * Run domain/subject/lecture validation on a renderable graph payload.
+	 *
+	 * @param graph - A graph fetched via getRenderablePayload (or any structurally compatible payload)
+	 * @returns The list of validation issues, indexable by domain/subject/lecture id
+	 */
+	static validate(graph: PrismaGraphPayload): Issues {
+		return new GraphValidator(graph).validate();
+	}
+
 	/**
 	 * Create a new empty graph under a course or a sandbox.
 	 *
