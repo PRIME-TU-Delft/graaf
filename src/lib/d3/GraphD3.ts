@@ -386,6 +386,15 @@ export class GraphD3 {
 		CameraToolbox.moveCamera(this, transform, () => {});
 	}
 
+	/**
+	 * The DOM element to hand to the Fullscreen API when toggling fullscreen. Walks up from the
+	 * `<svg>` node past its wrapping elements. Owning this here (rather than at call sites) keeps
+	 * `GraphRenderer.svelte`'s markup nesting an implementation detail of GraphD3.
+	 */
+	getFullscreenTarget() {
+		return this.svg.node()?.parentElement?.parentElement ?? null;
+	}
+
 	// -----------------------------> Private methods
 
 	/**

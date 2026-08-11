@@ -77,7 +77,7 @@
 	function toggleFullscreen() {
 		if (!screenfull.isEnabled || !document) return;
 
-		const svgParent = graphD3.svg.node()?.parentElement?.parentElement;
+		const svgParent = graphD3.getFullscreenTarget();
 
 		if (!svgParent) {
 			console.error('SVG parent element not found');
