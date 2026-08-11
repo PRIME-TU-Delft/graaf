@@ -44,7 +44,7 @@
 			showArchivedCourses={false}
 		/>
 	{:else}
-		<p class="bg-purple-100/80 p-2 col-span-3 text-purple-900 rounded">
+		<p class="col-span-3 rounded bg-purple-100/80 p-2 text-purple-900">
 			There are no program or courses available. Ask a super admin to create one.
 		</p>
 	{/each}

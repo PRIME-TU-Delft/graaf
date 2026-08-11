@@ -8,6 +8,7 @@ import {
 import type { Prisma, User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
 import { whereHasGraphCoursePermission } from '../permissions';
+import { withPermissionCheck } from './permissionError';
 
 /** Server actions for creating, editing, and deleting subjects within a graph, and for
  * creating/removing relations between subjects. Called from form actions in `+page.server.ts`
@@ -25,34 +26,37 @@ export class SubjectActions {
 	 * via setError instead of throwing.
 	 */
 	static async addSubjectToGraph(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
-		try {
-			const lastSubject = await prisma.subject.findFirst({
-				where: {
-					graphId: form.data.graphId
-				},
-				orderBy: {
-					order: 'desc'
-				}
-			});
+		return await withPermissionCheck(
+			async () => {
+				const lastSubject = await prisma.subject.findFirst({
+					where: {
+						graphId: form.data.graphId
+					},
+					orderBy: {
+						order: 'desc'
+					}
+				});
 
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					subjects: {
-						create: {
-							name: form.data.name,
-							order: lastSubject ? lastSubject.order + 1 : 0,
-							domainId: form.data.domainId > 0 ? form.data.domainId : null
+				return prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						subjects: {
+							create: {
+								name: form.data.name,
+								order: lastSubject ? lastSubject.order + 1 : 0,
+								domainId: form.data.domainId > 0 ? form.data.domainId : null
+							}
 						}
 					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+				});
+			},
+			form,
+			'name',
+			{ entity: 'Graph', message: "You don't have permission to edit this subject" }
+		);
 	}
 
 	/**
@@ -103,15 +107,13 @@ export class SubjectActions {
 			}
 		});
 
-		try {
-			await prisma.$transaction([
-				...removeTargetFromSource,
-				...removeSourceFromTarget,
-				deleteSubject
-			]);
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withPermissionCheck(
+			() =>
+				prisma.$transaction([...removeTargetFromSource, ...removeSourceFromTarget, deleteSubject]),
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to delete this subject" }
+		);
 	}
 
 	/**
@@ -129,27 +131,29 @@ export class SubjectActions {
 			return setError(form, 'name', 'Invalid subject id, cannot be 0');
 		}
 
-		try {
-			await prisma.graph.update({
-				where: {
-					id: form.data.graphId,
-					...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-				},
-				data: {
-					subjects: {
-						update: {
-							where: { id: form.data.subjectId },
-							data: {
-								name: form.data.name,
-								domainId: form.data.domainId > 0 ? form.data.domainId : null
+		return await withPermissionCheck(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						subjects: {
+							update: {
+								where: { id: form.data.subjectId },
+								data: {
+									name: form.data.name,
+									domainId: form.data.domainId > 0 ? form.data.domainId : null
+								}
 							}
 						}
 					}
-				}
-			});
-		} catch (e: unknown) {
-			return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-		}
+				}),
+			form,
+			'name',
+			{ entity: 'Graph', message: "You don't have permission to edit this subject" }
+		);
 	}
 
 	/**
@@ -222,13 +226,16 @@ export class SubjectActions {
 	static async addSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
-		try {
-			const sourceId = form.data.sourceSubjectId;
-			const targetId = form.data.targetSubjectId;
-			await SubjectActions.connectSubjects(form.data.graphId, user, sourceId, targetId);
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withPermissionCheck(
+			() => {
+				const sourceId = form.data.sourceSubjectId;
+				const targetId = form.data.targetSubjectId;
+				return SubjectActions.connectSubjects(form.data.graphId, user, sourceId, targetId);
+			},
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to edit this subject relation" }
+		);
 	}
 
 	/**
@@ -318,25 +325,27 @@ export class SubjectActions {
 	) {
 		if (!form.valid) return setError(form, '', form.message);
 
-		try {
-			await prisma.$transaction(async (tx) => {
-				await SubjectActions.disconnectSubjects(
-					form.data.graphId,
-					user,
-					form.data.oldSourceSubjectId,
-					form.data.oldTargetSubjectId,
-					tx
-				);
-				await SubjectActions.connectSubjects(
-					form.data.graphId,
-					user,
-					form.data.sourceSubjectId,
-					form.data.targetSubjectId,
-					tx
-				);
-			});
-		} catch (e: unknown) {
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withPermissionCheck(
+			() =>
+				prisma.$transaction(async (tx) => {
+					await SubjectActions.disconnectSubjects(
+						form.data.graphId,
+						user,
+						form.data.oldSourceSubjectId,
+						form.data.oldTargetSubjectId,
+						tx
+					);
+					await SubjectActions.connectSubjects(
+						form.data.graphId,
+						user,
+						form.data.sourceSubjectId,
+						form.data.targetSubjectId,
+						tx
+					);
+				}),
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to edit this subject relation" }
+		);
 	}
 }

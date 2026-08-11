@@ -1,7 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { GraphValidator } from '$lib/validators/graphValidator';
 import type { Breadcrumb } from '$lib/utils/breadcrumbs';
-import { error } from '@sveltejs/kit';
+import { error, redirect, isRedirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 const leafLabels: Record<string, string> = {
@@ -59,7 +59,7 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 			}
 		});
 
-		if (!graph) error(404, { message: 'Graph not found' });
+		if (!graph) redirect(303, '/graph-editor?error=Graph not found');
 
 		const graphValidator = new GraphValidator(graph);
 		const issues = graphValidator.validate();
@@ -94,6 +94,7 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 			breadcrumbs
 		};
 	} catch (e: unknown) {
+		if (isRedirect(e)) throw e;
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
 };

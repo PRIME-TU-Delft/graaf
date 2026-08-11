@@ -48,6 +48,11 @@ NETLIFY_CONTEXT=DEPLOY_PREVIEW pnpm run dev
 pnpm test:integration
 ```
 
+Spins up a `db-test` service (via podman/docker compose), pushes the Prisma schema, seeds
+the fixture below, then runs `src/lib/server/actions/tests/**/*.test.ts` against it. Runs
+in CI on every push and pull request (`.github/workflows/check.yml`, `integration-tests` job)
+against a Postgres service container instead of compose.
+
 ```mermaid
 flowchart LR;
 	TEST_DB[(Test Database)]

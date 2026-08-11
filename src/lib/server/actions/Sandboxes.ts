@@ -1,6 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasSandboxPermission } from '$lib/server/permissions';
+import { withPermissionCheck } from './permissionError';
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -66,21 +67,21 @@ export class SandboxActions {
 	static async editSandbox(user: User, form: SuperValidated<Infer<typeof editSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		try {
-			await prisma.sandbox.update({
-				where: {
-					id: form.data.sandboxId,
-					...whereHasSandboxPermission(user, 'Owner')
-				},
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to edit this sandbox");
-		}
-
-		return { form };
+		return await withPermissionCheck(
+			() =>
+				prisma.sandbox.update({
+					where: {
+						id: form.data.sandboxId,
+						...whereHasSandboxPermission(user, 'Owner')
+					},
+					data: {
+						name: form.data.name
+					}
+				}),
+			form,
+			'',
+			{ entity: 'Sandbox', message: "You don't have permission to edit this sandbox" }
+		);
 	}
 
 	/**
@@ -188,16 +189,20 @@ export class SandboxActions {
 	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		try {
-			await prisma.sandbox.delete({
-				where: {
-					id: form.data.sandboxId,
-					...whereHasSandboxPermission(user, 'Owner')
-				}
-			});
-		} catch {
-			return setError(form, '', "You don't have permission to delete this sandbox");
-		}
+		const result = await withPermissionCheck(
+			() =>
+				prisma.sandbox.delete({
+					where: {
+						id: form.data.sandboxId,
+						...whereHasSandboxPermission(user, 'Owner')
+					}
+				}),
+			form,
+			'',
+			{ entity: 'Sandbox', message: "You don't have permission to delete this sandbox" }
+		);
+
+		if ('status' in result) return result;
 
 		throw redirect(303, '/');
 	}
