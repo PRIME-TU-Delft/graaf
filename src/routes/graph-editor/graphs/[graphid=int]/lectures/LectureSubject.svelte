@@ -5,6 +5,7 @@
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import { invalidateAll } from '$app/navigation';
 	import IssueIndicator from '../IssueIndicator.svelte';
 
 	type Props = {
@@ -29,7 +30,6 @@
 		lecture.subjects = e.detail.items;
 
 		const body = {
-			name: lecture.name,
 			graphId: lecture.graphId,
 			lectureId: lecture.id,
 			subjectIds: e.detail.items.map((subject) => subject.id)
@@ -46,6 +46,7 @@
 			toast.error('Error while reordering lectures');
 		} else {
 			subjectBackup = [...lecture.subjects];
+			await invalidateAll();
 		}
 	}
 </script>

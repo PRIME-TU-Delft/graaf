@@ -63,12 +63,32 @@ export class GraphActions {
 	): Promise<Prisma.GraphGetPayload<{
 		include: typeof GraphActions.renderablePayloadInclude & Extra;
 	}> | null> {
-		return prisma.graph.findFirst({
+		const graph = (await prisma.graph.findFirst({
 			where,
 			include: { ...this.renderablePayloadInclude, ...extraInclude }
-		}) as Promise<Prisma.GraphGetPayload<{
+		})) as Prisma.GraphGetPayload<{
+			include: typeof GraphActions.renderablePayloadInclude;
+		}> | null;
+
+		if (!graph) return null;
+
+		// Lecture.subjects has no sortable column of its own (it's a plain many-to-many
+		// relation), so display order within a lecture is kept separately as subjectOrder,
+		// a JSON array of subject ids, and applied here after the fetch.
+		for (const lecture of graph.lectures) {
+			const order: number[] = JSON.parse(lecture.subjectOrder);
+			if (order.length === 0) continue;
+
+			lecture.subjects.sort((a, b) => {
+				const aIndex = order.indexOf(a.id);
+				const bIndex = order.indexOf(b.id);
+				return (aIndex === -1 ? Infinity : aIndex) - (bIndex === -1 ? Infinity : bIndex);
+			});
+		}
+
+		return graph as Prisma.GraphGetPayload<{
 			include: typeof GraphActions.renderablePayloadInclude & Extra;
-		}> | null>;
+		}>;
 	}
 
 	/**
