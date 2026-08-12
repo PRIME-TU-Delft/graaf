@@ -115,12 +115,12 @@ export class ProgramActions {
 	}
 
 	/**
-	 * Decide whether a program role change is allowed, intended to stop a program from ending up
-	 * with zero admins. Used by editSuperUser before it applies a role change.
+	 * Decide whether a program role change is allowed, stopping a program from ending up with zero
+	 * admins. Used by editSuperUser before it applies a role change.
 	 *
-	 * Note the guard only activates once `admins` is already empty: as written, any change is
-	 * allowed whenever the program currently has one or more admins, and the "cannot change/revoke
-	 * the last admin" errors below only trigger when `admins.length` is already 0.
+	 * Only a change that takes the admin role away from the program's sole admin is blocked.
+	 * Changes to editors, changes that grant admin, and any change while a second admin remains
+	 * are all allowed.
 	 *
 	 * @param fromRole - The user's current role
 	 * @param toRole - The role being changed to
@@ -132,26 +132,20 @@ export class ProgramActions {
 		toRole: Role,
 		admins: { id: string }[]
 	) {
-		if (fromRole === 'revoke') return {};
-		if (admins.length >= 1) return {};
+		// Only demoting an existing admin can leave the program without one
+		if (fromRole !== 'admin') return {};
+		if (toRole === 'admin') return {};
 
-		if (fromRole === toRole) return { error: 'You cannot change the role to the same role' };
+		// Another admin stays behind, so losing this one is fine
+		if (admins.length > 1) return {};
 
-		if (fromRole == 'admin' && toRole === 'editor')
-			return { error: 'You cannot change the last admin to an editor' };
-		if (fromRole == 'admin' && toRole === 'revoke')
-			return { error: 'You cannot revoke the last admin' };
-
-		return { error: 'You cannot change the last admin' };
+		if (toRole === 'editor') return { error: 'You cannot change the last admin to an editor' };
+		return { error: 'You cannot revoke the last admin' };
 	}
 
 	/**
 	 * Set, change, or revoke a program-level admin/editor role for a user, guarded by
 	 * isAllowedToEditSuperUser so the program can't be left without any admins.
-	 *
-	 * Note the user's current role is derived by checking `program.admins` twice (not
-	 * `program.editors` for the editor case), so `fromRole` as computed here only ever resolves
-	 * to 'admin' or 'revoke', never 'editor', regardless of the target user's actual current role.
 	 *
 	 * @param user - The user performing the action, must have program admin rights
 	 * @param formData - Validated form data with the programId, target userId, and new role
@@ -181,12 +175,12 @@ export class ProgramActions {
 
 		if (!program) return setError(formData, '', 'Unauthorized');
 
-		// if program.admins.length <= 1
+		// if this user is the only program admin
 		// admin -NOT ALLOWED-> editor
 		// admin -NOT ALLOWED-> revoke
 		const fromRole = program.admins.find((admin) => admin.id === userId)
 			? 'admin'
-			: program.admins.find((admin) => admin.id === userId)
+			: program.editors.find((editor) => editor.id === userId)
 				? 'editor'
 				: 'revoke';
 

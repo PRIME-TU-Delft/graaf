@@ -1,5 +1,10 @@
-import type { User } from '@prisma/client';
+import prisma from '$lib/server/db/prisma';
+import { setError } from '$lib/utils/setError';
 import { redirect, type RequestEvent } from '@sveltejs/kit';
+
+import type { changeUserRoleSchema } from '$lib/zod/userSchema';
+import type { User } from '@prisma/client';
+import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 /**
  * Get the currently authenticated user for a request, redirecting to `/auth` if there is none.
@@ -31,4 +36,60 @@ export async function getUserResponse({ locals }: { locals: RequestEvent['locals
 	if (!user) return { error: 'Unauthorized' };
 
 	return user;
+}
+
+/** Server actions for managing users themselves, as opposed to their per-program or per-course
+ * roles. Called from form actions in `+page.server.ts` route files, one static method per
+ * operation. */
+export class UserActions {
+	/**
+	 * Promote a user to super admin, or demote a super admin back to a regular user.
+	 *
+	 * PERMISSIONS:
+	 * - Only super admins can change the super-admin role
+	 *
+	 * Two guards keep the install reachable: you cannot demote yourself, and you cannot demote the
+	 * last remaining admin. Given only admins may call this, the self-demote guard already implies
+	 * the second one, but the count check is kept as a backstop so the invariant still holds if the
+	 * caller check above ever widens.
+	 *
+	 * @param user - The user performing the action, must have the super-admin role
+	 * @param form - Validated form data with the target userId and the new role
+	 * @returns `{ form }` on success. On invalid input, missing permission, or a demotion that
+	 * would lock everyone out, returns the form with an error via setError instead of throwing.
+	 */
+	static async changeRole(user: User, form: SuperValidated<Infer<typeof changeUserRoleSchema>>) {
+		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		if (user.role !== 'ADMIN') {
+			return setError(form, '', 'You do not have permission to perform this action');
+		}
+
+		const { userId, role } = form.data;
+
+		if (role === 'USER') {
+			if (userId === user.id) {
+				return setError(form, '', 'You cannot demote yourself');
+			}
+
+			const remainingAdmins = await prisma.user.count({
+				where: { role: 'ADMIN', id: { not: userId } }
+			});
+
+			if (remainingAdmins === 0) {
+				return setError(form, '', 'You cannot demote the last admin');
+			}
+		}
+
+		try {
+			await prisma.user.update({
+				where: { id: userId },
+				data: { role }
+			});
+		} catch (e: unknown) {
+			return setError(form, '', e instanceof Error ? e.message : `${e}`);
+		}
+
+		return { form };
+	}
 }
