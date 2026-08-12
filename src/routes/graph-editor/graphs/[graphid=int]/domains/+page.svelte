@@ -5,6 +5,7 @@
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import type { SubmitFunction } from '@sveltejs/kit';
 
 	import ChangeDomain from './ChangeDomain.svelte';
@@ -106,6 +107,7 @@
 			return;
 		} else {
 			graphD3Store.graphD3?.setDomainStyle(domain.id, key);
+			await invalidateAll();
 			closeAndFocusTrigger(triggerId, () => {
 				isOpenState.isOpen = false;
 			});
