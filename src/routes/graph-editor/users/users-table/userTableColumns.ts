@@ -13,16 +13,26 @@ export type DataUser = User & {
 	course_admins: Course[];
 };
 
-/** Every special privilege a user holds, counting the super-admin role as one on top of each
- * program and course role. */
-export function privilegeCount(user: DataUser) {
-	return (
-		(user.role === 'ADMIN' ? 1 : 0) +
-		user.program_admins.length +
-		user.program_editors.length +
-		user.course_admins.length +
+/** A user's privilege counts per tier, most senior first, matching the permission hierarchy in
+ * src/lib/server/permissions.ts. Used to sort by rank rather than by raw total, so a super admin
+ * with no other roles still outranks e.g. a course admin of four courses. */
+export function privilegeRank(user: DataUser): number[] {
+	return [
+		user.role === 'ADMIN' ? 1 : 0,
+		user.program_admins.length,
+		user.program_editors.length,
+		user.course_admins.length,
 		user.course_editors.length
-	);
+	];
+}
+
+/** Lexicographic comparison of two privilege ranks: the most senior tier decides unless both
+ * users tie on it, in which case the next tier down breaks the tie, and so on. */
+export function comparePrivilegeRank(a: number[], b: number[]) {
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) return a[i] - b[i];
+	}
+	return 0;
 }
 
 export const columns: ColumnDef<DataUser>[] = [
@@ -41,7 +51,9 @@ export const columns: ColumnDef<DataUser>[] = [
 	},
 	{
 		id: 'privileges',
-		accessorFn: (user) => privilegeCount(user),
+		accessorFn: (user) => privilegeRank(user),
+		sortingFn: (rowA, rowB, columnId) =>
+			comparePrivilegeRank(rowA.getValue(columnId), rowB.getValue(columnId)),
 		header: ({ column }) => renderComponent(SortableHeader, { column, label: 'Privileges' }),
 		cell: ({ row }) => {
 			return renderComponent(CellRoles, { user: row.original });
