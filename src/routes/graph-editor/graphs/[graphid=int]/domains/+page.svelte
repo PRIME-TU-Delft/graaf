@@ -4,6 +4,8 @@
 	import { GraphValidator } from '$lib/validators/graphValidator';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
 
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
@@ -24,15 +26,39 @@
 
 	let { data }: { data: PageData } = $props();
 
+	let isLocalUpdate = false;
+
 	// This is a workaround for the fact that we can't use $derived due to the reordering.
 	// A writable $derived would not be re-proxied on reassignment, so mutations like
 	// `graph.domains = ...` or `domain.style = ...` below would stop being reactive.
 	// svelte-ignore state_referenced_locally
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
+	$effect.pre(() => {
+		const fresh = data.graph;
+		if (!isLocalUpdate) {
+			graph = fresh;
+		}
 	});
+
+	let reorderForm: HTMLFormElement;
+	let reorderOrderInput: HTMLInputElement;
+
+	const reorderEnhancer: SubmitFunction = () => {
+		isLocalUpdate = true;
+		return async ({ result, update }) => {
+			if (result.type === 'success') {
+				graph.domains.forEach((domain, index) => {
+					domain.order = index;
+				});
+				await update({ reset: false });
+			} else {
+				graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
+				toast.error('Failed to update domain order, try again later!');
+			}
+			isLocalUpdate = false;
+		};
+	};
 
 	const issues = $derived(new GraphValidator(graph).validate());
 
@@ -89,33 +115,24 @@
 	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
 		graph.domains = e.detail.items;
 	}
-	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
+	function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
 		graph.domains = e.detail.items;
-
-		const body = graph.domains.map((domain, index) => ({
-			domainId: domain.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/domains/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Failed to update domain order, try again later!');
-		} else {
-			// Update the order of the domains in the graph
-			graph.domains.forEach((domain, index) => {
-				domain.order = index;
-			});
-		}
+		reorderOrderInput.value = JSON.stringify(
+			graph.domains.map((domain, index) => ({ domainId: domain.id, newOrder: index }))
+		);
+		reorderForm.requestSubmit();
 	}
 </script>
+
+<form
+	bind:this={reorderForm}
+	method="POST"
+	action="?/reorderDomains"
+	use:enhance={reorderEnhancer}
+	hidden
+>
+	<input bind:this={reorderOrderInput} type="hidden" name="order" />
+</form>
 
 <svelte:head>
 	<title>{graph.name} Domains | PRIME Graph Editor</title>

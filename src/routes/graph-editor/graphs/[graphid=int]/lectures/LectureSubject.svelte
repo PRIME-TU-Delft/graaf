@@ -26,12 +26,6 @@
 	}
 
 	async function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
-		// When there is a internal change of subject reorder
-		if (subjectBackup.length === e.detail.items.length) {
-			lecture.subjects = subjectBackup;
-			return;
-		}
-
 		lecture.subjects = e.detail.items;
 
 		const body = {
@@ -51,7 +45,7 @@
 			lecture.subjects = subjectBackup;
 			toast.error('Error while reordering lectures');
 		} else {
-			subjectBackup = lecture.subjects;
+			subjectBackup = [...lecture.subjects];
 		}
 	}
 </script>

@@ -271,6 +271,11 @@ export class GraphD3 {
 				node.style = style;
 			})
 			.call(NodeToolbox.updateStyle);
+
+		this.content
+			.selectAll<SVGLineElement, EdgeData>('.edge')
+			.filter((edge) => edge.source.type === NodeType.DOMAIN && edge.source.id === id)
+			.call(EdgeToolbox.updateStyle);
 	}
 
 	/**

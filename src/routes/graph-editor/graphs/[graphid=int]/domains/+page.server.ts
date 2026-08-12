@@ -1,3 +1,5 @@
+import prisma from '$lib/server/db/prisma';
+import { whereHasCoursePermission } from '$lib/server/permissions';
 import { DomainActions } from '$lib/server/actions';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 as zod } from 'sveltekit-superforms/adapters';
@@ -8,7 +10,12 @@ import {
 	domainRelSchema,
 	domainSchema
 } from '$lib/zod/domainSchema.js';
+import { fail } from '@sveltejs/kit';
+import type { User } from '@prisma/client';
+import { z } from 'zod';
 import type { ServerLoad } from '@sveltejs/kit';
+
+const reorderSchema = z.array(z.object({ domainId: z.number().int(), newOrder: z.number().int() }));
 
 export const load: ServerLoad = async () => {
 	return {
@@ -46,5 +53,38 @@ export const actions = {
 	'delete-domain-rel': async (event) => {
 		const form = await superValidate(event, zod(domainRelSchema));
 		return DomainActions.deleteDomainRel(await getUser(event), form);
+	},
+	reorderDomains: async ({ request, locals }) => {
+		const session = await locals.auth();
+		const user = session?.user as User | undefined;
+		if (!user) return fail(401, { error: 'Unauthorized' });
+
+		const formData = await request.formData();
+		const raw = formData.get('order');
+		if (typeof raw !== 'string') return fail(400, { error: 'Missing order data' });
+
+		const parsed = reorderSchema.safeParse(JSON.parse(raw));
+		if (!parsed.success) return fail(400, { error: 'Invalid order data' });
+
+		try {
+			await prisma.$transaction(
+				parsed.data.map(({ domainId, newOrder }) =>
+					prisma.domain.update({
+						where: {
+							id: domainId,
+							graph: {
+								course: {
+									...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+								}
+							}
+						},
+						data: { order: newOrder }
+					})
+				)
+			);
+			return { success: true };
+		} catch {
+			return fail(500, { error: 'Failed to reorder domains' });
+		}
 	}
 };
