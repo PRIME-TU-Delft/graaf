@@ -2,20 +2,23 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { cn } from '$lib/utils';
-	import { GraphValidator } from '$lib/validators/graphValidator';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { Ellipsis, MoveVertical } from '@lucide/svelte';
-	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
-	import { toast } from 'svelte-sonner';
+	import { dragHandle, dragHandleZone } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
 	import IssueIndicator from '../IssueIndicator.svelte';
-	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
 	import ChangeLecture from './ChangeLecture.svelte';
 	import CreateNewLecture from './CreateNewLecture.svelte';
 	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
 
-	let { data }: { data: PageData } = $props();
+	// The graph store owns this graph: the list reads its projection, and reordering lectures (or
+	// moving a subject between them) goes through its mutations, which also keep the preview canvas
+	// in step.
+	const store = getGraphStore();
+	const graph = $derived(store.graph);
+	const issues = $derived(store.issues);
 
 	class ChangeLectureClass {
 		open = $state(false);
@@ -23,61 +26,24 @@
 
 	const flipDurationMs = 300;
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering from the
-	// svelte-dnd-action library. A writable $derived would not be re-proxied on reassignment, so
-	// mutations like `lecture.order = index` below would stop being reactive.
-	// svelte-ignore state_referenced_locally
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let lectures = $state(data.graph.lectures);
-	$effect(() => {
-		lectures = data.graph.lectures;
-	});
-
-	const issues = $derived(new GraphValidator({ ...data.graph, lectures }).validate());
-
-	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
-		lectures = e.detail.items;
-	}
-
-	async function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
-		lectures = e.detail.items;
-
-		const body = lectures.map((lecture, index) => ({
-			lectureId: lecture.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/lectures/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			lectures = lectures.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Error while reordering lectures');
-		} else {
-			lectures.forEach((lecture, index) => {
-				lecture.order = index;
-			});
-		}
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 
 <svelte:head>
-	<title>{data.graph.name} Lectures | PRIME Graph Editor</title>
+	<title>{graph.name} Lectures | PRIME Graph Editor</title>
 </svelte:head>
 
-<CreateNewLecture graph={data.graph} />
+<CreateNewLecture {graph} />
 
 <div
 	class="space-y-3 rounded !outline-purple-300"
-	use:dragHandleZone={{ items: lectures, flipDurationMs, type: 'lecture' }}
-	onconsider={handleDndConsider}
-	onfinalize={handleDndFinalize}
+	use:dragHandleZone={{ items: graph.lectures, flipDurationMs, type: 'lecture' }}
+	onconsider={(e) => store.previewOrder('lectures', idsOf(e.detail.items))}
+	onfinalize={(e) => store.commitLectureOrder(idsOf(e.detail.items))}
 >
-	{#each lectures as lecture, index (lecture.id)}
+	{#each graph.lectures as lecture (lecture.id)}
 		{@const changeLecture = new ChangeLectureClass()}
 		{@const lectureIssues = issues.lectureIssues[lecture.id] || { lecture: [], subjects: {} }}
 
@@ -97,9 +63,9 @@
 				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
 				<IssueIndicator issues={lectureIssues.lecture} />
 
-				{#if data.graph.subjects.length > 0}
+				{#if graph.subjects.length > 0}
 					{#key lecture.subjects}
-						<AddSubjectToLecture {lecture} graph={data.graph} />
+						<AddSubjectToLecture {lecture} {graph} />
 					{/key}
 				{/if}
 
@@ -109,11 +75,7 @@
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Item class="p-0">
-							<ChangeLecture
-								{lecture}
-								graph={data.graph}
-								onSuccess={() => (changeLecture.open = false)}
-							/>
+							<ChangeLecture {lecture} {graph} onSuccess={() => (changeLecture.open = false)} />
 						</DropdownMenu.Item>
 
 						<DropdownMenu.Sub>
@@ -121,22 +83,14 @@
 								Delete
 							</DropdownMenu.SubTrigger>
 							<DropdownMenu.SubContent class="ml-1 w-40">
-								<DeleteLecture
-									{lecture}
-									graph={data.graph}
-									onSuccess={() => (changeLecture.open = false)}
-								/>
+								<DeleteLecture {lecture} {graph} onSuccess={() => (changeLecture.open = false)} />
 							</DropdownMenu.SubContent>
 						</DropdownMenu.Sub>
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			</div>
 
-			<LectureSubject
-				bind:lecture={lectures[index]}
-				subjects={data.graph.subjects}
-				issues={lectureIssues.subjects}
-			/>
+			<LectureSubject {lecture} subjects={graph.subjects} issues={lectureIssues.subjects} />
 		</div>
 	{:else}
 		<p class="mt-2 w-full p-3 text-center text-sm text-gray-500">

@@ -1,9 +1,7 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { GraphValidator } from '$lib/validators/graphValidator';
 	import { useId } from 'bits-ui';
-	import { toast } from 'svelte-sonner';
 
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
@@ -14,27 +12,18 @@
 	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
-	import { graphD3Store } from '$lib/d3/graphD3.svelte';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import IssueIndicator from '../IssueIndicator.svelte';
-	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
 	import DeleteDomainRel from './DeleteDomainRel.svelte';
 
-	let { data }: { data: PageData } = $props();
-
-	// This is a workaround for the fact that we can't use $derived due to the reordering.
-	// A writable $derived would not be re-proxied on reassignment, so mutations like
-	// `graph.domains = ...` or `domain.style = ...` below would stop being reactive.
-	// svelte-ignore state_referenced_locally
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
-	});
-
-	const issues = $derived(new GraphValidator(graph).validate());
+	// The graph store owns this graph: the table reads its projection, and every change to a domain
+	// goes through one of its mutations, which also keeps the preview canvas in step.
+	const store = getGraphStore();
+	const graph = $derived(store.graph);
+	const issues = $derived(store.issues);
 
 	const domainMapping = $derived.by(() => {
 		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
@@ -59,7 +48,6 @@
 	 * @param key - The style key
 	 * @param domainIndex - The index of the domain
 	 */
-
 	async function handleChangeStyle(
 		key: DomainStyle | null,
 		domainIndex: number,
@@ -67,53 +55,15 @@
 		isOpenState: ChangeStyleOpenState
 	) {
 		const domain = graph.domains[domainIndex];
-		domain.style = key;
+		if (!(await store.setDomainStyle(domain.id, key))) return;
 
-		const response = await fetch('/api/domains/style', {
-			method: 'PATCH',
-			body: JSON.stringify({ domainId: domain.id, style: key }),
-			headers: { 'content-type': 'application/json' }
+		closeAndFocusTrigger(triggerId, () => {
+			isOpenState.isOpen = false;
 		});
-
-		if (!response.ok) {
-			toast.error('Failed to update domain style, try again later');
-			return;
-		} else {
-			graphD3Store.graphD3?.setDomainStyle(domain.id, key);
-			closeAndFocusTrigger(triggerId, () => {
-				isOpenState.isOpen = false;
-			});
-		}
 	}
 
-	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
-		graph.domains = e.detail.items;
-	}
-	async function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
-		graph.domains = e.detail.items;
-
-		const body = graph.domains.map((domain, index) => ({
-			domainId: domain.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/domains/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Failed to update domain order, try again later!');
-		} else {
-			// Update the order of the domains in the graph
-			graph.domains.forEach((domain, index) => {
-				domain.order = index;
-			});
-		}
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 
@@ -135,8 +85,8 @@
 	<Grid.ReorderRows
 		name="domain"
 		items={graph.domains}
-		onconsider={handleDndConsider}
-		onfinalize={handleDndFinalize}
+		onconsider={(e) => store.previewOrder('domains', idsOf(e.detail.items))}
+		onfinalize={(e) => store.commitDomainOrder(idsOf(e.detail.items))}
 	>
 		{#snippet children(domain, index)}
 			<Grid.Cell>

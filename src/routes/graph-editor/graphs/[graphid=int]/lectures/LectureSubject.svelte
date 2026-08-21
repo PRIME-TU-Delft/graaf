@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import type { Issue } from '$lib/validators/types';
 	import { MoveVertical, Plus } from '@lucide/svelte';
 	import type { Lecture, Subject } from '@prisma/client';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
-	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
 	import IssueIndicator from '../IssueIndicator.svelte';
 
@@ -15,44 +15,30 @@
 		};
 	};
 
-	const { subjects, issues, lecture = $bindable() }: Props = $props();
+	const { subjects, issues, lecture }: Props = $props();
 
-	let subjectBackup = [...lecture.subjects];
+	// This component renders the store's membership for one lecture and hands drags back to it, so
+	// the lectures view of the canvas repartitions without waiting for a reload
+	const store = getGraphStore();
 
 	const flipDurationMs = 300;
 
 	function handleDndConsider(e: CustomEvent<DndEvent<Subject>>): void {
-		lecture.subjects = e.detail.items;
+		store.previewLectureSubjects(lecture.id, idsOf(e.detail.items));
 	}
 
-	async function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
-		// When there is a internal change of subject reorder
-		if (subjectBackup.length === e.detail.items.length) {
-			lecture.subjects = subjectBackup;
+	function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
+		// Reordering subjects within one lecture is not persisted, only moves between lectures are
+		if (e.detail.items.length === store.committedSubjectIdsOf(lecture.id).length) {
+			store.revertLectureSubjects(lecture.id);
 			return;
 		}
 
-		lecture.subjects = e.detail.items;
+		store.commitLectureSubjects(lecture.id, idsOf(e.detail.items));
+	}
 
-		const body = {
-			name: lecture.name,
-			graphId: lecture.graphId,
-			lectureId: lecture.id,
-			subjectIds: e.detail.items.map((subject) => subject.id)
-		};
-
-		const response = await fetch('/api/lectures/order-subjects', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			lecture.subjects = subjectBackup;
-			toast.error('Error while reordering lectures');
-		} else {
-			subjectBackup = lecture.subjects;
-		}
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 

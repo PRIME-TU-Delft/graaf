@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -9,12 +10,25 @@
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
+	import { setGraphStore } from '$lib/graph/graphStore.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+
+	// One owner for this graph, for the tables below and the canvas in the preview pane. Created
+	// during render rather than in an effect, so server-rendered markup has the graph too, and
+	// re-hydrated whenever a load (or a form action's invalidateAll) brings a new payload.
+	// Intentionally the initial value: the effect below picks up every later payload
+	// svelte-ignore state_referenced_locally
+	const store = setGraphStore(data.graph);
+	$effect(() => {
+		const payload = data.graph;
+
+		untrack(() => store.hydrate(payload));
+	});
 
 	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
 
@@ -114,7 +128,7 @@
 
 			<Pane defaultSize={50}>
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
-					<GraphRenderer data={data.graph} editable={true} {view} {lectureID} />
+					<GraphRenderer editable={true} {view} {lectureID} />
 				</div>
 			</Pane>
 		{/if}

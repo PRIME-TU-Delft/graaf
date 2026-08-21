@@ -4,12 +4,10 @@
 
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	import { GraphValidator } from '$lib/validators/graphValidator';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from '@lucide/svelte/icons/link';
-	import { toast } from 'svelte-sonner';
-	import type { PageData } from './$types';
 
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
@@ -19,21 +17,11 @@
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import DeleteSubjectRel from './DeleteSubjectRel.svelte';
 
-	let { data }: { data: PageData } = $props();
-
-	// This is a workaround for the fact that we can't use $derived due to the reordering.
-	// A writable $derived would not be re-proxied on reassignment, so mutations like
-	// `graph.subjects = ...` below would stop being reactive.
-	// svelte-ignore state_referenced_locally
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
-	});
-
-	const issues = $derived(new GraphValidator(graph).validate());
-
-	type Graph = PageData['graph'];
+	// The graph store owns this graph: the table reads its projection, and reordering goes through
+	// its mutations, which also keep the preview canvas in step.
+	const store = getGraphStore();
+	const graph = $derived(store.graph);
+	const issues = $derived(store.issues);
 
 	const subjectMapping = $derived.by(() => {
 		const map: { id: string; sourceSubject: Subject; targetSubject: Subject }[] = [];
@@ -49,35 +37,8 @@
 		return map;
 	});
 
-	function handleDndConsider(e: CustomEvent<{ items: Graph['subjects'] }>) {
-		graph.subjects = e.detail.items;
-	}
-
-	async function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
-		graph.subjects = e.detail.items;
-
-		const body = graph.subjects.map((subject, index) => ({
-			subjectId: subject.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/subjects/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Failed to update subject order, try again later!');
-		} else {
-			// Update the order of the domains in the graph
-			graph.subjects.forEach((domain, index) => {
-				domain.order = index;
-			});
-		}
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 
@@ -99,8 +60,8 @@
 	<Grid.ReorderRows
 		name="subject"
 		items={graph.subjects}
-		onconsider={handleDndConsider}
-		onfinalize={handleDndFinalize}
+		onconsider={(e) => store.previewOrder('subjects', idsOf(e.detail.items))}
+		onfinalize={(e) => store.commitSubjectOrder(idsOf(e.detail.items))}
 	>
 		{#snippet children(subject)}
 			<Grid.Cell>

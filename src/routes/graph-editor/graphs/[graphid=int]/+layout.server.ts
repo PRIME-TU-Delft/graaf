@@ -31,8 +31,6 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 
 		if (!graph) redirect(303, '/graph-editor?error=Graph not found');
 
-		const issues = GraphActions.validate(graph);
-
 		// Build the breadcrumb trail from the graph's real parent (course or sandbox) and the
 		// active leaf tab, so the nav bar shows names instead of guessing from the URL path.
 		const breadcrumbs: Breadcrumb[] = [{ name: 'Home', url: '/graph-editor' }];
@@ -59,7 +57,6 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 		// Happy path
 		return {
 			graph: graph,
-			issues: issues,
 			breadcrumbs
 		};
 	} catch (e: unknown) {
