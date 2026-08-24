@@ -64,25 +64,25 @@
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 
-			<form action="?/unlink-courses" method="POST" use:enhance>
-				<input type="text" name="programId" value={program.id} hidden />
+			<Form.FormError {form} />
 
-				<Form.Fieldset {form} name="courseIds" class="h-0">
-					{#each $formData.courseIds, i}
-						<Form.ElementField {form} name="courseIds[{i}]">
-							<Form.Control>
-								{#snippet children({ props })}
-									<input type="hidden" bind:value={$formData.courseIds[i]} {...props} />
-								{/snippet}
-							</Form.Control>
-						</Form.ElementField>
-					{/each}
-				</Form.Fieldset>
+			<AlertDialog.Footer>
+				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<form action="?/unlink-courses" method="POST" use:enhance>
+					<input type="text" name="programId" value={program.id} hidden />
 
-				<Form.FormError {form} />
+					<Form.Fieldset {form} name="courseIds" class="h-0">
+						{#each $formData.courseIds, i}
+							<Form.ElementField {form} name="courseIds[{i}]">
+								<Form.Control>
+									{#snippet children({ props })}
+										<input type="hidden" bind:value={$formData.courseIds[i]} {...props} />
+									{/snippet}
+								</Form.Control>
+							</Form.ElementField>
+						{/each}
+					</Form.Fieldset>
 
-				<AlertDialog.Footer>
-					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
 					<Form.FormButton
 						type="submit"
 						variant="destructive"
@@ -94,8 +94,8 @@
 							<span>Unlinking...</span>
 						{/snippet}
 					</Form.FormButton>
-				</AlertDialog.Footer>
-			</form>
+				</form>
+			</AlertDialog.Footer>
 		</AlertDialog.Content>
 	</AlertDialog.Root>
 </div>
