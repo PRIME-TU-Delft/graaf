@@ -95,6 +95,7 @@
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
+		linkViews={data.linkViews}
 		getLinkURL={(link) => `${page.url.origin}/graph/${data.course.uriCode}/${link.name}`}
 		hasAtLeastAdminPermission={hasCoursePermissions(
 			data.user,

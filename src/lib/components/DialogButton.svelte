@@ -4,6 +4,7 @@
 	import {
 		ArrowLeftRight,
 		BadgeHelp,
+		ChartColumn,
 		Code,
 		Copy,
 		Ellipsis,
@@ -16,7 +17,17 @@
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
-		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link' | 'help' | 'copy' | 'swap' | 'code';
+		icon?:
+			| 'plus'
+			| 'ellipsis'
+			| 'edit'
+			| 'admins'
+			| 'link'
+			| 'help'
+			| 'copy'
+			| 'swap'
+			| 'code'
+			| 'chart';
 		open?: boolean;
 		button?: string;
 		title: string;
@@ -78,6 +89,8 @@
 			<ArrowLeftRight class="size-5" />
 		{:else if icon == 'code'}
 			<Code class="size-5" />
+		{:else if icon == 'chart'}
+			<ChartColumn class="size-5" />
 		{/if}
 
 		{#if button}
