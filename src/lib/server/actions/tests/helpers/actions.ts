@@ -3,7 +3,7 @@
 import { superValidate } from 'sveltekit-superforms/server';
 import { zod4 as zod } from 'sveltekit-superforms/adapters';
 
-import type { ZodType } from 'zod';
+import type { InferIn, ZodValidationSchema } from 'sveltekit-superforms/adapters';
 
 /**
  * Build the `SuperValidated` form object that every server action method takes as its second
@@ -12,7 +12,10 @@ import type { ZodType } from 'zod';
  *
  * Always await this: some schemas (e.g. `changeDomainRelSchema`) carry an async `.refine`.
  */
-export async function buildForm<T extends ZodType>(schema: T, data: unknown) {
+export async function buildForm<T extends ZodValidationSchema>(
+	schema: T,
+	data: Partial<InferIn<T, 'zod4'>>
+) {
 	return await superValidate(data, zod(schema));
 }
 

@@ -13,8 +13,8 @@ import type { FormPathLeavesWithErrors, SuperValidated } from 'sveltekit-superfo
  * @param form - The form to attach an error to if the action fails
  * @param path - The form field to attach the error to
  * @param opts.entity - The Prisma model name of the top-level query in `action` (e.g. `'Course'`
- * for a `prisma.course.update(...)`), matched against the "No '<entity>' record" cause Prisma
- * reports when the permission-scoped where clause excludes the record
+ * for a `prisma.course.update(...)`), matched against the P2025/P2017 error's `meta.modelName`
+ * Prisma reports when the permission-scoped where clause excludes the record
  * @param opts.message - The permission-denied message to show when that cause matches
  * @returns `{ form }` on success. If `action` fails because the record wasn't found under the
  * permission-scoped where clause, sets `opts.message`; otherwise sets the underlying error
@@ -33,10 +33,10 @@ export async function withPermissionCheck<T, S extends Record<string, unknown>>(
 
 		if (
 			e instanceof Prisma.PrismaClientKnownRequestError &&
+			(e.code === 'P2025' || e.code === 'P2017') &&
 			e.meta &&
-			'cause' in e.meta &&
-			typeof e.meta.cause === 'string' &&
-			e.meta.cause.includes(`No '${opts.entity}' record`)
+			'modelName' in e.meta &&
+			e.meta.modelName === opts.entity
 		) {
 			return setError(form, path, opts.message);
 		}
