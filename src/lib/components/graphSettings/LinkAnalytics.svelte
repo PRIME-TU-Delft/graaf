@@ -32,6 +32,7 @@
 	button="Analytics"
 	title="Views of {link.name}"
 	description={url}
+	contentClass="sm:max-w-4xl scrollbar-subtle"
 >
 	<div class="space-y-4">
 		<div class="grid grid-cols-2 gap-2">
@@ -57,17 +58,17 @@
 		<LinkViewsChart weeks={analytics.weeks} />
 
 		{#if weeksWithViews.length > 0}
-			<div class="max-h-56 overflow-y-auto rounded-md border">
+			<div class="scrollbar-subtle max-h-56 overflow-y-auto rounded-md border">
 				<Table.Root class="!m-0">
 					<Table.Header>
-						<Table.Row>
+						<Table.Row class="hover:bg-transparent">
 							<Table.Head class="w-full">Week</Table.Head>
 							<Table.Head class="text-right">Views</Table.Head>
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
 						{#each weeksWithViews as week (week.weekStart.getTime())}
-							<Table.Row>
+							<Table.Row class="hover:bg-transparent">
 								<Table.Cell class="text-xs">{formatAcademicWeekLong(week.weekStart)}</Table.Cell>
 								<Table.Cell class="text-right tabular-nums">{week.count}</Table.Cell>
 							</Table.Row>

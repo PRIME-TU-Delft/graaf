@@ -100,20 +100,24 @@
 {/if}
 
 <div class="rounded-md border">
-	<Table.Root class="!m-0">
+	<!-- min-width keeps the rows readable on narrow screens: Table.Root's own container scrolls
+	     instead of squeezing the link URL and the action buttons into each other -->
+	<Table.Root class="!m-0 min-w-[42rem]">
 		<Table.Header>
-			<Table.Row>
+			<!-- Rows here are not clickable, so none of them tint on hover. Table.Row ships a hover
+			     tint, which each row cancels by restating its own background for the hover state. -->
+			<Table.Row class="hover:bg-transparent">
 				<Table.Head class="w-full">Name</Table.Head>
 				<Table.Head>Actions</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
 			{#each graphs as graph (graph.id)}
-				<Table.Row class="p-0">
+				<Table.Row class="p-0 hover:bg-transparent">
 					<Table.Cell>
 						{graph.name}
 					</Table.Cell>
-					<Table.Cell>
+					<Table.Cell class="flex items-center justify-end gap-1">
 						<CreateLink {graph} {newLinkForm} />
 						<GraphSettings {graph} {editGraphForm} canDelete={hasAtLeastAdminPermission} />
 					</Table.Cell>
@@ -121,7 +125,9 @@
 
 				{#each visibleLinks(graph.links) as link (link.id)}
 					{@const linkAnalytics = analytics.get(link.id)}
-					<Table.Row class="bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-100/30">
+					<Table.Row
+						class="bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-50/50 odd:hover:bg-purple-100/50"
+					>
 						<Table.Cell class="pl-8 text-xs">
 							<span class="block">{getLinkURL(link)}</span>
 							<span class="mt-1 flex items-center gap-2 text-gray-500">
@@ -147,7 +153,7 @@
 					</Table.Row>
 				{/each}
 			{:else}
-				<Table.Row>
+				<Table.Row class="hover:bg-transparent">
 					<Table.Cell colspan={2} class="text-center">No graphs found.</Table.Cell>
 				</Table.Row>
 			{/each}

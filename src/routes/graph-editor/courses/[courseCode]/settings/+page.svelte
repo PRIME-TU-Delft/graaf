@@ -26,7 +26,7 @@
 </svelte:head>
 
 <section
-	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
+	class="prose mx-auto mb-4 flex w-full max-w-4xl items-center justify-between border-b border-purple-200 p-4"
 >
 	<div class="flex items-center gap-2">
 		<h1 class="!m-0">{data.course.name}</h1>
@@ -57,7 +57,7 @@
 	{/if}
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Super Users</h2>
 	<p>Super Users are the admins and editors of a course.</p>
 	<ul class="text-sm">
@@ -82,7 +82,7 @@
 	/>
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Graphs</h2>
 	<p>
 		Graphs are the bread and butter of the Graph Editor! Here you can structure the information in
@@ -105,7 +105,7 @@
 	/>
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Programs</h2>
 	<p>
 		This course is part of {data.course.programs.length} program{data.course.programs.length == 1
@@ -134,7 +134,7 @@
 {#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 	<section
 		id="danger-zone"
-		class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+		class="prose mx-auto my-12 max-w-4xl space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 	>
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">

@@ -41,6 +41,10 @@
 		children: Snippet;
 		variant?: ButtonVariant;
 		class?: string;
+		/** Extra classes for the dialog itself, e.g. `sm:max-w-4xl` for a dialog that needs more
+		 * room than the default. Note the width has to be set on the `sm:` variant to beat the
+		 * `sm:max-w-lg` the dialog primitive ships with. */
+		contentClass?: string;
 	};
 
 	let {
@@ -53,7 +57,8 @@
 		onclick = () => {},
 		children,
 		variant = 'default',
-		class: classes
+		class: classes,
+		contentClass
 	}: Props = $props();
 </script>
 
@@ -98,7 +103,7 @@
 		{/if}
 	</Dialog.Trigger>
 
-	<Dialog.Content class="max-h-[80dvh] max-w-2xl overflow-y-auto p-0">
+	<Dialog.Content class={cn('max-h-[80dvh] max-w-2xl overflow-y-auto p-0', contentClass)}>
 		<Dialog.Header class="sticky top-0 z-10 bg-white/50 p-4 backdrop-blur-lg">
 			<Dialog.Title class="text-lg">{title}</Dialog.Title>
 			{#if description}
