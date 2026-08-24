@@ -92,13 +92,13 @@ export class LectureActions {
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, lectureId, and the full subjectIds list
 	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
-	 * a `subjectIds._errors`-field error via setError instead of throwing.
+	 * a form-level error via setError instead of throwing.
 	 */
 	static async linkSubjectsToLecture(
 		user: User,
 		form: SuperValidated<Infer<typeof lectureSchema>>
 	) {
-		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid lecture');
+		if (!form.valid) return setError(form, '', 'Invalid lecture');
 
 		return await withPermissionCheck(
 			() =>
@@ -117,7 +117,7 @@ export class LectureActions {
 					}
 				}),
 			form,
-			'subjectIds._errors',
+			'',
 			{ entity: 'Lecture', message: "You don't have permission to edit this lecture" }
 		);
 	}
