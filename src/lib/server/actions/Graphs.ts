@@ -2,7 +2,12 @@ import { env } from '$env/dynamic/private';
 import { setError } from '$lib/utils/setError';
 import prisma from '$lib/server/db/prisma';
 import { redirect } from '@sveltejs/kit';
-import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
+import {
+	whereHasCoursePermission,
+	whereHasSandboxPermission,
+	whereHasGraphCoursePermission,
+	whereHasGraphSandboxPermission
+} from '../permissions';
 import { withPermissionCheck } from './permissionError';
 import { GraphValidator } from '$lib/validators/graphValidator';
 
@@ -294,7 +299,13 @@ export class GraphActions {
 		}
 
 		const sourcegraph = await prisma.graph.findFirst({
-			where: { id: form.data.graphId },
+			where: {
+				id: form.data.graphId,
+				OR: [
+					whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor'),
+					whereHasGraphSandboxPermission(user, 'OwnerOREditor')
+				]
+			},
 			include: {
 				domains: {
 					include: {
