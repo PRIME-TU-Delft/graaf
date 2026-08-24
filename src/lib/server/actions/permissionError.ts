@@ -13,7 +13,8 @@ import type { FormPathLeavesWithErrors, SuperValidated } from 'sveltekit-superfo
  * @param form - The form to attach an error to if the action fails
  * @param path - The form field to attach the error to
  * @param opts.entity - The Prisma model name of the top-level query in `action` (e.g. `'Course'`
- * for a `prisma.course.update(...)`), matched against the "No '<entity>' record" cause Prisma
+ * for a `prisma.course.update(...)`), matched against a P2025 with that `meta.modelName` (Prisma
+ * 7+) or the legacy "No '<entity>' record" `meta.cause` string (pre-7), either of which Prisma
  * reports when the permission-scoped where clause excludes the record
  * @param opts.message - The permission-denied message to show when that cause matches
  * @returns `{ form }` on success. If `action` fails because the record wasn't found under the
@@ -31,14 +32,18 @@ export async function withPermissionCheck<T, S extends Record<string, unknown>>(
 	} catch (e: unknown) {
 		if (env.DEBUG) console.error(e);
 
-		if (
-			e instanceof Prisma.PrismaClientKnownRequestError &&
-			e.meta &&
-			'cause' in e.meta &&
-			typeof e.meta.cause === 'string' &&
-			e.meta.cause.includes(`No '${opts.entity}' record`)
-		) {
-			return setError(form, path, opts.message);
+		if (e instanceof Prisma.PrismaClientKnownRequestError) {
+			const isNotFoundCause =
+				e.meta &&
+				'cause' in e.meta &&
+				typeof e.meta.cause === 'string' &&
+				e.meta.cause.includes(`No '${opts.entity}' record`);
+
+			const isNotFoundP2025 = e.code === 'P2025' && e.meta && e.meta.modelName === opts.entity;
+
+			if (isNotFoundCause || isNotFoundP2025) {
+				return setError(form, path, opts.message);
+			}
 		}
 
 		return setError(form, path, e instanceof Error ? e.message : `${e}`);
