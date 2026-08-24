@@ -44,14 +44,10 @@ export const load = (async ({ params, locals }) => {
 
 		if (!dbProgram) throw Error('You do not have permissions to access this program setting page');
 
-		const permittedCourseIds = await prisma.course.findMany({
-			where: {
-				id: { in: dbProgram.courses.map((c) => c.id) },
-				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-			},
-			select: { id: true }
-		});
-		const permittedIds = new Set(permittedCourseIds.map((c) => c.id));
+		const permittedIds = await CourseActions.getUnlinkEligibility(
+			user,
+			dbProgram.courses.map((c) => c.id)
+		);
 
 		const programCourses = dbProgram.courses.map((c) => ({
 			...c,
