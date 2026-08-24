@@ -29,7 +29,7 @@ export async function withPermissionCheck<T, S extends Record<string, unknown>>(
 	try {
 		await action();
 	} catch (e: unknown) {
-		if (env.DEBUG) console.error(e);
+		if (env.DEBUG === 'true') console.error(e);
 
 		if (
 			e instanceof Prisma.PrismaClientKnownRequestError &&
