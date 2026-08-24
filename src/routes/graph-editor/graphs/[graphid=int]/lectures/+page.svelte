@@ -7,8 +7,7 @@
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
-	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { superForm } from 'sveltekit-superforms';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
@@ -25,39 +24,47 @@
 
 	const flipDurationMs = 300;
 
-	let isLocalUpdate = false;
-
 	// This is a workaround for the fact that we can't use $derived due to the reordering from the
 	// svelte-dnd-action library. A writable $derived would not be re-proxied on reassignment, so
 	// mutations like `lecture.order = index` below would stop being reactive.
 	// svelte-ignore state_referenced_locally
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let lectures = $state(data.graph.lectures);
-	$effect.pre(() => {
-		const fresh = data.graph.lectures;
-		if (!isLocalUpdate) {
-			lectures = fresh;
-		}
+	$effect(() => {
+		lectures = data.graph.lectures;
 	});
 
-	let reorderForm: HTMLFormElement;
-	let reorderOrderInput: HTMLInputElement;
+	function revertLectureOrder() {
+		lectures = lectures.toSorted((a, b) => a.order - b.order);
+		toast.error('Error while reordering lectures');
+	}
 
-	const reorderEnhancer: SubmitFunction = () => {
-		isLocalUpdate = true;
-		return async ({ result, update }) => {
-			if (result.type === 'success') {
-				lectures.forEach((lecture, index) => {
-					lecture.order = index;
-				});
-				await update({ reset: false });
-			} else {
-				lectures = lectures.toSorted((a, b) => a.order - b.order);
-				toast.error('Error while reordering lectures');
+	// Lecture order is only ever shown in this list, never on the graph canvas, so this posts
+	// without invalidating: the rows are already in their new order and a refetch would rebuild
+	// the canvas for nothing.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderLecturesForm, {
+		id: 'reorder-lectures',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (!form.valid) {
+				revertLectureOrder();
+				return;
 			}
-			isLocalUpdate = false;
-		};
-	};
+
+			lectures.forEach((lecture, index) => {
+				lecture.order = index;
+			});
+		},
+		onError: revertLectureOrder
+	});
 
 	const issues = $derived(new GraphValidator({ ...data.graph, lectures }).validate());
 
@@ -67,22 +74,16 @@
 
 	function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
-		reorderOrderInput.value = JSON.stringify(
-			lectures.map((lecture, index) => ({ lectureId: lecture.id, newOrder: index }))
-		);
-		reorderForm.requestSubmit();
+
+		$reorderData = {
+			graphId: data.graph.id,
+			lectureIds: lectures.map((lecture) => lecture.id)
+		};
+		submitReorder();
 	}
 </script>
 
-<form
-	bind:this={reorderForm}
-	method="POST"
-	action="?/reorderLectures"
-	use:enhance={reorderEnhancer}
-	hidden
->
-	<input bind:this={reorderOrderInput} type="hidden" name="order" />
-</form>
+<form method="POST" action="?/reorder-lectures" use:reorderEnhance hidden></form>
 
 <svelte:head>
 	<title>{data.graph.name} Lectures | PRIME Graph Editor</title>

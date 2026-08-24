@@ -9,8 +9,7 @@
 	import type { Subject } from '@prisma/client';
 	import Link from '@lucide/svelte/icons/link';
 	import { toast } from 'svelte-sonner';
-	import { enhance } from '$app/forms';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { superForm } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
 
 	import IssueIndicator from '../IssueIndicator.svelte';
@@ -23,39 +22,47 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let isLocalUpdate = false;
-
 	// This is a workaround for the fact that we can't use $derived due to the reordering.
 	// A writable $derived would not be re-proxied on reassignment, so mutations like
 	// `graph.subjects = ...` below would stop being reactive.
 	// svelte-ignore state_referenced_locally
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let graph = $state(data.graph);
-	$effect.pre(() => {
-		const fresh = data.graph;
-		if (!isLocalUpdate) {
-			graph = fresh;
-		}
+	$effect(() => {
+		graph = data.graph;
 	});
 
-	let reorderForm: HTMLFormElement;
-	let reorderOrderInput: HTMLInputElement;
+	function revertSubjectOrder() {
+		graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
+		toast.error('Failed to update subject order, try again later!');
+	}
 
-	const reorderEnhancer: SubmitFunction = () => {
-		isLocalUpdate = true;
-		return async ({ result, update }) => {
-			if (result.type === 'success') {
-				graph.subjects.forEach((subject, index) => {
-					subject.order = index;
-				});
-				await update({ reset: false });
-			} else {
-				graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
-				toast.error('Failed to update subject order, try again later!');
+	// Subject order is only ever shown in this list, never on the graph canvas, so this posts
+	// without invalidating: the rows are already in their new order and a refetch would rebuild
+	// the canvas for nothing.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderSubjectsForm, {
+		id: 'reorder-subjects',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (!form.valid) {
+				revertSubjectOrder();
+				return;
 			}
-			isLocalUpdate = false;
-		};
-	};
+
+			graph.subjects.forEach((subject, index) => {
+				subject.order = index;
+			});
+		},
+		onError: revertSubjectOrder
+	});
 
 	const issues = $derived(new GraphValidator(graph).validate());
 
@@ -81,22 +88,16 @@
 
 	function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
 		graph.subjects = e.detail.items;
-		reorderOrderInput.value = JSON.stringify(
-			graph.subjects.map((subject, index) => ({ subjectId: subject.id, newOrder: index }))
-		);
-		reorderForm.requestSubmit();
+
+		$reorderData = {
+			graphId: graph.id,
+			subjectIds: graph.subjects.map((subject) => subject.id)
+		};
+		submitReorder();
 	}
 </script>
 
-<form
-	bind:this={reorderForm}
-	method="POST"
-	action="?/reorderSubjects"
-	use:enhance={reorderEnhancer}
-	hidden
->
-	<input bind:this={reorderOrderInput} type="hidden" name="order" />
-</form>
+<form method="POST" action="?/reorder-subjects" use:reorderEnhance hidden></form>
 
 <svelte:head>
 	<title>{graph.name} Subjects | PRIME Graph Editor</title>

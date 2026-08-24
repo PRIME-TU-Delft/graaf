@@ -4,9 +4,7 @@
 	import { GraphValidator } from '$lib/validators/graphValidator';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
-	import { enhance } from '$app/forms';
-	import { invalidateAll } from '$app/navigation';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { superForm } from 'sveltekit-superforms';
 
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
@@ -17,7 +15,6 @@
 	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
-	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import IssueIndicator from '../IssueIndicator.svelte';
@@ -27,39 +24,78 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let isLocalUpdate = false;
-
 	// This is a workaround for the fact that we can't use $derived due to the reordering.
 	// A writable $derived would not be re-proxied on reassignment, so mutations like
 	// `graph.domains = ...` or `domain.style = ...` below would stop being reactive.
 	// svelte-ignore state_referenced_locally
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let graph = $state(data.graph);
-	$effect.pre(() => {
-		const fresh = data.graph;
-		if (!isLocalUpdate) {
-			graph = fresh;
-		}
+	$effect(() => {
+		graph = data.graph;
 	});
 
-	let reorderForm: HTMLFormElement;
-	let reorderOrderInput: HTMLInputElement;
+	function revertDomainOrder(message: string) {
+		graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
+		toast.error(message);
+	}
 
-	const reorderEnhancer: SubmitFunction = () => {
-		isLocalUpdate = true;
-		return async ({ result, update }) => {
-			if (result.type === 'success') {
-				graph.domains.forEach((domain, index) => {
-					domain.order = index;
-				});
-				await update({ reset: false });
-			} else {
-				graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
-				toast.error('Failed to update domain order, try again later!');
+	// Domain order is only ever shown in this list, never on the graph canvas, so this posts
+	// without invalidating: the rows are already in their new order and a refetch would rebuild
+	// the canvas for nothing.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderDomainsForm, {
+		id: 'reorder-domains',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (!form.valid) {
+				revertDomainOrder('Failed to update domain order, try again later!');
+				return;
 			}
-			isLocalUpdate = false;
-		};
-	};
+
+			graph.domains.forEach((domain, index) => {
+				domain.order = index;
+			});
+		},
+		onError: () => revertDomainOrder('Failed to update domain order, try again later!')
+	});
+
+	// The style a domain is restyled from, plus how to close the popover it was picked in, kept
+	// until the server answers so a rejected change can be rolled back.
+	let pendingStyle: { index: number; previous: DomainStyle | null; close: () => void } | null =
+		null;
+
+	// This one does invalidate: the canvas colours its domain nodes and their outgoing edges from
+	// the style, so it needs the fresh payload.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: styleData,
+		enhance: styleEnhance,
+		submit: submitStyle
+	} = superForm(data.domainStyleForm, {
+		id: 'change-domain-style',
+		dataType: 'json',
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (form.valid) pendingStyle?.close();
+			else {
+				if (pendingStyle) graph.domains[pendingStyle.index].style = pendingStyle.previous;
+				toast.error('Failed to update domain style, try again later');
+			}
+			pendingStyle = null;
+		},
+		onError: () => {
+			if (pendingStyle) graph.domains[pendingStyle.index].style = pendingStyle.previous;
+			toast.error('Failed to update domain style, try again later');
+			pendingStyle = null;
+		}
+	});
 
 	const issues = $derived(new GraphValidator(graph).validate());
 
@@ -87,31 +123,27 @@
 	 * @param domainIndex - The index of the domain
 	 */
 
-	async function handleChangeStyle(
+	function handleChangeStyle(
 		key: DomainStyle | null,
 		domainIndex: number,
 		triggerId: string,
 		isOpenState: ChangeStyleOpenState
 	) {
 		const domain = graph.domains[domainIndex];
+
+		pendingStyle = {
+			index: domainIndex,
+			previous: domain.style,
+			close: () =>
+				closeAndFocusTrigger(triggerId, () => {
+					isOpenState.isOpen = false;
+				})
+		};
+
 		domain.style = key;
 
-		const response = await fetch('/api/domains/style', {
-			method: 'PATCH',
-			body: JSON.stringify({ domainId: domain.id, style: key }),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			toast.error('Failed to update domain style, try again later');
-			return;
-		} else {
-			graphD3Store.graphD3?.setDomainStyle(domain.id, key);
-			await invalidateAll();
-			closeAndFocusTrigger(triggerId, () => {
-				isOpenState.isOpen = false;
-			});
-		}
+		$styleData = { graphId: graph.id, domainId: domain.id, style: key ?? '' };
+		submitStyle();
 	}
 
 	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
@@ -119,22 +151,17 @@
 	}
 	function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
 		graph.domains = e.detail.items;
-		reorderOrderInput.value = JSON.stringify(
-			graph.domains.map((domain, index) => ({ domainId: domain.id, newOrder: index }))
-		);
-		reorderForm.requestSubmit();
+
+		$reorderData = {
+			graphId: graph.id,
+			domainIds: graph.domains.map((domain) => domain.id)
+		};
+		submitReorder();
 	}
 </script>
 
-<form
-	bind:this={reorderForm}
-	method="POST"
-	action="?/reorderDomains"
-	use:enhance={reorderEnhancer}
-	hidden
->
-	<input bind:this={reorderOrderInput} type="hidden" name="order" />
-</form>
+<form method="POST" action="?/reorder-domains" use:reorderEnhance hidden></form>
+<form method="POST" action="?/change-domain-style" use:styleEnhance hidden></form>
 
 <svelte:head>
 	<title>{graph.name} Domains | PRIME Graph Editor</title>

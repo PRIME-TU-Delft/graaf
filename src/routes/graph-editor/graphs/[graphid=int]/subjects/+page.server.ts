@@ -1,35 +1,34 @@
-import prisma from '$lib/server/db/prisma';
-import { whereHasCoursePermission } from '$lib/server/permissions';
 import { SubjectActions } from '$lib/server/actions';
 import { getUser } from '$lib/server/actions/Users';
 import {
 	changeSubjectRelSchema,
 	deleteSubjectSchema,
+	reorderSubjectsSchema,
 	subjectRelSchema,
 	subjectSchema
 } from '$lib/zod/subjectSchema';
-import { fail } from '@sveltejs/kit';
-import type { User } from '@prisma/client';
-import { z } from 'zod';
-import type { ServerLoad } from '@sveltejs/kit';
+import { nodePositionActions } from '../nodePositions';
+import type { PageServerLoad } from './$types';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 as zod } from 'sveltekit-superforms/adapters';
 
-const reorderSchema = z.array(
-	z.object({ subjectId: z.number().int(), newOrder: z.number().int() })
-);
-
-export const load: ServerLoad = async () => {
+export const load: PageServerLoad = async ({ params }) => {
 	return {
+		// Just this page's crumb; NavigationBar appends it to the trail the layout built. Kept out
+		// of the layout load (and out of `await parent()`, which would force that load to re-run)
+		// so switching tabs doesn't refetch the graph and rebuild the canvas.
+		breadcrumbLeaf: { name: 'Subjects', url: `/graph-editor/graphs/${params.graphid}/subjects` },
 		newSubjectForm: await superValidate(zod(subjectSchema)),
 		deleteSubjectForm: await superValidate(zod(deleteSubjectSchema)),
 		newSubjectRelForm: await superValidate(zod(subjectRelSchema)),
-		changeSubjectRelForm: await superValidate(zod(changeSubjectRelSchema))
+		changeSubjectRelForm: await superValidate(zod(changeSubjectRelSchema)),
+		reorderSubjectsForm: await superValidate(zod(reorderSubjectsSchema))
 	};
 };
 
 // ACTIONS
 export const actions = {
+	...nodePositionActions,
 	'add-subject-to-graph': async (event) => {
 		const form = await superValidate(event, zod(subjectSchema));
 		return SubjectActions.addSubjectToGraph(await getUser(event), form);
@@ -37,6 +36,10 @@ export const actions = {
 	'change-subject-in-graph': async (event) => {
 		const form = await superValidate(event, zod(subjectSchema));
 		return SubjectActions.changeSubject(await getUser(event), form);
+	},
+	'reorder-subjects': async (event) => {
+		const form = await superValidate(event, zod(reorderSubjectsSchema));
+		return SubjectActions.reorderSubjects(await getUser(event), form);
 	},
 	'delete-subject': async (event) => {
 		const form = await superValidate(event, zod(deleteSubjectSchema));
@@ -53,38 +56,5 @@ export const actions = {
 	'delete-subject-rel': async (event) => {
 		const form = await superValidate(event, zod(subjectRelSchema));
 		return SubjectActions.deleteSubjectRel(await getUser(event), form);
-	},
-	reorderSubjects: async ({ request, locals }) => {
-		const session = await locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		const formData = await request.formData();
-		const raw = formData.get('order');
-		if (typeof raw !== 'string') return fail(400, { error: 'Missing order data' });
-
-		const parsed = reorderSchema.safeParse(JSON.parse(raw));
-		if (!parsed.success) return fail(400, { error: 'Invalid order data' });
-
-		try {
-			await prisma.$transaction(
-				parsed.data.map(({ subjectId, newOrder }) =>
-					prisma.subject.update({
-						where: {
-							id: subjectId,
-							graph: {
-								course: {
-									...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-								}
-							}
-						},
-						data: { order: newOrder }
-					})
-				)
-			);
-			return { success: true };
-		} catch {
-			return fail(500, { error: 'Failed to reorder subjects' });
-		}
 	}
 };

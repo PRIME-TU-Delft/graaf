@@ -20,9 +20,9 @@ import type {
 	LectureData,
 	NodeData,
 	PrismaGraphPayload,
+	SavePositions,
 	SVGSelection
 } from './types';
-import type { DomainStyle } from '@prisma/client';
 
 /**
  * Orchestrates the interactive D3 graph canvas: owns the SVG selections, the force simulation,
@@ -48,6 +48,7 @@ export class GraphD3 {
 	lecture: LectureData | null = null;
 	keys: Record<string, boolean> = {};
 	data_backup: GraphData | null = null;
+	savePositions?: SavePositions;
 
 	/**
 	 * Build a new graph canvas: formats the Prisma payload into simulation-ready data, sets up
@@ -62,15 +63,19 @@ export class GraphD3 {
 	 * dragging/editing interactions) or the read-only public viewer
 	 * @param view - Which of domains/subjects/lectures to open on
 	 * @param lectureId - If provided, the lecture to focus when `view` is `lectures`
+	 * @param savePositions - Called with the nodes that moved, whenever a drag or the force
+	 * simulation settles them somewhere new. Omitted in the read-only public viewer.
 	 */
 	constructor(
 		element: SVGSVGElement,
 		payload: PrismaGraphPayload,
 		editable: boolean,
 		view: GraphView = GraphView.domains,
-		lectureId: number | null = null
+		lectureId: number | null = null,
+		savePositions?: SavePositions
 	) {
 		this.editable = editable;
+		this.savePositions = savePositions;
 
 		// Set zoom lock to false if editable
 		if (this.editable) {
@@ -197,7 +202,7 @@ export class GraphD3 {
 		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
 
 		// Save new data
-		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.save);
+		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.save, this);
 	}
 
 	/**
@@ -254,28 +259,6 @@ export class GraphD3 {
 
 		// Update highlights
 		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.updateHighlight, this);
-	}
-
-	/**
-	 * Update the rendered style of a single domain node in place, without a full data refresh.
-	 * Matches on the node's DOM id (`#domain-{id}`), so this affects the currently rendered
-	 * element directly rather than going through `data`.
-	 *
-	 * @param id - The domain's id
-	 * @param style - The new style, or null to clear it
-	 */
-	setDomainStyle(id: number, style: DomainStyle | null) {
-		this.content
-			.selectAll<SVGGElement, NodeData>(`#domain-${id}`)
-			.each(function (node) {
-				node.style = style;
-			})
-			.call(NodeToolbox.updateStyle);
-
-		this.content
-			.selectAll<SVGLineElement, EdgeData>('.edge')
-			.filter((edge) => edge.source.type === NodeType.DOMAIN && edge.source.id === id)
-			.call(EdgeToolbox.updateStyle);
 	}
 
 	/**
@@ -361,7 +344,7 @@ export class GraphD3 {
 		this.content
 			.selectAll<SVGGElement, NodeData>('.node:not(.fixed)')
 			.call(NodeToolbox.setFixed, this, true)
-			.call(NodeToolbox.save);
+			.call(NodeToolbox.save, this);
 
 		// Freeze simulation
 		this.simulation.stop();

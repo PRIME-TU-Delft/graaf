@@ -13,14 +13,12 @@ export const deleteLectureSchema = z.object({
 	lectureId: z.number()
 });
 
-export const reorderLecturesSchema = z.array(
-	z.object({
-		lectureId: z.number(),
-		newOrder: z.number()
-	})
-);
+export const reorderLecturesSchema = z.object({
+	graphId: z.number(),
+	lectureIds: z.array(z.number())
+});
 
-export const orderSubjectsSchema = z.object({
+export const reorderLectureSubjectsSchema = z.object({
 	graphId: z.number(),
 	lectureId: z.number(),
 	subjectIds: z.array(z.number())

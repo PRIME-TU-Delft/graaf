@@ -1,5 +1,3 @@
-import prisma from '$lib/server/db/prisma';
-import { whereHasCoursePermission } from '$lib/server/permissions';
 import { DomainActions } from '$lib/server/actions';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 as zod } from 'sveltekit-superforms/adapters';
@@ -8,26 +6,31 @@ import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
 	domainRelSchema,
-	domainSchema
+	domainSchema,
+	domainStyleSchema,
+	reorderDomainsSchema
 } from '$lib/zod/domainSchema.js';
-import { fail } from '@sveltejs/kit';
-import type { User } from '@prisma/client';
-import { z } from 'zod';
-import type { ServerLoad } from '@sveltejs/kit';
+import { nodePositionActions } from '../nodePositions';
+import type { PageServerLoad } from './$types';
 
-const reorderSchema = z.array(z.object({ domainId: z.number().int(), newOrder: z.number().int() }));
-
-export const load: ServerLoad = async () => {
+export const load: PageServerLoad = async ({ params }) => {
 	return {
+		// Just this page's crumb; NavigationBar appends it to the trail the layout built. Kept out
+		// of the layout load (and out of `await parent()`, which would force that load to re-run)
+		// so switching tabs doesn't refetch the graph and rebuild the canvas.
+		breadcrumbLeaf: { name: 'Domains', url: `/graph-editor/graphs/${params.graphid}/domains` },
 		newDomainForm: await superValidate(zod(domainSchema)),
 		deleteDomainForm: await superValidate(zod(deleteDomainSchema)),
 		newDomainRelForm: await superValidate(zod(domainRelSchema)),
-		changeDomainRelForm: await superValidate(zod(changeDomainRelSchema))
+		changeDomainRelForm: await superValidate(zod(changeDomainRelSchema)),
+		reorderDomainsForm: await superValidate(zod(reorderDomainsSchema)),
+		domainStyleForm: await superValidate(zod(domainStyleSchema))
 	};
 };
 
 // ACTIONS
 export const actions = {
+	...nodePositionActions,
 	'add-domain-to-graph': async (event) => {
 		const form = await superValidate(event, zod(domainSchema));
 		return DomainActions.addDomainToGraph(await getUser(event), form);
@@ -35,6 +38,14 @@ export const actions = {
 	'change-domain-in-graph': async (event) => {
 		const form = await superValidate(event, zod(domainSchema));
 		return DomainActions.changeDomain(await getUser(event), form);
+	},
+	'change-domain-style': async (event) => {
+		const form = await superValidate(event, zod(domainStyleSchema));
+		return DomainActions.changeDomainStyle(await getUser(event), form);
+	},
+	'reorder-domains': async (event) => {
+		const form = await superValidate(event, zod(reorderDomainsSchema));
+		return DomainActions.reorderDomains(await getUser(event), form);
 	},
 	'delete-domain': async (event) => {
 		const form = await superValidate(event, zod(deleteDomainSchema));
@@ -53,38 +64,5 @@ export const actions = {
 	'delete-domain-rel': async (event) => {
 		const form = await superValidate(event, zod(domainRelSchema));
 		return DomainActions.deleteDomainRel(await getUser(event), form);
-	},
-	reorderDomains: async ({ request, locals }) => {
-		const session = await locals.auth();
-		const user = session?.user as User | undefined;
-		if (!user) return fail(401, { error: 'Unauthorized' });
-
-		const formData = await request.formData();
-		const raw = formData.get('order');
-		if (typeof raw !== 'string') return fail(400, { error: 'Missing order data' });
-
-		const parsed = reorderSchema.safeParse(JSON.parse(raw));
-		if (!parsed.success) return fail(400, { error: 'Invalid order data' });
-
-		try {
-			await prisma.$transaction(
-				parsed.data.map(({ domainId, newOrder }) =>
-					prisma.domain.update({
-						where: {
-							id: domainId,
-							graph: {
-								course: {
-									...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
-								}
-							}
-						},
-						data: { order: newOrder }
-					})
-				)
-			);
-			return { success: true };
-		} catch {
-			return fail(500, { error: 'Failed to reorder domains' });
-		}
 	}
 };
