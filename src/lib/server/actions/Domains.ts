@@ -5,10 +5,12 @@ import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
 	domainRelSchema,
-	domainSchema
+	domainSchema,
+	domainStyleSchema,
+	reorderDomainsSchema
 } from '$lib/zod/domainSchema';
 import type { DomainStyle, Prisma, User } from '@prisma/client';
-import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms/server';
 
 /** Server actions for creating, editing, and deleting domains within a graph, and for
  * creating/removing relations between domains. Called from form actions in `+page.server.ts`
@@ -170,6 +172,84 @@ export class DomainActions {
 				}),
 			form,
 			'name',
+			{ entity: 'Graph', message: "You don't have permission to edit this domain" }
+		);
+	}
+
+	/**
+	 * Reorder the domains in a graph. `domainIds` is the graph's domain ids in their new display
+	 * order; each domain's `order` is set to its index in that list. Runs as a single nested
+	 * write, so the whole reorder either applies or none of it does.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId and the reordered domainIds
+	 * @returns Nothing on success. On invalid input, an id that isn't in this graph, or missing
+	 * permission, returns the form with a `domainIds._errors`-field error via setError instead of
+	 * throwing.
+	 */
+	static async reorderDomains(
+		user: User,
+		form: SuperValidated<Infer<typeof reorderDomainsSchema>>
+	) {
+		if (!form.valid) return setError(form, 'domainIds._errors', 'Invalid domain order');
+
+		return await withPermissionCheck(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						domains: {
+							update: form.data.domainIds.map((id, order) => ({
+								where: { id },
+								data: { order }
+							}))
+						}
+					}
+				}),
+			form,
+			'domainIds._errors',
+			{ entity: 'Graph', message: "You don't have permission to reorder these domains" }
+		);
+	}
+
+	/**
+	 * Change a domain's style, leaving its name untouched. Split out from changeDomain because
+	 * the domain list restyles a domain on its own, without the rename dialog.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId, domainId, and the new style ('' clears it)
+	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
+	 * a `style`-field error via setError instead of throwing.
+	 */
+	static async changeDomainStyle(
+		user: User,
+		form: SuperValidated<Infer<typeof domainStyleSchema>>
+	) {
+		if (!form.valid) return setError(form, 'style', 'Invalid domain style');
+
+		return await withPermissionCheck(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						domains: {
+							update: {
+								where: { id: form.data.domainId },
+								data: {
+									style: form.data.style == '' ? null : (form.data.style as DomainStyle)
+								}
+							}
+						}
+					}
+				}),
+			form,
+			'style',
 			{ entity: 'Graph', message: "You don't have permission to edit this domain" }
 		);
 	}
