@@ -17,13 +17,17 @@ import {
 	getGraph,
 	seedFixture
 } from './helpers/fixture';
-import { buildForm, expectDenied } from './helpers/actions';
+import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 
 // Same dual-branch shape as GraphActions: COURSE gated at CourseAdminEditorORProgramAdminEditor,
 // SANDBOX at OwnerOREditor with no super-admin bypass.
 //
-// Denials assert status and an unchanged database rather than message text, because
-// withPermissionCheck currently emits a raw Prisma error instead of its message (#153).
+// Denials assert the branch's shared message too, now that withPermissionCheck correctly matches
+// Prisma 7's P2025 shape instead of falling through to a raw Prisma error (#153).
+
+const COURSE_DENIED =
+	'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor';
+const SANDBOX_DENIED = 'You are not allowed to edit this sandbox. You are not an owner or editor';
 
 beforeEach(seedFixture);
 
@@ -67,6 +71,7 @@ describe('LinkActions.newLink', () => {
 		const result = await LinkActions.newLink(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.link.findFirst({ where: { name: 'new-link' } })).resolves.toBeNull();
 	});
 
@@ -97,6 +102,7 @@ describe('LinkActions.newLink', () => {
 		const result = await LinkActions.newLink(superAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(prisma.link.findFirst({ where: { name: 'sb-new-link' } })).resolves.toBeNull();
 	});
 });
@@ -139,6 +145,7 @@ describe('LinkActions.moveLink', () => {
 		const result = await LinkActions.moveLink(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.link.findUniqueOrThrow({ where: { id: link.id } })).resolves.toMatchObject({
 			graphId: graphThree.id
 		});
@@ -158,6 +165,7 @@ describe('LinkActions.moveLink', () => {
 		const result = await LinkActions.moveLink(superAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(prisma.link.findUniqueOrThrow({ where: { id: link.id } })).resolves.toMatchObject({
 			graphId: graph.id
 		});
@@ -198,6 +206,7 @@ describe('LinkActions.deleteLink', () => {
 		const result = await LinkActions.deleteLink(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.link.findUnique({ where: { id: link.id } })).resolves.not.toBeNull();
 	});
 
@@ -231,6 +240,7 @@ describe('LinkActions.deleteLink', () => {
 		const result = await LinkActions.deleteLink(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(prisma.link.findUnique({ where: { id: link.id } })).resolves.not.toBeNull();
 	});
 });
