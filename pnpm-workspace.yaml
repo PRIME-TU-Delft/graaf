@@ -12,4 +12,5 @@ minimumReleaseAgeExclude:
 overrides:
   '@hono/node-server@<1.19.13': ^1.19.13
   cookie@<0.7.0: ^0.7.0
+  deepmerge-ts@<8.0.0: ^8.0.0
   yaml@>=2.0.0 <2.8.3: ^2.8.3

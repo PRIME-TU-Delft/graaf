@@ -7,7 +7,6 @@ import { graphView } from './GraphD3View.svelte';
 
 import type { GraphD3 } from './GraphD3';
 import { NodeType, type EdgeData, type NodeData, type NodeSelection } from './types';
-import { toast } from 'svelte-sonner';
 
 export { NodeToolbox };
 
@@ -114,7 +113,7 @@ class NodeToolbox {
 					}
 				})
 
-				.on('end', async function (_, node) {
+				.on('end', function (_, node) {
 					const selection = d3.select<SVGGElement, NodeData>(this);
 					node.x = Math.round(node.x);
 					node.y = Math.round(node.y);
@@ -122,52 +121,40 @@ class NodeToolbox {
 					node.fy = node.y;
 
 					NodeToolbox.updatePosition(selection, graph);
-					NodeToolbox.save(selection);
+					NodeToolbox.save(selection, graph);
 				})
 		);
 	}
 
 	/**
-	 * Persist the current x/y position of every node in the selection to the server, batched
-	 * into one PATCH request for domains and one for subjects (regardless of how many nodes of
-	 * each type are in the selection). Shows an error toast if either request fails.
+	 * Hand the current x/y position of every node in the selection to the graph's savePositions
+	 * callback, grouped into domains and subjects since they are separate tables. Positions are
+	 * rounded to whole grid units, matching the integer columns they end up in. No-op when the
+	 * graph has no callback, which is the case in the read-only public viewer.
 	 *
 	 * @param selection - The nodes whose positions should be saved; may contain a mix of domain
 	 * and subject nodes
+	 * @param graph - The owning graph instance, which knows how to persist the positions
 	 */
-	static async save(selection: NodeSelection) {
-		// We are not guaranteed to select only domains, or only subjects, so we have two options:
-		// 1) Send an API call per node, to the appropriate endpoint => More requests, less work per request
-		// 2) Sort the nodes by type and send a single API call per type => Fewer requests, more work per request
-		// We will go with option 2 for now, as save isnt called often (only on drag-end and simulation-end)
-		// and this offloads some work from the server
+	static save(selection: NodeSelection, graph: GraphD3) {
+		if (!graph.savePositions) return;
 
-		// Group nodes by type
-		const domains = selection.filter((node) => node.type === NodeType.DOMAIN).data();
-		const subjects = selection.filter((node) => node.type === NodeType.SUBJECT).data();
+		const position = (node: NodeData) => ({
+			id: node.id,
+			x: Math.round(node.x),
+			y: Math.round(node.y)
+		});
 
-		// Send API calls
-		const domainBody = domains.map((node) => ({ domainId: node.id, x: node.x, y: node.y }));
-		const subjectBody = subjects.map((node) => ({ subjectId: node.id, x: node.x, y: node.y }));
-
-		const requests = [
-			fetch('/api/domains/position', {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(domainBody)
-			}),
-
-			fetch('/api/subjects/position', {
-				method: 'PATCH',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(subjectBody)
-			})
-		];
-
-		const responses = await Promise.all(requests);
-		if (responses.some((response) => !response.ok)) {
-			toast.error('Failed to save node positions', { duration: 2000 });
-		}
+		graph.savePositions(
+			selection
+				.filter((node) => node.type === NodeType.DOMAIN)
+				.data()
+				.map(position),
+			selection
+				.filter((node) => node.type === NodeType.SUBJECT)
+				.data()
+				.map(position)
+		);
 	}
 
 	/**

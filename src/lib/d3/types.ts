@@ -18,7 +18,9 @@ export type {
 	DefsSelection,
 	GroupSelection,
 	NodeSelection,
-	EdgeSelection
+	EdgeSelection,
+	NodePosition,
+	SavePositions
 };
 
 // -----------------------------> Enums
@@ -163,3 +165,17 @@ type DefsSelection = d3.Selection<SVGDefsElement, unknown, null, unknown>;
 type GroupSelection = d3.Selection<SVGGElement, unknown, null, unknown>;
 type NodeSelection = d3.Selection<SVGGElement, NodeData, d3.BaseType, unknown>;
 type EdgeSelection = d3.Selection<SVGLineElement, EdgeData, d3.BaseType, unknown>;
+
+/** A node's persisted canvas position, in whole grid units. */
+type NodePosition = {
+	id: number;
+	x: number;
+	y: number;
+};
+
+/**
+ * Persists the canvas positions of moved nodes. Supplied by whoever mounts the graph, so the
+ * D3 layer doesn't have to know how a position reaches the server; left undefined in the
+ * read-only public viewer, where nodes can't be moved.
+ */
+type SavePositions = (domains: NodePosition[], subjects: NodePosition[]) => void;

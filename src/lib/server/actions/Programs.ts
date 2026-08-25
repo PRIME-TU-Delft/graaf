@@ -3,6 +3,7 @@ import { setError } from '$lib/utils/setError';
 import { newProgramSchema } from '$lib/zod/programSchema';
 import { whereHasProgramPermission } from '../permissions';
 import { GuardError, isWriteConflict, WRITE_CONFLICT_MESSAGE } from './transaction';
+import { withPermissionCheck } from './permissionError';
 import { redirect } from '@sveltejs/kit';
 
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -68,21 +69,21 @@ export class ProgramActions {
 	static async editProgram(user: User, form: SuperValidated<Infer<typeof editProgramSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		try {
-			await prisma.program.update({
-				where: {
-					id: form.data.programId,
-					...whereHasProgramPermission(user, 'ProgramAdmin')
-				},
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch {
-			return setError(form, '', 'Unauthorized');
-		}
-
-		return { form };
+		return await withPermissionCheck(
+			() =>
+				prisma.program.update({
+					where: {
+						id: form.data.programId,
+						...whereHasProgramPermission(user, 'ProgramAdmin')
+					},
+					data: {
+						name: form.data.name
+					}
+				}),
+			form,
+			'',
+			{ entity: 'Program', message: 'You do not have permission to edit this program' }
+		);
 	}
 
 	/**
