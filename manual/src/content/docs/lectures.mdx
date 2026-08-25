@@ -6,14 +6,17 @@ description: Create lectures and assign subjects to them.
 import { Aside } from '@astrojs/starlight/components';
 
 A lecture stores a set of subjects, letting students (and the graph preview) focus on just the
-subjects covered in that lecture.
+subjects covered in that lecture. By clicking on the "Lecture" button (1) in the top-right, you can select which lecture view do you want to preview.
+
+![Lecture View](../../assets/lectures/lecture-view.png)
+_Figure 1: Lecture view_
 
 ## Creating a lecture
 
 Open a graph's Lectures tab and click "New Lecture". Give it a name.
 
 ![Create lecture](../../assets/lectures/create-lecture.png)
-_Figure 1: Create lecture_
+_Figure 2: Create lecture_
 
 <Aside type="note">
 	Creating a lecture only requires course editor permissions. Editing its name, deleting it, or
@@ -24,12 +27,12 @@ _Figure 1: Create lecture_
 
 ## The lecture list
 
-Lectures are shown as cards you can drag (using the handle) to reorder.
+Lectures are shown as cards you can drag using the handle (1) to reorder.
 
 ![Lecture list](../../assets/lectures/lecture-list.png)
-_Figure 2: Lecture list_
+_Figure 3: Lecture list_
 
-Each card's ellipsis menu has "Edit" (rename or delete the lecture) and "Delete" options.
+Each card's ellipsis menu (2) has "Edit" (rename or delete the lecture) and "Delete" options.
 
 ## Assigning subjects to a lecture
 
@@ -38,7 +41,7 @@ open a checklist of every subject in the graph. Check the subjects that belong t
 submit. This replaces the lecture's full subject list with your selection.
 
 ![Assign subjects to a lecture](../../assets/lectures/assign-subjects.png)
-_Figure 3: Assign subjects to a lecture_
+_Figure 4: Assign subjects to a lecture_
 
 Once a lecture has subjects, you can also reorder them by dragging within the lecture's card, or
 drag a subject from one lecture directly into another to move it across.
