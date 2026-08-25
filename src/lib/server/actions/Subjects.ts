@@ -2,11 +2,12 @@ import prisma from '$lib/server/db/prisma';
 import {
 	changeSubjectRelSchema,
 	deleteSubjectSchema,
+	reorderSubjectsSchema,
 	subjectRelSchema,
 	subjectSchema
 } from '$lib/zod/subjectSchema';
 import type { Prisma, User } from '@prisma/client';
-import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms/server';
 import { whereHasGraphCoursePermission } from '../permissions';
 import { withPermissionCheck } from './permissionError';
 
@@ -153,6 +154,45 @@ export class SubjectActions {
 			form,
 			'name',
 			{ entity: 'Graph', message: "You don't have permission to edit this subject" }
+		);
+	}
+
+	/**
+	 * Reorder the subjects in a graph. `subjectIds` is the graph's subject ids in their new
+	 * display order; each subject's `order` is set to its index in that list. Runs as a single
+	 * nested write, so the whole reorder either applies or none of it does.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId and the reordered subjectIds
+	 * @returns Nothing on success. On invalid input, an id that isn't in this graph, or missing
+	 * permission, returns the form with a `subjectIds._errors`-field error via setError instead
+	 * of throwing.
+	 */
+	static async reorderSubjects(
+		user: User,
+		form: SuperValidated<Infer<typeof reorderSubjectsSchema>>
+	) {
+		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid subject order');
+
+		return await withPermissionCheck(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						subjects: {
+							update: form.data.subjectIds.map((id, order) => ({
+								where: { id },
+								data: { order }
+							}))
+						}
+					}
+				}),
+			form,
+			'subjectIds._errors',
+			{ entity: 'Graph', message: "You don't have permission to reorder these subjects" }
 		);
 	}
 
