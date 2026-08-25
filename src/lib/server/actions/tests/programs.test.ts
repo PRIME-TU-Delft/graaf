@@ -19,9 +19,11 @@ import {
 } from './helpers/fixture';
 import { asErrorObject, buildForm, errorMessages } from './helpers/actions';
 
-// ProgramActions is the only action class where no method uses withPermissionCheck: every failure
-// path is hand-rolled. That makes the messages here reliable, so these tests assert on them
-// directly rather than going through expectDenied.
+// Most ProgramActions failure paths are hand-rolled rather than going through withPermissionCheck,
+// so these tests assert on messages directly rather than going through expectDenied. editProgram
+// is the exception (#152): it used to collapse every failure, permission-related or not, into a
+// generic 'Unauthorized', which is why it now goes through the same withPermissionCheck helper as
+// the other action classes and gets an entity-specific message instead.
 //
 // The tiers are also the narrowest in the codebase. editProgram and editSuperUser require
 // ProgramAdmin, which excludes program editors; deleteProgram requires OnlySuperAdmin, which the
@@ -76,7 +78,7 @@ describe('ProgramActions.editProgram', () => {
 		).resolves.toMatchObject({ name: 'RenamedProgram' });
 	});
 
-	it('denies a program editor, one tier below', async () => {
+	it('denies a program editor, one tier below, with an entity-specific message', async () => {
 		const { programEditor } = await fixtureUsers();
 		const program = await getProgram(FIXTURE_PROGRAMS.three);
 
@@ -86,7 +88,24 @@ describe('ProgramActions.editProgram', () => {
 		});
 		const result = await ProgramActions.editProgram(programEditor, form);
 
-		expect(errorMessages(result)).toContain('Unauthorized');
+		// #152: this used to collapse into the generic 'Unauthorized' regardless of cause.
+		expect(errorMessages(result)).toContain('You do not have permission to edit this program');
+		await expect(
+			prisma.program.findUniqueOrThrow({ where: { id: program.id } })
+		).resolves.toMatchObject({ name: FIXTURE_PROGRAMS.three });
+	});
+
+	it('denies an outsider with no role on the program at all', async () => {
+		const outsider = await createOutsider();
+		const program = await getProgram(FIXTURE_PROGRAMS.three);
+
+		const form = await buildForm(editProgramSchema, {
+			programId: program.id,
+			name: 'RenamedProgram'
+		});
+		const result = await ProgramActions.editProgram(outsider, form);
+
+		expect(errorMessages(result)).toContain('You do not have permission to edit this program');
 		await expect(
 			prisma.program.findUniqueOrThrow({ where: { id: program.id } })
 		).resolves.toMatchObject({ name: FIXTURE_PROGRAMS.three });
