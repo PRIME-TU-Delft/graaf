@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { displayName } from '$lib/utils/displayUserName';
 
 	// Components
 	import AddToProgram from './AddToProgram.svelte';
@@ -41,6 +42,11 @@
 		<ul class="m-0 flex list-none flex-col gap-2 p-0">
 			{#each memberships as { program, role } (role + program.id)}
 				{@const onlyAdmin = isOnlyAdminOf(program.id, role)}
+				{@const removeConfirm = {
+					title: `Remove ${displayName(user)} from ${program.name}?`,
+					description: `They lose their ${role} role on this program, and any access it gave them.`,
+					action: 'Yes, remove'
+				}}
 				<li class="m-0 rounded border border-purple-200 bg-purple-50/50 p-2">
 					<div class="flex flex-wrap items-center justify-between gap-2">
 						<span class="text-sm font-medium">{program.name}</span>
@@ -73,7 +79,7 @@
 							role="revoke"
 							label="Remove from program"
 							variant="destructive"
-							confirmMessage="Are you sure?"
+							confirm={removeConfirm}
 							successMessage="User removed from program"
 							disabled={onlyAdmin}
 						/>

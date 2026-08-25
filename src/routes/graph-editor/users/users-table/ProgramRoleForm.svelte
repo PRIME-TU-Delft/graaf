@@ -7,7 +7,8 @@
 	import { toast } from 'svelte-sonner';
 
 	// Components
-	import { Button, type ButtonVariant } from '$lib/components/ui/button';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+	import { Button, buttonVariants, type ButtonVariant } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 
 	// Types
@@ -21,8 +22,8 @@
 		role: 'admin' | 'editor' | 'revoke';
 		label: string;
 		successMessage: string;
-		/** When set, the button first reveals this message plus a destructive confirm button */
-		confirmMessage?: string;
+		/** When set, the button opens a confirmation dialog instead of submitting straight away */
+		confirm?: { title: string; description: string; action: string };
 		variant?: ButtonVariant;
 		disabled?: boolean;
 	};
@@ -33,12 +34,12 @@
 		role,
 		label,
 		successMessage,
-		confirmMessage,
+		confirm,
 		variant = 'outline',
 		disabled = false
 	}: Props = $props();
 
-	let confirming = $state(false);
+	let confirmOpen = $state(false);
 
 	// svelte-ignore state_referenced_locally
 	const form = superForm((page.data as PageData).editSuperUserForm, {
@@ -51,7 +52,7 @@
 		onResult: ({ result }) => {
 			if (result.type === 'success') {
 				toast.success(successMessage);
-				confirming = false;
+				confirmOpen = false;
 			}
 		}
 	});
@@ -67,37 +68,54 @@
 	});
 </script>
 
-<form action="?/edit-super-user" method="POST" use:enhance>
+{#snippet hiddenFields()}
 	<input type="hidden" name="userId" value={user.id} />
 	<input type="hidden" name="programId" value={program.id} />
 	<input type="hidden" name="role" value={role} />
+{/snippet}
 
-	{#if confirmMessage && !confirming}
-		<Button size="sm" {variant} {disabled} onclick={() => (confirming = true)}>{label}</Button>
-	{:else if confirmMessage}
-		<div class="flex items-center gap-2">
-			<p class="m-0 text-sm">{confirmMessage}</p>
-			<Form.FormButton
-				size="sm"
-				variant="destructive"
-				disabled={$submitting || disabled}
-				loading={$delayed}
-			>
-				Yes, sure!
-				{#snippet loadingMessage()}
-					<span>Saving...</span>
-				{/snippet}
-			</Form.FormButton>
-			<Button size="sm" variant="ghost" onclick={() => (confirming = false)}>Cancel</Button>
-		</div>
-	{:else}
+{#if !confirm}
+	<form action="?/edit-super-user" method="POST" use:enhance>
+		{@render hiddenFields()}
+
 		<Form.FormButton size="sm" {variant} disabled={$submitting || disabled} loading={$delayed}>
 			{label}
 			{#snippet loadingMessage()}
 				<span>Saving...</span>
 			{/snippet}
 		</Form.FormButton>
-	{/if}
 
-	<Form.FormError class="mt-1" {form} />
-</form>
+		<Form.FormError class="mt-1" {form} />
+	</form>
+{:else if disabled}
+	<Button size="sm" {variant} disabled>{label}</Button>
+{:else}
+	<AlertDialog.Root bind:open={confirmOpen}>
+		<AlertDialog.Trigger class={buttonVariants({ variant, size: 'sm' })}>
+			{label}
+		</AlertDialog.Trigger>
+
+		<AlertDialog.Content>
+			<AlertDialog.Header>
+				<AlertDialog.Title>{confirm.title}</AlertDialog.Title>
+				<AlertDialog.Description>{confirm.description}</AlertDialog.Description>
+			</AlertDialog.Header>
+
+			<Form.FormError {form} />
+
+			<AlertDialog.Footer>
+				<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+				<form action="?/edit-super-user" method="POST" use:enhance>
+					{@render hiddenFields()}
+
+					<Form.FormButton {variant} disabled={$submitting} loading={$delayed}>
+						{confirm.action}
+						{#snippet loadingMessage()}
+							<span>Saving...</span>
+						{/snippet}
+					</Form.FormButton>
+				</form>
+			</AlertDialog.Footer>
+		</AlertDialog.Content>
+	</AlertDialog.Root>
+{/if}
