@@ -1,6 +1,5 @@
 import { getContext, setContext } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
-import { toast } from 'svelte-sonner';
 
 import { GraphValidator } from '$lib/validators/graphValidator';
 import {
@@ -17,7 +16,7 @@ import { projectGraphData } from './projectGraphData';
 import { projectWithRelations } from './projectWithRelations';
 
 import type { DomainStyle, Graph } from '@prisma/client';
-import type { GraphCanvas, GraphData, NodePositions, PositionSink } from '$lib/d3/types';
+import type { GraphCanvas, GraphData, NodePosition } from '$lib/d3/types';
 import type { Issues } from '$lib/validators/types';
 import type {
 	DomainRow,
@@ -33,20 +32,21 @@ import type {
  * The single owner of one graph's contents while it is open in the editor or the public viewer.
  *
  * The server stays the source of truth: `hydrate` reconciles the loader's payload into the model,
- * and every form action still round-trips through `invalidateAll`. What this class owns is the
- * *write path*. Nothing else may hold a mutable copy of a graph:
+ * and mutations are still posted through the route's form actions. What this class owns is the
+ * *model*. Nothing else may hold a mutable copy of a graph:
  *
  * - the editor tables and form components read the payload-shaped `graph` projection
  * - the D3 canvas is handed the `graphData` projection, and is pushed a fresh one on every change
- * - the four mutations that bypass form actions (style, the three orders, lecture membership,
- *   node positions) are methods here, each doing the optimistic update, the request, and the
- *   rollback in one place
+ *
+ * Mutations are applied here optimistically and synchronously, then confirmed or reverted when the
+ * server answers. The request itself stays in the component, because that is where superforms and
+ * its form element live; this class never talks to the server.
  *
  * Internally the model is id-keyed and relations are id pairs, so there is exactly one row per
  * entity to update and no duplicated relation rows to keep in step. Object references between
  * nodes are created in `projectGraphData` and nowhere else.
  */
-export class GraphStore implements PositionSink {
+export class GraphStore {
 	// -----------------------------> Committed model
 
 	#meta = $state.raw<Graph | null>(null);
@@ -64,10 +64,16 @@ export class GraphStore implements PositionSink {
 	readonly #orderPreview = new SvelteMap<OrderedCollection, number[]>();
 	readonly #lectureSubjectPreview = new SvelteMap<number, number[]>();
 
-	// A drag whose request is still in flight keeps its preview, so a reload that lands while the
-	// server has not caught up yet cannot pull the display back to the order it still knows
-	readonly #committingOrder = new SvelteSet<OrderedCollection>();
-	readonly #committingLectures = new SvelteSet<number>();
+	// -----------------------------> Pending mutations
+	// An optimistic change stays pending until the component reports what the server said. While
+	// it is pending its previous value is kept for a revert, and `hydrate` will not overwrite it:
+	// a reload that lands in that window is behind the change, not ahead of it.
+
+	readonly #pendingOrder = new SvelteMap<OrderedCollection, [number, number][]>();
+	readonly #pendingStyle = new SvelteMap<number, DomainStyle | null>();
+	readonly #pendingStyleTarget = new SvelteMap<number, DomainStyle | null>();
+	readonly #pendingLectureSubjects = new SvelteMap<number, number[]>();
+	readonly #pendingLectureSubjectsTarget = new SvelteMap<number, number[]>();
 
 	/** The mounted canvas, while there is one. Pushed to, never read from. */
 	#canvas: GraphCanvas | null = null;
@@ -181,18 +187,39 @@ export class GraphStore implements PositionSink {
 		}
 
 		// A reload is the authority on order and membership, so drop what a finished drag left
-		// behind. A drag still waiting for its request keeps its preview: the reload is behind it,
-		// not ahead of it, and the commit re-asserts the order once the server confirms.
+		// behind. Anything still waiting on the server is kept, and re-asserted below.
 		for (const collection of [...this.#orderPreview.keys()]) {
-			if (this.#committingOrder.has(collection)) continue;
+			if (this.#pendingOrder.has(collection)) continue;
 
 			this.#orderPreview.delete(collection);
 			changed = true;
 		}
 		for (const lectureId of [...this.#lectureSubjectPreview.keys()]) {
-			if (this.#committingLectures.has(lectureId)) continue;
+			if (this.#pendingLectureSubjects.has(lectureId)) continue;
 
 			this.#lectureSubjectPreview.delete(lectureId);
+			changed = true;
+		}
+
+		// Re-assert pending changes the reload just wrote over with the server's older values
+		for (const [id, target] of this.#pendingStyleTarget) {
+			const row = this.#domains.get(id);
+			if (!row || row.style === target) continue;
+
+			this.#domains.set(id, { ...row, style: target });
+			changed = true;
+		}
+		for (const collection of this.#pendingOrder.keys()) {
+			const ids = this.#orderPreview.get(collection);
+			if (!ids) continue;
+
+			renumber(this.#rowsOf(collection), ids);
+			changed = true;
+		}
+		for (const [lectureId, subjectIds] of this.#pendingLectureSubjectsTarget) {
+			if (sameIds(this.#lectureSubjects.get(lectureId), subjectIds)) continue;
+
+			this.#lectureSubjects.set(lectureId, subjectIds);
 			changed = true;
 		}
 
@@ -202,14 +229,13 @@ export class GraphStore implements PositionSink {
 	// -----------------------------> Canvas binding
 
 	/**
-	 * Bind a freshly mounted canvas to this store: it will be pushed a new projection whenever the
-	 * model changes, and its node positions are persisted through this store.
+	 * Bind a freshly mounted canvas to this store, so it is pushed a new projection whenever the
+	 * model changes.
 	 *
 	 * @param canvas - The canvas to bind, already constructed from `graphData`
 	 */
 	attachCanvas(canvas: GraphCanvas): void {
 		this.#canvas = canvas;
-		canvas.positionSink = this;
 	}
 
 	/**
@@ -221,246 +247,184 @@ export class GraphStore implements PositionSink {
 	detachCanvas(canvas: GraphCanvas): void {
 		if (this.#canvas !== canvas) return;
 
-		canvas.positionSink = null;
 		this.#canvas = null;
 	}
 
 	// -----------------------------> Mutations
+	// Each of these applies the change to the model straight away and pushes it at the canvas, so
+	// the tables and the canvas move together. The caller posts the matching form action and then
+	// calls confirm or revert, which is the only place the previous value is remembered.
 
 	/**
-	 * Restyle a domain, on the tables and on the canvas (nodes, their edges, and the subjects that
-	 * inherit the domain's style), then persist it.
+	 * Restyle a domain: the node, the edges leaving it, and the subjects that inherit its style all
+	 * follow from this one write, because the canvas is re-projected rather than patched.
 	 *
 	 * @param id - The domain's id
 	 * @param style - The new style, or null to clear it
-	 * @returns Whether the server accepted the change; on failure the style is rolled back
 	 */
-	async setDomainStyle(id: number, style: DomainStyle | null): Promise<boolean> {
+	setDomainStyle(id: number, style: DomainStyle | null): void {
 		const row = this.#domains.get(id);
-		if (!row) return false;
+		if (!row || row.style === style) return;
 
-		const previous = row.style;
-		this.#setDomainStyle(id, style);
-
-		const ok = await patch('/api/domains/style', { domainId: id, style });
-		if (!ok) {
-			this.#setDomainStyle(id, previous);
-			toast.error('Failed to update domain style, try again later');
-		}
-
-		return ok;
-	}
-
-	/** Show a reorder drag in progress. Not persisted, and not pushed to the canvas. */
-	previewOrder(collection: OrderedCollection, ids: number[]): void {
-		this.#orderPreview.set(collection, ids);
-	}
-
-	/**
-	 * Commit a finished domain reorder: renumber the rows, push, and persist.
-	 *
-	 * @param ids - Every domain id, in the new display order
-	 * @returns Whether the server accepted the new order; on failure the old order is restored
-	 */
-	async commitDomainOrder(ids: number[]): Promise<boolean> {
-		const ok = await this.#commitOrder(
-			'domains',
-			this.#domains,
-			ids,
-			'/api/domains/order',
-			(id, newOrder) => ({ domainId: id, newOrder })
-		);
-		if (!ok) toast.error('Failed to update domain order, try again later!');
-
-		return ok;
-	}
-
-	/**
-	 * Commit a finished subject reorder: renumber the rows, push, and persist.
-	 *
-	 * @param ids - Every subject id, in the new display order
-	 * @returns Whether the server accepted the new order; on failure the old order is restored
-	 */
-	async commitSubjectOrder(ids: number[]): Promise<boolean> {
-		const ok = await this.#commitOrder(
-			'subjects',
-			this.#subjects,
-			ids,
-			'/api/subjects/order',
-			(id, newOrder) => ({ subjectId: id, newOrder })
-		);
-		if (!ok) toast.error('Failed to update subject order, try again later!');
-
-		return ok;
-	}
-
-	/**
-	 * Commit a finished lecture reorder: renumber the rows, push, and persist.
-	 *
-	 * @param ids - Every lecture id, in the new display order
-	 * @returns Whether the server accepted the new order; on failure the old order is restored
-	 */
-	async commitLectureOrder(ids: number[]): Promise<boolean> {
-		const ok = await this.#commitOrder(
-			'lectures',
-			this.#lectures,
-			ids,
-			'/api/lectures/order',
-			(id, newOrder) => ({ lectureId: id, newOrder })
-		);
-		if (!ok) toast.error('Error while reordering lectures');
-
-		return ok;
-	}
-
-	/** Show a lecture membership drag in progress. Not persisted, and not pushed to the canvas. */
-	previewLectureSubjects(lectureId: number, subjectIds: number[]): void {
-		this.#lectureSubjectPreview.set(lectureId, subjectIds);
-	}
-
-	/** Drop a lecture membership drag without persisting it. */
-	revertLectureSubjects(lectureId: number): void {
-		this.#lectureSubjectPreview.delete(lectureId);
-	}
-
-	/**
-	 * Commit a finished lecture membership drag, so the lectures view of the canvas repartitions
-	 * into past/present/future without needing a reload.
-	 *
-	 * @param lectureId - The lecture whose subjects changed
-	 * @param subjectIds - The lecture's subjects, in display order
-	 * @returns Whether the server accepted the change; on failure the old membership is restored
-	 */
-	async commitLectureSubjects(lectureId: number, subjectIds: number[]): Promise<boolean> {
-		const lecture = this.#lectures.get(lectureId);
-		if (!lecture) return false;
-
-		const previous = this.committedSubjectIdsOf(lectureId);
-
-		this.#lectureSubjectPreview.set(lectureId, subjectIds);
-		this.#committingLectures.add(lectureId);
-		this.#pushToCanvas();
-
-		const ok = await patch('/api/lectures/order-subjects', {
-			name: lecture.name,
-			graphId: lecture.graphId,
-			lectureId,
-			subjectIds
-		});
-
-		this.#committingLectures.delete(lectureId);
-		this.#lectureSubjects.set(lectureId, ok ? subjectIds : previous);
-		this.#lectureSubjectPreview.delete(lectureId);
-		this.#pushToCanvas();
-
-		if (!ok) toast.error('Error while reordering lectures');
-
-		return ok;
-	}
-
-	/**
-	 * Record and persist node positions the canvas has already moved. Called by NodeToolbox on
-	 * drag end and when the simulation is stopped or reset. The canvas is not pushed a new
-	 * projection here: it is the one that moved the nodes, and re-projecting would only hand it
-	 * back the positions it already has.
-	 *
-	 * @param positions - The moved nodes, split into domains and subjects
-	 */
-	async persistPositions({ domains, subjects }: NodePositions): Promise<void> {
-		for (const moved of domains) {
-			const row = this.#domains.get(moved.id);
-			if (!row) continue;
-
-			this.#domains.set(moved.id, { ...row, x: Math.round(moved.x), y: Math.round(moved.y) });
-		}
-
-		for (const moved of subjects) {
-			const row = this.#subjects.get(moved.id);
-			if (!row) continue;
-
-			this.#subjects.set(moved.id, { ...row, x: Math.round(moved.x), y: Math.round(moved.y) });
-		}
-
-		const requests: Promise<boolean>[] = [];
-		if (domains.length > 0) {
-			requests.push(
-				patch(
-					'/api/domains/position',
-					domains.map((moved) => ({
-						domainId: moved.id,
-						x: Math.round(moved.x),
-						y: Math.round(moved.y)
-					}))
-				)
-			);
-		}
-
-		if (subjects.length > 0) {
-			requests.push(
-				patch(
-					'/api/subjects/position',
-					subjects.map((moved) => ({
-						subjectId: moved.id,
-						x: Math.round(moved.x),
-						y: Math.round(moved.y)
-					}))
-				)
-			);
-		}
-
-		const results = await Promise.all(requests);
-		if (results.some((ok) => !ok)) {
-			toast.error('Failed to save node positions', { duration: 2000 });
-		}
-	}
-
-	// -----------------------------> Internals
-
-	#setDomainStyle(id: number, style: DomainStyle | null): void {
-		const row = this.#domains.get(id);
-		if (!row) return;
+		if (!this.#pendingStyle.has(id)) this.#pendingStyle.set(id, row.style);
+		this.#pendingStyleTarget.set(id, style);
 
 		this.#domains.set(id, { ...row, style });
 		this.#pushToCanvas();
 	}
 
-	async #commitOrder<Row extends { id: number; order: number }>(
-		collection: OrderedCollection,
-		rows: SvelteMap<number, Row>,
-		ids: number[],
-		url: string,
-		body: (id: number, newOrder: number) => unknown
-	): Promise<boolean> {
-		const previous = [...rows.values()].map((row) => [row.id, row.order] as const);
+	/** The server accepted a restyle: stop holding on to the old value. */
+	confirmDomainStyle(id: number): void {
+		this.#pendingStyle.delete(id);
+		this.#pendingStyleTarget.delete(id);
+	}
 
-		this.#orderPreview.set(collection, ids);
-		this.#committingOrder.add(collection);
-		renumber(rows, ids);
+	/** The server rejected a restyle: put the old style back. */
+	revertDomainStyle(id: number): void {
+		const previous = this.#pendingStyle.get(id);
+		this.#pendingStyle.delete(id);
+		this.#pendingStyleTarget.delete(id);
+
+		const row = this.#domains.get(id);
+		if (previous === undefined || !row) return;
+
+		this.#domains.set(id, { ...row, style: previous });
 		this.#pushToCanvas();
+	}
 
-		const ok = await patch(
-			url,
-			ids.map((id, index) => body(id, index))
-		);
+	/** Show a reorder drag in progress. Not pushed to the canvas, and not posted anywhere. */
+	previewOrder(collection: OrderedCollection, ids: number[]): void {
+		this.#orderPreview.set(collection, ids);
+	}
 
-		this.#committingOrder.delete(collection);
+	/**
+	 * Apply a finished reorder drag: renumber the rows so the new order is the committed one.
+	 *
+	 * @param collection - Which collection was dragged
+	 * @param ids - Every id in that collection, in the new display order
+	 */
+	applyOrder(collection: OrderedCollection, ids: number[]): void {
+		const rows = this.#rowsOf(collection);
 
-		if (ok) {
-			// Re-assert, in case a reload landed mid-request and wrote the server's old order
-			renumber(rows, ids);
-		} else {
-			for (const [id, order] of previous) {
-				const row = rows.get(id);
-				if (!row || row.order === order) continue;
-
-				rows.set(id, { ...row, order });
-			}
+		if (!this.#pendingOrder.has(collection)) {
+			this.#pendingOrder.set(
+				collection,
+				[...rows.values()].map((row) => [row.id, row.order])
+			);
 		}
 
-		this.#orderPreview.delete(collection);
+		this.#orderPreview.set(collection, ids);
+		renumber(rows, ids);
 		this.#pushToCanvas();
+	}
 
-		return ok;
+	/** The server accepted a reorder: the rows carry the new order, so the preview can go. */
+	confirmOrder(collection: OrderedCollection): void {
+		this.#pendingOrder.delete(collection);
+		this.#orderPreview.delete(collection);
+	}
+
+	/** The server rejected a reorder: put the previous order back. */
+	revertOrder(collection: OrderedCollection): void {
+		const previous = this.#pendingOrder.get(collection);
+		this.#pendingOrder.delete(collection);
+		this.#orderPreview.delete(collection);
+		if (!previous) return;
+
+		const rows = this.#rowsOf(collection);
+		for (const [id, order] of previous) {
+			const row = rows.get(id);
+			if (!row || row.order === order) continue;
+
+			rows.set(id, { ...row, order });
+		}
+
+		this.#pushToCanvas();
+	}
+
+	/** Show a lecture membership drag in progress. Not pushed to the canvas. */
+	previewLectureSubjects(lectureId: number, subjectIds: number[]): void {
+		this.#lectureSubjectPreview.set(lectureId, subjectIds);
+	}
+
+	/**
+	 * Apply a finished lecture membership drag, so the lectures view repartitions into
+	 * past/present/future without waiting for a reload.
+	 *
+	 * @param lectureId - The lecture whose subjects changed
+	 * @param subjectIds - The lecture's subjects, in display order
+	 */
+	setLectureSubjects(lectureId: number, subjectIds: number[]): void {
+		if (!this.#lectures.has(lectureId)) return;
+
+		if (!this.#pendingLectureSubjects.has(lectureId)) {
+			this.#pendingLectureSubjects.set(lectureId, this.committedSubjectIdsOf(lectureId));
+		}
+		this.#pendingLectureSubjectsTarget.set(lectureId, subjectIds);
+
+		this.#lectureSubjects.set(lectureId, subjectIds);
+		this.#lectureSubjectPreview.delete(lectureId);
+
+		// Keep the row's persisted order field in step, so it never contradicts the membership map
+		const row = this.#lectures.get(lectureId);
+		if (row) this.#lectures.set(lectureId, { ...row, subjectOrder: subjectIds });
+
+		this.#pushToCanvas();
+	}
+
+	/** The server accepted a membership change: stop holding on to the old membership. */
+	confirmLectureSubjects(lectureId: number): void {
+		this.#pendingLectureSubjects.delete(lectureId);
+		this.#pendingLectureSubjectsTarget.delete(lectureId);
+	}
+
+	/** Drop a membership drag, or put the previous membership back if it was already applied. */
+	revertLectureSubjects(lectureId: number): void {
+		this.#lectureSubjectPreview.delete(lectureId);
+
+		const previous = this.#pendingLectureSubjects.get(lectureId);
+		this.#pendingLectureSubjects.delete(lectureId);
+		this.#pendingLectureSubjectsTarget.delete(lectureId);
+		if (!previous) {
+			this.#pushToCanvas();
+			return;
+		}
+
+		this.#lectureSubjects.set(lectureId, previous);
+		this.#pushToCanvas();
+	}
+
+	/**
+	 * Record positions the canvas has already moved nodes to, so a later projection does not pull
+	 * them back to whatever the last load carried. The canvas is not pushed a new projection here:
+	 * it is the one that moved the nodes.
+	 *
+	 * @param domains - Moved domain nodes, in whole grid units
+	 * @param subjects - Moved subject nodes, in whole grid units
+	 */
+	recordPositions(domains: NodePosition[], subjects: NodePosition[]): void {
+		for (const moved of domains) {
+			const row = this.#domains.get(moved.id);
+			if (!row || (row.x === moved.x && row.y === moved.y)) continue;
+
+			this.#domains.set(moved.id, { ...row, x: moved.x, y: moved.y });
+		}
+
+		for (const moved of subjects) {
+			const row = this.#subjects.get(moved.id);
+			if (!row || (row.x === moved.x && row.y === moved.y)) continue;
+
+			this.#subjects.set(moved.id, { ...row, x: moved.x, y: moved.y });
+		}
+	}
+
+	// -----------------------------> Internals
+
+	#rowsOf(collection: OrderedCollection): SvelteMap<number, { id: number; order: number }> {
+		if (collection === 'domains') return this.#domains;
+		if (collection === 'subjects') return this.#subjects;
+
+		return this.#lectures;
 	}
 
 	#pushToCanvas(options: { recenter?: boolean } = {}): void {
@@ -476,8 +440,11 @@ export class GraphStore implements PositionSink {
 		this.#subjectEdges.clear();
 		this.#lectureSubjectPreview.clear();
 		this.#orderPreview.clear();
-		this.#committingOrder.clear();
-		this.#committingLectures.clear();
+		this.#pendingOrder.clear();
+		this.#pendingStyle.clear();
+		this.#pendingStyleTarget.clear();
+		this.#pendingLectureSubjects.clear();
+		this.#pendingLectureSubjectsTarget.clear();
 	}
 }
 
@@ -539,18 +506,4 @@ function ordered<Row extends { id: number; order: number }>(
 	}
 
 	return [...rows.values()].sort((a, b) => a.order - b.order);
-}
-
-async function patch(url: string, body: unknown): Promise<boolean> {
-	try {
-		const response = await fetch(url, {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		return response.ok;
-	} catch {
-		return false;
-	}
 }

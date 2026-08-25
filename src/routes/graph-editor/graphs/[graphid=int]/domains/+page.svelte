@@ -1,7 +1,10 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { useId } from 'bits-ui';
+	import { toast } from 'svelte-sonner';
+	import { superForm } from 'sveltekit-superforms';
 
 	import ChangeDomain from './ChangeDomain.svelte';
 	import CreateNewDomain from './CreateNewDomain.svelte';
@@ -12,18 +15,79 @@
 	import * as Grid from '$lib/components/ui/grid/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 
-	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Domain, DomainStyle } from '@prisma/client';
 	import IssueIndicator from '../IssueIndicator.svelte';
+	import type { PageData } from './$types';
 	import ChangeDomainRel from './ChangeDomainRel.svelte';
 	import DeleteDomainRel from './DeleteDomainRel.svelte';
 
-	// The graph store owns this graph: the table reads its projection, and every change to a domain
-	// goes through one of its mutations, which also keeps the preview canvas in step.
+	let { data }: { data: PageData } = $props();
+
+	// The graph store owns this graph: the table reads its projection and every change to a domain
+	// is applied there, which is what keeps the preview canvas in step without a second write.
 	const store = getGraphStore();
 	const graph = $derived(store.graph);
 	const issues = $derived(store.issues);
+
+	function failedReorder() {
+		store.revertOrder('domains');
+		toast.error('Failed to update domain order, try again later!');
+	}
+
+	// No invalidateAll: the store already carries the new order, and domain order is not something
+	// the canvas draws anyway.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderDomainsForm, {
+		id: 'reorder-domains',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (form.valid) store.confirmOrder('domains');
+			else failedReorder();
+		},
+		onError: failedReorder
+	});
+
+	// The domain being restyled and how to close the popover it was picked in, until the server
+	// answers. The previous style is the store's business, not this component's.
+	let pendingStyle: { id: number; close: () => void } | null = null;
+
+	function failedStyle() {
+		if (pendingStyle) store.revertDomainStyle(pendingStyle.id);
+		pendingStyle = null;
+		toast.error('Failed to update domain style, try again later');
+	}
+
+	// No invalidateAll: applying the style to the store already restyled the node, the edges
+	// leaving it and the subjects that inherit it, so there is nothing a refetch would add.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: styleData,
+		enhance: styleEnhance,
+		submit: submitStyle
+	} = superForm(data.domainStyleForm, {
+		id: 'change-domain-style',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (!form.valid) return failedStyle();
+			if (!pendingStyle) return;
+
+			store.confirmDomainStyle(pendingStyle.id);
+			pendingStyle.close();
+			pendingStyle = null;
+		},
+		onError: failedStyle
+	});
 
 	const domainMapping = $derived.by(() => {
 		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
@@ -48,24 +112,48 @@
 	 * @param key - The style key
 	 * @param domainIndex - The index of the domain
 	 */
-	async function handleChangeStyle(
+
+	function handleChangeStyle(
 		key: DomainStyle | null,
 		domainIndex: number,
 		triggerId: string,
 		isOpenState: ChangeStyleOpenState
 	) {
 		const domain = graph.domains[domainIndex];
-		if (!(await store.setDomainStyle(domain.id, key))) return;
 
-		closeAndFocusTrigger(triggerId, () => {
-			isOpenState.isOpen = false;
-		});
+		pendingStyle = {
+			id: domain.id,
+			close: () =>
+				closeAndFocusTrigger(triggerId, () => {
+					isOpenState.isOpen = false;
+				})
+		};
+
+		store.setDomainStyle(domain.id, key);
+
+		$styleData = { graphId: graph.id, domainId: domain.id, style: key ?? '' };
+		submitStyle();
+	}
+
+	function handleDndConsider(e: CustomEvent<{ items: { id: number }[] }>) {
+		store.previewOrder('domains', idsOf(e.detail.items));
+	}
+
+	function handleDndFinalize(e: CustomEvent<{ items: { id: number }[] }>) {
+		const domainIds = idsOf(e.detail.items);
+		store.applyOrder('domains', domainIds);
+
+		$reorderData = { graphId: graph.id, domainIds };
+		submitReorder();
 	}
 
 	function idsOf(items: { id: number }[]) {
 		return items.map((item) => item.id);
 	}
 </script>
+
+<form method="POST" action="?/reorder-domains" use:reorderEnhance hidden></form>
+<form method="POST" action="?/change-domain-style" use:styleEnhance hidden></form>
 
 <svelte:head>
 	<title>{graph.name} Domains | PRIME Graph Editor</title>
@@ -85,8 +173,8 @@
 	<Grid.ReorderRows
 		name="domain"
 		items={graph.domains}
-		onconsider={(e) => store.previewOrder('domains', idsOf(e.detail.items))}
-		onfinalize={(e) => store.commitDomainOrder(idsOf(e.detail.items))}
+		onconsider={handleDndConsider}
+		onfinalize={handleDndFinalize}
 	>
 		{#snippet children(domain, index)}
 			<Grid.Cell>

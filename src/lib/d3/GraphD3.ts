@@ -19,7 +19,7 @@ import type {
 	GroupSelection,
 	LectureData,
 	NodeData,
-	PositionSink,
+	SavePositions,
 	SVGSelection
 } from './types';
 
@@ -38,9 +38,9 @@ export class GraphD3 implements GraphCanvas {
 	data: GraphData;
 	editable: boolean;
 
-	/** Where the positions this canvas moves are recorded and persisted. Set by the graph store
-	 *  when it attaches, cleared when it detaches. */
-	positionSink: PositionSink | null = null;
+	/** Called with the nodes that moved, whenever a drag or the force simulation settles them
+	 *  somewhere new. Supplied by whoever mounts the canvas; undefined in the read-only viewer. */
+	savePositions?: SavePositions;
 
 	svg: SVGSelection;
 	background: GroupSelection;
@@ -74,15 +74,19 @@ export class GraphD3 implements GraphCanvas {
 	 * dragging/editing interactions) or the read-only public viewer
 	 * @param view - Which of domains/subjects/lectures to open on
 	 * @param lectureId - If provided, the lecture to focus when `view` is `lectures`
+	 * @param savePositions - Called with the nodes that moved, whenever a drag or the force
+	 * simulation settles them somewhere new. Omitted in the read-only public viewer.
 	 */
 	constructor(
 		element: SVGSVGElement,
 		data: GraphData,
 		editable: boolean,
 		view: GraphView = GraphView.domains,
-		lectureId: number | null = null
+		lectureId: number | null = null,
+		savePositions?: SavePositions
 	) {
 		this.editable = editable;
+		this.savePositions = savePositions;
 
 		// Set zoom lock to false if editable
 		if (this.editable) {

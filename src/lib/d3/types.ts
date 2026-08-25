@@ -5,8 +5,8 @@ import * as settings from '$lib/settings';
 export { NodeType };
 export type {
 	GraphCanvas,
-	NodePositions,
-	PositionSink,
+	NodePosition,
+	SavePositions,
 	GraphData,
 	NodeData,
 	EdgeData,
@@ -119,25 +119,25 @@ type NodeSelection = d3.Selection<SVGGElement, NodeData, d3.BaseType, unknown>;
 type EdgeSelection = d3.Selection<SVGLineElement, EdgeData, d3.BaseType, unknown>;
 
 // -----------------------------> Canvas ports
-// The canvas is imperative and the graph store is reactive, so they meet through these two narrow
+// The canvas is imperative while the graph store is reactive, so they meet through these narrow
 // types rather than importing each other.
 
-/** What the graph store needs from a mounted canvas: somewhere to push a new projection, and a
- * slot to hand itself to as the canvas's position sink. Implemented by GraphD3. */
+/** What the graph store needs from a mounted canvas: somewhere to push a new projection whenever
+ * the model changes. Implemented by GraphD3. */
 type GraphCanvas = {
-	positionSink: PositionSink | null;
 	applyData(data: GraphData, options?: { recenter?: boolean }): void;
 };
 
-/** Node positions the canvas has moved and wants persisted, split by kind since domains and
- * subjects are stored (and PATCHed) separately. */
-type NodePositions = {
-	domains: { id: number; x: number; y: number }[];
-	subjects: { id: number; x: number; y: number }[];
+/** A node's persisted canvas position, in whole grid units. */
+type NodePosition = {
+	id: number;
+	x: number;
+	y: number;
 };
 
-/** Where the canvas sends the positions it has moved. Implemented by the graph store, which owns
- * both the rows they belong to and the request that persists them. */
-type PositionSink = {
-	persistPositions(positions: NodePositions): void;
-};
+/**
+ * Persists the canvas positions of moved nodes. Supplied by whoever mounts the graph, so the
+ * D3 layer doesn't have to know how a position reaches the server; left undefined in the
+ * read-only public viewer, where nodes can't be moved.
+ */
+type SavePositions = (domains: NodePosition[], subjects: NodePosition[]) => void;

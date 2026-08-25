@@ -13,8 +13,11 @@ import type { DomainRow, EdgeKey, GraphPayload, LectureRow, SubjectRow } from '.
  * here are not mistaken for reactive state.
  */
 
-/** Whether two rows carry the same values. Dates are compared by value rather than identity, since
- *  the loader revives a new Date on every load. */
+/**
+ * Whether two rows carry the same values. Dates and scalar lists (`Lecture.subjectOrder`) are
+ * compared by value rather than identity, since every load revives new objects for them and
+ * comparing by identity would make every row look changed.
+ */
 export function sameRow<Row extends object>(a: Row, b: Row): boolean {
 	const keys = Object.keys(a) as (keyof Row)[];
 	if (keys.length !== Object.keys(b).length) return false;
@@ -23,6 +26,9 @@ export function sameRow<Row extends object>(a: Row, b: Row): boolean {
 		const left = a[key];
 		const right = b[key];
 		if (left instanceof Date && right instanceof Date) return left.getTime() === right.getTime();
+		if (Array.isArray(left) && Array.isArray(right)) {
+			return left.length === right.length && left.every((item, index) => item === right[index]);
+		}
 
 		return left === right;
 	});
@@ -151,12 +157,17 @@ export function subjectRow(subject: GraphPayload['subjects'][number]): SubjectRo
 	};
 }
 
-/** One lecture row, without its subjects. */
+/**
+ * One lecture row, without its subjects. `subjectOrder` is the persisted display order of those
+ * subjects; the loader sorts `lecture.subjects` by it, so the store reads the order from there and
+ * keeps this field only so the row stays a faithful copy of the database row.
+ */
 export function lectureRow(lecture: GraphPayload['lectures'][number]): LectureRow {
 	return {
 		id: lecture.id,
 		name: lecture.name,
 		order: lecture.order,
+		subjectOrder: lecture.subjectOrder,
 		graphId: lecture.graphId,
 		createdAt: lecture.createdAt,
 		updatedAt: lecture.updatedAt

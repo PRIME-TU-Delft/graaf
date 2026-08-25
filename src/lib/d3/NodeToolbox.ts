@@ -14,9 +14,8 @@ export { NodeToolbox };
 
 /**
  * Renders and manages the interactive behavior of graph nodes (domains and subjects): creation,
- * drag-to-reposition, position/style/text updates, highlighting, and handing moved positions to
- * the graph's position sink. Used by GraphD3 and the other Toolboxes rather than driving the
- * canvas directly.
+ * drag-to-reposition, position/style/text updates, highlighting, and saving positions back to
+ * the server. Used by GraphD3 and the other Toolboxes rather than driving the canvas directly.
  */
 class NodeToolbox {
 	/**
@@ -114,7 +113,7 @@ class NodeToolbox {
 					}
 				})
 
-				.on('end', async function (_, node) {
+				.on('end', function (_, node) {
 					const selection = d3.select<SVGGElement, NodeData>(this);
 					node.x = Math.round(node.x);
 					node.y = Math.round(node.y);
@@ -128,28 +127,34 @@ class NodeToolbox {
 	}
 
 	/**
-	 * Hand the current x/y position of every node in the selection to the graph's position sink,
-	 * which records them on the graph store's rows and persists them. Split by node type here,
-	 * since a selection is not guaranteed to hold only domains or only subjects and the two are
-	 * stored separately.
+	 * Hand the current x/y position of every node in the selection to the graph's savePositions
+	 * callback, grouped into domains and subjects since they are separate tables. Positions are
+	 * rounded to whole grid units, matching the integer columns they end up in. No-op when the
+	 * graph has no callback, which is the case in the read-only public viewer.
 	 *
 	 * @param selection - The nodes whose positions should be saved; may contain a mix of domain
 	 * and subject nodes
-	 * @param graph - The owning graph instance, whose sink the positions are sent to
+	 * @param graph - The owning graph instance, which knows how to persist the positions
 	 */
 	static save(selection: NodeSelection, graph: GraphD3) {
-		const position = (node: NodeData) => ({ id: node.id, x: node.x, y: node.y });
+		if (!graph.savePositions) return;
 
-		graph.positionSink?.persistPositions({
-			domains: selection
+		const position = (node: NodeData) => ({
+			id: node.id,
+			x: Math.round(node.x),
+			y: Math.round(node.y)
+		});
+
+		graph.savePositions(
+			selection
 				.filter((node) => node.type === NodeType.DOMAIN)
 				.data()
 				.map(position),
-			subjects: selection
+			selection
 				.filter((node) => node.type === NodeType.SUBJECT)
 				.data()
 				.map(position)
-		});
+		);
 	}
 
 	/**

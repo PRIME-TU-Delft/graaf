@@ -4,21 +4,19 @@
 	import { cn } from '$lib/utils';
 	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { Ellipsis, MoveVertical } from '@lucide/svelte';
-	import { dragHandle, dragHandleZone } from 'svelte-dnd-action';
+	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
+	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import { superForm } from 'sveltekit-superforms';
 	import IssueIndicator from '../IssueIndicator.svelte';
+	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
 	import ChangeLecture from './ChangeLecture.svelte';
 	import CreateNewLecture from './CreateNewLecture.svelte';
 	import DeleteLecture from './DeleteLecture.svelte';
 	import LectureSubject from './LectureSubject.svelte';
 
-	// The graph store owns this graph: the list reads its projection, and reordering lectures (or
-	// moving a subject between them) goes through its mutations, which also keep the preview canvas
-	// in step.
-	const store = getGraphStore();
-	const graph = $derived(store.graph);
-	const issues = $derived(store.issues);
+	let { data }: { data: PageData } = $props();
 
 	class ChangeLectureClass {
 		open = $state(false);
@@ -26,10 +24,55 @@
 
 	const flipDurationMs = 300;
 
+	// The graph store owns this graph: the list reads its projection and reordering (or moving a
+	// subject between lectures) is applied there, which keeps the preview canvas in step.
+	const store = getGraphStore();
+	const graph = $derived(store.graph);
+	const issues = $derived(store.issues);
+
+	function failedReorder() {
+		store.revertOrder('lectures');
+		toast.error('Error while reordering lectures');
+	}
+
+	// No invalidateAll: the store already carries the new order, and lecture order is not something
+	// the canvas draws anyway.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderLecturesForm, {
+		id: 'reorder-lectures',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (form.valid) store.confirmOrder('lectures');
+			else failedReorder();
+		},
+		onError: failedReorder
+	});
+
+	function handleDndConsider(e: CustomEvent<DndEvent<{ id: number }>>) {
+		store.previewOrder('lectures', idsOf(e.detail.items));
+	}
+
+	function handleDndFinalize(e: CustomEvent<DndEvent<{ id: number }>>) {
+		const lectureIds = idsOf(e.detail.items);
+		store.applyOrder('lectures', lectureIds);
+
+		$reorderData = { graphId: graph.id, lectureIds };
+		submitReorder();
+	}
+
 	function idsOf(items: { id: number }[]) {
 		return items.map((item) => item.id);
 	}
 </script>
+
+<form method="POST" action="?/reorder-lectures" use:reorderEnhance hidden></form>
 
 <svelte:head>
 	<title>{graph.name} Lectures | PRIME Graph Editor</title>
@@ -40,8 +83,8 @@
 <div
 	class="space-y-3 rounded !outline-purple-300"
 	use:dragHandleZone={{ items: graph.lectures, flipDurationMs, type: 'lecture' }}
-	onconsider={(e) => store.previewOrder('lectures', idsOf(e.detail.items))}
-	onfinalize={(e) => store.commitLectureOrder(idsOf(e.detail.items))}
+	onconsider={handleDndConsider}
+	onfinalize={handleDndFinalize}
 >
 	{#each graph.lectures as lecture (lecture.id)}
 		{@const changeLecture = new ChangeLectureClass()}

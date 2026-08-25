@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { GraphStore } from './graphStore.svelte';
 
-import type { GraphCanvas, GraphData, PositionSink } from '$lib/d3/types';
+import type { GraphCanvas, GraphData } from '$lib/d3/types';
 import type { GraphPayload } from './model';
-
-vi.mock('svelte-sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const timestamps = { createdAt: new Date(0), updatedAt: new Date(0) };
 
@@ -71,14 +69,21 @@ function payload(): GraphPayload {
 			}
 		],
 		lectures: [
-			{ id: 1, name: 'lecture 1', order: 0, graphId: 1, ...timestamps, subjects: [{ id: 1 }] }
+			{
+				id: 1,
+				name: 'lecture 1',
+				order: 0,
+				subjectOrder: [1],
+				graphId: 1,
+				...timestamps,
+				subjects: [{ id: 1 }]
+			}
 		]
 	};
 }
 
 /** Stands in for GraphD3, recording what the store pushes at it. */
 class FakeCanvas implements GraphCanvas {
-	positionSink: PositionSink | null = null;
 	pushes: { data: GraphData; recenter: boolean }[] = [];
 
 	applyData(data: GraphData, options: { recenter?: boolean } = {}) {
@@ -88,18 +93,6 @@ class FakeCanvas implements GraphCanvas {
 	get last(): GraphData {
 		return this.pushes[this.pushes.length - 1].data;
 	}
-}
-
-let requests: { url: string; body: unknown }[] = [];
-
-/** Stub fetch, failing every request once `failing` is set, and recording what was sent. */
-function stubFetch(failing = false) {
-	requests = [];
-	vi.stubGlobal('fetch', async (url: string, init: RequestInit) => {
-		requests.push({ url, body: JSON.parse(String(init.body)) });
-
-		return { ok: !failing } as Response;
-	});
 }
 
 function attached(): { store: GraphStore; canvas: FakeCanvas } {
@@ -112,10 +105,6 @@ function attached(): { store: GraphStore; canvas: FakeCanvas } {
 
 const styleOf = (data: GraphData, uuid: string) =>
 	[...data.domain_nodes, ...data.subject_nodes].find((node) => node.uuid === uuid)?.style;
-
-beforeEach(() => {
-	stubFetch();
-});
 
 describe('GraphStore', () => {
 	describe('hydration', () => {
@@ -133,11 +122,9 @@ describe('GraphStore', () => {
 			expect(store.graph.lectures[0].subjects.map((subject) => subject.id)).toEqual([1]);
 		});
 
-		it('validates the projection without being asked twice', () => {
+		it('owns validation instead of each page recomputing it', () => {
 			const store = new GraphStore(payload());
 
-			// domain 2 has no subject styling issue but domain relations are validated, so this only
-			// has to come back shaped like Issues to prove the store owns validation now
 			expect(store.issues.domainIssues).toBeDefined();
 			expect(store.issues.lectureIssues).toBeDefined();
 		});
@@ -200,122 +187,111 @@ describe('GraphStore', () => {
 	});
 
 	describe('domain style', () => {
-		it('restyles the domain, its edges and the subjects that inherit from it', async () => {
+		it('restyles the domain, its edges and the subjects that inherit from it', () => {
 			const { store, canvas } = attached();
 
-			await store.setDomainStyle(1, 'MYSTERIOUS_BLUE');
+			store.setDomainStyle(1, 'MYSTERIOUS_BLUE');
 
 			expect(store.graph.domains[0].style).toBe('MYSTERIOUS_BLUE');
-			expect(requests).toEqual([
-				{ url: '/api/domains/style', body: { domainId: 1, style: 'MYSTERIOUS_BLUE' } }
-			]);
 
 			// One write, one projection: the subject inheriting the style and the edge leaving the
-			// domain follow without a second call
+			// domain follow without a second update call
 			expect(styleOf(canvas.last, 'domain-1')).toBe('MYSTERIOUS_BLUE');
 			expect(styleOf(canvas.last, 'subject-1')).toBe('MYSTERIOUS_BLUE');
 			expect(canvas.last.domain_edges[0].source.style).toBe('MYSTERIOUS_BLUE');
 		});
 
-		it('rolls the style back when the server rejects it', async () => {
-			stubFetch(true);
+		it('puts the old style back when the server rejects it', () => {
 			const { store, canvas } = attached();
 
-			await store.setDomainStyle(1, 'MYSTERIOUS_BLUE');
+			store.setDomainStyle(1, 'MYSTERIOUS_BLUE');
+			store.revertDomainStyle(1);
 
 			expect(store.graph.domains[0].style).toBe('SUNNY_YELLOW');
 			expect(styleOf(canvas.last, 'subject-1')).toBe('SUNNY_YELLOW');
 		});
+
+		it('keeps the applied style once confirmed', () => {
+			const { store } = attached();
+
+			store.setDomainStyle(1, 'MYSTERIOUS_BLUE');
+			store.confirmDomainStyle(1);
+			store.revertDomainStyle(1); // nothing left to revert
+
+			expect(store.graph.domains[0].style).toBe('MYSTERIOUS_BLUE');
+		});
 	});
 
 	describe('reorder', () => {
-		it('shows a drag in progress without persisting or pushing it', () => {
+		it('shows a drag in progress without pushing it at the canvas', () => {
 			const { store, canvas } = attached();
 
 			store.previewOrder('domains', [2, 1]);
 
 			expect(store.domains.map((domain) => domain.id)).toEqual([2, 1]);
-			expect(requests).toHaveLength(0);
 			expect(canvas.pushes).toHaveLength(0);
 		});
 
-		it('renumbers the rows and persists a committed drag', async () => {
+		it('renumbers the rows when a drag is applied', () => {
 			const { store, canvas } = attached();
 
 			store.previewOrder('domains', [2, 1]);
-			await store.commitDomainOrder([2, 1]);
+			store.applyOrder('domains', [2, 1]);
+			store.confirmOrder('domains');
 
 			expect(store.domains.map((domain) => domain.id)).toEqual([2, 1]);
 			expect(store.domains.map((domain) => domain.order)).toEqual([0, 1]);
-			expect(requests).toEqual([
-				{
-					url: '/api/domains/order',
-					body: [
-						{ domainId: 2, newOrder: 0 },
-						{ domainId: 1, newOrder: 1 }
-					]
-				}
-			]);
 			expect(canvas.pushes.length).toBeGreaterThan(0);
 		});
 
-		it('restores the previous order when the server rejects it', async () => {
-			stubFetch(true);
+		it('restores the previous order when the server rejects it', () => {
 			const { store } = attached();
 
-			await store.commitSubjectOrder([2, 1]);
+			store.applyOrder('subjects', [2, 1]);
+			store.revertOrder('subjects');
 
 			expect(store.subjects.map((subject) => subject.id)).toEqual([1, 2]);
+			expect(store.subjects.map((subject) => subject.order)).toEqual([0, 1]);
 		});
 
-		// A reload landing mid-request still carries the order the server had before the drag, so
-		// hydrating on top of an in-flight commit must not pull the display back to it
-		it('survives a reload that lands while the commit is in flight', async () => {
+		// A reload landing before the server answers still carries the order it had before the
+		// drag, so hydrating on top of a pending reorder must not pull the display back to it
+		it('survives a reload that lands while the reorder is still pending', () => {
 			const { store } = attached();
 
-			const committing = store.commitDomainOrder([2, 1]);
+			store.applyOrder('domains', [2, 1]);
 			store.hydrate(payload());
+
 			expect(store.domains.map((domain) => domain.id)).toEqual([2, 1]);
 
-			await committing;
+			store.confirmOrder('domains');
 			expect(store.domains.map((domain) => domain.id)).toEqual([2, 1]);
-			expect(store.domains.map((domain) => domain.order)).toEqual([0, 1]);
 		});
 	});
 
 	describe('lecture membership', () => {
-		it('repartitions the canvas when a subject moves into a lecture', async () => {
+		it('repartitions the canvas when a subject moves into a lecture', () => {
 			const { store, canvas } = attached();
 
-			await store.commitLectureSubjects(1, [1, 2]);
+			store.setLectureSubjects(1, [1, 2]);
 
 			expect(store.graph.lectures[0].subjects.map((subject) => subject.id)).toEqual([1, 2]);
 			expect(canvas.last.lectures[0].present_nodes.map((node) => node.id)).toEqual([1, 2]);
-			expect(requests[0].url).toBe('/api/lectures/order-subjects');
+			// The row's persisted order field follows the membership map
+			expect(store.graph.lectures[0].subjectOrder).toEqual([1, 2]);
 		});
 
-		it('restores the previous membership when the server rejects it', async () => {
-			stubFetch(true);
+		it('restores the previous membership when the server rejects it', () => {
 			const { store, canvas } = attached();
 
-			await store.commitLectureSubjects(1, [1, 2]);
+			store.setLectureSubjects(1, [1, 2]);
+			store.revertLectureSubjects(1);
 
 			expect(store.committedSubjectIdsOf(1)).toEqual([1]);
 			expect(canvas.last.lectures[0].present_nodes.map((node) => node.id)).toEqual([1]);
 		});
 
-		it('survives a reload that lands while the membership commit is in flight', async () => {
-			const { store } = attached();
-
-			const committing = store.commitLectureSubjects(1, [1, 2]);
-			store.hydrate(payload());
-			expect(store.subjectIdsOf(1)).toEqual([1, 2]);
-
-			await committing;
-			expect(store.committedSubjectIdsOf(1)).toEqual([1, 2]);
-		});
-
-		it('drops a reverted drag without touching the server', () => {
+		it('drops a preview that was never applied', () => {
 			const { store } = attached();
 
 			store.previewLectureSubjects(1, [1, 2]);
@@ -323,46 +299,60 @@ describe('GraphStore', () => {
 
 			store.revertLectureSubjects(1);
 			expect(store.subjectIdsOf(1)).toEqual([1]);
-			expect(requests).toHaveLength(0);
+		});
+
+		it('survives a reload that lands while the membership change is still pending', () => {
+			const { store } = attached();
+
+			store.setLectureSubjects(1, [1, 2]);
+			store.hydrate(payload());
+
+			expect(store.subjectIdsOf(1)).toEqual([1, 2]);
+
+			store.confirmLectureSubjects(1);
+			expect(store.committedSubjectIdsOf(1)).toEqual([1, 2]);
 		});
 	});
 
 	describe('positions', () => {
-		it('records moved positions on the rows and persists them per kind', async () => {
+		it('records moved positions on the rows without pushing them back at the canvas', () => {
 			const { store, canvas } = attached();
 
-			await store.persistPositions({
-				domains: [{ id: 1, x: 3.4, y: -2.6 }],
-				subjects: []
-			});
+			store.recordPositions([{ id: 1, x: 3, y: -3 }], []);
 
 			expect(store.graph.domains[0].x).toBe(3);
 			expect(store.graph.domains[0].y).toBe(-3);
-			expect(requests).toEqual([
-				{ url: '/api/domains/position', body: [{ domainId: 1, x: 3, y: -3 }] }
-			]);
 
 			// The canvas moved these nodes itself, so pushing them back at it would be busywork
 			expect(canvas.pushes).toHaveLength(0);
 		});
+
+		it('keeps recorded positions through a later projection', () => {
+			const { store, canvas } = attached();
+
+			store.recordPositions([{ id: 1, x: 7, y: 8 }], []);
+			store.setDomainStyle(1, null);
+
+			const node = canvas.last.domain_nodes.find((n) => n.id === 1);
+			expect([node?.x, node?.y]).toEqual([7, 8]);
+		});
 	});
 
 	describe('canvas binding', () => {
-		it('hands itself to the canvas as its position sink, and takes it back on detach', () => {
+		it('stops pushing at a canvas that detached', () => {
 			const { store, canvas } = attached();
-
-			expect(canvas.positionSink).toBe(store);
 
 			store.detachCanvas(canvas);
-			expect(canvas.positionSink).toBeNull();
+			store.setDomainStyle(1, null);
+
+			expect(canvas.pushes).toHaveLength(0);
 		});
 
-		it('ignores a detach from a canvas it is not bound to', async () => {
+		it('ignores a detach from a canvas it is not bound to', () => {
 			const { store, canvas } = attached();
-			const replaced = new FakeCanvas();
 
-			store.detachCanvas(replaced);
-			await store.setDomainStyle(1, null);
+			store.detachCanvas(new FakeCanvas());
+			store.setDomainStyle(1, null);
 
 			expect(canvas.pushes.length).toBeGreaterThan(0);
 		});

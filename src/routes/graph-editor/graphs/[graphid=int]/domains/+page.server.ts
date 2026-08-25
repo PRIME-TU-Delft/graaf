@@ -6,21 +6,31 @@ import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
 	domainRelSchema,
-	domainSchema
+	domainSchema,
+	domainStyleSchema,
+	reorderDomainsSchema
 } from '$lib/zod/domainSchema.js';
-import type { ServerLoad } from '@sveltejs/kit';
+import { nodePositionActions } from '../nodePositions';
+import type { PageServerLoad } from './$types';
 
-export const load: ServerLoad = async () => {
+export const load: PageServerLoad = async ({ params }) => {
 	return {
+		// Just this page's crumb; NavigationBar appends it to the trail the layout built. Kept out
+		// of the layout load (and out of `await parent()`, which would force that load to re-run)
+		// so switching tabs doesn't refetch the graph and rebuild the canvas.
+		breadcrumbLeaf: { name: 'Domains', url: `/graph-editor/graphs/${params.graphid}/domains` },
 		newDomainForm: await superValidate(zod(domainSchema)),
 		deleteDomainForm: await superValidate(zod(deleteDomainSchema)),
 		newDomainRelForm: await superValidate(zod(domainRelSchema)),
-		changeDomainRelForm: await superValidate(zod(changeDomainRelSchema))
+		changeDomainRelForm: await superValidate(zod(changeDomainRelSchema)),
+		reorderDomainsForm: await superValidate(zod(reorderDomainsSchema)),
+		domainStyleForm: await superValidate(zod(domainStyleSchema))
 	};
 };
 
 // ACTIONS
 export const actions = {
+	...nodePositionActions,
 	'add-domain-to-graph': async (event) => {
 		const form = await superValidate(event, zod(domainSchema));
 		return DomainActions.addDomainToGraph(await getUser(event), form);
@@ -28,6 +38,14 @@ export const actions = {
 	'change-domain-in-graph': async (event) => {
 		const form = await superValidate(event, zod(domainSchema));
 		return DomainActions.changeDomain(await getUser(event), form);
+	},
+	'change-domain-style': async (event) => {
+		const form = await superValidate(event, zod(domainStyleSchema));
+		return DomainActions.changeDomainStyle(await getUser(event), form);
+	},
+	'reorder-domains': async (event) => {
+		const form = await superValidate(event, zod(reorderDomainsSchema));
+		return DomainActions.reorderDomains(await getUser(event), form);
 	},
 	'delete-domain': async (event) => {
 		const form = await superValidate(event, zod(deleteDomainSchema));

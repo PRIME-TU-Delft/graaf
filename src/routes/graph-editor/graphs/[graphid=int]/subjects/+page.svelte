@@ -8,6 +8,9 @@
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from '@lucide/svelte/icons/link';
+	import { toast } from 'svelte-sonner';
+	import { superForm } from 'sveltekit-superforms';
+	import type { PageData } from './$types';
 
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import ChangeDomainForSubject from './ChangeDomainForSubject.svelte';
@@ -17,11 +20,38 @@
 	import CreateNewSubjectRel from './CreateNewSubjectRel.svelte';
 	import DeleteSubjectRel from './DeleteSubjectRel.svelte';
 
-	// The graph store owns this graph: the table reads its projection, and reordering goes through
-	// its mutations, which also keep the preview canvas in step.
+	let { data }: { data: PageData } = $props();
+
+	// The graph store owns this graph: the table reads its projection and reordering is applied
+	// there, which is what keeps the preview canvas in step without a second write.
 	const store = getGraphStore();
 	const graph = $derived(store.graph);
 	const issues = $derived(store.issues);
+
+	function failedReorder() {
+		store.revertOrder('subjects');
+		toast.error('Failed to update subject order, try again later!');
+	}
+
+	// No invalidateAll: the store already carries the new order, and subject order is not something
+	// the canvas draws anyway.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderSubjectsForm, {
+		id: 'reorder-subjects',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (form.valid) store.confirmOrder('subjects');
+			else failedReorder();
+		},
+		onError: failedReorder
+	});
 
 	const subjectMapping = $derived.by(() => {
 		const map: { id: string; sourceSubject: Subject; targetSubject: Subject }[] = [];
@@ -37,10 +67,24 @@
 		return map;
 	});
 
+	function handleDndConsider(e: CustomEvent<{ items: { id: number }[] }>) {
+		store.previewOrder('subjects', idsOf(e.detail.items));
+	}
+
+	function handleDndFinalize(e: CustomEvent<{ items: { id: number }[] }>) {
+		const subjectIds = idsOf(e.detail.items);
+		store.applyOrder('subjects', subjectIds);
+
+		$reorderData = { graphId: graph.id, subjectIds };
+		submitReorder();
+	}
+
 	function idsOf(items: { id: number }[]) {
 		return items.map((item) => item.id);
 	}
 </script>
+
+<form method="POST" action="?/reorder-subjects" use:reorderEnhance hidden></form>
 
 <svelte:head>
 	<title>{graph.name} Subjects | PRIME Graph Editor</title>
@@ -60,8 +104,8 @@
 	<Grid.ReorderRows
 		name="subject"
 		items={graph.subjects}
-		onconsider={(e) => store.previewOrder('subjects', idsOf(e.detail.items))}
-		onfinalize={(e) => store.commitSubjectOrder(idsOf(e.detail.items))}
+		onconsider={handleDndConsider}
+		onfinalize={handleDndFinalize}
 	>
 		{#snippet children(subject)}
 			<Grid.Cell>

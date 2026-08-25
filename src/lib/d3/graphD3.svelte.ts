@@ -1,5 +1,6 @@
 import { GraphD3 } from '$lib/d3/GraphD3';
 
+import type { SavePositions } from '$lib/d3/types';
 import type { GraphStore } from '$lib/graph/graphStore.svelte';
 
 /**
@@ -23,6 +24,8 @@ class GraphD3Store {
 	 * @param options.editable - Whether this is the authenticated editor or the read-only viewer
 	 * @param options.view - Which view to open on
 	 * @param options.lectureID - The lecture to focus, when `view` is 'LECTURES'
+	 * @param options.savePositions - Called with the nodes a drag or the simulation moved. Omitted
+	 * in the read-only public viewer, where nodes cannot be moved.
 	 * @returns The mounted canvas, to hand back to `unmount` when it goes away
 	 */
 	mount(
@@ -32,6 +35,7 @@ class GraphD3Store {
 			editable: boolean;
 			view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
 			lectureID: number | null;
+			savePositions?: SavePositions;
 		}
 	): GraphD3 {
 		const canvas = new GraphD3(
@@ -39,7 +43,8 @@ class GraphD3Store {
 			store.graphData,
 			options.editable,
 			options.view,
-			options.lectureID
+			options.lectureID,
+			options.savePositions
 		);
 
 		store.attachCanvas(canvas);

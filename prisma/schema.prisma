@@ -221,10 +221,11 @@ model Subject {
 }
 
 model Lecture {
-	id      Int    @id @default(autoincrement())
-	name    String @default("")
-	order   Int
-	graphId Int
+	id           Int    @id @default(autoincrement())
+	name         String @default("")
+	order        Int
+	subjectOrder Int[]  @default([]) // Display order of `subjects` within this lecture, as subject ids
+	graphId      Int
 
 	graph    Graph     @relation("GraphLecture", fields: [graphId], references: [id], onDelete: Cascade)
 	subjects Subject[] @relation("LectureSubject")

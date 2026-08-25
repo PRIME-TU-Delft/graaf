@@ -34,7 +34,15 @@ function subject(id: number, extra: Partial<SubjectRow> = {}): SubjectRow {
 }
 
 function lecture(id: number, subjectIds: number[]): LectureRow & { subjectIds: number[] } {
-	return { id, name: `lecture ${id}`, order: id, graphId: 1, ...timestamps, subjectIds };
+	return {
+		id,
+		name: `lecture ${id}`,
+		order: id,
+		subjectOrder: subjectIds,
+		graphId: 1,
+		...timestamps,
+		subjectIds
+	};
 }
 
 /**

@@ -15,9 +15,13 @@ The design below is what was built, with three deliberate changes from the first
   components were migrated off. The tables, the form components and `GraphValidator` were all
   written against the loader's payload, so keeping that shape as a derived read cut the change from
   ~15 components to 6, and it removes the stale-duplicate problem in finding 7 by being read-only.
-- Node positions go through the store too (`persistPositions`), which turned out to be required
-  rather than optional: once the canvas is updated incrementally instead of rebuilt, a projection
-  built from stale rows would pull dragged nodes back to their last loaded position.
+- Node positions go through the store too, which turned out to be required rather than optional:
+  once the canvas is updated incrementally instead of rebuilt, a projection built from stale rows
+  would pull dragged nodes back to their last loaded position.
+
+It was then merged with a much-changed `main` (see "Integration with main" at the bottom): the
+`src/routes/api` tree is gone, every mutation is a superforms action, and the store no longer talks
+to the server at all.
 
 ## What the seam looked like
 
@@ -266,16 +270,21 @@ export class GraphStore implements PositionSink {
 	attachCanvas(canvas: GraphCanvas): void; // also hands itself over as the position sink
 	detachCanvas(canvas: GraphCanvas): void;
 
-	// --- mutations: model, then canvas, then server, rollback on failure
-	setDomainStyle(id: number, style: DomainStyle | null): Promise<boolean>;
+	// --- mutations: applied to the model and pushed at the canvas straight away, then confirmed
+	// or reverted when the server answers. The request itself belongs to the component, which is
+	// where superforms and its form element live; this class never talks to the server.
+	setDomainStyle(id: number, style: DomainStyle | null): void;
+	confirmDomainStyle(id: number): void;
+	revertDomainStyle(id: number): void;
 	previewOrder(collection: OrderedCollection, ids: number[]): void; // drag in flight
-	commitDomainOrder(ids: number[]): Promise<boolean>;
-	commitSubjectOrder(ids: number[]): Promise<boolean>;
-	commitLectureOrder(ids: number[]): Promise<boolean>;
+	applyOrder(collection: OrderedCollection, ids: number[]): void; // drag finished
+	confirmOrder(collection: OrderedCollection): void;
+	revertOrder(collection: OrderedCollection): void;
 	previewLectureSubjects(lectureId: number, subjectIds: number[]): void;
+	setLectureSubjects(lectureId: number, subjectIds: number[]): void;
+	confirmLectureSubjects(lectureId: number): void;
 	revertLectureSubjects(lectureId: number): void;
-	commitLectureSubjects(lectureId: number, subjectIds: number[]): Promise<boolean>;
-	persistPositions(positions: NodePositions): Promise<void>;
+	recordPositions(domains: NodePosition[], subjects: NodePosition[]): void;
 }
 
 /** Create the store and put it in context. Called during render, so SSR has the graph too. */
@@ -283,27 +292,24 @@ export function setGraphStore(payload: GraphPayload): GraphStore;
 export function getGraphStore(): GraphStore;
 ```
 
-Each mutation returns whether the server accepted it, so a caller that has UI to close (the style
-popover) can wait for the answer instead of guessing. Optimistic update, request, toast and rollback
-all live in the method: that is the logic that used to be inlined in each page handler, and moving
-it here is the deletion test the issue asks for.
+A mutation is applied optimistically and stays pending until the component reports what the server
+said, which is the only place the previous value is remembered. While a change is pending, `hydrate`
+will not overwrite it: a reload that lands in that window is behind the change, not ahead of it. That
+is the same hazard `main`'s `isLocalUpdate` flag guards against, handled once in the owner instead of
+per page.
 
 The canvas and the store meet through two narrow types in `src/lib/d3/types.ts` rather than
 importing each other:
 
 ```ts
 type GraphCanvas = {
-	positionSink: PositionSink | null;
 	applyData(data: GraphData, options?: { recenter?: boolean }): void;
 };
-
-type NodePositions = {
-	domains: { id: number; x: number; y: number }[];
-	subjects: { id: number; x: number; y: number }[];
-};
-
-type PositionSink = { persistPositions(positions: NodePositions): void };
 ```
+
+Positions travel the other way through `SavePositions`, which `main` introduced independently and
+this branch adopted: the canvas calls it, `GraphRenderer` records the move on the store and posts
+the `update-node-positions` action.
 
 ## Files
 
@@ -339,8 +345,9 @@ Changed:
 - `.../domains/DeleteDomainRel.svelte`, `subjects/DeleteSubjectRel.svelte` - `graph: Graph` instead
   of `PageData['graph']`, since both only ever read `graph.id`
 
-Untouched, as planned: `GraphValidator`, every form action, every `src/routes/api/**` endpoint, and
-the internals of `NodeToolbox` / `EdgeToolbox` / `CameraToolbox` / `BackgroundToolbox`.
+Untouched: `GraphValidator`, every server action and zod schema, and the internals of `EdgeToolbox` /
+`CameraToolbox` / `BackgroundToolbox`. (`src/routes/api/**` no longer exists; `main` replaced it with
+form actions.)
 
 ## Change, phase by phase
 
@@ -422,10 +429,11 @@ discarded. It now restores, pins, and saves the restored positions.
 ## Verification
 
 ```bash
-pnpm check   # 0 errors, 0 warnings
-pnpm lint    # prettier + eslint clean
-pnpm test    # 29 unit tests
-pnpm build   # succeeds, SSR included
+pnpm check             # 0 errors, 0 warnings
+pnpm lint              # prettier + eslint clean
+pnpm test              # 50 unit tests
+pnpm test:integration  # 107 tests, including main's reordering/node-position coverage
+pnpm build             # succeeds, SSR included
 ```
 
 The unit tests cover what does not need a browser: the reference-identity invariant and its
@@ -487,25 +495,33 @@ Still worth watching in the manual pass:
   instance). Reachable in theory by dragging a canvas node while a dialog is open, which a single
   pointer cannot do; if it turns out to matter, memoise per row rather than per collection.
 
-## Interaction with branch 62 (graph editor reactivity)
+## Integration with main
 
-`62-graph-editor-reactivity` is not merged yet and touches five of the same files. Both branches
-come off `main`, so nothing is merged yet either way. Fix by fix:
+`#147` (branch 62) and the reorder work landed on `main` while this branch was in review, and `main`
+moved further than 62 did. What it brought:
 
-| Branch 62 fix                                                                                        | Status here                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GraphRenderer split into two effects, view untracked in the data effect                              | Superseded, but its race fix was adopted. The canvas is mounted once here instead of being reinitialised on data change, so the data effect has no reason to exist; the view effect keeps 62's tracking of `graphView.state`, which is what lets a view change requested mid-transition catch up rather than be dropped.                                                                                                                                                                                                                                                                                  |
-| `setDomainStyle` also restyles outgoing edges                                                        | Subsumed. `setDomainStyle` is gone; a restyle re-projects, and the d3 update join restyles the node, its edges and the subjects that inherit the domain's style. 62 fixed the edges; the inheriting subjects were still stale.                                                                                                                                                                                                                                                                                                                                                                            |
-| Reorder through form actions, guarded by `isLocalUpdate` on an `$effect.pre`                         | Overlapping, and a decision. Reorder here stays on the `/api/*/order` endpoints but goes through the store, which owns the optimistic renumber and the rollback, so there is no second copy to clobber and no full graph refetch per drag. The clobber 62's flag guards is closed in `#commitOrder` / `commitLectureSubjects` instead: an in-flight commit keeps its drag preview, `hydrate` leaves that preview alone, and the commit re-asserts the order once the server confirms. If 62's form actions are kept instead, the three `commit*Order` methods and the reorder endpoints go away together. |
-| `handleChangeStyle` calls `invalidateAll()`                                                          | Not needed. The store push updates the table, the canvas and the issues without a refetch.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| LectureSubject: keep same-length in-lecture reorders, copy `subjectBackup`, invalidate after success | **Needs 62 first.** This branch still reverts a same-length drag, which is what `main` did, because without `Lecture.subjectOrder` there is nothing to persist an in-lecture order to. The aliasing bug and the backup array are gone here (the store holds committed membership), but the early return has to be dropped once `subjectOrder` exists.                                                                                                                                                                                                                                                     |
-| `Lecture.subjectOrder` + migration + loader sorts each lecture's subjects by it                      | **Needs 62.** No conflict with the store: it hydrates whatever order the loader returns, so sorting server-side is enough. `lectureRow` has to start carrying `subjectOrder` once the column exists, and `commitLectureSubjects` should mirror it so a row never contradicts the membership map.                                                                                                                                                                                                                                                                                                          |
-| `api/lectures/order-subjects` validates `orderSubjectsSchema` and persists `subjectOrder`            | **Needs 62.** The body the store sends still carries `name`, which `orderSubjectsSchema` ignores rather than rejects, so it keeps working either way; drop `name` from the call once merged.                                                                                                                                                                                                                                                                                                                                                                                                              |
+- `src/routes/api` deleted. Every mutation is now a superforms action backed by a method on the
+  matching `*Actions` class, with a zod schema and integration-test coverage
+  (`reorder-domains`, `reorder-subjects`, `reorder-lectures`, `change-domain-style`,
+  `reorder-lecture-subjects`, `update-node-positions`).
+- `SavePositions`, a callback injected by whoever mounts the canvas, so the D3 layer does not know
+  how a position reaches the server. Independently arrived at, and nearly identical to the
+  `PositionSink` this branch had.
+- `Lecture.subjectOrder` (`Int[]`), with `getRenderablePayload` sorting each lecture's subjects by it.
+- A `mountedFrom` guard around the rebuild effect, because "rebuilding throws away the camera and any
+  running simulation", plus a per-form `invalidateAll` decision documented case by case.
 
-Suggested order: land 62 first, then rebase this branch onto it. 62 carries a migration and a real
-behavioural change (persisted in-lecture subject order) that this branch cannot infer, while the
-three items marked "needs 62" are small edits in code this branch just wrote. Doing it the other way
-means resolving 62's page-level diffs against handlers that no longer exist.
+How the merge was resolved:
+
+| main's side                                          | resolution                                                                                                                                                                                                 |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SavePositions` / `NodePosition`                     | Adopted. This branch's `PositionSink` / `NodePositions` are gone, and `NodeToolbox.save` is main's version.                                                                                                |
+| Form actions for every mutation                      | Adopted wholesale. The store no longer talks to the server: its mutators are synchronous optimistic writes, and the component posts the action and then calls `confirm*` or `revert*`.                     |
+| `isLocalUpdate` on an `$effect.pre`                  | Replaced by pending state in the owner, so one guard covers all four mutations instead of one flag per page.                                                                                               |
+| `mountedFrom` rebuild guard                          | Dropped. There is no rebuild to guard: the canvas is mounted once and pushed new projections.                                                                                                              |
+| `invalidateAll` on style and lecture-subject changes | Turned off. Both existed so the refetch would reach the canvas; applying the change to the store reaches it directly, and the refetch would only hand back what the canvas already shows.                  |
+| Same-length in-lecture drags                         | Now persist, which the earlier draft of this branch could not do. `subjectOrder` is what made it possible, and the early return that reverted those drags is gone.                                         |
+| `Lecture.subjectOrder`                               | Carried on the lecture row and mirrored when membership changes, so the row never contradicts the membership map. `sameRow` now compares scalar lists by value, or every hydrate would look like a change. |
 
 ## Out of scope
 
@@ -514,7 +530,7 @@ means resolving 62's page-level diffs against handlers that no longer exist.
 - `#107` graph-payload query duplicated across loaders. Both loaders already go through
   `GraphActions.getRenderablePayload`, so that issue looks already fixed; the leftover is the
   duplicated _type_ in finding 9, folded into phase 0 here.
-- Server-side changes to the `/api/**` endpoints, the form actions, or `GraphValidator`.
+- Server-side changes to the form actions, the zod schemas, or `GraphValidator`.
 - Promoting the "one owner, two projections" decision to `docs/adr/0001-*.md`. Worth doing once this
   is reviewed and merged, since `docs/agents/domain.md` expects ADRs for decisions in an area, and
   `docs/adr/` does not exist yet.
