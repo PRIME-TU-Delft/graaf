@@ -156,13 +156,16 @@ export class LectureActions {
 		return await withPermissionCheck(
 			() =>
 				prisma.$transaction(async (tx) => {
-					const lecture = await tx.lecture.findFirstOrThrow({
-						where,
+					// Unscoped read, used only to preserve existing order. Permission is enforced by the
+					// update below, whose where clause is the one that carries the scope: findFirstOrThrow
+					// doesn't set meta.modelName on its P2025, so withPermissionCheck can't translate it.
+					const lecture = await tx.lecture.findUnique({
+						where: { id: form.data.lectureId },
 						select: { subjectOrder: true }
 					});
 
 					const linked = new Set(form.data.subjectIds);
-					const kept = lecture.subjectOrder.filter((id) => linked.has(id));
+					const kept = (lecture?.subjectOrder ?? []).filter((id) => linked.has(id));
 					const keptSet = new Set(kept);
 					const added = form.data.subjectIds.filter((id) => !keptSet.has(id));
 
@@ -177,7 +180,7 @@ export class LectureActions {
 					});
 				}),
 			form,
-			'subjectIds._errors',
+			'',
 			{ entity: 'Lecture', message: "You don't have permission to edit this lecture" }
 		);
 	}
