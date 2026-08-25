@@ -21,7 +21,10 @@
 	// (see src/lib/utils/breadcrumbs.ts). When it does, we trust it. Otherwise we fall back
 	// to building the trail from the raw path segments, which can only title-case each part.
 	let urls = $derived.by<Crumb[]>(() => {
-		if (page.data?.breadcrumbs) return page.data.breadcrumbs;
+		if (page.data?.breadcrumbs) {
+			const leaf = page.data.breadcrumbLeaf;
+			return leaf ? [...page.data.breadcrumbs, leaf] : page.data.breadcrumbs;
+		}
 
 		const parts = page.url?.pathname?.split('/') ?? [];
 		let result: Crumb[] = [];

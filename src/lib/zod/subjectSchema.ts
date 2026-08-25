@@ -28,3 +28,8 @@ export const changeSubjectRelSchema = subjectRelSchema.extend({
 	oldSourceSubjectId: z.number().gt(0, 'Please select a source subject'),
 	oldTargetSubjectId: z.number().gt(0, 'Please select a target subject')
 });
+
+export const reorderSubjectsSchema = z.object({
+	graphId: z.number(),
+	subjectIds: z.array(z.number())
+});
