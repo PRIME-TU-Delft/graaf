@@ -156,3 +156,135 @@ export async function seedFixture() {
 	await seedGraphContent(graphTwo.id);
 	await seedGraphContent(graphThree.id);
 }
+
+// Lookups. `resetDatabase` deletes rows rather than truncating, so Postgres keeps incrementing
+// its id sequences across reseeds and no numeric id is stable between test files. Everything
+// below resolves rows by their fixture name/code/email instead.
+
+/** The five fixture users, keyed the same way as FIXTURE_EMAILS. */
+export async function fixtureUsers() {
+	const users = await prisma.user.findMany({
+		where: { email: { in: Object.values(FIXTURE_EMAILS) } }
+	});
+
+	const byEmail = (email: string) => {
+		const user = users.find((u) => u.email === email);
+		if (!user) throw new Error(`Fixture user ${email} is missing, was seedFixture() called?`);
+		return user;
+	};
+
+	return {
+		superAdmin: byEmail(FIXTURE_EMAILS.superAdmin),
+		programAdmin: byEmail(FIXTURE_EMAILS.programAdmin),
+		programEditor: byEmail(FIXTURE_EMAILS.programEditor),
+		courseAdmin: byEmail(FIXTURE_EMAILS.courseAdmin),
+		courseEditor: byEmail(FIXTURE_EMAILS.courseEditor)
+	};
+}
+
+/** A user who exists but holds no program, course, or sandbox role anywhere. */
+export async function createOutsider(email = 'outsider@fixture.test') {
+	return await prisma.user.create({ data: { email, nickname: 'Outsider' } });
+}
+
+/**
+ * @param name - One of FIXTURE_PROGRAMS
+ * @returns The seeded program with that name
+ */
+export async function getProgram(name: string) {
+	return await prisma.program.findFirstOrThrow({ where: { name } });
+}
+
+/**
+ * @param code - One of FIXTURE_COURSES' codes
+ * @returns The seeded course with that code
+ */
+export async function getCourse(code: string) {
+	return await prisma.course.findFirstOrThrow({ where: { code } });
+}
+
+/**
+ * @param name - One of FIXTURE_GRAPHS
+ * @returns The seeded graph with that name
+ */
+export async function getGraph(name: string) {
+	return await prisma.graph.findFirstOrThrow({ where: { name } });
+}
+
+/**
+ * @param graphId - The graph the domain belongs to
+ * @param name - DomainOne, DomainTwo, or DomainThree
+ * @returns That graph's copy of the named domain
+ */
+export async function getDomain(graphId: number, name: string) {
+	return await prisma.domain.findFirstOrThrow({ where: { graphId, name } });
+}
+
+/**
+ * @param graphId - The graph the subject belongs to
+ * @param name - SubjectOne, SubjectTwo, or SubjectThree
+ * @returns That graph's copy of the named subject
+ */
+export async function getSubject(graphId: number, name: string) {
+	return await prisma.subject.findFirstOrThrow({ where: { graphId, name } });
+}
+
+// Creators for the entities seedFixture deliberately leaves out. Call these from the individual
+// test files that need them rather than from seedFixture, since most files do not.
+
+/**
+ * @param ownerId - The user who owns the sandbox
+ * @param editorIds - Users to attach as sandbox editors
+ * @param name - The sandbox name
+ * @returns The created sandbox
+ */
+export async function createSandbox(ownerId: string, editorIds: string[] = [], name = 'Sandbox') {
+	return await prisma.sandbox.create({
+		data: { name, ownerId, editors: { connect: editorIds.map((id) => ({ id })) } }
+	});
+}
+
+/**
+ * @param sandboxId - The sandbox to attach the graph to
+ * @param name - The graph name
+ * @returns The created graph, with parentType SANDBOX
+ */
+export async function createSandboxGraph(sandboxId: number, name = 'SandboxGraph') {
+	return await prisma.graph.create({ data: { name, parentType: 'SANDBOX', sandboxId } });
+}
+
+/**
+ * @param graphId - The graph to attach the lecture to
+ * @param subjectIds - Subjects to link into the lecture
+ * @param name - The lecture name
+ * @returns The created lecture
+ */
+export async function createLecture(graphId: number, subjectIds: number[] = [], name = 'Lecture') {
+	return await prisma.lecture.create({
+		data: { name, order: 0, graphId, subjects: { connect: subjectIds.map((id) => ({ id })) } }
+	});
+}
+
+/**
+ * @param courseId - The course the link belongs to
+ * @param graphId - The graph the link points at
+ * @param name - The link alias, max MAX_LINK_NAME_LENGTH characters
+ * @returns The created link, with parentType COURSE
+ */
+export async function createCourseLink(courseId: number, graphId: number, name = 'course-link') {
+	return await prisma.link.create({
+		data: { name, parentType: 'COURSE', courseId, graphId }
+	});
+}
+
+/**
+ * @param sandboxId - The sandbox the link belongs to
+ * @param graphId - The graph the link points at
+ * @param name - The link alias, max MAX_LINK_NAME_LENGTH characters
+ * @returns The created link, with parentType SANDBOX
+ */
+export async function createSandboxLink(sandboxId: number, graphId: number, name = 'sb-link') {
+	return await prisma.link.create({
+		data: { name, parentType: 'SANDBOX', sandboxId, graphId }
+	});
+}
