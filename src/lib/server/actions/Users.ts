@@ -1,5 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
+import { GuardError, isWriteConflict, WRITE_CONFLICT_MESSAGE } from './transaction';
 import { redirect, type RequestEvent } from '@sveltejs/kit';
 
 import type { changeUserRoleSchema } from '$lib/zod/userSchema';
@@ -53,10 +54,15 @@ export class UserActions {
 	 * the second one, but the count check is kept as a backstop so the invariant still holds if the
 	 * caller check above ever widens.
 	 *
+	 * The count and the update run in one serializable transaction, so two demotions racing each
+	 * other cannot both read the same admin count and leave the install with nobody left to
+	 * administer it. Postgres rolls one of them back, and that caller is asked to try again.
+	 *
 	 * @param user - The user performing the action, must have the super-admin role
 	 * @param form - Validated form data with the target userId and the new role
-	 * @returns `{ form }` on success. On invalid input, missing permission, or a demotion that
-	 * would lock everyone out, returns the form with an error via setError instead of throwing.
+	 * @returns `{ form }` on success. On invalid input, missing permission, a demotion that would
+	 * lock everyone out, or a lost race against a concurrent role change, returns the form with
+	 * an error via setError instead of throwing.
 	 */
 	static async changeRole(user: User, form: SuperValidated<Infer<typeof changeUserRoleSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
@@ -67,26 +73,32 @@ export class UserActions {
 
 		const { userId, role } = form.data;
 
-		if (role === 'USER') {
-			if (userId === user.id) {
-				return setError(form, '', 'You cannot demote yourself');
-			}
-
-			const remainingAdmins = await prisma.user.count({
-				where: { role: 'ADMIN', id: { not: userId } }
-			});
-
-			if (remainingAdmins === 0) {
-				return setError(form, '', 'You cannot demote the last admin');
-			}
+		if (role === 'USER' && userId === user.id) {
+			return setError(form, '', 'You cannot demote yourself');
 		}
 
 		try {
-			await prisma.user.update({
-				where: { id: userId },
-				data: { role }
-			});
+			await prisma.$transaction(
+				async (tx) => {
+					if (role === 'USER') {
+						const remainingAdmins = await tx.user.count({
+							where: { role: 'ADMIN', id: { not: userId } }
+						});
+
+						if (remainingAdmins === 0) throw new GuardError('You cannot demote the last admin');
+					}
+
+					await tx.user.update({
+						where: { id: userId },
+						data: { role }
+					});
+				},
+				{ isolationLevel: 'Serializable' }
+			);
 		} catch (e: unknown) {
+			if (e instanceof GuardError) return setError(form, '', e.message);
+			if (isWriteConflict(e)) return setError(form, '', WRITE_CONFLICT_MESSAGE);
+
 			return setError(form, '', e instanceof Error ? e.message : `${e}`);
 		}
 

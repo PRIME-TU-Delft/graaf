@@ -2,6 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { newProgramSchema } from '$lib/zod/programSchema';
 import { whereHasProgramPermission } from '../permissions';
+import { GuardError, isWriteConflict, WRITE_CONFLICT_MESSAGE } from './transaction';
 import { redirect } from '@sveltejs/kit';
 
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -147,11 +148,17 @@ export class ProgramActions {
 	 * Set, change, or revoke a program-level admin/editor role for a user, guarded by
 	 * isAllowedToEditSuperUser so the program can't be left without any admins.
 	 *
+	 * The read of the current admins, the guard, and the update run in one serializable
+	 * transaction, so two role changes racing each other cannot both see the same admin list and
+	 * strip the program of its last admin between them. Postgres rolls one of them back, and that
+	 * caller is asked to try again.
+	 *
 	 * @param user - The user performing the action, must have program admin rights
 	 * @param formData - Validated form data with the programId, target userId, and new role
 	 * ('admin' | 'editor' | 'revoke')
-	 * @returns Nothing on success. On invalid input, missing permission, or a disallowed role
-	 * change (see isAllowedToEditSuperUser), returns the form with an error via setError.
+	 * @returns Nothing on success. On invalid input, missing permission, a disallowed role change
+	 * (see isAllowedToEditSuperUser), or a lost race against a concurrent role change, returns the
+	 * form with an error via setError.
 	 */
 	static async editSuperUser(
 		user: User,
@@ -161,31 +168,6 @@ export class ProgramActions {
 
 		const newRole = formData.data.role;
 		const userId = formData.data.userId;
-
-		const program = await prisma.program.findFirst({
-			where: {
-				id: formData.data.programId,
-				...whereHasProgramPermission(user, 'ProgramAdmin')
-			},
-			include: {
-				admins: { select: { id: true } },
-				editors: { select: { id: true } }
-			}
-		});
-
-		if (!program) return setError(formData, '', 'Unauthorized');
-
-		// if this user is the only program admin
-		// admin -NOT ALLOWED-> editor
-		// admin -NOT ALLOWED-> revoke
-		const fromRole = program.admins.find((admin) => admin.id === userId)
-			? 'admin'
-			: program.editors.find((editor) => editor.id === userId)
-				? 'editor'
-				: 'revoke';
-
-		const isAllowed = ProgramActions.isAllowedToEditSuperUser(fromRole, newRole, program.admins);
-		if (isAllowed.error) return setError(formData, '', isAllowed.error);
 
 		function getData() {
 			switch (newRole) {
@@ -208,14 +190,51 @@ export class ProgramActions {
 		}
 
 		try {
-			await prisma.program.update({
-				where: {
-					id: formData.data.programId,
-					...whereHasProgramPermission(user, 'ProgramAdmin')
+			await prisma.$transaction(
+				async (tx) => {
+					const program = await tx.program.findFirst({
+						where: {
+							id: formData.data.programId,
+							...whereHasProgramPermission(user, 'ProgramAdmin')
+						},
+						include: {
+							admins: { select: { id: true } },
+							editors: { select: { id: true } }
+						}
+					});
+
+					if (!program) throw new GuardError('Unauthorized');
+
+					// if this user is the only program admin
+					// admin -NOT ALLOWED-> editor
+					// admin -NOT ALLOWED-> revoke
+					const fromRole = program.admins.find((admin) => admin.id === userId)
+						? 'admin'
+						: program.editors.find((editor) => editor.id === userId)
+							? 'editor'
+							: 'revoke';
+
+					const isAllowed = ProgramActions.isAllowedToEditSuperUser(
+						fromRole,
+						newRole,
+						program.admins
+					);
+					if (isAllowed.error) throw new GuardError(isAllowed.error);
+
+					await tx.program.update({
+						where: {
+							id: formData.data.programId,
+							...whereHasProgramPermission(user, 'ProgramAdmin')
+						},
+						data: getData()
+					});
 				},
-				data: getData()
-			});
+				{ isolationLevel: 'Serializable' }
+			);
 		} catch (e: unknown) {
+			if (e instanceof GuardError) return setError(formData, '', e.message);
+			if (isWriteConflict(e)) return setError(formData, '', WRITE_CONFLICT_MESSAGE);
+
 			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
 		}
 	}
