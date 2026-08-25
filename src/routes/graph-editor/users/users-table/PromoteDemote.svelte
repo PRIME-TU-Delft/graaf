@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { cn } from '$lib/utils';
+	import { displayName } from '$lib/utils/displayUserName';
 	import { changeUserRoleSchema } from '$lib/zod/userSchema';
 	import { useId } from 'bits-ui';
 	import { superForm } from 'sveltekit-superforms';
@@ -7,7 +9,8 @@
 	import { toast } from 'svelte-sonner';
 
 	// Components
-	import { Button } from '$lib/components/ui/button';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form/index.js';
 
 	// Icons
@@ -38,7 +41,7 @@
 		return null;
 	});
 
-	let confirming = $state(false);
+	let confirmOpen = $state(false);
 	let submittedRole = $state<'ADMIN' | 'USER'>('ADMIN');
 
 	const form = superForm((page.data as PageData).changeUserRoleForm, {
@@ -58,7 +61,7 @@
 						? 'User promoted to super admin'
 						: 'User demoted to regular user'
 				);
-				confirming = false;
+				confirmOpen = false;
 			}
 		}
 	});
@@ -82,39 +85,65 @@
 		{/if}
 	</p>
 
-	<form action="?/change-user-role" method="POST" class="mt-2" use:enhance>
-		<input type="hidden" name="userId" value={user.id} />
-		<input type="hidden" name="role" value={newRole} />
+	{#if blockedReason}
+		<Button size="sm" variant="destructive" class="mt-2" disabled>
+			<ShieldOff /> Demote to user
+		</Button>
+		<p class="m-0 mt-2 text-xs text-purple-500">{blockedReason}</p>
+	{:else}
+		<AlertDialog.Root bind:open={confirmOpen}>
+			<AlertDialog.Trigger
+				class={cn(
+					buttonVariants({ variant: isAdmin ? 'destructive' : 'default', size: 'sm' }),
+					'mt-2'
+				)}
+			>
+				{#if isAdmin}
+					<ShieldOff /> Demote to user
+				{:else}
+					<ShieldUser /> Promote to super admin
+				{/if}
+			</AlertDialog.Trigger>
 
-		{#if !isAdmin}
-			<Form.FormButton size="sm" disabled={$submitting} loading={$delayed}>
-				<ShieldUser /> Promote to super admin
-				{#snippet loadingMessage()}
-					<span>Promoting...</span>
-				{/snippet}
-			</Form.FormButton>
-		{:else if blockedReason}
-			<Button size="sm" variant="destructive" disabled>
-				<ShieldOff /> Demote to user
-			</Button>
-			<p class="m-0 mt-2 text-xs text-purple-500">{blockedReason}</p>
-		{:else if confirming}
-			<p class="m-0 text-sm">Are you sure? They lose access to this admin panel.</p>
-			<div class="mt-2 flex items-center gap-2">
-				<Form.FormButton size="sm" variant="destructive" disabled={$submitting} loading={$delayed}>
-					Yes, sure!
-					{#snippet loadingMessage()}
-						<span>Demoting...</span>
-					{/snippet}
-				</Form.FormButton>
-				<Button size="sm" variant="ghost" onclick={() => (confirming = false)}>Cancel</Button>
-			</div>
-		{:else}
-			<Button size="sm" variant="destructive" onclick={() => (confirming = true)}>
-				<ShieldOff /> Demote to user
-			</Button>
-		{/if}
+			<AlertDialog.Content>
+				<AlertDialog.Header>
+					<AlertDialog.Title>
+						{isAdmin
+							? `Demote ${displayName(user)} to a regular user?`
+							: `Promote ${displayName(user)} to super admin?`}
+					</AlertDialog.Title>
+					<AlertDialog.Description>
+						{#if isAdmin}
+							They lose access to this admin panel, and keep only the program and course roles they
+							were given directly.
+						{:else}
+							They will be able to reach every program and course, this admin panel, and the
+							privileges of every other user.
+						{/if}
+					</AlertDialog.Description>
+				</AlertDialog.Header>
 
-		<Form.FormError class="mt-2" {form} />
-	</form>
+				<Form.FormError {form} />
+
+				<AlertDialog.Footer>
+					<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+					<form action="?/change-user-role" method="POST" use:enhance>
+						<input type="hidden" name="userId" value={user.id} />
+						<input type="hidden" name="role" value={newRole} />
+
+						<Form.FormButton
+							variant={isAdmin ? 'destructive' : 'default'}
+							disabled={$submitting}
+							loading={$delayed}
+						>
+							{isAdmin ? 'Yes, demote' : 'Yes, promote'}
+							{#snippet loadingMessage()}
+								<span>{isAdmin ? 'Demoting...' : 'Promoting...'}</span>
+							{/snippet}
+						</Form.FormButton>
+					</form>
+				</AlertDialog.Footer>
+			</AlertDialog.Content>
+		</AlertDialog.Root>
+	{/if}
 </div>
