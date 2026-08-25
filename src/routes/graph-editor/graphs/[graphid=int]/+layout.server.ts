@@ -3,13 +3,7 @@ import type { Breadcrumb } from '$lib/utils/breadcrumbs';
 import { error, redirect, isRedirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
-const leafLabels: Record<string, string> = {
-	domains: 'Domains',
-	subjects: 'Subjects',
-	lectures: 'Lectures'
-};
-
-export const load: LayoutServerLoad = async ({ params, url }) => {
+export const load: LayoutServerLoad = async ({ params }) => {
 	if (!params.graphid) {
 		error(400, { message: 'Graph ID is required' });
 	}
@@ -51,10 +45,10 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 		}
 		breadcrumbs.push({ name: graph.name, url: `/graph-editor/graphs/${graph.id}` });
 
-		const leaf = url.pathname.split('/').filter(Boolean).at(-1);
-		if (leaf && leaf in leafLabels) {
-			breadcrumbs.push({ name: leafLabels[leaf], url: `/graph-editor/graphs/${graph.id}/${leaf}` });
-		}
+		// The trail stops at the graph. Each child page appends its own leaf, because reading
+		// `url` here would make this load re-run on every tab switch, and the fresh graph object
+		// makes GraphRenderer tear the canvas down and rebuild it instead of animating the view
+		// transition.
 
 		// Happy path
 		return {

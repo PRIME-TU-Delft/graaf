@@ -13,9 +13,9 @@ import type { FormPathLeavesWithErrors, SuperValidated } from 'sveltekit-superfo
  * @param form - The form to attach an error to if the action fails
  * @param path - The form field to attach the error to
  * @param opts.entity - The Prisma model name of the top-level query in `action` (e.g. `'Course'`
- * for a `prisma.course.update(...)`), matched against a P2025 with that `meta.modelName` (Prisma
- * 7+) or the legacy "No '<entity>' record" `meta.cause` string (pre-7), either of which Prisma
- * reports when the permission-scoped where clause excludes the record
+ * for a `prisma.course.update(...)`), matched against a P2025/P2017 error with that
+ * `meta.modelName` (Prisma 7+) or the legacy "No '<entity>' record" `meta.cause` string (pre-7),
+ * either of which Prisma reports when the permission-scoped where clause excludes the record
  * @param opts.message - The permission-denied message to show when that cause matches
  * @returns `{ form }` on success. If `action` fails because the record wasn't found under the
  * permission-scoped where clause, sets `opts.message`; otherwise sets the underlying error
@@ -30,7 +30,7 @@ export async function withPermissionCheck<T, S extends Record<string, unknown>>(
 	try {
 		await action();
 	} catch (e: unknown) {
-		if (env.DEBUG) console.error(e);
+		if (env.DEBUG === 'true') console.error(e);
 
 		if (e instanceof Prisma.PrismaClientKnownRequestError) {
 			const isNotFoundCause =
@@ -39,9 +39,13 @@ export async function withPermissionCheck<T, S extends Record<string, unknown>>(
 				typeof e.meta.cause === 'string' &&
 				e.meta.cause.includes(`No '${opts.entity}' record`);
 
-			const isNotFoundP2025 = e.code === 'P2025' && e.meta && e.meta.modelName === opts.entity;
+			const isNotFoundModelName =
+				(e.code === 'P2025' || e.code === 'P2017') &&
+				e.meta &&
+				'modelName' in e.meta &&
+				e.meta.modelName === opts.entity;
 
-			if (isNotFoundCause || isNotFoundP2025) {
+			if (isNotFoundCause || isNotFoundModelName) {
 				return setError(form, path, opts.message);
 			}
 		}

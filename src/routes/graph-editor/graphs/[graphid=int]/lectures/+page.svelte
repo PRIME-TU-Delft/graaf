@@ -7,6 +7,7 @@
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import { superForm } from 'sveltekit-superforms';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 	import AddSubjectToLecture from './AddSubjectToLecture.svelte';
@@ -33,37 +34,56 @@
 		lectures = data.graph.lectures;
 	});
 
+	function revertLectureOrder() {
+		lectures = lectures.toSorted((a, b) => a.order - b.order);
+		toast.error('Error while reordering lectures');
+	}
+
+	// Lecture order is only ever shown in this list, never on the graph canvas, so this posts
+	// without invalidating: the rows are already in their new order and a refetch would rebuild
+	// the canvas for nothing.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderLecturesForm, {
+		id: 'reorder-lectures',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (!form.valid) {
+				revertLectureOrder();
+				return;
+			}
+
+			lectures.forEach((lecture, index) => {
+				lecture.order = index;
+			});
+		},
+		onError: revertLectureOrder
+	});
+
 	const issues = $derived(new GraphValidator({ ...data.graph, lectures }).validate());
 
 	function handleDndConsider(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
 	}
 
-	async function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
+	function handleDndFinalize(e: CustomEvent<DndEvent<(typeof lectures)[number]>>) {
 		lectures = e.detail.items;
 
-		const body = lectures.map((lecture, index) => ({
-			lectureId: lecture.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/lectures/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			lectures = lectures.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Error while reordering lectures');
-		} else {
-			lectures.forEach((lecture, index) => {
-				lecture.order = index;
-			});
-		}
+		$reorderData = {
+			graphId: data.graph.id,
+			lectureIds: lectures.map((lecture) => lecture.id)
+		};
+		submitReorder();
 	}
 </script>
+
+<form method="POST" action="?/reorder-lectures" use:reorderEnhance hidden></form>
 
 <svelte:head>
 	<title>{data.graph.name} Lectures | PRIME Graph Editor</title>
