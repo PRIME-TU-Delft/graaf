@@ -11,7 +11,12 @@ import {
 import { withPermissionCheck } from './permissionError';
 import { GraphValidator } from '$lib/validators/graphValidator';
 
-import type { newGraphSchema, graphSchemaWithId, duplicateGraphSchema } from '$lib/zod/graphSchema';
+import type {
+	newGraphSchema,
+	graphSchemaWithId,
+	duplicateGraphSchema,
+	nodePositionsSchema
+} from '$lib/zod/graphSchema';
 import type { PrismaGraphPayload, Issues } from '$lib/validators/types';
 
 import type { Prisma, User } from '@prisma/client';
@@ -68,12 +73,77 @@ export class GraphActions {
 	): Promise<Prisma.GraphGetPayload<{
 		include: typeof GraphActions.renderablePayloadInclude & Extra;
 	}> | null> {
-		return prisma.graph.findFirst({
+		const graph = (await prisma.graph.findFirst({
 			where,
 			include: { ...this.renderablePayloadInclude, ...extraInclude }
-		}) as Promise<Prisma.GraphGetPayload<{
+		})) as Prisma.GraphGetPayload<{
+			include: typeof GraphActions.renderablePayloadInclude;
+		}> | null;
+
+		if (!graph) return null;
+
+		// Lecture.subjects has no sortable column of its own (it's a plain many-to-many relation),
+		// so display order within a lecture lives on Lecture.subjectOrder as a list of subject
+		// ids, applied here after the fetch. Subjects missing from that list sort to the end and
+		// keep the relative order the query returned them in.
+		for (const lecture of graph.lectures) {
+			if (lecture.subjectOrder.length === 0) continue;
+
+			const rank = new Map(lecture.subjectOrder.map((id, index) => [id, index]));
+			lecture.subjects.sort(
+				(a, b) =>
+					(rank.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (rank.get(b.id) ?? Number.MAX_SAFE_INTEGER)
+			);
+		}
+
+		return graph as Prisma.GraphGetPayload<{
 			include: typeof GraphActions.renderablePayloadInclude & Extra;
-		}> | null>;
+		}>;
+	}
+
+	/**
+	 * Persist the canvas positions of a graph's domain and subject nodes. Written as one nested
+	 * write scoped to the graph, so a single permission check covers every node and a node id
+	 * from another graph can't be smuggled in.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId and the new x/y of each moved domain and
+	 * subject
+	 * @returns Nothing on success. On invalid input, an id that isn't in this graph, or missing
+	 * permission, returns the form with an error via setError instead of throwing.
+	 */
+	static async updateNodePositions(
+		user: User,
+		form: SuperValidated<Infer<typeof nodePositionsSchema>>
+	) {
+		if (!form.valid) return setError(form, '', 'Invalid node positions');
+
+		return await withPermissionCheck(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						domains: {
+							update: form.data.domains.map(({ id, x, y }) => ({
+								where: { id },
+								data: { x, y }
+							}))
+						},
+						subjects: {
+							update: form.data.subjects.map(({ id, x, y }) => ({
+								where: { id },
+								data: { x, y }
+							}))
+						}
+					}
+				}),
+			form,
+			'',
+			{ entity: 'Graph', message: "You don't have permission to move nodes in this graph" }
+		);
 	}
 
 	/**
