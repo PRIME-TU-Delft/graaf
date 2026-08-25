@@ -277,14 +277,27 @@ describe('GraphActions.duplicateGraph', () => {
 		await expect(prisma.graph.findFirst({ where: { name: 'CopiedGraph' } })).resolves.toBeNull();
 	});
 
-	it('copies a source graph the caller has no access to, which is bug #151', async () => {
-		// Documents current behaviour, not desired behaviour. Only the destination is permission
-		// checked; the source graph is fetched by id alone. The course editor here holds no role on
-		// CourseOne, yet GraphOne's full contents land in a sandbox they control. When #151 is fixed
-		// this test should start failing and be rewritten to assert the denial.
+	it('denies duplicating a source graph the caller has no access to, which is bug #151', async () => {
 		const { courseEditor } = await fixtureUsers();
 		const sandbox = await createSandbox(courseEditor.id);
 		const source = await getGraph(FIXTURE_GRAPHS.one);
+
+		const form = await buildForm(duplicateGraphSchema, {
+			graphId: source.id,
+			newName: 'CopiedGraph',
+			destinationType: 'SANDBOX',
+			destinationId: sandbox.id
+		});
+		const result = await GraphActions.duplicateGraph(courseEditor, form);
+
+		expect(errorMessages(result)).toContain('Source graph not found');
+		await expect(prisma.graph.findFirst({ where: { name: 'CopiedGraph' } })).resolves.toBeNull();
+	});
+
+	it('copies a source graph the caller has course editor access to', async () => {
+		const { courseEditor } = await fixtureUsers();
+		const sandbox = await createSandbox(courseEditor.id);
+		const source = await getGraph(FIXTURE_GRAPHS.three);
 
 		const form = await buildForm(duplicateGraphSchema, {
 			graphId: source.id,
@@ -302,5 +315,42 @@ describe('GraphActions.duplicateGraph', () => {
 		expect(copied).not.toBeNull();
 		expect(copied?.domains).toHaveLength(3);
 		expect(copied?.subjects).toHaveLength(3);
+	});
+
+	it('copies a source graph in a sandbox the caller owns', async () => {
+		const { courseEditor } = await fixtureUsers();
+		const sourceSandbox = await createSandbox(courseEditor.id);
+		const source = await createSandboxGraph(sourceSandbox.id);
+		const destSandbox = await createSandbox(courseEditor.id);
+
+		const form = await buildForm(duplicateGraphSchema, {
+			graphId: source.id,
+			newName: 'CopiedFromSandbox',
+			destinationType: 'SANDBOX',
+			destinationId: destSandbox.id
+		});
+		await expect(GraphActions.duplicateGraph(courseEditor, form)).rejects.toSatisfy(isRedirect);
+
+		await expect(
+			prisma.graph.findFirst({ where: { name: 'CopiedFromSandbox' } })
+		).resolves.not.toBeNull();
+	});
+
+	it('denies duplicating a source graph in a sandbox the caller has no access to', async () => {
+		const { sandbox } = await sandboxSetup();
+		const source = await createSandboxGraph(sandbox.id);
+		const outsider = await createOutsider();
+		const destSandbox = await createSandbox(outsider.id);
+
+		const form = await buildForm(duplicateGraphSchema, {
+			graphId: source.id,
+			newName: 'CopiedGraph',
+			destinationType: 'SANDBOX',
+			destinationId: destSandbox.id
+		});
+		const result = await GraphActions.duplicateGraph(outsider, form);
+
+		expect(errorMessages(result)).toContain('Source graph not found');
+		await expect(prisma.graph.findFirst({ where: { name: 'CopiedGraph' } })).resolves.toBeNull();
 	});
 });
