@@ -23,9 +23,10 @@ export const load = async ({ locals }) => {
 				program_admins: true,
 				program_editors: true
 			},
-			orderBy: {
-				role: 'desc' // ADMIN first then USER
-			}
+			// ADMIN first then USER. The name and id keys are what make the order stable: without
+			// them Postgres is free to return equally-ranked users in a different order on every
+			// load, which reshuffles the table each time a role changes.
+			orderBy: [{ role: 'desc' }, { nickname: 'asc' }, { id: 'asc' }]
 		});
 
 		// Needed by the privileges dialog to offer programs a user can be added to. The admin and

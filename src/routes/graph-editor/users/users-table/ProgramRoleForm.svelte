@@ -44,6 +44,10 @@
 	const form = superForm((page.data as PageData).editSuperUserForm, {
 		id: `edit-super-user-${program.id}-${role}-${useId()}`,
 		validators: zodClient(editSuperUserSchema),
+		// These fields are filled from the row, never typed in, so resetting the store after a
+		// successful submit would just empty it and make the next submit fail client-side
+		// validation without ever reaching the server
+		resetForm: false,
 		onResult: ({ result }) => {
 			if (result.type === 'success') {
 				toast.success(successMessage);

@@ -80,6 +80,10 @@
 			pagination = { ...pagination, pageIndex: 0 };
 		},
 		globalFilterFn: (row, _columnId, filterValue) => matchesUserSearch(row.original, filterValue),
+		// Without this, table-core falls back to the row index as the row id, so the keyed each
+		// block below keys by position. Re-sorting the list then rebinds open UI, like the
+		// privileges dialog, onto whichever user landed on that row.
+		getRowId: (user) => user.id,
 		getCoreRowModel: getCoreRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		getSortedRowModel: getSortedRowModel(),

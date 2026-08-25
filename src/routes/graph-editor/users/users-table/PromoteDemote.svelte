@@ -44,6 +44,10 @@
 	const form = superForm((page.data as PageData).changeUserRoleForm, {
 		id: 'change-user-role-' + useId(),
 		validators: zodClient(changeUserRoleSchema),
+		// These fields are filled from the row, never typed in, so resetting the store after a
+		// successful submit would just empty it and make the next submit fail client-side
+		// validation without ever reaching the server
+		resetForm: false,
 		onSubmit: () => {
 			submittedRole = newRole;
 		},
