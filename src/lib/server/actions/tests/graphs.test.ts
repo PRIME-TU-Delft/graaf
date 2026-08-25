@@ -26,8 +26,13 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // reachable through these entry points: the zod enum rejects any other value first, so the method
 // returns a form error rather than falling through.
 //
-// Denials that run through withPermissionCheck assert status and an unchanged database, not
-// message text, because that helper currently emits a raw Prisma error instead (#153).
+// Denials that run through withPermissionCheck now also assert the branch's shared message, since
+// that helper correctly matches Prisma 7's P2025 shape instead of falling through to a raw Prisma
+// error (#153).
+
+const COURSE_DENIED =
+	'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor';
+const SANDBOX_DENIED = 'You are not allowed to edit this sandbox. You are not an owner or editor';
 
 beforeEach(seedFixture);
 
@@ -69,6 +74,7 @@ describe('GraphActions.newGraph (COURSE)', () => {
 		const result = await GraphActions.newGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.graph.findFirst({ where: { name: 'NewCourseGraph' } })).resolves.toBeNull();
 	});
 });
@@ -104,6 +110,7 @@ describe('GraphActions.newGraph (SANDBOX)', () => {
 		const result = await GraphActions.newGraph(superAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(
 			prisma.graph.findFirst({ where: { name: 'NewSandboxGraph' } })
 		).resolves.toBeNull();
@@ -144,6 +151,7 @@ describe('GraphActions.editGraph', () => {
 		const result = await GraphActions.editGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(
 			prisma.graph.findUniqueOrThrow({ where: { id: graph.id } })
 		).resolves.toMatchObject({ name: FIXTURE_GRAPHS.three });
@@ -181,6 +189,7 @@ describe('GraphActions.editGraph', () => {
 		const result = await GraphActions.editGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(
 			prisma.graph.findUniqueOrThrow({ where: { id: graph.id } })
 		).resolves.toMatchObject({ name: 'SandboxGraph' });
@@ -219,6 +228,7 @@ describe('GraphActions.deleteGraph', () => {
 		const result = await GraphActions.deleteGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.graph.findUnique({ where: { id: graph.id } })).resolves.not.toBeNull();
 	});
 
@@ -235,6 +245,7 @@ describe('GraphActions.deleteGraph', () => {
 		const result = await GraphActions.deleteGraph(superAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(prisma.graph.findUnique({ where: { id: graph.id } })).resolves.not.toBeNull();
 	});
 });

@@ -13,7 +13,12 @@ import {
 	getSubject,
 	seedFixture
 } from './helpers/fixture';
-import { buildForm, expectDenied, expectDeniedWithoutMessage } from './helpers/actions';
+import {
+	buildForm,
+	errorMessages,
+	expectDenied,
+	expectDeniedWithoutMessage
+} from './helpers/actions';
 
 // This class is the one place where the tier is not uniform across a single aggregate:
 //
@@ -25,8 +30,10 @@ import { buildForm, expectDenied, expectDeniedWithoutMessage } from './helpers/a
 // So a course editor may add a lecture and then be unable to rename, refill, or remove it. The
 // describe block at the bottom pins that split down explicitly.
 //
-// Denials assert status and an unchanged database rather than message text, because
-// withPermissionCheck currently emits a raw Prisma error instead of its message (#153).
+// Denials assert the entity-specific message now that withPermissionCheck correctly matches
+// Prisma 7's P2025 shape instead of falling through to a raw Prisma error (#153).
+// linkSubjectsToLecture is the one exception: it still goes through a $transaction lookup whose
+// P2025 doesn't carry meta.modelName, so its denials stay status-only until #154 is fixed.
 
 beforeEach(seedFixture);
 
@@ -81,6 +88,7 @@ describe('LectureActions.addLectureToGraph', () => {
 		const result = await LectureActions.addLectureToGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this lecture");
 		await expect(
 			prisma.lecture.findFirst({ where: { graphId: graph.id, name: 'AddedLecture' } })
 		).resolves.toBeNull();
@@ -120,6 +128,7 @@ describe('LectureActions.changeLectureName', () => {
 		const result = await LectureActions.changeLectureName(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this lecture");
 		await expect(
 			prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id } })
 		).resolves.toMatchObject({ name: 'Lecture' });
@@ -204,6 +213,7 @@ describe('LectureActions.deleteLecture', () => {
 		const result = await LectureActions.deleteLecture(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to delete this lecture");
 		await expect(prisma.lecture.findUnique({ where: { id: lecture.id } })).resolves.not.toBeNull();
 	});
 });
@@ -224,6 +234,7 @@ describe('course editor tier split', () => {
 		const result = await LectureActions.changeLectureName(courseEditor, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this lecture");
 		await expect(
 			prisma.lecture.findUniqueOrThrow({ where: { id: lecture.id } })
 		).resolves.toMatchObject({ name: 'Lecture' });
@@ -262,6 +273,7 @@ describe('course editor tier split', () => {
 		const result = await LectureActions.deleteLecture(courseEditor, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to delete this lecture");
 		await expect(prisma.lecture.findUnique({ where: { id: lecture.id } })).resolves.not.toBeNull();
 	});
 });

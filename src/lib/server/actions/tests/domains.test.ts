@@ -18,14 +18,16 @@ import {
 	getSubject,
 	seedFixture
 } from './helpers/fixture';
-import { buildForm, expectDenied } from './helpers/actions';
+import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 
 // Every method here is gated at CourseAdminEditorORProgramAdminEditor via
 // whereHasGraphCoursePermission, the widest course tier. GraphThree belongs to CourseThree, so the
 // fixture's course editor is authorized. The denied party has to be a user with no role anywhere.
 //
-// Denials are asserted by status and by the database being unchanged, not by message text, since
-// withPermissionCheck currently emits a raw Prisma error rather than its message (#153).
+// Denials now assert the entity-specific message too, now that withPermissionCheck correctly
+// matches Prisma 7's P2025 shape (#153). deleteDomainRel is the exception: it hand-rolls its own
+// try/catch instead of going through withPermissionCheck, so it still surfaces the raw Prisma
+// error message and stays status-only.
 
 beforeEach(seedFixture);
 
@@ -67,6 +69,7 @@ describe('DomainActions.addDomainToGraph', () => {
 		const result = await DomainActions.addDomainToGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this domain");
 		await expect(
 			prisma.domain.findFirst({ where: { graphId: graph.id, name: 'AddedDomain' } })
 		).resolves.toBeNull();
@@ -105,6 +108,7 @@ describe('DomainActions.changeDomain', () => {
 		const result = await DomainActions.changeDomain(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this domain");
 		await expect(
 			prisma.domain.findUniqueOrThrow({ where: { id: domain.id } })
 		).resolves.toMatchObject({ name: 'DomainOne' });
@@ -155,6 +159,7 @@ describe('DomainActions.deleteDomain', () => {
 		const result = await DomainActions.deleteDomain(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to delete this domain");
 
 		// The domain survives, and so does every relation the ungated cleanup would have severed.
 		await expect(prisma.domain.findUnique({ where: { id: domainTwo.id } })).resolves.not.toBeNull();
@@ -206,6 +211,9 @@ describe('DomainActions.addDomainRel', () => {
 		const result = await DomainActions.addDomainRel(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(
+			"You don't have permission to edit this domain relation"
+		);
 		const after = await prisma.domain.findUniqueOrThrow({
 			where: { id: domainOne.id },
 			include: { targetDomains: true }
@@ -298,6 +306,9 @@ describe('DomainActions.changeDomainRel', () => {
 		const result = await DomainActions.changeDomainRel(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(
+			"You don't have permission to edit this domain relation"
+		);
 		const after = await prisma.domain.findUniqueOrThrow({
 			where: { id: domainOne.id },
 			include: { targetDomains: true }
