@@ -13,6 +13,7 @@
 	// Types
 	import type { PageData } from '../$types';
 	import type { Course, Program, User } from '@prisma/client';
+	import type { UnlinkCandidate } from './course-columns';
 	import type {
 		ColumnDef,
 		PaginationState,
@@ -21,9 +22,9 @@
 	} from '@tanstack/table-core';
 
 	type DataTableProps = {
-		columns: ColumnDef<Course, Course>[];
+		columns: ColumnDef<UnlinkCandidate, UnlinkCandidate>[];
 		program: Program & { courses: Course[]; admins: User[]; editors: User[] };
-		data: Course[];
+		data: UnlinkCandidate[];
 		courses: Promise<Course[]>;
 	};
 
@@ -70,6 +71,7 @@
 				rowSelection = updater;
 			}
 		},
+		enableRowSelection: (row) => row.original.linkable,
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel()
 	});
@@ -97,7 +99,9 @@
 			{#each table.getRowModel().rows as row (row.id)}
 				<Table.Row
 					data-state={row.getIsSelected() && 'selected'}
+					class={!row.original.linkable ? 'opacity-50' : ''}
 					onclick={() => {
+						if (!row.original.linkable) return;
 						const isSelected = rowSelection[row.id];
 						rowSelection = {
 							...rowSelection,

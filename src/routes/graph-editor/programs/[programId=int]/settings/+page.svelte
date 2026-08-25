@@ -75,7 +75,7 @@
 	</p>
 
 	<CoursesTable
-		data={data.program?.courses}
+		data={data.programCourses}
 		program={data.program}
 		{columns}
 		courses={data.allCourses}
