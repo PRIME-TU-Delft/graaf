@@ -25,7 +25,7 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // So a course editor may add a lecture and then be unable to rename, refill, or remove it. The
 // describe block at the bottom pins that split down explicitly.
 //
-// Denials assert the entity-specific message now that withPermissionCheck correctly matches
+// Denials assert the entity-specific message now that withGuardedMutation correctly matches
 // Prisma 7's P2025 shape instead of falling through to a raw Prisma error (#153).
 // linkSubjectsToLecture is the one exception: it still goes through a $transaction lookup whose
 // P2025 doesn't carry meta.modelName, so its denials stay status-only until #154 is fixed.

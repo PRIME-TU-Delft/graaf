@@ -15,7 +15,7 @@ import { FIXTURE_COURSES, FIXTURE_EMAILS, FIXTURE_GRAPHS } from './helpers/fixtu
 
 import type { User } from '@prisma/client';
 
-/** Whether an action returned a failure rather than `{ form }` (see withPermissionCheck). */
+/** Whether an action returned a failure rather than `{ form }` (see withGuardedMutation). */
 function failed(result: unknown) {
 	return typeof result === 'object' && result !== null && 'status' in result;
 }

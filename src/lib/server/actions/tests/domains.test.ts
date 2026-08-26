@@ -24,9 +24,9 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // whereHasGraphCoursePermission, the widest course tier. GraphThree belongs to CourseThree, so the
 // fixture's course editor is authorized. The denied party has to be a user with no role anywhere.
 //
-// Denials now assert the entity-specific message too, now that withPermissionCheck correctly
+// Denials now assert the entity-specific message too, now that withGuardedMutation correctly
 // matches Prisma 7's P2025 shape (#153). deleteDomainRel is the exception: it hand-rolls its own
-// try/catch instead of going through withPermissionCheck, so it still surfaces the raw Prisma
+// try/catch instead of going through withGuardedMutation, so it still surfaces the raw Prisma
 // error message and stays status-only.
 
 beforeEach(seedFixture);
@@ -223,7 +223,7 @@ describe('DomainActions.addDomainRel', () => {
 });
 
 describe('DomainActions.deleteDomainRel', () => {
-	// Hand-rolled try/catch rather than withPermissionCheck, and returns undefined on success.
+	// Hand-rolled try/catch rather than withGuardedMutation, and returns undefined on success.
 
 	it('allows a course editor, returning undefined', async () => {
 		const { courseEditor, graph } = await graphThreeSetup();

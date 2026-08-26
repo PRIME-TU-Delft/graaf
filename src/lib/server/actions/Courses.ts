@@ -1,7 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasCoursePermission, whereHasProgramPermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 import {
 	newCourseSchema,
 	editCourseSchema,
@@ -35,7 +35,7 @@ export class CourseActions {
 	static async newCourse(user: User, form: SuperValidated<Infer<typeof newCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.program.update({
 					where: {
@@ -96,7 +96,7 @@ export class CourseActions {
 			}
 		}
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.course.update({
 					where: {
@@ -161,7 +161,7 @@ export class CourseActions {
 			return setError(form, '', `You don't have permission on ${missing} of the selected courses`);
 		}
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.program.update({
 					where: {
@@ -212,7 +212,7 @@ export class CourseActions {
 	static async editCourse(user: User, form: SuperValidated<Infer<typeof editCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.course.update({
 					where: {
@@ -272,7 +272,7 @@ export class CourseActions {
 	static async changeArchive(user: User, form: SuperValidated<Infer<typeof changeArchiveSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.course.update({
 					where: {

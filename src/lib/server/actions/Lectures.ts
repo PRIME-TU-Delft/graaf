@@ -8,7 +8,7 @@ import {
 import type { User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms/server';
 import { whereHasGraphCoursePermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 
 /** Server actions for creating, renaming, and deleting lectures within a graph, and for
  * linking subjects to them. Called from form actions in `+page.server.ts` route files, one
@@ -26,7 +26,7 @@ export class LectureActions {
 	static async addLectureToGraph(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			async () => {
 				const lectureCount = await prisma.lecture.count({
 					where: {
@@ -69,7 +69,7 @@ export class LectureActions {
 	static async changeLectureName(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.lecture.update({
 					where: {
@@ -106,7 +106,7 @@ export class LectureActions {
 	) {
 		if (!form.valid) return setError(form, 'lectureIds._errors', 'Invalid lecture order');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -153,12 +153,12 @@ export class LectureActions {
 			}
 		};
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction(async (tx) => {
 					// Unscoped read, used only to preserve existing order. Permission is enforced by the
 					// update below, whose where clause is the one that carries the scope: findFirstOrThrow
-					// doesn't set meta.modelName on its P2025, so withPermissionCheck can't translate it.
+					// doesn't set meta.modelName on its P2025, so withGuardedMutation can't translate it.
 					const lecture = await tx.lecture.findUnique({
 						where: { id: form.data.lectureId },
 						select: { subjectOrder: true }
@@ -202,7 +202,7 @@ export class LectureActions {
 	) {
 		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid subject order');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.lecture.update({
 					where: {
@@ -236,7 +236,7 @@ export class LectureActions {
 	static async deleteLecture(user: User, form: SuperValidated<Infer<typeof deleteLectureSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid lecture');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.lecture.delete({
 					where: {

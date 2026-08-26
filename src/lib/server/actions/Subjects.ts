@@ -9,7 +9,7 @@ import {
 import type { Prisma, User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms/server';
 import { whereHasGraphCoursePermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 
 /** Server actions for creating, editing, and deleting subjects within a graph, and for
  * creating/removing relations between subjects. Called from form actions in `+page.server.ts`
@@ -27,7 +27,7 @@ export class SubjectActions {
 	 * via setError instead of throwing.
 	 */
 	static async addSubjectToGraph(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			async () => {
 				const lastSubject = await prisma.subject.findFirst({
 					where: {
@@ -108,7 +108,7 @@ export class SubjectActions {
 			}
 		});
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction([...removeTargetFromSource, ...removeSourceFromTarget, deleteSubject]),
 			form,
@@ -132,7 +132,7 @@ export class SubjectActions {
 			return setError(form, 'name', 'Invalid subject id, cannot be 0');
 		}
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -174,7 +174,7 @@ export class SubjectActions {
 	) {
 		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid subject order');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -266,7 +266,7 @@ export class SubjectActions {
 	static async addSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() => {
 				const sourceId = form.data.sourceSubjectId;
 				const targetId = form.data.targetSubjectId;
@@ -365,7 +365,7 @@ export class SubjectActions {
 	) {
 		if (!form.valid) return setError(form, '', form.message);
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction(async (tx) => {
 					await SubjectActions.disconnectSubjects(

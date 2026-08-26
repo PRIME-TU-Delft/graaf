@@ -2,8 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { newProgramSchema } from '$lib/zod/programSchema';
 import { whereHasProgramPermission } from '../permissions';
-import { GuardError, isWriteConflict, WRITE_CONFLICT_MESSAGE } from './transaction';
-import { withPermissionCheck } from './permissionError';
+import { GuardError, withGuardedMutation } from './guardedMutation';
 import { redirect } from '@sveltejs/kit';
 
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -39,20 +38,16 @@ export class ProgramActions {
 			return setError(form, '', 'You do not have permission to perform this action');
 		}
 
-		try {
-			await prisma.program.create({
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch (e) {
-			if (!(e instanceof Object) || !('message' in e)) {
-				return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-			}
-			return setError(form, 'name', `${e.message}`);
-		}
-
-		return { form };
+		return await withGuardedMutation(
+			() =>
+				prisma.program.create({
+					data: {
+						name: form.data.name
+					}
+				}),
+			form,
+			'name'
+		);
 	}
 
 	/**
@@ -69,7 +64,7 @@ export class ProgramActions {
 	static async editProgram(user: User, form: SuperValidated<Infer<typeof editProgramSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.program.update({
 					where: {
@@ -190,53 +185,55 @@ export class ProgramActions {
 			}
 		}
 
-		try {
-			await prisma.$transaction(
-				async (tx) => {
-					const program = await tx.program.findFirst({
-						where: {
-							id: formData.data.programId,
-							...whereHasProgramPermission(user, 'ProgramAdmin')
-						},
-						include: {
-							admins: { select: { id: true } },
-							editors: { select: { id: true } }
-						}
-					});
+		return await withGuardedMutation(
+			() =>
+				prisma.$transaction(
+					async (tx) => {
+						const program = await tx.program.findFirst({
+							where: {
+								id: formData.data.programId,
+								...whereHasProgramPermission(user, 'ProgramAdmin')
+							},
+							include: {
+								admins: { select: { id: true } },
+								editors: { select: { id: true } }
+							}
+						});
 
-					if (!program) throw new GuardError('Unauthorized');
+						if (!program) throw new GuardError('Unauthorized');
 
-					// if this user is the only program admin
-					// admin -NOT ALLOWED-> editor
-					// admin -NOT ALLOWED-> revoke
-					const fromRole = program.admins.find((admin) => admin.id === userId)
-						? 'admin'
-						: program.editors.find((editor) => editor.id === userId)
-							? 'editor'
-							: 'revoke';
+						// if this user is the only program admin
+						// admin -NOT ALLOWED-> editor
+						// admin -NOT ALLOWED-> revoke
+						const fromRole = program.admins.find((admin) => admin.id === userId)
+							? 'admin'
+							: program.editors.find((editor) => editor.id === userId)
+								? 'editor'
+								: 'revoke';
 
-					const isAllowed = ProgramActions.isAllowedToEditSuperUser(
-						fromRole,
-						newRole,
-						program.admins
-					);
-					if (isAllowed.error) throw new GuardError(isAllowed.error);
+						const isAllowed = ProgramActions.isAllowedToEditSuperUser(
+							fromRole,
+							newRole,
+							program.admins
+						);
+						if (isAllowed.error) throw new GuardError(isAllowed.error);
 
-					await tx.program.update({
-						where: {
-							id: formData.data.programId,
-							...whereHasProgramPermission(user, 'ProgramAdmin')
-						},
-						data: getData()
-					});
-				},
-				{ isolationLevel: 'Serializable' }
-			);
-		} catch (e: unknown) {
-			if (e instanceof GuardError) return setError(formData, '', e.message);
-			if (isWriteConflict(e)) return setError(formData, '', WRITE_CONFLICT_MESSAGE);
-
-			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
-		}
+						await tx.program.update({
+							where: {
+								id: formData.data.programId,
+								...whereHasProgramPermission(user, 'ProgramAdmin')
+							},
+							data: getData()
+						});
+					},
+					{ isolationLevel: 'Serializable' }
+				),
+			formData,
+			'',
+			{
+				writeConflictMessage:
+					'Someone changed these roles at the same time, so this change was not applied. Please try again.'
+			}
+		);
 	}
 }

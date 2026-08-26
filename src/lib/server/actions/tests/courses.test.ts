@@ -26,7 +26,7 @@ import { asErrorObject, buildForm, errorMessages, expectDenied } from './helpers
 // CourseActions.changePin is deliberately not covered: it has no permission gate at all, any
 // authenticated user may pin any course for themselves.
 //
-// Denials that run through withPermissionCheck now assert the entity-specific message too, since
+// Denials that run through withGuardedMutation now assert the entity-specific message too, since
 // that helper correctly matches Prisma 7's P2025 shape (#153). linkCourses hand-rolls its own
 // setError calls, so its wording was already asserted directly.
 

@@ -1,7 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasCoursePermission, whereHasSandboxPermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 
 import type { editLinkSchema, newLinkSchema } from '$lib/zod/linkSchema';
 
@@ -45,7 +45,7 @@ export class LinkActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Course',
 				message:
 					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
@@ -67,7 +67,7 @@ export class LinkActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Sandbox',
 				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
 			});
@@ -104,7 +104,7 @@ export class LinkActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'parentId', {
+			return await withGuardedMutation(() => query, form, 'parentId', {
 				entity: 'Course',
 				message:
 					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
@@ -127,7 +127,7 @@ export class LinkActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'parentId', {
+			return await withGuardedMutation(() => query, form, 'parentId', {
 				entity: 'Sandbox',
 				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
 			});
@@ -162,7 +162,7 @@ export class LinkActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'parentId', {
+			return await withGuardedMutation(() => query, form, 'parentId', {
 				entity: 'Course',
 				message:
 					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
@@ -182,7 +182,7 @@ export class LinkActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'parentId', {
+			return await withGuardedMutation(() => query, form, 'parentId', {
 				entity: 'Sandbox',
 				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
 			});
