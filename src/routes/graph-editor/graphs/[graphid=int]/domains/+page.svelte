@@ -314,7 +314,9 @@
 
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
-			<span class="w-full text-left">{thisDomain.name}</span>
+			<span class="min-w-0 flex-1 truncate text-left" title={thisDomain.name}>
+				{thisDomain.name}
+			</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">
