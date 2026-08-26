@@ -7,6 +7,8 @@
 	import CreateGraph from '$lib/components/graphSettings/CreateGraph.svelte';
 	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
 	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
+	import Help from '$lib/components/Help.svelte';
+	import { manualUrl } from '$lib/manual';
 	import ShowAdmins from './ShowAdmins.svelte';
 
 	// Icons
@@ -35,6 +37,8 @@
 		>{data.course ? `${data.course.code} ${data.course.name}` : 'Course'} | PRIME Graph Editor</title
 	>
 </svelte:head>
+
+<Help href={manualUrl('graphs')} />
 
 <article class="my-6 mb-12 space-y-6">
 	{#if data.error != undefined}

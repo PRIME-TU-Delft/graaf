@@ -6,6 +6,7 @@
 	import { page } from '$app/state';
 	import Help from '$lib/components/Help.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
+	import { manualUrl } from '$lib/manual';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { cn } from '$lib/utils';
 	import { Archive, ArchiveX } from '@lucide/svelte';
@@ -34,12 +35,7 @@
 	<title>Dashboard | PRIME Graph Editor</title>
 </svelte:head>
 
-<Help title="Home page">
-	<p>
-		The home page is where you can find Programmes, Courses and Sandboxes you're working on. You can
-		pin courses to the top of the page, and filter Programmes by unarchived courses.
-	</p>
-</Help>
+<Help href={manualUrl('about')} />
 
 <article class="my-6 mb-12 space-y-8">
 	<section class="prose mx-auto p-4">

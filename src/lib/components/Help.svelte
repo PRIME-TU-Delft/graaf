@@ -1,20 +1,27 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import DialogButton from './DialogButton.svelte';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import { cn } from '$lib/utils';
+	import { BadgeHelp } from '@lucide/svelte';
 
 	type Props = {
-		title: string;
-		children: Snippet<[]>;
+		href: string;
 	};
 
-	const { title, children }: Props = $props();
+	const { href }: Props = $props();
 </script>
 
-<DialogButton
-	{title}
-	button="Help"
-	icon="help"
-	class="fixed top-2 right-4 z-20 gap-1 bg-transparent text-white hover:underline"
+<!-- eslint-disable svelte/no-navigation-without-resolve -- external manual link, not a SvelteKit route -->
+<a
+	{href}
+	target="_blank"
+	rel="noopener noreferrer"
+	class={cn(
+		'flex items-center gap-2 rounded p-2 text-sm text-nowrap shadow-none transition-all hover:shadow-lg',
+		buttonVariants({ variant: 'default' }),
+		'fixed top-2 right-4 z-20 gap-1 bg-transparent text-white hover:underline'
+	)}
 >
-	{@render children()}
-</DialogButton>
+	<BadgeHelp class="size-5" />
+	<span>Help</span>
+</a>
+<!-- eslint-enable svelte/no-navigation-without-resolve -->
