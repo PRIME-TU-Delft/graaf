@@ -13,12 +13,7 @@ import {
 	getSubject,
 	seedFixture
 } from './helpers/fixture';
-import {
-	buildForm,
-	errorMessages,
-	expectDenied,
-	expectDeniedWithoutMessage
-} from './helpers/actions';
+import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 
 // This class is the one place where the tier is not uniform across a single aggregate:
 //
@@ -175,9 +170,11 @@ describe('LectureActions.linkSubjectsToLecture', () => {
 		});
 		const result = await LectureActions.linkSubjectsToLecture(outsider, form);
 
-		// Status only: this method writes its error to a path setError cannot reach, so the denial
-		// carries no message (#154). Tighten to expectDenied once that is fixed.
-		expectDeniedWithoutMessage(result);
+		// #154: this used to write its error to a form path setError could not reach ('subjectIds._errors'
+		// on a non-array schema field), so the denial carried no message. It now writes to '' like the
+		// rest of this class.
+		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this lecture");
 		const after = await prisma.lecture.findUniqueOrThrow({
 			where: { id: lecture.id },
 			include: { subjects: true }
@@ -254,7 +251,8 @@ describe('course editor tier split', () => {
 		});
 		const result = await LectureActions.linkSubjectsToLecture(courseEditor, form);
 
-		expectDeniedWithoutMessage(result); // no message on this path, see #154
+		expectDenied(result); // now carries a message too, see #154
+		expect(errorMessages(result)).toContain("You don't have permission to edit this lecture");
 		const after = await prisma.lecture.findUniqueOrThrow({
 			where: { id: lecture.id },
 			include: { subjects: true }
