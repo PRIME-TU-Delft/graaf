@@ -23,6 +23,7 @@ export const load: ServerLoad = async ({ params }) => {
 		});
 	} catch (e: unknown) {
 		if (isHttpError(e)) throw e;
+		console.error(e);
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
 
