@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { User } from '@prisma/client';
 	import Help from '$lib/components/Help.svelte';
-	import { manualUrl } from '$lib/manual';
 	import CreateNewProgramButton from '../newProgramButton.svelte';
 	import Program from '../Program.svelte';
 	import SearchCourses from '../SearchCourses.svelte';
@@ -15,7 +14,7 @@
 	<title>Programs | PRIME Graph Editor</title>
 </svelte:head>
 
-<Help href={manualUrl('programmes')} />
+<Help page="programmes" />
 <section class="prose mx-auto mt-12 p-4">
 	<h1 class="text-purple-950 shadow-purple-500/70">Programmes</h1>
 	<p>

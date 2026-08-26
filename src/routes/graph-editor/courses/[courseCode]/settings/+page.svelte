@@ -3,7 +3,6 @@
 	import { resolve } from '$app/paths';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import Help from '$lib/components/Help.svelte';
-	import { manualUrl } from '$lib/manual';
 	import { hasCoursePermissions, hasProgramPermissions } from '$lib/utils/permissions';
 	import ArchiveCourse from './ArchiveCourse.svelte';
 	import EditCourseName from './EditCourseName.svelte';
@@ -27,7 +26,7 @@
 	<title>{data.course.name} Settings | PRIME Graph Editor</title>
 </svelte:head>
 
-<Help href={manualUrl('courseSettings')} />
+<Help page="courseSettings" />
 
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"

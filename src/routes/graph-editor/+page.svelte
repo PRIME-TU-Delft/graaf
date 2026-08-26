@@ -6,7 +6,6 @@
 	import { page } from '$app/state';
 	import Help from '$lib/components/Help.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
-	import { manualUrl } from '$lib/manual';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { cn } from '$lib/utils';
 	import { Archive, ArchiveX } from '@lucide/svelte';
@@ -35,7 +34,7 @@
 	<title>Dashboard | PRIME Graph Editor</title>
 </svelte:head>
 
-<Help href={manualUrl('about')} />
+<Help page="about" />
 
 <article class="my-6 mb-12 space-y-8">
 	<section class="prose mx-auto p-4">

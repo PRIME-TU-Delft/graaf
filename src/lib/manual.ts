@@ -16,8 +16,25 @@ const manualPagePaths = {
 	links: '/links/'
 } as const;
 
+const manualPageLabels = {
+	about: 'About',
+	programmes: 'Programmes',
+	programmeSettings: 'Programme settings',
+	courses: 'Courses',
+	courseSettings: 'Course settings',
+	graphs: 'Graphs',
+	domains: 'Domains',
+	subjects: 'Subjects',
+	lectures: 'Lectures',
+	links: 'Links'
+} as const;
+
 export type ManualPage = keyof typeof manualPagePaths;
 
 export function manualUrl(page: ManualPage) {
 	return `${MANUAL_BASE_URL}${manualPagePaths[page]}`;
+}
+
+export function manualLabel(page: ManualPage) {
+	return manualPageLabels[page];
 }

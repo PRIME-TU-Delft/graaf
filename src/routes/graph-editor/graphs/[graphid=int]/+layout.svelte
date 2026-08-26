@@ -10,7 +10,6 @@
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import Help from '$lib/components/Help.svelte';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
-	import { manualUrl } from '$lib/manual';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	import type { Snippet } from 'svelte';
@@ -62,7 +61,7 @@
 	);
 </script>
 
-<Help href={manualUrl(manualPageForView)} />
+<Help page={manualPageForView} />
 
 <div class="mx-auto max-w-[100rem]">
 	<PaneGroup direction="horizontal" autoSaveId="panels" class="w-full !overflow-visible">

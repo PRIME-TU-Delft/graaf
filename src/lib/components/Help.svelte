@@ -1,18 +1,19 @@
 <script lang="ts">
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
+	import { manualLabel, manualUrl, type ManualPage } from '$lib/manual';
 	import { BadgeHelp } from '@lucide/svelte';
 
 	type Props = {
-		href: string;
+		page: ManualPage;
 	};
 
-	const { href }: Props = $props();
+	const { page }: Props = $props();
 </script>
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- external manual link, not a SvelteKit route -->
 <a
-	{href}
+	href={manualUrl(page)}
 	target="_blank"
 	rel="noopener noreferrer"
 	class={cn(
@@ -22,6 +23,6 @@
 	)}
 >
 	<BadgeHelp class="size-5" />
-	<span>Help</span>
+	<span>{manualLabel(page)} help</span>
 </a>
 <!-- eslint-enable svelte/no-navigation-without-resolve -->
