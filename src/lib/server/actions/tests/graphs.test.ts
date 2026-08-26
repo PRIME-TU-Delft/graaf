@@ -26,8 +26,13 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // reachable through these entry points: the zod enum rejects any other value first, so the method
 // returns a form error rather than falling through.
 //
-// Denials that run through withPermissionCheck assert status and an unchanged database, not
-// message text, because that helper currently emits a raw Prisma error instead (#153).
+// Denials that run through withPermissionCheck now also assert the branch's shared message, since
+// that helper correctly matches Prisma 7's P2025 shape instead of falling through to a raw Prisma
+// error (#153).
+
+const COURSE_DENIED =
+	'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor';
+const SANDBOX_DENIED = 'You are not allowed to edit this sandbox. You are not an owner or editor';
 
 beforeEach(seedFixture);
 
@@ -69,6 +74,7 @@ describe('GraphActions.newGraph (COURSE)', () => {
 		const result = await GraphActions.newGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.graph.findFirst({ where: { name: 'NewCourseGraph' } })).resolves.toBeNull();
 	});
 });
@@ -104,6 +110,7 @@ describe('GraphActions.newGraph (SANDBOX)', () => {
 		const result = await GraphActions.newGraph(superAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(
 			prisma.graph.findFirst({ where: { name: 'NewSandboxGraph' } })
 		).resolves.toBeNull();
@@ -144,6 +151,7 @@ describe('GraphActions.editGraph', () => {
 		const result = await GraphActions.editGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(
 			prisma.graph.findUniqueOrThrow({ where: { id: graph.id } })
 		).resolves.toMatchObject({ name: FIXTURE_GRAPHS.three });
@@ -181,6 +189,7 @@ describe('GraphActions.editGraph', () => {
 		const result = await GraphActions.editGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(
 			prisma.graph.findUniqueOrThrow({ where: { id: graph.id } })
 		).resolves.toMatchObject({ name: 'SandboxGraph' });
@@ -219,6 +228,7 @@ describe('GraphActions.deleteGraph', () => {
 		const result = await GraphActions.deleteGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(COURSE_DENIED);
 		await expect(prisma.graph.findUnique({ where: { id: graph.id } })).resolves.not.toBeNull();
 	});
 
@@ -235,6 +245,7 @@ describe('GraphActions.deleteGraph', () => {
 		const result = await GraphActions.deleteGraph(superAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(prisma.graph.findUnique({ where: { id: graph.id } })).resolves.not.toBeNull();
 	});
 });
@@ -277,14 +288,27 @@ describe('GraphActions.duplicateGraph', () => {
 		await expect(prisma.graph.findFirst({ where: { name: 'CopiedGraph' } })).resolves.toBeNull();
 	});
 
-	it('copies a source graph the caller has no access to, which is bug #151', async () => {
-		// Documents current behaviour, not desired behaviour. Only the destination is permission
-		// checked; the source graph is fetched by id alone. The course editor here holds no role on
-		// CourseOne, yet GraphOne's full contents land in a sandbox they control. When #151 is fixed
-		// this test should start failing and be rewritten to assert the denial.
+	it('denies duplicating a source graph the caller has no access to, which is bug #151', async () => {
 		const { courseEditor } = await fixtureUsers();
 		const sandbox = await createSandbox(courseEditor.id);
 		const source = await getGraph(FIXTURE_GRAPHS.one);
+
+		const form = await buildForm(duplicateGraphSchema, {
+			graphId: source.id,
+			newName: 'CopiedGraph',
+			destinationType: 'SANDBOX',
+			destinationId: sandbox.id
+		});
+		const result = await GraphActions.duplicateGraph(courseEditor, form);
+
+		expect(errorMessages(result)).toContain('Source graph not found');
+		await expect(prisma.graph.findFirst({ where: { name: 'CopiedGraph' } })).resolves.toBeNull();
+	});
+
+	it('copies a source graph the caller has course editor access to', async () => {
+		const { courseEditor } = await fixtureUsers();
+		const sandbox = await createSandbox(courseEditor.id);
+		const source = await getGraph(FIXTURE_GRAPHS.three);
 
 		const form = await buildForm(duplicateGraphSchema, {
 			graphId: source.id,
@@ -302,5 +326,42 @@ describe('GraphActions.duplicateGraph', () => {
 		expect(copied).not.toBeNull();
 		expect(copied?.domains).toHaveLength(3);
 		expect(copied?.subjects).toHaveLength(3);
+	});
+
+	it('copies a source graph in a sandbox the caller owns', async () => {
+		const { courseEditor } = await fixtureUsers();
+		const sourceSandbox = await createSandbox(courseEditor.id);
+		const source = await createSandboxGraph(sourceSandbox.id);
+		const destSandbox = await createSandbox(courseEditor.id);
+
+		const form = await buildForm(duplicateGraphSchema, {
+			graphId: source.id,
+			newName: 'CopiedFromSandbox',
+			destinationType: 'SANDBOX',
+			destinationId: destSandbox.id
+		});
+		await expect(GraphActions.duplicateGraph(courseEditor, form)).rejects.toSatisfy(isRedirect);
+
+		await expect(
+			prisma.graph.findFirst({ where: { name: 'CopiedFromSandbox' } })
+		).resolves.not.toBeNull();
+	});
+
+	it('denies duplicating a source graph in a sandbox the caller has no access to', async () => {
+		const { sandbox } = await sandboxSetup();
+		const source = await createSandboxGraph(sandbox.id);
+		const outsider = await createOutsider();
+		const destSandbox = await createSandbox(outsider.id);
+
+		const form = await buildForm(duplicateGraphSchema, {
+			graphId: source.id,
+			newName: 'CopiedGraph',
+			destinationType: 'SANDBOX',
+			destinationId: destSandbox.id
+		});
+		const result = await GraphActions.duplicateGraph(outsider, form);
+
+		expect(errorMessages(result)).toContain('Source graph not found');
+		await expect(prisma.graph.findFirst({ where: { name: 'CopiedGraph' } })).resolves.toBeNull();
 	});
 });

@@ -177,6 +177,28 @@ export class CourseActions {
 	}
 
 	/**
+	 * Compute which of the given courses the user has course-level permission on, for
+	 * gating the unlink table's per-row eligibility.
+	 *
+	 * PERMISSIONS:
+	 * - Same tier `linkCourses` requires per course: CourseAdminEditor or ProgramAdminEditor
+	 *
+	 * @param user - The user performing the action
+	 * @param courseIds - The course ids to check
+	 * @returns `Set` of course ids the user is permitted to unlink
+	 */
+	static async getUnlinkEligibility(user: User, courseIds: number[]) {
+		const permittedCourses = await prisma.course.findMany({
+			where: {
+				id: { in: courseIds },
+				...whereHasCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+			},
+			select: { id: true }
+		});
+		return new Set(permittedCourses.map((c) => c.id));
+	}
+
+	/**
 	 * Rename a course.
 	 *
 	 * PERMISSIONS:
