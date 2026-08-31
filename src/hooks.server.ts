@@ -42,11 +42,14 @@ export const handle: Handle = async ({ event, resolve }) => {
 		});
 	}
 
+	// Public graph links (course code + link alias) don't require auth
+	const isPublicGraphLink = /^\/graph\/[^/]+\/[^/]+\/?$/.test(event.url.pathname);
+
 	// Disable all forms of authentication in deploy previews
 	if (env.NETLIFY_CONTEXT == 'DEPLOY_PREVIEW') {
 		const user_id = event.cookies.get('user_id');
 
-		if (!user_id && event.url.pathname.startsWith('/auth')) {
+		if (!user_id && (event.url.pathname.startsWith('/auth') || isPublicGraphLink)) {
 			event.locals.auth = () => authFunction(event, user_id);
 			return await resolve(event);
 		} else if (!user_id) {
