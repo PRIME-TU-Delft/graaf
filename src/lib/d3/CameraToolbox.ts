@@ -29,6 +29,20 @@ export class CameraToolbox {
 	}
 
 	/**
+	 * Get the real pixel dimensions of the canvas viewport, reading from the parent container
+	 * so dimensions remain accurate even when the SVG's viewBox or styles are being transitioned.
+	 *
+	 * @param graph - The graph instance
+	 */
+	static getViewportDimensions(graph: GraphD3): { width: number; height: number } {
+		const svgNode = graph.svg.node();
+		const parent = svgNode?.parentElement;
+		const width = parent?.clientWidth || svgNode?.clientWidth || 800;
+		const height = parent?.clientHeight || svgNode?.clientHeight || 600;
+		return { width, height };
+	}
+
+	/**
 	 * Contains a bunch of handy knickknacks.
 	 *
 	 * **x** and **y** are the offsets to center the origin. When the background is a lecture, or
@@ -44,6 +58,8 @@ export class CameraToolbox {
 	 * background
 	 */
 	static clientTransform(graph: GraphD3, mode?: 'graph' | 'lecture'): CameraTransform {
+		const { width, height } = CameraToolbox.getViewportDimensions(graph);
+
 		if (mode !== 'graph' && (graph.background.classed('lecture') || mode === 'lecture')) {
 			const size = graph.lecture
 				? Math.max(
@@ -67,16 +83,12 @@ export class CameraToolbox {
 			return {
 				x: outer_width / 2,
 				y: outer_height / 2,
-				k: Math.min(
-					1,
-					(graph.svg.node()!.clientWidth - 2 * settings.LECTURE_PADDING * settings.GRID_UNIT) /
-						outer_width
-				)
+				k: Math.min(1, (width - 2 * settings.LECTURE_PADDING * settings.GRID_UNIT) / outer_width)
 			};
 		} else {
 			return {
-				x: graph.svg.node()!.clientWidth / 2,
-				y: graph.svg.node()!.clientHeight / 2,
+				x: width / 2,
+				y: height / 2,
 				k: 1
 			};
 		}
@@ -111,6 +123,8 @@ export class CameraToolbox {
 		max_x += settings.GRID_PADDING;
 		max_y += settings.GRID_PADDING;
 
+		const { width, height } = CameraToolbox.getViewportDimensions(graph);
+
 		return {
 			x: (min_x + max_x) / 2,
 			y: (min_y + max_y) / 2,
@@ -118,8 +132,8 @@ export class CameraToolbox {
 				settings.MIN_ZOOM,
 				Math.min(
 					settings.MAX_ZOOM,
-					graph.svg.node()!.clientWidth / ((max_x - min_x) * settings.GRID_UNIT),
-					graph.svg.node()!.clientHeight / ((max_y - min_y) * settings.GRID_UNIT)
+					width / ((max_x - min_x) * settings.GRID_UNIT),
+					height / ((max_y - min_y) * settings.GRID_UNIT)
 				)
 			)
 		};
@@ -136,25 +150,25 @@ export class CameraToolbox {
 	 */
 	static moveCamera(graph: GraphD3, transform: CameraTransform, callback?: () => void) {
 		const client = CameraToolbox.clientTransform(graph);
+		const targetTransform = d3.zoomIdentity
+			.translate(
+				client.x - transform.k * transform.x * settings.GRID_UNIT,
+				client.y - transform.k * transform.y * settings.GRID_UNIT
+			)
+			.scale(transform.k);
 
-		graph.svg
-			.transition()
-			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-			.call(
-				graph.zoom.transform,
-				d3.zoomIdentity
-					.translate(
-						client.x - transform.k * transform.x * settings.GRID_UNIT,
-						client.y - transform.k * transform.y * settings.GRID_UNIT
-					)
-					.scale(transform.k)
-			);
+		if (callback !== undefined) {
+			graph.svg
+				.transition()
+				.duration(settings.GRAPH_ANIMATION_DURATION)
+				.ease(d3.easeSinInOut)
+				.call(graph.zoom.transform, targetTransform);
 
-		if (callback) {
 			setTimeout(() => {
 				callback();
 			}, settings.GRAPH_ANIMATION_DURATION);
+		} else {
+			graph.svg.call(graph.zoom.transform, targetTransform);
 		}
 	}
 

@@ -99,6 +99,8 @@ export class GraphD3 {
 
 		if (lectureId !== null) {
 			this.lecture = this.data.lectures.find((l) => l.id === lectureId) ?? null;
+		} else if (view === GraphView.lectures && this.data.lectures.length > 0) {
+			this.lecture = this.data.lectures[0];
 		}
 
 		// SVG setup
@@ -216,6 +218,14 @@ export class GraphD3 {
 	setView(targetView: GraphView) {
 		if (graphState.isTransitioning()) return;
 		if (graphState.isSimulating()) this.stopSimulation();
+
+		if (
+			targetView === GraphView.lectures &&
+			this.lecture === null &&
+			this.data.lectures.length > 0
+		) {
+			this.lecture = this.data.lectures[0];
+		}
 
 		switch (graphView.state) {
 			case GraphView.domains:
