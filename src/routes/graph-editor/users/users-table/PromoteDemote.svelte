@@ -2,10 +2,11 @@
 	import { page } from '$app/state';
 	import { cn } from '$lib/utils';
 	import { displayName } from '$lib/utils/displayUserName';
+	import { useSyncedSuperForm } from '$lib/utils/syncedSuperForm.svelte';
 	import { changeUserRoleSchema } from '$lib/zod/userSchema';
 	import { useId } from 'bits-ui';
-	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
+	import type { z } from 'zod';
 	import { toast } from 'svelte-sonner';
 
 	// Components
@@ -44,36 +45,29 @@
 	let confirmOpen = $state(false);
 	let submittedRole = $state<'ADMIN' | 'USER'>('ADMIN');
 
-	const form = superForm((page.data as PageData).changeUserRoleForm, {
-		id: 'change-user-role-' + useId(),
-		validators: zodClient(changeUserRoleSchema),
-		// These fields are filled from the row, never typed in, so resetting the store after a
-		// successful submit would just empty it and make the next submit fail client-side
-		// validation without ever reaching the server
-		resetForm: false,
-		onSubmit: () => {
-			submittedRole = newRole;
-		},
-		onResult: ({ result }) => {
-			if (result.type === 'success') {
-				toast.success(
-					submittedRole === 'ADMIN'
-						? 'User promoted to super admin'
-						: 'User demoted to regular user'
-				);
-				confirmOpen = false;
+	const form = useSyncedSuperForm<z.infer<typeof changeUserRoleSchema>>(
+		(page.data as PageData).changeUserRoleForm,
+		{
+			id: 'change-user-role-' + useId(),
+			validators: zodClient(changeUserRoleSchema),
+			onSubmit: () => {
+				submittedRole = newRole;
+			},
+			onResult: ({ result }) => {
+				if (result.type === 'success') {
+					toast.success(
+						submittedRole === 'ADMIN'
+							? 'User promoted to super admin'
+							: 'User demoted to regular user'
+					);
+					confirmOpen = false;
+				}
 			}
-		}
-	});
+		},
+		() => ({ userId: user.id, role: newRole })
+	);
 
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	// Keep the store in sync with the hidden inputs, otherwise client-side validation rejects
-	// the submit before it leaves the page
-	$effect(() => {
-		$formData.userId = user.id;
-		$formData.role = newRole;
-	});
+	const { enhance, submitting, delayed } = form;
 </script>
 
 <div class="mt-2">
