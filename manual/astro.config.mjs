@@ -24,6 +24,10 @@ export default defineConfig({
 					slug: 'about'
 				},
 				{
+					label: 'Roles',
+					slug: 'roles'
+				},
+				{
 					label: 'Programmes',
 					slug: 'programmes'
 				},

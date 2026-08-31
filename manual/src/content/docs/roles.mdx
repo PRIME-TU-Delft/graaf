@@ -1,0 +1,68 @@
+---
+title: Roles
+description: The permission roles that exist in Graaf, from highest to lowest.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Graaf's permissions are hierarchical: a role higher up this list automatically has every
+permission of the roles below it, for the programmes and courses it applies to. Use this page to
+pick the right role when adding someone as a super user on a [programme](../programmes) or
+[course](../courses).
+
+## 1. Super Admin
+
+Super Admins can do anything, anywhere in Graaf: create and delete programmes, and manage every
+programme and course without being added to it explicitly.
+
+Super Admin status is not assigned from the programme or course settings pages. If you need one,
+ask an existing super admin.
+
+## 2. Programme Admin
+
+Programme Admins manage a programme itself. They can:
+
+- Edit the programme's name.
+- Add, change or remove the programme's admins and editors.
+- Add, link and unlink courses under the programme.
+- Delete a course under the programme (once it is archived).
+- Everything a Programme Editor and a Course Admin can do, for every course under the programme.
+
+## 3. Programme Editor
+
+Programme Editors manage a programme's courses, but not the programme's own settings or its super
+users. They can:
+
+- Add, link and unlink courses under the programme.
+- Delete a course under the programme (once it is archived).
+- Everything a Course Editor can do, for every course under the programme.
+
+Programme Editors cannot rename the programme or change who its admins/editors are.
+
+## 4. Course Admin
+
+Course Admins manage a single course. They can:
+
+- Rename the course.
+- Add, change or remove the course's admins and editors.
+- Archive or restore the course.
+- Everything a Course Editor can do, for that course.
+
+Course Admins cannot delete the course (deleting requires Programme Admin/Editor permissions, see
+[Deleting a course](../courses#deleting-a-course)) and have no access outside their own course.
+
+## 5. Course Editor
+
+Course Editors work on a course's content. They can:
+
+- Create and edit graphs, domains, subjects and lectures.
+- Create and edit links.
+
+Course Editors cannot delete graphs or links, cannot manage the course's admins/editors, and
+cannot archive or delete the course.
+
+<Aside type="note">
+	Sandboxes use a separate, non-hierarchical pair of roles: the **Owner** (the user who created it)
+	and **Editors** they invite. Sandbox roles are not related to programme or course roles and only
+	apply to that one sandbox.
+</Aside>
