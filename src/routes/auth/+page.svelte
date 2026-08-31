@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { resolve } from '$app/paths';
+	import Logo from '$lib/components/Logo.svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { ArrowLeft, ExternalLink, LogIn } from '@lucide/svelte';
 	import type { User } from '@prisma/client';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
@@ -8,99 +11,157 @@
 	const { data }: { data: PageData } = $props();
 
 	let testUsers: User[] = $state([]);
+	let logoMouseState = $state(-1);
+	let logoClearTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
+
+	function handleLogoInteraction() {
+		logoMouseState = Math.random();
+		if (logoClearTimeout) {
+			clearTimeout(logoClearTimeout);
+		}
+		logoClearTimeout = setTimeout(() => {
+			logoMouseState = -1;
+		}, 2000);
+	}
 
 	onMount(() => {
-		// If in netlify environment, fetch all test users
+		// If in deploy preview environment, fetch all test users
 		if (data.isInNetlify) {
 			fetch('./auth/get-all-testusers')
 				.then((res) => res.json())
-				.then((data) => {
-					testUsers = data;
+				.then((userData) => {
+					testUsers = userData;
 				});
 		}
 	});
-
-	let contributors = [
-		{ name: 'Abel de Bruijn', title: 'Developer' },
-		{ name: 'Bram Kreulen', title: 'Developer' },
-		{ name: 'Julia van der Kris', title: 'Migration and Devops expert' }
-	];
 </script>
 
 <svelte:head>
 	<title>Sign in | PRIME Graph Editor</title>
 </svelte:head>
 
-<section class="prose prose-lg mx-auto mt-24">
-	<h2>What is the course graph?</h2>
-	Welcome to the graph editor, here you can assemble your own course graph! Sign-in to get started. The
-	graph is produced by
-	<a
-		href="https://www.tudelft.nl/ewi/over-de-faculteit/afdelingen/applied-mathematics/studeren/prime"
-	>
-		PRIME
-	</a>
-	(PRogramme for Inovation in Math Education) and is a tool for teachers to create and share course graphs.
+<div
+	class="flex min-h-screen flex-col justify-between bg-slate-50 text-slate-900 selection:bg-purple-500 selection:text-white"
+>
+	<!-- Top Bar -->
+	<header class="border-b border-purple-900/20 bg-purple-950 px-4 py-4 sm:px-6 lg:px-8">
+		<div class="mx-auto flex max-w-7xl items-center justify-between">
+			<a
+				href={resolve('/')}
+				class="flex items-center gap-2.5 text-white transition-opacity hover:opacity-90"
+				onmouseenter={handleLogoInteraction}
+			>
+				<div class="flex size-8 items-center justify-center rounded-lg bg-purple-900/60 p-1">
+					<Logo mouseState={logoMouseState} class="size-5" />
+				</div>
+				<span class="text-base font-semibold tracking-tight">PRIME Graph Editor</span>
+			</a>
 
-	<p>Sign-in with your TU Delft account to get started!</p>
-
-	{#if data.isInNetlify}
-		<div class="space-y-2 p-2">
-			{#each testUsers as user (user.id)}
-				<TestUser {user} />
-			{/each}
+			<a
+				href={resolve('/')}
+				class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-200 transition-colors hover:text-white"
+			>
+				<ArrowLeft class="size-4" />
+				<span>Back to home</span>
+			</a>
 		</div>
-	{/if}
+	</header>
 
-	<form action="?/auth" method="POST">
-		<Button type="submit">Sign-in</Button>
-	</form>
-</section>
+	<!-- Main Sign-in Card Section -->
+	<main class="grain relative flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+		<div class="w-full max-w-md">
+			<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
+				<!-- Animated Logo -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<div
+					class="mx-auto mb-6 flex size-16 cursor-pointer items-center justify-center rounded-2xl bg-purple-950 p-2.5 shadow-md transition-transform duration-200 hover:scale-105"
+					onmouseenter={handleLogoInteraction}
+				>
+					<Logo mouseState={logoMouseState} class="size-10" />
+				</div>
 
-<section class="prose mx-auto mt-12">
-	<h2>Contributors</h2>
-	{#each contributors as { name, title } (name)}
-		<div class="mb-2 flex gap-2">
-			<div class="not-prose w-24 overflow-hidden rounded">
-				<img
-					class="aspect-square object-cover"
-					src={'/contributors/' + name.toLowerCase().replaceAll(' ', '-') + '.jpg'}
-					alt={'Profile of ' + name}
-				/>
+				<div class="text-center">
+					<h1 class="text-2xl font-bold tracking-tight text-slate-900">Sign in to Graph Editor</h1>
+					<p class="mt-2 text-sm leading-relaxed text-slate-600">
+						Log in with your TU Delft credentials to create and manage course graphs.
+					</p>
+				</div>
+
+				<div class="mt-8 space-y-4">
+					<form action="?/auth" method="POST">
+						<input type="hidden" name="providerId" value="surfconext" />
+						<Button
+							type="submit"
+							size="lg"
+							class="w-full bg-purple-600 font-medium text-white hover:bg-purple-500"
+						>
+							<LogIn class="size-5" />
+							<span>Sign in with TU Delft NetID</span>
+						</Button>
+					</form>
+
+					<div
+						class="rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-center text-xs text-slate-600"
+					>
+						<p>
+							Need guidance? Read the
+							<a
+								href="https://prime-tu-delft.github.io/graaf/"
+								target="_blank"
+								rel="noreferrer"
+								class="font-medium text-purple-800 underline hover:text-purple-950"
+							>
+								course-staff and TA manual
+								<ExternalLink class="inline-block size-3" />
+							</a>
+						</p>
+					</div>
+				</div>
+
+				<!-- Deploy Preview Test Users -->
+				{#if data.isInNetlify}
+					<div class="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-left">
+						<div class="flex items-center justify-between border-b border-slate-200 pb-2">
+							<h2 class="text-xs font-semibold tracking-wider text-slate-700 uppercase">
+								Test accounts
+							</h2>
+							<span
+								class="rounded bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-900"
+							>
+								Deploy preview
+							</span>
+						</div>
+						<div class="mt-3 space-y-2">
+							{#each testUsers as user (user.id)}
+								<TestUser {user} />
+							{/each}
+						</div>
+					</div>
+				{/if}
 			</div>
-			<div class="flex flex-col gap-1">
-				<span class="bold">{name}</span>
-				<span class="text-xs">{title}</span>
+
+			<div class="mt-6 text-center text-xs text-slate-500">
+				<a href={resolve('/')} class="font-medium text-slate-600 underline hover:text-purple-800">
+					← Return to landing page
+				</a>
 			</div>
 		</div>
-	{/each}
-</section>
+	</main>
 
-<section class="prose mx-auto mt-12">
-	<h2>Licence</h2>
-	<p>
-		<a class="not-prose" rel="license" href="http://creativecommons.org/licenses/by/4.0/"
-			><img
-				alt="Creative Commons License"
-				style="border-width:0"
-				src="https://i.creativecommons.org/l/by/4.0/88x31.png"
-			/></a
-		><br /><span>PRIME Graph</span>
-		by
-		<a
-			href="https://www.tudelft.nl/ewi/over-de-faculteit/afdelingen/applied-mathematics/studeren/prime"
-			property="cc:attributionName"
-			rel="cc:attributionURL">PRIME, TU Delft</a
-		>
-		is licensed under a
-		<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"
-			>Creative Commons Attribution 4.0 International License</a
-		>.<br />Based on a work at
-		<a href="https://github.com/PRIME-TU-Delft/graaf" rel="dct:source"
-			>https://github.com/PRIME-TU-Delft/graaf</a
-		>.<br />Permissions beyond the scope of this license may be available at
-		<a href="https://github.com/PRIME-TU-Delft/graaf/blob/main/LICENSE" rel="cc:morePermissions"
-			>https://github.com/PRIME-TU-Delft/graaf/blob/main/LICENSE</a
-		>.
-	</p>
-</section>
+	<!-- Footer -->
+	<footer class="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
+		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+			<p>
+				PRIME Graph Editor • TU Delft • Licensed under
+				<a
+					href="https://creativecommons.org/licenses/by/4.0/"
+					target="_blank"
+					rel="noreferrer"
+					class="underline hover:text-slate-800"
+				>
+					CC BY 4.0
+				</a>
+			</p>
+		</div>
+	</footer>
+</div>
