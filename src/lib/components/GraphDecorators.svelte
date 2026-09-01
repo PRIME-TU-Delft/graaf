@@ -59,9 +59,6 @@
 	function gotoView(view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES') {
 		const params = new SvelteURLSearchParams(page.url.searchParams);
 		params.set('view', view);
-		if (view === 'LECTURES' && !params.has('lectureID') && graphD3.data.lectures.length > 0) {
-			params.set('lectureID', String(graphD3.data.lectures[0].id));
-		}
 
 		goto(`?${params}` as ResolvedPathname);
 	}
@@ -120,11 +117,7 @@
 						<DropdownMenu.Item
 							disabled={graphState.isTransitioning()}
 							onclick={() => {
-								if (tab === 'LECTURES' && !graphD3.lecture && graphD3.data.lectures.length > 0) {
-									graphD3.setLecture(graphD3.data.lectures[0]);
-								}
 								gotoView(tab);
-								graphD3.setView(tab);
 							}}
 						>
 							{capitalize(tab)}
