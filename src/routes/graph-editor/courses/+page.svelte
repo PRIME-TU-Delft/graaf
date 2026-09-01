@@ -5,6 +5,7 @@
 
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import Help from '$lib/components/Help.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { displayName } from '$lib/utils/displayUserName';
@@ -52,6 +53,7 @@
 	<title>Courses | PRIME Graph Editor</title>
 </svelte:head>
 
+<Help page="courses" />
 <section class="prose mx-auto mt-12 p-4">
 	<h1 class="text-purple-950 shadow-purple-500/70">Courses</h1>
 	<p>
