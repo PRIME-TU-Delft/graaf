@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import Footer from '$lib/components/Footer.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import TopBar from '$lib/components/TopBar.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -130,20 +131,5 @@
 		</div>
 	</main>
 
-	<!-- Footer -->
-	<footer class="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<p>
-				PRIME Graph Editor • TU Delft • Licensed under
-				<a
-					href="https://creativecommons.org/licenses/by/4.0/"
-					target="_blank"
-					rel="noreferrer"
-					class="underline hover:text-slate-800"
-				>
-					CC BY 4.0
-				</a>
-			</p>
-		</div>
-	</footer>
+	<Footer />
 </div>
