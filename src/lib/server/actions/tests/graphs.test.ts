@@ -26,7 +26,7 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // reachable through these entry points: the zod enum rejects any other value first, so the method
 // returns a form error rather than falling through.
 //
-// Denials that run through withPermissionCheck now also assert the branch's shared message, since
+// Denials that run through withGuardedMutation now also assert the branch's shared message, since
 // that helper correctly matches Prisma 7's P2025 shape instead of falling through to a raw Prisma
 // error (#153).
 

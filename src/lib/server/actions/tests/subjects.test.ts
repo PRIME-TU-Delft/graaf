@@ -24,9 +24,9 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // GraphThree belongs to CourseThree, so the fixture course editor is authorized and a user with no
 // role anywhere is the denied party.
 //
-// Denials now assert the entity-specific message too, now that withPermissionCheck correctly
+// Denials now assert the entity-specific message too, now that withGuardedMutation correctly
 // matches Prisma 7's P2025 shape (#153). deleteSubjectRel is the exception: it hand-rolls its own
-// try/catch instead of going through withPermissionCheck, so it still surfaces the raw Prisma
+// try/catch instead of going through withGuardedMutation, so it still surfaces the raw Prisma
 // error message and stays status-only.
 
 beforeEach(seedFixture);
@@ -214,7 +214,7 @@ describe('SubjectActions.addSubjectRel', () => {
 });
 
 describe('SubjectActions.deleteSubjectRel', () => {
-	// Hand-rolled try/catch rather than withPermissionCheck, returns undefined on success.
+	// Hand-rolled try/catch rather than withGuardedMutation, returns undefined on success.
 
 	it('allows a course editor, returning undefined', async () => {
 		const { courseEditor, graph } = await graphThreeSetup();

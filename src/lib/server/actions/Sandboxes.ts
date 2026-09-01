@@ -1,7 +1,7 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasSandboxPermission } from '$lib/server/permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -67,7 +67,7 @@ export class SandboxActions {
 	static async editSandbox(user: User, form: SuperValidated<Infer<typeof editSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.sandbox.update({
 					where: {
@@ -189,7 +189,7 @@ export class SandboxActions {
 	static async deleteSandbox(user: User, form: SuperValidated<Infer<typeof deleteSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		const result = await withPermissionCheck(
+		const result = await withGuardedMutation(
 			() =>
 				prisma.sandbox.delete({
 					where: {

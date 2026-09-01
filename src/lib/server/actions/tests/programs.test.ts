@@ -19,10 +19,10 @@ import {
 } from './helpers/fixture';
 import { asErrorObject, buildForm, errorMessages } from './helpers/actions';
 
-// Most ProgramActions failure paths are hand-rolled rather than going through withPermissionCheck,
+// Most ProgramActions failure paths are hand-rolled rather than going through withGuardedMutation,
 // so these tests assert on messages directly rather than going through expectDenied. editProgram
 // is the exception (#152): it used to collapse every failure, permission-related or not, into a
-// generic 'Unauthorized', which is why it now goes through the same withPermissionCheck helper as
+// generic 'Unauthorized', which is why it now goes through the same withGuardedMutation helper as
 // the other action classes and gets an entity-specific message instead.
 //
 // The tiers are also the narrowest in the codebase. editProgram and editSuperUser require
@@ -139,8 +139,6 @@ describe('ProgramActions.deleteProgram', () => {
 });
 
 describe('ProgramActions.editSuperUser', () => {
-	// Returns undefined on success rather than { form }.
-
 	it('allows the program admin to grant an editor role', async () => {
 		const { programAdmin } = await fixtureUsers();
 		const outsider = await createOutsider();
@@ -153,7 +151,7 @@ describe('ProgramActions.editSuperUser', () => {
 		});
 		const result = await ProgramActions.editSuperUser(programAdmin, form);
 
-		expect(result).toBeUndefined();
+		expect(result).not.toHaveProperty('status');
 		const after = await prisma.program.findUniqueOrThrow({
 			where: { id: program.id },
 			include: { editors: true }

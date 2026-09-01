@@ -22,7 +22,7 @@ import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 // Same dual-branch shape as GraphActions: COURSE gated at CourseAdminEditorORProgramAdminEditor,
 // SANDBOX at OwnerOREditor with no super-admin bypass.
 //
-// Denials assert the branch's shared message too, now that withPermissionCheck correctly matches
+// Denials assert the branch's shared message too, now that withGuardedMutation correctly matches
 // Prisma 7's P2025 shape instead of falling through to a raw Prisma error (#153).
 
 const COURSE_DENIED =

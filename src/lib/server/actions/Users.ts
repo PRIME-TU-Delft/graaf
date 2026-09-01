@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
-import { GuardError, isWriteConflict, WRITE_CONFLICT_MESSAGE } from './transaction';
+import { GuardError, withGuardedMutation } from './guardedMutation';
 import { redirect, type RequestEvent } from '@sveltejs/kit';
 
 import type { changeUserRoleSchema } from '$lib/zod/userSchema';
@@ -77,31 +77,31 @@ export class UserActions {
 			return setError(form, '', 'You cannot demote yourself');
 		}
 
-		try {
-			await prisma.$transaction(
-				async (tx) => {
-					if (role === 'USER') {
-						const remainingAdmins = await tx.user.count({
-							where: { role: 'ADMIN', id: { not: userId } }
+		return await withGuardedMutation(
+			() =>
+				prisma.$transaction(
+					async (tx) => {
+						if (role === 'USER') {
+							const remainingAdmins = await tx.user.count({
+								where: { role: 'ADMIN', id: { not: userId } }
+							});
+
+							if (remainingAdmins === 0) throw new GuardError('You cannot demote the last admin');
+						}
+
+						await tx.user.update({
+							where: { id: userId },
+							data: { role }
 						});
-
-						if (remainingAdmins === 0) throw new GuardError('You cannot demote the last admin');
-					}
-
-					await tx.user.update({
-						where: { id: userId },
-						data: { role }
-					});
-				},
-				{ isolationLevel: 'Serializable' }
-			);
-		} catch (e: unknown) {
-			if (e instanceof GuardError) return setError(form, '', e.message);
-			if (isWriteConflict(e)) return setError(form, '', WRITE_CONFLICT_MESSAGE);
-
-			return setError(form, '', e instanceof Error ? e.message : `${e}`);
-		}
-
-		return { form };
+					},
+					{ isolationLevel: 'Serializable' }
+				),
+			form,
+			'',
+			{
+				writeConflictMessage:
+					'Someone changed these roles at the same time, so this change was not applied. Please try again.'
+			}
+		);
 	}
 }

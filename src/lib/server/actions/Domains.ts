@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { whereHasGraphCoursePermission } from '$lib/server/permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 import {
 	changeDomainRelSchema,
 	deleteDomainSchema,
@@ -29,7 +29,7 @@ export class DomainActions {
 	static async addDomainToGraph(user: User, form: SuperValidated<Infer<typeof domainSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid graph name');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			async () => {
 				// Find the last domain added value in the database.
 				// Where creation data is the latest
@@ -122,7 +122,7 @@ export class DomainActions {
 			}
 		});
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction([
 					...removeTargetFromSourceDomain,
@@ -151,7 +151,7 @@ export class DomainActions {
 			return setError(form, 'name', 'Invalid domain id, cannot be 0');
 		}
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -193,7 +193,7 @@ export class DomainActions {
 	) {
 		if (!form.valid) return setError(form, 'domainIds._errors', 'Invalid domain order');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -230,7 +230,7 @@ export class DomainActions {
 	) {
 		if (!form.valid) return setError(form, 'style', 'Invalid domain style');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -324,7 +324,7 @@ export class DomainActions {
 	 * permission, returns the form with an error via setError instead of throwing.
 	 */
 	static async addDomainRel(user: User, form: SuperValidated<Infer<typeof domainRelSchema>>) {
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() => {
 				const sourceId = form.data.sourceDomainId;
 				const targetId = form.data.targetDomainId;
@@ -423,7 +423,7 @@ export class DomainActions {
 	) {
 		if (!form.valid) return setError(form, '', 'Invalid form data');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction(async (tx) => {
 					await DomainActions.disconnectDomains(
