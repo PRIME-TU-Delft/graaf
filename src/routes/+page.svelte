@@ -427,7 +427,7 @@
 						GitHub
 					</a>
 					<a
-						href="https://www.tudelft.nl/ewi/over-de-faculteit/afdelingen/applied-mathematics/studeren/prime"
+						href="https://www.tudelft.nl/prime"
 						target="_blank"
 						rel="noreferrer"
 						class="hover:text-white"
