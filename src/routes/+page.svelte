@@ -133,7 +133,8 @@
 				href={resolve('/graph-editor')}
 				class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
 			>
-				<span>Open Graph Editor</span>
+				<span class="sm:hidden">Open</span>
+				<span class="hidden sm:inline">Open Graph Editor</span>
 				<ArrowRight class="size-4" />
 			</Button>
 		{:else}
@@ -151,11 +152,13 @@
 		{/if}
 	</TopBar>
 
-	<section class="flex flex-row divide-x divide-purple-900/60 border-b border-purple-900/60">
+	<section
+		class="flex flex-col divide-y divide-purple-900/60 border-b border-purple-900/60 md:flex-row md:divide-x md:divide-y-0"
+	>
 		<!-- Interactive Example Graph Section -->
-		<div class="w-8/12 bg-slate-50">
-			<div class="mx-auto my-4 ml-12 pr-2">
-				<div class="mb-4 flex flex-row items-baseline gap-2">
+		<div class="bg-slate-50 md:w-8/12">
+			<div class="mx-auto my-4 px-4 sm:px-6 md:pr-2 md:pl-12">
+				<div class="mb-4 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
 					<h2 class="text-lg font-medium text-black">Example Curriculum Graph</h2>
 					<span class="text-sm font-light text-slate-700">(Student's view)</span>
 				</div>
@@ -163,7 +166,7 @@
 				<!-- Graph Iframe Frame -->
 				<div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-md">
 					<div
-						class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-600"
+						class="flex flex-col items-start gap-1 border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:gap-2"
 					>
 						<div class="flex items-center gap-2">
 							<span class="size-2 rounded-full bg-emerald-500"></span>
@@ -177,15 +180,15 @@
 					<iframe
 						src={resolve('/graph/example')}
 						title="Example Curriculum Graph"
-						class="h-130 w-full border-0 bg-white"
+						class="h-80 w-full border-0 bg-white sm:h-96 md:h-130"
 						loading="lazy"
 					></iframe>
 				</div>
 			</div>
 		</div>
 
-		<div class="flex w-4/12 flex-col">
-			<div class="my-8 mr-12 flex flex-1 flex-col justify-between px-8">
+		<div class="flex flex-col md:w-4/12">
+			<div class="my-8 flex flex-1 flex-col justify-between px-4 sm:px-6 md:mr-12 md:px-8">
 				<div class="flex flex-col">
 					<h1 class="text-2xl font-bold tracking-tight">
 						A tool for mapping course material as a graph
@@ -202,8 +205,8 @@
 						in a session.
 					</p>
 					<p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600">
-						An example graph is shown on the left. You can drag nodes, zoom in and out, and change
-						to different views.
+						An example graph is shown nearby. You can drag nodes, zoom in and out, and change to
+						different views.
 					</p>
 				</div>
 
@@ -252,7 +255,7 @@
 
 	<!-- Features Section -->
 	<section class="border-b border-slate-200 bg-white py-16">
-		<div class="mx-12">
+		<div class="px-4 sm:px-6 md:px-12">
 			<div class="max-w-2xl">
 				<h2 class="text-2xl font-bold tracking-tight text-slate-900">Features</h2>
 				<p class="mt-2 text-sm text-slate-600">
@@ -280,9 +283,13 @@
 
 	<!-- Manual Spotlight Section -->
 	<section class="border-b border-slate-200 bg-purple-50">
-		<div class="mx-12 flex divide-x divide-slate-200">
-			<div class="w-1/2">
-				<div class="mr-6 py-12 flex items-center gap-2">
+		<div
+			class="flex flex-col divide-y divide-slate-200 px-4 sm:px-6 md:mx-12 md:flex-row md:divide-x md:divide-y-0 md:px-0"
+		>
+			<div class="md:w-1/2">
+				<div
+					class="flex flex-col items-start gap-3 py-8 sm:flex-row sm:items-center sm:gap-2 md:mr-6 md:py-12"
+				>
 					<div>
 						<h2 class="text-xl font-bold text-purple-900">Sharing graphs with students</h2>
 						<p class="mt-2 text-sm leading-relaxed text-slate-600">
@@ -304,8 +311,10 @@
 					</Button>
 				</div>
 			</div>
-			<div class="w-1/2">
-				<div class="ml-6 flex items-center py-12 gap-2">
+			<div class="md:w-1/2">
+				<div
+					class="flex flex-col items-start gap-3 py-8 sm:flex-row sm:items-center sm:gap-2 md:ml-6 md:py-12"
+				>
 					<div>
 						<h2 class="text-xl font-bold text-purple-900">Course-staff and TA manual</h2>
 						<p class="mt-2 text-sm leading-relaxed text-slate-600">
@@ -332,7 +341,7 @@
 
 	<!-- Contributors Section -->
 	<section class="border-b border-slate-200 bg-white py-12">
-		<div class="mx-12">
+		<div class="px-4 sm:px-6 md:px-12">
 			<div class="text-start">
 				<h2 class="text-2xl font-bold tracking-tight text-slate-900">Contributors</h2>
 			</div>
@@ -380,7 +389,7 @@
 
 	<!-- Footer / License Section -->
 	<footer class="bg-slate-900 py-10 text-slate-400">
-		<div class="mx-12">
+		<div class="px-4 sm:px-6 md:px-12">
 			<div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
 				<div class="flex items-center gap-2.5">
 					<div class="flex size-7 items-center justify-center rounded-md bg-purple-950 p-1">
