@@ -10,6 +10,7 @@
 		ExternalLink,
 		FlaskRound,
 		Layers,
+		Link,
 		LogIn,
 		Network,
 		Share2
@@ -17,19 +18,6 @@
 	import type { PageData } from './$types';
 
 	const { data }: { data: PageData } = $props();
-
-	let logoMouseState = $state(-1);
-	let logoClearTimeout: ReturnType<typeof setTimeout> | undefined = undefined;
-
-	function handleLogoInteraction() {
-		logoMouseState = Math.random();
-		if (logoClearTimeout) {
-			clearTimeout(logoClearTimeout);
-		}
-		logoClearTimeout = setTimeout(() => {
-			logoMouseState = -1;
-		}, 2000);
-	}
 
 	interface Contributor {
 		name: string;
@@ -117,40 +105,24 @@
 	<title>PRIME Graph Editor</title>
 </svelte:head>
 
-{#snippet githubIcon(className: string = 'size-4')}
-	<!-- source: https://simpleicons.org/?q=github -->
-	<svg
-		class={className}
-		fill="currentColor"
-		role="img"
-		viewBox="0 0 24 24"
-		xmlns="http://www.w3.org/2000/svg"
-		><title>GitHub</title><path
-			d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"
-		/></svg
-	>
-{/snippet}
-
-<div class="min-h-screen bg-slate-50 text-slate-900 selection:bg-purple-500 selection:text-white">
+<div class="min-h-screen bg-white text-slate-900 selection:bg-purple-500 selection:text-white">
 	<!-- Top Navigation Bar -->
 	<TopBar>
 		<a
 			href="https://prime-tu-delft.github.io/graaf/"
 			target="_blank"
 			rel="noreferrer"
-			class="hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-purple-200 transition-colors hover:bg-purple-900 hover:text-white sm:flex"
+			class="hidden items-center gap-1.5 rounded-md px-1 py-1.5 text-sm transition-colors hover:underline sm:flex"
 		>
-			<BookOpen class="size-4" />
 			<span>Manual</span>
 		</a>
 		<a
 			href="https://github.com/PRIME-TU-Delft/graaf"
 			target="_blank"
 			rel="noreferrer"
-			class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-purple-200 transition-colors hover:bg-purple-900 hover:text-white"
+			class="flex items-center gap-1.5 rounded-md px-1 py-1.5 text-sm transition-colors hover:underline sm:flex"
 			aria-label="GitHub Repository"
 		>
-			{@render githubIcon('size-4')}
 			<span class="hidden sm:inline">GitHub</span>
 		</a>
 
@@ -159,7 +131,7 @@
 				variant="secondary"
 				size="sm"
 				href={resolve('/graph-editor')}
-				class="bg-purple-100 font-medium text-purple-950 hover:bg-white"
+				class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
 			>
 				<span>Open Graph Editor</span>
 				<ArrowRight class="size-4" />
@@ -170,7 +142,7 @@
 				<Button
 					type="submit"
 					size="sm"
-					class="bg-purple-600 font-medium text-white hover:bg-purple-500"
+					class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
 				>
 					<LogIn class="size-4" />
 					<span>Sign in</span>
@@ -179,125 +151,108 @@
 		{/if}
 	</TopBar>
 
-	<!-- Hero Section -->
-	<section
-		class="grain relative border-b border-purple-900/60 bg-linear-to-b from-purple-950 to-slate-900 px-4 py-16 text-white sm:px-6 sm:py-24"
-	>
-		<div class="mx-auto max-w-4xl text-center">
-			<!-- Interactive Hero Logo -->
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div
-				class="group mx-auto mb-6 flex size-20 cursor-pointer items-center justify-center rounded-2xl border border-purple-800 bg-purple-900/80 p-3 shadow-md transition-transform duration-200 hover:scale-105 hover:border-purple-600"
-				onmouseenter={handleLogoInteraction}
-			>
-				<Logo mouseState={logoMouseState} class="size-12" />
-			</div>
-
-			<h1 class="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-				Visual curriculum mapping
-			</h1>
-
-			<p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-purple-200 sm:text-lg">
-				A tool developed by the <a
-					href="https://www.tudelft.nl/prime"
-					target="_blank"
-					rel="noreferrer"
-					class="text-purple-200 underline hover:text-white"
-					>PRIME programme <ExternalLink class="inline-block size-3" /></a
-				> at TU Delft for teachers and coordinators to build, explore, and share interconnected course
-				graphs.
-			</p>
-
-			<!-- Hero CTAs -->
-			<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-				{#if data.user}
-					<Button
-						size="lg"
-						href={resolve('/graph-editor')}
-						class="bg-purple-600 font-medium text-white hover:bg-purple-500"
-					>
-						<span>Open Graph Editor</span>
-						<ArrowRight class="size-4" />
-					</Button>
-				{:else}
-					<form action="?/auth" method="POST">
-						<input type="hidden" name="providerId" value="surfconext" />
-						<Button
-							type="submit"
-							size="lg"
-							class="bg-purple-600 font-medium text-white hover:bg-purple-500"
-						>
-							<LogIn class="size-4" />
-							<span>Sign in with TU Delft NetID</span>
-						</Button>
-					</form>
-				{/if}
-
-				<Button
-					variant="outline"
-					size="lg"
-					href="https://prime-tu-delft.github.io/graaf/"
-					target="_blank"
-					rel="noreferrer"
-					class="border-purple-700 bg-purple-950/40 text-purple-100 hover:bg-purple-900 hover:text-white"
-				>
-					<BookOpen class="size-4" />
-					<span>Read manual</span>
-					<ExternalLink class="size-3.5 opacity-60" />
-				</Button>
-
-				<Button
-					variant="ghost"
-					size="lg"
-					href="https://github.com/PRIME-TU-Delft/graaf"
-					target="_blank"
-					rel="noreferrer"
-					class="text-purple-200 hover:bg-purple-900/60 hover:text-white"
-				>
-					{@render githubIcon('size-4')}
-					<span>GitHub</span>
-				</Button>
-			</div>
-		</div>
-	</section>
-
-	<!-- Interactive Example Graph Section -->
-	<section class="border-b border-slate-200 bg-slate-100/70 px-4 py-12 sm:px-6">
-		<div class="mx-auto max-w-6xl">
-			<div class="mb-6">
-				<h2 class="text-2xl font-bold tracking-tight text-slate-900">Example curriculum graph</h2>
-				<p class="mt-1 text-sm text-slate-600">
-					Prerequisite map across domains, subjects, and lectures in an undergraduate course.
-				</p>
-			</div>
-
-			<!-- Graph Iframe Frame -->
-			<div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-md">
-				<div
-					class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-600"
-				>
-					<div class="flex items-center gap-2">
-						<span class="size-2 rounded-full bg-emerald-500"></span>
-						<span class="font-medium text-slate-800">AM101 • Linear Algebra & Calculus</span>
-					</div>
-					<span class="text-slate-500">
-						Interactive embed • Switch views or drag & zoom nodes
-					</span>
+	<section class="flex flex-row divide-x divide-purple-900/60 border-b border-purple-900/60">
+		<!-- Interactive Example Graph Section -->
+		<div class="w-8/12 bg-slate-50">
+			<div class="mx-auto my-4 ml-12 pr-2">
+				<div class="mb-4 flex flex-row items-baseline gap-2">
+					<h2 class="text-lg font-medium text-black">Example Curriculum Graph</h2>
+					<span class="text-sm font-light text-slate-700">(Student's view)</span>
 				</div>
 
-				<iframe
-					src={resolve('/graph/example')}
-					title="Example Curriculum Graph"
-					class="h-130 w-full border-0 bg-white"
-					loading="lazy"
-				></iframe>
+				<!-- Graph Iframe Frame -->
+				<div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-md">
+					<div
+						class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2.5 text-xs text-slate-600"
+					>
+						<div class="flex items-center gap-2">
+							<span class="size-2 rounded-full bg-emerald-500"></span>
+							<span class="font-medium text-slate-800">AM101 • Linear Algebra & Calculus</span>
+						</div>
+						<span class="text-slate-500">
+							Interactive embed • Switch views or drag & zoom nodes
+						</span>
+					</div>
+
+					<iframe
+						src={resolve('/graph/example')}
+						title="Example Curriculum Graph"
+						class="h-130 w-full border-0 bg-white"
+						loading="lazy"
+					></iframe>
+				</div>
+			</div>
+		</div>
+
+		<div class="flex w-4/12 flex-col">
+			<div class="my-8 mr-12 flex flex-1 flex-col justify-between px-8">
+				<div class="flex flex-col">
+					<h1 class="text-2xl font-bold tracking-tight">
+						A tool for mapping course material as a graph
+					</h1>
+					<p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600">
+						Course material rarely fits a single linear syllabus. Topics depend on each other, get
+						reused across courses, and get taught in a different order every year. The Graph Editor
+						lets course staff model that structure explicitly: <span
+							class="font-semibold text-purple-800">domains</span
+						>
+						connect to show prerequisites,
+						<span class="font-semibold text-purple-800">subjects</span> live inside a domain,
+						<span class="font-semibold text-purple-800">lectures</span> group subjects into what's taught
+						in a session.
+					</p>
+					<p class="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-slate-600">
+						An example graph is shown on the left. You can drag nodes, zoom in and out, and change
+						to different views.
+					</p>
+				</div>
+
+				<hr class="my-3 w-full border-slate-300" />
+
+				<div class="flex flex-col items-center justify-center gap-3">
+					{#if data.user}
+						<Button
+							size="lg"
+							href={resolve('/graph-editor')}
+							class="w-full bg-purple-800 font-medium text-white hover:bg-purple-700"
+						>
+							<span>Open Graph Editor</span>
+							<ArrowRight class="size-4" />
+						</Button>
+					{:else}
+						<form action="?/auth" method="POST" class="w-full">
+							<input type="hidden" name="providerId" value="surfconext" />
+							<Button
+								type="submit"
+								size="lg"
+								class="w-full bg-purple-800 font-medium text-white hover:bg-purple-700"
+							>
+								<LogIn class="size-4" />
+								<span>Sign in with TU Delft NetID</span>
+							</Button>
+						</form>
+					{/if}
+
+					<Button
+						variant="outline"
+						size="lg"
+						href="https://prime-tu-delft.github.io/graaf/"
+						target="_blank"
+						rel="noreferrer"
+						class="hover:text-purple w-full border-purple-700 bg-slate-50 text-purple-800 hover:underline"
+					>
+						<BookOpen class="size-4" />
+						<span>Read manual</span>
+						<ExternalLink class="size-3.5 opacity-60" />
+					</Button>
+				</div>
 			</div>
 		</div>
 	</section>
 
 	<!-- Features Section -->
-	<section class="border-b border-slate-200 bg-white px-4 py-16 sm:px-6">
-		<div class="mx-auto max-w-6xl">
+	<section class="border-b border-slate-200 bg-white py-16">
+		<div class="mx-12">
 			<div class="max-w-2xl">
 				<h2 class="text-2xl font-bold tracking-tight text-slate-900">Features</h2>
 				<p class="mt-2 text-sm text-slate-600">
@@ -324,61 +279,87 @@
 	</section>
 
 	<!-- Manual Spotlight Section -->
-	<section class="border-b border-slate-200 bg-slate-50 px-4 py-12 sm:px-6">
-		<div class="mx-auto max-w-6xl">
-			<div
-				class="flex flex-col items-start justify-between gap-6 rounded-xl border border-slate-200 bg-white p-6 sm:p-8 md:flex-row md:items-center"
-			>
-				<div class="max-w-2xl">
-					<h2 class="text-xl font-bold text-slate-900">Course-staff and TA manual</h2>
-					<p class="mt-2 text-sm leading-relaxed text-slate-600">
-						Read step-by-step walkthroughs for courses, graphs, domains, subjects, lectures, and
-						shareable links.
-					</p>
+	<section class="border-b border-slate-200 bg-purple-50">
+		<div class="mx-12 flex divide-x divide-slate-200">
+			<div class="w-1/2">
+				<div class="mr-6 py-12 flex items-center gap-2">
+					<div>
+						<h2 class="text-xl font-bold text-purple-900">Sharing graphs with students</h2>
+						<p class="mt-2 text-sm leading-relaxed text-slate-600">
+							A finished graph can be shared as a read-only link, or embedded as an iframe anywhere.
+							Viewers don't get edit access and don't need to log in.
+						</p>
+					</div>
+					<Button
+						variant="outline"
+						size="default"
+						href={resolve('/graph/example')}
+						target="_blank"
+						rel="noreferrer"
+						class="border-slate-300 text-slate-800 hover:bg-slate-50"
+					>
+						<Link class="size-4" />
+						<span>Open the link</span>
+						<ExternalLink class="size-3.5 opacity-60" />
+					</Button>
 				</div>
-				<Button
-					variant="outline"
-					size="default"
-					href="https://prime-tu-delft.github.io/graaf/"
-					target="_blank"
-					rel="noreferrer"
-					class="border-slate-300 text-slate-800 hover:bg-slate-50"
-				>
-					<BookOpen class="size-4" />
-					<span>Open manual</span>
-					<ExternalLink class="size-3.5 opacity-60" />
-				</Button>
+			</div>
+			<div class="w-1/2">
+				<div class="ml-6 flex items-center py-12 gap-2">
+					<div>
+						<h2 class="text-xl font-bold text-purple-900">Course-staff and TA manual</h2>
+						<p class="mt-2 text-sm leading-relaxed text-slate-600">
+							Read step-by-step walkthroughs for courses, graphs, domains, subjects, lectures, and
+							shareable links.
+						</p>
+					</div>
+					<Button
+						variant="outline"
+						size="default"
+						href="https://prime-tu-delft.github.io/graaf/"
+						target="_blank"
+						rel="noreferrer"
+						class="border-slate-300 text-slate-800 hover:bg-slate-50"
+					>
+						<BookOpen class="size-4" />
+						<span>Open manual</span>
+						<ExternalLink class="size-3.5 opacity-60" />
+					</Button>
+				</div>
 			</div>
 		</div>
 	</section>
 
 	<!-- Contributors Section -->
-	<section class="border-b border-slate-200 bg-white px-4 py-16 sm:px-6">
-		<div class="mx-auto max-w-6xl">
-			<div class="text-center">
+	<section class="border-b border-slate-200 bg-white py-12">
+		<div class="mx-12">
+			<div class="text-start">
 				<h2 class="text-2xl font-bold tracking-tight text-slate-900">Contributors</h2>
 			</div>
 
-			<div class="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
+			<div class="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
 				{#each contributors as contributor (contributor.name)}
 					<div
-						class="flex flex-col items-center rounded-lg border border-slate-200 bg-slate-50/50 p-5 text-center transition-colors hover:border-slate-300"
+						class="flex flex-row items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-2 text-start transition-colors hover:border-slate-300"
 					>
-						<Avatar.Root class="size-16 border border-slate-200 shadow-xs">
-							{#if contributor.image}
-								<Avatar.Image
-									src={contributor.image}
-									alt={'Profile photo of ' + contributor.name}
-									class="aspect-square object-cover"
-								/>
-							{/if}
-							<Avatar.Fallback class="bg-purple-100 text-sm font-semibold text-purple-900">
-								{contributor.initials}
-							</Avatar.Fallback>
-						</Avatar.Root>
-
-						<h3 class="mt-3 text-sm font-semibold text-slate-900">{contributor.name}</h3>
-						<p class="text-xs text-slate-500">{contributor.title}</p>
+						<div class="flex flex-row items-center gap-4">
+							<Avatar.Root class="size-12 border border-slate-200 shadow-xs">
+								{#if contributor.image}
+									<Avatar.Image
+										src={contributor.image}
+										alt={'Profile photo of ' + contributor.name}
+										class="aspect-square object-cover"
+									/>
+								{/if}
+								<Avatar.Fallback class="bg-purple-100 text-sm font-semibold text-purple-900">
+									{contributor.initials}
+								</Avatar.Fallback>
+							</Avatar.Root>
+							<div>
+								<h3 class="text-sm font-semibold text-slate-900">{contributor.name}</h3>
+								<p class="text-xs text-slate-500">{contributor.title}</p>
+							</div>
+						</div>
 
 						{#if contributor.githubUrl}
 							<!-- eslint-disable svelte/no-navigation-without-resolve -- gh url -->
@@ -386,10 +367,9 @@
 								href={contributor.githubUrl}
 								target="_blank"
 								rel="noreferrer"
-								class="mt-3 inline-flex items-center gap-1 text-xs text-slate-600 hover:text-purple-900"
+								class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-purple-900"
 							>
-								{@render githubIcon('size-3.5')}
-								<span>@{contributor.githubUsername}</span>
+								<span class="font-mono">@{contributor.githubUsername}</span>
 							</a>
 						{/if}
 					</div>
@@ -400,7 +380,7 @@
 
 	<!-- Footer / License Section -->
 	<footer class="bg-slate-900 py-10 text-slate-400">
-		<div class="mx-auto max-w-6xl px-4 sm:px-6">
+		<div class="mx-12">
 			<div class="flex flex-col items-center justify-between gap-4 sm:flex-row">
 				<div class="flex items-center gap-2.5">
 					<div class="flex size-7 items-center justify-center rounded-md bg-purple-950 p-1">

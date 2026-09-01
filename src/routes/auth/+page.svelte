@@ -46,13 +46,14 @@
 >
 	<!-- Top Bar -->
 	<TopBar>
-		<a
+		<Button
+			variant="secondary"
 			href={resolve('/')}
-			class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-purple-200 transition-colors hover:bg-purple-900 hover:text-white"
+			class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
 		>
 			<ArrowLeft class="size-4" />
 			<span>Back to home</span>
-		</a>
+		</Button>
 	</TopBar>
 
 	<!-- Main Sign-in Card Section -->
