@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import AuthButton from '$lib/components/AuthButton.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import TopBar from '$lib/components/TopBar.svelte';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
@@ -126,30 +127,17 @@
 			<span class="hidden sm:inline">GitHub</span>
 		</a>
 
-		{#if data.user}
-			<Button
-				variant="secondary"
-				size="sm"
-				href={resolve('/graph-editor')}
-				class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
-			>
+		<AuthButton user={data.user} size="sm" variant="purple">
+			{#snippet signedIn()}
 				<span class="sm:hidden">Open</span>
 				<span class="hidden sm:inline">Open Graph Editor</span>
 				<ArrowRight class="size-4" />
-			</Button>
-		{:else}
-			<form action="?/auth" method="POST">
-				<input type="hidden" name="providerId" value="surfconext" />
-				<Button
-					type="submit"
-					size="sm"
-					class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
-				>
-					<LogIn class="size-4" />
-					<span>Sign in</span>
-				</Button>
-			</form>
-		{/if}
+			{/snippet}
+			{#snippet signedOut()}
+				<LogIn class="size-4" />
+				<span>Sign in</span>
+			{/snippet}
+		</AuthButton>
 	</TopBar>
 
 	<section
@@ -213,36 +201,28 @@
 				<hr class="my-3 w-full border-slate-300" />
 
 				<div class="flex flex-col items-center justify-center gap-3">
-					{#if data.user}
-						<Button
-							size="lg"
-							href={resolve('/graph-editor')}
-							class="w-full bg-purple-800 font-medium text-white hover:bg-purple-700"
-						>
+					<AuthButton
+						user={data.user}
+						formClass="w-full"
+						class="w-full bg-purple-800 font-medium text-white hover:bg-purple-700"
+					>
+						{#snippet signedIn()}
 							<span>Open Graph Editor</span>
 							<ArrowRight class="size-4" />
-						</Button>
-					{:else}
-						<form action="?/auth" method="POST" class="w-full">
-							<input type="hidden" name="providerId" value="surfconext" />
-							<Button
-								type="submit"
-								size="lg"
-								class="w-full bg-purple-800 font-medium text-white hover:bg-purple-700"
-							>
-								<LogIn class="size-4" />
-								<span>Sign in with TU Delft NetID</span>
-							</Button>
-						</form>
-					{/if}
+						{/snippet}
+						{#snippet signedOut()}
+							<LogIn class="size-4" />
+							<span>Sign in with TU Delft NetID</span>
+						{/snippet}
+					</AuthButton>
 
 					<Button
-						variant="outline"
+						variant="purple-outline"
 						size="lg"
 						href="https://prime-tu-delft.github.io/graaf/"
 						target="_blank"
 						rel="noreferrer"
-						class="hover:text-purple w-full border-purple-700 bg-slate-50 text-purple-800 hover:underline"
+						class="w-full"
 					>
 						<BookOpen class="size-4" />
 						<span>Read manual</span>
@@ -298,12 +278,11 @@
 						</p>
 					</div>
 					<Button
-						variant="outline"
+						variant="outline-muted"
 						size="default"
 						href={resolve('/graph/example')}
 						target="_blank"
 						rel="noreferrer"
-						class="border-slate-300 text-slate-800 hover:bg-slate-50"
 					>
 						<Link class="size-4" />
 						<span>Open the link</span>
@@ -323,12 +302,11 @@
 						</p>
 					</div>
 					<Button
-						variant="outline"
+						variant="outline-muted"
 						size="default"
 						href="https://prime-tu-delft.github.io/graaf/"
 						target="_blank"
 						rel="noreferrer"
-						class="border-slate-300 text-slate-800 hover:bg-slate-50"
 					>
 						<BookOpen class="size-4" />
 						<span>Open manual</span>

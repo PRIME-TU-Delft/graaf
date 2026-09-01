@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import AuthButton from '$lib/components/AuthButton.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import TopBar from '$lib/components/TopBar.svelte';
@@ -47,11 +48,7 @@
 >
 	<!-- Top Bar -->
 	<TopBar>
-		<Button
-			variant="secondary"
-			href={resolve('/')}
-			class="border border-purple-800 bg-purple-200 font-medium text-purple-800 hover:bg-purple-100 hover:underline"
-		>
+		<Button variant="purple" href={resolve('/')}>
 			<ArrowLeft class="size-4" />
 			<span>Back to home</span>
 		</Button>
@@ -77,17 +74,12 @@
 				</div>
 
 				<div class="mt-8 space-y-4">
-					<form action="?/auth" method="POST">
-						<input type="hidden" name="providerId" value="surfconext" />
-						<Button
-							type="submit"
-							size="lg"
-							class="w-full bg-purple-600 font-medium text-white hover:bg-purple-500"
-						>
+					<AuthButton class="w-full bg-purple-600 font-medium text-white hover:bg-purple-500">
+						{#snippet signedOut()}
 							<LogIn class="size-5" />
 							<span>Sign in with TU Delft NetID</span>
-						</Button>
-					</form>
+						{/snippet}
+					</AuthButton>
 
 					<div
 						class="rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-center text-xs text-slate-600"
