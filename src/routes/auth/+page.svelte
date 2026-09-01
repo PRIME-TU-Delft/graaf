@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import AuthButton from '$lib/components/AuthButton.svelte';
+	import Footer from '$lib/components/Footer.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import TopBar from '$lib/components/TopBar.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -46,13 +48,10 @@
 >
 	<!-- Top Bar -->
 	<TopBar>
-		<a
-			href={resolve('/')}
-			class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-purple-200 transition-colors hover:bg-purple-900 hover:text-white"
-		>
+		<Button variant="purple" href={resolve('/')}>
 			<ArrowLeft class="size-4" />
 			<span>Back to home</span>
-		</a>
+		</Button>
 	</TopBar>
 
 	<!-- Main Sign-in Card Section -->
@@ -75,17 +74,12 @@
 				</div>
 
 				<div class="mt-8 space-y-4">
-					<form action="?/auth" method="POST">
-						<input type="hidden" name="providerId" value="surfconext" />
-						<Button
-							type="submit"
-							size="lg"
-							class="w-full bg-purple-600 font-medium text-white hover:bg-purple-500"
-						>
+					<AuthButton class="w-full bg-purple-600 font-medium text-white hover:bg-purple-500">
+						{#snippet signedOut()}
 							<LogIn class="size-5" />
 							<span>Sign in with TU Delft NetID</span>
-						</Button>
-					</form>
+						{/snippet}
+					</AuthButton>
 
 					<div
 						class="rounded-lg border border-slate-200 bg-slate-50 p-3.5 text-center text-xs text-slate-600"
@@ -129,20 +123,5 @@
 		</div>
 	</main>
 
-	<!-- Footer -->
-	<footer class="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500">
-		<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-			<p>
-				PRIME Graph Editor • TU Delft • Licensed under
-				<a
-					href="https://creativecommons.org/licenses/by/4.0/"
-					target="_blank"
-					rel="noreferrer"
-					class="underline hover:text-slate-800"
-				>
-					CC BY 4.0
-				</a>
-			</p>
-		</div>
-	</footer>
+	<Footer />
 </div>
