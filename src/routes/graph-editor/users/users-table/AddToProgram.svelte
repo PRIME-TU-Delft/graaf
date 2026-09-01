@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import { useSyncedSuperForm } from '$lib/utils/syncedSuperForm.svelte';
 	import { editSuperUserSchema } from '$lib/zod/programSchema';
 	import { useId } from 'bits-ui';
-	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
+	import type { z } from 'zod';
 	import { toast } from 'svelte-sonner';
 
 	// Components
@@ -48,31 +49,27 @@
 
 	const selectedProgram = $derived(availablePrograms.find((p) => p.id === selectedProgramId));
 
-	const form = superForm((page.data as PageData).editSuperUserForm, {
-		id: 'add-to-program-' + useId(),
-		validators: zodClient(editSuperUserSchema),
-		// These fields are filled from the row, never typed in, so resetting the store after a
-		// successful submit would just empty it and make the next submit fail client-side
-		// validation without ever reaching the server
-		resetForm: false,
-		onResult: ({ result }) => {
-			if (result.type == 'success') {
-				toast.success('User added to program');
-				selectedProgramId = null;
-				asAdmin = false;
+	const form = useSyncedSuperForm<z.infer<typeof editSuperUserSchema>>(
+		(page.data as PageData).editSuperUserForm,
+		{
+			id: 'add-to-program-' + useId(),
+			validators: zodClient(editSuperUserSchema),
+			onResult: ({ result }) => {
+				if (result.type == 'success') {
+					toast.success('User added to program');
+					selectedProgramId = null;
+					asAdmin = false;
+				}
 			}
-		}
-	});
+		},
+		() => ({
+			userId: user.id,
+			role: asAdmin ? 'admin' : 'editor',
+			...(selectedProgramId ? { programId: selectedProgramId } : {})
+		})
+	);
 
-	const { form: formData, enhance, submitting, delayed } = form;
-
-	// Keep the store in sync with the hidden inputs, otherwise client-side validation rejects
-	// the submit before it leaves the page
-	$effect(() => {
-		$formData.userId = user.id;
-		$formData.role = asAdmin ? 'admin' : 'editor';
-		if (selectedProgramId) $formData.programId = selectedProgramId;
-	});
+	const { enhance, submitting, delayed } = form;
 </script>
 
 {#if availablePrograms.length == 0}
