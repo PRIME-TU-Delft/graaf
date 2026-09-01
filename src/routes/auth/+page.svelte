@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Logo from '$lib/components/Logo.svelte';
+	import TopBar from '$lib/components/TopBar.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { ArrowLeft, ExternalLink, LogIn } from '@lucide/svelte';
 	import type { User } from '@prisma/client';
@@ -44,34 +45,20 @@
 	class="flex min-h-screen flex-col justify-between bg-slate-50 text-slate-900 selection:bg-purple-500 selection:text-white"
 >
 	<!-- Top Bar -->
-	<header class="border-b border-purple-900/20 bg-purple-950 px-4 py-4 sm:px-6 lg:px-8">
-		<div class="mx-auto flex max-w-7xl items-center justify-between">
-			<a
-				href={resolve('/')}
-				class="flex items-center gap-2.5 text-white transition-opacity hover:opacity-90"
-				onmouseenter={handleLogoInteraction}
-			>
-				<div class="flex size-8 items-center justify-center rounded-lg bg-purple-900/60 p-1">
-					<Logo mouseState={logoMouseState} class="size-5" />
-				</div>
-				<span class="text-base font-semibold tracking-tight">PRIME Graph Editor</span>
-			</a>
-
-			<a
-				href={resolve('/')}
-				class="inline-flex items-center gap-1.5 text-sm font-medium text-purple-200 transition-colors hover:text-white"
-			>
-				<ArrowLeft class="size-4" />
-				<span>Back to home</span>
-			</a>
-		</div>
-	</header>
+	<TopBar>
+		<a
+			href={resolve('/')}
+			class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-purple-200 transition-colors hover:bg-purple-900 hover:text-white"
+		>
+			<ArrowLeft class="size-4" />
+			<span>Back to home</span>
+		</a>
+	</TopBar>
 
 	<!-- Main Sign-in Card Section -->
 	<main class="grain relative flex flex-1 items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
 		<div class="w-full max-w-md">
 			<div class="overflow-hidden rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
-				<!-- Animated Logo -->
 				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					class="mx-auto mb-6 flex size-16 cursor-pointer items-center justify-center rounded-2xl bg-purple-950 p-2.5 shadow-md transition-transform duration-200 hover:scale-105"
@@ -138,12 +125,6 @@
 						</div>
 					</div>
 				{/if}
-			</div>
-
-			<div class="mt-6 text-center text-xs text-slate-500">
-				<a href={resolve('/')} class="font-medium text-slate-600 underline hover:text-purple-800">
-					← Return to landing page
-				</a>
 			</div>
 		</div>
 	</main>

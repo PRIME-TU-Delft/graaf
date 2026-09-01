@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import Logo from '$lib/components/Logo.svelte';
+	import TopBar from '$lib/components/TopBar.svelte';
 	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import {
@@ -132,66 +133,51 @@
 
 <div class="min-h-screen bg-slate-50 text-slate-900 selection:bg-purple-500 selection:text-white">
 	<!-- Top Navigation Bar -->
-	<header class="sticky top-0 z-40 border-b border-purple-900/60 bg-purple-950 text-white">
-		<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-			<a
-				href={resolve('/')}
-				class="flex items-center gap-3 text-white transition-opacity hover:opacity-90"
-				onmouseenter={handleLogoInteraction}
+	<TopBar>
+		<a
+			href="https://prime-tu-delft.github.io/graaf/"
+			target="_blank"
+			rel="noreferrer"
+			class="hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-purple-200 transition-colors hover:bg-purple-900 hover:text-white sm:flex"
+		>
+			<BookOpen class="size-4" />
+			<span>Manual</span>
+		</a>
+		<a
+			href="https://github.com/PRIME-TU-Delft/graaf"
+			target="_blank"
+			rel="noreferrer"
+			class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-purple-200 transition-colors hover:bg-purple-900 hover:text-white"
+			aria-label="GitHub Repository"
+		>
+			{@render githubIcon('size-4')}
+			<span class="hidden sm:inline">GitHub</span>
+		</a>
+
+		{#if data.user}
+			<Button
+				variant="secondary"
+				size="sm"
+				href={resolve('/graph-editor')}
+				class="bg-purple-100 font-medium text-purple-950 hover:bg-white"
 			>
-				<div class="flex size-9 items-center justify-center rounded-md bg-purple-900 p-1">
-					<Logo mouseState={logoMouseState} class="size-6" />
-				</div>
-				<span class="text-base font-semibold tracking-tight">PRIME Graph Editor</span>
-			</a>
-
-			<nav class="flex items-center gap-2 sm:gap-4">
-				<a
-					href="https://prime-tu-delft.github.io/graaf/"
-					target="_blank"
-					rel="noreferrer"
-					class="hidden items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-purple-200 transition-colors hover:bg-purple-900 hover:text-white sm:flex"
+				<span>Open Graph Editor</span>
+				<ArrowRight class="size-4" />
+			</Button>
+		{:else}
+			<form action="?/auth" method="POST">
+				<input type="hidden" name="providerId" value="surfconext" />
+				<Button
+					type="submit"
+					size="sm"
+					class="bg-purple-600 font-medium text-white hover:bg-purple-500"
 				>
-					<BookOpen class="size-4" />
-					<span>Manual</span>
-				</a>
-				<a
-					href="https://github.com/PRIME-TU-Delft/graaf"
-					target="_blank"
-					rel="noreferrer"
-					class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm text-purple-200 transition-colors hover:bg-purple-900 hover:text-white"
-					aria-label="GitHub Repository"
-				>
-					{@render githubIcon('size-4')}
-					<span class="hidden sm:inline">GitHub</span>
-				</a>
-
-				{#if data.user}
-					<Button
-						variant="secondary"
-						size="sm"
-						href={resolve('/graph-editor')}
-						class="bg-purple-100 font-medium text-purple-950 hover:bg-white"
-					>
-						<span>Open Graph Editor</span>
-						<ArrowRight class="size-4" />
-					</Button>
-				{:else}
-					<form action="?/auth" method="POST">
-						<input type="hidden" name="providerId" value="surfconext" />
-						<Button
-							type="submit"
-							size="sm"
-							class="bg-purple-600 font-medium text-white hover:bg-purple-500"
-						>
-							<LogIn class="size-4" />
-							<span>Sign in</span>
-						</Button>
-					</form>
-				{/if}
-			</nav>
-		</div>
-	</header>
+					<LogIn class="size-4" />
+					<span>Sign in</span>
+				</Button>
+			</form>
+		{/if}
+	</TopBar>
 
 	<!-- Hero Section -->
 	<section
