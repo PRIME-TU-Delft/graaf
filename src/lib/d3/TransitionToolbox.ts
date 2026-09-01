@@ -389,10 +389,6 @@ export class TransitionToolbox {
 	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture to show
 	 */
 	static snapToLectures(graph: GraphD3) {
-		if (graph.lecture === null && graph.data.lectures.length > 0) {
-			graph.lecture = graph.data.lectures[0];
-		}
-
 		graphState.toTransitioning();
 
 		// Set camera pov and background - Background must be set before moving camera

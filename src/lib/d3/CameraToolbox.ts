@@ -194,26 +194,4 @@ export class CameraToolbox {
 			}, settings.GRAPH_ANIMATION_DURATION);
 		}
 	}
-
-	/**
-	 * Animate the camera to a given zoom scale, without changing position.
-	 *
-	 * @param graph - The graph instance to zoom
-	 * @param k - The target scale factor
-	 * @param callback - If provided, animates the zoom and calls this once the animation
-	 * duration has elapsed; if omitted, the zoom is instant and no callback is scheduled
-	 */
-	static zoomCamera(graph: GraphD3, k: number, callback?: () => void) {
-		graph.svg
-			.transition()
-			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.ease(d3.easeSinInOut)
-			.call(graph.zoom.scaleTo, k);
-
-		if (callback) {
-			setTimeout(() => {
-				callback();
-			}, settings.GRAPH_ANIMATION_DURATION);
-		}
-	}
 }

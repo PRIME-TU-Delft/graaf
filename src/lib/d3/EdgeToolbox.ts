@@ -102,22 +102,15 @@ export class EdgeToolbox {
 
 			// Check for overlap - if so, just go center to center (the line shouldn't be visible anyways)
 			if (Math.abs(dx) < halfWidth && Math.abs(dy) < halfHeight) {
-				if (transition) {
-					line
-						.transition()
-						.duration(settings.GRAPH_ANIMATION_DURATION)
-						.ease(d3.easeSinInOut)
-						.attr('x1', cxSource * settings.GRID_UNIT)
-						.attr('y1', cySource * settings.GRID_UNIT)
-						.attr('x2', cxTarget * settings.GRID_UNIT)
-						.attr('y2', cyTarget * settings.GRID_UNIT);
-				} else {
-					line
-						.attr('x1', cxSource * settings.GRID_UNIT)
-						.attr('y1', cySource * settings.GRID_UNIT)
-						.attr('x2', cxTarget * settings.GRID_UNIT)
-						.attr('y2', cyTarget * settings.GRID_UNIT);
-				}
+				EdgeToolbox.setLineCoords(
+					transition
+						? line.transition().duration(settings.GRAPH_ANIMATION_DURATION).ease(d3.easeSinInOut)
+						: line,
+					cxSource,
+					cySource,
+					cxTarget,
+					cyTarget
+				);
 
 				return;
 			}
@@ -136,23 +129,31 @@ export class EdgeToolbox {
 			const x2 = cxTarget + sign * (vertQuad ? (halfHeight * dx) / dy : halfWidth);
 			const y2 = cyTarget + sign * (vertQuad ? halfHeight : (halfWidth * dy) / dx);
 
-			if (transition) {
-				line
-					.transition()
-					.duration(settings.GRAPH_ANIMATION_DURATION)
-					.ease(d3.easeSinInOut)
-					.attr('x1', x1 * settings.GRID_UNIT)
-					.attr('y1', y1 * settings.GRID_UNIT)
-					.attr('x2', x2 * settings.GRID_UNIT)
-					.attr('y2', y2 * settings.GRID_UNIT);
-			} else {
-				line
-					.attr('x1', x1 * settings.GRID_UNIT)
-					.attr('y1', y1 * settings.GRID_UNIT)
-					.attr('x2', x2 * settings.GRID_UNIT)
-					.attr('y2', y2 * settings.GRID_UNIT);
-			}
+			EdgeToolbox.setLineCoords(
+				transition
+					? line.transition().duration(settings.GRAPH_ANIMATION_DURATION).ease(d3.easeSinInOut)
+					: line,
+				x1,
+				y1,
+				x2,
+				y2
+			);
 		});
+	}
+
+	/** Set a line's endpoint attributes, in grid units. Works on either a plain selection or a transition. */
+	private static setLineCoords<S extends { attr(name: string, value: number): S }>(
+		sel: S,
+		x1: number,
+		y1: number,
+		x2: number,
+		y2: number
+	): S {
+		return sel
+			.attr('x1', x1 * settings.GRID_UNIT)
+			.attr('y1', y1 * settings.GRID_UNIT)
+			.attr('x2', x2 * settings.GRID_UNIT)
+			.attr('y2', y2 * settings.GRID_UNIT);
 	}
 
 	/**

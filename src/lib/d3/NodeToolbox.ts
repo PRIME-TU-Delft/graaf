@@ -171,27 +171,16 @@ class NodeToolbox {
 		selection.raise();
 
 		// Update node position
-		if (transition) {
-			selection
-				.transition()
-				.duration(settings.GRAPH_ANIMATION_DURATION)
-				.ease(d3.easeSinInOut)
-				.attr(
-					'transform',
-					(node) => `translate(
-						${node.x * settings.GRID_UNIT},
-						${node.y * settings.GRID_UNIT}
-					)`
-				);
-		} else {
-			selection.attr(
-				'transform',
-				(node) => `translate(
-					${node.x * settings.GRID_UNIT},
-					${node.y * settings.GRID_UNIT}
-				)`
-			);
-		}
+		const target = transition
+			? selection.transition().duration(settings.GRAPH_ANIMATION_DURATION).ease(d3.easeSinInOut)
+			: selection;
+		target.attr(
+			'transform',
+			(node) => `translate(
+				${node.x * settings.GRID_UNIT},
+				${node.y * settings.GRID_UNIT}
+			)`
+		);
 
 		// Update edges
 		selection.each(function (node) {
