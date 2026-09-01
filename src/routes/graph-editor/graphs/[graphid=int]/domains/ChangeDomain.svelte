@@ -131,7 +131,12 @@
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each domains as domain (domain.id)}
 					<div class="flex flex-col items-center gap-1">
-						<Button class="w-full font-mono text-xs" href="#domain-{domain.id}" variant="ghost">
+						<Button
+							class="w-full truncate font-mono text-xs"
+							href="#domain-{domain.id}"
+							title={domain.name}
+							variant="ghost"
+						>
 							{domain.name}
 						</Button>
 					</div>

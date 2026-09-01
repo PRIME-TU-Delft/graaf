@@ -117,7 +117,12 @@
 			<Menubar.SubContent class="ml-1 w-32 p-1">
 				{#each subjects as subject (subject.id)}
 					<div class="flex flex-col items-center gap-1">
-						<Button class="w-full font-mono text-xs" href="#subject-{subject.id}" variant="ghost">
+						<Button
+							class="w-full truncate font-mono text-xs"
+							href="#subject-{subject.id}"
+							title={subject.name}
+							variant="ghost"
+						>
 							{subject.name}
 						</Button>
 					</div>
@@ -157,12 +162,18 @@
 								<span class="font-mono text-xs font-normal text-gray-400">(Optional)</span>
 							</Form.Label>
 							<Popover.Trigger
-								class={cn(buttonVariants({ variant: 'outline' }), 'min-w-[50%] justify-between')}
+								class={cn(
+									buttonVariants({ variant: 'outline' }),
+									'max-w-full min-w-[50%] justify-between'
+								)}
 								role="combobox"
 								{...props}
 							>
-								{graph.domains.find((f) => f.id === $formData.domainId)?.name ?? 'Select domain'}
-								<ChevronsUpDown class="opacity-50" />
+								{@const selectedDomainName =
+									graph.domains.find((f) => f.id === $formData.domainId)?.name ?? 'Select domain'}
+								<span class="min-w-0 truncate" title={selectedDomainName}>{selectedDomainName}</span
+								>
+								<ChevronsUpDown class="shrink-0 opacity-50" />
 							</Popover.Trigger>
 							<input hidden value={$formData.domainId} name={props.name} />
 						</div>

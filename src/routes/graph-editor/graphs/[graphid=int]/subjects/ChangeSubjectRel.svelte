@@ -77,7 +77,7 @@
 		loading={fromStore(delayed).current}
 		loadingMessage="Changing to {subject.name} relationship..."
 	>
-		<Replace />
-		{subject.name}
+		<Replace class="shrink-0" />
+		<span class="min-w-0 truncate" title={subject.name}>{subject.name}</span>
 	</Form.FormButton>
 </form>

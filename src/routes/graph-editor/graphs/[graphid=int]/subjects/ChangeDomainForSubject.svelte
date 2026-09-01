@@ -39,7 +39,7 @@
 				'!hover:bg-orange-900 !bg-orange-300/20 text-orange-900 hover:text-orange-900'
 		)}
 	>
-		<span class="grow text-left">
+		<span class="min-w-0 grow truncate text-left" title={subject.domain?.name}>
 			{#if subject.domain}
 				{subject.domain.name}
 			{:else}
