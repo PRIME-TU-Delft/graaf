@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import { cn } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
@@ -157,55 +156,53 @@
 	});
 </script>
 
-<a href={resolve('/')}>
-	<!-- SVG Logo -->
-	<svg viewBox="0 0 {viewboxSize} {viewboxSize}" class={twClasses}>
-		<!-- Edges -->
-		<line
-			x1={edgeX1(v1.current, v2.current)}
-			y1={edgeY1(v1.current, v2.current)}
-			x2={edgeX2(v1.current, v2.current)}
-			y2={edgeY2(v1.current, v2.current)}
-			stroke-width={strokeWidth}
-			stroke="white"
-		/>
+<!-- SVG Logo -->
+<svg viewBox="0 0 {viewboxSize} {viewboxSize}" class={twClasses}>
+	<!-- Edges -->
+	<line
+		x1={edgeX1(v1.current, v2.current)}
+		y1={edgeY1(v1.current, v2.current)}
+		x2={edgeX2(v1.current, v2.current)}
+		y2={edgeY2(v1.current, v2.current)}
+		stroke-width={strokeWidth}
+		stroke="white"
+	/>
 
-		<line
-			x1={edgeX1(v1.current, v3.current)}
-			y1={edgeY1(v1.current, v3.current)}
-			x2={edgeX2(v1.current, v3.current)}
-			y2={edgeY2(v1.current, v3.current)}
-			stroke-width={strokeWidth}
-			stroke="white"
-		/>
+	<line
+		x1={edgeX1(v1.current, v3.current)}
+		y1={edgeY1(v1.current, v3.current)}
+		x2={edgeX2(v1.current, v3.current)}
+		y2={edgeY2(v1.current, v3.current)}
+		stroke-width={strokeWidth}
+		stroke="white"
+	/>
 
-		<!-- Vertices -->
-		<circle
-			cx={v1.current.x}
-			cy={v1.current.y}
-			r={bigCircleRadius}
-			fill="transparent"
-			stroke="white"
-			stroke-width={strokeWidth}
-		/>
-		<circle
-			cx={v2.current.x}
-			cy={v2.current.y}
-			r={circleRadius}
-			fill="transparent"
-			stroke="white"
-			stroke-width={strokeWidth}
-		/>
-		<circle
-			cx={v3.current.x}
-			cy={v3.current.y}
-			r={circleRadius}
-			fill="transparent"
-			stroke="white"
-			stroke-width={strokeWidth}
-		/>
-	</svg>
-</a>
+	<!-- Vertices -->
+	<circle
+		cx={v1.current.x}
+		cy={v1.current.y}
+		r={bigCircleRadius}
+		fill="transparent"
+		stroke="white"
+		stroke-width={strokeWidth}
+	/>
+	<circle
+		cx={v2.current.x}
+		cy={v2.current.y}
+		r={circleRadius}
+		fill="transparent"
+		stroke="white"
+		stroke-width={strokeWidth}
+	/>
+	<circle
+		cx={v3.current.x}
+		cy={v3.current.y}
+		r={circleRadius}
+		fill="transparent"
+		stroke="white"
+		stroke-width={strokeWidth}
+	/>
+</svg>
 
 <style>
 	svg {

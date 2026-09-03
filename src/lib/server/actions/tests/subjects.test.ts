@@ -18,14 +18,16 @@ import {
 	getSubject,
 	seedFixture
 } from './helpers/fixture';
-import { buildForm, expectDenied } from './helpers/actions';
+import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 
 // Same gate as domains: CourseAdminEditorORProgramAdminEditor via whereHasGraphCoursePermission.
 // GraphThree belongs to CourseThree, so the fixture course editor is authorized and a user with no
 // role anywhere is the denied party.
 //
-// Denials assert status and an unchanged database rather than message text, since
-// withPermissionCheck currently emits a raw Prisma error instead of its message (#153).
+// Denials now assert the entity-specific message too, now that withGuardedMutation correctly
+// matches Prisma 7's P2025 shape (#153). deleteSubjectRel is the exception: it hand-rolls its own
+// try/catch instead of going through withGuardedMutation, so it still surfaces the raw Prisma
+// error message and stays status-only.
 
 beforeEach(seedFixture);
 
@@ -67,6 +69,7 @@ describe('SubjectActions.addSubjectToGraph', () => {
 		const result = await SubjectActions.addSubjectToGraph(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this subject");
 		await expect(
 			prisma.subject.findFirst({ where: { graphId: graph.id, name: 'AddedSubject' } })
 		).resolves.toBeNull();
@@ -108,6 +111,7 @@ describe('SubjectActions.changeSubject', () => {
 		const result = await SubjectActions.changeSubject(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this subject");
 		await expect(
 			prisma.subject.findUniqueOrThrow({ where: { id: subject.id } })
 		).resolves.toMatchObject({ name: 'SubjectOne', domainId: domainOne.id });
@@ -150,6 +154,7 @@ describe('SubjectActions.deleteSubject', () => {
 		const result = await SubjectActions.deleteSubject(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to delete this subject");
 		await expect(
 			prisma.subject.findUnique({ where: { id: subjectTwo.id } })
 		).resolves.not.toBeNull();
@@ -197,6 +202,9 @@ describe('SubjectActions.addSubjectRel', () => {
 		const result = await SubjectActions.addSubjectRel(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(
+			"You don't have permission to edit this subject relation"
+		);
 		const after = await prisma.subject.findUniqueOrThrow({
 			where: { id: subjectThree.id },
 			include: { targetSubjects: true }
@@ -206,7 +214,7 @@ describe('SubjectActions.addSubjectRel', () => {
 });
 
 describe('SubjectActions.deleteSubjectRel', () => {
-	// Hand-rolled try/catch rather than withPermissionCheck, returns undefined on success.
+	// Hand-rolled try/catch rather than withGuardedMutation, returns undefined on success.
 
 	it('allows a course editor, returning undefined', async () => {
 		const { courseEditor, graph } = await graphThreeSetup();
@@ -289,6 +297,9 @@ describe('SubjectActions.changeSubjectRel', () => {
 		const result = await SubjectActions.changeSubjectRel(outsider, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain(
+			"You don't have permission to edit this subject relation"
+		);
 		const after = await prisma.subject.findUniqueOrThrow({
 			where: { id: subjectThree.id },
 			include: { targetSubjects: true }

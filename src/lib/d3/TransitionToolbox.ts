@@ -72,8 +72,10 @@ export class TransitionToolbox {
 	) {
 		if (nodes.length + edges.length === 0) return this.clearContent(graph, callback);
 
+		const isTransition = callback !== undefined;
+
 		// Update Nodes
-		graph.content
+		const nodeSelection = graph.content
 			.selectAll<SVGGElement, NodeData>('.node')
 			.data(nodes, (node) => node.uuid)
 			.join(
@@ -82,61 +84,78 @@ export class TransitionToolbox {
 						.append('g')
 						.call(NodeToolbox.create, graph)
 						.call(NodeToolbox.updateHighlight, graph)
-						.style('opacity', 0);
+						.style('opacity', isTransition ? 0 : 1);
 				},
 
 				function (update) {
 					return update
-						.call(NodeToolbox.updatePosition, graph, callback !== undefined)
+						.call(NodeToolbox.updatePosition, graph, isTransition)
 						.call(NodeToolbox.updateHighlight, graph)
 						.call(NodeToolbox.updateStyle)
 						.call(NodeToolbox.updateText);
 				},
 
 				function (exit) {
-					return exit
-						.transition()
-						.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-						.on('end', function () {
-							d3.select(this).remove();
-						}) // Use this instead of .remove() to circumvent pending transitions
-						.style('opacity', 0);
+					if (isTransition) {
+						return exit
+							.transition()
+							.duration(settings.GRAPH_ANIMATION_DURATION)
+							.on('end', function () {
+								d3.select(this).remove();
+							})
+							.style('opacity', 0);
+					} else {
+						return exit.remove();
+					}
 				}
-			)
-			.transition()
-			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.style('opacity', 1);
+			);
+
+		if (isTransition) {
+			nodeSelection.transition().duration(settings.GRAPH_ANIMATION_DURATION).style('opacity', 1);
+		} else {
+			nodeSelection.style('opacity', 1);
+		}
 
 		// Update relations
-		graph.content
+		const edgeSelection = graph.content
 			.selectAll<SVGLineElement, EdgeData>('.edge')
 			.data(edges, (edge) => edge.uuid)
 			.join(
 				function (enter) {
-					return enter.append('line').call(EdgeToolbox.create).style('opacity', 0);
+					return enter
+						.append('line')
+						.call(EdgeToolbox.create)
+						.style('opacity', isTransition ? 0 : 1);
 				},
 
 				function (update) {
 					return update
-						.call(EdgeToolbox.updatePosition, callback !== undefined)
+						.call(EdgeToolbox.updatePosition, isTransition)
 						.call(EdgeToolbox.updateStyle);
 				},
 
 				function (exit) {
-					return exit
-						.transition()
-						.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-						.on('end', function () {
-							d3.select(this).remove();
-						}) // Use this instead of .remove() to circumvent pending transitions
-						.style('opacity', 0);
+					if (isTransition) {
+						return exit
+							.transition()
+							.duration(settings.GRAPH_ANIMATION_DURATION)
+							.on('end', function () {
+								d3.select(this).remove();
+							})
+							.style('opacity', 0);
+					} else {
+						return exit.remove();
+					}
 				}
-			)
-			.transition()
-			.duration(callback !== undefined ? settings.GRAPH_ANIMATION_DURATION : 0)
-			.style('opacity', 1);
+			);
 
-		// Update simulation
+		if (isTransition) {
+			edgeSelection.transition().duration(settings.GRAPH_ANIMATION_DURATION).style('opacity', 1);
+		} else {
+			edgeSelection.style('opacity', 1);
+		}
+
+		// Simulation setup
 		graph.simulation.nodes(nodes).force('link', d3.forceLink(edges));
 
 		// Post-transition
@@ -438,41 +457,14 @@ export class TransitionToolbox {
 	}
 
 	/**
-	 * Animate from the domains view to the lectures view: pans/zooms the camera toward the
-	 * lecture table's scale while staying centered on the domain nodes for minimal movement,
-	 * fades in the focused lecture's content at domain positions, then animates it into the
-	 * lecture table layout. Falls back to snapToLectures if no lecture is focused.
+	 * Transition from the domains view to the lectures view: switches the background to the
+	 * lecture table, frames the camera, and renders the focused lecture's content in the
+	 * three-column past/present/future layout.
 	 *
 	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture to show
 	 */
 	static domainsToLectures(graph: GraphD3) {
-		// Validate lecture
-		if (graph.lecture === null) {
-			this.snapToLectures(graph);
-			return;
-		}
-
-		graphState.toTransitioning();
-
-		// Transition to new camera pov - centered on the current graph for minimal movement
-		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
-		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes); // Pan to the center of the domain nodes
-		CameraToolbox.moveCamera(graph, { ...central, k: client.k }, () => {});
-
-		// Set new content in domain positions
-		this.setContent(graph, graph.lecture.nodes, graph.lecture.edges);
-		this.moveContent(graph, graph.lecture.nodes, this.domainTransform);
-
-		// Transition content to lecture positions, then update background
-		this.moveContent(
-			graph,
-			graph.lecture.nodes,
-			this.lectureTransform(graph, central.x, central.y),
-			() => {
-				graphState.toIdle();
-				graphView.toLectures();
-			}
-		);
+		this.snapToLectures(graph);
 	}
 
 	/**
@@ -499,56 +491,29 @@ export class TransitionToolbox {
 	}
 
 	/**
-	 * Animate from the subjects view to the lectures view: pans/zooms the camera toward the
-	 * lecture table's scale while staying centered on the subject nodes for minimal movement,
-	 * fades in the focused lecture's content at its subject positions, then animates it into the
-	 * lecture table layout. Falls back to snapToLectures if no lecture is focused.
+	 * Transition from the subjects view to the lectures view: switches the background to the
+	 * lecture table, frames the camera, and renders the focused lecture's content in the
+	 * three-column past/present/future layout.
 	 *
 	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture to show
 	 */
 	static subjectsToLectures(graph: GraphD3) {
-		// Validate lecture
-		if (graph.lecture === null) {
-			this.snapToLectures(graph);
-			return;
-		}
-
-		graphState.toTransitioning();
-		const lecture = graph.lecture; // Ref to lecture for future callbacks
-
-		// Transition to new camera pov - centered on the current graph for minimal movement
-		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
-		const central = CameraToolbox.centralTransform(graph, graph.data.subject_nodes); // Pan to the center of the subject nodes
-		CameraToolbox.moveCamera(graph, { ...central, k: client.k }, () => {});
-
-		// Fade in new content, then move to lecture positions, then update background
-		this.setContent(graph, lecture.nodes, lecture.edges, () => {
-			this.moveContent(
-				graph,
-				lecture.nodes,
-				this.lectureTransform(graph, central.x, central.y),
-				() => {
-					graphState.toIdle();
-					graphView.toLectures();
-				}
-			);
-		});
+		this.snapToLectures(graph);
 	}
 
 	/**
-	 * Animate from the lectures view to the domains view: switches the background to the grid
-	 * ahead of time, snaps the camera/content to the lecture-table pov for the domains-node
-	 * framing, zooms out to that framing, animates the lecture's content into domain positions,
-	 * then fades it out and fades in the domain content. Falls back to snapToDomains if no
-	 * lecture is focused.
+	 * Animate from the lectures view to the domains view: switches the background to the grid,
+	 * transitions the camera to center on domain nodes, animates the lecture's content into
+	 * domain positions, then fades it out and fades in the full domain content. Falls back to
+	 * snapToDomains if no lecture is focused.
 	 *
 	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture
 	 * being left
 	 */
 	static lecturesToDomains(graph: GraphD3) {
-		// Validate lecture
-		if (graph.lecture === null) {
-			this.snapToDomains(graph);
+		// Validate lecture - fall back to snap if no lecture or 0 nodes in lecture
+		if (graph.lecture === null || graph.lecture.nodes.length === 0) {
+			this.snapToDomains(graph, true);
 			return;
 		}
 
@@ -557,18 +522,9 @@ export class TransitionToolbox {
 		// Update background - Background must be set before moving camera/calculating central transform
 		BackgroundToolbox.grid(graph);
 
-		// Snap camera and content to correct pov
-		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
-		const central = CameraToolbox.centralTransform(graph, graph.data.domain_nodes); // Pan to the center of the domain nodes
-		CameraToolbox.moveCamera(graph, { ...central, k: client.k });
-		this.moveContent(
-			graph,
-			graph.lecture.nodes,
-			this.lectureTransform(graph, central.x, central.y)
-		);
-
-		// Zoom out to new pov
-		CameraToolbox.zoomCamera(graph, central.k, () => {});
+		// Transition camera to new pov
+		const transform = CameraToolbox.centralTransform(graph, graph.data.domain_nodes);
+		CameraToolbox.moveCamera(graph, transform, () => {});
 
 		// Transition content to domain positions, then fade in new content
 		this.moveContent(graph, graph.lecture.nodes, this.domainTransform, () => {
@@ -580,19 +536,18 @@ export class TransitionToolbox {
 	}
 
 	/**
-	 * Animate from the lectures view to the subjects view: switches the background to the grid
-	 * ahead of time, snaps the camera/content to the lecture-table pov for the subject-node
-	 * framing, zooms out to that framing, animates the lecture's content back to its real
-	 * positions, then fades it out and fades in the subject content. Falls back to
+	 * Animate from the lectures view to the subjects view: switches the background to the grid,
+	 * transitions the camera to center on subject nodes, animates the lecture's content back to
+	 * its real positions, then fades it out and fades in the full subject content. Falls back to
 	 * snapToSubjects if no lecture is focused.
 	 *
 	 * @param graph - The graph instance to transition, using `graph.lecture` as the lecture
 	 * being left
 	 */
 	static lecturesToSubjects(graph: GraphD3) {
-		// Validate lecture
-		if (graph.lecture === null) {
-			this.snapToSubjects(graph);
+		// Validate lecture - fall back to snap if no lecture or 0 nodes in lecture
+		if (graph.lecture === null || graph.lecture.nodes.length === 0) {
+			this.snapToSubjects(graph, true);
 			return;
 		}
 
@@ -601,18 +556,9 @@ export class TransitionToolbox {
 		// Update background
 		BackgroundToolbox.grid(graph);
 
-		// Snap camera and content to correct pov
-		const client = CameraToolbox.clientTransform(graph, 'lecture'); // Zoom out to fit into scaled lecture background
-		const central = CameraToolbox.centralTransform(graph, graph.data.subject_nodes); // Pan to the center of the subject nodes
-		CameraToolbox.moveCamera(graph, { ...central, k: client.k });
-		this.moveContent(
-			graph,
-			graph.lecture.nodes,
-			this.lectureTransform(graph, central.x, central.y)
-		);
-
-		// Zoom out to fit subject nodes
-		CameraToolbox.zoomCamera(graph, central.k, () => {});
+		// Transition camera to new pov
+		const transform = CameraToolbox.centralTransform(graph, graph.data.subject_nodes);
+		CameraToolbox.moveCamera(graph, transform, () => {});
 
 		// Transition content to original positions, then fade in new content
 		this.restoreContentPosition(graph, () => {

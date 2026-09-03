@@ -46,7 +46,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 	if (env.NETLIFY_CONTEXT == 'DEPLOY_PREVIEW') {
 		const user_id = event.cookies.get('user_id');
 
-		if (!user_id && event.url.pathname.startsWith('/auth')) {
+		const isPublic =
+			event.url.pathname === '/' ||
+			event.url.pathname.startsWith('/auth') ||
+			event.url.pathname.startsWith('/graph/');
+
+		if (!user_id && isPublic) {
 			event.locals.auth = () => authFunction(event, user_id);
 			return await resolve(event);
 		} else if (!user_id) {

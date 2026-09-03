@@ -8,7 +8,7 @@ import {
 	whereHasGraphCoursePermission,
 	whereHasGraphSandboxPermission
 } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 import { GraphValidator } from '$lib/validators/graphValidator';
 import { renderableGraphInclude } from '$lib/graph/renderablePayload';
 
@@ -90,7 +90,7 @@ export class GraphActions {
 	) {
 		if (!form.valid) return setError(form, '', 'Invalid node positions');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -156,7 +156,7 @@ export class GraphActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Course',
 				message:
 					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
@@ -177,7 +177,7 @@ export class GraphActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Sandbox',
 				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
 			});
@@ -212,7 +212,7 @@ export class GraphActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Course',
 				message:
 					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
@@ -233,7 +233,7 @@ export class GraphActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Sandbox',
 				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
 			});
@@ -265,7 +265,7 @@ export class GraphActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Course',
 				message:
 					'You are not allowed to edit this course. You are not an program admin/editor or course admin/editor'
@@ -283,7 +283,7 @@ export class GraphActions {
 				}
 			});
 
-			return await withPermissionCheck(() => query, form, 'name', {
+			return await withGuardedMutation(() => query, form, 'name', {
 				entity: 'Sandbox',
 				message: 'You are not allowed to edit this sandbox. You are not an owner or editor'
 			});

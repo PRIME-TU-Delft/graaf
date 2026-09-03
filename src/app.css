@@ -96,6 +96,7 @@
 
 		position: absolute;
 		inset: 0;
+		pointer-events: none;
 
 		background: url('/grain.png') repeat;
 		background-size: 100px 100px;

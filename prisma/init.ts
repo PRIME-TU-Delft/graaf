@@ -27,6 +27,11 @@ export const graph = [
 
 export const courses = [
 	{
+		code: 'AM101',
+		uriCode: 'AM101',
+		name: 'Linear Algebra & Calculus'
+	},
+	{
 		code: 'CS1000',
 		uriCode: 'CS1000',
 		name: 'CourseOne'
@@ -51,7 +56,7 @@ export const courses = [
 export const programs = [
 	{
 		name: 'ProgramOne',
-		courses: [courses[0], courses[1], courses[2], courses[3]]
+		courses: [courses[0], courses[1], courses[2], courses[3], courses[4]]
 	},
 	{
 		name: 'ProgramTwo',

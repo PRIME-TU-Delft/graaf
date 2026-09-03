@@ -103,7 +103,9 @@
 					<MoveVertical class="h-4 w-4" />
 				</div>
 
-				<p class="m-0 mr-auto text-lg font-bold">{lecture.name}</p>
+				<p class="m-0 mr-auto min-w-0 flex-1 truncate text-lg font-bold" title={lecture.name}>
+					{lecture.name}
+				</p>
 				<IssueIndicator issues={lectureIssues.lecture} />
 
 				{#if graph.subjects.length > 0}

@@ -2,7 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { newProgramSchema } from '$lib/zod/programSchema';
 import { whereHasProgramPermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { GuardError, withGuardedMutation } from './guardedMutation';
 import { redirect } from '@sveltejs/kit';
 
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -38,20 +38,16 @@ export class ProgramActions {
 			return setError(form, '', 'You do not have permission to perform this action');
 		}
 
-		try {
-			await prisma.program.create({
-				data: {
-					name: form.data.name
-				}
-			});
-		} catch (e) {
-			if (!(e instanceof Object) || !('message' in e)) {
-				return setError(form, 'name', e instanceof Error ? e.message : `${e}`);
-			}
-			return setError(form, 'name', `${e.message}`);
-		}
-
-		return { form };
+		return await withGuardedMutation(
+			() =>
+				prisma.program.create({
+					data: {
+						name: form.data.name
+					}
+				}),
+			form,
+			'name'
+		);
 	}
 
 	/**
@@ -68,7 +64,7 @@ export class ProgramActions {
 	static async editProgram(user: User, form: SuperValidated<Infer<typeof editProgramSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.program.update({
 					where: {
@@ -116,12 +112,12 @@ export class ProgramActions {
 	}
 
 	/**
-	 * Decide whether a program role change is allowed, intended to stop a program from ending up
-	 * with zero admins. Used by editSuperUser before it applies a role change.
+	 * Decide whether a program role change is allowed, stopping a program from ending up with zero
+	 * admins. Used by editSuperUser before it applies a role change.
 	 *
-	 * Note the guard only activates once `admins` is already empty: as written, any change is
-	 * allowed whenever the program currently has one or more admins, and the "cannot change/revoke
-	 * the last admin" errors below only trigger when `admins.length` is already 0.
+	 * Only a change that takes the admin role away from the program's sole admin is blocked.
+	 * Changes to editors, changes that grant admin, and any change while a second admin remains
+	 * are all allowed.
 	 *
 	 * @param fromRole - The user's current role
 	 * @param toRole - The role being changed to
@@ -133,32 +129,32 @@ export class ProgramActions {
 		toRole: Role,
 		admins: { id: string }[]
 	) {
-		if (fromRole === 'revoke') return {};
-		if (admins.length >= 1) return {};
+		// Only demoting an existing admin can leave the program without one
+		if (fromRole !== 'admin') return {};
+		if (toRole === 'admin') return {};
 
-		if (fromRole === toRole) return { error: 'You cannot change the role to the same role' };
+		// Another admin stays behind, so losing this one is fine
+		if (admins.length > 1) return {};
 
-		if (fromRole == 'admin' && toRole === 'editor')
-			return { error: 'You cannot change the last admin to an editor' };
-		if (fromRole == 'admin' && toRole === 'revoke')
-			return { error: 'You cannot revoke the last admin' };
-
-		return { error: 'You cannot change the last admin' };
+		if (toRole === 'editor') return { error: 'You cannot change the last admin to an editor' };
+		return { error: 'You cannot revoke the last admin' };
 	}
 
 	/**
 	 * Set, change, or revoke a program-level admin/editor role for a user, guarded by
 	 * isAllowedToEditSuperUser so the program can't be left without any admins.
 	 *
-	 * Note the user's current role is derived by checking `program.admins` twice (not
-	 * `program.editors` for the editor case), so `fromRole` as computed here only ever resolves
-	 * to 'admin' or 'revoke', never 'editor', regardless of the target user's actual current role.
+	 * The read of the current admins, the guard, and the update run in one serializable
+	 * transaction, so two role changes racing each other cannot both see the same admin list and
+	 * strip the program of its last admin between them. Postgres rolls one of them back, and that
+	 * caller is asked to try again.
 	 *
 	 * @param user - The user performing the action, must have program admin rights
 	 * @param formData - Validated form data with the programId, target userId, and new role
 	 * ('admin' | 'editor' | 'revoke')
-	 * @returns Nothing on success. On invalid input, missing permission, or a disallowed role
-	 * change (see isAllowedToEditSuperUser), returns the form with an error via setError.
+	 * @returns Nothing on success. On invalid input, missing permission, a disallowed role change
+	 * (see isAllowedToEditSuperUser), or a lost race against a concurrent role change, returns the
+	 * form with an error via setError.
 	 */
 	static async editSuperUser(
 		user: User,
@@ -168,31 +164,6 @@ export class ProgramActions {
 
 		const newRole = formData.data.role;
 		const userId = formData.data.userId;
-
-		const program = await prisma.program.findFirst({
-			where: {
-				id: formData.data.programId,
-				...whereHasProgramPermission(user, 'ProgramAdmin')
-			},
-			include: {
-				admins: { select: { id: true } },
-				editors: { select: { id: true } }
-			}
-		});
-
-		if (!program) return setError(formData, '', 'Unauthorized');
-
-		// if program.admins.length <= 1
-		// admin -NOT ALLOWED-> editor
-		// admin -NOT ALLOWED-> revoke
-		const fromRole = program.admins.find((admin) => admin.id === userId)
-			? 'admin'
-			: program.admins.find((admin) => admin.id === userId)
-				? 'editor'
-				: 'revoke';
-
-		const isAllowed = ProgramActions.isAllowedToEditSuperUser(fromRole, newRole, program.admins);
-		if (isAllowed.error) return setError(formData, '', isAllowed.error);
 
 		function getData() {
 			switch (newRole) {
@@ -214,16 +185,55 @@ export class ProgramActions {
 			}
 		}
 
-		try {
-			await prisma.program.update({
-				where: {
-					id: formData.data.programId,
-					...whereHasProgramPermission(user, 'ProgramAdmin')
-				},
-				data: getData()
-			});
-		} catch (e: unknown) {
-			return setError(formData, '', e instanceof Error ? e.message : `${e}`);
-		}
+		return await withGuardedMutation(
+			() =>
+				prisma.$transaction(
+					async (tx) => {
+						const program = await tx.program.findFirst({
+							where: {
+								id: formData.data.programId,
+								...whereHasProgramPermission(user, 'ProgramAdmin')
+							},
+							include: {
+								admins: { select: { id: true } },
+								editors: { select: { id: true } }
+							}
+						});
+
+						if (!program) throw new GuardError('Unauthorized');
+
+						// if this user is the only program admin
+						// admin -NOT ALLOWED-> editor
+						// admin -NOT ALLOWED-> revoke
+						const fromRole = program.admins.find((admin) => admin.id === userId)
+							? 'admin'
+							: program.editors.find((editor) => editor.id === userId)
+								? 'editor'
+								: 'revoke';
+
+						const isAllowed = ProgramActions.isAllowedToEditSuperUser(
+							fromRole,
+							newRole,
+							program.admins
+						);
+						if (isAllowed.error) throw new GuardError(isAllowed.error);
+
+						await tx.program.update({
+							where: {
+								id: formData.data.programId,
+								...whereHasProgramPermission(user, 'ProgramAdmin')
+							},
+							data: getData()
+						});
+					},
+					{ isolationLevel: 'Serializable' }
+				),
+			formData,
+			'',
+			{
+				writeConflictMessage:
+					'Someone changed these roles at the same time, so this change was not applied. Please try again.'
+			}
+		);
 	}
 }

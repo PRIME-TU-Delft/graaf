@@ -5,6 +5,7 @@
 
 	// Components
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import Help from '$lib/components/Help.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import { Button } from '$lib/components/ui/button';
 	import { displayName } from '$lib/utils/displayUserName';
@@ -36,6 +37,10 @@
 		open = $state(false);
 	}
 
+	function uniqueById<T extends { id: string }>(items: T[]) {
+		return [...new Map(items.map((item) => [item.id, item])).values()];
+	}
+
 	function generateMailToLink(user: User, course: Course) {
 		const senderName = displayName(data.user);
 		const receiverName = displayName(user);
@@ -48,6 +53,7 @@
 	<title>Courses | PRIME Graph Editor</title>
 </svelte:head>
 
+<Help page="courses" />
 <section class="prose mx-auto mt-12 p-4">
 	<h1 class="text-purple-950 shadow-purple-500/70">Courses</h1>
 	<p>
@@ -86,17 +92,15 @@
 	</div>
 
 	{#each data.courses.filter((course) => !course.isArchived) as course (course.code)}
-		{@const superUsers = Array.from(
-			new Set([
-				...course.admins,
-				...course.editors,
-				...course.programs
-					.map((p) => {
-						return [...p.admins, ...p.editors];
-					})
-					.flat()
-			])
-		)}
+		{@const superUsers = uniqueById([
+			...course.admins,
+			...course.editors,
+			...course.programs
+				.map((p) => {
+					return [...p.admins, ...p.editors];
+				})
+				.flat()
+		])}
 
 		{@const hasAtLeastEditPermission =
 			data.user && hasCoursePermissions(data.user, course, 'CourseAdminEditorORProgramAdminEditor')}
@@ -263,7 +267,7 @@
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				{#each Array.from(new Set(course.programs.map((p) => p.admins).flat())) as user (user.id)}
+				{#each uniqueById(course.programs.map((p) => p.admins).flat()) as user (user.id)}
 					<Table.Row class="bg-purple-100/50 odd:bg-purple-50/50 hover:bg-purple-100/30">
 						<Table.Cell>
 							{displayName(user)}
@@ -289,7 +293,7 @@
 					</Table.Row>
 				{/each}
 
-				{#each Array.from(new Set(course.programs.map((p) => p.editors).flat())) as user (user.id)}
+				{#each uniqueById(course.programs.map((p) => p.editors).flat()) as user (user.id)}
 					<Table.Row class="bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-100/30">
 						<Table.Cell>
 							{displayName(user)}
@@ -315,9 +319,7 @@
 					</Table.Row>
 				{/each}
 
-				{#if Array.from(new Set(course.programs
-							.map((p) => [...p.admins, ...p.editors])
-							.flat())).length === 0}
+				{#if uniqueById(course.programs.flatMap((p) => [...p.admins, ...p.editors])).length === 0}
 					<Table.Row>
 						<Table.Cell colspan={3} class="text-center text-gray-500">
 							This course has no programs with admins or editors

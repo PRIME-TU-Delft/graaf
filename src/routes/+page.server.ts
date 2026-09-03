@@ -1,12 +1,15 @@
-import { redirect, type ServerLoad } from '@sveltejs/kit';
+import { signIn } from '$lib/server/auth';
+import type { User } from '@prisma/client';
+import type { Actions, ServerLoad } from '@sveltejs/kit';
 
 export const load: ServerLoad = async ({ locals }) => {
 	const session = await locals.auth();
 
-	// This is redundant? see issue #33
-	if (!session?.user) {
-		redirect(303, '/auth');
-	} else {
-		redirect(303, '/graph-editor');
-	}
+	return {
+		user: (session?.user as User) ?? null
+	};
+};
+
+export const actions: Actions = {
+	auth: signIn
 };

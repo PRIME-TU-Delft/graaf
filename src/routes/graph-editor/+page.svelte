@@ -34,12 +34,7 @@
 	<title>Dashboard | PRIME Graph Editor</title>
 </svelte:head>
 
-<Help title="Home page">
-	<p>
-		The home page is where you can find Programmes, Courses and Sandboxes you're working on. You can
-		pin courses to the top of the page, and filter Programmes by unarchived courses.
-	</p>
-</Help>
+<Help page="about" />
 
 <article class="my-6 mb-12 space-y-8">
 	<section class="prose mx-auto p-4">

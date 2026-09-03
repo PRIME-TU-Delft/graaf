@@ -114,7 +114,7 @@
 			</Grid.Cell>
 
 			<Grid.Cell>
-				{subject.name}
+				<p class="m-0 truncate" title={subject.name}>{subject.name}</p>
 			</Grid.Cell>
 
 			<Grid.Cell>
@@ -172,7 +172,9 @@
 
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
-			<span class="w-full text-left">{thisSubject.name}</span>
+			<span class="min-w-0 flex-1 truncate text-left" title={thisSubject.name}>
+				{thisSubject.name}
+			</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">

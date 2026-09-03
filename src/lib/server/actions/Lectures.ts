@@ -8,7 +8,7 @@ import {
 import type { User } from '@prisma/client';
 import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms/server';
 import { whereHasGraphCoursePermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 
 /** Server actions for creating, renaming, and deleting lectures within a graph, and for
  * linking subjects to them. Called from form actions in `+page.server.ts` route files, one
@@ -26,7 +26,7 @@ export class LectureActions {
 	static async addLectureToGraph(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			async () => {
 				const lectureCount = await prisma.lecture.count({
 					where: {
@@ -69,7 +69,7 @@ export class LectureActions {
 	static async changeLectureName(user: User, form: SuperValidated<Infer<typeof lectureSchema>>) {
 		if (!form.valid) return setError(form, 'name', 'Invalid lecture');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.lecture.update({
 					where: {
@@ -106,7 +106,7 @@ export class LectureActions {
 	) {
 		if (!form.valid) return setError(form, 'lectureIds._errors', 'Invalid lecture order');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -137,13 +137,13 @@ export class LectureActions {
 	 * @param user - The user performing the action, must have course or program admin/editor rights
 	 * @param form - Validated form data with the graphId, lectureId, and the full subjectIds list
 	 * @returns Nothing on success. On invalid input or missing permission, returns the form with
-	 * a `subjectIds._errors`-field error via setError instead of throwing.
+	 * a form-level error via setError instead of throwing.
 	 */
 	static async linkSubjectsToLecture(
 		user: User,
 		form: SuperValidated<Infer<typeof lectureSchema>>
 	) {
-		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid lecture');
+		if (!form.valid) return setError(form, '', 'Invalid lecture');
 
 		const where = {
 			id: form.data.lectureId,
@@ -153,16 +153,19 @@ export class LectureActions {
 			}
 		};
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction(async (tx) => {
-					const lecture = await tx.lecture.findFirstOrThrow({
-						where,
+					// Unscoped read, used only to preserve existing order. Permission is enforced by the
+					// update below, whose where clause is the one that carries the scope: findFirstOrThrow
+					// doesn't set meta.modelName on its P2025, so withGuardedMutation can't translate it.
+					const lecture = await tx.lecture.findUnique({
+						where: { id: form.data.lectureId },
 						select: { subjectOrder: true }
 					});
 
 					const linked = new Set(form.data.subjectIds);
-					const kept = lecture.subjectOrder.filter((id) => linked.has(id));
+					const kept = (lecture?.subjectOrder ?? []).filter((id) => linked.has(id));
 					const keptSet = new Set(kept);
 					const added = form.data.subjectIds.filter((id) => !keptSet.has(id));
 
@@ -177,7 +180,7 @@ export class LectureActions {
 					});
 				}),
 			form,
-			'subjectIds._errors',
+			'',
 			{ entity: 'Lecture', message: "You don't have permission to edit this lecture" }
 		);
 	}
@@ -199,7 +202,7 @@ export class LectureActions {
 	) {
 		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid subject order');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.lecture.update({
 					where: {
@@ -217,7 +220,7 @@ export class LectureActions {
 					}
 				}),
 			form,
-			'subjectIds._errors',
+			'',
 			{ entity: 'Lecture', message: "You don't have permission to edit this lecture" }
 		);
 	}
@@ -233,7 +236,7 @@ export class LectureActions {
 	static async deleteLecture(user: User, form: SuperValidated<Infer<typeof deleteLectureSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid lecture');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.lecture.delete({
 					where: {

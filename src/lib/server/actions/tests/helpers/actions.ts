@@ -37,7 +37,7 @@ export function asFailure(result: unknown) {
  * error attached, and returns it for any further inspection.
  *
  * Deliberately does not check the message text. Methods that route failures through
- * `withPermissionCheck` currently emit a raw Prisma error rather than their intended
+ * `withGuardedMutation` currently emit a raw Prisma error rather than their intended
  * permission-denied message (see #153), so asserting on wording here would pin a bug in place.
  * Use `errorMessages` for the methods that hand-roll setError, where the wording is reliable.
  */

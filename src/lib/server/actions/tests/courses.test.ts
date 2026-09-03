@@ -26,10 +26,9 @@ import { asErrorObject, buildForm, errorMessages, expectDenied } from './helpers
 // CourseActions.changePin is deliberately not covered: it has no permission gate at all, any
 // authenticated user may pin any course for themselves.
 //
-// Denials that run through withPermissionCheck are asserted with expectDenied (status + no write)
-// rather than on message text, because that helper currently emits a raw Prisma error instead of
-// its intended message on Prisma 7 (#153). linkCourses hand-rolls its own setError calls, so its
-// wording is asserted directly.
+// Denials that run through withGuardedMutation now assert the entity-specific message too, since
+// that helper correctly matches Prisma 7's P2025 shape (#153). linkCourses hand-rolls its own
+// setError calls, so its wording was already asserted directly.
 
 beforeEach(seedFixture);
 
@@ -63,6 +62,7 @@ describe('CourseActions.newCourse', () => {
 		const result = await CourseActions.newCourse(courseAdmin, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to create a new course");
 		await expect(prisma.course.findFirst({ where: { code: 'NEW2' } })).resolves.toBeNull();
 	});
 });
@@ -91,6 +91,7 @@ describe('CourseActions.editCourse', () => {
 		const result = await CourseActions.editCourse(courseEditor, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit this course");
 		await expect(
 			prisma.course.findUniqueOrThrow({ where: { id: course.id } })
 		).resolves.toMatchObject({ name: FIXTURE_COURSES.three.name });
@@ -119,6 +120,7 @@ describe('CourseActions.changeArchive', () => {
 		const result = await CourseActions.changeArchive(courseEditor, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to (de)archive this course");
 		await expect(
 			prisma.course.findUniqueOrThrow({ where: { id: course.id } })
 		).resolves.toMatchObject({ isArchived: false });
@@ -159,6 +161,7 @@ describe('CourseActions.editSuperUser', () => {
 		const result = await CourseActions.editSuperUser(courseEditor, form);
 
 		expectDenied(result);
+		expect(errorMessages(result)).toContain("You don't have permission to edit super users");
 		const after = await prisma.course.findUniqueOrThrow({
 			where: { id: course.id },
 			include: { admins: true, editors: true }
