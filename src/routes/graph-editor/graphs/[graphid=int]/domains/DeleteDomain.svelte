@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
+	import type { RenderableDomain, RenderableGraph } from '$lib/graph/renderablePayload';
 	import { deleteDomainSchema } from '$lib/zod/domainSchema';
 	import { toast } from 'svelte-sonner';
 	import { fromStore } from 'svelte/store';
@@ -10,8 +10,8 @@
 	import type { PageData } from './$types';
 
 	type Props = {
-		domain: PrismaDomainPayload;
-		graph: PrismaGraphPayload;
+		domain: RenderableDomain;
+		graph: RenderableGraph;
 	};
 
 	let { domain, graph }: Props = $props();

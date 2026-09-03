@@ -10,6 +10,7 @@ import {
 } from '../permissions';
 import { withGuardedMutation } from './guardedMutation';
 import { GraphValidator } from '$lib/validators/graphValidator';
+import { renderableGraphInclude } from '$lib/graph/renderablePayload';
 
 import type {
 	newGraphSchema,
@@ -17,45 +18,16 @@ import type {
 	duplicateGraphSchema,
 	nodePositionsSchema
 } from '$lib/zod/graphSchema';
-import type { PrismaGraphPayload, Issues } from '$lib/validators/types';
+import type { Issues } from '$lib/validators/types';
 
 import type { Prisma, User } from '@prisma/client';
+import type { RenderableGraph } from '$lib/graph/renderablePayload';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
 
 /** Server actions for creating, renaming, deleting, and duplicating graphs under a course or
  * sandbox. Called from form actions in `+page.server.ts` route files, one static method per
  * operation. */
 export class GraphActions {
-	/**
-	 * The `include` shape needed to render a graph: domains and subjects with their relation
-	 * edges, ordered for display, plus lectures with their subjects. Shared by every loader that
-	 * needs a full renderable graph, so a schema change to what "renderable" means only needs
-	 * updating here.
-	 */
-	private static readonly renderablePayloadInclude = {
-		domains: {
-			include: {
-				sourceDomains: true,
-				targetDomains: true
-			},
-			orderBy: { order: 'asc' as const }
-		},
-		subjects: {
-			include: {
-				sourceSubjects: true,
-				targetSubjects: true,
-				domain: true
-			},
-			orderBy: { order: 'asc' as const }
-		},
-		lectures: {
-			include: {
-				subjects: true
-			},
-			orderBy: { order: 'asc' as const }
-		}
-	} satisfies Prisma.GraphInclude;
-
 	/**
 	 * Fetch a graph with the full shape needed to render and validate it: domains, subjects, and
 	 * lectures with their relations, in display order. Used by both the graph-editor loader and
@@ -71,13 +43,13 @@ export class GraphActions {
 		where: Prisma.GraphWhereInput,
 		extraInclude?: Extra
 	): Promise<Prisma.GraphGetPayload<{
-		include: typeof GraphActions.renderablePayloadInclude & Extra;
+		include: typeof renderableGraphInclude & Extra;
 	}> | null> {
 		const graph = (await prisma.graph.findFirst({
 			where,
-			include: { ...this.renderablePayloadInclude, ...extraInclude }
+			include: { ...renderableGraphInclude, ...extraInclude }
 		})) as Prisma.GraphGetPayload<{
-			include: typeof GraphActions.renderablePayloadInclude;
+			include: typeof renderableGraphInclude;
 		}> | null;
 
 		if (!graph) return null;
@@ -97,7 +69,7 @@ export class GraphActions {
 		}
 
 		return graph as Prisma.GraphGetPayload<{
-			include: typeof GraphActions.renderablePayloadInclude & Extra;
+			include: typeof renderableGraphInclude & Extra;
 		}>;
 	}
 
@@ -152,7 +124,7 @@ export class GraphActions {
 	 * @param graph - A graph fetched via getRenderablePayload (or any structurally compatible payload)
 	 * @returns The list of validation issues, indexable by domain/subject/lecture id
 	 */
-	static validate(graph: PrismaGraphPayload): Issues {
+	static validate(graph: RenderableGraph): Issues {
 		return new GraphValidator(graph).validate();
 	}
 

@@ -1,14 +1,12 @@
 import * as d3 from 'd3';
-import { Prisma } from '@prisma/client';
 
 import * as settings from '$lib/settings';
 
 export { NodeType };
 export type {
-	PrismaGraphPayload,
-	PrismaDomainPayload,
-	PrismaSubjectPayload,
-	PrismaLecturePayload,
+	GraphCanvas,
+	NodePosition,
+	SavePositions,
 	GraphData,
 	NodeData,
 	EdgeData,
@@ -18,9 +16,7 @@ export type {
 	DefsSelection,
 	GroupSelection,
 	NodeSelection,
-	EdgeSelection,
-	NodePosition,
-	SavePositions
+	EdgeSelection
 };
 
 // -----------------------------> Enums
@@ -34,58 +30,8 @@ enum NodeType {
 // -----------------------------> Types
 
 /**
- * The shape of Prisma's graph query result that GraphD3.formatPayload expects as input: a graph
- * with its domains, subjects, and lectures, each including the relation data needed to build
- * edges (source/target domains and subjects) and lecture subject membership.
- */
-type PrismaGraphPayload = Prisma.GraphGetPayload<{
-	include: {
-		domains: {
-			include: {
-				sourceDomains: true;
-				targetDomains: true;
-			};
-		};
-		subjects: {
-			include: {
-				sourceSubjects: true;
-				targetSubjects: true;
-			};
-		};
-		lectures: {
-			include: {
-				subjects: true;
-			};
-		};
-	};
-}>;
-
-/** The shape of a single domain from a PrismaGraphPayload, including its relation edges. */
-type PrismaDomainPayload = Prisma.DomainGetPayload<{
-	include: {
-		sourceDomains: true;
-		targetDomains: true;
-	};
-}>;
-
-/** The shape of a single subject from a PrismaGraphPayload, including its relation edges. */
-type PrismaSubjectPayload = Prisma.SubjectGetPayload<{
-	include: {
-		sourceSubjects: true;
-		targetSubjects: true;
-	};
-}>;
-
-/** The shape of a single lecture from a PrismaGraphPayload, including its subject membership. */
-type PrismaLecturePayload = Prisma.LectureGetPayload<{
-	include: {
-		subjects: true;
-	};
-}>;
-
-/**
  * The flattened, simulation-ready shape of a graph's contents, as produced by
- * GraphD3.formatPayload from a PrismaGraphPayload. Domains and subjects are kept as separate
+ * projectGraphData from the graph store's model. Domains and subjects are kept as separate
  * node/edge lists (rather than merged) since only one of the two is rendered at a time,
  * depending on the active view.
  */
@@ -122,6 +68,12 @@ type NodeData = {
 /**
  * A directed relation between two nodes (both domains or both subjects). Holds the actual node
  * objects rather than ids, so renderers can read source/target position and style directly.
+ *
+ * INVARIANT: `source` and `target` are reference-equal to the matching entries of the
+ * `domain_nodes` / `subject_nodes` array they belong to. Edge geometry and styling read straight
+ * through these references, and only the node objects in those arrays are kept up to date by the
+ * simulation and the drag handler. `projectGraphData` is the one place these references are
+ * created; see the invariant documented there before building an EdgeData anywhere else.
  */
 type EdgeData = {
 	uuid: string;
@@ -130,7 +82,7 @@ type EdgeData = {
 };
 
 /**
- * A single lecture's rendering data, as produced by GraphD3.formatPayload. `past_nodes`/
+ * A single lecture's rendering data, as produced by projectGraphData. `past_nodes`/
  * `present_nodes`/`future_nodes` partition the subject graph relative to this lecture's own
  * subjects (present_nodes), found by walking one hop outward along subject edges; `nodes`/
  * `edges` are the union of all three groups, used when rendering the lectures view.
@@ -165,6 +117,16 @@ type DefsSelection = d3.Selection<SVGDefsElement, unknown, null, unknown>;
 type GroupSelection = d3.Selection<SVGGElement, unknown, null, unknown>;
 type NodeSelection = d3.Selection<SVGGElement, NodeData, d3.BaseType, unknown>;
 type EdgeSelection = d3.Selection<SVGLineElement, EdgeData, d3.BaseType, unknown>;
+
+// -----------------------------> Canvas ports
+// The canvas is imperative while the graph store is reactive, so they meet through these narrow
+// types rather than importing each other.
+
+/** What the graph store needs from a mounted canvas: somewhere to push a new projection whenever
+ * the model changes. Implemented by GraphD3. */
+type GraphCanvas = {
+	applyData(data: GraphData, options?: { recenter?: boolean }): void;
+};
 
 /** A node's persisted canvas position, in whole grid units. */
 type NodePosition = {

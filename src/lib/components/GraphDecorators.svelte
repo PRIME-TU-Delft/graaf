@@ -3,6 +3,7 @@
 
 	import { GraphD3 } from '$lib/d3/GraphD3';
 	import { graphView } from '$lib/d3/GraphD3View.svelte';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import * as settings from '$lib/settings';
 
 	import {
@@ -40,9 +41,13 @@
 
 	let { graphD3, editable, builtInViewDropdown = false }: Props = $props();
 
+	// The lecture list comes from the store rather than the canvas: the canvas rebuilds its
+	// LectureData objects on every update, and a plain field on it would not be reactive here.
+	const store = getGraphStore();
+
 	let isFullscreen = $state(false);
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
-	let chosenLecture = $derived(graphD3.data.lectures.find((lecture) => lecture.id === lectureID));
+	let chosenLecture = $derived(store.lectures.find((lecture) => lecture.id === lectureID));
 
 	$effect(() => {
 		if (screenfull.isEnabled) {
@@ -116,9 +121,7 @@
 					{:else}
 						<DropdownMenu.Item
 							disabled={graphState.isTransitioning()}
-							onclick={() => {
-								gotoView(tab);
-							}}
+							onclick={() => gotoView(tab)}
 						>
 							{capitalize(tab)}
 						</DropdownMenu.Item>
@@ -130,7 +133,7 @@
 {/if}
 
 <!-- Select Lecture -->
-{#if !isFullscreen && graphD3.data.lectures.length > 0}
+{#if !isFullscreen && store.lectures.length > 0}
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger
 			class={cn(
@@ -143,23 +146,13 @@
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content>
 			<DropdownMenu.Group>
-				<DropdownMenu.Item
-					onclick={() => {
-						gotoLecture(null);
-						graphD3.setLecture(null);
-					}}
-				>
+				<DropdownMenu.Item onclick={() => gotoLecture(null)}>
 					Unselect
 					<Check class={cn('ml-auto w-auto', lectureID && 'w-0 text-transparent')} />
 				</DropdownMenu.Item>
 				<DropdownMenu.Separator />
-				{#each graphD3.data.lectures as lecture (lecture.id)}
-					<DropdownMenu.Item
-						onclick={() => {
-							gotoLecture(lecture.id);
-							graphD3.setLecture(lecture);
-						}}
-					>
+				{#each store.lectures as lecture (lecture.id)}
+					<DropdownMenu.Item onclick={() => gotoLecture(lecture.id)}>
 						{lecture.name}
 						<Check
 							class={cn('ml-auto w-auto', lecture.id !== lectureID && 'w-0 text-transparent')}

@@ -7,6 +7,7 @@
 	import { flip } from 'svelte/animate';
 	import { page } from '$app/state';
 	import { superForm } from 'sveltekit-superforms';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 
@@ -18,48 +19,55 @@
 		};
 	};
 
-	const { subjects, issues, lecture = $bindable() }: Props = $props();
+	const { subjects, issues, lecture }: Props = $props();
 
-	let subjectBackup = [...lecture.subjects];
+	// This renders the store's membership for one lecture and hands drags back to it. The previous
+	// membership is the store's business, so there is no backup array here any more.
+	const store = getGraphStore();
+
+	// Only has to be unique per mounted form, so it does not read a prop at init
+	const formId = $props.id();
 
 	const flipDurationMs = 300;
 
-	function revertSubjectOrder() {
-		lecture.subjects = subjectBackup;
+	function failedReorder() {
+		store.revertLectureSubjects(lecture.id);
 		toast.error('Error while reordering lectures');
 	}
 
-	// Unlike the lecture list itself, this order does show up on the graph canvas: the lectures
-	// view lays a lecture's subjects out in this order. So this form invalidates, and the canvas
-	// picks the new order up from the refreshed payload.
+	// No invalidateAll: this order does show up on the canvas (the lectures view lays a lecture's
+	// subjects out in it), but applying it to the store already repartitioned the canvas.
 	const {
 		form: reorderData,
 		enhance: reorderEnhance,
 		submit: submitReorder
 	} = superForm((page.data as PageData).reorderLectureSubjectsForm, {
-		id: `reorder-lecture-subjects-${lecture.id}`,
+		id: `reorder-lecture-subjects-${formId}`,
 		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
 		resetForm: false,
 		onUpdated: ({ form }) => {
-			if (form.valid) subjectBackup = [...lecture.subjects];
-			else revertSubjectOrder();
+			if (form.valid) store.confirmLectureSubjects(lecture.id);
+			else failedReorder();
 		},
-		onError: revertSubjectOrder
+		onError: failedReorder
 	});
 
 	function handleDndConsider(e: CustomEvent<DndEvent<Subject>>): void {
-		lecture.subjects = e.detail.items;
+		store.previewLectureSubjects(lecture.id, idsOf(e.detail.items));
 	}
 
 	function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
-		lecture.subjects = e.detail.items;
+		const subjectIds = idsOf(e.detail.items);
+		store.setLectureSubjects(lecture.id, subjectIds);
 
-		$reorderData = {
-			graphId: lecture.graphId,
-			lectureId: lecture.id,
-			subjectIds: e.detail.items.map((subject) => subject.id)
-		};
+		$reorderData = { graphId: lecture.graphId, lectureId: lecture.id, subjectIds };
 		submitReorder();
+	}
+
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 
