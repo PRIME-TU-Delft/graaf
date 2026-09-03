@@ -22,11 +22,11 @@ import type {
 	DomainRow,
 	EdgeKey,
 	GraphModel,
-	GraphPayload,
 	GraphWithRelations,
 	LectureRow,
 	SubjectRow
 } from './model';
+import type { RenderableGraph } from './renderablePayload';
 
 /**
  * The single owner of one graph's contents while it is open in the editor or the public viewer.
@@ -78,7 +78,7 @@ export class GraphStore {
 	/** The mounted canvas, while there is one. Pushed to, never read from. */
 	#canvas: GraphCanvas | null = null;
 
-	constructor(payload: GraphPayload) {
+	constructor(payload: RenderableGraph) {
 		this.hydrate(payload);
 	}
 
@@ -149,7 +149,7 @@ export class GraphStore {
 	 *
 	 * @param payload - The graph as returned by GraphActions.getRenderablePayload
 	 */
-	hydrate(payload: GraphPayload): void {
+	hydrate(payload: RenderableGraph): void {
 		const isNewGraph = this.#meta !== null && this.#meta.id !== payload.id;
 		if (isNewGraph) this.#clear();
 
@@ -463,7 +463,7 @@ const GRAPH_STORE_KEY = Symbol('graphStore');
  * @param payload - The graph as returned by GraphActions.getRenderablePayload
  * @returns The store, so the caller can hydrate it when its load data changes
  */
-export function setGraphStore(payload: GraphPayload): GraphStore {
+export function setGraphStore(payload: RenderableGraph): GraphStore {
 	const store = new GraphStore(payload);
 	setContext(GRAPH_STORE_KEY, store);
 

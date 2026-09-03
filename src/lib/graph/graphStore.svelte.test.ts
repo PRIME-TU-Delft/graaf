@@ -3,12 +3,57 @@ import { describe, expect, it } from 'vitest';
 import { GraphStore } from './graphStore.svelte';
 
 import type { GraphCanvas, GraphData } from '$lib/d3/types';
-import type { GraphPayload } from './model';
+import type { RenderableGraph } from './renderablePayload';
+import type { Domain, Lecture, Subject } from '@prisma/client';
 
 const timestamps = { createdAt: new Date(0), updatedAt: new Date(0) };
 
-/** A graph with two domains related 1 -> 2, a subject in each, and a lecture holding subject 1. */
-function payload(): GraphPayload {
+function domain(id: number, style: Domain['style'] = null): Domain {
+	return {
+		id,
+		name: `domain ${id}`,
+		style,
+		order: id - 1,
+		x: (id - 1) * 4,
+		y: 0,
+		graphId: 1,
+		...timestamps
+	};
+}
+
+function subject(id: number, domainId: number | null): Subject {
+	return {
+		id,
+		name: `subject ${id}`,
+		order: id - 1,
+		x: (id - 1) * 4,
+		y: 2,
+		graphId: 1,
+		domainId,
+		...timestamps
+	};
+}
+
+function lecture(id: number, subjectIds: number[]): Lecture {
+	return {
+		id,
+		name: `lecture ${id}`,
+		order: id - 1,
+		subjectOrder: subjectIds,
+		graphId: 1,
+		...timestamps
+	};
+}
+
+/**
+ * A graph as the loaders return it: two domains related 1 -> 2, a subject in each, and a lecture
+ * holding the first subject. Typed as RenderableGraph, so a change to what the query includes
+ * shows up here rather than being quietly absent from the fixture.
+ */
+function payload(): RenderableGraph {
+	const [domainOne, domainTwo] = [domain(1, 'SUNNY_YELLOW'), domain(2)];
+	const [subjectOne, subjectTwo] = [subject(1, 1), subject(2, 2)];
+
 	return {
 		id: 1,
 		name: 'graph',
@@ -17,68 +62,14 @@ function payload(): GraphPayload {
 		sandboxId: null,
 		...timestamps,
 		domains: [
-			{
-				id: 1,
-				name: 'domain 1',
-				style: 'SUNNY_YELLOW',
-				order: 0,
-				x: 0,
-				y: 0,
-				graphId: 1,
-				...timestamps,
-				sourceDomains: [],
-				targetDomains: [{ id: 2 }]
-			},
-			{
-				id: 2,
-				name: 'domain 2',
-				style: null,
-				order: 1,
-				x: 4,
-				y: 0,
-				graphId: 1,
-				...timestamps,
-				sourceDomains: [{ id: 1 }],
-				targetDomains: []
-			}
+			{ ...domainOne, sourceDomains: [], targetDomains: [domainTwo] },
+			{ ...domainTwo, sourceDomains: [domainOne], targetDomains: [] }
 		],
 		subjects: [
-			{
-				id: 1,
-				name: 'subject 1',
-				order: 0,
-				x: 0,
-				y: 2,
-				graphId: 1,
-				domainId: 1,
-				...timestamps,
-				sourceSubjects: [],
-				targetSubjects: []
-			},
-			{
-				id: 2,
-				name: 'subject 2',
-				order: 1,
-				x: 4,
-				y: 2,
-				graphId: 1,
-				domainId: 2,
-				...timestamps,
-				sourceSubjects: [],
-				targetSubjects: []
-			}
+			{ ...subjectOne, domain: domainOne, sourceSubjects: [], targetSubjects: [] },
+			{ ...subjectTwo, domain: domainTwo, sourceSubjects: [], targetSubjects: [] }
 		],
-		lectures: [
-			{
-				id: 1,
-				name: 'lecture 1',
-				order: 0,
-				subjectOrder: [1],
-				graphId: 1,
-				...timestamps,
-				subjects: [{ id: 1 }]
-			}
-		]
+		lectures: [{ ...lecture(1, [1]), subjects: [subjectOne] }]
 	};
 }
 

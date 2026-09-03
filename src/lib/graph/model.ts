@@ -27,17 +27,6 @@ export function edgeEnds(key: EdgeKey): { sourceId: number; targetId: number } {
 }
 
 /**
- * The payload shape the store hydrates from: what `GraphActions.getRenderablePayload` returns.
- * Relation arrays are only read for their ids, so they are typed as loosely as possible to accept
- * every loader's variant of the payload.
- */
-export type GraphPayload = Graph & {
-	domains: (Domain & { sourceDomains: { id: number }[]; targetDomains: { id: number }[] })[];
-	subjects: (Subject & { sourceSubjects: { id: number }[]; targetSubjects: { id: number }[] })[];
-	lectures: (Lecture & { subjects: { id: number }[] })[];
-};
-
-/**
  * The payload-shaped projection of the store, for the editor tables, the form components and
  * GraphValidator, all of which were written against the loader's payload.
  *

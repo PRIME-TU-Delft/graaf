@@ -2,7 +2,8 @@ import { edgeKey } from './model';
 
 import type { SvelteMap, SvelteSet } from 'svelte/reactivity';
 import type { Graph } from '@prisma/client';
-import type { DomainRow, EdgeKey, GraphPayload, LectureRow, SubjectRow } from './model';
+import type { DomainRow, EdgeKey, LectureRow, SubjectRow } from './model';
+import type { RenderableGraph } from './renderablePayload';
 
 /**
  * Turning a loaded payload into the graph store's model: one row builder per entity, stripping the
@@ -114,7 +115,7 @@ export function reconcileEdges<Source extends { id: number }>(
 }
 
 /** The graph's own fields, without any of its contents. */
-export function graphMeta(payload: GraphPayload): Graph {
+export function graphMeta(payload: RenderableGraph): Graph {
 	return {
 		id: payload.id,
 		name: payload.name,
@@ -128,7 +129,7 @@ export function graphMeta(payload: GraphPayload): Graph {
 
 /** One domain row, without its relation arrays. Built field by field, so nothing the payload
  *  happens to carry leaks into the model. */
-export function domainRow(domain: GraphPayload['domains'][number]): DomainRow {
+export function domainRow(domain: RenderableGraph['domains'][number]): DomainRow {
 	return {
 		id: domain.id,
 		name: domain.name,
@@ -143,7 +144,7 @@ export function domainRow(domain: GraphPayload['domains'][number]): DomainRow {
 }
 
 /** One subject row, without its relation arrays or its parent domain. */
-export function subjectRow(subject: GraphPayload['subjects'][number]): SubjectRow {
+export function subjectRow(subject: RenderableGraph['subjects'][number]): SubjectRow {
 	return {
 		id: subject.id,
 		name: subject.name,
@@ -162,7 +163,7 @@ export function subjectRow(subject: GraphPayload['subjects'][number]): SubjectRo
  * subjects; the loader sorts `lecture.subjects` by it, so the store reads the order from there and
  * keeps this field only so the row stays a faithful copy of the database row.
  */
-export function lectureRow(lecture: GraphPayload['lectures'][number]): LectureRow {
+export function lectureRow(lecture: RenderableGraph['lectures'][number]): LectureRow {
 	return {
 		id: lecture.id,
 		name: lecture.name,

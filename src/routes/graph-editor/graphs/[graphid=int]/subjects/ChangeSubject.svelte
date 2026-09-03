@@ -9,7 +9,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import type { RenderableGraph, RenderableSubject } from '$lib/graph/renderablePayload';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import type { Subject } from '@prisma/client';
 	import { useId } from 'bits-ui';
@@ -26,8 +26,8 @@
 	import Undo2 from '@lucide/svelte/icons/undo-2';
 
 	type Props = {
-		subject: PageData['graph']['subjects'][0];
-		graph: PrismaGraphPayload;
+		subject: RenderableSubject;
+		graph: RenderableGraph;
 	};
 
 	let { subject, graph }: Props = $props();

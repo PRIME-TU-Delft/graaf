@@ -190,6 +190,25 @@ preview has to live somewhere reactive. Putting it in the store as `previewOrder
 (no server call, no canvas push) and committing on finalize keeps zero copies in the component,
 which is the point of the exercise.
 
+### One declaration of the payload shape
+
+Finding 9 is fixed rather than worked around. `src/lib/graph/renderablePayload.ts` owns the
+`include` that makes a graph renderable, and everything else is derived from it:
+`GraphActions.getRenderablePayload` queries with the value, and `RenderableGraph` /
+`RenderableDomain` / `RenderableSubject` / `RenderableLecture` come from
+`Prisma.GraphGetPayload<{ include: typeof renderableGraphInclude }>`. The hand-written copies in
+`src/lib/d3/types.ts` and `src/lib/validators/types.ts` are gone, and so is the store's own loose
+`GraphPayload`; `validators/types.ts` now holds only `Issue` and `Issues`.
+
+It lives outside `$lib/server` on purpose. The components and validators that consume the query
+result need the derived types, while only the query needs the value, and nothing else in this repo
+imports from `$lib/server` in client code.
+
+What that drift was actually costing: the copy in validators omitted `subjects.include.domain`,
+which the real query has, so three components could not use the shared type and typed their props as
+`PageData['graph']['subjects'][0]` instead. All three now take `RenderableSubject`, and no component
+types a prop off `PageData['graph']` any more.
+
 ### No deep clone
 
 `startSimulation` / `resetSimulation` do not need a deep copy of the object graph. They need the
@@ -315,13 +334,16 @@ the `update-node-positions` action.
 
 New:
 
-- `src/lib/graph/model.ts` - row, payload, projection and model types
+- `src/lib/graph/renderablePayload.ts` - the one declaration of the renderable graph include, and
+  every payload type derived from it
+- `src/lib/graph/model.ts` - row, projection and model types
 - `src/lib/graph/hydration.ts` - row builders and the reconcilers, pure and Map-free of reactivity
 - `src/lib/graph/projectGraphData.ts` - the canvas projection, moved out of `GraphD3.formatPayload`
 - `src/lib/graph/projectWithRelations.ts` - the payload-shaped projection for the tables
 - `src/lib/graph/graphStore.svelte.ts` - the owner, plus its context helpers
 - `src/lib/graph/projectGraphData.test.ts` - the reference-identity invariant, 11 cases
-- `src/lib/graph/graphStore.svelte.test.ts` - hydration, mutations, rollback, sink, 18 cases
+- `src/lib/graph/graphStore.svelte.test.ts` - hydration, mutations, revert and canvas binding,
+  20 cases, against a fixture typed as the real payload
 
 Changed:
 
@@ -527,9 +549,12 @@ How the merge was resolved:
 
 - `#105` fullscreen DOM reach from `GraphDecorators` into `GraphD3` internals. Same subsystem,
   different seam, and `getFullscreenTarget` (`GraphD3.ts:394`) already narrowed it.
-- `#107` graph-payload query duplicated across loaders. Both loaders already go through
-  `GraphActions.getRenderablePayload`, so that issue looks already fixed; the leftover is the
-  duplicated _type_ in finding 9, folded into phase 0 here.
+- `#107` graph-payload query duplicated across loaders. Both loaders already went through
+  `GraphActions.getRenderablePayload`; the leftover duplicated _type_ from finding 9 is fixed here,
+  see "One declaration of the payload shape".
+- The graph settings components (`DuplicateGraph.svelte`, `GraphTable.svelte`) each declare the same
+  inline `GraphGetPayload<{ include: { lectures: true; links: true } }>`. Same smell, different
+  shape, and nothing to do with rendering a graph, so it is left alone.
 - Server-side changes to the form actions, the zod schemas, or `GraphValidator`.
 - Promoting the "one owner, two projections" decision to `docs/adr/0001-*.md`. Worth doing once this
   is reviewed and merged, since `docs/agents/domain.md` expects ADRs for decisions in an area, and
