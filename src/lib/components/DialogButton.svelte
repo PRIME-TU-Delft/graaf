@@ -4,6 +4,7 @@
 	import {
 		ArrowLeftRight,
 		BadgeHelp,
+		ChartColumn,
 		Code,
 		Copy,
 		Ellipsis,
@@ -16,7 +17,17 @@
 	import { buttonVariants, type ButtonVariant } from './ui/button';
 
 	type Props = {
-		icon?: 'plus' | 'ellipsis' | 'edit' | 'admins' | 'link' | 'help' | 'copy' | 'swap' | 'code';
+		icon?:
+			| 'plus'
+			| 'ellipsis'
+			| 'edit'
+			| 'admins'
+			| 'link'
+			| 'help'
+			| 'copy'
+			| 'swap'
+			| 'code'
+			| 'chart';
 		open?: boolean;
 		button?: string;
 		title: string;
@@ -30,6 +41,10 @@
 		children: Snippet;
 		variant?: ButtonVariant;
 		class?: string;
+		/** Extra classes for the dialog itself, e.g. `sm:max-w-4xl` for a dialog that needs more
+		 * room than the default. Note the width has to be set on the `sm:` variant to beat the
+		 * `sm:max-w-lg` the dialog primitive ships with. */
+		contentClass?: string;
 	};
 
 	let {
@@ -42,7 +57,8 @@
 		onclick = () => {},
 		children,
 		variant = 'default',
-		class: classes
+		class: classes,
+		contentClass
 	}: Props = $props();
 </script>
 
@@ -78,6 +94,8 @@
 			<ArrowLeftRight class="size-5" />
 		{:else if icon == 'code'}
 			<Code class="size-5" />
+		{:else if icon == 'chart'}
+			<ChartColumn class="size-5" />
 		{/if}
 
 		{#if button}
@@ -85,7 +103,7 @@
 		{/if}
 	</Dialog.Trigger>
 
-	<Dialog.Content class="max-h-[80dvh] max-w-2xl overflow-y-auto p-0">
+	<Dialog.Content class={cn('max-h-[80dvh] max-w-2xl overflow-y-auto p-0', contentClass)}>
 		<Dialog.Header class="sticky top-0 z-10 bg-white/50 p-4 backdrop-blur-lg">
 			<Dialog.Title class="text-lg">{title}</Dialog.Title>
 			{#if description}

@@ -19,13 +19,13 @@
 </svelte:head>
 
 <section
-	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
+	class="prose mx-auto mb-4 flex w-full max-w-4xl items-center justify-between border-b border-purple-200 p-4"
 >
 	<h1 class="!m-0">{data.sandbox.name}</h1>
 	<EditSandbox />
 </section>
 
-<section class="prose container mx-auto mt-8 p-4">
+<section class="prose mx-auto mt-8 max-w-4xl p-4">
 	<h2 class="m-0">Sandbox Editors</h2>
 
 	<p>
@@ -36,7 +36,7 @@
 	<EditorTable sandbox={data.sandbox} />
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Graphs</h2>
 	<p>
 		Graphs are the bread and butter of the Graph Editor! They are perfect for structuring
@@ -52,6 +52,7 @@
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
+		showAnalytics={false}
 		getLinkURL={() => `SANDBOX LINKS ARE NOT SUPPORTED YET`}
 		hasAtLeastAdminPermission={hasSandboxPermissions(data.user, data.sandbox, 'Owner')}
 	/>
@@ -59,7 +60,7 @@
 
 <section
 	id="danger-zone"
-	class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+	class="prose mx-auto my-12 max-w-4xl space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 >
 	<h2 class="text-red-950">Danger zone</h2>
 	<div class="flex items-center gap-2">

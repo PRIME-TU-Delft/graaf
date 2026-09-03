@@ -4,6 +4,7 @@ import prisma from '$lib/server/db/prisma';
 import { whereHasCoursePermission } from '$lib/server/permissions';
 import { CourseActions } from '$lib/server/actions/Courses';
 import { LinkActions } from '$lib/server/actions/Links';
+import { LinkViewActions } from '$lib/server/actions/LinkViews';
 import { graphSchemaWithId } from '$lib/zod/graphSchema';
 import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema';
 import { redirect, type ServerLoad } from '@sveltejs/kit';
@@ -52,10 +53,17 @@ export const load = (async ({ params, locals }) => {
 		// TODO: Check if we need pagination here
 		const allUsers = await prisma.user.findMany();
 
+		// Weekly view buckets for every link listed below, so the link list can show view counts
+		// and work out staleness. Reading these needs no more access than reading the links.
+		const linkViews = await LinkViewActions.getWeeklyViews(
+			dbCourse.graphs.flatMap((graph) => graph.links.map((link) => link.id))
+		);
+
 		return {
 			course: dbCourse,
 			user,
 			allUsers,
+			linkViews,
 			editCourseForm: await superValidate(zod(newCourseSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			changeArchiveForm: await superValidate(zod(changeArchiveSchema)),
