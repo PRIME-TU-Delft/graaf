@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import prisma from '$lib/server/db/prisma';
 import { LinkViewActions } from '$lib/server/actions/LinkViews';
 import { STALE_LINK_VIEW_THRESHOLD, STALE_LINK_WINDOW_WEEKS } from '$lib/settings';
-import { addWeeks, utcWeekStart } from '$lib/utils/academicWeeks';
+import { addWeeks, utcWeekStart } from '$lib/utils/weeks';
 import { buildLinkAnalytics } from '$lib/utils/linkAnalytics';
 import { FIXTURE_COURSES, FIXTURE_GRAPHS } from './helpers/fixture';
 

@@ -1,6 +1,6 @@
 import prisma from '$lib/server/db/prisma';
 import { STALE_LINK_WINDOW_WEEKS } from '$lib/settings';
-import { addWeeks, utcWeekStart } from '$lib/utils/academicWeeks';
+import { addWeeks, utcWeekStart } from '$lib/utils/weeks';
 
 import type { LinkViewWeek } from '$lib/utils/linkAnalytics';
 

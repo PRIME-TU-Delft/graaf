@@ -1,5 +1,5 @@
 import { STALE_LINK_VIEW_THRESHOLD, STALE_LINK_WINDOW_WEEKS } from '$lib/settings';
-import { addWeeks, utcWeekStart } from './academicWeeks';
+import { addWeeks, utcWeekStart } from './weeks';
 
 /** One stored bucket: how often one link was viewed during one UTC Monday-start week. */
 export type LinkViewWeek = {

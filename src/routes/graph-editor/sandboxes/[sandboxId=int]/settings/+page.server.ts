@@ -8,7 +8,6 @@ import { SandboxActions } from '$lib/server/actions/Sandboxes';
 import { GraphActions } from '$lib/server/actions/Graphs';
 import { graphSchemaWithId } from '$lib/zod/graphSchema';
 import { LinkActions } from '$lib/server/actions/Links';
-import { LinkViewActions } from '$lib/server/actions/LinkViews';
 
 import { newLinkSchema, editLinkSchema } from '$lib/zod/linkSchema';
 
@@ -49,12 +48,6 @@ export const load = (async ({ params, locals }) => {
 		// TODO: Check if we need pagination here
 		const allUsers = await prisma.user.findMany();
 
-		// Weekly view buckets for every link listed below, so the link list can show view counts
-		// and work out staleness. Reading these needs no more access than reading the links.
-		const linkViews = await LinkViewActions.getWeeklyViews(
-			dbSandbox.graphs.flatMap((graph) => graph.links.map((link) => link.id))
-		);
-
 		return {
 			breadcrumbs: [
 				{ name: 'Home', url: '/graph-editor' },
@@ -65,7 +58,6 @@ export const load = (async ({ params, locals }) => {
 			sandbox: dbSandbox,
 			user,
 			allUsers,
-			linkViews,
 			editSandboxForm: await superValidate(zod(editSandboxSchema)),
 			editSuperUserForm: await superValidate(zod(editSuperUserSchema)),
 			deleteSandboxForm: await superValidate(zod(deleteSandboxSchema)),

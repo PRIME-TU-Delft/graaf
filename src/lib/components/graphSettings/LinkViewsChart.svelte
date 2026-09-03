@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAcademicWeek, formatAcademicWeekLong } from '$lib/utils/academicWeeks';
+	import { formatWeek, formatWeekLong } from '$lib/utils/weeks';
 
 	// Types
 	import type { ViewWeek } from '$lib/utils/linkAnalytics';
@@ -43,11 +43,11 @@
 		if (hovered != null) {
 			const week = weeks[hovered];
 			const views = week.count === 1 ? '1 view' : `${week.count} views`;
-			return `${formatAcademicWeekLong(week.weekStart)}: ${views}`;
+			return `${formatWeekLong(week.weekStart)}: ${views}`;
 		}
 
 		if (peak.count === 0) return `No views in the last ${weeks.length} weeks`;
-		return `Busiest week: ${peak.count} views in ${formatAcademicWeekLong(peak.weekStart)}`;
+		return `Busiest week: ${peak.count} views in ${formatWeekLong(peak.weekStart)}`;
 	});
 </script>
 
@@ -76,7 +76,7 @@
 					type="button"
 					class="relative h-full min-w-0 grow rounded-t transition-colors hover:bg-purple-100/70 focus-visible:bg-purple-100/70 focus-visible:outline-none"
 					tabindex={week.count > 0 ? 0 : -1}
-					aria-label="{formatAcademicWeekLong(week.weekStart)}: {week.count} views"
+					aria-label="{formatWeekLong(week.weekStart)}: {week.count} views"
 					onmouseenter={() => (hovered = index)}
 					onmouseleave={() => (hovered = null)}
 					onfocus={() => (hovered = index)}
@@ -96,12 +96,12 @@
 	<div class="flex gap-[2px] pl-8">
 		{#each weeks as week, index (week.weekStart.getTime())}
 			<span class="min-w-0 grow text-center text-[10px] whitespace-nowrap text-gray-400">
-				{index % LABEL_EVERY === LABEL_OFFSET ? formatAcademicWeek(week.weekStart) : ''}
+				{index % LABEL_EVERY === LABEL_OFFSET ? formatWeek(week.weekStart) : ''}
 			</span>
 		{/each}
 	</div>
 
 	<p class="text-xs text-gray-400">
-		Weeks are TU Delft academic weeks, week 1 being the week that contains September 1st.
+		Week numbers are ISO week numbers. Every week runs Monday to Sunday.
 	</p>
 </figure>

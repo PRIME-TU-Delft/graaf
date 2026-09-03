@@ -35,7 +35,10 @@
 		editLinkForm: SuperValidated<Infer<typeof editLinkSchema>>;
 		getLinkURL: (link: Link) => string;
 		hasAtLeastAdminPermission: boolean;
-		linkViews: LinkViewWeek[];
+		/** Whether to show view counts, the analytics popup and the stale filter. Off for
+		 * sandboxes, whose links have no public URL and so can never collect a view. */
+		showAnalytics: boolean;
+		linkViews?: LinkViewWeek[];
 	};
 
 	const {
@@ -45,7 +48,8 @@
 		editLinkForm,
 		getLinkURL,
 		hasAtLeastAdminPermission,
-		linkViews
+		showAnalytics,
+		linkViews = []
 	}: GraphLinksProps = $props();
 
 	const filters: { value: StaleFilter; label: string }[] = [
@@ -57,10 +61,12 @@
 	let staleFilter = $state<StaleFilter>('all');
 
 	const analytics = $derived(
-		buildLinkAnalytics(
-			graphs.flatMap((graph) => graph.links),
-			linkViews
-		)
+		showAnalytics
+			? buildLinkAnalytics(
+					graphs.flatMap((graph) => graph.links),
+					linkViews
+				)
+			: new Map()
 	);
 
 	const staleCount = $derived([...analytics.values()].filter((views) => views.isStale).length);
@@ -77,7 +83,7 @@
 	}
 </script>
 
-{#if analytics.size > 0}
+{#if showAnalytics && analytics.size > 0}
 	<div class="mb-2 flex flex-wrap items-center justify-between gap-2">
 		<p class="!m-0 text-sm text-gray-500">
 			{staleCount} of {analytics.size}
@@ -130,19 +136,21 @@
 					>
 						<Table.Cell class="pl-8 text-xs">
 							<span class="block">{getLinkURL(link)}</span>
-							<span class="mt-1 flex items-center gap-2 text-gray-500">
-								<span class="flex items-center gap-1">
-									<Eye class="size-3.5" />
-									{link.viewCount}
-									{link.viewCount == 1 ? 'view' : 'views'}
+							{#if showAnalytics}
+								<span class="mt-1 flex items-center gap-2 text-gray-500">
+									<span class="flex items-center gap-1">
+										<Eye class="size-3.5" />
+										{link.viewCount}
+										{link.viewCount == 1 ? 'view' : 'views'}
+									</span>
+									{#if linkAnalytics?.isStale}
+										<StaleLinkBadge analytics={linkAnalytics} />
+									{/if}
 								</span>
-								{#if linkAnalytics?.isStale}
-									<StaleLinkBadge analytics={linkAnalytics} />
-								{/if}
-							</span>
+							{/if}
 						</Table.Cell>
 						<Table.Cell class="flex items-center justify-end gap-1">
-							{#if linkAnalytics}
+							{#if showAnalytics && linkAnalytics}
 								<LinkAnalytics {link} analytics={linkAnalytics} url={getLinkURL(link)} />
 							{/if}
 							<EmbedLink {link} {getLinkURL} lectures={graph.lectures} />

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatAcademicWeekLong } from '$lib/utils/academicWeeks';
+	import { formatWeekLong } from '$lib/utils/weeks';
 
 	// Components
 	import * as Table from '$lib/components/ui/table/index.js';
@@ -69,7 +69,7 @@
 					<Table.Body>
 						{#each weeksWithViews as week (week.weekStart.getTime())}
 							<Table.Row class="hover:bg-transparent">
-								<Table.Cell class="text-xs">{formatAcademicWeekLong(week.weekStart)}</Table.Cell>
+								<Table.Cell class="text-xs">{formatWeekLong(week.weekStart)}</Table.Cell>
 								<Table.Cell class="text-right tabular-nums">{week.count}</Table.Cell>
 							</Table.Row>
 						{/each}

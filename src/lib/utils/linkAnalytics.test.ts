@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { STALE_LINK_VIEW_THRESHOLD, STALE_LINK_WINDOW_WEEKS } from '$lib/settings';
 import { buildLinkAnalytics, type LinkViewWeek } from './linkAnalytics';
-import { addWeeks, utcWeekStart } from './academicWeeks';
+import { addWeeks, utcWeekStart } from './weeks';
 
 const NOW = new Date('2026-02-11T10:30:00Z');
 const CURRENT_WEEK = utcWeekStart(NOW);

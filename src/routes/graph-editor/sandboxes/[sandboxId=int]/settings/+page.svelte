@@ -52,7 +52,7 @@
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
-		linkViews={data.linkViews}
+		showAnalytics={false}
 		getLinkURL={() => `SANDBOX LINKS ARE NOT SUPPORTED YET`}
 		hasAtLeastAdminPermission={hasSandboxPermissions(data.user, data.sandbox, 'Owner')}
 	/>
