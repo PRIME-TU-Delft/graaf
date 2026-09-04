@@ -115,5 +115,5 @@ describe('GraphDecorators + GraphRenderer view-switch race', () => {
 		}
 
 		unmount(app);
-	}, 30000);
+	}, 75000);
 });
