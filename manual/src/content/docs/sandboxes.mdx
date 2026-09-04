@@ -12,14 +12,14 @@ prototype a graph before proposing it for a course, or build something for a one
 <Aside type="caution">
 	A sandbox is **not** a course. Its content shouldn't be posted publicly, and sandboxes are prone
 	to being lost or deleted over time. If you're building something for an actual university course,
-	ask a programme administrator to set up a course instead — see the [Programmes](../programmes)
+	ask a programme administrator to set up a course instead. See the [Programmes](../programmes)
 	page.
 </Aside>
 
 ## How sandboxes differ from courses
 
 - No programme hierarchy: a sandbox belongs to one person (its **Owner**), not a programme.
-- Simpler roles: **Owner** and **Editor**, instead of a course's Admin/Editor split — see
+- Simpler roles: **Owner** and **Editor**, instead of a course's Admin/Editor split. See
   [Sandbox roles](#sandbox-roles) below.
 - A sandbox can be deleted by its owner at any time, with no archive step.
 - Creating graphs, editing domains/subjects/lectures, and everything else about working inside a
@@ -43,11 +43,10 @@ name, and you're the owner of a new, empty sandbox.
 
 ## Viewing a sandbox
 
-Click "View" (or "View/Edit" if you're the owner or an editor) on a sandbox card to open its
-overview page, listing the sandbox's graphs. From here you can create new graphs the same way you
-would in a course.
-
-{/* TODO: screenshot */}
+Opening a sandbox card works the same as opening a course card on the [Courses](../courses) page:
+click "View" (or "View/Edit" if you're the owner or an editor) to reach its overview page, listing
+the sandbox's graphs. A sandbox has no pinned/archived grouping and no "request access" fallback,
+since only the owner and editors can see it at all.
 
 ## Sandbox roles
 
@@ -73,9 +72,10 @@ Click "Edit sandbox name" at the top of the settings page.
 
 ### Managing editors
 
-The settings page lists current editors in a table, where the owner can add or remove them.
-
-{/* TODO: screenshot */}
+Adding and removing editors uses the same "Add super users" dialog and table pattern as
+[Courses](../courses#add-or-change-super-users). The differences: a sandbox has only one role
+(editor, no admin), so there's no role picker, and removing an editor is a "Revoke" button in
+their table row instead of a role-badge menu.
 
 ### Transferring ownership
 
