@@ -12,6 +12,10 @@ export const COURSE_CODE_REGEX = /^[A-Za-z0-9 ]*$/;
 export const MAX_COURSE_CODE_LENGTH = 30;
 export const MAX_COURSE_NAME_LENGTH = 30;
 
+// Sandbox settings
+export const SANDBOX_CODE_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+export const MAX_SANDBOX_CODE_LENGTH = 30;
+
 // Graph settings
 export const MAX_GRAPH_NAME_LENGTH = 50;
 export const MAX_LINK_NAME_LENGTH = 12;

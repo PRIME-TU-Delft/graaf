@@ -72,7 +72,9 @@
 	icon="link"
 	button="Link"
 	title="Create Link"
-	description="Links allow you to share graphs with others. Users with the link can view the graph, but not edit it."
+	description={parentType === 'SANDBOX'
+		? 'Links allow you to share graphs with others. Users with the link can view the graph, but not edit it. This makes the graph publicly viewable to anyone with the link, even though the sandbox itself stays private.'
+		: 'Links allow you to share graphs with others. Users with the link can view the graph, but not edit it.'}
 >
 	<form action="?/new-link" method="POST" use:enhance>
 		<input type="hidden" name="graphId" value={graph.id} />
