@@ -7,6 +7,7 @@
 	import GraphTable from '$lib/components/graphSettings/GraphTable.svelte';
 	import EditorTable from './superUsers/EditorTable.svelte';
 	import TransferOwnership from './TransferOwnership.svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	// Icons
 	import type { PageData } from './$types';
@@ -17,6 +18,8 @@
 <svelte:head>
 	<title>{data.sandbox.name} Settings | PRIME Graph Editor</title>
 </svelte:head>
+
+<Help page="sandboxSettings" />
 
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"

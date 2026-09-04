@@ -1,0 +1,94 @@
+---
+title: Sandboxes
+description: Personal, course-independent spaces for experimenting with graphs.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import { APP_HOST } from '../../consts';
+
+A sandbox is a private space for graphs that don't belong to a course. Use it to experiment,
+prototype a graph before proposing it for a course, or build something for a one-off assignment.
+
+<Aside type="caution">
+	A sandbox is **not** a course. Its content shouldn't be posted publicly, and sandboxes are prone
+	to being lost or deleted over time. If you're building something for an actual university course,
+	ask a programme administrator to set up a course instead — see the [Programmes](../programmes)
+	page.
+</Aside>
+
+## How sandboxes differ from courses
+
+- No programme hierarchy: a sandbox belongs to one person (its **Owner**), not a programme.
+- Simpler roles: **Owner** and **Editor**, instead of a course's Admin/Editor split — see
+  [Sandbox roles](#sandbox-roles) below.
+- A sandbox can be deleted by its owner at any time, with no archive step.
+- Creating graphs, editing domains/subjects/lectures, and everything else about working inside a
+  graph works exactly the same as in a course. See the [Graphs](../graphs),
+  [Domains](../domains), [Subjects](../subjects), and [Lectures](../lectures) pages for how-tos on
+  that.
+
+<Aside type="note">
+	Sharing a sandbox graph via a public link isn't available yet, unlike course graphs (see
+	[Links](../links)). This is planned but not yet implemented.
+</Aside>
+
+## Creating a sandbox
+
+All sandboxes you have access to are listed on the
+
+<a href={APP_HOST + '/graph-editor/sandboxes'}>Sandboxes page</a>. Click "Create Sandbox", give it a
+name, and you're the owner of a new, empty sandbox.
+
+{/* TODO: screenshot */}
+
+## Viewing a sandbox
+
+Click "View" (or "View/Edit" if you're the owner or an editor) on a sandbox card to open its
+overview page, listing the sandbox's graphs. From here you can create new graphs the same way you
+would in a course.
+
+{/* TODO: screenshot */}
+
+## Sandbox roles
+
+- **Owner** can rename the sandbox, add or remove editors, transfer ownership, and delete the
+  sandbox. A sandbox has exactly one owner.
+- **Editor** can create and edit graphs in the sandbox, but cannot change its settings, add other
+  editors, or delete it.
+
+Both owner and editors are shown as "Super Users" on a sandbox's card in the sandbox list.
+
+{/* TODO: screenshot */}
+
+## Sandbox settings
+
+Only the owner can open a sandbox's settings page, reached via "Settings" on the sandbox overview
+page.
+
+{/* TODO: screenshot */}
+
+### Renaming a sandbox
+
+Click "Edit sandbox name" at the top of the settings page.
+
+### Managing editors
+
+The settings page lists current editors in a table, where the owner can add or remove them.
+
+{/* TODO: screenshot */}
+
+### Transferring ownership
+
+In the danger zone at the bottom of the settings page, the owner can transfer ownership to another
+editor. The current owner becomes an editor and immediately loses access to the settings page.
+This cannot be undone by the person transferring ownership.
+
+### Deleting a sandbox
+
+Also in the danger zone, the owner can permanently delete the sandbox, along with all its graphs
+and links. Deleting requires typing the sandbox's name to confirm, and cannot be undone.
+
+## Leaving a sandbox
+
+An editor (not the owner) can leave a sandbox from its overview page. This removes their editor
+access; the owner or another editor needs to add them back for them to regain access.
