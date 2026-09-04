@@ -73,7 +73,9 @@
 					{/snippet}
 				</Form.Control>
 				<Form.Description
-					>Used in share URLs for this sandbox's links. Lowercase letters, numbers, and dashes only.</Form.Description
+					>Used in share URLs for this sandbox's links. Changing it changes the URL of every
+					existing link, breaking any that are already shared or embedded elsewhere. Lowercase
+					letters, numbers, and dashes only.</Form.Description
 				>
 				<Form.FieldErrors />
 			</Form.Field>
