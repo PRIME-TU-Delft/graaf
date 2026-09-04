@@ -2,6 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasSandboxPermission } from '$lib/server/permissions';
 import { withGuardedMutation } from './guardedMutation';
+import { generateUniqueCode, isCodeTaken } from './codeGeneration';
 
 import type { User } from '@prisma/client';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
@@ -33,10 +34,14 @@ export class SandboxActions {
 	static async newSandbox(user: User, form: SuperValidated<Infer<typeof newSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
 
+		const code = await generateUniqueCode(user.nickname || user.firstName || user.id);
+
 		try {
 			await prisma.sandbox.create({
 				data: {
 					name: form.data.name,
+					code,
+					uriCode: encodeURIComponent(code),
 					owner: {
 						connect: {
 							id: user.id
@@ -60,12 +65,17 @@ export class SandboxActions {
 	 * - Only OWNERS can edit sandboxes
 	 *
 	 * @param user - The user performing the action, must be the sandbox owner
-	 * @param form - Validated form data with the sandboxId and the new name
+	 * @param form - Validated form data with the sandboxId, the new name, and the new code
 	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
-	 * with an error via setError instead of throwing.
+	 * with an error via setError instead of throwing. Returns a `code`-field error if the code is
+	 * already taken by another Course or Sandbox.
 	 */
 	static async editSandbox(user: User, form: SuperValidated<Infer<typeof editSandboxSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		if (await isCodeTaken(form.data.code, { sandboxId: form.data.sandboxId })) {
+			return setError(form, 'code', 'This code is already taken');
+		}
 
 		return await withGuardedMutation(
 			() =>
@@ -75,7 +85,9 @@ export class SandboxActions {
 						...whereHasSandboxPermission(user, 'Owner')
 					},
 					data: {
-						name: form.data.name
+						name: form.data.name,
+						code: form.data.code,
+						uriCode: encodeURIComponent(form.data.code)
 					}
 				}),
 			form,

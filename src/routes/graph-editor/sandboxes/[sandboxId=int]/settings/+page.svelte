@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { hasSandboxPermissions } from '$lib/utils/permissions';
 
 	// Components
@@ -46,13 +47,12 @@
 		or <b>embeds</b> to share graphs with your friends.
 	</p>
 
-	<!-- TODO Placeholder for link URL -->
 	<GraphTable
 		graphs={data.sandbox.graphs}
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
-		getLinkURL={() => `SANDBOX LINKS ARE NOT SUPPORTED YET`}
+		getLinkURL={(link) => `${page.url.origin}/graph/${data.sandbox.uriCode}/${link.name}`}
 		hasAtLeastAdminPermission={hasSandboxPermissions(data.user, data.sandbox, 'Owner')}
 	/>
 </section>

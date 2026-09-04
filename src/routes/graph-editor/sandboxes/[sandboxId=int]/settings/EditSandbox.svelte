@@ -39,14 +39,15 @@
 	$effect(() => {
 		$formData.sandboxId = data.sandbox.id;
 		$formData.name = data.sandbox.name;
+		$formData.code = data.sandbox.code;
 	});
 </script>
 
 <DialogButton
 	bind:open={editSandboxDialogOpen}
-	button="Edit sandbox name"
+	button="Edit sandbox"
 	icon="edit"
-	title="Edit the name of this sandbox"
+	title="Edit this sandbox"
 >
 	<form action="?/edit-sandbox" method="POST" use:enhance>
 		<input type="hidden" name="sandboxId" value={data.sandbox.id} />
@@ -63,6 +64,23 @@
 			</Form.Field>
 		</div>
 
+		<div class="mt-2 flex gap-3">
+			<Form.Field {form} name="code" class="grow">
+				<Form.Control>
+					{#snippet children({ props })}
+						<Form.Label>Code</Form.Label>
+						<Input {...props} bind:value={$formData.code} />
+					{/snippet}
+				</Form.Control>
+				<Form.Description
+					>Used in share URLs for this sandbox's links. Changing it changes the URL of every
+					existing link, breaking any that are already shared or embedded elsewhere. Lowercase
+					letters, numbers, and dashes only.</Form.Description
+				>
+				<Form.FieldErrors />
+			</Form.Field>
+		</div>
+
 		<div class="mt-2 flex items-center justify-between gap-1">
 			<Form.FormError class="w-full" {form} />
 			<Button
@@ -71,6 +89,7 @@
 					form.reset({
 						newState: {
 							name: data.sandbox.name,
+							code: data.sandbox.code,
 							sandboxId: data.sandbox.id
 						}
 					})}
@@ -78,9 +97,9 @@
 				<Undo2 /> Reset
 			</Button>
 			<Form.FormButton disabled={$submitting} loading={$delayed}>
-				Save new name
+				Save
 				{#snippet loadingMessage()}
-					<span>Saving new name...</span>
+					<span>Saving...</span>
 				{/snippet}
 			</Form.FormButton>
 		</div>

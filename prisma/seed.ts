@@ -90,18 +90,24 @@ async function main() {
 		prisma.sandbox.create({
 			data: {
 				name: 'SandboxOne',
+				code: 'bram-kreulen',
+				uriCode: 'bram-kreulen',
 				ownerId: userBram.id
 			}
 		}),
 		prisma.sandbox.create({
 			data: {
 				name: 'SandboxTwo',
+				code: 'bram-kreulen-2',
+				uriCode: 'bram-kreulen-2',
 				ownerId: userBram.id
 			}
 		}),
 		prisma.sandbox.create({
 			data: {
 				name: 'SandboxThree',
+				code: 'julia-van-der-kris',
+				uriCode: 'julia-van-der-kris',
 				ownerId: userJulia.id
 			}
 		})
