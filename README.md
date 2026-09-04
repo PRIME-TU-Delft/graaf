@@ -1,6 +1,7 @@
 # PRIME Graph Editor
 
 [![Check](https://github.com/PRIME-TU-Delft/graaf/actions/workflows/check.yml/badge.svg)](https://github.com/PRIME-TU-Delft/graaf/actions/workflows/check.yml)
+[![Docker build & push image](https://github.com/PRIME-TU-Delft/graaf/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/PRIME-TU-Delft/graaf/actions/workflows/docker-build-push.yml)
 
 ## What this is
 
@@ -9,6 +10,10 @@ across courses, and get taught in a different order every year. The Graph Editor
 model that structure explicitly as a graph instead of a document: **domains** (broad topic areas)
 connect to each other to show prerequisites, **subjects** live inside a domain, and **lectures**
 group subjects into what's actually taught in a session.
+
+![Example graph](docs/images/example-graph.png)
+
+Try it live: https://beta.prime-applets.ewi.tudelft.nl/graph/example
 
 Graphs belong to a **course**, and courses can optionally belong to one or more **programmes**
 (e.g. a faculty's degree programme), which is how staff and permissions are organized. A finished
@@ -37,10 +42,10 @@ workflows.
 
 ## Installation
 
-Create an .env file in the root of the project with the following content:
+Create an .env file in the root of the project from the example and fill it in:
 
-```env
-DATABASE_URL="postgres://root:mysecretpassword@localhost:5432/local"
+```bash
+cp .env.example .env
 ```
 
 ```bash
@@ -70,7 +75,7 @@ pnpm dev
 ### Running with test users
 
 ```bash
-NETLIFY_CONTEXT=DEPLOY_PREVIEW pnpm run dev
+pnpm run dev:testusers
 ```
 
 ## Testing
@@ -82,51 +87,10 @@ pnpm test:integration
 Integration tests run against seeded test data that exercises the permission hierarchy described
 above: three test programmes with different admin/editor roles, three test courses linked into
 them with their own separate roles, and one graph (`GraphOne`) that's copied into the other two
-courses to check that a graph's content is independent once copied. The diagram below shows that
-seed structure:
+courses to check that a graph's content is independent once copied. See
+[`prisma/seed.ts`](prisma/seed.ts) for the full fixture.
 
 Spins up a `db-test` service (via podman/docker compose), pushes the Prisma schema, seeds
-the fixture below, then runs `src/lib/server/actions/tests/**/*.test.ts` against it. Runs
-in CI on every push and pull request (`.github/workflows/check.yml`, `integration-tests` job)
-against a Postgres service container instead of compose.
-
-```mermaid
-flowchart LR;
-	TEST_DB[(Test Database)]
-  TEST_DB --> P1["`**ProgramOne**
-      +SuperAdmin`"]
-  TEST_DB --> P2["`**ProgramTwo**
-      +SuperAdmin
-      +ProgramAdmin`"]
-  TEST_DB --> P3["`**ProgramThree**
-      +SuperAdmin
-      +ProgramEditor`"]
-
-  C1["`**CourseOne**
-      +SuperAdmin`"]
-  C2["`**CourseTwo**
-      +SuperAdmin
-      +CourseAdmin`"]
-  C3["`**CourseThree**
-      +SuperAdmin
-      +CourseEditor`"]
-
-
-  P1 ==> C1 & C2 & C3
-  P2 & P3 --> C1 & C2 & C3
-
-  C1 -->G1
-  C2-->G2["GraphTwo"]
-  C3-->G3["GraphThree"]
-
-  G2 & G3 --> A
-  A@{ shape: braces, label: "GraphTwo & GraphThree have the same content as GraphOne as a copy (not reference)" }
-
-  subgraph G1["GraphOne"]
-    D1["DomainOne"]-->D2["DomainTwo"]-->D3["DomainThree"]
-    S3["SubjectThree"] --> S2["SubjectTwo"] --> S1["SubjectOne"]
-
-    S1 & S2 ==> D1
-    S3 ==> D2
-  end
-```
+the fixture, then runs `src/lib/server/actions/tests/**/*.test.ts` against it. Runs in CI on
+every push and pull request (`.github/workflows/check.yml`, `integration-tests` job) against a
+Postgres service container instead of compose.
