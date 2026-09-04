@@ -50,6 +50,7 @@
 		"eslint-plugin-svelte": "^3.23.0",
 		"formsnap": "^2.0.1",
 		"globals": "^17.11.0",
+		"jsdom": "^30.0.1",
 		"mode-watcher": "^1.1.0",
 		"paneforge": "1.0.2",
 		"prettier": "^3.9.6",
