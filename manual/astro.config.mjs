@@ -14,7 +14,7 @@ export default defineConfig({
 	},
 	integrations: [
 		starlight({
-			title: 'Graaf Manual',
+			title: 'PRIME Graph Editor Manual',
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/PRIME-TU-Delft/graaf' }
 			],
