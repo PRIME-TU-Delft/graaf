@@ -97,9 +97,9 @@
 				<Undo2 /> Reset
 			</Button>
 			<Form.FormButton disabled={$submitting} loading={$delayed}>
-				Save new name
+				Save
 				{#snippet loadingMessage()}
-					<span>Saving new name...</span>
+					<span>Saving...</span>
 				{/snippet}
 			</Form.FormButton>
 		</div>
