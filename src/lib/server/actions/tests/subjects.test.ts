@@ -211,6 +211,55 @@ describe('SubjectActions.addSubjectRel', () => {
 		});
 		expect(after.targetSubjects.map((s) => s.id)).not.toContain(subjectOne.id);
 	});
+
+	it('rejects a self relation at the schema level, creating nothing', async () => {
+		const { courseEditor, graph } = await graphThreeSetup();
+		const subjectOne = await getSubject(graph.id, 'SubjectOne');
+
+		const form = await buildForm(subjectRelSchema, {
+			graphId: graph.id,
+			sourceSubjectId: subjectOne.id,
+			targetSubjectId: subjectOne.id
+		});
+		// The refine's two-field path nests the message under errors.sourceSubjectId.targetSubjectId,
+		// same shape domainRelSchema's refine produces, which errorMessages() can't flatten.
+		expect(form.errors).toMatchObject({
+			sourceSubjectId: {
+				targetSubjectId: ['sourceSubjectId and targetSubjectId must not be the same']
+			}
+		});
+
+		const result = await SubjectActions.addSubjectRel(courseEditor, form);
+
+		expectDenied(result);
+		const after = await prisma.subject.findUniqueOrThrow({
+			where: { id: subjectOne.id },
+			include: { targetSubjects: true }
+		});
+		expect(after.targetSubjects.map((s) => s.id)).not.toContain(subjectOne.id);
+	});
+
+	it('rejects a self relation at the action layer even if a caller bypasses the zod schema', async () => {
+		const { courseEditor, graph } = await graphThreeSetup();
+		const subjectOne = await getSubject(graph.id, 'SubjectOne');
+
+		const form = await buildForm(subjectRelSchema, {
+			graphId: graph.id,
+			sourceSubjectId: subjectOne.id,
+			targetSubjectId: subjectOne.id
+		});
+		// Simulates a caller that writes through Prisma directly and skips zod, e.g. the migration.
+		form.valid = true;
+		const result = await SubjectActions.addSubjectRel(courseEditor, form);
+
+		expectDenied(result);
+		expect(errorMessages(result)).toContain('A subject cannot be connected to itself');
+		const after = await prisma.subject.findUniqueOrThrow({
+			where: { id: subjectOne.id },
+			include: { targetSubjects: true }
+		});
+		expect(after.targetSubjects.map((s) => s.id)).not.toContain(subjectOne.id);
+	});
 });
 
 describe('SubjectActions.deleteSubjectRel', () => {

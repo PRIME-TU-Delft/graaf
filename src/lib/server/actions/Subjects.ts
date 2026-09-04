@@ -207,7 +207,8 @@ export class SubjectActions {
 	 * @param tx - The Prisma client or transaction client to run the queries against, defaults to
 	 * the shared client
 	 * @returns The updated graph
-	 * @throws If the subjects are already connected, or if the user lacks permission
+	 * @throws If inId and outId are the same subject, if the subjects are already connected, or if
+	 * the user lacks permission
 	 */
 	private static async connectSubjects(
 		graphId: number,
@@ -216,6 +217,10 @@ export class SubjectActions {
 		outId: number,
 		tx: Prisma.TransactionClient = prisma
 	) {
+		if (inId === outId) {
+			throw new Error('A subject cannot be connected to itself');
+		}
+
 		// Check if the subjecs are already connected
 		const isConnected = await tx.subject.findFirst({
 			where: {
