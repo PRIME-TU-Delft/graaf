@@ -2,7 +2,7 @@
 // (where none of the globals below exist), so everything here is guarded.
 
 // jsdom doesn't give <text>/<tspan> their own SVGTextElement/SVGTSpanElement prototypes, just the
-// generic SVGElement - TS's DOM lib puts getComputedTextLength on SVGTextContentElement, which
+// generic SVGElement. TS's DOM lib puts getComputedTextLength on SVGTextContentElement, which
 // jsdom never instantiates, hence the cast.
 const svgElementProto =
 	typeof SVGElement !== 'undefined'

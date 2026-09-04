@@ -3,7 +3,7 @@
 // Regression test for issue #181: GraphDecorators' view-switch handler used to call
 // `graphD3.setView(tab)` directly *and* navigate the URL via `gotoView(tab)`. Since the URL
 // update lands a tick later than the direct call, GraphRenderer's URL-driven effect could fire
-// with a stale `view` value and trigger an extra, overlapping transition - leaving a
+// with a stale `view` value and trigger an extra, overlapping transition, leaving a
 // setTimeout-armed fade-out `end` handler pointing at DOM nodes that a later transition had
 // already reused (matched by uuid) as the current, correctly-rendered content. That handler
 // fires afterward and deletes them, silently zeroing out the rendered graph. The fix removed the
@@ -12,7 +12,7 @@
 // This test mounts GraphDecorators + GraphRenderer together (via a small harness mirroring how
 // src/routes/graph/example/+page.svelte wires `view`/`lectureID` from the URL), drives repeated
 // domains <-> lectures switches through the real dropdown, and asserts the rendered node count
-// matches the selected lecture's node count after each switch - both right after the transition
+// matches the selected lecture's node count after each switch, both right after the transition
 // settles and again after a further animation duration, to catch a removal deferred past that
 // point.
 
@@ -95,7 +95,7 @@ describe('GraphDecorators + GraphRenderer view-switch race', () => {
 		expect(renderedNodeCount()).toBe(graph.domains.length);
 
 		// The node count the lectures view should show: the lecture's own subjects plus whatever
-		// past/future subjects formatPayload pulled in via subject edges - read from the formatted
+		// past/future subjects formatPayload pulled in via subject edges. Read from the formatted
 		// data rather than hardcoded, so this doesn't drift if the fixture changes.
 		const expectedLectureNodeCount = graphD3Store.graphD3!.data.lectures.find(
 			(l) => l.id === lecture.id

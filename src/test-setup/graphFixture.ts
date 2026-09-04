@@ -2,8 +2,8 @@ import type { PrismaGraphPayload } from '$lib/d3/types';
 
 /**
  * A minimal graph payload shaped like GraphD3.formatPayload expects: one domain, three subjects
- * chained S1 -> S2 -> S3, and one lecture covering S2. That gives the lecture a non-trivial
- * node set (present: S2, past: S1, future: S3 - 3 nodes total) without needing real Prisma rows.
+ * chained S1 -> S2 -> S3, and one lecture covering S2. That gives the lecture a non-trivial node
+ * set (present: S2, past: S1, future: S3, 3 nodes total) without needing real Prisma rows.
  */
 export function buildGraphFixture(): PrismaGraphPayload {
 	const domain = { id: 1, name: 'Domain 1', style: 'PROSPEROUS_RED', x: 0, y: 0 };
