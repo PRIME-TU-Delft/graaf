@@ -4,7 +4,7 @@ import { LinkViewActions } from '$lib/server/actions/LinkViews';
 import { STALE_LINK_VIEW_THRESHOLD, STALE_LINK_WINDOW_WEEKS } from '$lib/settings';
 import { addWeeks, utcWeekStart } from '$lib/utils/weeks';
 import { buildLinkAnalytics } from '$lib/utils/linkAnalytics';
-import { FIXTURE_COURSES, FIXTURE_GRAPHS } from './helpers/fixture';
+import { FIXTURE_COURSES, FIXTURE_EMAILS, FIXTURE_GRAPHS } from './helpers/fixture';
 
 /** Create a link on the fixture's first graph. Each test uses its own name, since the fixture is
  * only reseeded between files. */
@@ -16,6 +16,18 @@ async function makeLink(name: string) {
 	return prisma.link.create({
 		data: { name, graphId: graph.id, parentType: 'COURSE', courseId: graph.courseId }
 	});
+}
+
+/** CourseOne, which every link above lives on, belongs to every fixture program. programEditor
+ * has editor access to ProgramThree, which is enough to see CourseOne's link analytics. */
+function viewerUser() {
+	return prisma.user.findUniqueOrThrow({ where: { email: FIXTURE_EMAILS.programEditor } });
+}
+
+/** courseAdmin only has access to CourseTwo, not CourseOne, so they see none of the buckets
+ * above. */
+function outsiderUser() {
+	return prisma.user.findUniqueOrThrow({ where: { email: FIXTURE_EMAILS.courseAdmin } });
 }
 
 describe('LinkViewActions.recordView', () => {
@@ -84,13 +96,22 @@ describe('LinkViewActions.getWeeklyViews', () => {
 			]
 		});
 
-		expect(await LinkViewActions.getWeeklyViews([link.id])).toEqual([
+		expect(await LinkViewActions.getWeeklyViews(await viewerUser(), [link.id])).toEqual([
 			{ linkId: link.id, weekStart: oldestInWindow, count: 4 }
 		]);
 	});
 
 	it('reads nothing when asked about no links', async () => {
-		expect(await LinkViewActions.getWeeklyViews([])).toEqual([]);
+		expect(await LinkViewActions.getWeeklyViews(await viewerUser(), [])).toEqual([]);
+	});
+
+	it('reads nothing for a user without at least course-editor access to the link', async () => {
+		const link = await makeLink('views-forbidden');
+		await prisma.linkViewWeek.create({
+			data: { linkId: link.id, weekStart: utcWeekStart(new Date()), count: 5 }
+		});
+
+		expect(await LinkViewActions.getWeeklyViews(await outsiderUser(), [link.id])).toEqual([]);
 	});
 
 	it('feeds staleness, which stays derived from the buckets that were read', async () => {
@@ -114,7 +135,7 @@ describe('LinkViewActions.getWeeklyViews', () => {
 			data: { viewCount: STALE_LINK_VIEW_THRESHOLD * 10 }
 		});
 
-		const buckets = await LinkViewActions.getWeeklyViews([stale.id, busy.id]);
+		const buckets = await LinkViewActions.getWeeklyViews(await viewerUser(), [stale.id, busy.id]);
 		const analytics = buildLinkAnalytics(
 			[
 				{ id: stale.id, viewCount: STALE_LINK_VIEW_THRESHOLD * 10 },

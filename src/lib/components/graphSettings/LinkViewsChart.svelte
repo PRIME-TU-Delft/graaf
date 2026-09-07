@@ -1,5 +1,7 @@
 <script lang="ts">
+	import * as d3 from 'd3';
 	import { formatWeek, formatWeekLong } from '$lib/utils/weeks';
+	import { formatViewCount } from '$lib/utils/linkAnalytics';
 
 	// Types
 	import type { ViewWeek } from '$lib/utils/linkAnalytics';
@@ -15,39 +17,54 @@
 	const LABEL_EVERY = 8;
 	const LABEL_OFFSET = 2;
 
+	/** Height of the plotted area, in the SVG's own viewBox units. The viewBox's width tracks
+	 * `weeks.length` instead, so each bar is exactly one unit wide and the chart stays crisp at
+	 * any container width without measuring it. */
+	const VIEW_HEIGHT = 100;
+	/** Gap between bars, in viewBox units, i.e. a fraction of one bar's width */
+	const BAND_PADDING = 0.15;
+	/** Shortest a non-zero bar is ever drawn, in viewBox units, so a small count next to a much
+	 * bigger peak still shows as a sliver rather than nothing */
+	const MIN_BAR_HEIGHT = 1.5;
+
 	let hovered = $state<number | null>(null);
 
-	const peak = $derived(
-		weeks.reduce(
-			(best, week) => (week.count > best.count ? week : best),
-			weeks[0] ?? { weekStart: new Date(0), count: 0 }
-		)
-	);
+	const peak = $derived(d3.max(weeks, (week) => week.count) ?? 0);
 
 	/** Top of the scale, rounded up to the next half order of magnitude so it reads as a round
 	 * number rather than as the exact peak. */
 	const top = $derived.by(() => {
-		if (peak.count <= 2) return 2;
+		if (peak <= 2) return 2;
 
-		const step = 10 ** Math.floor(Math.log10(peak.count)) / 2;
-		return Math.ceil(peak.count / step) * step;
+		const step = 10 ** Math.floor(Math.log10(peak)) / 2;
+		return Math.ceil(peak / step) * step;
 	});
 
+	const x = $derived(
+		d3
+			.scaleBand<number>()
+			.domain(d3.range(weeks.length))
+			.range([0, weeks.length])
+			.paddingInner(BAND_PADDING)
+	);
+	const y = $derived(d3.scaleLinear().domain([0, top]).range([VIEW_HEIGHT, 0]));
+
 	const ticks = $derived([
-		{ height: 100, label: `${top}` },
-		{ height: 50, label: '' },
-		{ height: 0, label: '0' }
+		{ value: top, y: y(top), label: `${top}` },
+		{ value: top / 2, y: y(top / 2), label: '' },
+		{ value: 0, y: y(0), label: '0' }
 	]);
 
 	const readout = $derived.by(() => {
 		if (hovered != null) {
 			const week = weeks[hovered];
-			const views = week.count === 1 ? '1 view' : `${week.count} views`;
-			return `${formatWeekLong(week.weekStart)}: ${views}`;
+			return `${formatWeekLong(week.weekStart)}: ${formatViewCount(week.count)}`;
 		}
 
-		if (peak.count === 0) return `No views in the last ${weeks.length} weeks`;
-		return `Busiest week: ${peak.count} views in ${formatWeekLong(peak.weekStart)}`;
+		if (peak === 0) return `No views in the last ${weeks.length} weeks`;
+
+		const peakIndex = weeks.findIndex((week) => week.count === peak);
+		return `Busiest week: ${peak} views in ${formatWeekLong(weeks[peakIndex].weekStart)}`;
 	});
 </script>
 
@@ -58,10 +75,10 @@
 
 	<div class="relative h-40 pl-8">
 		<!-- Scale: a labelled top and baseline, with a hairline halfway between -->
-		{#each ticks as tick (tick.height)}
+		{#each ticks as tick (tick.value)}
 			<div
 				class="pointer-events-none absolute inset-x-0 flex -translate-y-1/2 items-center gap-1"
-				style="top: {100 - tick.height}%"
+				style="top: {(tick.y / VIEW_HEIGHT) * 100}%"
 			>
 				<span class="w-7 shrink-0 text-right text-[10px] text-gray-400 tabular-nums">
 					{tick.label}
@@ -70,27 +87,45 @@
 			</div>
 		{/each}
 
-		<div class="relative flex h-full gap-[2px]">
+		<svg
+			class="h-full w-full"
+			viewBox="0 0 {weeks.length} {VIEW_HEIGHT}"
+			preserveAspectRatio="none"
+			role="presentation"
+		>
 			{#each weeks as week, index (week.weekStart.getTime())}
-				<button
-					type="button"
-					class="relative h-full min-w-0 grow rounded-t transition-colors hover:bg-purple-100/70 focus-visible:bg-purple-100/70 focus-visible:outline-none"
-					tabindex={week.count > 0 ? 0 : -1}
-					aria-label="{formatWeekLong(week.weekStart)}: {week.count} views"
-					onmouseenter={() => (hovered = index)}
-					onmouseleave={() => (hovered = null)}
-					onfocus={() => (hovered = index)}
-					onblur={() => (hovered = null)}
-				>
+				{@const barX = x(index) ?? 0}
+				{@const barY = y(week.count)}
+				<g>
+					<!-- Hit target spans the full column height, so hover works below the bar too -->
+					<rect
+						x={barX}
+						y={0}
+						width={x.bandwidth()}
+						height={VIEW_HEIGHT}
+						fill="transparent"
+						class="hover:fill-purple-100/70 focus-visible:fill-purple-100/70 focus-visible:outline-none"
+						tabindex={week.count > 0 ? 0 : -1}
+						role="button"
+						aria-label="{formatWeekLong(week.weekStart)}: {week.count} views"
+						onmouseenter={() => (hovered = index)}
+						onmouseleave={() => (hovered = null)}
+						onfocus={() => (hovered = index)}
+						onblur={() => (hovered = null)}
+					/>
 					{#if week.count > 0}
-						<span
-							class="bg-primary absolute bottom-0 left-1/2 w-full max-w-6 -translate-x-1/2 rounded-t-[4px]"
-							style="height: max(2px, {(week.count / top) * 100}%)"
-						></span>
+						{@const barHeight = Math.max(MIN_BAR_HEIGHT, VIEW_HEIGHT - barY)}
+						<rect
+							x={barX}
+							y={VIEW_HEIGHT - barHeight}
+							width={x.bandwidth()}
+							height={barHeight}
+							class="fill-primary pointer-events-none"
+						/>
 					{/if}
-				</button>
+				</g>
 			{/each}
-		</div>
+		</svg>
 	</div>
 
 	<div class="flex gap-[2px] pl-8">
@@ -100,8 +135,4 @@
 			</span>
 		{/each}
 	</div>
-
-	<p class="text-xs text-gray-400">
-		Week numbers are ISO week numbers. Every week runs Monday to Sunday.
-	</p>
 </figure>

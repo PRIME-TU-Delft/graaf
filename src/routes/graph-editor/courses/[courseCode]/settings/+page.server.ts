@@ -56,6 +56,7 @@ export const load = (async ({ params, locals }) => {
 		// Weekly view buckets for every link listed below, so the link list can show view counts
 		// and work out staleness. Reading these needs no more access than reading the links.
 		const linkViews = await LinkViewActions.getWeeklyViews(
+			user,
 			dbCourse.graphs.flatMap((graph) => graph.links.map((link) => link.id))
 		);
 

@@ -6,7 +6,7 @@
 	import { TrendingDown } from '@lucide/svelte';
 
 	// Types
-	import type { LinkAnalytics } from '$lib/utils/linkAnalytics';
+	import { formatViewCount, type LinkAnalytics } from '$lib/utils/linkAnalytics';
 
 	type StaleLinkBadgeProps = {
 		analytics: LinkAnalytics;
@@ -14,7 +14,7 @@
 
 	const { analytics }: StaleLinkBadgeProps = $props();
 
-	const views = $derived(analytics.recentViews === 1 ? '1 view' : `${analytics.recentViews} views`);
+	const views = $derived(formatViewCount(analytics.recentViews));
 </script>
 
 <Popover.Root>

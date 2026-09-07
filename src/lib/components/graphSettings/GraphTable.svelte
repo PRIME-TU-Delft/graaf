@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { buildLinkAnalytics } from '$lib/utils/linkAnalytics';
+	import { buildLinkAnalytics, formatViewCount } from '$lib/utils/linkAnalytics';
 
 	// Components
 	import * as Table from '$lib/components/ui/table/index.js';
@@ -140,8 +140,7 @@
 								<span class="mt-1 flex items-center gap-2 text-gray-500">
 									<span class="flex items-center gap-1">
 										<Eye class="size-3.5" />
-										{link.viewCount}
-										{link.viewCount == 1 ? 'view' : 'views'}
+										{formatViewCount(link.viewCount)}
 									</span>
 									{#if linkAnalytics?.isStale}
 										<StaleLinkBadge analytics={linkAnalytics} />

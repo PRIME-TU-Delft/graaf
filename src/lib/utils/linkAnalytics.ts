@@ -31,6 +31,27 @@ export type LinkAnalytics = {
 };
 
 /**
+ * Start of the trailing staleness window, the window being the current week plus the weeks
+ * before it, so it ends on the week `now` falls in.
+ *
+ * @param now - The moment the window ends, defaults to the current time
+ * @returns The oldest week start included in the window
+ */
+export function analyticsWindowStart(now: Date = new Date()): Date {
+	return addWeeks(utcWeekStart(now), -(STALE_LINK_WINDOW_WEEKS - 1));
+}
+
+/**
+ * Pluralize a view count for display.
+ *
+ * @param count - Number of views
+ * @returns e.g. `1 view` or `3 views`
+ */
+export function formatViewCount(count: number): string {
+	return count === 1 ? '1 view' : `${count} views`;
+}
+
+/**
  * Turn stored weekly buckets into per-link analytics, deriving staleness at read time rather
  * than reading a stored flag.
  *
@@ -48,8 +69,7 @@ export function buildLinkAnalytics(
 	buckets: LinkViewWeek[],
 	now: Date = new Date()
 ): Map<number, LinkAnalytics> {
-	// The window is the current week plus the weeks before it, so it ends on the week we are in
-	const windowStart = addWeeks(utcWeekStart(now), -(STALE_LINK_WINDOW_WEEKS - 1));
+	const windowStart = analyticsWindowStart(now);
 
 	const countsByLink = new Map<number, Map<number, number>>();
 	for (const bucket of buckets) {
