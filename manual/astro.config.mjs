@@ -36,6 +36,10 @@ export default defineConfig({
 					slug: 'courses'
 				},
 				{
+					label: 'Sandboxes',
+					slug: 'sandboxes'
+				},
+				{
 					label: 'Graphs',
 					slug: 'graphs'
 				},
