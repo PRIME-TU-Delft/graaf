@@ -133,10 +133,13 @@ model Link {
 	id         Int     @id @default(autoincrement())
 	name       String
 	isArchived Boolean @default(false)
+	viewCount  Int     @default(0) // Running total of public views, denormalized from LinkViewWeek
 
 	course  Course?  @relation("CourseLink", fields: [courseId], references: [id])
 	sandbox Sandbox? @relation("SandboxLink", fields: [sandboxId], references: [id])
 	graph   Graph    @relation("GraphLink", fields: [graphId], references: [id], onDelete: Cascade)
+
+	viewWeeks LinkViewWeek[] @relation("LinkViewWeek")
 
 	parentType ParentType
 	courseId  Int?
@@ -147,6 +150,20 @@ model Link {
 	updatedAt DateTime @updatedAt
 
 	@@unique([courseId, name])
+}
+
+// Aggregate view counts per link per week. Weeks are UTC Monday-start dates, as produced by
+// postgres `date_trunc('week', ...)`. A week in which a link was never viewed has no row at all,
+// so this table only grows for links that are actually used. Holds no visitor information.
+model LinkViewWeek {
+	weekStart DateTime @db.Date
+	count     Int      @default(0)
+
+	link Link @relation("LinkViewWeek", fields: [linkId], references: [id], onDelete: Cascade)
+
+	linkId Int
+
+	@@id([linkId, weekStart])
 }
 
 model Graph {

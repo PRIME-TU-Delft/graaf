@@ -16,6 +16,12 @@ export const MAX_COURSE_NAME_LENGTH = 30;
 export const MAX_GRAPH_NAME_LENGTH = 50;
 export const MAX_LINK_NAME_LENGTH = 12;
 
+// Link analytics settings
+// A link is called stale when it collected fewer than STALE_LINK_VIEW_THRESHOLD views over the
+// trailing STALE_LINK_WINDOW_WEEKS weeks (the current week plus the ones before it).
+export const STALE_LINK_WINDOW_WEEKS = 52;
+export const STALE_LINK_VIEW_THRESHOLD = 10;
+
 // Domain settings
 export const MAX_DOMAIN_NAME_LENGTH = 50;
 
