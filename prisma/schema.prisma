@@ -110,8 +110,10 @@ model Course {
 }
 
 model Sandbox {
-	id   Int    @id @default(autoincrement())
-	name String
+	id      Int    @id @default(autoincrement())
+	name    String
+	code    String @unique
+	uriCode String @unique
 
 	owner   User    @relation("SandboxOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 	editors User[]  @relation("SandboxEditor")
@@ -147,6 +149,7 @@ model Link {
 	updatedAt DateTime @updatedAt
 
 	@@unique([courseId, name])
+	@@unique([sandboxId, name])
 }
 
 model Graph {

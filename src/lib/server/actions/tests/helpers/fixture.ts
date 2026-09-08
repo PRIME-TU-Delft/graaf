@@ -232,15 +232,32 @@ export async function getSubject(graphId: number, name: string) {
 // Creators for the entities seedFixture deliberately leaves out. Call these from the individual
 // test files that need them rather than from seedFixture, since most files do not.
 
+// Sandbox.code/uriCode are unique, so fixture sandboxes each need a code of their own; a
+// module-level counter (rather than deriving one from `name`, which callers often leave at its
+// default) keeps every call across a test file distinct without callers having to think about it.
+let sandboxCodeCounter = 0;
+
 /**
  * @param ownerId - The user who owns the sandbox
  * @param editorIds - Users to attach as sandbox editors
  * @param name - The sandbox name
+ * @param code - The sandbox code/uriCode; auto-generated and unique if omitted
  * @returns The created sandbox
  */
-export async function createSandbox(ownerId: string, editorIds: string[] = [], name = 'Sandbox') {
+export async function createSandbox(
+	ownerId: string,
+	editorIds: string[] = [],
+	name = 'Sandbox',
+	code = `fixture-sandbox-${++sandboxCodeCounter}`
+) {
 	return await prisma.sandbox.create({
-		data: { name, ownerId, editors: { connect: editorIds.map((id) => ({ id })) } }
+		data: {
+			name,
+			code,
+			uriCode: encodeURIComponent(code),
+			ownerId,
+			editors: { connect: editorIds.map((id) => ({ id })) }
+		}
 	});
 }
 
