@@ -220,6 +220,28 @@ describe('DomainActions.addDomainRel', () => {
 		});
 		expect(after.targetDomains.map((d) => d.id)).not.toContain(domainThree.id);
 	});
+
+	it('rejects a self relation, creating nothing', async () => {
+		// addDomainRel does not gate on form.valid, so this exercises connectDomains' own guard
+		// directly, the same one a caller writing through Prisma directly (bypassing zod) would hit.
+		const { courseEditor, graph } = await graphThreeSetup();
+		const domainOne = await getDomain(graph.id, 'DomainOne');
+
+		const form = await buildForm(domainRelSchema, {
+			graphId: graph.id,
+			sourceDomainId: domainOne.id,
+			targetDomainId: domainOne.id
+		});
+		const result = await DomainActions.addDomainRel(courseEditor, form);
+
+		expectDenied(result);
+		expect(errorMessages(result)).toContain('A domain cannot be connected to itself');
+		const after = await prisma.domain.findUniqueOrThrow({
+			where: { id: domainOne.id },
+			include: { targetDomains: true }
+		});
+		expect(after.targetDomains.map((d) => d.id)).not.toContain(domainOne.id);
+	});
 });
 
 describe('DomainActions.deleteDomainRel', () => {

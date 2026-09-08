@@ -267,7 +267,8 @@ export class DomainActions {
 	 * @param tx - The Prisma client or transaction client to run the queries against, defaults to
 	 * the shared client
 	 * @returns The updated graph
-	 * @throws If the domains are already connected, or if the user lacks permission
+	 * @throws If inId and outId are the same domain, if the domains are already connected, or if
+	 * the user lacks permission
 	 */
 	private static async connectDomains(
 		graphId: number,
@@ -276,6 +277,10 @@ export class DomainActions {
 		outId: number,
 		tx: Prisma.TransactionClient = prisma
 	) {
+		if (inId === outId) {
+			throw new Error('A domain cannot be connected to itself');
+		}
+
 		// Check if the domains are already connected
 		const isConnected = await tx.domain.findFirst({
 			where: {
