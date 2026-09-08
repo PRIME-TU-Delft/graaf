@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
-	import { GraphValidator } from '$lib/validators/graphValidator';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
 	import { superForm } from 'sveltekit-superforms';
@@ -24,24 +24,19 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering.
-	// A writable $derived would not be re-proxied on reassignment, so mutations like
-	// `graph.domains = ...` or `domain.style = ...` below would stop being reactive.
-	// svelte-ignore state_referenced_locally
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
-	});
+	// The graph store owns this graph: the table reads its projection and every change to a domain
+	// is applied there, which is what keeps the preview canvas in step without a second write.
+	const store = getGraphStore();
+	const graph = $derived(store.graph);
+	const issues = $derived(store.issues);
 
-	function revertDomainOrder(message: string) {
-		graph.domains = graph.domains.toSorted((a, b) => a.order - b.order);
-		toast.error(message);
+	function failedReorder() {
+		store.revertOrder('domains');
+		toast.error('Failed to update domain order, try again later!');
 	}
 
-	// Domain order is only ever shown in this list, never on the graph canvas, so this posts
-	// without invalidating: the rows are already in their new order and a refetch would rebuild
-	// the canvas for nothing.
+	// No invalidateAll: the store already carries the new order, and domain order is not something
+	// the canvas draws anyway.
 	// svelte-ignore state_referenced_locally
 	const {
 		form: reorderData,
@@ -54,25 +49,24 @@
 		applyAction: false,
 		resetForm: false,
 		onUpdated: ({ form }) => {
-			if (!form.valid) {
-				revertDomainOrder('Failed to update domain order, try again later!');
-				return;
-			}
-
-			graph.domains.forEach((domain, index) => {
-				domain.order = index;
-			});
+			if (form.valid) store.confirmOrder('domains');
+			else failedReorder();
 		},
-		onError: () => revertDomainOrder('Failed to update domain order, try again later!')
+		onError: failedReorder
 	});
 
-	// The style a domain is restyled from, plus how to close the popover it was picked in, kept
-	// until the server answers so a rejected change can be rolled back.
-	let pendingStyle: { index: number; previous: DomainStyle | null; close: () => void } | null =
-		null;
+	// The domain being restyled and how to close the popover it was picked in, until the server
+	// answers. The previous style is the store's business, not this component's.
+	let pendingStyle: { id: number; close: () => void } | null = null;
 
-	// This one does invalidate: the canvas colours its domain nodes and their outgoing edges from
-	// the style, so it needs the fresh payload.
+	function failedStyle() {
+		if (pendingStyle) store.revertDomainStyle(pendingStyle.id);
+		pendingStyle = null;
+		toast.error('Failed to update domain style, try again later');
+	}
+
+	// No invalidateAll: applying the style to the store already restyled the node, the edges
+	// leaving it and the subjects that inherit it, so there is nothing a refetch would add.
 	// svelte-ignore state_referenced_locally
 	const {
 		form: styleData,
@@ -81,23 +75,19 @@
 	} = superForm(data.domainStyleForm, {
 		id: 'change-domain-style',
 		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
 		resetForm: false,
 		onUpdated: ({ form }) => {
-			if (form.valid) pendingStyle?.close();
-			else {
-				if (pendingStyle) graph.domains[pendingStyle.index].style = pendingStyle.previous;
-				toast.error('Failed to update domain style, try again later');
-			}
+			if (!form.valid) return failedStyle();
+			if (!pendingStyle) return;
+
+			store.confirmDomainStyle(pendingStyle.id);
+			pendingStyle.close();
 			pendingStyle = null;
 		},
-		onError: () => {
-			if (pendingStyle) graph.domains[pendingStyle.index].style = pendingStyle.previous;
-			toast.error('Failed to update domain style, try again later');
-			pendingStyle = null;
-		}
+		onError: failedStyle
 	});
-
-	const issues = $derived(new GraphValidator(graph).validate());
 
 	const domainMapping = $derived.by(() => {
 		const map: { id: string; domain: Domain; outDomain: Domain }[] = [];
@@ -132,31 +122,33 @@
 		const domain = graph.domains[domainIndex];
 
 		pendingStyle = {
-			index: domainIndex,
-			previous: domain.style,
+			id: domain.id,
 			close: () =>
 				closeAndFocusTrigger(triggerId, () => {
 					isOpenState.isOpen = false;
 				})
 		};
 
-		domain.style = key;
+		store.setDomainStyle(domain.id, key);
 
 		$styleData = { graphId: graph.id, domainId: domain.id, style: key ?? '' };
 		submitStyle();
 	}
 
-	function handleDndConsider(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
-		graph.domains = e.detail.items;
+	function handleDndConsider(e: CustomEvent<{ items: { id: number }[] }>) {
+		store.previewOrder('domains', idsOf(e.detail.items));
 	}
-	function handleDndFinalize(e: CustomEvent<{ items: (typeof graph)['domains'] }>) {
-		graph.domains = e.detail.items;
 
-		$reorderData = {
-			graphId: graph.id,
-			domainIds: graph.domains.map((domain) => domain.id)
-		};
+	function handleDndFinalize(e: CustomEvent<{ items: { id: number }[] }>) {
+		const domainIds = idsOf(e.detail.items);
+		store.applyOrder('domains', domainIds);
+
+		$reorderData = { graphId: graph.id, domainIds };
 		submitReorder();
+	}
+
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 

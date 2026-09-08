@@ -7,7 +7,7 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import { Trash2 } from '@lucide/svelte';
-	import type { Subject } from '@prisma/client';
+	import type { Graph, Subject } from '@prisma/client';
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { type PageData } from './$types';
@@ -17,7 +17,7 @@
 	type Props = {
 		sourceSubject: Subject;
 		targetSubject: Subject;
-		graph: PageData['graph'];
+		graph: Graph;
 	};
 
 	let { graph, sourceSubject, targetSubject }: Props = $props();

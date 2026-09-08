@@ -4,7 +4,7 @@
 
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
-	import { GraphValidator } from '$lib/validators/graphValidator';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
 	import Link from '@lucide/svelte/icons/link';
@@ -22,24 +22,19 @@
 
 	let { data }: { data: PageData } = $props();
 
-	// This is a workaround for the fact that we can't use $derived due to the reordering.
-	// A writable $derived would not be re-proxied on reassignment, so mutations like
-	// `graph.subjects = ...` below would stop being reactive.
-	// svelte-ignore state_referenced_locally
-	// eslint-disable-next-line svelte/prefer-writable-derived
-	let graph = $state(data.graph);
-	$effect(() => {
-		graph = data.graph;
-	});
+	// The graph store owns this graph: the table reads its projection and reordering is applied
+	// there, which is what keeps the preview canvas in step without a second write.
+	const store = getGraphStore();
+	const graph = $derived(store.graph);
+	const issues = $derived(store.issues);
 
-	function revertSubjectOrder() {
-		graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
+	function failedReorder() {
+		store.revertOrder('subjects');
 		toast.error('Failed to update subject order, try again later!');
 	}
 
-	// Subject order is only ever shown in this list, never on the graph canvas, so this posts
-	// without invalidating: the rows are already in their new order and a refetch would rebuild
-	// the canvas for nothing.
+	// No invalidateAll: the store already carries the new order, and subject order is not something
+	// the canvas draws anyway.
 	// svelte-ignore state_referenced_locally
 	const {
 		form: reorderData,
@@ -52,21 +47,11 @@
 		applyAction: false,
 		resetForm: false,
 		onUpdated: ({ form }) => {
-			if (!form.valid) {
-				revertSubjectOrder();
-				return;
-			}
-
-			graph.subjects.forEach((subject, index) => {
-				subject.order = index;
-			});
+			if (form.valid) store.confirmOrder('subjects');
+			else failedReorder();
 		},
-		onError: revertSubjectOrder
+		onError: failedReorder
 	});
-
-	const issues = $derived(new GraphValidator(graph).validate());
-
-	type Graph = PageData['graph'];
 
 	const subjectMapping = $derived.by(() => {
 		const map: { id: string; sourceSubject: Subject; targetSubject: Subject }[] = [];
@@ -82,18 +67,20 @@
 		return map;
 	});
 
-	function handleDndConsider(e: CustomEvent<{ items: Graph['subjects'] }>) {
-		graph.subjects = e.detail.items;
+	function handleDndConsider(e: CustomEvent<{ items: { id: number }[] }>) {
+		store.previewOrder('subjects', idsOf(e.detail.items));
 	}
 
-	function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
-		graph.subjects = e.detail.items;
+	function handleDndFinalize(e: CustomEvent<{ items: { id: number }[] }>) {
+		const subjectIds = idsOf(e.detail.items);
+		store.applyOrder('subjects', subjectIds);
 
-		$reorderData = {
-			graphId: graph.id,
-			subjectIds: graph.subjects.map((subject) => subject.id)
-		};
+		$reorderData = { graphId: graph.id, subjectIds };
 		submitReorder();
+	}
+
+	function idsOf(items: { id: number }[]) {
+		return items.map((item) => item.id);
 	}
 </script>
 

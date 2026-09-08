@@ -1,39 +1,68 @@
 import { GraphD3 } from '$lib/d3/GraphD3';
-import type { PrismaGraphPayload, SavePositions } from '$lib/d3/types';
+
+import type { SavePositions } from '$lib/d3/types';
+import type { GraphStore } from '$lib/graph/graphStore.svelte';
 
 /**
- * Holds the current GraphD3 instance as Svelte 5 rune-based reactive state, so components can
- * read/react to which graph (if any) is currently mounted, since GraphD3 itself is a plain
+ * Holds the currently mounted GraphD3 instance as Svelte 5 rune-based reactive state, so components
+ * can read/react to which graph (if any) is currently mounted, since GraphD3 itself is a plain
  * (non-reactive) class driving an imperative D3 canvas.
  */
 class GraphD3Store {
-	/** The currently mounted graph instance, or undefined before setGraphD3 has been called. */
+	/** The currently mounted graph instance, or undefined while no canvas is mounted. */
 	graphD3 = $state<GraphD3>();
 
 	constructor() {}
 
 	/**
-	 * Construct a new GraphD3 instance for the given SVG element and payload, replacing any
-	 * previously stored one.
+	 * Construct the canvas for an `<svg>` element and bind it to the graph store, which owns the
+	 * data it renders: the store hands it the projection to start from, pushes a new one whenever
+	 * the graph changes, and records the node positions the canvas moves.
 	 *
 	 * @param d3Canvas - The `<svg>` element to render into
-	 * @param payload - The raw Prisma graph payload to format and render
-	 * @param editable - Whether the graph is being viewed in the authenticated editor or the
-	 * read-only public viewer
-	 * @param view - Which view to open on
-	 * @param lectureId - If provided, the lecture to focus when `view` is 'LECTURES'
-	 * @param savePositions - Called with the nodes that moved after a drag or the force
-	 * simulation settles. Omitted in the read-only public viewer.
+	 * @param store - The graph store owning the graph being rendered
+	 * @param options.editable - Whether this is the authenticated editor or the read-only viewer
+	 * @param options.view - Which view to open on
+	 * @param options.lectureID - The lecture to focus, when `view` is 'LECTURES'
+	 * @param options.savePositions - Called with the nodes a drag or the simulation moved. Omitted
+	 * in the read-only public viewer, where nodes cannot be moved.
+	 * @returns The mounted canvas, to hand back to `unmount` when it goes away
 	 */
-	setGraphD3(
+	mount(
 		d3Canvas: SVGSVGElement,
-		payload: PrismaGraphPayload,
-		editable: boolean,
-		view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES' = 'DOMAINS',
-		lectureId: number | null = null,
-		savePositions?: SavePositions
-	) {
-		this.graphD3 = new GraphD3(d3Canvas, payload, editable, view, lectureId, savePositions);
+		store: GraphStore,
+		options: {
+			editable: boolean;
+			view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
+			lectureID: number | null;
+			savePositions?: SavePositions;
+		}
+	): GraphD3 {
+		const canvas = new GraphD3(
+			d3Canvas,
+			store.graphData,
+			options.editable,
+			options.view,
+			options.lectureID,
+			options.savePositions
+		);
+
+		store.attachCanvas(canvas);
+		this.graphD3 = canvas;
+
+		return canvas;
+	}
+
+	/**
+	 * Unbind a canvas that is going away, so the store stops pushing at it.
+	 *
+	 * @param canvas - The canvas returned by the matching `mount` call
+	 * @param store - The graph store it was bound to
+	 */
+	unmount(canvas: GraphD3, store: GraphStore) {
+		store.detachCanvas(canvas);
+
+		if (this.graphD3 === canvas) this.graphD3 = undefined;
 	}
 }
 

@@ -10,10 +10,10 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import type { PageData } from './$types';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import type { RenderableGraph } from '$lib/graph/renderablePayload';
 
 	type Props = {
-		graph: PrismaGraphPayload;
+		graph: RenderableGraph;
 		domain: Domain;
 		sourceDomain: Domain;
 		targetDomain: Domain;

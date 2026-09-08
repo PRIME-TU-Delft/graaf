@@ -1,6 +1,9 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+
 	import { graphD3Store } from '$lib/d3/graphD3.svelte';
 	import { graphView } from '$lib/d3/GraphD3View.svelte';
+	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import GraphDecorators from './GraphDecorators.svelte';
 
 	import { nodePositionsSchema } from '$lib/zod/graphSchema';
@@ -8,24 +11,26 @@
 	import { zod4Client as zodClient } from 'sveltekit-superforms/adapters';
 	import { toast } from 'svelte-sonner';
 
-	import type { PrismaGraphPayload, SavePositions } from '$lib/d3/types';
-	import { untrack } from 'svelte';
+	import type { SavePositions } from '$lib/d3/types';
 
 	type Props = {
-		data: PrismaGraphPayload;
 		editable: boolean;
 		view?: 'DOMAINS' | 'SUBJECTS' | 'LECTURES';
 		lectureID: number | null;
 		builtInViewDropdown?: boolean;
 	};
 
-	let { data: payload, editable, view, lectureID, builtInViewDropdown = false }: Props = $props();
+	let { editable, view = 'DOMAINS', lectureID, builtInViewDropdown = false }: Props = $props();
+
+	// The graph itself comes from the store rather than a prop: it owns the data both this canvas
+	// and the editor tables render, and pushes the canvas a new projection whenever it changes.
+	const store = getGraphStore();
 	let d3Canvas: SVGSVGElement;
 
 	// Dragging a node persists its position through the `update-node-positions` action that every
 	// child page of the graph editor spreads in. Posting without invalidating is deliberate: the
-	// canvas already shows the node where it was dropped, and a refetch would tear the canvas
-	// down and rebuild it (Effect 1) right after every drag.
+	// store has already recorded the move, so a refetch would only hand the canvas back the
+	// positions it just reported.
 	const positionsForm = superForm(
 		defaults({ graphId: 0, domains: [], subjects: [] }, zodClient(nodePositionsSchema)),
 		{
@@ -45,62 +50,49 @@
 	const savePositions: SavePositions = (domains, subjects) => {
 		if (domains.length === 0 && subjects.length === 0) return;
 
-		$positionsData = { graphId: payload.id, domains, subjects };
+		// The store owns the rows these positions belong to, so it hears about the move first
+		store.recordPositions(domains, subjects);
+
+		$positionsData = { graphId: store.id, domains, subjects };
 		submitPositions();
 	};
 
-	// What the currently mounted canvas was built from, so Effect 1 can tell a real data change
-	// from an effect re-run that carries the same values.
-	let mountedFrom: {
-		canvas: SVGSVGElement;
-		payload: PrismaGraphPayload;
-		editable: boolean;
-		lectureID: number | null;
-	} | null = null;
+	// Every call into the canvas is untracked. The D3 layer reads the graphState/graphView
+	// singletons internally, and those reads would otherwise become dependencies of these effects,
+	// re-running them on every animation frame of a transition.
 
-	// Effect 1: rebuild the canvas when the data behind it changes (payload, editable, lectureID,
-	// d3Canvas). `view` is read untracked, so navigating between views never lands here — that is
-	// Effect 2's job. Rebuilding throws away the camera and any running simulation, so it is
-	// guarded on the values actually differing rather than on the effect having re-run: Svelte
-	// re-runs this on navigation even when every one of those values is identical.
+	// The canvas is mounted once for this <svg> and kept up to date by the store, so there is no
+	// rebuild-on-data-change effect and nothing to guard against re-running.
 	$effect(() => {
-		const next = { canvas: d3Canvas, payload, editable, lectureID };
+		const canvas = untrack(() =>
+			graphD3Store.mount(d3Canvas, store, {
+				editable,
+				view,
+				lectureID,
+				savePositions: editable ? savePositions : undefined
+			})
+		);
+
+		return () => untrack(() => graphD3Store.unmount(canvas, store));
+	});
+
+	// `graphView.state` is tracked on purpose here. `setView` no-ops while a transition is running,
+	// and the transition only reports its new view when its animation callback fires, so tracking
+	// that is what lets a view change requested mid-transition catch up instead of being dropped
+	// (switch Domains -> Subjects -> Domains quickly and the last one would otherwise be lost).
+	$effect(() => {
+		const target = view;
+		const current = graphView.state;
 
 		untrack(() => {
-			if (
-				mountedFrom &&
-				mountedFrom.canvas === next.canvas &&
-				mountedFrom.payload === next.payload &&
-				mountedFrom.editable === next.editable &&
-				mountedFrom.lectureID === next.lectureID
-			) {
-				return;
-			}
-
-			mountedFrom = next;
-			graphD3Store.setGraphD3(
-				d3Canvas,
-				payload,
-				editable,
-				view ?? 'DOMAINS',
-				lectureID,
-				editable ? savePositions : undefined
-			);
+			if (current !== target) graphD3Store.graphD3?.setView(target);
 		});
 	});
 
-	// Effect 2: transition between views when the user navigates.
-	// Both `view` and `graphView.state` are tracked so the effect re-runs when the
-	// D3 animation callback eventually updates graphView.state (fixes the race where
-	// setView is called before the prior animation has finished updating graphView.state).
 	$effect(() => {
-		const targetView = view;
-		const currentView = graphView.state; // tracked — re-runs when animation callback fires
-		untrack(() => {
-			if (graphD3Store.graphD3 && currentView !== targetView) {
-				graphD3Store.graphD3.setView(targetView ?? 'DOMAINS');
-			}
-		});
+		const target = lectureID;
+
+		untrack(() => graphD3Store.graphD3?.setLectureById(target));
 	});
 </script>
 
