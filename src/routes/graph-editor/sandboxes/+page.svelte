@@ -7,6 +7,7 @@
 	import * as Table from '$lib/components/ui/table/index.js';
 	import DialogButton from '$lib/components/DialogButton.svelte';
 	import NewSandboxButton from './newSandboxButton.svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	// Icons
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -24,6 +25,8 @@
 <svelte:head>
 	<title>Sandboxes | PRIME Graph Editor</title>
 </svelte:head>
+
+<Help page="sandboxes" />
 
 <section class="prose mx-auto mt-12 p-4">
 	<h1 class="text-purple-950 shadow-purple-500/70">Sandboxes</h1>

@@ -18,16 +18,29 @@ export const deleteSubjectSchema = z.object({
 	targetSubjects: z.array(z.number())
 });
 
-export const subjectRelSchema = z.object({
-	graphId: z.number(),
-	sourceSubjectId: z.number().gt(0, 'Please select a source subject'),
-	targetSubjectId: z.number().gt(0, 'Please select a target domain')
-});
+export const subjectRelSchema = z
+	.object({
+		graphId: z.number(),
+		sourceSubjectId: z.number().gt(0, 'Please select a source subject'),
+		targetSubjectId: z.number().gt(0, 'Please select a target subject')
+	})
+	.refine((data) => data.sourceSubjectId !== data.targetSubjectId, {
+		message: 'sourceSubjectId and targetSubjectId must not be the same',
+		path: ['sourceSubjectId', 'targetSubjectId']
+	});
 
-export const changeSubjectRelSchema = subjectRelSchema.extend({
-	oldSourceSubjectId: z.number().gt(0, 'Please select a source subject'),
-	oldTargetSubjectId: z.number().gt(0, 'Please select a target subject')
-});
+export const changeSubjectRelSchema = z
+	.object({
+		graphId: z.number(),
+		oldSourceSubjectId: z.number().gt(0, 'Please select a source subject'),
+		oldTargetSubjectId: z.number().gt(0, 'Please select a target subject'),
+		sourceSubjectId: z.number().gt(0, 'Please select a source subject'),
+		targetSubjectId: z.number().gt(0, 'Please select a target subject')
+	})
+	.refine((data) => data.sourceSubjectId !== data.targetSubjectId, {
+		message: 'sourceSubjectId and targetSubjectId must not be the same',
+		path: ['sourceSubjectId', 'targetSubjectId']
+	});
 
 export const reorderSubjectsSchema = z.object({
 	graphId: z.number(),

@@ -7,10 +7,17 @@ import {
 	deleteSandboxSchema,
 	editSandboxSchema,
 	editSuperUserSchema,
-	leaveSandboxSchema
+	leaveSandboxSchema,
+	newSandboxSchema
 } from '$lib/zod/sandboxSchema';
 
-import { createOutsider, createSandbox, fixtureUsers, seedFixture } from './helpers/fixture';
+import {
+	FIXTURE_COURSES,
+	createOutsider,
+	createSandbox,
+	fixtureUsers,
+	seedFixture
+} from './helpers/fixture';
 import { buildForm, errorMessages, expectDenied } from './helpers/actions';
 
 // Sandboxes are the exception to the permission model used everywhere else:
@@ -40,14 +47,15 @@ describe('SandboxActions.editSandbox', () => {
 
 		const form = await buildForm(editSandboxSchema, {
 			sandboxId: sandbox.id,
-			name: 'RenamedSandbox'
+			name: 'RenamedSandbox',
+			code: 'renamed-sandbox'
 		});
 		const result = await SandboxActions.editSandbox(courseAdmin, form);
 
 		expect(result).not.toHaveProperty('status');
 		await expect(
 			prisma.sandbox.findUniqueOrThrow({ where: { id: sandbox.id } })
-		).resolves.toMatchObject({ name: 'RenamedSandbox' });
+		).resolves.toMatchObject({ name: 'RenamedSandbox', code: 'renamed-sandbox' });
 	});
 
 	it('denies an editor, since this requires the owner tier', async () => {
@@ -55,7 +63,8 @@ describe('SandboxActions.editSandbox', () => {
 
 		const form = await buildForm(editSandboxSchema, {
 			sandboxId: sandbox.id,
-			name: 'RenamedSandbox'
+			name: 'RenamedSandbox',
+			code: 'renamed-sandbox'
 		});
 		const result = await SandboxActions.editSandbox(courseEditor, form);
 
@@ -70,7 +79,8 @@ describe('SandboxActions.editSandbox', () => {
 
 		const form = await buildForm(editSandboxSchema, {
 			sandboxId: sandbox.id,
-			name: 'RenamedSandbox'
+			name: 'RenamedSandbox',
+			code: 'renamed-sandbox'
 		});
 		const result = await SandboxActions.editSandbox(superAdmin, form);
 
@@ -78,6 +88,91 @@ describe('SandboxActions.editSandbox', () => {
 		await expect(
 			prisma.sandbox.findUniqueOrThrow({ where: { id: sandbox.id } })
 		).resolves.toMatchObject({ name: 'Sandbox' });
+	});
+
+	it('rejects a code already taken by another sandbox', async () => {
+		const { courseAdmin, sandbox } = await sandboxSetup();
+		const otherSandbox = await createSandbox(courseAdmin.id, [], 'OtherSandbox', 'taken-code');
+
+		const form = await buildForm(editSandboxSchema, {
+			sandboxId: sandbox.id,
+			name: sandbox.name,
+			code: otherSandbox.code
+		});
+		const result = await SandboxActions.editSandbox(courseAdmin, form);
+
+		expect(errorMessages(result)).toContain('This code is already taken');
+		await expect(
+			prisma.sandbox.findUniqueOrThrow({ where: { id: sandbox.id } })
+		).resolves.toMatchObject({ code: sandbox.code });
+	});
+
+	it('rejects a code already taken by a course', async () => {
+		const { courseAdmin, sandbox } = await sandboxSetup();
+
+		const form = await buildForm(editSandboxSchema, {
+			sandboxId: sandbox.id,
+			name: sandbox.name,
+			code: FIXTURE_COURSES.one.uriCode
+		});
+		const result = await SandboxActions.editSandbox(courseAdmin, form);
+
+		expect(errorMessages(result)).toContain('This code is already taken');
+		await expect(
+			prisma.sandbox.findUniqueOrThrow({ where: { id: sandbox.id } })
+		).resolves.toMatchObject({ code: sandbox.code });
+	});
+
+	it('allows keeping the same code unchanged', async () => {
+		const { courseAdmin, sandbox } = await sandboxSetup();
+
+		const form = await buildForm(editSandboxSchema, {
+			sandboxId: sandbox.id,
+			name: 'RenamedAgain',
+			code: sandbox.code
+		});
+		const result = await SandboxActions.editSandbox(courseAdmin, form);
+
+		expect(result).not.toHaveProperty('status');
+		await expect(
+			prisma.sandbox.findUniqueOrThrow({ where: { id: sandbox.id } })
+		).resolves.toMatchObject({ name: 'RenamedAgain', code: sandbox.code });
+	});
+});
+
+describe('SandboxActions.newSandbox', () => {
+	it('auto-generates a code slugified from the owner nickname', async () => {
+		const { courseAdmin } = await fixtureUsers();
+
+		const form = await buildForm(newSandboxSchema, {
+			ownerId: courseAdmin.id,
+			name: 'MySandbox'
+		});
+		const result = await SandboxActions.newSandbox(courseAdmin, form);
+
+		expect(result).not.toHaveProperty('status');
+		const created = await prisma.sandbox.findFirstOrThrow({
+			where: { ownerId: courseAdmin.id, name: 'MySandbox' }
+		});
+		expect(created.code).toBe('course-admin');
+		expect(created.uriCode).toBe('course-admin');
+	});
+
+	it('appends a numeric suffix when the generated code collides', async () => {
+		const { courseAdmin } = await fixtureUsers();
+		await createSandbox(courseAdmin.id, [], 'FirstSandbox', 'course-admin');
+
+		const form = await buildForm(newSandboxSchema, {
+			ownerId: courseAdmin.id,
+			name: 'SecondSandbox'
+		});
+		const result = await SandboxActions.newSandbox(courseAdmin, form);
+
+		expect(result).not.toHaveProperty('status');
+		const created = await prisma.sandbox.findFirstOrThrow({
+			where: { ownerId: courseAdmin.id, name: 'SecondSandbox' }
+		});
+		expect(created.code).toBe('course-admin-2');
 	});
 });
 

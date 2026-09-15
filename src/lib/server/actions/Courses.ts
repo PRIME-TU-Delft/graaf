@@ -2,6 +2,7 @@ import prisma from '$lib/server/db/prisma';
 import { setError } from '$lib/utils/setError';
 import { whereHasCoursePermission, whereHasProgramPermission } from '../permissions';
 import { withGuardedMutation } from './guardedMutation';
+import { isCodeTaken } from './codeGeneration';
 import {
 	newCourseSchema,
 	editCourseSchema,
@@ -30,10 +31,18 @@ export class CourseActions {
 	 * @param user - The user performing the action
 	 * @param form - Validated form data with the course name, code, and destination programId
 	 * @returns `{ form }` on success. On invalid input or missing permission, returns the form
-	 * with a `name`-field error via setError instead of throwing.
+	 * with a `name`-field error via setError instead of throwing. Returns a `code`-field error if
+	 * the code is already taken by another Course or a Sandbox.
 	 */
 	static async newCourse(user: User, form: SuperValidated<Infer<typeof newCourseSchema>>) {
 		if (!form.valid) return setError(form, '', 'Form is not valid');
+
+		if (
+			(await isCodeTaken(form.data.code)) ||
+			(await isCodeTaken(encodeURIComponent(form.data.code)))
+		) {
+			return setError(form, 'code', 'This code is already taken');
+		}
 
 		return await withGuardedMutation(
 			() =>

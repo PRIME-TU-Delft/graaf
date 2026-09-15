@@ -8,22 +8,32 @@ type Milliseconds = number;
 export const MAX_PROGRAM_NAME_LENGTH = 50;
 
 // Course settings
-export const COURSE_CODE_REGEX = /^[A-Za-z0-9 ]*$/;
+export const COURSE_CODE_REGEX = /^[A-Za-z0-9 \-_]*$/;
 export const MAX_COURSE_CODE_LENGTH = 30;
-export const MAX_COURSE_NAME_LENGTH = 30;
+export const MAX_COURSE_NAME_LENGTH = 100;
+
+// Sandbox settings
+export const SANDBOX_CODE_REGEX = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+export const MAX_SANDBOX_CODE_LENGTH = 30;
 
 // Graph settings
-export const MAX_GRAPH_NAME_LENGTH = 50;
+export const MAX_GRAPH_NAME_LENGTH = 150;
 export const MAX_LINK_NAME_LENGTH = 12;
 
+// Link analytics settings
+// A link is called stale when it collected fewer than STALE_LINK_VIEW_THRESHOLD views over the
+// trailing STALE_LINK_WINDOW_WEEKS weeks (the current week plus the ones before it).
+export const STALE_LINK_WINDOW_WEEKS = 52;
+export const STALE_LINK_VIEW_THRESHOLD = 10;
+
 // Domain settings
-export const MAX_DOMAIN_NAME_LENGTH = 50;
+export const MAX_DOMAIN_NAME_LENGTH = 250;
 
 // Subject settings
-export const MAX_SUBJECT_NAME_LENGTH = 50;
+export const MAX_SUBJECT_NAME_LENGTH = 250;
 
 // Lecture settings
-export const MAX_LECTURE_NAME_LENGTH = 50;
+export const MAX_LECTURE_NAME_LENGTH = 100;
 
 // ------------------------> Editor settings
 

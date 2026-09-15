@@ -8,6 +8,7 @@
 	import DuplicateGraph from '$lib/components/graphSettings/DuplicateGraph.svelte';
 	import GraphSettings from '$lib/components/graphSettings/GraphSettings.svelte';
 	import LeaveSandbox from './LeaveSandbox.svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	// Icons
 	import ArrowRight from '@lucide/svelte/icons/arrow-right';
@@ -34,6 +35,8 @@
 <svelte:head>
 	<title>{data.sandbox ? data.sandbox.name : 'Sandbox'} | PRIME Graph Editor</title>
 </svelte:head>
+
+<Help page="sandboxes" />
 
 <article class="my-6 mb-12 space-y-6">
 	{#if data.error != undefined}

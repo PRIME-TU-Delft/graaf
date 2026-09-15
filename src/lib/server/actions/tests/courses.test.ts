@@ -16,6 +16,7 @@ import {
 	FIXTURE_COURSES,
 	FIXTURE_PROGRAMS,
 	createOutsider,
+	createSandbox,
 	fixtureUsers,
 	getCourse,
 	getProgram,
@@ -64,6 +65,24 @@ describe('CourseActions.newCourse', () => {
 		expectDenied(result);
 		expect(errorMessages(result)).toContain("You don't have permission to create a new course");
 		await expect(prisma.course.findFirst({ where: { code: 'NEW2' } })).resolves.toBeNull();
+	});
+
+	it('rejects a code already taken by a sandbox', async () => {
+		const { programEditor, courseAdmin } = await fixtureUsers();
+		const program = await getProgram(FIXTURE_PROGRAMS.three);
+		await createSandbox(courseAdmin.id, [], 'SomeSandbox', 'takensandboxcode');
+
+		const form = await buildForm(newCourseSchema, {
+			code: 'takensandboxcode',
+			name: 'NewCourse',
+			programId: program.id
+		});
+		const result = await CourseActions.newCourse(programEditor, form);
+
+		expect(errorMessages(result)).toContain('This code is already taken');
+		await expect(
+			prisma.course.findFirst({ where: { code: 'takensandboxcode' } })
+		).resolves.toBeNull();
 	});
 });
 

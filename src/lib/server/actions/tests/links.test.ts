@@ -105,6 +105,24 @@ describe('LinkActions.newLink', () => {
 		expect(errorMessages(result)).toContain(SANDBOX_DENIED);
 		await expect(prisma.link.findFirst({ where: { name: 'sb-new-link' } })).resolves.toBeNull();
 	});
+
+	it('rejects a second alias with the same name in the same sandbox', async () => {
+		const { courseEditor, sandbox, graph } = await sandboxSetup();
+		await createSandboxLink(sandbox.id, graph.id, 'dup-name');
+
+		const form = await buildForm(newLinkSchema, {
+			parentId: sandbox.id,
+			parentType: 'SANDBOX',
+			graphId: graph.id,
+			name: 'dup-name'
+		});
+		const result = await LinkActions.newLink(courseEditor, form);
+
+		expectDenied(result);
+		await expect(
+			prisma.link.count({ where: { sandboxId: sandbox.id, name: 'dup-name' } })
+		).resolves.toBe(1);
+	});
 });
 
 describe('LinkActions.moveLink', () => {

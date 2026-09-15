@@ -91,6 +91,28 @@
 		@apply text-foreground bg-white;
 	}
 
+	/* Scrollbars that do not fight the content: no track at all, faint purple thumb. Used on
+	   scroll areas inside light panels, where the browser default reads as a dark stripe. */
+	.scrollbar-subtle {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-purple-200) transparent;
+	}
+
+	/* Fallback for browsers without scrollbar-color, which ignore the rule above */
+	.scrollbar-subtle::-webkit-scrollbar {
+		width: 0.5rem;
+		height: 0.5rem;
+	}
+
+	.scrollbar-subtle::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.scrollbar-subtle::-webkit-scrollbar-thumb {
+		border-radius: 9999px;
+		background: var(--color-purple-200);
+	}
+
 	.grain::after {
 		content: '';
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { hasSandboxPermissions } from '$lib/utils/permissions';
 
 	// Components
@@ -7,6 +8,7 @@
 	import GraphTable from '$lib/components/graphSettings/GraphTable.svelte';
 	import EditorTable from './superUsers/EditorTable.svelte';
 	import TransferOwnership from './TransferOwnership.svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	// Icons
 	import type { PageData } from './$types';
@@ -18,6 +20,8 @@
 	<title>{data.sandbox.name} Settings | PRIME Graph Editor</title>
 </svelte:head>
 
+<Help page="sandboxSettings" />
+
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
 >
@@ -25,7 +29,7 @@
 	<EditSandbox />
 </section>
 
-<section class="prose container mx-auto mt-8 p-4">
+<section class="prose mx-auto mt-8 max-w-4xl p-4">
 	<h2 class="m-0">Sandbox Editors</h2>
 
 	<p>
@@ -36,7 +40,7 @@
 	<EditorTable sandbox={data.sandbox} />
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Graphs</h2>
 	<p>
 		Graphs are the bread and butter of the Graph Editor! They are perfect for structuring
@@ -46,20 +50,20 @@
 		or <b>embeds</b> to share graphs with your friends.
 	</p>
 
-	<!-- TODO Placeholder for link URL -->
 	<GraphTable
 		graphs={data.sandbox.graphs}
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
-		getLinkURL={() => `SANDBOX LINKS ARE NOT SUPPORTED YET`}
+		showAnalytics={false}
+		getLinkURL={(link) => `${page.url.origin}/graph/${data.sandbox.uriCode}/${link.name}`}
 		hasAtLeastAdminPermission={hasSandboxPermissions(data.user, data.sandbox, 'Owner')}
 	/>
 </section>
 
 <section
 	id="danger-zone"
-	class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+	class="prose mx-auto my-12 max-w-4xl space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 >
 	<h2 class="text-red-950">Danger zone</h2>
 	<div class="flex items-center gap-2">

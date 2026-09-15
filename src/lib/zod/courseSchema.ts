@@ -10,7 +10,10 @@ export const newCourseSchema = z.object({
 		.trim()
 		.nonempty()
 		.max(settings.MAX_COURSE_CODE_LENGTH)
-		.regex(settings.COURSE_CODE_REGEX, 'Course code must be alphanumeric, spaces are allowed'),
+		.regex(
+			settings.COURSE_CODE_REGEX,
+			'Course code must be alphanumeric, spaces, hyphens and underscores are allowed'
+		),
 	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH),
 	programId: z.number()
 });
