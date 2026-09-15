@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -19,17 +18,8 @@
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-	// One owner for this graph, for the tables below and the canvas in the preview pane. Created
-	// during render rather than in an effect, so server-rendered markup has the graph too, and
-	// re-hydrated whenever a load (or a form action's invalidateAll) brings a new payload.
-	// Intentionally the initial value: the effect below picks up every later payload
-	// svelte-ignore state_referenced_locally
-	const store = setGraphStore(data.graph);
-	$effect(() => {
-		const payload = data.graph;
-
-		untrack(() => store.hydrate(payload));
-	});
+	// One owner for this graph, for the tables below and the canvas in the preview pane.
+	setGraphStore(() => data.graph);
 
 	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
 

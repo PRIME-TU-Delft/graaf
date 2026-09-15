@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as settings from '$lib/settings';
-	import { closeAndFocusTrigger, cn } from '$lib/utils';
+	import { closeAndFocusTrigger, cn, idsOf } from '$lib/utils';
 	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { useId } from 'bits-ui';
 	import { toast } from 'svelte-sonner';
@@ -145,10 +145,6 @@
 
 		$reorderData = { graphId: graph.id, domainIds };
 		submitReorder();
-	}
-
-	function idsOf(items: { id: number }[]) {
-		return items.map((item) => item.id);
 	}
 </script>
 

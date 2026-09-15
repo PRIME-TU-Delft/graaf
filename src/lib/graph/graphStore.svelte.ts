@@ -1,4 +1,4 @@
-import { getContext, setContext } from 'svelte';
+import { getContext, setContext, untrack } from 'svelte';
 import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
 import { GraphValidator } from '$lib/validators/graphValidator';
@@ -456,16 +456,26 @@ export type OrderedCollection = 'domains' | 'subjects' | 'lectures';
 const GRAPH_STORE_KEY = Symbol('graphStore');
 
 /**
- * Create the store for a graph and put it in context, for the tables and the canvas below to read.
- * Call this in the component that loads the graph (the graph editor layout, the public viewer
- * page), during render rather than in an `$effect`, so server-rendered markup has the data too.
+ * Create the store for a graph, put it in context for the tables and the canvas below to read, and
+ * keep it hydrated from the route's load data. Call this in the component that loads the graph
+ * (the graph editor layout, the public viewer pages), during render rather than in an `$effect`,
+ * so server-rendered markup has the data too.
  *
- * @param payload - The graph as returned by GraphActions.getRenderablePayload
- * @returns The store, so the caller can hydrate it when its load data changes
+ * The payload is a getter rather than a value so this can both seed the store with the initial
+ * graph and re-hydrate it whenever a load (or a form action's invalidateAll) brings a new one.
+ *
+ * @param payload - Reads the graph as returned by GraphActions.getRenderablePayload
+ * @returns The store, for the caller to render from
  */
-export function setGraphStore(payload: RenderableGraph): GraphStore {
-	const store = new GraphStore(payload);
+export function setGraphStore(payload: () => RenderableGraph): GraphStore {
+	const store = new GraphStore(untrack(payload));
 	setContext(GRAPH_STORE_KEY, store);
+
+	$effect(() => {
+		const next = payload();
+
+		untrack(() => store.hydrate(next));
+	});
 
 	return store;
 }

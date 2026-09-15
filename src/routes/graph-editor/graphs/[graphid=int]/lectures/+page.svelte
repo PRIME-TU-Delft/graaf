@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-	import { cn } from '$lib/utils';
+	import { cn, idsOf } from '$lib/utils';
 	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { Ellipsis, MoveVertical } from '@lucide/svelte';
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
@@ -65,10 +65,6 @@
 
 		$reorderData = { graphId: graph.id, lectureIds };
 		submitReorder();
-	}
-
-	function idsOf(items: { id: number }[]) {
-		return items.map((item) => item.id);
 	}
 </script>
 

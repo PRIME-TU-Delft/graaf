@@ -8,6 +8,7 @@
 	import { page } from '$app/state';
 	import { superForm } from 'sveltekit-superforms';
 	import { getGraphStore } from '$lib/graph/graphStore.svelte';
+	import { idsOf } from '$lib/utils';
 	import IssueIndicator from '../IssueIndicator.svelte';
 	import type { PageData } from './$types';
 
@@ -64,10 +65,6 @@
 
 		$reorderData = { graphId: lecture.graphId, lectureId: lecture.id, subjectIds };
 		submitReorder();
-	}
-
-	function idsOf(items: { id: number }[]) {
-		return items.map((item) => item.id);
 	}
 </script>
 

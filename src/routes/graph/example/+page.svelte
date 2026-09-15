@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
-
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import { page } from '$app/state';
 	import { setGraphStore } from '$lib/graph/graphStore.svelte';
@@ -9,14 +7,7 @@
 
 	// Same as the public viewer: the canvas reads its graph from the store, so every route that
 	// renders a graph sets one up the same way.
-	// Intentionally the initial value: the effect below picks up every later payload
-	// svelte-ignore state_referenced_locally
-	const store = setGraphStore(data.graph);
-	$effect(() => {
-		const payload = data.graph;
-
-		untrack(() => store.hydrate(payload));
-	});
+	const store = setGraphStore(() => data.graph);
 
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let view = $derived.by(() => {

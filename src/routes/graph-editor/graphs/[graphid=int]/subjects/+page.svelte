@@ -3,7 +3,7 @@
 	import * as Grid from '$lib/components/ui/grid/index.js';
 
 	import { buttonVariants } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils';
+	import { cn, idsOf } from '$lib/utils';
 	import { getGraphStore } from '$lib/graph/graphStore.svelte';
 	import { ChevronRight, Sparkles } from '@lucide/svelte';
 	import type { Subject } from '@prisma/client';
@@ -77,10 +77,6 @@
 
 		$reorderData = { graphId: graph.id, subjectIds };
 		submitReorder();
-	}
-
-	function idsOf(items: { id: number }[]) {
-		return items.map((item) => item.id);
 	}
 </script>
 
