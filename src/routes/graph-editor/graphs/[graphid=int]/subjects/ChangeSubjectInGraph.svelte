@@ -10,11 +10,11 @@
 	import type { PageData } from './$types';
 	import { subjectSchema } from '$lib/zod/subjectSchema';
 	import * as Form from '$lib/components/ui/form/index.js';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import type { RenderableGraph, RenderableSubject } from '$lib/graph/renderablePayload';
 
 	type Props = {
-		subject: PageData['graph']['subjects'][0];
-		graph: PrismaGraphPayload;
+		subject: RenderableSubject;
+		graph: RenderableGraph;
 		domain?: Domain;
 		onSuccess?: () => void;
 	};

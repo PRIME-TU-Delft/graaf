@@ -6,13 +6,12 @@
 	import { closeAndFocusTrigger, cn } from '$lib/utils';
 	import { ChevronRight, Sparkles, TriangleAlert } from '@lucide/svelte';
 	import { useId } from 'bits-ui';
-	import type { PageData } from './$types';
 	import ChangeSubjectInGraph from './ChangeSubjectInGraph.svelte';
-	import type { PrismaGraphPayload } from '$lib/validators/types';
+	import type { RenderableGraph, RenderableSubject } from '$lib/graph/renderablePayload';
 
 	type Props = {
-		subject: PageData['graph']['subjects'][0];
-		graph: PrismaGraphPayload;
+		subject: RenderableSubject;
+		graph: RenderableGraph;
 	};
 
 	let { subject, graph }: Props = $props();

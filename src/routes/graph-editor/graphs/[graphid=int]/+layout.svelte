@@ -10,12 +10,16 @@
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import Help from '$lib/components/Help.svelte';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
+	import { setGraphStore } from '$lib/graph/graphStore.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
+
+	// One owner for this graph, for the tables below and the canvas in the preview pane.
+	setGraphStore(() => data.graph);
 
 	let tabs = ['DOMAINS', 'SUBJECTS', 'LECTURES'] as ('DOMAINS' | 'SUBJECTS' | 'LECTURES')[];
 
@@ -121,7 +125,7 @@
 
 			<Pane defaultSize={50}>
 				<div class="sticky top-20 h-[calc(100dvh-8rem)] w-full rounded-xl bg-purple-200/50 p-4">
-					<GraphRenderer data={data.graph} editable={true} {view} {lectureID} />
+					<GraphRenderer editable={true} {view} {lectureID} />
 				</div>
 			</Pane>
 		{/if}

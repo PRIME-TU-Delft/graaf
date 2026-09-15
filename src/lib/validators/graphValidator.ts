@@ -43,7 +43,8 @@ Conflicting edges
 */
 
 import { useId } from 'bits-ui';
-import type { PrismaGraphPayload, Issues, Issue } from './types';
+import type { Issues, Issue } from './types';
+import type { RenderableGraph } from '$lib/graph/renderablePayload';
 
 // Abstract graph representation
 type AbstractGraph = Map<number, AbstractNode>;
@@ -65,13 +66,13 @@ type SCC = Set<AbstractNode>;
 
 // Graph validator class
 export class GraphValidator {
-	graph: PrismaGraphPayload; // Raw graph data
+	graph: RenderableGraph; // Raw graph data
 	domains: AbstractGraph; // Abstract representation of the domain graph
 	subjects: AbstractGraph; // Abstract representation of the subject graph
 	inheritanceMap: InheritanceMap; // Map linking subjects to domains
 	lectures: AbstractGroup[]; // Lectures in the graph
 
-	constructor(graph: PrismaGraphPayload) {
+	constructor(graph: RenderableGraph) {
 		this.graph = graph;
 		this.domains = new Map();
 		this.subjects = new Map();

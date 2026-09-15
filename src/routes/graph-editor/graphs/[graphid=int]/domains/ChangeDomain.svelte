@@ -26,11 +26,11 @@
 
 	import type { PageData } from './$types';
 	import type { Domain } from '@prisma/client';
-	import type { PrismaDomainPayload, PrismaGraphPayload } from '$lib/validators/types';
+	import type { RenderableDomain, RenderableGraph } from '$lib/graph/renderablePayload';
 
 	type Props = {
-		domain: PrismaDomainPayload;
-		graph: PrismaGraphPayload;
+		domain: RenderableDomain;
+		graph: RenderableGraph;
 	};
 
 	let { domain, graph }: Props = $props();

@@ -1,6 +1,15 @@
-import type { PrismaGraphPayload } from '$lib/d3/types';
+import type { RenderableGraph } from '$lib/graph/renderablePayload';
 
-export const exampleGraph: PrismaGraphPayload = {
+/**
+ * The literal below leaves out each subject's parent `domain`, which the real query includes: it is
+ * filled in from `domainId` when the graph is exported, so the fixture does not have to repeat every
+ * domain row inside every subject that belongs to it.
+ */
+type ExampleGraph = Omit<RenderableGraph, 'subjects'> & {
+	subjects: Omit<RenderableGraph['subjects'][number], 'domain'>[];
+};
+
+const graph: ExampleGraph = {
 	id: 1,
 	name: 'AM101: Linear Algebra & Calculus',
 	courseId: 1,
@@ -1444,4 +1453,14 @@ export const exampleGraph: PrismaGraphPayload = {
 			]
 		}
 	]
+};
+
+/** A stand-in for a graph fetched with `renderableGraphInclude`, used by the landing page's
+ *  embedded example at `/graph/example`. */
+export const exampleGraph: RenderableGraph = {
+	...graph,
+	subjects: graph.subjects.map((subject) => ({
+		...subject,
+		domain: graph.domains.find((domain) => domain.id === subject.domainId) ?? null
+	}))
 };

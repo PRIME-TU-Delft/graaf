@@ -324,6 +324,31 @@ export class TransitionToolbox {
 	// -----------------------------> Transitions
 
 	/**
+	 * Reconcile the rendered content with the graph's current data, without touching the camera or
+	 * the background. Used when the graph store pushes a new projection: the view is not changing,
+	 * so entering and exiting nodes/edges are joined in place and everything else stays put.
+	 *
+	 * @param graph - The graph instance to refresh
+	 */
+	static refreshContent(graph: GraphD3) {
+		if (graphView.isLectures()) {
+			const nodes = graph.lecture ? graph.lecture.nodes : [];
+			const edges = graph.lecture ? graph.lecture.edges : [];
+			this.setContent(graph, nodes, edges);
+			this.moveContent(graph, nodes, this.lectureTransform(graph, 0, 0));
+			return;
+		}
+
+		if (graphView.isDomains()) {
+			this.setContent(graph, graph.data.domain_nodes, graph.data.domain_edges);
+		} else {
+			this.setContent(graph, graph.data.subject_nodes, graph.data.subject_edges);
+		}
+
+		this.restoreContentPosition(graph);
+	}
+
+	/**
 	 * Switch directly to the domains view, instantly, without an entry/exit animation for the
 	 * content (only the camera move optionally animates). Used for the initial view on
 	 * construction and by GraphD3.setData.

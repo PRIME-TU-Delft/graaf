@@ -1,15 +1,19 @@
 <script lang="ts">
-	// Mirrors the `view`/`lectureID` derivation in src/routes/graph/example/+page.svelte: the
-	// real app derives these from the URL and hands them down as props, GraphRenderer never reads
-	// the URL itself. Component tests reproduce that wiring here so the view-switch race between
-	// GraphDecorators' dropdown and GraphRenderer's reactive effect is exercised for real.
+	// Mirrors src/routes/graph/example/+page.svelte: the route puts the loaded graph in the graph
+	// store and derives `view`/`lectureID` from the URL, handing those down as props. GraphRenderer
+	// reads the graph from the store and never reads the URL itself. Component tests reproduce that
+	// wiring here so the view-switch race between GraphDecorators' dropdown and GraphRenderer's
+	// reactive effect is exercised for real.
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
 	import { page } from '$app/state';
-	import type { PrismaGraphPayload } from '$lib/d3/types';
+	import { setGraphStore } from '$lib/graph/graphStore.svelte';
+	import type { RenderableGraph } from '$lib/graph/renderablePayload';
 
-	type Props = { data: PrismaGraphPayload };
+	type Props = { data: RenderableGraph };
 
 	let { data }: Props = $props();
+
+	setGraphStore(() => data);
 
 	let lectureID = $derived(Number(page.url.searchParams.get('lectureID')) || null);
 	let view = $derived.by(() => {
@@ -20,4 +24,4 @@
 	});
 </script>
 
-<GraphRenderer {data} editable={false} builtInViewDropdown={true} {view} {lectureID} />
+<GraphRenderer editable={false} builtInViewDropdown={true} {view} {lectureID} />

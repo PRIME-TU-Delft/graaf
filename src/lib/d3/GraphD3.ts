@@ -1,7 +1,6 @@
 import * as settings from '$lib/settings';
 import * as d3 from 'd3';
 
-import { NodeType } from './types';
 import { BackgroundToolbox } from './BackgroundToolbox';
 import { CameraToolbox } from './CameraToolbox';
 import { EdgeToolbox } from './EdgeToolbox';
@@ -15,11 +14,11 @@ import { graphView, GraphView } from './GraphD3View.svelte';
 import type {
 	DefsSelection,
 	EdgeData,
+	GraphCanvas,
 	GraphData,
 	GroupSelection,
 	LectureData,
 	NodeData,
-	PrismaGraphPayload,
 	SavePositions,
 	SVGSelection
 } from './types';
@@ -30,10 +29,18 @@ import type {
  * the various Toolbox modules (BackgroundToolbox, NodeToolbox, EdgeToolbox, OverlayToolbox,
  * CameraToolbox, TransitionToolbox). One instance is created per mounted graph canvas; the
  * Svelte 5 bridge in GraphD3State.svelte.ts / graphD3.svelte.ts exposes it to component code.
+ *
+ * The canvas does not own its data. The graph store builds every GraphData it renders (see
+ * projectGraphData) and pushes a new one through `applyData` whenever the graph changes, and the
+ * positions this canvas moves go back to the store through `positionSink`.
  */
-export class GraphD3 {
+export class GraphD3 implements GraphCanvas {
 	data: GraphData;
 	editable: boolean;
+
+	/** Called with the nodes that moved, whenever a drag or the force simulation settles them
+	 *  somewhere new. Supplied by whoever mounts the canvas; undefined in the read-only viewer. */
+	savePositions?: SavePositions;
 
 	svg: SVGSelection;
 	background: GroupSelection;
@@ -47,18 +54,22 @@ export class GraphD3 {
 	zoom_lock = true;
 	lecture: LectureData | null = null;
 	keys: Record<string, boolean> = {};
-	data_backup: GraphData | null = null;
-	savePositions?: SavePositions;
+
+	/** Node positions from before the simulation started, so resetSimulation can put them back.
+	 *  Keyed by node uuid: a snapshot of positions, not a copy of the graph, so the reference
+	 *  identity the renderers depend on is never at stake. */
+	private position_backup: Map<string, { x: number; y: number }> | null = null;
+
+	/** A projection that arrived while a view transition was running, applied once it finishes. */
+	private pending_data: { data: GraphData; recenter: boolean } | null = null;
 
 	/**
-	 * Build a new graph canvas: formats the Prisma payload into simulation-ready data, sets up
-	 * the SVG layer structure (defs/background/content/overlay), the force simulation, and
-	 * zoom/pan, then snaps the camera into the requested initial view. Clears any existing
-	 * content in `element` first.
+	 * Build a new graph canvas: sets up the SVG layer structure (defs/background/content/overlay),
+	 * the force simulation, and zoom/pan, then snaps the camera into the requested initial view.
+	 * Clears any existing content in `element` first.
 	 *
 	 * @param element - The `<svg>` element to render into
-	 * @param payload - The raw Prisma graph payload (domains, subjects, lectures and their
-	 * relations) to format and render
+	 * @param data - The graph data to render, as projected by the graph store
 	 * @param editable - Whether the graph is being viewed in the authenticated editor (enables
 	 * dragging/editing interactions) or the read-only public viewer
 	 * @param view - Which of domains/subjects/lectures to open on
@@ -68,7 +79,7 @@ export class GraphD3 {
 	 */
 	constructor(
 		element: SVGSVGElement,
-		payload: PrismaGraphPayload,
+		data: GraphData,
 		editable: boolean,
 		view: GraphView = GraphView.domains,
 		lectureId: number | null = null,
@@ -82,8 +93,7 @@ export class GraphD3 {
 			this.zoom_lock = false;
 		}
 
-		// Format data
-		this.data = this.formatPayload(payload);
+		this.data = data;
 
 		switch (view) {
 			case GraphView.domains:
@@ -184,25 +194,42 @@ export class GraphD3 {
 	}
 
 	/**
-	 * Replace the current graph data and re-render the active view. No-op while a view
-	 * transition is in progress; stops any running simulation first.
+	 * Render a new projection of the graph. The camera stays where the user left it and nodes that
+	 * survive the update keep their on-screen position, so an edit elsewhere in the editor does not
+	 * disturb what is on the canvas.
 	 *
-	 * @param data - The new graph data to render
-	 * @param animateCamera - Whether the camera should animate to the new layout (domains/
-	 * subjects views only) rather than snapping instantly
+	 * Deferred while a view transition is running, since a transition animates the data it started
+	 * with; the last projection to arrive is applied once the transition finishes.
+	 *
+	 * @param data - The projection to render, built by the graph store
+	 * @param options - `recenter` animates the camera to frame the new data, for when the canvas is
+	 * handed a different graph rather than an update of the one it is showing
 	 */
-	setData(data: GraphData, animateCamera: boolean) {
-		if (graphState.isTransitioning()) return;
-		if (graphState.isSimulating()) this.stopSimulation();
+	applyData(data: GraphData, { recenter = false }: { recenter?: boolean } = {}) {
+		if (graphState.isTransitioning()) {
+			this.pending_data = { data, recenter };
+			setTimeout(() => this.applyPendingData(), settings.GRAPH_ANIMATION_DURATION);
+			return;
+		}
 
+		this.carryOverPositions(data);
 		this.data = data;
 
-		if (graphView.isDomains()) TransitionToolbox.snapToDomains(this, animateCamera);
-		else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this, animateCamera);
-		else if (graphView.isLectures()) TransitionToolbox.snapToLectures(this);
+		// Every projection builds fresh LectureData objects, so the focused lecture has to be
+		// looked up again: the renderers test lecture membership by reference
+		const focused = this.lecture;
+		if (focused) {
+			this.lecture = data.lectures.find((lecture) => lecture.id === focused.id) ?? null;
+		}
 
-		// Save new data
-		this.content.selectAll<SVGGElement, NodeData>('.node').call(NodeToolbox.save, this);
+		if (recenter) {
+			if (graphView.isDomains()) TransitionToolbox.snapToDomains(this, true);
+			else if (graphView.isSubjects()) TransitionToolbox.snapToSubjects(this, true);
+			else TransitionToolbox.snapToLectures(this);
+			return;
+		}
+
+		TransitionToolbox.refreshContent(this);
 	}
 
 	/**
@@ -262,6 +289,21 @@ export class GraphD3 {
 	}
 
 	/**
+	 * Focus the lecture with the given id, or clear the focus. Takes an id rather than a
+	 * LectureData because callers know the id (it lives in the URL) while the LectureData objects
+	 * belong to whichever projection is currently rendered. No-op if that lecture is already
+	 * focused.
+	 *
+	 * @param id - The lecture to focus, or null to clear the focused lecture
+	 */
+	setLectureById(id: number | null) {
+		if ((this.lecture?.id ?? null) === id) return;
+
+		const lecture = id === null ? null : (this.data.lectures.find((l) => l.id === id) ?? null);
+		this.setLecture(lecture);
+	}
+
+	/**
 	 * Animate the camera one zoom step in (by `settings.ZOOM_STEP`). No-op if zoom/pan is
 	 * currently disallowed.
 	 */
@@ -295,14 +337,16 @@ export class GraphD3 {
 
 	/**
 	 * Start the force simulation, releasing all fixed nodes so they can move freely. No-op
-	 * unless the graph is currently idle. Backs up the current data first so resetSimulation
-	 * can restore it.
+	 * unless the graph is currently idle. Snapshots the current node positions first, so
+	 * resetSimulation can put them back.
 	 */
 	startSimulation() {
 		if (!graphState.isIdle()) return;
 
-		// Copy data
-		this.data_backup = structuredClone(this.data); // Deeply clone graph date before simulating
+		// Remember where every node was, so an abandoned simulation can be undone
+		this.position_backup = new Map(
+			this.nodes().map((node) => [node.uuid, { x: node.x, y: node.y }])
+		);
 
 		// Release all nodes
 		this.content
@@ -316,21 +360,43 @@ export class GraphD3 {
 	}
 
 	/**
-	 * Discard the in-progress simulation and restore the data captured by startSimulation.
-	 * No-op unless the graph is currently simulating.
+	 * Discard the in-progress simulation, move every node back to where it was when
+	 * startSimulation ran, and persist that so the database matches what is on screen. No-op
+	 * unless the graph is currently simulating.
 	 *
-	 * @throws If no backup data exists (should not happen if startSimulation always ran first)
+	 * @throws If no snapshot exists (should not happen if startSimulation always ran first)
 	 */
 	resetSimulation() {
 		if (!graphState.isSimulating()) return;
 
-		// Restore data
-		if (this.data_backup) {
-			this.setData(this.data_backup, true);
-			this.data_backup = null;
-		} else {
-			throw new Error('No backup data available to reset simulation');
+		const backup = this.position_backup;
+		if (!backup) {
+			throw new Error('No backup positions available to reset simulation');
 		}
+
+		// Restore positions on the node objects the nodes and edges are rendered from
+		for (const node of this.nodes()) {
+			const position = backup.get(node.uuid);
+			if (!position) continue;
+
+			node.x = position.x;
+			node.y = position.y;
+			node.fx = position.x;
+			node.fy = position.y;
+		}
+
+		this.simulation.stop();
+		this.position_backup = null;
+		graphState.toIdle();
+
+		// Pin every node at its restored position and save that. Going through stopSimulation here
+		// would instead save the positions the abandoned simulation had reached.
+		const nodes = this.content.selectAll<SVGGElement, NodeData>('.node');
+		nodes.call(NodeToolbox.setFixed, this, true);
+		NodeToolbox.updatePosition(nodes, this, true);
+		NodeToolbox.save(nodes, this);
+
+		this.centerOnGraph();
 	}
 
 	/**
@@ -350,7 +416,7 @@ export class GraphD3 {
 		this.simulation.stop();
 
 		// Cleanup
-		this.data_backup = null;
+		this.position_backup = null;
 		this.centerOnGraph();
 		graphState.toIdle();
 	}
@@ -385,198 +451,50 @@ export class GraphD3 {
 
 	// -----------------------------> Private methods
 
+	/** Every node in the current data, domains and subjects together. */
+	private nodes(): NodeData[] {
+		return [...this.data.domain_nodes, ...this.data.subject_nodes];
+	}
+
 	/**
-	 * Convert a raw Prisma graph payload into the flat, id-linked GraphData shape the D3
-	 * simulation and renderers work with: domain/subject nodes get a `uuid` (prefixed to keep
-	 * domain and subject ids from colliding), relations become edge objects referencing the
-	 * actual node objects (not just ids), and each lecture gets its subjects partitioned into
-	 * past/present/future by walking the subject edge graph outward from that lecture's subjects.
+	 * Copy the live position of every rendered node onto its counterpart in `data`, so applying a
+	 * new projection does not yank nodes back to whatever positions the last load carried. Nodes
+	 * that are not currently rendered keep the projection's positions, which the store holds
+	 * current through persistPositions.
 	 *
-	 * @param data - The raw payload, as loaded from Prisma with domains/subjects/lectures and
-	 * their relations included
-	 * @returns The formatted GraphData
-	 * @throws If a relation or lecture references a domain/subject id that isn't present in
-	 * `data` (indicates corrupt or incomplete input data)
+	 * @param data - The incoming projection, mutated in place
 	 */
-	private formatPayload(data: PrismaGraphPayload): GraphData {
-		// NOTE: This function is a bit of a mess, but it's the best way I could think of to format the data.
-		//       It would be wonderful if the prisma schema would more closely match the required format.
+	private carryOverPositions(data: GraphData) {
+		const rendered = new Map<string, NodeData>();
+		this.content.selectAll<SVGGElement, NodeData>('.node').each(function (node) {
+			rendered.set(node.uuid, node);
+		});
 
-		const graph: GraphData = {
-			domain_nodes: [],
-			domain_edges: [],
-			subject_nodes: [],
-			subject_edges: [],
-			lectures: []
-		};
+		for (const node of [...data.domain_nodes, ...data.subject_nodes]) {
+			const current = rendered.get(node.uuid);
+			if (current === undefined) continue;
 
-		// Extract domain data
-		const domain_map = new Map<number, NodeData>();
-		for (const domain of data.domains) {
-			const node_data = {
-				id: domain.id,
-				uuid: 'domain-' + domain.id, // Prefix to avoid id conflicts between domains and subjects
-				type: NodeType.DOMAIN,
-				style: domain.style,
-				text: domain.name,
-				x: domain.x,
-				y: domain.y,
-				fx: domain.x,
-				fy: domain.y
-			};
+			node.x = current.x;
+			node.y = current.y;
+			node.fx = current.fx;
+			node.fy = current.fy;
+		}
+	}
 
-			domain_map.set(domain.id, node_data);
-			graph.domain_nodes.push(node_data);
+	/**
+	 * Apply the projection that arrived mid-transition, or wait one more animation out if the
+	 * canvas is still transitioning.
+	 */
+	private applyPendingData() {
+		const pending = this.pending_data;
+		if (pending === null) return;
+
+		if (graphState.isTransitioning()) {
+			setTimeout(() => this.applyPendingData(), settings.GRAPH_ANIMATION_DURATION);
+			return;
 		}
 
-		// Extract domain edge data
-		for (const source of data.domains) {
-			for (const target of source.targetDomains) {
-				// Get source and target nodes
-				const source_node = domain_map.get(source.id);
-				const target_node = domain_map.get(target.id);
-				if (source_node === undefined || target_node === undefined) {
-					throw new Error('Invalid graph data'); // Occurs when a domain has non-existent source/target domains
-				}
-
-				// Add edge to graph
-				graph.domain_edges.push({
-					uuid: `domain-${source.id}-${target.id}`, // Unique edge id from source and target ids
-					source: source_node,
-					target: target_node
-				});
-			}
-		}
-
-		// Extract subject data
-		const subject_map = new Map<number, NodeData>();
-		for (const subject of data.subjects) {
-			let domain_node = undefined;
-			if (subject.domainId) {
-				domain_node = domain_map.get(subject.domainId);
-				if (domain_node === undefined) {
-					throw new Error('Invalid graph data'); // Occurs when a subject has a non-existent domain
-				}
-			}
-
-			const node_data = {
-				id: subject.id,
-				uuid: 'subject-' + subject.id, // Prefix to avoid id conflicts between domains and subjects
-				type: NodeType.SUBJECT,
-				style: domain_node?.style ?? null,
-				text: subject.name,
-				parent: domain_node,
-				x: subject.x,
-				y: subject.y,
-				fx: subject.x,
-				fy: subject.y
-			};
-
-			subject_map.set(subject.id, node_data);
-			graph.subject_nodes.push(node_data);
-		}
-
-		// Extract subject edge data
-		const forward_edge_map = new Map<number, EdgeData[]>(); // Forward and reverse edges are mapped so lectures can find…
-		const reverse_edge_map = new Map<number, EdgeData[]>(); // …past and future subjects more easily
-
-		for (const source of data.subjects) {
-			for (const target of source.targetSubjects) {
-				// Get source and target nodes
-				const source_node = subject_map.get(source.id);
-				const target_node = subject_map.get(target.id);
-				if (source_node === undefined || target_node === undefined) {
-					throw new Error('Invalid graph data'); // Occurs when a subject has non-existent source/target subjects
-				}
-
-				// Create edge data
-				const edge = {
-					uuid: `subject-${source.id}-${target.id}`, // Unique edge id from source and target ids
-					source: source_node,
-					target: target_node
-				};
-
-				// Update subject edge map
-				const forward_edges = forward_edge_map.get(source.id) || [];
-				forward_edges.push(edge);
-				forward_edge_map.set(source.id, forward_edges);
-
-				// Update reverse subject edge map
-				const reverse_edges = reverse_edge_map.get(target.id) || [];
-				reverse_edges.push(edge);
-				reverse_edge_map.set(target.id, reverse_edges);
-
-				// Add edge to graph and edge map
-				graph.subject_edges.push(edge);
-			}
-		}
-
-		// Extract lecture data
-		for (const lecture of data.lectures) {
-			const lecture_data: LectureData = {
-				id: lecture.id,
-				name: lecture.name,
-				past_nodes: [],
-				present_nodes: [],
-				future_nodes: [],
-				domains: [],
-				nodes: [],
-				edges: []
-			};
-
-			// Get present nodes
-			for (const subject of lecture.subjects) {
-				const subject_node = subject_map.get(subject.id);
-				if (subject_node === undefined) throw new Error('Invalid graph data'); // Occurs when a lecture has non-existent subjects
-				lecture_data.present_nodes.push(subject_node);
-				lecture_data.nodes.push(subject_node);
-
-				// Get parent domain
-				if (subject_node.parent) {
-					lecture_data.domains.push(subject_node.parent);
-				}
-			}
-
-			// Gather past and future nodes and edges
-			for (const subject of lecture.subjects) {
-				// Gather past nodes and edges
-				const source_edges = reverse_edge_map.get(subject.id);
-				if (source_edges) {
-					for (const edge of source_edges.values()) {
-						if (
-							lecture_data.past_nodes.includes(edge.source) ||
-							lecture_data.present_nodes.includes(edge.source) ||
-							lecture_data.future_nodes.includes(edge.source)
-						)
-							continue; // Avoid duplicates
-
-						lecture_data.past_nodes.push(edge.source);
-						lecture_data.nodes.push(edge.source);
-						lecture_data.edges.push(edge);
-					}
-				}
-
-				// Gather future nodes and edges
-				const target_edges = forward_edge_map.get(subject.id);
-				if (target_edges) {
-					for (const edge of target_edges.values()) {
-						if (
-							lecture_data.past_nodes.includes(edge.target) ||
-							lecture_data.present_nodes.includes(edge.target) ||
-							lecture_data.future_nodes.includes(edge.target)
-						)
-							continue; // Avoid duplicates
-
-						lecture_data.future_nodes.push(edge.target);
-						lecture_data.nodes.push(edge.target);
-						lecture_data.edges.push(edge);
-					}
-				}
-			}
-
-			graph.lectures.push(lecture_data);
-		}
-
-		return graph;
+		this.pending_data = null;
+		this.applyData(pending.data, { recenter: pending.recenter });
 	}
 }

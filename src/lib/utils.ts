@@ -34,3 +34,8 @@ export type WithoutChild<T> = T extends { child?: any } ? Omit<T, 'child'> : T;
 export type WithoutChildren<T> = T extends { children?: any } ? Omit<T, 'children'> : T;
 export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & { ref?: U | null };
+
+/** The ids of a list of rows, in order, as the reorder endpoints and the store expect them. */
+export function idsOf(items: { id: number }[]) {
+	return items.map((item) => item.id);
+}
