@@ -60,7 +60,7 @@
 	{/if}
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Super Users</h2>
 	<p>Super Users are the admins and editors of a course.</p>
 	<ul class="text-sm">
@@ -85,7 +85,7 @@
 	/>
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Graphs</h2>
 	<p>
 		Graphs are the bread and butter of the Graph Editor! Here you can structure the information in
@@ -98,6 +98,8 @@
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
+		linkViews={data.linkViews}
+		showAnalytics={true}
 		getLinkURL={(link) => `${page.url.origin}/graph/${data.course.uriCode}/${link.name}`}
 		hasAtLeastAdminPermission={hasCoursePermissions(
 			data.user,
@@ -107,7 +109,7 @@
 	/>
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Programs</h2>
 	<p>
 		This course is part of {data.course.programs.length} program{data.course.programs.length == 1
@@ -136,7 +138,7 @@
 {#if hasCoursePermissions(data.user, data.course, 'CourseAdminORProgramAdminEditor')}
 	<section
 		id="danger-zone"
-		class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+		class="prose mx-auto my-12 max-w-4xl space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 	>
 		<h2 class="text-red-950">Danger zone</h2>
 		<div class="flex items-center gap-2">

@@ -29,7 +29,7 @@
 	<EditSandbox />
 </section>
 
-<section class="prose container mx-auto mt-8 p-4">
+<section class="prose mx-auto mt-8 max-w-4xl p-4">
 	<h2 class="m-0">Sandbox Editors</h2>
 
 	<p>
@@ -40,7 +40,7 @@
 	<EditorTable sandbox={data.sandbox} />
 </section>
 
-<section class="prose mx-auto p-4">
+<section class="prose mx-auto max-w-4xl p-4">
 	<h2>Graphs</h2>
 	<p>
 		Graphs are the bread and butter of the Graph Editor! They are perfect for structuring
@@ -55,6 +55,7 @@
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
+		showAnalytics={false}
 		getLinkURL={(link) => `${page.url.origin}/graph/${data.sandbox.uriCode}/${link.name}`}
 		hasAtLeastAdminPermission={hasSandboxPermissions(data.user, data.sandbox, 'Owner')}
 	/>
@@ -62,7 +63,7 @@
 
 <section
 	id="danger-zone"
-	class="prose mx-auto my-12 space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
+	class="prose mx-auto my-12 max-w-4xl space-y-2 border-y-2 border-red-700/50 bg-red-100/50 p-4 text-red-900 shadow-red-900/70 sm:rounded-lg sm:border-2 sm:shadow"
 >
 	<h2 class="text-red-950">Danger zone</h2>
 	<div class="flex items-center gap-2">
