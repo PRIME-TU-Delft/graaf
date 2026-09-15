@@ -2,13 +2,14 @@ import prisma from '$lib/server/db/prisma';
 import {
 	changeSubjectRelSchema,
 	deleteSubjectSchema,
+	reorderSubjectsSchema,
 	subjectRelSchema,
 	subjectSchema
 } from '$lib/zod/subjectSchema';
 import type { Prisma, User } from '@prisma/client';
-import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms';
+import { setError, type Infer, type SuperValidated } from 'sveltekit-superforms/server';
 import { whereHasGraphCoursePermission } from '../permissions';
-import { withPermissionCheck } from './permissionError';
+import { withGuardedMutation } from './guardedMutation';
 
 /** Server actions for creating, editing, and deleting subjects within a graph, and for
  * creating/removing relations between subjects. Called from form actions in `+page.server.ts`
@@ -26,7 +27,7 @@ export class SubjectActions {
 	 * via setError instead of throwing.
 	 */
 	static async addSubjectToGraph(user: User, form: SuperValidated<Infer<typeof subjectSchema>>) {
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			async () => {
 				const lastSubject = await prisma.subject.findFirst({
 					where: {
@@ -107,7 +108,7 @@ export class SubjectActions {
 			}
 		});
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction([...removeTargetFromSource, ...removeSourceFromTarget, deleteSubject]),
 			form,
@@ -131,7 +132,7 @@ export class SubjectActions {
 			return setError(form, 'name', 'Invalid subject id, cannot be 0');
 		}
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.graph.update({
 					where: {
@@ -157,6 +158,45 @@ export class SubjectActions {
 	}
 
 	/**
+	 * Reorder the subjects in a graph. `subjectIds` is the graph's subject ids in their new
+	 * display order; each subject's `order` is set to its index in that list. Runs as a single
+	 * nested write, so the whole reorder either applies or none of it does.
+	 *
+	 * @param user - The user performing the action, must have course or program admin/editor rights
+	 * @param form - Validated form data with the graphId and the reordered subjectIds
+	 * @returns Nothing on success. On invalid input, an id that isn't in this graph, or missing
+	 * permission, returns the form with a `subjectIds._errors`-field error via setError instead
+	 * of throwing.
+	 */
+	static async reorderSubjects(
+		user: User,
+		form: SuperValidated<Infer<typeof reorderSubjectsSchema>>
+	) {
+		if (!form.valid) return setError(form, 'subjectIds._errors', 'Invalid subject order');
+
+		return await withGuardedMutation(
+			() =>
+				prisma.graph.update({
+					where: {
+						id: form.data.graphId,
+						...whereHasGraphCoursePermission(user, 'CourseAdminEditorORProgramAdminEditor')
+					},
+					data: {
+						subjects: {
+							update: form.data.subjectIds.map((id, order) => ({
+								where: { id },
+								data: { order }
+							}))
+						}
+					}
+				}),
+			form,
+			'subjectIds._errors',
+			{ entity: 'Graph', message: "You don't have permission to reorder these subjects" }
+		);
+	}
+
+	/**
 	 * Create a directed relation between two subjects in the same graph (inId -> outId), used by
 	 * both addSubjectRel and changeSubjectRel.
 	 *
@@ -167,7 +207,8 @@ export class SubjectActions {
 	 * @param tx - The Prisma client or transaction client to run the queries against, defaults to
 	 * the shared client
 	 * @returns The updated graph
-	 * @throws If the subjects are already connected, or if the user lacks permission
+	 * @throws If inId and outId are the same subject, if the subjects are already connected, or if
+	 * the user lacks permission
 	 */
 	private static async connectSubjects(
 		graphId: number,
@@ -176,6 +217,10 @@ export class SubjectActions {
 		outId: number,
 		tx: Prisma.TransactionClient = prisma
 	) {
+		if (inId === outId) {
+			throw new Error('A subject cannot be connected to itself');
+		}
+
 		// Check if the subjecs are already connected
 		const isConnected = await tx.subject.findFirst({
 			where: {
@@ -226,7 +271,7 @@ export class SubjectActions {
 	static async addSubjectRel(user: User, form: SuperValidated<Infer<typeof subjectRelSchema>>) {
 		if (!form.valid) return setError(form, '', 'Invalid subject relationship');
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() => {
 				const sourceId = form.data.sourceSubjectId;
 				const targetId = form.data.targetSubjectId;
@@ -325,7 +370,7 @@ export class SubjectActions {
 	) {
 		if (!form.valid) return setError(form, '', form.message);
 
-		return await withPermissionCheck(
+		return await withGuardedMutation(
 			() =>
 				prisma.$transaction(async (tx) => {
 					await SubjectActions.disconnectSubjects(

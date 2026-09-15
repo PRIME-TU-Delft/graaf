@@ -87,6 +87,23 @@ export function whereHasGraphCoursePermission(user: User, has: CoursePermissions
 }
 
 /**
+ * Is a wrapper for whereHasSandboxPermission to be used in
+ * for queries that start with `prisma.graph.findFirst` or other sandbox-scoped graph operations
+ * @param user - User
+ * @param has - SandboxPermissionOptions
+ * @returns A json object that can be used in a Prisma graph where query
+ */
+export function whereHasGraphSandboxPermission(user: User, has: SandboxPermissionOptions) {
+	if (user.role == 'ADMIN') return {};
+
+	return {
+		sandbox: {
+			...whereHasSandboxPermission(user, has)
+		}
+	};
+}
+
+/**
  * Check if the user has permissions to edit the sandbox
  * @param user - User
  * @param has - SandboxPermissionOptions, 'Owner' restricts to the sandbox owner only,

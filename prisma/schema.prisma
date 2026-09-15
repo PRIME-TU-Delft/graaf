@@ -110,8 +110,10 @@ model Course {
 }
 
 model Sandbox {
-	id   Int    @id @default(autoincrement())
-	name String
+	id      Int    @id @default(autoincrement())
+	name    String
+	code    String @unique
+	uriCode String @unique
 
 	owner   User    @relation("SandboxOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 	editors User[]  @relation("SandboxEditor")
@@ -150,6 +152,7 @@ model Link {
 	updatedAt DateTime @updatedAt
 
 	@@unique([courseId, name])
+	@@unique([sandboxId, name])
 }
 
 // Aggregate view counts per link per week. Weeks are UTC Monday-start dates, as produced by
@@ -238,10 +241,11 @@ model Subject {
 }
 
 model Lecture {
-	id      Int    @id @default(autoincrement())
-	name    String @default("")
-	order   Int
-	graphId Int
+	id           Int    @id @default(autoincrement())
+	name         String @default("")
+	order        Int
+	subjectOrder Int[]  @default([]) // Display order of `subjects` within this lecture, as subject ids
+	graphId      Int
 
 	graph    Graph     @relation("GraphLecture", fields: [graphId], references: [id], onDelete: Cascade)
 	subjects Subject[] @relation("LectureSubject")

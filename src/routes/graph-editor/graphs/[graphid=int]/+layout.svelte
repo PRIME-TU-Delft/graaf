@@ -8,6 +8,7 @@
 	import { Check, ChevronDown, GripVertical } from '@lucide/svelte';
 	import { Pane, PaneGroup, PaneResizer } from 'paneforge';
 	import GraphRenderer from '$lib/components/GraphRenderer.svelte';
+	import Help from '$lib/components/Help.svelte';
 	import { graphState } from '$lib/d3/GraphD3State.svelte';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
@@ -54,7 +55,13 @@
 	function capitalize(str: string) {
 		return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 	}
+
+	const manualPageForView = $derived(
+		view === 'DOMAINS' ? 'domains' : view === 'SUBJECTS' ? 'subjects' : 'lectures'
+	);
 </script>
+
+<Help page={manualPageForView} />
 
 <div class="mx-auto max-w-[100rem]">
 	<PaneGroup direction="horizontal" autoSaveId="panels" class="w-full !overflow-visible">

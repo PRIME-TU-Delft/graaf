@@ -1,38 +1,38 @@
 import { GraphActions } from '$lib/server/actions/Graphs';
 import { LinkViewActions } from '$lib/server/actions/LinkViews';
 import { error, isHttpError, type ServerLoad } from '@sveltejs/kit';
+import type { Prisma } from '@prisma/client';
 
 export const load: ServerLoad = async ({ params }) => {
-	const courseCode = params.code;
+	const code = params.code;
 	const alias = params.alias;
 
-	if (!courseCode || !alias) {
-		throw new Error('Course code and alias are required');
+	if (!code || !alias) {
+		throw new Error('Code and alias are required');
 	}
+
+	const uriCode = encodeURIComponent(code);
+	const lookupByParent = (parent: Prisma.GraphWhereInput) =>
+		GraphActions.getRenderablePayload(
+			{ ...parent, links: { some: { name: alias } } },
+			{
+				// The link that resolved this page, so its view can be counted below
+				links: { where: { name: alias }, select: { id: true } }
+			}
+		);
 
 	let graph;
 	try {
-		graph = await GraphActions.getRenderablePayload(
-			{
-				course: {
-					uriCode: encodeURIComponent(courseCode)
-				},
-				links: {
-					some: {
-						name: alias
-					}
-				}
-			},
-			{
-				// The link that resolved this page, so its view can be counted below
-				links: {
-					where: { name: alias },
-					select: { id: true }
-				}
-			}
-		);
+		graph = await lookupByParent({ course: { uriCode } });
+
+		// A course code always wins over a sandbox code of the same value, so the sandbox lookup
+		// only runs once the course lookup has come back empty.
+		if (!graph) {
+			graph = await lookupByParent({ sandbox: { uriCode } });
+		}
 	} catch (e: unknown) {
 		if (isHttpError(e)) throw e;
+		console.error(e);
 		error(500, { message: e instanceof Error ? e.message : `${e}` });
 	}
 

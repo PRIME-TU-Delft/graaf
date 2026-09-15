@@ -26,7 +26,7 @@ pnpm prisma:studio         # inspect the local db
 
 Local Postgres: `cd db && podman compose up db` (or `docker compose up db`), then `pnpm prisma db push` and `pnpm prisma db seed`. `NETLIFY_CONTEXT=DEPLOY_PREVIEW pnpm run dev` runs app with auth disabled, cookie-based test users (see `hooks.server.ts`).
 
-Single unit test file: `pnpm vitest run path/to/file.test.ts`. Integration tests live under `src/lib/server/actions/tests/**/*.test.ts` (not present yet this checkout), run sequentially (`fileParallelism: false`) against real Postgres — not mocked.
+Single unit test file: `pnpm vitest run path/to/file.test.ts`. Integration tests live under `src/lib/server/actions/tests/**/*.test.ts`, run sequentially (`fileParallelism: false`) against real Postgres — not mocked.
 
 ## Architecture
 

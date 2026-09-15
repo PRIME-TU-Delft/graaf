@@ -4,7 +4,9 @@ import type { Course } from '@prisma/client';
 import type { ColumnDef } from '@tanstack/table-core';
 import VisitCourse from './VisitCourse.svelte';
 
-export const columns: ColumnDef<Course>[] = [
+export type UnlinkCandidate = Course & { linkable: boolean; reason?: string };
+
+export const columns: ColumnDef<UnlinkCandidate>[] = [
 	{
 		id: 'select',
 		header: ({ table }) =>
@@ -17,6 +19,7 @@ export const columns: ColumnDef<Course>[] = [
 		cell: ({ row }) =>
 			renderComponent(Checkbox, {
 				checked: row.getIsSelected(),
+				disabled: !row.original.linkable,
 				// onCheckedChange: (value) => row.toggleSelected(value),
 				'aria-label': 'Select row'
 			}),
@@ -35,5 +38,10 @@ export const columns: ColumnDef<Course>[] = [
 		id: 'visit',
 		cell: ({ row }) =>
 			renderComponent(VisitCourse, { href: `/graph-editor/courses/${row.original.code}` })
+	},
+	{
+		id: 'reason',
+		header: '',
+		cell: ({ row }) => row.original.reason ?? ''
 	}
 ];

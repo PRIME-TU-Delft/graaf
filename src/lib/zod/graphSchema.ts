@@ -20,3 +20,15 @@ export const duplicateGraphSchema = z.object({
 	destinationType: z.enum(['SANDBOX', 'COURSE']),
 	destinationId: z.number().min(1)
 });
+
+const nodePositionSchema = z.object({
+	id: z.number(),
+	x: z.number().int(),
+	y: z.number().int()
+});
+
+export const nodePositionsSchema = z.object({
+	graphId: z.number().min(1),
+	domains: z.array(nodePositionSchema),
+	subjects: z.array(nodePositionSchema)
+});

@@ -36,7 +36,8 @@
 		getLinkURL: (link: Link) => string;
 		hasAtLeastAdminPermission: boolean;
 		/** Whether to show view counts, the analytics popup and the stale filter. Off for
-		 * sandboxes, whose links have no public URL and so can never collect a view. */
+		 * sandboxes: getWeeklyViews only returns buckets for links reachable through a course,
+		 * so a sandbox link would read as permanently stale with an empty popup. */
 		showAnalytics: boolean;
 		linkViews?: LinkViewWeek[];
 	};
@@ -106,9 +107,7 @@
 {/if}
 
 <div class="rounded-md border">
-	<!-- min-width keeps the rows readable on narrow screens: Table.Root's own container scrolls
-	     instead of squeezing the link URL and the action buttons into each other -->
-	<Table.Root class="!m-0 min-w-[42rem]">
+	<Table.Root class="!m-0">
 		<Table.Header>
 			<!-- Rows here are not clickable, so none of them tint on hover. Table.Row ships a hover
 			     tint, which each row cancels by restating its own background for the hover state. -->
@@ -134,7 +133,7 @@
 					<Table.Row
 						class="bg-purple-50/50 odd:bg-purple-100/50 hover:bg-purple-50/50 odd:hover:bg-purple-100/50"
 					>
-						<Table.Cell class="pl-8 text-xs">
+						<Table.Cell class="pl-8 text-xs break-all whitespace-normal">
 							<span class="block">{getLinkURL(link)}</span>
 							{#if showAnalytics}
 								<span class="mt-1 flex items-center gap-2 text-gray-500">

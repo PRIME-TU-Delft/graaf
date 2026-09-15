@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { hasSandboxPermissions } from '$lib/utils/permissions';
 
 	// Components
@@ -7,6 +8,7 @@
 	import GraphTable from '$lib/components/graphSettings/GraphTable.svelte';
 	import EditorTable from './superUsers/EditorTable.svelte';
 	import TransferOwnership from './TransferOwnership.svelte';
+	import Help from '$lib/components/Help.svelte';
 
 	// Icons
 	import type { PageData } from './$types';
@@ -17,6 +19,8 @@
 <svelte:head>
 	<title>{data.sandbox.name} Settings | PRIME Graph Editor</title>
 </svelte:head>
+
+<Help page="sandboxSettings" />
 
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
@@ -46,14 +50,13 @@
 		or <b>embeds</b> to share graphs with your friends.
 	</p>
 
-	<!-- TODO Placeholder for link URL -->
 	<GraphTable
 		graphs={data.sandbox.graphs}
 		editGraphForm={data.editGraphForm}
 		newLinkForm={data.newLinkForm}
 		editLinkForm={data.editLinkForm}
 		showAnalytics={false}
-		getLinkURL={() => `SANDBOX LINKS ARE NOT SUPPORTED YET`}
+		getLinkURL={(link) => `${page.url.origin}/graph/${data.sandbox.uriCode}/${link.name}`}
 		hasAtLeastAdminPermission={hasSandboxPermissions(data.user, data.sandbox, 'Owner')}
 	/>
 </section>

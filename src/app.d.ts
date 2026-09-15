@@ -6,6 +6,7 @@ declare global {
 		// interface Locals {}
 		interface PageData {
 			breadcrumbs?: import('$lib/utils/breadcrumbs').Breadcrumb[];
+			breadcrumbLeaf?: import('$lib/utils/breadcrumbs').Breadcrumb;
 		}
 		// interface PageState {}
 		// interface Platform {}
