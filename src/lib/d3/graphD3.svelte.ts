@@ -1,5 +1,5 @@
 import { GraphD3 } from '$lib/d3/GraphD3';
-import type { PrismaGraphPayload } from '$lib/d3/types';
+import type { PrismaGraphPayload, SavePositions } from '$lib/d3/types';
 
 /**
  * Holds the current GraphD3 instance as Svelte 5 rune-based reactive state, so components can
@@ -22,15 +22,18 @@ class GraphD3Store {
 	 * read-only public viewer
 	 * @param view - Which view to open on
 	 * @param lectureId - If provided, the lecture to focus when `view` is 'LECTURES'
+	 * @param savePositions - Called with the nodes that moved after a drag or the force
+	 * simulation settles. Omitted in the read-only public viewer.
 	 */
 	setGraphD3(
 		d3Canvas: SVGSVGElement,
 		payload: PrismaGraphPayload,
 		editable: boolean,
 		view: 'DOMAINS' | 'SUBJECTS' | 'LECTURES' = 'DOMAINS',
-		lectureId: number | null = null
+		lectureId: number | null = null,
+		savePositions?: SavePositions
 	) {
-		this.graphD3 = new GraphD3(d3Canvas, payload, editable, view, lectureId);
+		this.graphD3 = new GraphD3(d3Canvas, payload, editable, view, lectureId, savePositions);
 	}
 }
 

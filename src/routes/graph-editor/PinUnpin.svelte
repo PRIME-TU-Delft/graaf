@@ -54,7 +54,9 @@
 						disabled={$submitting}
 						loading={$delayed}
 						onclick={(e) => {
+							e.preventDefault();
 							e.stopPropagation();
+							(e.currentTarget as HTMLButtonElement).form?.requestSubmit();
 						}}
 						onsubmit={(e) => {
 							e.stopPropagation();

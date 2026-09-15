@@ -3,6 +3,7 @@
 	import { columns } from './courses/course-columns';
 
 	import DialogButton from '$lib/components/DialogButton.svelte';
+	import Help from '$lib/components/Help.svelte';
 	import SuperUserTable from './superUsers/SuperUserTable.svelte';
 	import CoursesTable from './courses/CoursesTable.svelte';
 	import EditProgramName from './EditProgramName.svelte';
@@ -18,6 +19,8 @@
 <svelte:head>
 	<title>{data.program.name} Settings | PRIME Graph Editor</title>
 </svelte:head>
+
+<Help page="programmeSettings" />
 
 <section
 	class="prose top-20 z-10 mx-auto mb-4 flex w-full items-center justify-between rounded-lg bg-purple-50/80 p-4 shadow-none shadow-purple-200/70 backdrop-blur sm:sticky sm:border sm:border-purple-200 sm:shadow-lg"
@@ -75,7 +78,7 @@
 	</p>
 
 	<CoursesTable
-		data={data.program?.courses}
+		data={data.programCourses}
 		program={data.program}
 		{columns}
 		courses={data.allCourses}

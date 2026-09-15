@@ -61,3 +61,14 @@ export const changeDomainRelSchema = z
 			message: 'This relationship already exists'
 		}
 	);
+
+export const reorderDomainsSchema = z.object({
+	graphId: z.number().nonnegative('Invalid graph id'),
+	domainIds: z.array(z.number())
+});
+
+export const domainStyleSchema = z.object({
+	graphId: z.number().nonnegative('Invalid graph id'),
+	domainId: z.number().min(1, 'Invalid domain id'),
+	style: z.enum(['', ...settings.COLOR_KEYS] as [string, ...string[]])
+});

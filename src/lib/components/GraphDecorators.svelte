@@ -118,7 +118,6 @@
 							disabled={graphState.isTransitioning()}
 							onclick={() => {
 								gotoView(tab);
-								graphD3.setView(tab);
 							}}
 						>
 							{capitalize(tab)}

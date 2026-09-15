@@ -9,6 +9,7 @@
 	import type { Subject } from '@prisma/client';
 	import Link from '@lucide/svelte/icons/link';
 	import { toast } from 'svelte-sonner';
+	import { superForm } from 'sveltekit-superforms';
 	import type { PageData } from './$types';
 
 	import IssueIndicator from '../IssueIndicator.svelte';
@@ -29,6 +30,38 @@
 	let graph = $state(data.graph);
 	$effect(() => {
 		graph = data.graph;
+	});
+
+	function revertSubjectOrder() {
+		graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
+		toast.error('Failed to update subject order, try again later!');
+	}
+
+	// Subject order is only ever shown in this list, never on the graph canvas, so this posts
+	// without invalidating: the rows are already in their new order and a refetch would rebuild
+	// the canvas for nothing.
+	// svelte-ignore state_referenced_locally
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm(data.reorderSubjectsForm, {
+		id: 'reorder-subjects',
+		dataType: 'json',
+		invalidateAll: false,
+		applyAction: false,
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (!form.valid) {
+				revertSubjectOrder();
+				return;
+			}
+
+			graph.subjects.forEach((subject, index) => {
+				subject.order = index;
+			});
+		},
+		onError: revertSubjectOrder
 	});
 
 	const issues = $derived(new GraphValidator(graph).validate());
@@ -53,33 +86,18 @@
 		graph.subjects = e.detail.items;
 	}
 
-	async function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
+	function handleDndFinalize(e: CustomEvent<{ items: Graph['subjects'] }>) {
 		graph.subjects = e.detail.items;
 
-		const body = graph.subjects.map((subject, index) => ({
-			subjectId: subject.id,
-			newOrder: index
-		}));
-
-		const response = await fetch('/api/subjects/order', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			// Reset the order of the domains
-			graph.subjects = graph.subjects.toSorted((a, b) => a.order - b.order);
-
-			toast.error('Failed to update subject order, try again later!');
-		} else {
-			// Update the order of the domains in the graph
-			graph.subjects.forEach((domain, index) => {
-				domain.order = index;
-			});
-		}
+		$reorderData = {
+			graphId: graph.id,
+			subjectIds: graph.subjects.map((subject) => subject.id)
+		};
+		submitReorder();
 	}
 </script>
+
+<form method="POST" action="?/reorder-subjects" use:reorderEnhance hidden></form>
 
 <svelte:head>
 	<title>{graph.name} Subjects | PRIME Graph Editor</title>
@@ -109,7 +127,7 @@
 			</Grid.Cell>
 
 			<Grid.Cell>
-				{subject.name}
+				<p class="m-0 truncate" title={subject.name}>{subject.name}</p>
 			</Grid.Cell>
 
 			<Grid.Cell>
@@ -167,7 +185,9 @@
 
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class={cn('relative w-full', buttonVariants({ variant: 'outline' }))}>
-			<span class="w-full text-left">{thisSubject.name}</span>
+			<span class="min-w-0 flex-1 truncate text-left" title={thisSubject.name}>
+				{thisSubject.name}
+			</span>
 			<ChevronRight />
 		</DropdownMenu.Trigger>
 		<DropdownMenu.Content class="max-h-96 max-w-64 overflow-y-auto p-0">

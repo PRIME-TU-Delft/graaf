@@ -11,7 +11,16 @@ export const newSandboxSchema = z.object({
 
 export const editSandboxSchema = z.object({
 	sandboxId: z.number(),
-	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH)
+	name: z.string().nonempty().max(settings.MAX_COURSE_NAME_LENGTH),
+	code: z
+		.string()
+		.trim()
+		.nonempty()
+		.max(settings.MAX_SANDBOX_CODE_LENGTH)
+		.regex(
+			settings.SANDBOX_CODE_REGEX,
+			'Sandbox code must be lowercase letters, numbers, and dashes'
+		)
 });
 
 export const deleteSandboxSchema = z.object({

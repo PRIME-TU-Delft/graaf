@@ -5,7 +5,10 @@
 	import { dragHandle, dragHandleZone, type DndEvent } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { flip } from 'svelte/animate';
+	import { page } from '$app/state';
+	import { superForm } from 'sveltekit-superforms';
 	import IssueIndicator from '../IssueIndicator.svelte';
+	import type { PageData } from './$types';
 
 	type Props = {
 		issues: { [key: number]: Issue[] };
@@ -21,40 +24,46 @@
 
 	const flipDurationMs = 300;
 
+	function revertSubjectOrder() {
+		lecture.subjects = subjectBackup;
+		toast.error('Error while reordering lectures');
+	}
+
+	// Unlike the lecture list itself, this order does show up on the graph canvas: the lectures
+	// view lays a lecture's subjects out in this order. So this form invalidates, and the canvas
+	// picks the new order up from the refreshed payload.
+	const {
+		form: reorderData,
+		enhance: reorderEnhance,
+		submit: submitReorder
+	} = superForm((page.data as PageData).reorderLectureSubjectsForm, {
+		id: `reorder-lecture-subjects-${lecture.id}`,
+		dataType: 'json',
+		resetForm: false,
+		onUpdated: ({ form }) => {
+			if (form.valid) subjectBackup = [...lecture.subjects];
+			else revertSubjectOrder();
+		},
+		onError: revertSubjectOrder
+	});
+
 	function handleDndConsider(e: CustomEvent<DndEvent<Subject>>): void {
 		lecture.subjects = e.detail.items;
 	}
 
-	async function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
-		// When there is a internal change of subject reorder
-		if (subjectBackup.length === e.detail.items.length) {
-			lecture.subjects = subjectBackup;
-			return;
-		}
-
+	function handleDndFinalize(e: CustomEvent<DndEvent<Subject>>) {
 		lecture.subjects = e.detail.items;
 
-		const body = {
-			name: lecture.name,
+		$reorderData = {
 			graphId: lecture.graphId,
 			lectureId: lecture.id,
 			subjectIds: e.detail.items.map((subject) => subject.id)
 		};
-
-		const response = await fetch('/api/lectures/order-subjects', {
-			method: 'PATCH',
-			body: JSON.stringify(body),
-			headers: { 'content-type': 'application/json' }
-		});
-
-		if (!response.ok) {
-			lecture.subjects = subjectBackup;
-			toast.error('Error while reordering lectures');
-		} else {
-			subjectBackup = lecture.subjects;
-		}
+		submitReorder();
 	}
 </script>
+
+<form method="POST" action="?/reorder-lecture-subjects" use:reorderEnhance hidden></form>
 
 <div
 	class="min-h-8 space-y-2 rounded bg-purple-100 p-1 !outline-purple-400"

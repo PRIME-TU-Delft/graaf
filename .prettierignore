@@ -3,5 +3,9 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 
+# Manual build output
+manual/dist
+manual/.astro
+
 *.yaml
 *.yml
